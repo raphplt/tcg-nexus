@@ -82,3 +82,23 @@ Learn more about the power of Turborepo:
 - [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
 - [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
 - [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+
+
+
+## Pour l'inmplementation des cartes pokemon
+
+Utilisation du SDK de TcgDex
+Utilisation de PyMySql pour le scrip d'import dans la base de données 
+
+
+Utilisation de la route "getSetWithCards" qui va recuperer toutes les cartes d'une series avec comme parametres le nom de la serie
+exemple :  http://localhost:3000/tcgdex/setCard/sv05 (Forces temporelles)
+
+ensuite il faut exporter le resultat en format json dans le dossier JSON dans la ressource tcg-dex
+Remplacer le nom de fichier dans le script 
+Executer le scipt Python d'import dans le dossier tcg-dex
+
+python script.py
+
+
+
