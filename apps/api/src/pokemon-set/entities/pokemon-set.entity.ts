@@ -1,5 +1,5 @@
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
-import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-sery.entity';
+import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { Entity, Column, PrimaryColumn, ManyToOne, OneToMany } from 'typeorm';
 
 /**

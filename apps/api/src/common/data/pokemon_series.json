@@ -42,11 +42,13 @@
     },
     {
         "id": "pl",
+        "name": "Platine",
         "logo": "https://assets.tcgdex.net/fr/pl/pl1/logo",
         "releaseDate": "2009-02-11"
     },
     {
         "id": "hgss",
+        "name": "HeartGold SoulSilver",
         "logo": "https://assets.tcgdex.net/fr/hgss/hgss1/logo",
         "releaseDate": "2010-02-10"
     },
@@ -81,11 +83,13 @@
     },
     {
         "id": "swsh",
+        "name": "Épée et Bouclier",
         "logo": "https://assets.tcgdex.net/fr/swsh/swsh1/logo",
         "releaseDate": "2019-11-15"
     },
     {
         "id": "sv",
+        "name": "Écarlate et Violet",
         "logo": "https://assets.tcgdex.net/fr/sv/sv01/logo",
         "releaseDate": "2023-03-31"
     }
