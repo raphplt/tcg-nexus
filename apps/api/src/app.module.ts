@@ -21,14 +21,15 @@ import { SeedModule } from './seed/seed.module';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: true,
+      charset: 'utf8mb4'
     }),
     UserModule,
     PokemonCardModule,
     PokemonSetModule,
     PokemonSeriesModule,
-    SeedModule,
+    SeedModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService]
 })
 export class AppModule {}

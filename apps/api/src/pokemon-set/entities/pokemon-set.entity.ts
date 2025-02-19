@@ -82,6 +82,9 @@ export class PokemonSet {
   serie: PokemonSerie;
 
   // Relation vers les cartes du set
-  @OneToMany(() => PokemonCard, (pokemonCard) => pokemonCard.set)
+  @OneToMany(() => PokemonCard, (pokemonCard) => pokemonCard.set, {
+    cascade: true,
+    onDelete: 'CASCADE'
+  })
   cards: PokemonCard[];
 }

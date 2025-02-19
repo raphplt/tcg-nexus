@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { EnergyType } from 'src/common/enums/energyType';
 import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { TrainerType } from 'src/common/enums/trainerType';
@@ -7,19 +7,22 @@ import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 @Entity()
 export class PokemonCard {
   // Champs communs
-  @PrimaryColumn()
-  id: string; // L'ID unique de la carte. Exemple : swsh3-136
+  @PrimaryGeneratedColumn()
+  id: string; // L'ID unique de la carte. Exemple : "1"
 
-  @Column()
+  @Column({ nullable: true })
+  tcgDexId: string; // L'ID TCG de la carte. Exemple : "swsh3-136"
+
+  @Column({ nullable: true })
   localId: string; // L'ID local. Exemple : 136
 
-  @Column()
+  @Column({ nullable: true })
   name: string; // Nom de la carte. Exemple : "Mew VMAX"
 
   @Column({ nullable: true })
   image?: string; // Image de la carte (asset)
 
-  @Column()
+  @Column({ nullable: true })
   category: PokemonCardsType; // Catégorie : 'Pokemon', 'Energy', 'Trainer'
 
   @Column({ nullable: true })
@@ -29,7 +32,7 @@ export class PokemonCard {
   rarity?: string; // Rareté de la carte
 
   // Variantes de la carte (normal, reverse, holo, firstEdition)
-  @Column({ type: 'json' })
+  @Column({ type: 'simple-json', nullable: true })
   variants: {
     normal: boolean;
     reverse: boolean;
@@ -38,7 +41,7 @@ export class PokemonCard {
   };
 
   @ManyToOne(() => PokemonSet, (pokemonSet) => pokemonSet.cards)
-  set: PokemonSet; // Référence vers le set de la carte
+  set: PokemonSet;
 
   // --------------------
   // Champs spécifiques aux cartes Pokémon
@@ -69,13 +72,13 @@ export class PokemonCard {
   @Column({ nullable: true })
   suffix?: string; // Suffixe éventuel de la carte
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   item?: {
     name: string;
     effect: string;
   };
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   attacks?: {
     cost: string[];
     name: string;
@@ -83,7 +86,7 @@ export class PokemonCard {
     damage?: number;
   }[];
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   weaknesses?: {
     type: string;
     value: string;
@@ -95,7 +98,7 @@ export class PokemonCard {
   @Column({ nullable: true })
   regulationMark?: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({ type: 'simple-json', nullable: true })
   legal?: {
     standard: boolean;
     expanded: boolean;
@@ -120,4 +123,3 @@ export class PokemonCard {
   @Column({ nullable: true })
   energyType?: EnergyType; // Type de carte Energy ('Basic', 'Special')
 }
-

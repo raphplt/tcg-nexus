@@ -7,6 +7,10 @@ async function bootstrap() {
   const seedService = app.get(SeedService);
 
   try {
+    console.log('Truncating tables...');
+    await seedService.truncateTables();
+    console.log('Truncated tables ✅');
+
     console.log('Importing Pokémon series...');
     await seedService.importPokemonSeries();
     console.log('Imported Pokémon series ✅');

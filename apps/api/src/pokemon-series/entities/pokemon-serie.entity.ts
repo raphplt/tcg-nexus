@@ -13,9 +13,6 @@ export class PokemonSerie {
   logo?: string; // Serie logo (asset, nullable)
 
   // Relation vers les sets de cette série
-  @OneToMany(() => PokemonSet, (pokemonSet) => pokemonSet.serie, {
-    cascade: true,
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => PokemonSet, (pokemonSet) => pokemonSet.serie)
   sets: PokemonSet[];
 }

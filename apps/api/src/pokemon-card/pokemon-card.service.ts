@@ -25,7 +25,8 @@ export class PokemonCardService {
 
   async findOne(id: string): Promise<PokemonCard> {
     const card = await this.pokemonCardRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['set']
     });
     if (!card) {
       throw new Error(`PokemonCard with id ${id} not found`);
@@ -48,6 +49,7 @@ export class PokemonCardService {
   async findRandom(): Promise<PokemonCard> {
     const count = await this.pokemonCardRepository.count();
     const randomIndex = Math.floor(Math.random() * count);
+    console.log('Random index:', randomIndex);
     const randomCard = await this.pokemonCardRepository.find({
       skip: randomIndex,
       take: 1

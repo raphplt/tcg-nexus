@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
-import * as pokemonSeriesData from 'src/common/data/pokemon_series.json';
-import * as pokemonSetsData from 'src/common/data/pokemon_sets.json';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
+import * as pokemonSeriesData from 'src/common/data/pokemon_series.json';
+import * as pokemonSetsData from 'src/common/data/pokemon_sets.json';
 import * as AdmZip from 'adm-zip';
 import * as path from 'path';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
@@ -20,9 +19,19 @@ export class SeedService {
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
     @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    private readonly pokemonCardRepository: Repository<PokemonCard>
   ) {}
 
+  /**
+   * Clean special characters from a string
+   * @param {string} str - The string to clean
+   * @returns {string} - The cleaned string
+   */
+  cleanString(str: string): string {
+    // Convert special characters to their ASCII equivalents or remove them
+    // eslint-disable-next-line no-control-regex
+    return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+  }
   /**
    * Seed the database with the Pokemon Series data
    * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
@@ -33,7 +42,7 @@ export class SeedService {
 
     for (const serieData of pokemonSeriesData as DeepPartial<PokemonSerie>[]) {
       const existingSerie = await this.pokemonSerieRepository.findOne({
-        where: { name: serieData.name },
+        where: { name: serieData.name }
       });
 
       if (!existingSerie) {
@@ -59,18 +68,18 @@ export class SeedService {
 
     for (const setData of pokemonSetsData as DeepPartial<PokemonSet>[]) {
       const existingSet = await this.pokemonSetRepository.findOne({
-        where: { name: setData.name },
+        where: { name: setData.name }
       });
 
       if (!existingSet) {
         const serie = await this.pokemonSerieRepository.findOne({
-          where: { id: setData.serie?.id },
+          where: { id: setData.serie?.id }
         });
 
         if (serie) {
           const newSet = this.pokemonSetRepository.create({
             ...setData,
-            serie,
+            serie
           });
           sets.push(newSet);
         }
@@ -83,10 +92,11 @@ export class SeedService {
 
     return sets;
   }
+
   /**
    * Seed the database with the Pokemon Series and Sets data
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[] }>} The Pokemon Series and Sets created
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
    * @throws {Error} If a Serie is not found
    */
   async importPokemon(): Promise<{
@@ -105,7 +115,7 @@ export class SeedService {
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new Error(
-          `Failed to read zip file at ${zipPath}: ${error.message}`,
+          `Failed to read zip file at ${zipPath}: ${error.message}`
         );
       } else {
         throw new Error(`Failed to read zip file at ${zipPath}`);
@@ -116,8 +126,8 @@ export class SeedService {
     const cards: PokemonCard[] = [];
 
     if (zipEntries && zipEntries.length > 0) {
-      const firstEntry = zipEntries[0];
-      const firstEntryContent = firstEntry.getData().toString('utf8');
+      const content = zipEntries[0];
+      const firstEntryContent = content.getData().toString('utf8');
 
       try {
         // Parse le contenu JSON
@@ -131,22 +141,41 @@ export class SeedService {
           // Récupération de l'ID du set dans le JSON
           const setId = cardData.set?.id;
           if (!setId) {
-            console.warn(`Carte ${cardData.id} sans set défini.`);
+            // console.warn(`Carte ${cardData.id} sans set défini.`);
             continue;
           }
           // Recherche du set correspondant en BDD
           const set = await this.pokemonSetRepository.findOne({
-            where: { id: setId },
+            where: { id: setId }
           });
           if (!set) {
             console.warn(
-              `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`,
+              `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`
             );
             continue;
           }
           // Supprime la propriété "set" du JSON et lui réassigne le set trouvé
           delete cardData.set;
           cardData.set = set;
+
+          // Assigner l'id à tcgDexId et supprimer l'id de cardData
+          cardData.tcgDexId = cardData.id;
+          delete cardData.id;
+
+          // Nettoyer le nom de la carte pour retirer les caractères spéciaux
+          cardData.name = cardData.name ? this.cleanString(cardData.name) : '';
+          cardData.illustrator = cardData.illustrator
+            ? this.cleanString(cardData.illustrator)
+            : null;
+          cardData.description = cardData.description
+            ? this.cleanString(cardData.description)
+            : null;
+          cardData.evolveFrom = cardData.evolveFrom
+            ? this.cleanString(cardData.evolveFrom)
+            : null;
+          cardData.effect = cardData.effect
+            ? this.cleanString(cardData.effect)
+            : null;
 
           // Optionnel : Nettoyage de l'objet variants pour retirer d'éventuels attributs non désirés
           if (cardData.variants && cardData.variants.wPromo !== undefined) {
@@ -157,7 +186,7 @@ export class SeedService {
 
           // Création de l'entité PokemonCard à partir des données
           const card = this.pokemonCardRepository.create(
-            cardData as DeepPartial<PokemonCard>,
+            cardData as DeepPartial<PokemonCard>
           );
           cards.push(card);
         }
@@ -174,5 +203,14 @@ export class SeedService {
     }
 
     return { series, sets, cards };
+  }
+
+  /**
+   * Truncate all tables before seeding
+   */
+  async truncateTables() {
+    await this.pokemonCardRepository.query('DELETE FROM pokemon_card');
+    await this.pokemonSetRepository.query('DELETE FROM pokemon_set');
+    await this.pokemonSerieRepository.query('DELETE FROM pokemon_serie');
   }
 }
