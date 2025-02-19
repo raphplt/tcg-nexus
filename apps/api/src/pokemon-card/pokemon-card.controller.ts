@@ -48,4 +48,3 @@ export class PokemonCardController {
     return this.pokemonCardService.findRandom();
   }
 }
-
