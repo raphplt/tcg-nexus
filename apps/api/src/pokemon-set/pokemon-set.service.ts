@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
 import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
+import { PokemonSet } from './entities/pokemon-set.entity';
 
 @Injectable()
 export class PokemonSetService {
-  create(createPokemonSetDto: CreatePokemonSetDto) {
-    return 'This action adds a new pokemonSet';
+  constructor(
+    @InjectRepository(PokemonSet)
+    private readonly pokemonSetRepository: Repository<PokemonSet>,
+  ) {}
+
+  async create(createPokemonSetDto: CreatePokemonSetDto): Promise<PokemonSet> {
+    const pokemonSet = this.pokemonSetRepository.create(createPokemonSetDto);
+    return this.pokemonSetRepository.save(pokemonSet);
   }
 
-  findAll() {
-    return `This action returns all pokemonSet`;
+  async findAll(): Promise<PokemonSet[]> {
+    return this.pokemonSetRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pokemonSet`;
+  async findOne(id: string): Promise<PokemonSet> {
+    const pokemonSet = await this.pokemonSetRepository.findOne({
+      where: { id },
+    });
+    if (!pokemonSet) {
+      throw new Error(`PokemonSet with id ${id} not found`);
+    }
+    return pokemonSet;
   }
 
-  update(id: number, updatePokemonSetDto: UpdatePokemonSetDto) {
-    return `This action updates a #${id} pokemonSet`;
+  async update(
+    id: string,
+    updatePokemonSetDto: UpdatePokemonSetDto,
+  ): Promise<PokemonSet> {
+    await this.pokemonSetRepository.update(id, updatePokemonSetDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pokemonSet`;
+  async remove(id: number): Promise<void> {
+    await this.pokemonSetRepository.delete(id);
   }
 }

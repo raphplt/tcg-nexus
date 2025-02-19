@@ -70,23 +70,33 @@ class TcgDexService {
 		}
 	}
 
+	async getAllSetsDetails(): Promise<any> {
+		try {
+			const sets = await this.tcgdex.fetch("sets");
+			if (!sets) return [];
+			const setsPromises = sets.map(async (set: any) => {
+				const setData = await this.getSetById(set.id);
+				const { cards, serie, ...setWithoutCardsAndSerie } = setData;
+				return {
+					...setWithoutCardsAndSerie,
+					serieId: serie.id,
+				};
+			});
+
+			const setsDetails = await Promise.all(setsPromises);
+
+			return setsDetails;
+		} catch (error) {
+			throw new Error("Erreur lors de la récupération des données des sets");
+		}
+	}
+
 	async getSetWithCards(setId: string): Promise<any> {
 		try {
 			const setData = await this.tcgdex.fetch("sets", setId);
 			if (!setData || !setData.cards) {
 				throw new Error("Set non trouvé");
 			}
-
-			const cardsPromises = setData.cards.map(async (card: any) => {
-				return await this.tcgdex.fetch("cards", card.id);
-			});
-
-			const cards = await Promise.all(cardsPromises);
-
-			return {
-				...setData,
-				cards: cards.filter((card: any) => card !== null),
-			};
 		} catch (error) {
 			throw new Error("Erreur lors de la récupération des données du set");
 		}
@@ -123,6 +133,45 @@ class TcgDexService {
 			};
 		} catch (error) {
 			throw new Error("Erreur lors de la récupération des données de la série");
+		}
+	}
+
+	async getAllCardsDetails(): Promise<any> {
+		try {
+			console.log("Fetching all cards...");
+			const cards = await this.tcgdex.fetch("cards");
+			if (!cards) {
+				console.log("No cards found.");
+				return [];
+			}
+
+			const chunkSize = 1000;
+			const delay = (ms: number) =>
+				new Promise((resolve) => setTimeout(resolve, ms));
+
+			const cardsDetails: any[] = [];
+			for (let i = 0; i < cards.length; i += chunkSize) {
+				console.log(`Processing chunk from index ${i} to ${i + chunkSize}...`);
+				const chunk = cards.slice(i, i + chunkSize);
+				const cardsPromises = chunk.map(async (card: any) => {
+					const cardData = await this.tcgdex.fetch("cards", card.id);
+					return cardData;
+				});
+
+				const chunkDetails = await Promise.all(cardsPromises);
+				cardsDetails.push(...chunkDetails);
+
+				if (i + chunkSize < cards.length) {
+					console.log("Waiting for 30 seconds before processing the next chunk...");
+					await delay(30000); // 30 seconds delay
+				}
+			}
+
+			console.log("All cards details fetched successfully.");
+			return cardsDetails;
+		} catch (error) {
+			console.error("Error fetching cards details:", error);
+			throw new Error("Erreur lors de la récupération des données des cartes");
 		}
 	}
 }
@@ -191,6 +240,16 @@ app.get("/tcgdex/sets", async (req: Request, res: Response) => {
 	}
 });
 
+// Route pour récupérer tous les sets les détails
+app.get("/tcgdex/setsDetails", async (req: Request, res: Response) => {
+	try {
+		const sets = await tcgDexService.getAllSetsDetails();
+		res.json(sets);
+	} catch (error: any) {
+		res.status(404).json({ error: error.message });
+	}
+});
+
 // Route pour récupérer un set avec toutes ses cartes détaillées
 app.get("/tcgdex/setCard/:id", async (req: Request, res: Response) => {
 	try {
@@ -206,6 +265,16 @@ app.get("/tcgdex/bloc/:id", async (req: Request, res: Response) => {
 	try {
 		const bloc = await tcgDexService.getBloc(req.params.id);
 		res.json(bloc);
+	} catch (error: any) {
+		res.status(500).json({ error: error.message });
+	}
+});
+
+// Route pour récupérer toutes les cartes détaillées
+app.get("/tcgdex/cardsDetailed", async (req: Request, res: Response) => {
+	try {
+		const cards = await tcgDexService.getAllCardsDetails();
+		res.json(cards);
 	} catch (error: any) {
 		res.status(500).json({ error: error.message });
 	}

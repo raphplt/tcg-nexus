@@ -1,104 +1,93 @@
-# Turborepo starter
+# TCG Nexus Project
 
-This Turborepo starter is maintained by the Turborepo core team.
+Ce monorepo contient une application front-end en Next.js, une API en NestJS, et plusieurs microservices.
 
-## Using this example
+## Structure du projet
 
-Run the following command:
+- `apps/api`: Application front-end en [Next.js](https://nextjs.org/)
+- `apps/web`: Application back-end en [NestJS](https://nestjs.com/)
+- `apps/fetch`: Microservice de fetch en [Express](https://expressjs.com/)
+- `apps/doc`: Documentation du projet
+
+## Prérequis
+
+- Node.js (version 18 ou supérieure) [Télécharger](https://nodejs.org/)
+- npm (gestionnaire de paquets) [Télécharger](https://www.npmjs.com/)
+- MySQL (base de données) [Télécharger](https://www.mysql.com/)
+- Turborepo (gestionnaire de monorepo) [Télécharger](https://turbo.build/)
+
+## Installation
+
+Clonez le dépôt et installez les dépendances :
 
 ```sh
-npx create-turbo@latest
+git clone https://github.com/raphplt/tcg-nexus
+cd tcg-nexus
+npm install
 ```
 
-## What's inside?
+## Seed de la base de données
 
-This Turborepo includes the following packages/apps:
+La commande ci dessous permet de remplir la base de données à partir des fichiers JSON présents dans `apps/api/src/common/data` :
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+```sh
+npm run seed
 ```
 
-### Develop
+## Développement
 
-To develop all apps and packages, run the following command:
+Pour lancer les applications en mode développement :
 
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+```sh
+turbo dev
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Ou bien :
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
+```sh
+npm dev    
 ```
 
-## Useful Links
+Cela lancera les applications front-end et back-end.
 
-Learn more about the power of Turborepo:
+## Build
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+Pour construire toutes les applications et les packages :
 
+```sh
+turbo build
+```
 
+## Lancer les tests
 
-## Pour l'inmplementation des cartes pokemon
+Pour exécuter les tests unitaires :
 
-Utilisation du SDK de TcgDex
-Utilisation de PyMySql pour le scrip d'import dans la base de données 
+```sh
+turbo test
+```
 
+## Déploiement
 
-Utilisation de la route "getSetWithCards" qui va recuperer toutes les cartes d'une series avec comme parametres le nom de la serie
-exemple :  http://localhost:3000/tcgdex/setCard/sv05 (Forces temporelles)
+Les instructions de déploiement dépendent de votre infrastructure. Voici un exemple de déploiement avec Docker :
 
-ensuite il faut exporter le resultat en format json dans le dossier JSON dans la ressource tcg-dex
-Remplacer le nom de fichier dans le script 
-Executer le scipt Python d'import dans le dossier tcg-dex
+```sh
+docker-compose up --build
+```
 
-python script.py
+## Utilisation du microservice de fetch
 
+Le microservice de fetch est accessible via l'URL suivante :
 
+```sh
+http://localhost:3005/tcgdex
+```
 
+## Liens utiles
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [Turbo Documentation](https://turbo.hotwired.dev/)
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.

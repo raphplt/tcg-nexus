@@ -15,6 +15,7 @@ export class PokemonSerie {
   // Relation vers les sets de cette série
   @OneToMany(() => PokemonSet, (pokemonSet) => pokemonSet.serie, {
     cascade: true,
+    onDelete: 'CASCADE',
   })
   sets: PokemonSet[];
 }
