@@ -23,7 +23,7 @@ export class PokemonCardService {
     return await this.pokemonCardRepository.find();
   }
 
-  //Test
+  //Test pourquoi ca marche pos
   async findOne(id: string): Promise<PokemonCard> {
     const card = await this.pokemonCardRepository.findOne({
       where: { id }
