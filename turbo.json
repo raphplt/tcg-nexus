@@ -9,6 +9,9 @@
         ".next/**",
         "!.next/cache/**",
         "dist/**"
+      ],
+      "env": [
+        "NEXT_PUBLIC_API_URL"
       ]
     },
     "lint": {
@@ -19,7 +22,10 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "NEXT_PUBLIC_API_URL"
+      ]
     },
     "start": {
       "cache": false,
