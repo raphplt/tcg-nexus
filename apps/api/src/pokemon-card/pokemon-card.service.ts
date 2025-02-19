@@ -49,7 +49,6 @@ export class PokemonCardService {
   async findRandom(): Promise<PokemonCard> {
     const count = await this.pokemonCardRepository.count();
     const randomIndex = Math.floor(Math.random() * count);
-    console.log('Random index:', randomIndex);
     const randomCard = await this.pokemonCardRepository.find({
       skip: randomIndex,
       take: 1

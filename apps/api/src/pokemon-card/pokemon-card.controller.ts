@@ -43,7 +43,7 @@ export class PokemonCardController {
     return this.pokemonCardService.remove(id);
   }
 
-  @Get('random')
+  @Get('search/random')
   findRandom() {
     return this.pokemonCardService.findRandom();
   }
