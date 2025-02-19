@@ -7,10 +7,15 @@ async function bootstrap() {
   const seedService = app.get(SeedService);
 
   try {
-    const importedSeries = await seedService.importPokemonSeries();
-    console.log('Imported Pokémon series:', importedSeries);
-    const importedSets = await seedService.importPokemonSets();
-    console.log('Imported Pokémon sets:', importedSets);
+    console.log('Importing Pokémon series...');
+    await seedService.importPokemonSeries();
+    console.log('Imported Pokémon series ✅');
+    console.log('Importing Pokémon sets...');
+    await seedService.importPokemonSets();
+    console.log('Imported Pokémon sets ✅');
+    console.log('Importing Pokémon...');
+    await seedService.importPokemon();
+    console.log('Imported Pokémon ✅');
   } catch (error) {
     console.error('Error importing Pokémon:', error);
   } finally {

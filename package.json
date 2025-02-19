@@ -10,6 +10,7 @@
     "check-types": "turbo check-types"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
     "prettier": "^3.5.0",
     "turbo": "^2.4.2",
     "typescript": "5.7.3"

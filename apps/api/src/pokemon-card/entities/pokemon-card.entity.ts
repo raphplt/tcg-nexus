@@ -108,7 +108,7 @@ export class PokemonCard {
   // Champs spécifiques aux cartes Trainer
   // (optionnels si la carte n'est pas de type 'Trainer')
   // 'effect' peut également être utilisé pour les cartes Energy
-  @Column({ nullable: true })
+  @Column({ type: 'text', nullable: true })
   effect?: string; // Effet de la carte (Trainer ou Energy)
 
   @Column({ nullable: true })

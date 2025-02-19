@@ -27,7 +27,7 @@ export class PokemonSetController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.pokemonSetService.findOne(+id);
+    return this.pokemonSetService.findOne(id);
   }
 
   @Patch(':id')
@@ -35,7 +35,7 @@ export class PokemonSetController {
     @Param('id') id: string,
     @Body() updatePokemonSetDto: UpdatePokemonSetDto,
   ) {
-    return this.pokemonSetService.update(+id, updatePokemonSetDto);
+    return this.pokemonSetService.update(id, updatePokemonSetDto);
   }
 
   @Delete(':id')
