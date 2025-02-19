@@ -120,3 +120,4 @@ export class PokemonCard {
   @Column({ nullable: true })
   energyType?: EnergyType; // Type de carte Energy ('Basic', 'Special')
 }
+
