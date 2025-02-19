@@ -11,6 +11,8 @@ import { PokemonSeriesModule } from './pokemon-series/pokemon-series.module';
 import { PokemonCard } from './pokemon-card/entities/pokemon-card.entity';
 import { PokemonSerie } from './pokemon-series/entities/pokemon-sery.entity';
 import { PokemonSet } from './pokemon-set/entities/pokemon-set.entity';
+import { SeedModule } from './seed/seed.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -30,6 +32,7 @@ import { PokemonSet } from './pokemon-set/entities/pokemon-set.entity';
     PokemonCardModule,
     PokemonSetModule,
     PokemonSeriesModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

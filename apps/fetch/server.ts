@@ -17,6 +17,32 @@ class TcgDexService {
 		}
 	}
 
+	async getSeries(): Promise<any> {
+		try {
+			const series = await this.tcgdex.fetch("series");
+			return series;
+		} catch (error) {
+			throw new Error("Erreur lors de la récupération des données des séries");
+		}
+	}
+
+	async getSeriesDetails(): Promise<any> {
+		try {
+			const series = await this.tcgdex.fetch("series");
+			if (!series) return [];
+			const seriesPromises = series.map(async (serie: any) => {
+				const seriesData = await this.tcgdex.fetch("series", serie.id);
+				return seriesData;
+			});
+
+			const seriesDetails = await Promise.all(seriesPromises);
+
+			return seriesDetails;
+		} catch (error) {
+			throw new Error("Erreur lors de la récupération des données des séries");
+		}
+	}
+
 	async getSeriesById(seriesId: string): Promise<any> {
 		try {
 			const series = await this.tcgdex.fetch("series", seriesId);
@@ -111,6 +137,26 @@ app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
 	try {
 		const card = await tcgDexService.getCardById(req.params.id);
 		res.json(card);
+	} catch (error: any) {
+		res.status(404).json({ error: error.message });
+	}
+});
+
+// Route pour récupérer toutes les séries
+app.get("/tcgdex/series", async (req: Request, res: Response) => {
+	try {
+		const series = await tcgDexService.getSeries();
+		res.json(series);
+	} catch (error: any) {
+		res.status(404).json({ error: error.message });
+	}
+});
+
+// Route pour récupérer toutes les séries et leurs détails
+app.get("/tcgdex/seriesDetails", async (req: Request, res: Response) => {
+	try {
+		const series = await tcgDexService.getSeriesDetails();
+		res.json(series);
 	} catch (error: any) {
 		res.status(404).json({ error: error.message });
 	}
