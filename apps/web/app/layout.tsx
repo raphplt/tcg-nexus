@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-import Header from "./components/Layout/Header";
-import Footer from "./components/Layout/Footer";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-});
+import Header from "@components/Layout/Header";
+import Footer from "@components/Layout/Footer";
 
 export const metadata: Metadata = {
   title: "TCG Nexus",
@@ -25,9 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`antialiased `}>
         <Header />
-        <div className="mt-16">{children}</div>
+        <div className="mt-16 min-h-screen">{children}</div>
         <Footer />
       </body>
     </html>

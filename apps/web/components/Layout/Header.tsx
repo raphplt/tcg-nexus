@@ -7,12 +7,14 @@ import React from "react";
 const Header = () => {
   return (
     <div className="fixed top-0 left-0 w-full h-16 bg-white bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
-      <Image
-        src="/images/Logo.png"
-        alt="TCG Nexus"
-        width={100}
-        height={100}
-      />
+      <Link href="/">
+        <Image
+          src="/images/Logo.png"
+          alt="TCG Nexus"
+          width={100}
+          height={100}
+        />
+      </Link>
       <nav>
         <ul className="flex space-x-6 font-semibold items-center">
           <li>
@@ -22,16 +24,16 @@ const Header = () => {
             />
           </li>
           <li>
-            <Link href="#">Accueil</Link>
+            <Link href="/">Accueil</Link>
           </li>
           <li>
-            <Link href="#">Tournois</Link>
+            <Link href="/tournaments">Tournois</Link>
           </li>
           <li>
-            <Link href="#">Marketplace</Link>
+            <Link href="/marketplace">Marketplace</Link>
           </li>
           <li>
-            <Link href="#">Stratégie</Link>
+            <Link href="/strategy">Stratégie</Link>
           </li>
           <li>
             <Button

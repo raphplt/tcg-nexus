@@ -46,7 +46,10 @@ export const plugins = [
       light: {
         colors: {
           background: "#FFFFFF",
-          primary: "#b80c09ff",
+          primary: {
+            DEFAULT: "#b80c09ff",
+            foreground: "#FFFFFF",
+          },
           secondary: "#0b4f6cff",
           success: "#01baefff",
           warning: "#fbfbffff",
@@ -56,7 +59,10 @@ export const plugins = [
       dark: {
         colors: {
           background: "#161C24",
-          primary: "#b80c09ff",
+          primary: {
+            DEFAULT: "#b80c09ff",
+            foreground: "#FFFFFF",
+          },
           secondary: "#0b4f6cff",
           success: "#01baefff",
           warning: "#fbfbffff",
