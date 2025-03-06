@@ -193,7 +193,11 @@ export class SeedService {
 
         // Sauvegarde des cartes en base
         if (cards.length > 0) {
-          await this.pokemonCardRepository.save(cards);
+          const batchSize = 500;
+          for (let i = 0; i < cards.length; i += batchSize) {
+            const batch = cards.slice(i, i + batchSize);
+            await this.pokemonCardRepository.save(batch);
+          }
         }
       } catch (jsonError) {
         console.error('Failed to parse JSON content:', jsonError);

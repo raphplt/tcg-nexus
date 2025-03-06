@@ -6,33 +6,33 @@ import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 
 @Entity()
 export class PokemonCard {
-  // Champs communs
-  @PrimaryGeneratedColumn()
-  id: string; // L'ID unique de la carte. Exemple : "1"
+  // Pour Postgres, on peut opter pour un identifiant en UUID (ou int selon votre choix)
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  tcgDexId: string; // L'ID TCG de la carte. Exemple : "swsh3-136"
+  tcgDexId: string;
 
   @Column({ nullable: true })
-  localId: string; // L'ID local. Exemple : 136
+  localId: string;
 
   @Column({ nullable: true })
-  name: string; // Nom de la carte. Exemple : "Mew VMAX"
+  name: string;
 
   @Column({ nullable: true })
-  image?: string; // Image de la carte (asset)
+  image?: string;
 
   @Column({ nullable: true })
-  category: PokemonCardsType; // Catégorie : 'Pokemon', 'Energy', 'Trainer'
+  category: PokemonCardsType;
 
   @Column({ nullable: true })
-  illustrator?: string; // Illustrateur de la carte. Exemple : "PLANETA"
+  illustrator?: string;
 
   @Column({ nullable: true })
-  rarity?: string; // Rareté de la carte
+  rarity?: string;
 
-  // Variantes de la carte (normal, reverse, holo, firstEdition)
-  @Column({ type: 'simple-json', nullable: true })
+  // Utilisation de jsonb pour stocker un objet JSON
+  @Column({ type: 'jsonb', nullable: true })
   variants: {
     normal: boolean;
     reverse: boolean;
@@ -43,42 +43,39 @@ export class PokemonCard {
   @ManyToOne(() => PokemonSet, (pokemonSet) => pokemonSet.cards)
   set: PokemonSet;
 
-  // --------------------
-  // Champs spécifiques aux cartes Pokémon
-  // (optionnels si la carte n'est pas de type 'Pokemon')
-
-  // Utilisation de "simple-json" pour stocker le tableau dans MySQL
-  @Column({ type: 'simple-json', nullable: true })
-  dexId?: number[]; // ID du Pokédex national
+  // Stockage natif d'un tableau de nombres
+  @Column({ type: 'int', array: true, nullable: true })
+  dexId?: number[];
 
   @Column({ type: 'int', nullable: true })
-  hp?: number; // Points de vie du Pokémon
+  hp?: number;
 
-  @Column({ type: 'simple-array', nullable: true })
-  types?: string[]; // Types du Pokémon
-
-  @Column({ nullable: true })
-  evolveFrom?: string; // Nom du Pokémon dont il évolue
+  // Utilisation d'un tableau natif de texte
+  @Column('text', { array: true, nullable: true })
+  types?: string[];
 
   @Column({ nullable: true })
-  description?: string; // Description de la carte
+  evolveFrom?: string;
 
   @Column({ nullable: true })
-  level?: string; // Niveau du Pokémon (ex: 'lv.5')
+  description?: string;
 
   @Column({ nullable: true })
-  stage?: string; // Stade d'évolution du Pokémon
+  level?: string;
 
   @Column({ nullable: true })
-  suffix?: string; // Suffixe éventuel de la carte
+  stage?: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ nullable: true })
+  suffix?: string;
+
+  @Column({ type: 'jsonb', nullable: true })
   item?: {
     name: string;
     effect: string;
   };
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   attacks?: {
     cost: string[];
     name: string;
@@ -86,7 +83,7 @@ export class PokemonCard {
     damage?: number;
   }[];
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   weaknesses?: {
     type: string;
     value: string;
@@ -98,7 +95,7 @@ export class PokemonCard {
   @Column({ nullable: true })
   regulationMark?: string;
 
-  @Column({ type: 'simple-json', nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   legal?: {
     standard: boolean;
     expanded: boolean;
@@ -107,19 +104,13 @@ export class PokemonCard {
   @Column({ nullable: true })
   updated?: string;
 
-  // --------------------
-  // Champs spécifiques aux cartes Trainer
-  // (optionnels si la carte n'est pas de type 'Trainer')
-  // 'effect' peut également être utilisé pour les cartes Energy
+  // Champs spécifiques aux cartes Trainer et Energy
   @Column({ type: 'text', nullable: true })
-  effect?: string; // Effet de la carte (Trainer ou Energy)
+  effect?: string;
 
   @Column({ nullable: true })
-  trainerType?: TrainerType; // Type de carte Trainer ('Supporter', 'Item', etc.)
+  trainerType?: TrainerType;
 
-  // --------------------
-  // Champs spécifiques aux cartes Energy
-  // (optionnels si la carte n'est pas de type 'Energy')
   @Column({ nullable: true })
-  energyType?: EnergyType; // Type de carte Energy ('Basic', 'Special')
+  energyType?: EnergyType;
 }
