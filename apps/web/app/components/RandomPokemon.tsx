@@ -5,8 +5,6 @@ import { PokemonCardType } from "../../type/cardPokemon";
 const url = process.env.NEXT_PUBLIC_API_URL;
 const RandomPokemon = () => {
 	const [pokemon, setPokemon] = useState<PokemonCardType | null>(null);
-	console.log(url);
-
 	useEffect(() => {
 		fetch(url + "/pokemon-card/search/random")
 			.then((response) => response.json())
