@@ -1,11 +1,12 @@
 "use client";
-import { Button } from "@heroui/react";
+import { Button, Input, Link } from "@heroui/react";
+import { Icon } from "@iconify/react/dist/iconify.js";
 import Image from "next/image";
 import React from "react";
 
 const Header = () => {
   return (
-    <div className="fixed top-0 left-0 w-full h-16 bg-white shadow-md flex items-center justify-between px-10">
+    <div className="fixed top-0 left-0 w-full h-16 bg-white bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
       <Image
         src="/images/Logo.png"
         alt="TCG Nexus"
@@ -13,24 +14,29 @@ const Header = () => {
         height={100}
       />
       <nav>
-        <ul className="flex space-x-5 font-semibold text-sm items-center">
+        <ul className="flex space-x-6 font-semibold items-center">
           <li>
-            <a href="#">Accueil</a>
+            <Input
+              placeholder="Rechercher"
+              startContent={<Icon icon="mdi:search" />}
+            />
           </li>
           <li>
-            <a href="#">Decks</a>
+            <Link href="#">Accueil</Link>
           </li>
           <li>
-            <a href="#">Marketplace</a>
+            <Link href="#">Tournois</Link>
           </li>
           <li>
-            <a href="#">Communauté</a>
+            <Link href="#">Marketplace</Link>
+          </li>
+          <li>
+            <Link href="#">Stratégie</Link>
           </li>
           <li>
             <Button
               color="primary"
               className="font-semibold text-white"
-              radius="sm"
             >
               Se connecter
             </Button>

@@ -9,23 +9,31 @@ export const content = [
 export const theme = {
   extend: {
     colors: {
-      gradient: {
-        top: "linear-gradient(0deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        right:
-          "linear-gradient(90deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        bottom:
-          "linear-gradient(180deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        left: "linear-gradient(270deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        topRight:
-          "linear-gradient(45deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        bottomRight:
-          "linear-gradient(135deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        topLeft:
-          "linear-gradient(225deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        bottomLeft:
-          "linear-gradient(315deg, #b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-        radial: "radial-gradient(#b09e99, #fee9e1, #fad4c0, #64b6ac, #c0fdfb)",
-      },
+      primary: "#b80c09ff",
+      secondary: "#0b4f6cff",
+      success: "#01baefff",
+      warning: "#fbfbffff",
+      info: "#040f16ff",
+    },
+    backgroundImage: {
+      "gradient-top":
+        "linear-gradient(0deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-right":
+        "linear-gradient(90deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-bottom":
+        "linear-gradient(180deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-left":
+        "linear-gradient(270deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-top-right":
+        "linear-gradient(45deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-bottom-right":
+        "linear-gradient(135deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-top-left":
+        "linear-gradient(225deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-bottom-left":
+        "linear-gradient(315deg, #b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
+      "gradient-radial":
+        "radial-gradient(#b80c09ff, #0b4f6cff, #fbfbffff, #01baefff, #040f16ff)",
     },
   },
 };
@@ -38,21 +46,21 @@ export const plugins = [
       light: {
         colors: {
           background: "#FFFFFF",
-          primary: "#b09e99",
-          secondary: "#fee9e1",
-          success: "#64b6ac",
-          warning: "#fad4c0",
-          info: "#c0fdfb",
+          primary: "#b80c09ff",
+          secondary: "#0b4f6cff",
+          success: "#01baefff",
+          warning: "#fbfbffff",
+          info: "#040f16ff",
         },
       },
       dark: {
         colors: {
           background: "#161C24",
-          primary: "#b09e99",
-          secondary: "#fee9e1",
-          success: "#64b6ac",
-          warning: "#fad4c0",
-          info: "#c0fdfb",
+          primary: "#b80c09ff",
+          secondary: "#0b4f6cff",
+          success: "#01baefff",
+          warning: "#fbfbffff",
+          info: "#040f16ff",
         },
       },
     },
