@@ -35,10 +35,20 @@ export class PokemonCardService {
   }
 
   async findBySearch(search: string): Promise<PokemonCard[]> {
-    return await this.pokemonCardRepository.find({
-      where: [{ name: search }, { rarity: search }, { set: { name: search } }],
-      relations: ['set']
-    });
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder('card')
+      .leftJoinAndSelect('card.set', 'set');
+
+    // Si la chaîne de recherche est vide, on peut décider de renvoyer tous les résultats ou rien.
+    if (!search) {
+      return qb.getMany();
+    }
+
+    qb.where('card.name ILIKE :search', { search: `%${search}%` })
+      .orWhere('card.rarity ILIKE :search', { search: `%${search}%` })
+      .orWhere('set.name ILIKE :search', { search: `%${search}%` });
+
+    return qb.getMany();
   }
 
   async update(

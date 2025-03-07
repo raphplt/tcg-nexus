@@ -3,6 +3,7 @@ import { Button, Input, Link } from "@heroui/react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import React from "react";
+import SearchBar from "./SearchBar";
 
 const Header = () => {
   return (
@@ -18,17 +19,7 @@ const Header = () => {
       <nav>
         <ul className="flex space-x-6 font-semibold items-center">
           <li>
-            <Input
-              placeholder="Rechercher..."
-              startContent={
-                <Search
-                  width={20}
-                  height={20}
-                  color="gray"
-                />
-              }
-              className="flex-1 w-96"
-            />
+            <SearchBar />
           </li>
           <li>
             <Link href="/">Accueil</Link>
