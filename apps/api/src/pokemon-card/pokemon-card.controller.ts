@@ -25,14 +25,21 @@ export class PokemonCardController {
     return this.pokemonCardService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pokemonCardService.findOne(id);
-  }
-
+  // Routes statiques avant les routes dynamiques
   @Get('search/:search')
   findBySearch(@Param('search') search: string) {
     return this.pokemonCardService.findBySearch(search);
+  }
+
+  @Get('random')
+  findRandom() {
+    return this.pokemonCardService.findRandom();
+  }
+
+  // Route dynamique doit être la dernière pour éviter les conflits
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.pokemonCardService.findOne(id);
   }
 
   @Patch(':id')
@@ -46,10 +53,5 @@ export class PokemonCardController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.pokemonCardService.remove(id);
-  }
-
-  @Get('search/random')
-  findRandom() {
-    return this.pokemonCardService.findRandom();
   }
 }

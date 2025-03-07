@@ -8,7 +8,7 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 const RandomPokemon = () => {
   const [pokemon, setPokemon] = useState<PokemonCardType | null>(null);
   useEffect(() => {
-    fetch(url + "/pokemon-card/search/random")
+    fetch(url + "/pokemon-card/random")
       .then((response) => response.json())
       .then((data) => setPokemon(data));
   }, [url]);
