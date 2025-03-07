@@ -21,7 +21,7 @@ const CardLink = ({ title, description, link, icon }: CardLinkProps) => {
         <h2 className="text-2xl font-bold text-center">{title}</h2>
       </CardHeader>
       <CardBody>
-        <p className="mb-2 text-sm text-default-900">{description}</p>
+        <p className="mb-2 text-sm text-default-900 h-10">{description}</p>
         <Button
           as={Link}
           href={link}

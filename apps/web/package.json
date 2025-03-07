@@ -13,6 +13,7 @@
     "@heroui/react": "^2.7.4",
     "@repo/ui": "*",
     "autoprefixer": "^10.4.20",
+    "axios": "^1.8.2",
     "dotenv": "^16.4.7",
     "framer-motion": "^12.4.10",
     "lucide-react": "^0.477.0",

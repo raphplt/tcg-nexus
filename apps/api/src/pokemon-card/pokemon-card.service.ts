@@ -34,6 +34,13 @@ export class PokemonCardService {
     return card;
   }
 
+  async findBySearch(search: string): Promise<PokemonCard[]> {
+    return await this.pokemonCardRepository.find({
+      where: [{ name: search }, { rarity: search }, { set: { name: search } }],
+      relations: ['set']
+    });
+  }
+
   async update(
     id: string,
     updatePokemonCardDto: UpdatePokemonCardDto

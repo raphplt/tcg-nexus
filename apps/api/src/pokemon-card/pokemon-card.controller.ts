@@ -30,6 +30,11 @@ export class PokemonCardController {
     return this.pokemonCardService.findOne(id);
   }
 
+  @Get('search/:search')
+  findBySearch(@Param('search') search: string) {
+    return this.pokemonCardService.findBySearch(search);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
