@@ -8,6 +8,11 @@ import { PokemonCardModule } from './pokemon-card/pokemon-card.module';
 import { PokemonSetModule } from './pokemon-set/pokemon-set.module';
 import { PokemonSeriesModule } from './pokemon-series/pokemon-series.module';
 import { SeedModule } from './seed/seed.module';
+import { MatchModule } from './match/match.module';
+import { StatisticsModule } from './statistics/statistics.module';
+import { RankingModule } from './ranking/ranking.module';
+import { PlayerModule } from './player/player.module';
+import { TournamentModule } from './tournament/tournament.module';
 
 @Module({
   imports: [
@@ -26,7 +31,16 @@ import { SeedModule } from './seed/seed.module';
     PokemonCardModule,
     PokemonSetModule,
     PokemonSeriesModule,
-    SeedModule
+    MatchModule,
+    TournamentModule,
+    PlayerModule,
+    RankingModule,
+    StatisticsModule,
+    SeedModule,
+    TournamentModule,
+    PlayerModule,
+    RankingModule,
+    StatisticsModule
   ],
   controllers: [AppController],
   providers: [AppService]
