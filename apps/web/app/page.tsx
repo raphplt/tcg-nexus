@@ -5,7 +5,7 @@ import RandomPokemon from "@components/RandomPokemon";
 
 const page = () => {
   return (
-    <div className="min-h-screen bg-gradient-top-right">
+    <div className="min-h-screen bg-gradient-to-l from-[#4b6cb7] to-[#182848] text-white">
       <div className="flex flex-wrap justify-center items-center gap-4 py-20">
         <CardLink
           title="Tournois"

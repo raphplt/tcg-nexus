@@ -35,26 +35,24 @@ const SearchBar = () => {
   };
 
   return (
-    <div>
-      <Input
-        isClearable
-        value={search}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onClear={() => setSearch("")}
-        placeholder="Rechercher"
-        endContent={
-          <Search
-            width={20}
-            height={20}
-            color="gray"
-            className="cursor-pointer"
-            onClick={handleSearch}
-          />
-        }
-        className="flex-1 w-96"
-      />
-    </div>
+    <Input
+      isClearable
+      value={search}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      onClear={() => setSearch("")}
+      placeholder="Rechercher"
+      startContent={
+        <Search
+          width={20}
+          height={20}
+          color="black"
+          className="cursor-pointer"
+          onClick={handleSearch}
+        />
+      }
+      className="flex-1 w-full mx-8"
+    />
   );
 };
 
