@@ -125,7 +125,7 @@ const RandomPokemon = () => {
                       className="mb-2"
                     >
                       <p className="font-semibold">{attack.name}</p>
-                      <p>Cost: {attack.cost.join(", ")}</p>
+                      <p>Cost: {attack.cost?.join(", ")}</p>
                       <p>Effect: {attack.effect}</p>
                       <p>Damage: {attack.damage}</p>
                     </div>
