@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@heroui/react": "^2.7.4",
+    "@hookform/resolvers": "^5.0.1",
     "@repo/ui": "*",
     "autoprefixer": "^10.4.20",
     "axios": "^1.8.2",
@@ -20,7 +21,8 @@
     "next": "^15.1.6",
     "postcss": "^8.5.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.55.0"
   },
   "devDependencies": {
     "@iconify/react": "^5.2.0",

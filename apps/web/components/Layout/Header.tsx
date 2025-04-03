@@ -58,6 +58,8 @@ const Header = () => {
             <Button
               color="primary"
               className="font-semibold text-white"
+              as={Link}
+              href="/auth/login"
             >
               Se connecter
             </Button>
