@@ -64,6 +64,17 @@ const Header = () => {
               Se connecter
             </Button>
           </li>
+          <li>
+            <Button
+              color="primary"
+              variant="ghost"
+              className="font-semibold"
+              as={Link}
+              href="/auth/register"
+            >
+              S'inscrire
+            </Button>
+          </li>
         </ul>
       </nav>
     </div>
