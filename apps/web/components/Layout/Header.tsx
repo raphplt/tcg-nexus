@@ -1,15 +1,15 @@
 "use client";
-import { Button, Link } from "@heroui/react";
 import Image from "next/image";
 import React from "react";
 import SearchBar from "./SearchBar";
+import Link from "next/link";
 
 const Header = () => {
   const linkStyle =
     "text-gray-950 hover:text-gray-800 transition-all duration-300 hover:underline hover:underline-offset-4";
 
   return (
-    <div className="fixed top-0 left-0 w-full h-16 bg-white bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
+    <div className="fixed top-0 left-0 w-full h-16 bg-background bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
       <Link href="/">
         <Image
           src="/images/Logo.png"
@@ -55,12 +55,7 @@ const Header = () => {
             </Link>
           </li>
           <li>
-            <Button
-              color="primary"
-              className="font-semibold text-white"
-            >
-              Se connecter
-            </Button>
+            <button className="font-semibold text-white">Se connecter</button>
           </li>
         </ul>
       </nav>

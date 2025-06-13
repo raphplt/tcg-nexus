@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { Card, CardBody, CardHeader, Spinner } from "@heroui/react";
 import { PokemonCardType } from "type/cardPokemon";
+import { Card, CardContent, CardHeader } from "./ui/card";
 
 const url = process.env.NEXT_PUBLIC_API_URL;
 const RandomPokemon = () => {
@@ -16,13 +16,13 @@ const RandomPokemon = () => {
   return (
     <div className="flex justify-center items-center py-10">
       {pokemon ? (
-        <Card className="w-2/3 md:w-1/3 bg-white bg-opacity-50 backdrop-blur-md">
+        <Card className="w-2/3 md:w-1/3 bg-background bg-opacity-50 backdrop-blur-md">
           <CardHeader>
             <h2 className="text-2xl font-bold mb-4 text-center">
               {pokemon.name}
             </h2>
           </CardHeader>
-          <CardBody>
+          <CardContent>
             {pokemon.image ? (
               <img
                 className="mx-auto mb-4 object-cover rounded-lg"
@@ -167,11 +167,11 @@ const RandomPokemon = () => {
                 </p>
               </div>
             </div>
-          </CardBody>
+          </CardContent>
         </Card>
       ) : (
         <div className="text-xl">
-          <Spinner />
+          <p>Loading...</p>
         </div>
       )}
     </div>

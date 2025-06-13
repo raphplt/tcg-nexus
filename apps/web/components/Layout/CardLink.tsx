@@ -1,7 +1,5 @@
-import { Button, Card, CardBody, CardHeader } from "@heroui/react";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import React from "react";
+import { Card, CardContent, CardHeader } from "../ui/card";
 
 type CardLinkProps = {
   title: string;
@@ -12,26 +10,20 @@ type CardLinkProps = {
 
 const CardLink = ({ title, description, link, icon }: CardLinkProps) => {
   return (
-    <Card
-      className="w-full md:w-1/4 bg-white bg-opacity-50 backdrop-blur-md"
-      isHoverable
-    >
+    <Card className="w-full md:w-1/4 bg-opacity-50 bg-background backdrop-blur-md">
       <CardHeader className="flex flex-row items-center gap-2 mb-4">
         {icon}
         <h2 className="text-2xl font-bold text-center">{title}</h2>
       </CardHeader>
-      <CardBody>
+      <CardContent>
         <p className="mb-2 text-sm text-default-900 h-10">{description}</p>
-        <Button
-          as={Link}
+        <a
           href={link}
           color="primary"
-          size="sm"
-          endContent={<ArrowRight width={20} />}
         >
           Voir plus
-        </Button>
-      </CardBody>
+        </a>
+      </CardContent>
     </Card>
   );
 };
