@@ -14,7 +14,6 @@ concurrency:
 jobs:
   mirror:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,5 +30,8 @@ jobs:
           git remote add gitlab \
             https://oauth2:${{ secrets.GITLAB_TOKEN }}@rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981.git
 
-      - name: Mirror everything to GitLab
-        run: git push --mirror gitlab --force
+      - name: Push all branches to GitLab
+        run: git push --prune --all gitlab --force
+
+      - name: Push all tags to GitLab
+        run: git push --tags gitlab --force
