@@ -3,13 +3,14 @@ import Image from "next/image";
 import React from "react";
 import SearchBar from "./SearchBar";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const linkStyle =
-    "text-gray-950 hover:text-gray-800 transition-all duration-300 hover:underline hover:underline-offset-4";
+    "text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline hover:underline-offset-4";
 
   return (
-    <div className="fixed top-0 left-0 w-full h-16 bg-background bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
+    <div className="fixed top-0 left-0 w-full h-16 bg-background/80 backdrop-blur-md shadow-md border-b border-border flex items-center justify-between px-10 z-[9999]">
       <Link href="/">
         <Image
           src="/images/Logo.png"
@@ -55,7 +56,12 @@ const Header = () => {
             </Link>
           </li>
           <li>
-            <button className="font-semibold text-white">Se connecter</button>
+            <ThemeToggle />
+          </li>
+          <li>
+            <button className="font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-md transition-colors">
+              Se connecter
+            </button>
           </li>
         </ul>
       </nav>
