@@ -13,10 +13,11 @@ const Header = () => {
     <div className="fixed top-0 left-0 w-full h-16 bg-background/80 backdrop-blur-md shadow-md border-b border-border flex items-center justify-between px-10 z-[9999]">
       <Link href="/">
         <Image
-          src="/images/Logo.png"
+          src="/images/Logo_Large.png"
           alt="TCG Nexus"
           width={100}
           height={100}
+          className="h-10 w-auto"
         />
       </Link>
       <SearchBar />
