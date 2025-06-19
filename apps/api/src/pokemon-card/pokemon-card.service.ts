@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PokemonCard } from './entities/pokemon-card.entity';
 import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
 import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
+import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
 
 @Injectable()
 export class PokemonCardService {
@@ -60,6 +61,33 @@ export class PokemonCardService {
 
   async remove(id: string): Promise<void> {
     await this.pokemonCardRepository.delete(id);
+  }
+
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<PaginatedResult<PokemonCard>> {
+    const { page: validPage, limit: validLimit } =
+      PaginationHelper.validateParams({
+        page,
+        limit
+      });
+
+    const offset = PaginationHelper.calculateOffset(validPage, validLimit);
+
+    const [data, totalItems] = await this.pokemonCardRepository.findAndCount({
+      relations: ['set'],
+      skip: offset,
+      take: validLimit,
+      order: { name: 'ASC' }
+    });
+
+    return PaginationHelper.createPaginatedResult(
+      data,
+      totalItems,
+      validPage,
+      validLimit
+    );
   }
 
   async findRandom(): Promise<PokemonCard> {

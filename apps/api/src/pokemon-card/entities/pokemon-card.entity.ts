@@ -6,7 +6,6 @@ import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 
 @Entity()
 export class PokemonCard {
-  // Pour Postgres, on peut opter pour un identifiant en UUID (ou int selon votre choix)
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

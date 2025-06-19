@@ -29,6 +29,16 @@ const page = () => {
         />
       </div>
 
+      <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
+        <p>Autres liens</p>
+
+        <ul>
+          <li>
+            <a href="/pokemon">Pokémon</a>
+          </li>
+        </ul>
+      </div>
+
       <RandomPokemon />
     </div>
   );

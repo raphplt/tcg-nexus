@@ -5,11 +5,13 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  Query
 } from '@nestjs/common';
 import { PokemonCardService } from './pokemon-card.service';
 import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
 import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('pokemon-card')
 export class PokemonCardController {
@@ -23,6 +25,14 @@ export class PokemonCardController {
   @Get()
   findAll() {
     return this.pokemonCardService.findAll();
+  }
+
+  @Get('paginated')
+  findAllPaginated(@Query() paginationDto: PaginationDto) {
+    return this.pokemonCardService.findAllPaginated(
+      paginationDto.page,
+      paginationDto.limit
+    );
   }
 
   // Routes statiques avant les routes dynamiques
