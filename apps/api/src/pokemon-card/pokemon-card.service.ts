@@ -39,9 +39,8 @@ export class PokemonCardService {
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.set', 'set');
 
-    // Si la chaîne de recherche est vide, on peut décider de renvoyer tous les résultats ou rien.
     if (!search) {
-      return qb.getMany();
+      return [];
     }
 
     qb.where('card.name ILIKE :search', { search: `%${search}%` })
