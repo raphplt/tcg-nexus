@@ -1,5 +1,3 @@
-import { Input } from "@heroui/react";
-import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -35,22 +33,11 @@ const SearchBar = () => {
   };
 
   return (
-    <Input
-      isClearable
+    <input
       value={search}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      onClear={() => setSearch("")}
       placeholder="Rechercher"
-      startContent={
-        <Search
-          width={20}
-          height={20}
-          color="black"
-          className="cursor-pointer"
-          onClick={handleSearch}
-        />
-      }
       className="flex-1 w-full mx-8"
     />
   );

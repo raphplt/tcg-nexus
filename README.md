@@ -1,93 +1,120 @@
 # TCG Nexus Project
 
-Ce monorepo contient une application front-end en Next.js, une API en NestJS, et plusieurs microservices.
+Ce README se trouve à la racine du **dépôt GitLab fourni par l’ETNA** et référence l’ensemble des ressources nécessaires pour accéder à votre projet.
 
-## Structure du projet
+## 🔗 Liens de référence
 
-- `apps/api`: Application front-end en [Next.js](https://nextjs.org/)
-- `apps/web`: Application back-end en [NestJS](https://nestjs.com/)
-- `apps/fetch`: Microservice de fetch en [Express](https://expressjs.com/)
-- `apps/doc`: Documentation du projet
+* **Dépôt de développement (GitHub)** : [https://github.com/raphplt/tcg-nexus](https://github.com/raphplt/tcg-nexus)
+* **Dépôt de rendu (GitLab ETNA)** : [https://rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981](https://rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981)
+* **Story Map Figma** : [[https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1](https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1)](https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1&p=f&t=TNtJuYX659gcvBoe-0)
+* **Wireframe Figma** : https://www.figma.com/design/ur8IpT8VxUjc3V7MFkvvTP/Wireframe?t=TNtJuYX659gcvBoe-0
+* **Board Github Project** : https://github.com/users/raphplt/projects/3
+* **Mirroring CI/CD** : GitHub Actions reproduit automatiquement ce repo sur GitLab
 
-## Prérequis
+## 📂 Structure du projet
 
-- Node.js (version 18 ou supérieure) [Télécharger](https://nodejs.org/)
-- npm (gestionnaire de paquets) [Télécharger](https://www.npmjs.com/)
-- MySQL (base de données) [Télécharger](https://www.mysql.com/)
-- Turborepo (gestionnaire de monorepo) [Télécharger](https://turbo.build/)
+* `apps/web`    : Front-end Next.js
+* `apps/api`    : Back-end NestJS
+* `apps/fetch`  : Microservice Express (fetch)
+* `apps/doc`    : Documentation technique
+* `docs/`       : Documentation supplémentaire (architecture, références, tests)
 
-## Installation
+## 📁 Structure de rendu ETNA
 
-Clonez le dépôt et installez les dépendances :
+* `/fiche_projet/`          : **Fiche projet** (PDF) – contexte, objectifs, organisation, choix technos, story map
+* `/suivi_de_progression/`  : **Documents de suivi** – bilan & plan d’action (tous les 2 RUNs), fichiers datés
+* `/apps`, `/docs`          : Code source & documentation du POC
 
-```sh
-git clone https://github.com/raphplt/tcg-nexus
+## 📝 Fiche Projet
+
+> Chemin : `/fiche_projet/fiche_projet.pdf`
+
+Contient :
+
+* Contexte du projet et problématiques
+* Objectifs et solutions proposées
+* Organisation de l’équipe et rôles
+* Choix méthodologiques (Scrum, sprints) et technos
+* Story map et backlog priorisé
+
+## 📊 Suivi de Progression
+
+Dans `/suivi_de_progression/`, chaque fichier `suivi_RUN<N>_<YYYY-MM-DD>.md` comprend :
+
+* Bilan des objectifs du RUN précédent (US réalisées, en cours, bloquées)
+* Problèmes rencontrés
+* Captures d’écran ou démos
+* Plan d’action pour le RUN suivant
+
+## ✅ Documentation Technique & POC
+
+Le POC doit démontrer :
+
+* Valeur d’usage partielle et faisabilité technique
+* Respect des contraintes (performance, sécurité, stockage)
+
+### Dossier `apps/doc` ou `docs/`
+
+* `architecture.md` : schéma et explications de l’architecture
+* `references.md`   : liste des API et bibliothèques utilisées
+* Tests             : répertoire contenant tests unitaires et fonctionnels
+* Commentaires in-code pertinents pour chaque module critique
+
+## 🚀 Installation & Développement
+
+### Prérequis
+
+* Node.js ≥ 18
+* npm ou yarn
+* MySQL
+* Turborepo
+
+### Installation
+
+```bash
+git clone https://github.com/raphplt/tcg-nexus.git
 cd tcg-nexus
 npm install
 ```
 
-## Seed de la base de données
+### Seed de la base
 
-La commande ci dessous permet de remplir la base de données à partir des fichiers JSON présents dans `apps/api/src/common/data` :
-
-```sh
+```bash
 npm run seed
 ```
 
-## Développement
+### En mode développement
 
-Pour lancer les applications en mode développement :
-
-```sh
+```bash
 turbo dev
+# ou
+npm run dev
 ```
 
-Ou bien :
+### Build
 
-```sh
-npm dev    
-```
-
-Cela lancera les applications front-end et back-end.
-
-## Build
-
-Pour construire toutes les applications et les packages :
-
-```sh
+```bash
 turbo build
 ```
 
-## Lancer les tests
+### Tests unitaires
 
-Pour exécuter les tests unitaires :
-
-```sh
+```bash
 turbo test
 ```
 
-## Déploiement
+### Déploiement
 
-Les instructions de déploiement dépendent de votre infrastructure. Voici un exemple de déploiement avec Docker :
+Exemple avec Docker :
 
-```sh
+```bash
 docker-compose up --build
 ```
 
-## Utilisation du microservice de fetch
+## ⚙️ Microservice de fetch
 
-Le microservice de fetch est accessible via l'URL suivante :
+Accessible à : `http://localhost:3005/tcgdex`
 
-```sh
-http://localhost:3005/tcgdex
-```
+## 📜 Licence
 
-## Liens utiles
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [NestJS Documentation](https://docs.nestjs.com/)
-- [Turbo Documentation](https://turbo.hotwired.dev/)
-
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence **MIT**. Voir le fichier [LICENSE](LICENSE).

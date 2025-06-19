@@ -1,15 +1,97 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-primary: #b80c09;
+  --color-secondary: #0b4f6c;
+  --color-success: #01baef;
+  --color-warning: #fbfbff;
+  --color-info: #040f16;
+  
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  
+  --color-card: #ffffff;
+  --color-card-foreground: #0a0a0a;
+  
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0a0a0a;
+  
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #6b7280;
+  
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #0a0a0a;
+  
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  
+  --color-border: #e5e7eb;
+  --color-input: #e5e7eb;
+  --color-ring: #b80c09;
+  
+  --radius: 0.5rem;
+  
+  /* Animations */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  
+  /* Keyframes */
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+}
+
+/* Thème sombre */
+.dark {
+  --color-background: #0a0a0a;
+  --color-foreground: #fafafa;
+  
+  --color-card: #0a0a0a;
+  --color-card-foreground: #fafafa;
+  
+  --color-popover: #0a0a0a;
+  --color-popover-foreground: #fafafa;
+  
+  --color-muted: #262626;
+  --color-muted-foreground: #a3a3a3;
+  
+  --color-accent: #262626;
+  --color-accent-foreground: #fafafa;
+  
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fafafa;
+  
+  --color-border: #262626;
+  --color-input: #262626;
+  --color-ring: #d4d4d8;
+}
 
 * {
-    scroll-behavior: smooth;
-    font-family: 'Lato', sans-serif;
+  scroll-behavior: smooth;
+  font-family: 'Lato', sans-serif;
 }
+
 html,
 body {
-    scroll-behavior: smooth;
+  scroll-behavior: smooth;
+  font-family: 'Lato', sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     font-family: 'Lato', sans-serif;
+  }
 }

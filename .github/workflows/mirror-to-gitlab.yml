@@ -1,0 +1,37 @@
+name: Mirror to GitLab
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '*'
+
+concurrency:
+  group: mirror-to-gitlab
+  cancel-in-progress: true
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set Git user
+        run: |
+          git config user.name  "Mirror Bot"
+          git config user.email "mirror-bot@example.com"
+
+      - name: Add GitLab remote
+        run: |
+          git remote add gitlab \
+            https://oauth2:${{ secrets.GITLAB_TOKEN }}@rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981.git
+
+      - name: Push all branches to GitLab
+        run: git push --prune --all gitlab --force
+
+      - name: Push all tags to GitLab
+        run: git push --tags gitlab --force

@@ -1,21 +1,23 @@
 "use client";
-import { Button, Link } from "@heroui/react";
 import Image from "next/image";
 import React from "react";
 import SearchBar from "./SearchBar";
+import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Header = () => {
   const linkStyle =
-    "text-gray-950 hover:text-gray-800 transition-all duration-300 hover:underline hover:underline-offset-4";
+    "text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline hover:underline-offset-4";
 
   return (
-    <div className="fixed top-0 left-0 w-full h-16 bg-white bg-opacity-30 backdrop-blur-md shadow-md flex items-center justify-between px-10 z-[9999]">
+    <div className="fixed top-0 left-0 w-full h-16 bg-background/80 backdrop-blur-md shadow-md border-b border-border flex items-center justify-between px-10 z-[9999]">
       <Link href="/">
         <Image
-          src="/images/Logo.png"
+          src="/images/Logo_Large.png"
           alt="TCG Nexus"
           width={100}
           height={100}
+          className="h-10 w-auto"
         />
       </Link>
       <SearchBar />
@@ -55,12 +57,12 @@ const Header = () => {
             </Link>
           </li>
           <li>
-            <Button
-              color="primary"
-              className="font-semibold text-white"
-            >
+            <ThemeToggle />
+          </li>
+          <li>
+            <button className="font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-md transition-colors">
               Se connecter
-            </Button>
+            </button>
           </li>
         </ul>
       </nav>
