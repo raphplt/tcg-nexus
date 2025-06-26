@@ -30,7 +30,7 @@ const HomePage = () => {
               </h2>
               <Button
                 asChild
-                className="bg-white text-[#182848] hover:bg-gray-100"
+                variant="default"
               >
                 <Link href="/dashboard">Accéder au Dashboard</Link>
               </Button>
@@ -39,7 +39,7 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button
                 asChild
-                className="bg-white text-[#182848] hover:bg-gray-100"
+                className="bg-secondary  hover:bg-gray-100"
               >
                 <Link href="/auth/login">
                   <LogIn className="mr-2 h-4 w-4" />
@@ -82,21 +82,6 @@ const HomePage = () => {
             icon={<Brain />}
             link="/strategy"
           />
-        </div>
-
-        {/* Section Pokémon et liens */}
-        <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
-          <p className="text-lg">Autres liens</p>
-          <ul className="space-y-2">
-            <li>
-              <Link
-                href="/pokemon"
-                className="text-white hover:underline text-lg"
-              >
-                Pokémon
-              </Link>
-            </li>
-          </ul>
         </div>
 
         <RandomPokemon />

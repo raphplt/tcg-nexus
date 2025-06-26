@@ -34,7 +34,7 @@ const Header = () => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-16 bg-background/80 backdrop-blur-md shadow-md border-b border-border flex items-center justify-between px-10 z-[9999]">
+    <div className="fixed top-0 left-0 w-full h-16 bg-background/80 backdrop-blur-md shadow-md border-b border-border flex items-center justify-between px-8 z-[9999]">
       <Link href="/">
         <Image
           src="/images/Logo_Large.png"
@@ -44,10 +44,10 @@ const Header = () => {
           className="h-10 w-auto"
         />
       </Link>
-      <SearchBar />
 
+      <SearchBar />
       <nav>
-        <ul className="flex space-x-6 font-semibold items-center">
+        <ul className="flex space-x-6 items-center">
           <li>
             <Link
               href="/"
@@ -80,9 +80,11 @@ const Header = () => {
               Stratégie
             </Link>
           </li>
-          <li>
-            <ThemeToggle />
-          </li>
+          {!isAuthenticated && (
+            <li>
+              <ThemeToggle />
+            </li>
+          )}
           {isAuthenticated && user ? (
             <>
               <li>
@@ -92,6 +94,9 @@ const Header = () => {
                 >
                   Tableau de bord
                 </Link>
+              </li>
+              <li>
+                <ThemeToggle />
               </li>
               <li>
                 <DropdownMenu>

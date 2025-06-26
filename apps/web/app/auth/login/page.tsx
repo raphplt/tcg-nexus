@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -144,13 +143,6 @@ const LoginPage = () => {
             >
               S'inscrire
             </Link>
-          </div>
-          <div className="text-xs text-center text-muted-foreground">
-            <strong>Comptes de test :</strong>
-            <br />
-            Admin: admin@tcg-nexus.com / admin123456
-            <br />
-            User: user@tcg-nexus.com / user123456
           </div>
         </CardFooter>
       </Card>
