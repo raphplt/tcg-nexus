@@ -25,6 +25,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { CircleAlert, Eye, EyeOff } from "lucide-react";
 
 // Schéma de validation Zod
 const loginSchema = z.object({
@@ -42,6 +43,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const LoginPage = () => {
   const { login, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -81,7 +83,11 @@ const LoginPage = () => {
               className="space-y-4"
             >
               {error && (
-                <Alert variant="destructive">
+                <Alert
+                  variant="destructive"
+                  className="border-0"
+                >
+                  <CircleAlert />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -112,12 +118,28 @@ const LoginPage = () => {
                   <FormItem>
                     <FormLabel>Mot de passe</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        {...field}
-                        disabled={isLoading}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          {...field}
+                          disabled={isLoading}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +163,7 @@ const LoginPage = () => {
               href="/auth/register"
               className="text-primary hover:underline font-medium"
             >
-              S'inscrire
+              S&apos;inscrire
             </Link>
           </div>
         </CardFooter>

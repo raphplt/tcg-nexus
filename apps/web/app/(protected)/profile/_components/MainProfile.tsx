@@ -30,7 +30,6 @@ const MainProfile = () => {
     email: "",
   });
 
-  // Initialiser le formulaire avec les données utilisateur
   React.useEffect(() => {
     if (user) {
       setEditForm({
@@ -72,7 +71,6 @@ const MainProfile = () => {
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Annuler les modifications
       if (user) {
         setEditForm({
           firstName: user.firstName,

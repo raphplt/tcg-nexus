@@ -39,7 +39,8 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button
                 asChild
-                className="bg-secondary  hover:bg-gray-100"
+                variant="outline"
+                className="bg-primary"
               >
                 <Link href="/auth/login">
                   <LogIn className="mr-2 h-4 w-4" />
@@ -49,7 +50,7 @@ const HomePage = () => {
               <Button
                 asChild
                 variant="outline"
-                className="border-white text-white hover:bg-white hover:text-[#182848]"
+                className="bg-secondary"
               >
                 <Link href="/auth/register">
                   <UserPlus className="mr-2 h-4 w-4" />
