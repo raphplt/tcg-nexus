@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@components/Layout/Header";
 import Footer from "@components/Layout/Footer";
 import Script from "next/script";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: "TCG Nexus",
@@ -53,9 +54,11 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="antialiased">
-        <Header />
-        <div className="mt-16 min-h-screen">{children}</div>
-        <Footer />
+        <AuthProvider>
+          <Header />
+          <div className="mt-16 min-h-screen">{children}</div>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
