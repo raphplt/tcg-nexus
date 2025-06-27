@@ -49,7 +49,7 @@ export class TournamentRegistration {
   eliminatedRound: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  paidAmount: number; // Montant payé
+  paidAmount: number;
 
   @Column({ default: false })
   paymentCompleted: boolean;
@@ -58,10 +58,10 @@ export class TournamentRegistration {
   paymentDueDate: Date;
 
   @Column({ nullable: true })
-  confirmationCode: string; // Code de confirmation d'inscription
+  confirmationCode: string;
 
   @Column({ default: false })
-  checkedIn: boolean; // Présence confirmée le jour J
+  checkedIn: boolean;
 
   @Column({ nullable: true })
   checkedInAt: Date;

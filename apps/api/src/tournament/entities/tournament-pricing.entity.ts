@@ -12,7 +12,7 @@ import { Tournament } from './tournament.entity';
 export enum PricingType {
   FREE = 'free',
   PAID = 'paid',
-  TIERED = 'tiered' // Prix différent selon la date d'inscription
+  TIERED = 'tiered'
 }
 
 export enum PaymentStatus {
@@ -40,31 +40,31 @@ export class TournamentPricing {
   type: PricingType;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  basePrice: number; // Prix de base en euros
+  basePrice: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  earlyBirdPrice: number; // Prix réduit inscription précoce
+  earlyBirdPrice: number;
 
   @Column({ nullable: true })
   earlyBirdDeadline: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  lateRegistrationPrice: number; // Majoration inscription tardive
+  lateRegistrationPrice: number;
 
   @Column({ nullable: true })
   lateRegistrationStart: Date;
 
   @Column({ type: 'text', nullable: true })
-  priceDescription: string; // Description des frais inclus
+  priceDescription: string;
 
   @Column({ default: true })
   refundable: boolean;
 
   @Column({ nullable: true })
-  refundDeadline: Date; // Date limite pour remboursement
+  refundDeadline: Date;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
-  refundFeePercentage: number; // Frais de remboursement en %
+  refundFeePercentage: number;
 
   @Column({ type: 'text', nullable: true })
   paymentInstructions: string;

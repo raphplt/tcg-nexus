@@ -27,10 +27,10 @@ export class TournamentReward {
   tournament: Tournament;
 
   @Column()
-  position: number; // 1er, 2ème, 3ème place, etc.
+  position: number;
 
   @Column()
-  name: string; // Nom de la récompense
+  name: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
@@ -42,19 +42,19 @@ export class TournamentReward {
   type: RewardType;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  cashValue: number; // Valeur en euros si applicable
+  cashValue: number;
 
   @Column({ nullable: true })
-  productName: string; // Nom du produit si type PRODUCT
+  productName: string;
 
   @Column({ nullable: true })
   productBrand: string;
 
   @Column({ type: 'integer', nullable: true })
-  pointsValue: number; // Points de classement si applicable
+  pointsValue: number;
 
   @Column({ nullable: true })
-  imageUrl: string; // Photo de la récompense
+  imageUrl: string;
 
   @Column({ default: true })
   isActive: boolean;
