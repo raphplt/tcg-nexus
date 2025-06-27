@@ -75,13 +75,13 @@ export class Tournament {
   maxPlayers: number;
 
   @Column({ nullable: true })
-  minPlayers: number;
+  minPlayers: number; // Minimum requis pour démarrer
 
   @Column({ default: 0 })
   currentRound: number;
 
   @Column({ default: 0 })
-  totalRounds: number;
+  totalRounds: number; // Nombre total de rounds prévus
 
   @Column({ nullable: true })
   registrationDeadline: Date;
@@ -90,13 +90,13 @@ export class Tournament {
   allowLateRegistration: boolean;
 
   @Column({ default: false })
-  requiresApproval: boolean;
+  requiresApproval: boolean; // Inscription soumise à approbation
 
   @Column({ type: 'text', nullable: true })
-  rules: string;
+  rules: string; // Règles spécifiques du tournoi
 
   @Column({ type: 'text', nullable: true })
-  additionalInfo: string;
+  additionalInfo: string; // Infos supplémentaires
 
   @Column({ nullable: true })
   ageRestrictionMin: number;
@@ -105,10 +105,10 @@ export class Tournament {
   ageRestrictionMax: number;
 
   @Column({ type: 'simple-array', nullable: true })
-  allowedFormats: string[];
+  allowedFormats: string[]; // Formats de cartes autorisés
 
   @Column({ default: true })
-  isPublic: boolean;
+  isPublic: boolean; // Tournoi public ou privé
 
   @CreateDateColumn()
   createdAt: Date;

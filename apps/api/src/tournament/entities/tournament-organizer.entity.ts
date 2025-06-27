@@ -7,7 +7,6 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 import { Tournament } from './tournament.entity';
-import { User } from 'src/user/entities/user.entity';
 
 export enum OrganizerRole {
   OWNER = 'owner',
@@ -24,8 +23,8 @@ export class TournamentOrganizer {
   @ManyToOne(() => Tournament, { onDelete: 'CASCADE' })
   tournament: Tournament;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  userId: User;
+  @Column()
+  userId: number; // Référence vers l'utilisateur
 
   @Column()
   name: string;
