@@ -58,10 +58,10 @@ export class RegistrationPayment {
   status: PaymentStatus;
 
   @Column({ nullable: true })
-  transactionId: string; // ID de transaction externe
+  transactionId: string;
 
   @Column({ nullable: true })
-  paymentIntentId: string; // Pour Stripe par exemple
+  paymentIntentId: string;
 
   @Column({ nullable: true })
   paidAt: Date;

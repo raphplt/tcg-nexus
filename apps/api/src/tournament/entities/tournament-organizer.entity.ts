@@ -24,7 +24,7 @@ export class TournamentOrganizer {
   tournament: Tournament;
 
   @Column()
-  userId: number; // Référence vers l'utilisateur
+  userId: number;
 
   @Column()
   name: string;

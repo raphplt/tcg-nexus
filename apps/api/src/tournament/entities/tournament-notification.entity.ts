@@ -56,7 +56,7 @@ export class TournamentNotification {
   status: NotificationStatus;
 
   @Column({ nullable: true })
-  scheduledFor: Date; // Pour programmer l'envoi
+  scheduledFor: Date;
 
   @Column({ nullable: true })
   sentAt: Date;
@@ -71,7 +71,7 @@ export class TournamentNotification {
   failureCount: number;
 
   @Column({ type: 'simple-array', nullable: true })
-  targetRoles: string[]; // players, organizers, all
+  targetRoles: string[];
 
   @Column({ type: 'text', nullable: true })
   failureReasons: string;
