@@ -31,7 +31,17 @@ jobs:
             https://oauth2:${{ secrets.GITLAB_TOKEN }}@rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981.git
 
       - name: Push all branches to GitLab
-        run: git push --prune --all gitlab --force
+        run: |
+          git push --all gitlab --force
+          
+          git branch -r --format='%(refname:short)' | grep '^gitlab/' | sed 's/gitlab\///' | while read branch; do
+            if ! git show-ref --verify --quiet refs/heads/$branch; then
+              # Only delete if it's not the default branch (main/master)
+              if [ "$branch" != "main" ] && [ "$branch" != "master" ]; then
+                git push gitlab --delete "$branch" || true
+              fi
+            fi
+          done
 
       - name: Push all tags to GitLab
         run: git push --tags gitlab --force
