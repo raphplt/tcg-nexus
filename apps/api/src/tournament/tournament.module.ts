@@ -11,6 +11,7 @@ import {
   TournamentNotification,
   RegistrationPayment
 } from './entities';
+import { Player } from '../player/entities/player.entity';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import {
       TournamentPricing,
       TournamentOrganizer,
       TournamentNotification,
-      RegistrationPayment
+      RegistrationPayment,
+      Player
     ])
   ],
   controllers: [TournamentController],
