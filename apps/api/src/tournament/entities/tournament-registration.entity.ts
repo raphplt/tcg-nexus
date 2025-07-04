@@ -26,7 +26,9 @@ export class TournamentRegistration {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Tournament, (tournament) => tournament.registrations, {
+    onDelete: 'CASCADE'
+  })
   tournament: Tournament;
 
   @ManyToOne(() => Player, { onDelete: 'CASCADE' })
@@ -42,7 +44,7 @@ export class TournamentRegistration {
   @Column({ nullable: true })
   notes: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   eliminatedAt: Date;
 
   @Column({ nullable: true })
@@ -54,7 +56,7 @@ export class TournamentRegistration {
   @Column({ default: false })
   paymentCompleted: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   paymentDueDate: Date;
 
   @Column({ nullable: true })
@@ -63,7 +65,7 @@ export class TournamentRegistration {
   @Column({ default: false })
   checkedIn: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   checkedInAt: Date;
 
   @CreateDateColumn()

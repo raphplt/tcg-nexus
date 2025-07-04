@@ -12,7 +12,7 @@ const HomePage = () => {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-l from-[#4b6cb7] to-[#182848] text-white">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_center,_#0f172a,_#1e3a8a,_#991b1b)] text-background">
       <div className="container mx-auto px-4 py-20">
         {/* Section Hero */}
         <div className="text-center mb-16">

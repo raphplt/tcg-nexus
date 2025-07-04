@@ -33,7 +33,9 @@ export class TournamentNotification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Tournament, (tournament) => tournament.notifications, {
+    onDelete: 'CASCADE'
+  })
   tournament: Tournament;
 
   @Column({
@@ -55,10 +57,10 @@ export class TournamentNotification {
   })
   status: NotificationStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   scheduledFor: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   sentAt: Date;
 
   @Column({ default: 0 })

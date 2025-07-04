@@ -12,12 +12,15 @@ import { PokemonCardService } from './pokemon-card.service';
 import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
 import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/user/entities/user.entity';
 
 @Controller('pokemon-card')
 export class PokemonCardController {
   constructor(private readonly pokemonCardService: PokemonCardService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   create(@Body() createPokemonCardDto: CreatePokemonCardDto) {
     return this.pokemonCardService.create(createPokemonCardDto);
   }
@@ -35,7 +38,6 @@ export class PokemonCardController {
     );
   }
 
-  // Routes statiques avant les routes dynamiques
   @Get('search/:search')
   findBySearch(@Param('search') search: string) {
     return this.pokemonCardService.findBySearch(search);
@@ -46,13 +48,13 @@ export class PokemonCardController {
     return this.pokemonCardService.findRandom();
   }
 
-  // Route dynamique doit être la dernière pour éviter les conflits
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.pokemonCardService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   update(
     @Param('id') id: string,
     @Body() updatePokemonCardDto: UpdatePokemonCardDto
@@ -61,6 +63,7 @@ export class PokemonCardController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   remove(@Param('id') id: string) {
     return this.pokemonCardService.remove(id);
   }

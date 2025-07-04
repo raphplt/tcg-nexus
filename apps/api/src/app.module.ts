@@ -38,10 +38,6 @@ import { AuthModule } from './auth/auth.module';
     RankingModule,
     StatisticsModule,
     SeedModule,
-    TournamentModule,
-    PlayerModule,
-    RankingModule,
-    StatisticsModule,
     AuthModule
   ],
   controllers: [AppController],
