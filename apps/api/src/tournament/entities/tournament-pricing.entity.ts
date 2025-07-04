@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn
 } from 'typeorm';
@@ -28,8 +27,9 @@ export class TournamentPricing {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Tournament, { onDelete: 'CASCADE' })
-  @JoinColumn()
+  @OneToOne(() => Tournament, (tournament) => tournament.pricing, {
+    onDelete: 'CASCADE'
+  })
   tournament: Tournament;
 
   @Column({
@@ -45,13 +45,13 @@ export class TournamentPricing {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   earlyBirdPrice: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   earlyBirdDeadline: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   lateRegistrationPrice: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lateRegistrationStart: Date;
 
   @Column({ type: 'text', nullable: true })
@@ -60,7 +60,7 @@ export class TournamentPricing {
   @Column({ default: true })
   refundable: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   refundDeadline: Date;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })

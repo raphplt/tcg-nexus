@@ -63,13 +63,13 @@ export class RegistrationPayment {
   @Column({ nullable: true })
   paymentIntentId: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   paidAt: Date;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   refundedAmount: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   refundedAt: Date;
 
   @Column({ type: 'text', nullable: true })

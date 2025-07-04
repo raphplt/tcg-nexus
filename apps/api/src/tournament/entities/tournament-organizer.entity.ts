@@ -20,7 +20,9 @@ export class TournamentOrganizer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Tournament, (tournament) => tournament.organizers, {
+    onDelete: 'CASCADE'
+  })
   tournament: Tournament;
 
   @Column()

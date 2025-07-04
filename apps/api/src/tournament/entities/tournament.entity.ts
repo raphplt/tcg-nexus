@@ -6,6 +6,7 @@ import {
   ManyToMany,
   JoinTable,
   OneToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn
 } from 'typeorm';
@@ -48,10 +49,10 @@ export class Tournament {
   @Column({ nullable: true })
   location: string;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   startDate: Date;
 
-  @Column({ type: 'datetime' })
+  @Column({ type: 'timestamp' })
   endDate: Date;
 
   @Column({
@@ -69,25 +70,25 @@ export class Tournament {
   status: TournamentStatus;
 
   @Column({ default: false })
-  isFinished: boolean;
+  isFinished?: boolean;
 
   @Column({ nullable: true })
-  maxPlayers: number;
+  maxPlayers?: number;
 
   @Column({ nullable: true })
-  minPlayers: number;
+  minPlayers?: number;
 
-  @Column({ default: 0 })
-  currentRound: number;
+  @Column({ default: 0, nullable: true })
+  currentRound?: number;
 
-  @Column({ default: 0 })
-  totalRounds: number;
+  @Column({ default: 0, nullable: true })
+  totalRounds?: number;
 
-  @Column({ nullable: true })
-  registrationDeadline: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  registrationDeadline?: Date;
 
-  @Column({ default: true })
-  allowLateRegistration: boolean;
+  @Column({ default: true, nullable: true })
+  allowLateRegistration?: boolean;
 
   @Column({ default: false })
   requiresApproval: boolean;
@@ -145,6 +146,7 @@ export class Tournament {
   @OneToOne(() => TournamentPricing, (pricing) => pricing.tournament, {
     cascade: true
   })
+  @JoinColumn()
   pricing: TournamentPricing;
 
   @OneToMany(() => TournamentOrganizer, (organizer) => organizer.tournament, {
