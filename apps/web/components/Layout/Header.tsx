@@ -39,9 +39,10 @@ const Header = () => {
         <Image
           src="/images/Logo_Large.png"
           alt="TCG Nexus"
-          width={100}
-          height={100}
-          className="h-10 w-auto"
+          width={80}
+          height={80}
+          className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 object-contain"
+          priority
         />
       </Link>
 

@@ -17,6 +17,7 @@ import {
   RegistrationStatus
 } from './entities/tournament-registration.entity';
 import { Player } from '../player/entities/player.entity';
+import { PaginationHelper } from '../helpers/pagination';
 
 @Injectable()
 export class TournamentService {
@@ -64,12 +65,7 @@ export class TournamentService {
   }
 
   // Récupérer tous les tournois avec filtres et pagination
-  async findAll(query: TournamentQueryDto): Promise<{
-    tournaments: Tournament[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+  async findAll(query: TournamentQueryDto) {
     const {
       search,
       status,
@@ -116,21 +112,13 @@ export class TournamentService {
       queryBuilder.andWhere('tournament.isPublic = :isPublic', { isPublic });
     }
 
-    // Tri
-    queryBuilder.orderBy(`tournament.${sortBy}`, sortOrder);
-
-    // Pagination
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
-
-    const [tournaments, total] = await queryBuilder.getManyAndCount();
-
-    return {
-      tournaments,
-      total,
-      page,
-      limit
-    };
+    // Utilise le helper générique pour la pagination et le tri
+    return PaginationHelper.paginateQueryBuilder(
+      queryBuilder,
+      { page, limit },
+      sortBy ? `tournament.${sortBy}` : undefined,
+      sortOrder
+    );
   }
 
   // Récupérer un tournoi par ID

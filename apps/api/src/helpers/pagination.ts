@@ -1,3 +1,5 @@
+import { SelectQueryBuilder, ObjectLiteral } from 'typeorm';
+
 export interface PaginatedResult<T> {
   data: T[];
   meta: {
@@ -59,5 +61,34 @@ export class PaginationHelper {
         hasPreviousPage: page > 1
       }
     };
+  }
+
+  /**
+   * Paginate, filter and sort a TypeORM QueryBuilder in a generic way
+   * @param queryBuilder Le QueryBuilder TypeORM (déjà configuré avec les relations nécessaires)
+   * @param params PaginationParams (page, limit)
+   * @param sortBy Champ de tri (optionnel)
+   * @param sortOrder 'ASC' | 'DESC' (optionnel)
+   * @returns PaginatedResult<T>
+   *
+   * Utilisation :
+   *   const qb = repo.createQueryBuilder('entity');
+   *   // ...ajouter vos filtres...
+   *   return PaginationHelper.paginateQueryBuilder(qb, { page, limit }, 'createdAt', 'DESC');
+   */
+  static async paginateQueryBuilder<T extends ObjectLiteral>(
+    queryBuilder: SelectQueryBuilder<T>,
+    params: PaginationParams = {},
+    sortBy?: string,
+    sortOrder: 'ASC' | 'DESC' = 'ASC'
+  ): Promise<PaginatedResult<T>> {
+    const { page, limit } = this.validateParams(params);
+    if (sortBy) {
+      queryBuilder.orderBy(sortBy, sortOrder);
+    }
+    const skip = this.calculateOffset(page, limit);
+    queryBuilder.skip(skip).take(limit);
+    const [data, total] = await queryBuilder.getManyAndCount();
+    return this.createPaginatedResult(data, total, page, limit);
   }
 }

@@ -10,6 +10,41 @@ import * as pokemonSetsData from 'src/common/data/pokemon_sets.json';
 import * as AdmZip from 'adm-zip';
 import * as path from 'path';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { User, UserRole } from 'src/user/entities/user.entity';
+import {
+  Tournament,
+  TournamentType,
+  TournamentStatus
+} from 'src/tournament/entities/tournament.entity';
+import { Player } from 'src/player/entities/player.entity';
+import { Ranking } from 'src/ranking/entities/ranking.entity';
+import {
+  Match,
+  MatchPhase,
+  MatchStatus
+} from 'src/match/entities/match.entity';
+import {
+  TournamentRegistration,
+  RegistrationStatus
+} from 'src/tournament/entities/tournament-registration.entity';
+import {
+  TournamentReward,
+  RewardType
+} from 'src/tournament/entities/tournament-reward.entity';
+import {
+  TournamentPricing,
+  PricingType
+} from 'src/tournament/entities/tournament-pricing.entity';
+import {
+  TournamentOrganizer,
+  OrganizerRole
+} from 'src/tournament/entities/tournament-organizer.entity';
+import {
+  TournamentNotification,
+  NotificationType,
+  NotificationStatus
+} from 'src/tournament/entities/tournament-notification.entity';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class SeedService {
@@ -19,7 +54,27 @@ export class SeedService {
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
     @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>
+    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Tournament)
+    private readonly tournamentRepository: Repository<Tournament>,
+    @InjectRepository(Player)
+    private readonly playerRepository: Repository<Player>,
+    @InjectRepository(Ranking)
+    private readonly rankingRepository: Repository<Ranking>,
+    @InjectRepository(Match)
+    private readonly matchRepository: Repository<Match>,
+    @InjectRepository(TournamentRegistration)
+    private readonly tournamentRegistrationRepository: Repository<TournamentRegistration>,
+    @InjectRepository(TournamentReward)
+    private readonly tournamentRewardRepository: Repository<TournamentReward>,
+    @InjectRepository(TournamentPricing)
+    private readonly tournamentPricingRepository: Repository<TournamentPricing>,
+    @InjectRepository(TournamentOrganizer)
+    private readonly tournamentOrganizerRepository: Repository<TournamentOrganizer>,
+    @InjectRepository(TournamentNotification)
+    private readonly tournamentNotificationRepository: Repository<TournamentNotification>
   ) {}
 
   /**
@@ -207,6 +262,298 @@ export class SeedService {
     }
 
     return { series, sets, cards };
+  }
+
+  /**
+   * Seed test users
+   */
+  async seedUsers() {
+    // Si erreur: installer bcryptjs avec npm install bcryptjs @types/bcryptjs
+    const usersData: Array<
+      Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'refreshToken'>
+    > = [
+      {
+        email: 'test1@test.com',
+        firstName: 'Test',
+        lastName: 'User1',
+        password: 'password1',
+        role: UserRole.USER,
+        isActive: true,
+        emailVerified: true
+      },
+      {
+        email: 'test2@test.com',
+        firstName: 'Test',
+        lastName: 'User2',
+        password: 'password2',
+        role: UserRole.ADMIN,
+        isActive: true,
+        emailVerified: true
+      },
+      {
+        email: 'test3@test.com',
+        firstName: 'Test',
+        lastName: 'User3',
+        password: 'password3',
+        role: UserRole.MODERATOR,
+        isActive: true,
+        emailVerified: false
+      }
+    ];
+    const users: User[] = [];
+    for (const userData of usersData) {
+      const existing = await this.userRepository.findOne({
+        where: { email: userData.email }
+      });
+      if (!existing) {
+        const hash = await bcrypt.hash(userData.password, 10);
+        const user = this.userRepository.create({
+          ...userData,
+          password: hash
+        });
+        users.push(user);
+      }
+    }
+    if (users.length > 0) {
+      await this.userRepository.save(users);
+    }
+    return users;
+  }
+
+  /**
+   * Seed test tournaments with related entities
+   */
+  async seedTournaments() {
+    // Crée quelques joueurs (réutilise si déjà existants)
+    const players: Player[] = [];
+    for (let i = 1; i <= 4; i++) {
+      const name = `Player${i}`;
+      let player = await this.playerRepository.findOne({ where: { name } });
+      if (!player) {
+        player = this.playerRepository.create({ name });
+        await this.playerRepository.save(player);
+      }
+      players.push(player);
+    }
+
+    // Prépare plusieurs configs de tournois
+    const now = Date.now();
+    const tournamentsData = [
+      {
+        name: 'Test Tournament 1',
+        description: 'Premier tournoi de test',
+        location: 'Paris',
+        startDate: new Date(now + 24 * 60 * 60 * 1000),
+        endDate: new Date(now + 2 * 24 * 60 * 60 * 1000),
+        type: TournamentType.SINGLE_ELIMINATION,
+        status: TournamentStatus.REGISTRATION_OPEN,
+        isFinished: false,
+        isPublic: true,
+        playerIndexes: [0, 1]
+      },
+      {
+        name: 'Test Tournament 2',
+        description: 'Deuxième tournoi de test',
+        location: 'Lyon',
+        startDate: new Date(now + 3 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now + 5 * 24 * 60 * 60 * 1000),
+        type: TournamentType.ROUND_ROBIN,
+        status: TournamentStatus.IN_PROGRESS,
+        isFinished: false,
+        isPublic: false,
+        playerIndexes: [1, 2, 3]
+      },
+      {
+        name: 'Test Tournament 3',
+        description: 'Troisième tournoi de test',
+        location: 'Marseille',
+        startDate: new Date(now + 6 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now + 8 * 24 * 60 * 60 * 1000),
+        type: TournamentType.SWISS_SYSTEM,
+        status: TournamentStatus.FINISHED,
+        isFinished: true,
+        isPublic: true,
+        playerIndexes: [0, 2]
+      }
+    ];
+
+    const user = await this.userRepository.findOne({
+      where: { email: 'test1@test.com' }
+    });
+    const createdTournaments: Tournament[] = [];
+
+    for (const tData of tournamentsData) {
+      let tournament = await this.tournamentRepository.findOne({
+        where: { name: tData.name }
+      });
+      if (!tournament) {
+        tournament = this.tournamentRepository.create({
+          name: tData.name,
+          description: tData.description,
+          location: tData.location,
+          startDate: tData.startDate,
+          endDate: tData.endDate,
+          type: tData.type,
+          status: tData.status,
+          isFinished: tData.isFinished,
+          isPublic: tData.isPublic
+        });
+        await this.tournamentRepository.save(tournament);
+      }
+      // Ajoute les joueurs
+      tournament.players = tData.playerIndexes.map((i) => players[i]);
+      await this.tournamentRepository.save(tournament);
+
+      // Inscriptions
+      for (const i of tData.playerIndexes) {
+        const player = players[i];
+        let registration = await this.tournamentRegistrationRepository.findOne({
+          where: {
+            tournament: { id: tournament.id },
+            player: { id: player.id }
+          },
+          relations: ['tournament', 'player']
+        });
+        if (!registration) {
+          registration = this.tournamentRegistrationRepository.create({
+            tournament,
+            player,
+            status: RegistrationStatus.CONFIRMED,
+            paymentCompleted: true
+          });
+          await this.tournamentRegistrationRepository.save(registration);
+        }
+      }
+
+      // Récompense
+      let reward = await this.tournamentRewardRepository.findOne({
+        where: { tournament: { id: tournament.id }, position: 1 },
+        relations: ['tournament']
+      });
+      if (!reward) {
+        reward = this.tournamentRewardRepository.create({
+          tournament,
+          position: 1,
+          name: 'Booster Box',
+          type: RewardType.PRODUCT,
+          isActive: true
+        });
+        await this.tournamentRewardRepository.save(reward);
+      }
+
+      // Pricing
+      let pricing = await this.tournamentPricingRepository.findOne({
+        where: { tournament: { id: tournament.id } },
+        relations: ['tournament']
+      });
+      if (!pricing) {
+        pricing = this.tournamentPricingRepository.create({
+          tournament,
+          type: PricingType.FREE,
+          basePrice: 0,
+          refundable: true,
+          refundFeePercentage: 0
+        });
+        await this.tournamentPricingRepository.save(pricing);
+      }
+      tournament.pricing = pricing;
+      await this.tournamentRepository.save(tournament);
+
+      // Organisateur
+      if (user) {
+        let organizer = await this.tournamentOrganizerRepository.findOne({
+          where: { tournament: { id: tournament.id }, userId: user.id },
+          relations: ['tournament']
+        });
+        if (!organizer) {
+          organizer = this.tournamentOrganizerRepository.create({
+            tournament,
+            userId: user.id,
+            name: user.firstName + ' ' + user.lastName,
+            email: user.email,
+            role: OrganizerRole.OWNER,
+            isActive: true
+          });
+          await this.tournamentOrganizerRepository.save(organizer);
+        }
+      }
+
+      // Notification
+      let notification = await this.tournamentNotificationRepository.findOne({
+        where: {
+          tournament: { id: tournament.id },
+          type: NotificationType.TOURNAMENT_CREATED
+        },
+        relations: ['tournament']
+      });
+      if (!notification) {
+        notification = this.tournamentNotificationRepository.create({
+          tournament,
+          type: NotificationType.TOURNAMENT_CREATED,
+          title: 'Tournoi créé',
+          message: 'Le tournoi a été créé.',
+          status: NotificationStatus.SENT,
+          recipientCount: tData.playerIndexes.length,
+          successCount: tData.playerIndexes.length,
+          failureCount: 0
+        });
+        await this.tournamentNotificationRepository.save(notification);
+      }
+
+      // Rankings
+      for (let idx = 0; idx < tData.playerIndexes.length; idx++) {
+        const player = players[tData.playerIndexes[idx]];
+        let ranking = await this.rankingRepository.findOne({
+          where: {
+            tournament: { id: tournament.id },
+            player: { id: player.id }
+          },
+          relations: ['tournament', 'player']
+        });
+        if (!ranking) {
+          ranking = this.rankingRepository.create({
+            tournament,
+            player,
+            rank: idx + 1,
+            points: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            winRate: 0
+          });
+          await this.rankingRepository.save(ranking);
+        }
+      }
+
+      // Matchs (un match entre les deux premiers joueurs du tournoi)
+      if (tData.playerIndexes.length >= 2) {
+        const playerA = players[tData.playerIndexes[0]];
+        const playerB = players[tData.playerIndexes[1]];
+        let match = await this.matchRepository.findOne({
+          where: {
+            tournament: { id: tournament.id },
+            playerA: { id: playerA.id },
+            playerB: { id: playerB.id }
+          },
+          relations: ['tournament', 'playerA', 'playerB']
+        });
+        if (!match) {
+          match = this.matchRepository.create({
+            tournament,
+            playerA,
+            playerB,
+            round: 1,
+            phase: MatchPhase.QUALIFICATION,
+            status: MatchStatus.SCHEDULED,
+            playerAScore: 0,
+            playerBScore: 0
+          });
+          await this.matchRepository.save(match);
+        }
+      }
+      createdTournaments.push(tournament);
+    }
+    return createdTournaments;
   }
 
   /**

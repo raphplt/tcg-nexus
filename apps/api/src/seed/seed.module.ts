@@ -5,10 +5,36 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Tournament } from 'src/tournament/entities/tournament.entity';
+import { Player } from 'src/player/entities/player.entity';
+import { Ranking } from 'src/ranking/entities/ranking.entity';
+import { Match } from 'src/match/entities/match.entity';
+import { TournamentRegistration } from 'src/tournament/entities/tournament-registration.entity';
+import { TournamentReward } from 'src/tournament/entities/tournament-reward.entity';
+import { TournamentPricing } from 'src/tournament/entities/tournament-pricing.entity';
+import { TournamentOrganizer } from 'src/tournament/entities/tournament-organizer.entity';
+import { TournamentNotification } from 'src/tournament/entities/tournament-notification.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PokemonSerie, PokemonSet, PokemonCard])],
+  imports: [
+    TypeOrmModule.forFeature([
+      PokemonSerie,
+      PokemonSet,
+      PokemonCard,
+      User,
+      Tournament,
+      Player,
+      Ranking,
+      Match,
+      TournamentRegistration,
+      TournamentReward,
+      TournamentPricing,
+      TournamentOrganizer,
+      TournamentNotification
+    ])
+  ],
   controllers: [SeedController],
-  providers: [SeedService],
+  providers: [SeedService]
 })
 export class SeedModule {}

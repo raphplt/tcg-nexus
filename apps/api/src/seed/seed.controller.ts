@@ -9,4 +9,12 @@ export class SeedController {
   importSeries() {
     return this.seedService.importPokemonSeries();
   }
+
+  @Post('all')
+  async seedAll() {
+    const users = await this.seedService.seedUsers();
+    const tournaments = await this.seedService.seedTournaments();
+    await this.seedService.importPokemon();
+    return { users, tournaments };
+  }
 }
