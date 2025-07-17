@@ -3,83 +3,203 @@ import React, { useState } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { tournamentService, Tournament } from "@/services/tournament.service";
 import type { PaginatedResult } from "@/type/pagination";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
+import { Badge } from "@/components/ui/badge";
+import { Locate, MapPin } from "lucide-react";
 
-const TournamentsPage = () => {
+const statusColor: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  OUVERT: "default",
+  FERME: "secondary",
+  ANNULE: "destructive",
+};
+
+const typeColor: Record<string, "default" | "secondary" | "outline"> = {
+  Standard: "default",
+  Draft: "secondary",
+  Special: "outline",
+};
+
+export default function TournamentsPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = usePaginatedQuery<
     PaginatedResult<Tournament>
   >(["tournaments"], tournamentService.getPaginated, {
     page,
-    limit: 5,
+    limit: 8,
     sortBy: "startDate",
     sortOrder: "ASC",
   });
 
-  if (isLoading) return <div className="pt-20 text-center">Chargement...</div>;
-  if (error)
-    return (
-      <div className="pt-20 text-center text-red-500">
-        Erreur lors du chargement des tournois
-      </div>
-    );
+  const tableHeaders = [
+    { label: "Nom", key: "name" },
+    { label: "Date", key: "startDate" },
+    { label: "Lieu", key: "location" },
+    { label: "Type", key: "type" },
+    { label: "Statut", key: "status" },
+  ];
 
   return (
-    <div>
-      <h1 className="pt-20 text-4xl font-bold text-center mb-8">
-        Liste des tournois
-      </h1>
-      <div className="max-w-3xl mx-auto">
-        <table className="w-full border rounded-lg overflow-hidden">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">Nom</th>
-              <th className="p-2">Date</th>
-              <th className="p-2">Lieu</th>
-              <th className="p-2">Type</th>
-              <th className="p-2">Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.data?.map((tournament: Tournament) => (
-              <tr
-                key={tournament.id}
-                className="border-b"
-              >
-                <td className="p-2 font-medium">{tournament.name}</td>
-                <td className="p-2">
-                  {new Date(tournament.startDate).toLocaleDateString()} -{" "}
-                  {new Date(tournament.endDate).toLocaleDateString()}
-                </td>
-                <td className="p-2">{tournament.location}</td>
-                <td className="p-2">{tournament.type}</td>
-                <td className="p-2">{tournament.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {/* Pagination */}
-        <div className="flex justify-center mt-6 gap-2">
-          <button
-            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={!data?.meta?.hasPreviousPage}
-          >
-            Précédent
-          </button>
-          <span className="px-2 py-1">
-            Page {data?.meta?.currentPage} / {data?.meta?.totalPages}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={!data?.meta?.hasNextPage}
-          >
-            Suivant
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-2">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-extrabold text-center mb-2 tracking-tight text-primary">
+          Tournois Pokémon
+        </h1>
+        <p className="text-center text-muted-foreground mb-10 text-lg">
+          Découvrez et inscrivez-vous aux prochains tournois !
+        </p>
+        <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {tableHeaders.map((header) => (
+                  <TableHead key={header.key}>{header.label}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-lg animate-pulse"
+                  >
+                    Chargement des tournois...
+                  </TableCell>
+                </TableRow>
+              ) : error ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-destructive py-8"
+                  >
+                    Erreur lors du chargement des tournois
+                  </TableCell>
+                </TableRow>
+              ) : data?.data?.length ? (
+                data.data.map((tournament) => (
+                  <TableRow
+                    key={tournament.id}
+                    className="transition-all hover:scale-[1.01] hover:shadow-lg"
+                  >
+                    <TableCell className="font-semibold text-lg text-primary">
+                      {tournament.name}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-mono">
+                        {new Date(tournament.startDate).toLocaleDateString()}
+                        <br />
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(tournament.endDate).toLocaleDateString()}
+                        </span>
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {/* <MapPin className="w-4 h-4" /> */}
+                      {tournament.location || (
+                        <span className="italic text-muted-foreground">
+                          À venir
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={typeColor[tournament.type] || "outline"}>
+                        {tournament.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={statusColor[tournament.status] || "secondary"}
+                      >
+                        {tournament.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Aucun tournoi trouvé.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
+        {/* Pagination shadcn */}
+        {data && (
+          <Pagination className="mt-8">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(page - 1);
+                  }}
+                  aria-disabled={!data.meta.hasPreviousPage}
+                  tabIndex={!data.meta.hasPreviousPage ? -1 : 0}
+                  className={
+                    !data.meta.hasPreviousPage
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+              {Array.from({ length: data.meta.totalPages }, (_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href="#"
+                    isActive={data.meta.currentPage === i + 1}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(i + 1);
+                    }}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(page + 1);
+                  }}
+                  aria-disabled={!data.meta.hasNextPage}
+                  tabIndex={!data.meta.hasNextPage ? -1 : 0}
+                  className={
+                    !data.meta.hasNextPage
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </div>
   );
-};
-
-export default TournamentsPage;
+}
