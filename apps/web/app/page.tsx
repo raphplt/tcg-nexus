@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
+// TODO: Supprimer ce fichier si on a pas besoin de l'ancienne page d'accueil
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth();
 

@@ -4,60 +4,21 @@ import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { tournamentService } from "@/services/tournament.service";
 import type { PaginatedResult } from "@/types/pagination";
 import {
-  TournamentStatus,
   tournamentStatusTranslation,
-  TournamentType,
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { Tournament } from "@/types/tournament";
 import { TournamentsFilters } from "./_components/TournamentsFilters";
 import { TournamentsTable } from "./_components/TournamentsTable";
 import { TournamentsPagination } from "./_components/TournamentsPagination";
-
-const statusColor: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  [TournamentStatus.REGISTRATION_OPEN]: "default",
-  [TournamentStatus.REGISTRATION_CLOSED]: "secondary",
-  [TournamentStatus.IN_PROGRESS]: "destructive",
-  [TournamentStatus.FINISHED]: "outline",
-  [TournamentStatus.CANCELLED]: "secondary",
-  [TournamentStatus.DRAFT]: "secondary",
-};
-
-const typeColor: Record<string, "default" | "secondary" | "outline"> = {
-  [TournamentType.SINGLE_ELIMINATION]: "default",
-  [TournamentType.DOUBLE_ELIMINATION]: "secondary",
-  [TournamentType.SWISS_SYSTEM]: "outline",
-  [TournamentType.ROUND_ROBIN]: "outline",
-};
-
-const statusOptions = [
-  { label: "Tous", value: "" },
-  { label: "Ouvert", value: "registration_open" },
-  { label: "Fermé", value: "registration_closed" },
-  { label: "En cours", value: "in_progress" },
-  { label: "Terminé", value: "finished" },
-  { label: "Annulé", value: "cancelled" },
-  { label: "Brouillon", value: "draft" },
-];
-
-const typeOptions = [
-  { label: "Tous", value: "" },
-  { label: "Standard", value: "single_elimination" },
-  { label: "Double élimination", value: "double_elimination" },
-  { label: "Système suisse", value: "swiss_system" },
-  { label: "Round Robin", value: "round_robin" },
-];
-
-const sortOptions = [
-  { label: "Date de début", value: "startDate" },
-  { label: "Nom", value: "name" },
-  { label: "Lieu", value: "location" },
-  { label: "Type", value: "type" },
-  { label: "Statut", value: "status" },
-];
+import {
+  typeOptions,
+  statusOptions,
+  sortOptions,
+  statusColor,
+  typeColor,
+} from "./utils";
+import { H1 } from "@/components/Shared/Titles";
 
 export default function TournamentsPage() {
   const [page, setPage] = useState(1);
@@ -127,9 +88,12 @@ export default function TournamentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-5xl font-extrabold text-center mb-2 tracking-tight text-primary">
+        <H1
+          className="text-center mb-2"
+          variant="primary"
+        >
           Tournois Pokémon
-        </h1>
+        </H1>
         <p className="text-center text-muted-foreground mb-10 text-lg">
           Découvrez et inscrivez-vous aux prochains tournois !
         </p>
