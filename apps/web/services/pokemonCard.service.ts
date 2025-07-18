@@ -1,6 +1,6 @@
 import api from "../utils/fetch";
-import type { PokemonCardType } from "../type/cardPokemon";
-import type { PaginatedResult, PaginationParams } from "../type/pagination";
+import type { PokemonCardType } from "../types/cardPokemon";
+import type { PaginatedResult, PaginationParams } from "../types/pagination";
 
 export const pokemonCardService = {
   async getPaginated(

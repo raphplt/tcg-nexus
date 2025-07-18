@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
-import { tournamentService, Tournament } from "@/services/tournament.service";
-import type { PaginatedResult } from "@/type/pagination";
+import { tournamentService } from "@/services/tournament.service";
+import type { PaginatedResult } from "@/types/pagination";
 import {
   Table,
   TableHeader,
@@ -20,7 +20,11 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
-import { Locate, MapPin } from "lucide-react";
+import {
+  tournamentStatusTranslation,
+  tournamentTypeTranslation,
+} from "@/utils/tournaments";
+import { Tournament } from "@/types/tournament";
 
 const statusColor: Record<
   string,
@@ -120,15 +124,25 @@ export default function TournamentsPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={typeColor[tournament.type] || "outline"}>
-                        {tournament.type}
+                      <Badge
+                        variant={
+                          typeColor[
+                            tournament.type as keyof typeof typeColor
+                          ] || "outline"
+                        }
+                      >
+                        {
+                          tournamentTypeTranslation[
+                            tournament.type as keyof typeof tournamentTypeTranslation
+                          ]
+                        }
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={statusColor[tournament.status] || "secondary"}
                       >
-                        {tournament.status}
+                        {tournamentStatusTranslation[tournament.status]}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -146,7 +160,6 @@ export default function TournamentsPage() {
             </TableBody>
           </Table>
         </div>
-        {/* Pagination shadcn */}
         {data && (
           <Pagination className="mt-8">
             <PaginationContent>

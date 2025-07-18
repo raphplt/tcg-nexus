@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { PokemonCardType } from "type/cardPokemon";
+import { PokemonCardType } from "@/types/cardPokemon";
 import { Card, CardContent, CardHeader } from "./ui/card";
 
 const url = process.env.NEXT_PUBLIC_API_URL;

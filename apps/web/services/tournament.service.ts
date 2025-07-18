@@ -1,16 +1,6 @@
-import type { PaginationParams, PaginatedResult } from "@/type/pagination";
+import type { PaginationParams, PaginatedResult } from "@/types/pagination";
+import { Tournament } from "@/types/tournament";
 import { fetcher } from "@/utils/fetch";
-
-export interface Tournament {
-  id: number;
-  name: string;
-  startDate: string;
-  endDate: string;
-  location?: string;
-  type: string;
-  status: string;
-  // Ajoute d'autres champs si besoin
-}
 
 export interface TournamentQueryParams extends PaginationParams {
   search?: string;

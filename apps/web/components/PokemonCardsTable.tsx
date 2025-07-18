@@ -23,8 +23,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import type { PokemonCardType } from "@/type/cardPokemon";
-import type { PaginatedResult } from "@/type/pagination";
+import type { PokemonCardType } from "@/types/cardPokemon";
+import type { PaginatedResult } from "@/types/pagination";
 
 interface PokemonCardsTableProps {
   initialPage?: number;
