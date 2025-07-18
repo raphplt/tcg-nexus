@@ -14,6 +14,7 @@ import { RankingModule } from './ranking/ranking.module';
 import { PlayerModule } from './player/player.module';
 import { TournamentModule } from './tournament/tournament.module';
 import { AuthModule } from './auth/auth.module';
+import { ArticleModule } from './article/article.module';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { AuthModule } from './auth/auth.module';
     RankingModule,
     StatisticsModule,
     SeedModule,
-    AuthModule
+    AuthModule,
+    ArticleModule
   ],
   controllers: [AppController],
   providers: [AppService]

@@ -45,6 +45,7 @@ import {
   NotificationStatus
 } from 'src/tournament/entities/tournament-notification.entity';
 import * as bcrypt from 'bcryptjs';
+import { Article } from 'src/article/entities/article.entity';
 
 @Injectable()
 export class SeedService {
@@ -74,7 +75,9 @@ export class SeedService {
     @InjectRepository(TournamentOrganizer)
     private readonly tournamentOrganizerRepository: Repository<TournamentOrganizer>,
     @InjectRepository(TournamentNotification)
-    private readonly tournamentNotificationRepository: Repository<TournamentNotification>
+    private readonly tournamentNotificationRepository: Repository<TournamentNotification>,
+    @InjectRepository(Article)
+    private readonly articleRepository: Repository<Article>
   ) {}
 
   /**
@@ -557,6 +560,52 @@ export class SeedService {
       createdTournaments.push(tournament);
     }
     return createdTournaments;
+  }
+
+  /**
+   * Seed test articles
+   */
+  async seedArticles() {
+    const articlesSeed = [
+      {
+        title: 'Nouvelle extension Pokémon TCG : Tempête Argentée',
+        image:
+          'https://den-cards.pokellector.com/354/Lugia-VSTAR.SWSH12.139.45504.png', // image de Lugia VSTAR
+        link: 'https://www.pokemon.com/fr/actu-pokemon/nouvelle-extension-tempete-argentee/',
+        content:
+          'Découvrez la nouvelle extension Tempête Argentée du JCC Pokémon avec de nouvelles cartes et mécaniques de jeu.',
+        publishedAt: new Date('2024-06-01T10:00:00Z')
+      },
+      {
+        title: 'Tournoi régional de Lyon : Résultats et analyses',
+        image:
+          'https://toxigon.com/image/pikachu-holding-trophy-with-pokemon-cards-surrounding.webp', // illustration de tournoi
+        link: 'https://www.pokemon.com/fr/actu-pokemon/tournoi-lyon-2024/',
+        content:
+          'Retour sur le tournoi régional de Lyon avec les decks gagnants et les moments forts de la compétition.',
+        publishedAt: new Date('2024-05-20T15:00:00Z')
+      },
+      {
+        title: 'Guide stratégique : Bien débuter sur Pokémon TCG Online',
+        image:
+          'https://upload.wikimedia.org/wikipedia/en/thumb/5/51/PokemonTCGO1stScreenshot.png/250px-PokemonTCGO1stScreenshot.png', // capture d’écran de TCG Online
+        link: 'https://www.pokemon.com/fr/strategie/guide-debutant-tcg-online/',
+        content:
+          'Nos conseils pour bien démarrer sur la plateforme Pokémon TCG Online et construire un deck efficace.',
+        publishedAt: new Date('2024-05-10T09:00:00Z')
+      }
+    ];
+
+    for (const article of articlesSeed) {
+      const exists = await this.articleRepository.findOneBy({
+        title: article.title
+      });
+      if (!exists) {
+        await this.articleRepository.save(
+          this.articleRepository.create(article)
+        );
+      }
+    }
   }
 
   /**

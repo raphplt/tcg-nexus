@@ -24,6 +24,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "bcryptjs": "^3.0.2"
+    "bcryptjs": "^3.0.2",
+    "rss-parser": "^3.13.0"
   }
 }
