@@ -72,6 +72,8 @@ export class TournamentService {
       type,
       location,
       isPublic,
+      startDateFrom,
+      startDateTo,
       page = 1,
       limit = 10,
       sortBy = 'startDate',
@@ -110,6 +112,17 @@ export class TournamentService {
 
     if (isPublic !== undefined) {
       queryBuilder.andWhere('tournament.isPublic = :isPublic', { isPublic });
+    }
+
+    if (startDateFrom) {
+      queryBuilder.andWhere('tournament.startDate >= :startDateFrom', {
+        startDateFrom
+      });
+    }
+    if (startDateTo) {
+      queryBuilder.andWhere('tournament.startDate <= :startDateTo', {
+        startDateTo
+      });
     }
 
     // Utilise le helper générique pour la pagination et le tri
