@@ -22,4 +22,10 @@ export const tournamentService = {
   ): Promise<PaginatedResult<Tournament>> {
     return fetcher<PaginatedResult<Tournament>>("/tournaments", { params });
   },
+
+  async getUpcomingTournaments(limit: number = 3): Promise<Tournament[]> {
+    return fetcher<Tournament[]>("/tournaments/upcoming", {
+      params: { limit },
+    });
+  },
 };

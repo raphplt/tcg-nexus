@@ -34,6 +34,14 @@ export class TournamentQueryDto {
   isPublic?: boolean;
 
   @IsOptional()
+  @IsString()
+  startDateFrom?: string;
+
+  @IsOptional()
+  @IsString()
+  startDateTo?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)

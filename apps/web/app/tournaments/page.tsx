@@ -4,55 +4,80 @@ import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { tournamentService } from "@/services/tournament.service";
 import type { PaginatedResult } from "@/types/pagination";
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
-import { Badge } from "@/components/ui/badge";
-import {
   tournamentStatusTranslation,
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { Tournament } from "@/types/tournament";
-
-const statusColor: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  OUVERT: "default",
-  FERME: "secondary",
-  ANNULE: "destructive",
-};
-
-const typeColor: Record<string, "default" | "secondary" | "outline"> = {
-  Standard: "default",
-  Draft: "secondary",
-  Special: "outline",
-};
+import { TournamentsFilters } from "./_components/TournamentsFilters";
+import { TournamentsTable } from "./_components/TournamentsTable";
+import { TournamentsPagination } from "./_components/TournamentsPagination";
+import {
+  typeOptions,
+  statusOptions,
+  sortOptions,
+  statusColor,
+  typeColor,
+} from "./utils";
+import { H1 } from "@/components/Shared/Titles";
 
 export default function TournamentsPage() {
   const [page, setPage] = useState(1);
-  const { data, isLoading, error } = usePaginatedQuery<
-    PaginatedResult<Tournament>
-  >(["tournaments"], tournamentService.getPaginated, {
-    page,
-    limit: 8,
+  const [filters, setFilters] = useState({
+    search: "",
+    type: "",
+    status: "",
+    location: "",
+    startDateFrom: "",
+    startDateTo: "",
     sortBy: "startDate",
-    sortOrder: "ASC",
+    sortOrder: "ASC" as "ASC" | "DESC",
   });
 
-  const tableHeaders = [
+  const { data, isLoading, error } = usePaginatedQuery<
+    PaginatedResult<Tournament>
+  >(
+    [
+      "tournaments",
+      page,
+      filters.search,
+      filters.type,
+      filters.status,
+      filters.location,
+      filters.startDateFrom,
+      filters.startDateTo,
+      filters.sortBy,
+      filters.sortOrder,
+    ],
+    tournamentService.getPaginated,
+    {
+      page,
+      limit: 8,
+      search: filters.search || undefined,
+      type: filters.type || undefined,
+      status: filters.status || undefined,
+      location: filters.location || undefined,
+      startDateFrom: filters.startDateFrom || undefined,
+      startDateTo: filters.startDateTo || undefined,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+    },
+  );
+
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      type: "",
+      status: "",
+      location: "",
+      startDateFrom: "",
+      startDateTo: "",
+      sortBy: "startDate",
+      sortOrder: "ASC",
+    });
+    setPage(1);
+  };
+
+  const tableHeaders: { label: string; key: keyof Tournament }[] = [
     { label: "Nom", key: "name" },
     { label: "Date", key: "startDate" },
     { label: "Lieu", key: "location" },
@@ -63,154 +88,47 @@ export default function TournamentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-5xl font-extrabold text-center mb-2 tracking-tight text-primary">
+        <H1
+          className="text-center mb-2"
+          variant="primary"
+        >
           Tournois Pokémon
-        </h1>
+        </H1>
         <p className="text-center text-muted-foreground mb-10 text-lg">
           Découvrez et inscrivez-vous aux prochains tournois !
         </p>
+        <TournamentsFilters
+          filters={filters}
+          setFilters={(newFilters) => {
+            setFilters((prev) => ({ ...prev, ...newFilters }));
+            setPage(1);
+          }}
+          typeOptions={typeOptions}
+          statusOptions={statusOptions}
+          sortOptions={sortOptions}
+          resetFilters={resetFilters}
+        />
         <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {tableHeaders.map((header) => (
-                  <TableHead key={header.key}>{header.label}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-8 text-lg animate-pulse"
-                  >
-                    Chargement des tournois...
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-destructive py-8"
-                  >
-                    Erreur lors du chargement des tournois
-                  </TableCell>
-                </TableRow>
-              ) : data?.data?.length ? (
-                data.data.map((tournament) => (
-                  <TableRow
-                    key={tournament.id}
-                    className="transition-all hover:scale-[1.01] hover:shadow-lg"
-                  >
-                    <TableCell className="font-semibold text-lg text-primary">
-                      {tournament.name}
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono">
-                        {new Date(tournament.startDate).toLocaleDateString()}
-                        <br />
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(tournament.endDate).toLocaleDateString()}
-                        </span>
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {/* <MapPin className="w-4 h-4" /> */}
-                      {tournament.location || (
-                        <span className="italic text-muted-foreground">
-                          À venir
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          typeColor[
-                            tournament.type as keyof typeof typeColor
-                          ] || "outline"
-                        }
-                      >
-                        {
-                          tournamentTypeTranslation[
-                            tournament.type as keyof typeof tournamentTypeTranslation
-                          ]
-                        }
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={statusColor[tournament.status] || "secondary"}
-                      >
-                        {tournamentStatusTranslation[tournament.status]}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    Aucun tournoi trouvé.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <TournamentsTable
+            data={data}
+            isLoading={isLoading}
+            error={error}
+            tableHeaders={tableHeaders}
+            statusColor={statusColor}
+            typeColor={typeColor}
+            tournamentStatusTranslation={tournamentStatusTranslation}
+            tournamentTypeTranslation={tournamentTypeTranslation}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))}
+          />
         </div>
         {data && (
-          <Pagination className="mt-8">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setPage(page - 1);
-                  }}
-                  aria-disabled={!data.meta.hasPreviousPage}
-                  tabIndex={!data.meta.hasPreviousPage ? -1 : 0}
-                  className={
-                    !data.meta.hasPreviousPage
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </PaginationItem>
-              {Array.from({ length: data.meta.totalPages }, (_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href="#"
-                    isActive={data.meta.currentPage === i + 1}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPage(i + 1);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setPage(page + 1);
-                  }}
-                  aria-disabled={!data.meta.hasNextPage}
-                  tabIndex={!data.meta.hasNextPage ? -1 : 0}
-                  className={
-                    !data.meta.hasNextPage
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <TournamentsPagination
+            meta={data.meta}
+            page={page}
+            setPage={setPage}
+          />
         )}
       </div>
     </div>
