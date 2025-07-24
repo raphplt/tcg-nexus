@@ -1,18 +1,41 @@
+import { Currency } from '../entities/currency.enum';
+import { CardState } from '../entities/listing.entity';
 import {
-  Currency,
-  CardState,
-  OrderStatus,
-  PaymentMethod,
-  PaymentStatus
-} from '../entities';
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Min
+} from 'class-validator';
 
 export class CreateListingDto {
+  @IsInt()
+  @IsPositive()
   sellerId: number;
+
+  @IsString()
+  @IsNotEmpty()
   pokemonCardId: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsPositive()
   price: number;
+
+  @IsEnum(Currency)
   currency: Currency;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
   quantityAvailable?: number;
+
+  @IsEnum(CardState)
   cardState: CardState;
+
+  @IsOptional()
   expiresAt?: Date;
 }
 
@@ -20,8 +43,8 @@ export class CreateOrderDto {
   buyerId: number;
   totalAmount: number;
   currency: Currency;
-  status: OrderStatus;
-  orderItems: CreateOrderItemDto[];
+  status: any;
+  orderItems: any[];
 }
 
 export class CreateOrderItemDto {
@@ -32,8 +55,8 @@ export class CreateOrderItemDto {
 
 export class CreatePaymentTransactionDto {
   orderId: number;
-  method: PaymentMethod;
-  status: PaymentStatus;
+  method: any;
+  status: any;
   transactionId?: string;
   amount: number;
 }
