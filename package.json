@@ -24,6 +24,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "@nestjs/mapped-types": "*",
     "bcryptjs": "^3.0.2",
     "rss-parser": "^3.13.0"
   }
