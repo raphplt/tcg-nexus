@@ -3,11 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToMany,
-  OneToMany
+  OneToMany,
+  OneToOne
 } from 'typeorm';
 import { Tournament } from 'src/tournament/entities/tournament.entity';
 import { Statistics } from 'src/statistics/entities/statistic.entity';
 import { Ranking } from 'src/ranking/entities/ranking.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Player {
@@ -16,6 +18,9 @@ export class Player {
 
   @Column()
   name: string;
+
+  @OneToOne(() => User, (user) => user.player)
+  user: User;
 
   @ManyToMany(() => Tournament, (tournament) => tournament.players)
   tournaments: Tournament[];

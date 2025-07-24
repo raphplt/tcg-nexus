@@ -34,7 +34,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  // Vérifier l'authentification au chargement
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -45,7 +44,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error("Auth check failed:", error);
-        // Si l'erreur est 401, les cookies seront nettoyés par l'intercepteur
       } finally {
         setIsLoading(false);
       }
@@ -73,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       setUser(response.user);
-      router.push("/"); // Redirection vers la page d'accueil
+      router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -87,7 +85,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await authService.register(userData);
 
-      // Stocker les tokens dans les cookies
       Cookies.set("accessToken", response.tokens.accessToken, {
         expires: 1 / 96, // 15 minutes
         secure: process.env.NODE_ENV === "production",
@@ -101,7 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       setUser(response.user);
-      router.push("/"); // Redirection vers la page d'accueil
+      router.push("/");
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;
