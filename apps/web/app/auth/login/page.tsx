@@ -44,6 +44,7 @@ const LoginPage = () => {
   const { login, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,7 +57,7 @@ const LoginPage = () => {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setError(null);
-      await login(values);
+      await login({ ...values, rememberMe });
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
@@ -153,6 +154,22 @@ const LoginPage = () => {
               >
                 {isLoading ? "Connexion..." : "Se connecter"}
               </Button>
+              <div className="flex items-center mt-2">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={() => setRememberMe((v) => !v)}
+                  disabled={isLoading}
+                  className="mr-2"
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="text-sm select-none cursor-pointer"
+                >
+                  Se souvenir de moi
+                </label>
+              </div>
             </form>
           </Form>
         </CardContent>

@@ -41,9 +41,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (accessToken) {
           const userData = await authService.getProfile();
           setUser(userData);
+        } else {
+          // Pas d'accessToken, on tente un refresh si refreshToken présent
+          const refreshToken = Cookies.get("refreshToken");
+          if (refreshToken) {
+            try {
+              const tokens = await authService.refreshToken(refreshToken);
+              // On stocke les nouveaux tokens (durée par défaut, ou on peut raffiner selon rememberMe si besoin)
+              Cookies.set("accessToken", tokens.accessToken, {
+                expires: 1 / 96,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+              });
+              Cookies.set("refreshToken", tokens.refreshToken, {
+                expires: 7,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+              });
+              // On relance getProfile
+              const userData = await authService.getProfile();
+              setUser(userData);
+            } catch (refreshError) {
+              // Refresh échoué, on considère l'utilisateur déconnecté
+              setUser(null);
+              Cookies.remove("accessToken");
+              Cookies.remove("refreshToken");
+            }
+          } else {
+            setUser(null);
+          }
         }
-      } catch (error) {
-        console.error("Auth check failed:", error);
+      } catch (error: any) {
+        // Si erreur 401, on tente un refresh
+        if (error?.response?.status === 401) {
+          const refreshToken = Cookies.get("refreshToken");
+          if (refreshToken) {
+            try {
+              const tokens = await authService.refreshToken(refreshToken);
+              Cookies.set("accessToken", tokens.accessToken, {
+                expires: 1 / 96,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+              });
+              Cookies.set("refreshToken", tokens.refreshToken, {
+                expires: 7,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+              });
+              const userData = await authService.getProfile();
+              setUser(userData);
+            } catch (refreshError) {
+              setUser(null);
+              Cookies.remove("accessToken");
+              Cookies.remove("refreshToken");
+            }
+          } else {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -57,15 +114,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(true);
       const response = await authService.login(credentials);
 
-      // Stocker les tokens dans les cookies
+      // Gestion de la durée des cookies selon le "se souvenir de moi"
+      const rememberMe = credentials.rememberMe;
       Cookies.set("accessToken", response.tokens.accessToken, {
-        expires: 1 / 96, // 15 minutes
+        expires: rememberMe ? 7 : 1 / 96, // 7 jours ou 15 min
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
 
       Cookies.set("refreshToken", response.tokens.refreshToken, {
-        expires: 7, // 7 jours
+        expires: rememberMe ? 30 : 7, // 30 jours ou 7 jours
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });

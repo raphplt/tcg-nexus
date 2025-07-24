@@ -43,3 +43,33 @@ export async function fetcher<T = any>(url: string, config?: any): Promise<T> {
   const response = await secureApi.get<T>(url, config);
   return response.data;
 }
+
+/**
+ * Fonction de fetch générique authentifiée pour tous les verbes HTTP
+ * @param method Le verbe HTTP (GET, POST, PATCH, DELETE, etc.)
+ * @param url L'URL relative de l'API (ex: /tournaments)
+ * @param options Options de requête : { data, params, headers, ... }
+ * @returns Les données de la réponse (response.data)
+ * @throws L'erreur axios si la requête échoue
+ *
+ * Utilisation :
+ * await authedFetch('POST', '/tournaments', { data: { ... } })
+ */
+export async function authedFetch<T = any>(
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  url: string,
+  options: {
+    data?: any;
+    params?: any;
+    headers?: any;
+    [key: string]: any;
+  } = {}
+): Promise<T> {
+  const config = {
+    method,
+    url,
+    ...options,
+  };
+  const response = await secureApi.request<T>(config);
+  return response.data;
+}
