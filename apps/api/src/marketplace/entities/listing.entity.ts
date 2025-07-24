@@ -52,6 +52,6 @@ export class Listing {
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
 
-  @OneToMany(() => OrderItem, (orderItem: any) => orderItem.listing)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.listing)
   orderItems: any[];
 }
