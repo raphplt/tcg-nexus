@@ -5,6 +5,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: "admin" | "moderator" | "user";
+  isPro: boolean;
 }
 
 export interface AuthTokens {

@@ -41,6 +41,9 @@ export class User {
   })
   role: UserRole;
 
+  @Column({ default: false })
+  isPro: boolean;
+
   @Column({ default: true })
   isActive: boolean;
 

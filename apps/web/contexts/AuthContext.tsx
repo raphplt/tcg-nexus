@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Stocker les tokens dans les cookies
       Cookies.set("accessToken", response.tokens.accessToken, {
-        expires: 1 / 96, // 15 minutes
+        expires: 6 / 24, // 15 minutes
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });

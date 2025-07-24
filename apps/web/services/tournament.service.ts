@@ -1,5 +1,5 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { Tournament } from "@/types/tournament";
+import { CreateTournamentDto, Tournament } from "@/types/tournament";
 import { fetcher } from "@/utils/fetch";
 
 export interface TournamentQueryParams extends PaginationParams {
@@ -21,5 +21,12 @@ export const tournamentService = {
     params: TournamentQueryParams = {},
   ): Promise<PaginatedResult<Tournament>> {
     return fetcher<PaginatedResult<Tournament>>("/tournaments", { params });
+  },
+
+  async create(data: CreateTournamentDto): Promise<Tournament> {
+    return fetcher<Tournament>("/tournaments", {
+      method: "POST",
+      data,
+    });
   },
 };

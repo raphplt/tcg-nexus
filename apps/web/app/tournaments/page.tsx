@@ -25,6 +25,9 @@ import {
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { Tournament } from "@/types/tournament";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 const statusColor: Record<
   string,
@@ -42,6 +45,7 @@ const typeColor: Record<string, "default" | "secondary" | "outline"> = {
 };
 
 export default function TournamentsPage() {
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = usePaginatedQuery<
     PaginatedResult<Tournament>
@@ -69,6 +73,14 @@ export default function TournamentsPage() {
         <p className="text-center text-muted-foreground mb-10 text-lg">
           Découvrez et inscrivez-vous aux prochains tournois !
         </p>
+
+        {user?.isPro  && (
+          <div className="flex justify-end mb-4">
+            <Link href="/tournaments/create">
+              <Button variant="default">Créer un tournoi</Button>
+            </Link>
+          </div>
+        )}
         <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
           <Table>
             <TableHeader>
