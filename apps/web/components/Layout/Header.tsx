@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut } from "lucide-react";
+import { Skeleton } from "../ui/skeleton";
 
 const Header = () => {
   const linkStyle =
     "text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline hover:underline-offset-4";
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isLoading } = useAuth();
 
   const getUserInitials = (firstName: string, lastName: string) =>
     `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
@@ -93,7 +94,11 @@ const Header = () => {
             </li>
           )}
 
-          {isAuthenticated && user ? (
+          {isLoading ? (
+            <li>
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </li>
+          ) : isAuthenticated && user ? (
             <>
               <li>
                 <Link
