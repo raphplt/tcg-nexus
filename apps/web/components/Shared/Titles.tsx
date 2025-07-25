@@ -10,7 +10,7 @@ interface TitleProps {
 function getColor(variant?: string) {
   if (variant === "muted") return "text-muted-foreground";
   if (variant === "primary") return "text-primary";
-  return "text-black";
+  return "text-default";
 }
 
 export function H1({ children, className, variant = "default" }: TitleProps) {
