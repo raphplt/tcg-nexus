@@ -64,7 +64,10 @@ export class MarketplaceService {
     const qb = this.listingRepository
       .createQueryBuilder('listing')
       .leftJoinAndSelect('listing.seller', 'seller')
-      .leftJoinAndSelect('listing.pokemonCard', 'pokemonCard');
+      .leftJoinAndSelect('listing.pokemonCard', 'pokemonCard')
+      .leftJoinAndSelect('pokemonCard.set', 'set')
+      .leftJoinAndSelect('set.serie', 'serie');
+
     if (sellerId) {
       qb.andWhere('seller.id = :sellerId', { sellerId });
     }
@@ -102,7 +105,12 @@ export class MarketplaceService {
   async findOne(id: number): Promise<Listing> {
     const listing = await this.listingRepository.findOne({
       where: { id },
-      relations: ['seller', 'pokemonCard']
+      relations: [
+        'seller',
+        'pokemonCard',
+        'pokemonCard.set',
+        'pokemonCard.set.serie'
+      ]
     });
     if (!listing) throw new NotFoundException('Listing not found');
     return listing;

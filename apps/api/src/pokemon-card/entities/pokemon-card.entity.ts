@@ -30,7 +30,6 @@ export class PokemonCard {
   @Column({ nullable: true })
   rarity?: string;
 
-  // Utilisation de jsonb pour stocker un objet JSON
   @Column({ type: 'jsonb', nullable: true })
   variants: {
     normal: boolean;
@@ -42,14 +41,12 @@ export class PokemonCard {
   @ManyToOne(() => PokemonSet, (pokemonSet) => pokemonSet.cards)
   set: PokemonSet;
 
-  // Stockage natif d'un tableau de nombres
   @Column({ type: 'int', array: true, nullable: true })
   dexId?: number[];
 
   @Column({ type: 'int', nullable: true })
   hp?: number;
 
-  // Utilisation d'un tableau natif de texte
   @Column('text', { array: true, nullable: true })
   types?: string[];
 

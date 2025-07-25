@@ -62,6 +62,10 @@ async function bootstrap() {
     await seedService.importPokemon();
     logSuccess('Cartes Pokémon importées !');
 
+    logStep('Création des listings de test...');
+    await seedService.seedListings();
+    logSuccess('Listings créés !');
+
     logSuccess('🎉 Seed terminé avec succès !');
   } catch (error) {
     logError('Erreur lors du seed : ' + error);

@@ -20,4 +20,12 @@ export const marketplaceService = {
   ): Promise<PaginatedResult<Listing>> {
     return fetcher<PaginatedResult<Listing>>("/listings", { params });
   },
+
+  /**
+   * Récupère un listing par son ID
+   * @param id ID du listing
+   */
+  async getListingById(id: string): Promise<Listing> {
+    return fetcher<Listing>(`/listings/${id}`);
+  },
 }; 
