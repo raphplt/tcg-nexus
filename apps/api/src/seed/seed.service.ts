@@ -609,11 +609,26 @@ export class SeedService {
   }
 
   /**
-   * Truncate all tables before seeding
+   * Truncate all tables before seeding (Postgres version)
    */
   async truncateTables() {
-    await this.pokemonCardRepository.query('DELETE FROM pokemon_card');
-    await this.pokemonSetRepository.query('DELETE FROM pokemon_set');
-    await this.pokemonSerieRepository.query('DELETE FROM pokemon_serie');
+    await this.userRepository.query(`
+      TRUNCATE TABLE
+        tournament_notification,
+        tournament_organizer,
+        tournament_reward,
+        tournament_pricing,
+        tournament_registration,
+        match,
+        ranking,
+        tournament,
+        player,
+        article,
+        pokemon_card,
+        pokemon_set,
+        pokemon_serie,
+        "user"
+      RESTART IDENTITY CASCADE;
+    `);
   }
 }

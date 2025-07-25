@@ -2,7 +2,6 @@
 
 import { H2 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 import { Listing } from "@/types/listing";
 import { authedFetch } from "@/utils/fetch";
 import React, { useEffect, useState } from "react";
@@ -34,7 +33,7 @@ const Test = () => {
     try {
       const testData = {
         sellerId: 1,
-        pokemonCardId: "6eee2b37-f4ea-4eb9-8a62-05494980d5b6",
+        pokemonCardId: "1aa2c248-5ad5-4ec7-a707-c7b77d98ef02",
         price: 12.5,
         currency: "EUR",
         quantityAvailable: 3,
@@ -53,6 +52,8 @@ const Test = () => {
   useEffect(() => {
     fetchListings();
   }, []);
+
+  console.log(listings);
 
   return (
     <div className="flex flex-col gap-4 container mx-auto">
