@@ -46,6 +46,8 @@ import {
 } from 'src/tournament/entities/tournament-notification.entity';
 import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
+import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
+import { Currency } from 'src/marketplace/entities/currency.enum';
 
 @Injectable()
 export class SeedService {
@@ -77,7 +79,9 @@ export class SeedService {
     @InjectRepository(TournamentNotification)
     private readonly tournamentNotificationRepository: Repository<TournamentNotification>,
     @InjectRepository(Article)
-    private readonly articleRepository: Repository<Article>
+    private readonly articleRepository: Repository<Article>,
+    @InjectRepository(Listing)
+    private readonly listingRepository: Repository<Listing>
   ) {}
 
   /**
@@ -603,6 +607,129 @@ export class SeedService {
       if (!exists) {
         await this.articleRepository.save(
           this.articleRepository.create(article)
+        );
+      }
+    }
+  }
+
+  /**
+   * Seed test listings
+   */
+  async seedListings() {
+    // Récupère les 3 premiers utilisateurs et 3 premières cartes Pokémon
+    const sellers = await this.userRepository.find({ take: 3 });
+    const cards = await this.pokemonCardRepository.find({ take: 3 });
+    if (sellers.length < 1 || cards.length < 1) return;
+
+    const listingsSeed = [
+      // Seller 1, Card 1
+      {
+        seller: sellers[0],
+        pokemonCard: cards[0],
+        price: 5.99,
+        currency: Currency.EUR,
+        quantityAvailable: 2,
+        cardState: CardState.NM,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[0],
+        pokemonCard: cards[1],
+        price: 3.5,
+        currency: Currency.USD,
+        quantityAvailable: 1,
+        cardState: CardState.EX,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[0],
+        pokemonCard: cards[2],
+        price: 7.0,
+        currency: Currency.GBP,
+        quantityAvailable: 3,
+        cardState: CardState.GD,
+        expiresAt: undefined
+      },
+      // Seller 2, Card 1
+      {
+        seller: sellers[1],
+        pokemonCard: cards[0],
+        price: 6.5,
+        currency: Currency.EUR,
+        quantityAvailable: 1,
+        cardState: CardState.LP,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[1],
+        pokemonCard: cards[1],
+        price: 2.99,
+        currency: Currency.USD,
+        quantityAvailable: 2,
+        cardState: CardState.PL,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[1],
+        pokemonCard: cards[2],
+        price: 8.25,
+        currency: Currency.GBP,
+        quantityAvailable: 1,
+        cardState: CardState.Poor,
+        expiresAt: undefined
+      },
+      // Seller 3, Card 1
+      {
+        seller: sellers[2],
+        pokemonCard: cards[0],
+        price: 4.75,
+        currency: Currency.EUR,
+        quantityAvailable: 1,
+        cardState: CardState.EX,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[2],
+        pokemonCard: cards[1],
+        price: 5.0,
+        currency: Currency.USD,
+        quantityAvailable: 2,
+        cardState: CardState.NM,
+        expiresAt: undefined
+      },
+      {
+        seller: sellers[2],
+        pokemonCard: cards[2],
+        price: 9.99,
+        currency: Currency.GBP,
+        quantityAvailable: 1,
+        cardState: CardState.LP,
+        expiresAt: undefined
+      },
+      // Un extra pour la diversité
+      {
+        seller: sellers[0],
+        pokemonCard: cards[0],
+        price: 10.0,
+        currency: Currency.EUR,
+        quantityAvailable: 1,
+        cardState: CardState.Poor,
+        expiresAt: undefined
+      }
+    ];
+
+    for (const listing of listingsSeed) {
+      const exists = await this.listingRepository.findOne({
+        where: {
+          seller: { id: listing.seller.id },
+          pokemonCard: { id: listing.pokemonCard.id },
+          price: listing.price
+        },
+        relations: ['seller', 'pokemonCard']
+      });
+      if (!exists) {
+        await this.listingRepository.save(
+          this.listingRepository.create(listing)
         );
       }
     }

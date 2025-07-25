@@ -16,6 +16,7 @@ import { TournamentPricing } from 'src/tournament/entities/tournament-pricing.en
 import { TournamentOrganizer } from 'src/tournament/entities/tournament-organizer.entity';
 import { TournamentNotification } from 'src/tournament/entities/tournament-notification.entity';
 import { Article } from 'src/article/entities/article.entity';
+import { Listing } from 'src/marketplace/entities';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { Article } from 'src/article/entities/article.entity';
       TournamentPricing,
       TournamentOrganizer,
       TournamentNotification,
-      Article
+      Article,
+      Listing
     ])
   ],
   controllers: [SeedController],
