@@ -2,6 +2,7 @@
 
 import { H2 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { Listing } from "@/types/listing";
 import { authedFetch } from "@/utils/fetch";
 import React, { useEffect, useState } from "react";
@@ -52,8 +53,6 @@ const Test = () => {
   useEffect(() => {
     fetchListings();
   }, []);
-
-  console.log(listings);
 
   return (
     <div className="flex flex-col gap-4 container mx-auto">

@@ -1,6 +1,5 @@
 import axios from "axios";
 import { NEXT_PUBLIC_API_URL } from "./variables";
-import Cookies from "js-cookie";
 
 const API_BASE_URL = NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -13,20 +12,12 @@ export const api = axios.create({
 
 export default api;
 
-// Instance axios sécurisée (ajoute le token si présent)
 export const secureApi = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
-});
-
-secureApi.interceptors.request.use((config) => {
-  const token = Cookies.get("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  withCredentials: true,
 });
 
 /**
@@ -40,7 +31,10 @@ secureApi.interceptors.request.use((config) => {
  * const { data } = useQuery({ queryKey: ['tournaments'], queryFn: () => fetcher('/tournaments') })
  */
 export async function fetcher<T = any>(url: string, config?: any): Promise<T> {
-  const response = await secureApi.get<T>(url, config);
+  const response = await secureApi.get<T>(url, {
+    ...config,
+    withCredentials: true,
+  });
   return response.data;
 }
 
@@ -56,19 +50,20 @@ export async function fetcher<T = any>(url: string, config?: any): Promise<T> {
  * await authedFetch('POST', '/tournaments', { data: { ... } })
  */
 export async function authedFetch<T = any>(
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   url: string,
   options: {
     data?: any;
     params?: any;
     headers?: any;
     [key: string]: any;
-  } = {}
+  } = {},
 ): Promise<T> {
   const config = {
     method,
     url,
     ...options,
+    withCredentials: true,
   };
   const response = await secureApi.request<T>(config);
   return response.data;
