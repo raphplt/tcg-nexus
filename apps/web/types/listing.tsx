@@ -8,7 +8,16 @@ export interface Listing {
   price: number;
   currency: string;
   quantityAvailable: number;
-  cardState: string;
+  cardState: CardState;
   createdAt: Date;
   expiresAt: Date;
+}
+
+export enum CardState {
+  NM = "NM",
+  EX = "EX",
+  GD = "GD",
+  LP = "LP",
+  PL = "PL",
+  Poor = "Poor",
 }

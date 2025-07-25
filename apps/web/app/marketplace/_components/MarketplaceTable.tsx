@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Listing } from "@/types/listing";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { getCardStateColor } from "../utils";
 
 export interface MarketplaceFilters {
   search: string;
@@ -39,6 +42,8 @@ const MarketplaceTable = ({
   sortOrder,
   setFilters,
 }: MarketplaceTableProps) => {
+  const router = useRouter();
+
   const handleSort = (key: string) => {
     if (sortBy === key) {
       setFilters({ sortOrder: sortOrder === "ASC" ? "DESC" : "ASC" });
@@ -93,17 +98,32 @@ const MarketplaceTable = ({
           data.data.map((listing: Listing) => (
             <TableRow
               key={listing.id}
-              className="transition-all hover:scale-[1.01] hover:shadow-lg"
+              className="transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer"
+              onClick={() => router.push(`/marketplace/${listing.id}`)}
             >
-              <TableCell className="font-semibold text-lg text-primary">
+              <TableCell className="font-semibold text-lg text-primary flex items-center gap-2">
+                <Image
+                  src={listing.pokemonCard?.image + "/low.png" || ""}
+                  alt={listing.pokemonCard?.name || "Carte inconnue"}
+                  width={40}
+                  height={40}
+                />
                 {listing.pokemonCard?.name || "Carte inconnue"}
+                <Badge variant="outline">
+                  {listing.pokemonCard?.set?.name}
+                </Badge>
               </TableCell>
               <TableCell>
                 {listing.price} {listing.currency}
               </TableCell>
               <TableCell>{listing.quantityAvailable}</TableCell>
               <TableCell>
-                <Badge variant="outline">{listing.cardState}</Badge>
+                <Badge
+                  variant="outline"
+                  className={getCardStateColor(listing.cardState)}
+                >
+                  {listing.cardState}
+                </Badge>
               </TableCell>
               <TableCell>
                 {listing.expiresAt
