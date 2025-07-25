@@ -23,6 +23,12 @@ export const tournamentService = {
     return fetcher<PaginatedResult<Tournament>>("/tournaments", { params });
   },
 
+  async getUpcomingTournaments(limit: number = 3): Promise<Tournament[]> {
+    return fetcher<Tournament[]>("/tournaments/upcoming", {
+      params: { limit },
+    });
+  },
+
   async create(data: CreateTournamentDto): Promise<Tournament> {
     return fetcher<Tournament>("/tournaments", {
       method: "POST",

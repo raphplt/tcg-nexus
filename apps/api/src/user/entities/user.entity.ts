@@ -3,9 +3,11 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
+  OneToOne
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Player } from 'src/player/entities/player.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -53,6 +55,10 @@ export class User {
   @Column({ nullable: true })
   @Exclude()
   refreshToken: string;
+
+  // Relations
+  @OneToOne(() => Player, (player) => player.user, { nullable: true })
+  player?: Player;
 
   @CreateDateColumn()
   createdAt: Date;

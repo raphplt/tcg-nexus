@@ -1,32 +1,32 @@
 {
-  "name": "tcgdex",
-  "private": true,
-  "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "seed": "cd apps/api && npm run seed",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo check-types"
-  },
-  "devDependencies": {
-    "@types/adm-zip": "^0.5.7",
-    "@types/bcryptjs": "^2.4.6",
-    "prettier": "^3.5.0",
-    "turbo": "^2.5.4",
-    "typescript": "5.8.3"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "packageManager": "npm@10.9.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "dependencies": {
-    "@nestjs/swagger": "^11.2.0",
-    "bcryptjs": "^3.0.2",
-    "sonner": "^2.0.6"
-  }
+    "name": "tcgdex",
+    "private": true,
+    "scripts": {
+        "build": "turbo build",
+        "dev": "turbo dev",
+        "seed": "cd apps/api && npm run seed",
+        "lint": "turbo lint",
+        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+        "check-types": "turbo check-types"
+    },
+    "devDependencies": {
+        "@types/adm-zip": "^0.5.7",
+        "@types/bcryptjs": "^2.4.6",
+        "prettier": "^3.5.0",
+        "turbo": "^2.5.4",
+        "typescript": "5.8.3"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "packageManager": "npm@10.9.0",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "dependencies": {
+        "@nestjs/swagger": "^11.2.0",
+        "bcryptjs": "^3.0.2",
+        "sonner": "^2.0.6"
+    }
 }

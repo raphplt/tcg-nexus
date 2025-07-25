@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { User, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -34,46 +33,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user;
 
-  // Vérifier l'authentification au chargement
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const accessToken = Cookies.get("accessToken");
-        if (accessToken) {
-          const userData = await authService.getProfile();
-          setUser(userData);
-        }
+        const userData = await authService.getProfile();
+        setUser(userData);
       } catch (error) {
-        console.error("Auth check failed:", error);
-        // Si l'erreur est 401, les cookies seront nettoyés par l'intercepteur
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 
   const login = async (credentials: LoginRequest) => {
     try {
       setIsLoading(true);
-      const response = await authService.login(credentials);
-
-      // Stocker les tokens dans les cookies
-      Cookies.set("accessToken", response.tokens.accessToken, {
-        expires: 6 / 24, // 15 minutes
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      Cookies.set("refreshToken", response.tokens.refreshToken, {
-        expires: 7, // 7 jours
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      setUser(response.user);
-      router.push("/"); // Redirection vers la page d'accueil
+      await authService.login(credentials);
+      const userData = await authService.getProfile();
+      setUser(userData);
+      router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -85,23 +65,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterRequest) => {
     try {
       setIsLoading(true);
-      const response = await authService.register(userData);
-
-      // Stocker les tokens dans les cookies
-      Cookies.set("accessToken", response.tokens.accessToken, {
-        expires: 1 / 96, // 15 minutes
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      Cookies.set("refreshToken", response.tokens.refreshToken, {
-        expires: 7, // 7 jours
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      setUser(response.user);
-      router.push("/"); // Redirection vers la page d'accueil
+      await authService.register(userData);
+      const user = await authService.getProfile();
+      setUser(user);
+      router.push("/");
     } catch (error) {
       console.error("Registration failed:", error);
       throw error;

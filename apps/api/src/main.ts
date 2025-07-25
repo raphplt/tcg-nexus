@@ -4,12 +4,14 @@ import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
+import * as cookieParser from 'cookie-parser';
 
 dotenv.config();
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
+    app.use(cookieParser());
 
     const config = new DocumentBuilder()
       .setTitle('TCG Nexus API')
@@ -36,7 +38,9 @@ async function bootstrap() {
 
     app.enableCors({
       origin:
-        process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+        process.env.NODE_ENV === 'production'
+          ? process.env.FRONTEND_URL
+          : 'http://localhost:3000',
       credentials: true
     });
 
