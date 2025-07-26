@@ -25,9 +25,10 @@ import {PokemonCardType} from "@/types/cardPokemon";
 
 interface CardComboboxProps {
     onSelect: (card: PokemonCardType) => void
+    resetSignal?: number;
 }
 
-export function CardSelector({ onSelect }: CardComboboxProps) {
+export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState('')
     const [input, setInput] = React.useState('')
@@ -40,6 +41,14 @@ export function CardSelector({ onSelect }: CardComboboxProps) {
     const timeoutRef = React.useRef<number | undefined>(undefined);
 
     const listRef = React.useRef<HTMLDivElement|null>(null)
+
+    React.useEffect(() => {
+        setSelectedCard(null)
+        setValue('')
+        setInput('')
+        setCards([])
+        setPage(1)
+    }, [resetSignal])
 
     React.useEffect(() => {
         if (!open) return

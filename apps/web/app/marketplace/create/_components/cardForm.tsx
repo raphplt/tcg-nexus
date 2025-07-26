@@ -19,23 +19,28 @@ import Link from "next/link";
 import {Loader2} from "lucide-react";
 import {useAuth} from "@/contexts/AuthContext";
 import {PokemonCardType} from "@/types/cardPokemon";
+import {CardState} from "@/types/listing";
 const FormSchema = z.object({
     cardId: z.string().uuid("Carte requise."),
     price: z.coerce.number().positive("Prix invalide"),
     quantityAvailable: z.coerce.number().int().positive("Quantité invalide"),
-    cardState: z.string().min(1, "État requis"),
+    cardState: z.nativeEnum(CardState, {
+        errorMap: () => ({ message: "État requis" })
+    }),
 })
 const cardStates = [
-    { label: "Near Mint", value: "NM" },
-    { label: "Excellent", value: "EX" },
-    { label: "Good", value: "GD" },
-    { label: "Lightly Played", value: "LP" },
-    { label: "Played", value: "PL" },
-    { label: "Poor", value: "POOR" },
+    { label: "Near Mint", value: CardState.NM },
+    { label: "Excellent", value: CardState.EX },
+    { label: "Good", value: CardState.GD },
+    { label: "Lightly Played", value: CardState.LP },
+    { label: "Played", value: CardState.PL },
+    { label: "Poor", value: CardState.Poor },
 ];
+
 
 const CardForm = () => {
     const [loading, setLoading] = useState(false);
+    const [resetCardSelect, setResetCardSelect] = useState(0);
     const { user} = useAuth();
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -70,6 +75,7 @@ const CardForm = () => {
                 setLoading(false);
                 if (data?.id)
                 {
+                    setResetCardSelect(prev => prev + 1);
                     form.reset();
                     return `La vente a été créer avec succès.`;
                 }
@@ -91,8 +97,8 @@ const CardForm = () => {
                     <CardSelector
                         onSelect={(card) => {
                             form.setValue("cardId", card.id)
-
                         }}
+                        resetSignal={resetCardSelect}
                     />
                     {form.formState.errors.cardId && <p className="text-sm text-red-500">{form.formState.errors.cardId.message}</p>}
                 </div>
