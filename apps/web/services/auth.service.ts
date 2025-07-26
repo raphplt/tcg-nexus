@@ -22,7 +22,8 @@ export const authService = {
         headers: {
           "x-remember-me": rememberMe ? "true" : "false",
         },
-      },
+        withCredentials: true
+      }
     );
     return response.data;
   },

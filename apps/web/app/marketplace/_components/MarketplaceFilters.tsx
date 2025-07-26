@@ -5,6 +5,8 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import {useAuth} from "@/contexts/AuthContext";
 
 interface Option {
   label: string;
@@ -39,7 +41,7 @@ const MarketplaceFilters = ({
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
+  const {isAuthenticated} = useAuth();
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
       setFilters({ search: debouncedSearch });
@@ -77,6 +79,19 @@ const MarketplaceFilters = ({
           <SlidersHorizontal className="w-4 h-4 mr-2" />
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
+        {isAuthenticated && (
+            <Button
+                type="button"
+                className="h-10"
+                asChild
+            >
+              <Link
+                  href="/marketplace/create"
+              >
+                Créer une vente
+              </Link>
+            </Button>
+        )}
       </div>
       {showAdvanced && (
         <div className="flex flex-wrap gap-4 items-end mt-4">

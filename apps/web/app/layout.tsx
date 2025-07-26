@@ -5,7 +5,7 @@ import Footer from "@components/Layout/Footer";
 import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/contexts/QueryClientContext";
-
+import { Toaster } from 'sonner';
 export const metadata: Metadata = {
   title: "TCG Nexus",
   description: "La révolution du jeu de cartes",
@@ -33,6 +33,7 @@ export default function RootLayout({
           <AuthProvider>
             <Header />
             <div className="mt-16 min-h-screen">{children}</div>
+            <Toaster position="top-right"/>
             <Footer />
           </AuthProvider>
         </ReactQueryProvider>
