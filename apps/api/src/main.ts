@@ -5,6 +5,7 @@ import { Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 import * as cookieParser from 'cookie-parser';
+import { AllExceptionsFilter } from './common/http-exception.filter';
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ async function bootstrap() {
         }
       })
     );
+
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     app.useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector))
