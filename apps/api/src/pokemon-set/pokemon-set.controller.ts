@@ -10,7 +10,9 @@ import {
 import { PokemonSetService } from './pokemon-set.service';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
 import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('pokemon-set')
 @Controller('pokemon-set')
 export class PokemonSetController {
   constructor(private readonly pokemonSetService: PokemonSetService) {}

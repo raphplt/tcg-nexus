@@ -17,7 +17,9 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
 import { Response, Request as ExpressRequest } from 'express';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -44,7 +46,7 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
     });
-    res.json({ user: result.user });
+    res.json({ user: result.user, tokens: result.tokens });
     return;
   }
 
@@ -74,6 +76,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtRefreshGuard)
+  @ApiBearerAuth()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refreshTokens(
@@ -103,6 +106,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user: User, @Res() res: Response) {
@@ -114,6 +118,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('profile')
   @HttpCode(HttpStatus.OK)
   getProfile(@CurrentUser() user: User) {
