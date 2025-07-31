@@ -47,7 +47,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
 import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
-import { Currency } from 'src/marketplace/entities/currency.enum';
+import { Currency } from 'src/common/enums/currency';
 
 @Injectable()
 export class SeedService {

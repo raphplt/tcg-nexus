@@ -1,3 +1,4 @@
+import { CardState } from "@/utils/enums";
 import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
 
@@ -11,13 +12,4 @@ export interface Listing {
   cardState: CardState;
   createdAt: Date;
   expiresAt: Date;
-}
-
-export enum CardState {
-  NM = "NM",
-  EX = "EX",
-  GD = "GD",
-  LP = "LP",
-  PL = "PL",
-  Poor = "Poor",
 }

@@ -11,7 +11,7 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { OrderItem } from './order-item.entity';
 import { PaymentTransaction } from './payment-transaction.entity';
-import { Currency } from './currency.enum';
+import { Currency } from '../../common/enums/currency';
 
 export enum OrderStatus {
   PENDING = 'Pending',

@@ -3,13 +3,12 @@
 import * as React from 'react'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList
-} from '@components/ui/command'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@components/ui/command";
 import {
     Popover,
     PopoverContent,
@@ -55,7 +54,10 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
         const fetchCards = async () => {
             setLoading(true)
             try {
-                let res = await authedFetch("GET",`/pokemon-card/paginated?page=${page}&limit=100`)
+                const res = await authedFetch(
+                  "GET",
+                  `/pokemon-card/paginated?page=${page}&limit=100`,
+                );
                 setIsSearching(false)
                 const newCards = res.data
                 setCards((prev) => [...prev, ...newCards])
@@ -89,86 +91,106 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     }
 
     const handleOnChange = async (search: string) => {
-        setLoading(true);
-        try {
-            let res = await authedFetch("GET",`/pokemon-card/search/${encodeURIComponent(search)}`)
-            setIsSearching(true)
-            setCards([])
-            setCards(res)
-            setHasMore(false)
-        }catch (err) {
-            console.error('Erreur fetch cartes :', err)
-        } finally {
-            setLoading(false)
-        }
-
-    }
+      setLoading(true);
+      try {
+        const res = await authedFetch(
+          "GET",
+          `/pokemon-card/search/${encodeURIComponent(search)}`,
+        );
+        setIsSearching(true);
+        setCards([]);
+        setCards(res);
+        setHasMore(false);
+      } catch (err) {
+        console.error("Erreur fetch cartes :", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     return (
-        <Popover open={open} onOpenChange={(state) => {
-            setOpen(state)
-            if (state) {
-                setPage(1)
-                setCards([])
-                setInput('')
-            }
-        }}>
-            <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-                    {selectedCard ? (selectedCard.name ?? "") : 'Sélectionner une carte'}
-                    <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0">
-                <Command>
-                    <Input
-                        placeholder="Rechercher une carte..."
-                        value={input}
-                        onChange={(e) => {
-                            let val = e.target.value;
-                            if (timeoutRef.current) {
-                                clearTimeout(timeoutRef.current!);
-                            }
-                            timeoutRef.current = window.setTimeout(() => {
-                                if (val.length > 0){
-                                    handleOnChange(val);
-                                }
-                            }, 500);
+      <Popover
+        open={open}
+        onOpenChange={(state) => {
+          setOpen(state);
+          if (state) {
+            setPage(1);
+            setCards([]);
+            setInput("");
+          }
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedCard
+              ? (selectedCard.name ?? "")
+              : "Sélectionner une carte"}
+            <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[400px] p-0">
+          <Command>
+            <Input
+              placeholder="Rechercher une carte..."
+              value={input}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (timeoutRef.current) {
+                  clearTimeout(timeoutRef.current!);
+                }
+                timeoutRef.current = window.setTimeout(() => {
+                  if (val.length > 0) {
+                    handleOnChange(val);
+                  }
+                }, 500);
 
-                            setInput(val)
-                            // setPage(1)
-                            // setCards([])
-                            // setHasMore(true)
-                        }}
+                setInput(val);
+                // setPage(1)
+                // setCards([])
+                // setHasMore(true)
+              }}
+            />
+            <CommandList
+              ref={(el) => {
+                listRef.current = el;
+              }}
+              onScroll={handleScroll}
+            >
+              <CommandEmpty>
+                {input.length < 2
+                  ? "Commencez à taper pour rechercher."
+                  : "Aucune carte trouvée."}
+              </CommandEmpty>
+              <CommandGroup>
+                {cards.map((card) => (
+                  <CommandItem
+                    key={card.id}
+                    value={card.id}
+                    onSelect={() => handleSelect(card.id)}
+                  >
+                    <CheckIcon
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === card.id ? "opacity-100" : "opacity-0",
+                      )}
                     />
-                    <CommandList
-                        ref={(el) => {
-                            listRef.current = el
-                        }}
-                        onScroll={handleScroll}
-                    >
-                        <CommandEmpty>
-                            {input.length < 2 ? 'Commencez à taper pour rechercher.' : 'Aucune carte trouvée.'}
-                        </CommandEmpty>
-                        <CommandGroup>
-                            {cards.map((card) => (
-                                <CommandItem key={card.id} value={card.id} onSelect={() => handleSelect(card.id)}>
-                                    <CheckIcon
-                                        className={cn(
-                                            'mr-2 h-4 w-4',
-                                            value === card.id ? 'opacity-100' : 'opacity-0'
-                                        )}
-                                    />
-                                    {card.name ?? ""}
-                                </CommandItem>
-                            ))}
-                            {loading && (
-                                <div className="p-2 text-sm text-muted-foreground">Chargement...</div>
-                            )}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
-    )
+                    {card.name ?? ""}
+                  </CommandItem>
+                ))}
+                {loading && (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    Chargement...
+                  </div>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
 }

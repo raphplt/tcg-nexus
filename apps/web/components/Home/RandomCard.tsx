@@ -36,7 +36,7 @@ const RandomCard = () => {
                 src={
                   card.image
                     ? card.image + "/high.png"
-                    : "/images/placeholder.png"
+                    : "/images/carte-pokemon-dos.jpg"
                 }
                 alt={card.name || "Carte Pokémon"}
                 fill

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Option {
   label: string;
@@ -42,6 +44,7 @@ export function TournamentsFilters({
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
@@ -80,41 +83,68 @@ export function TournamentsFilters({
           <SlidersHorizontal className="w-4 h-4 mr-2" />
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
+        {user?.isPro && (
+          <div className="flex justify-end">
+            <Link href="/tournaments/create">
+              <Button variant="default">Créer un tournoi</Button>
+            </Link>
+          </div>
+        )}
       </div>
       {showAdvanced && (
         <div className="flex flex-wrap gap-4 items-end mt-4">
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="type">Type</Label>
             <Select
-              id="type"
-              value={filters.type}
-              onChange={(e) => setFilters({ type: e.target.value })}
+              value={filters.type || "ALL"}
+              onValueChange={(value) =>
+                setFilters({ type: value === "ALL" ? "" : value })
+              }
             >
-              {typeOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {typeOptions.find((opt) => opt.value === filters.type)?.label ||
+                  "Tous"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous</SelectItem>
+                {typeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={
+                      opt.value || opt.label.replace(/\s+/g, "_").toUpperCase()
+                    }
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="status">Statut</Label>
             <Select
-              id="status"
-              value={filters.status}
-              onChange={(e) => setFilters({ status: e.target.value })}
+              value={filters.status || "ALL"}
+              onValueChange={(value) =>
+                setFilters({ status: value === "ALL" ? "" : value })
+              }
             >
-              {statusOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {statusOptions.find((opt) => opt.value === filters.status)
+                  ?.label || "Tous les statuts"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous les statuts</SelectItem>
+                {statusOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={
+                      opt.value || opt.label.replace(/\s+/g, "_").toUpperCase()
+                    }
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
@@ -146,31 +176,40 @@ export function TournamentsFilters({
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="sortBy">Trier par</Label>
             <Select
-              id="sortBy"
-              value={filters.sortBy}
-              onChange={(e) => setFilters({ sortBy: e.target.value })}
+              value={filters.sortBy || ""}
+              onValueChange={(value) => setFilters({ sortBy: value })}
             >
-              {sortOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {sortOptions.find((opt) => opt.value === filters.sortBy)
+                  ?.label || ""}
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[120px]">
             <Label htmlFor="sortOrder">Ordre</Label>
             <Select
-              id="sortOrder"
               value={filters.sortOrder}
-              onChange={(e) =>
-                setFilters({ sortOrder: e.target.value as "ASC" | "DESC" })
+              onValueChange={(value) =>
+                setFilters({ sortOrder: value as "ASC" | "DESC" })
               }
             >
-              <option value="ASC">Ascendant</option>
-              <option value="DESC">Descendant</option>
+              <SelectTrigger className="w-full">
+                {filters.sortOrder === "ASC" ? "Ascendant" : "Descendant"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ASC">Ascendant</SelectItem>
+                <SelectItem value="DESC">Descendant</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <Button
