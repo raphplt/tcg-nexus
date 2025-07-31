@@ -1,4 +1,4 @@
-import { Currency } from '../entities/currency.enum';
+import { Currency } from '../../common/enums/currency';
 import { CardState } from '../entities/listing.entity';
 import {
   IsEnum,
@@ -31,6 +31,10 @@ export class CreateListingDto {
   @IsInt()
   @Min(1)
   quantityAvailable?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @IsEnum(CardState)
   cardState: CardState;

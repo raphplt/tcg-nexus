@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
@@ -80,17 +85,13 @@ const MarketplaceFilters = ({
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
         {isAuthenticated && (
-            <Button
-                type="button"
-                className="h-10"
-                asChild
-            >
-              <Link
-                  href="/marketplace/create"
-              >
-                Créer une vente
-              </Link>
-            </Button>
+          <Button
+            type="button"
+            className="h-10"
+            asChild
+          >
+            <Link href="/marketplace/create">Créer une vente</Link>
+          </Button>
         )}
       </div>
       {showAdvanced && (
@@ -98,65 +99,90 @@ const MarketplaceFilters = ({
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="cardState">État</Label>
             <Select
-              id="cardState"
-              value={filters.cardState}
-              onChange={(e) => setFilters({ cardState: e.target.value })}
+              value={filters.cardState || "ALL"}
+              onValueChange={(value) =>
+                setFilters({ cardState: value === "ALL" ? "" : value })
+              }
             >
-              {cardStateOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {cardStateOptions.find((opt) => opt.value === filters.cardState)
+                  ?.label || "Tous"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Tous</SelectItem>
+                {cardStateOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="currency">Devise</Label>
             <Select
-              id="currency"
-              value={filters.currency}
-              onChange={(e) => setFilters({ currency: e.target.value })}
+              value={filters.currency || "ALL"}
+              onValueChange={(value) =>
+                setFilters({ currency: value === "ALL" ? "" : value })
+              }
             >
-              {currencyOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {currencyOptions.find((opt) => opt.value === filters.currency)
+                  ?.label || "Toutes"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Toutes</SelectItem>
+                {currencyOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
             <Label htmlFor="sortBy">Trier par</Label>
             <Select
-              id="sortBy"
-              value={filters.sortBy}
-              onChange={(e) => setFilters({ sortBy: e.target.value })}
+              value={filters.sortBy || ""}
+              onValueChange={(value) => setFilters({ sortBy: value })}
             >
-              {sortOptions.map((opt) => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                >
-                  {opt.label}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                {sortOptions.find((opt) => opt.value === filters.sortBy)
+                  ?.label || ""}
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[120px]">
             <Label htmlFor="sortOrder">Ordre</Label>
             <Select
-              id="sortOrder"
               value={filters.sortOrder}
-              onChange={(e) =>
-                setFilters({ sortOrder: e.target.value as "ASC" | "DESC" })
+              onValueChange={(value) =>
+                setFilters({ sortOrder: value as "ASC" | "DESC" })
               }
             >
-              <option value="ASC">Ascendant</option>
-              <option value="DESC">Descendant</option>
+              <SelectTrigger className="w-full">
+                {filters.sortOrder === "ASC" ? "Ascendant" : "Descendant"}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ASC">Ascendant</SelectItem>
+                <SelectItem value="DESC">Descendant</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <Button

@@ -3,13 +3,12 @@
 import * as React from 'react'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList
-} from '@components/ui/command'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@components/ui/command";
 import {
     Popover,
     PopoverContent,

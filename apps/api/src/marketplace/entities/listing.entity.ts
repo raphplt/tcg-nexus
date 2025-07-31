@@ -10,7 +10,8 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { OrderItem } from './order-item.entity';
-import { Currency } from './currency.enum';
+import { Currency } from '../../common/enums/currency';
+import { Languages } from 'src/common/enums/languages';
 
 export enum CardState {
   NM = 'NM',
@@ -45,6 +46,12 @@ export class Listing {
 
   @Column({ type: 'enum', enum: CardState })
   cardState: CardState;
+
+  @Column({ nullable: true })
+  description?: string;
+
+  @Column({ nullable: true, default: Languages.FR })
+  language?: Languages;
 
   @CreateDateColumn()
   createdAt: Date;

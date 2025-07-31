@@ -1,4 +1,4 @@
-import { CardState } from "@/types/listing";
+import { CardState } from "@/utils/enums";
 
 export const getCardStateColor = (cardState: CardState) => {
   switch (cardState) {

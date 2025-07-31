@@ -2,4 +2,4 @@ export * from './listing.entity';
 export * from './order.entity';
 export * from './order-item.entity';
 export * from './payment-transaction.entity';
-export * from './currency.enum';
+export * from '../../common/enums/currency';
