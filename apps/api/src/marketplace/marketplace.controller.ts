@@ -16,12 +16,15 @@ import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from 'src/user/entities/user.entity';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('marketplace')
 @Controller('listings')
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post()
   createListing(@Body() createListingDto: CreateListingDto) {
     return this.marketplaceService.create(createListingDto);
@@ -38,6 +41,7 @@ export class MarketplaceController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Patch(':id')
   updateListing(
     @Param('id') id: string,
@@ -48,6 +52,7 @@ export class MarketplaceController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Delete(':id')
   deleteListing(@Param('id') id: string, @CurrentUser() user: User) {
     return this.marketplaceService.delete(+id, user);

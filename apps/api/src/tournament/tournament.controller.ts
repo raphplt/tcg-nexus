@@ -17,7 +17,9 @@ import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { TournamentQueryDto } from './dto/tournament-query.dto';
 import { UpdateTournamentStatusDto } from './dto/update-tournament-status.dto';
 import { TournamentRegistrationDto } from './dto/tournament-registration.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('tournaments')
 @Controller('tournaments')
 export class TournamentController {
   constructor(private readonly tournamentService: TournamentService) {}

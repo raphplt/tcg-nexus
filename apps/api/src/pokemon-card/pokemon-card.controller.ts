@@ -14,7 +14,9 @@ import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/user/entities/user.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('pokemon-card')
 @Controller('pokemon-card')
 export class PokemonCardController {
   constructor(private readonly pokemonCardService: PokemonCardService) {}
