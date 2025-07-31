@@ -97,13 +97,23 @@ export function TournamentsFilters({
             <Label htmlFor="type">Type</Label>
             <Select
               value={filters.type || "ALL"}
-              onValueChange={(value) => setFilters({ type: value === "ALL" ? "" : value })}
+              onValueChange={(value) =>
+                setFilters({ type: value === "ALL" ? "" : value })
+              }
             >
-              <SelectTrigger className="w-full">{typeOptions.find(opt => opt.value === filters.type)?.label || "Tous"}</SelectTrigger>
+              <SelectTrigger className="w-full">
+                {typeOptions.find((opt) => opt.value === filters.type)?.label ||
+                  "Tous"}
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Tous</SelectItem>
                 {typeOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={
+                      opt.value || opt.label.replace(/\s+/g, "_").toUpperCase()
+                    }
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -114,13 +124,23 @@ export function TournamentsFilters({
             <Label htmlFor="status">Statut</Label>
             <Select
               value={filters.status || "ALL"}
-              onValueChange={(value) => setFilters({ status: value === "ALL" ? "" : value })}
+              onValueChange={(value) =>
+                setFilters({ status: value === "ALL" ? "" : value })
+              }
             >
-              <SelectTrigger className="w-full">{statusOptions.find(opt => opt.value === filters.status)?.label || "Tous les statuts"}</SelectTrigger>
+              <SelectTrigger className="w-full">
+                {statusOptions.find((opt) => opt.value === filters.status)
+                  ?.label || "Tous les statuts"}
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">Tous les statuts</SelectItem>
                 {statusOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={
+                      opt.value || opt.label.replace(/\s+/g, "_").toUpperCase()
+                    }
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -159,10 +179,16 @@ export function TournamentsFilters({
               value={filters.sortBy || ""}
               onValueChange={(value) => setFilters({ sortBy: value })}
             >
-              <SelectTrigger className="w-full">{sortOptions.find(opt => opt.value === filters.sortBy)?.label || ""}</SelectTrigger>
+              <SelectTrigger className="w-full">
+                {sortOptions.find((opt) => opt.value === filters.sortBy)
+                  ?.label || ""}
+              </SelectTrigger>
               <SelectContent>
                 {sortOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                  >
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -173,9 +199,13 @@ export function TournamentsFilters({
             <Label htmlFor="sortOrder">Ordre</Label>
             <Select
               value={filters.sortOrder}
-              onValueChange={(value) => setFilters({ sortOrder: value as "ASC" | "DESC" })}
+              onValueChange={(value) =>
+                setFilters({ sortOrder: value as "ASC" | "DESC" })
+              }
             >
-              <SelectTrigger className="w-full">{filters.sortOrder === "ASC" ? "Ascendant" : "Descendant"}</SelectTrigger>
+              <SelectTrigger className="w-full">
+                {filters.sortOrder === "ASC" ? "Ascendant" : "Descendant"}
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ASC">Ascendant</SelectItem>
                 <SelectItem value="DESC">Descendant</SelectItem>
