@@ -8,6 +8,9 @@ import {
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { Tournament } from "@/types/tournament";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { TournamentsFilters } from "./_components/TournamentsFilters";
 import { TournamentsTable } from "./_components/TournamentsTable";
 import { TournamentsPagination } from "./_components/TournamentsPagination";
@@ -21,6 +24,7 @@ import {
 import { H1 } from "@/components/Shared/Titles";
 
 export default function TournamentsPage() {
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     search: "",
@@ -108,6 +112,14 @@ export default function TournamentsPage() {
           sortOptions={sortOptions}
           resetFilters={resetFilters}
         />
+
+        {user?.isPro  && (
+          <div className="flex justify-end mb-4">
+            <Link href="/tournaments/create">
+              <Button variant="default">Créer un tournoi</Button>
+            </Link>
+          </div>
+        )}
         <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
           <TournamentsTable
             data={data}

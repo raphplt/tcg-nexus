@@ -286,6 +286,7 @@ export class SeedService {
         password: 'password1',
         avatarUrl: 'https://via.placeholder.com/150',
         role: UserRole.USER,
+        isPro: false,
         isActive: true,
         emailVerified: true
       },
@@ -296,6 +297,7 @@ export class SeedService {
         password: 'password2',
         avatarUrl: 'https://via.placeholder.com/150',
         role: UserRole.ADMIN,
+        isPro: true,
         isActive: true,
         emailVerified: true
       },
@@ -306,6 +308,7 @@ export class SeedService {
         password: 'password3',
         avatarUrl: 'https://via.placeholder.com/150',
         role: UserRole.MODERATOR,
+        isPro: true,
         isActive: true,
         emailVerified: false
       }

@@ -33,7 +33,7 @@ export class TournamentService {
   // Créer un nouveau tournoi
   async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
     const tournament = this.tournamentRepository.create(createTournamentDto);
-
+    console.log("Creating tournament with data:", tournament);
     // Validation des dates
     if (tournament.startDate >= tournament.endDate) {
       throw new BadRequestException(
