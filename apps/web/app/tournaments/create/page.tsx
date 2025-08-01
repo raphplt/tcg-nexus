@@ -41,6 +41,7 @@ import {
 import { tournamentService } from "@/services/tournament.service";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { CreateTournamentDto } from "@/types/tournament";
 
 const formSchema = z
   .object({
@@ -51,7 +52,7 @@ const formSchema = z
     endDate: z.string().min(1, "Date de fin requise"),
     registrationDeadline: z.string().optional(),
     format: z.nativeEnum(TournamentFormat),
-    tournamentType: z.nativeEnum(TournamentType),
+    type: z.nativeEnum(TournamentType),
     status: z.nativeEnum(TournamentStatus).optional(),
     isFinished: z.boolean().optional(),
     isPublic: z.boolean().optional(),
@@ -89,7 +90,7 @@ export default function CreateTournamentPage() {
       startDate: "",
       endDate: "",
       format: TournamentFormat.STANDARD,
-      tournamentType: TournamentType.SINGLE_ELIMINATION,
+      type: TournamentType.SINGLE_ELIMINATION,
       status: TournamentStatus.DRAFT,
       isPublic: true,
       allowLateRegistration: false,
@@ -103,8 +104,32 @@ export default function CreateTournamentPage() {
   const onSubmit = async (values: FormValues) => {
     setError(null);
     setSuccess(null);
+
     try {
-      await tournamentService.create(values);
+      const payload: CreateTournamentDto = {
+        name: values.name,
+        description: values.description,
+        location: values.location,
+        startDate: new Date(values.startDate),
+        endDate: new Date(values.endDate),
+        type: values.type, 
+        registrationDeadline: values.registrationDeadline
+          ? new Date(values.registrationDeadline)
+          : undefined,
+        allowLateRegistration: values.allowLateRegistration,
+        requiresApproval: values.requiresApproval,
+        rules: values.rules,
+        additionalInfo: values.additionalInfo,
+        ageRestrictionMin: values.ageRestrictionMin,
+        ageRestrictionMax: values.ageRestrictionMax,
+        allowedFormats: values.allowedFormats,
+        isPublic: values.isPublic,
+        maxPlayers: values.maxPlayers,
+        minPlayers: values.minPlayers,
+      };
+
+      console.log("Payload envoyé au service:", payload);
+      await tournamentService.create(payload);
       setSuccess("Tournoi créé avec succès !");
       setTimeout(() => {
         router.push("/tournaments");
@@ -135,7 +160,10 @@ export default function CreateTournamentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
       <div className="flex mb-6 max-w-xl">
-        <Button variant="outline" onClick={() => window.history.back()}>
+        <Button
+          variant="outline"
+          onClick={() => window.history.back()}
+        >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
@@ -159,7 +187,10 @@ export default function CreateTournamentPage() {
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -168,7 +199,10 @@ export default function CreateTournamentPage() {
                   <FormItem className="col-span-2">
                     <FormLabel>Nom du tournoi</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nom du tournoi" {...field} />
+                      <Input
+                        placeholder="Nom du tournoi"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,7 +216,10 @@ export default function CreateTournamentPage() {
                   <FormItem className="col-span-2">
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder="Description du tournoi" {...field} />
+                      <Input
+                        placeholder="Description du tournoi"
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -195,7 +232,10 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Lieu</FormLabel>
                     <FormControl>
-                      <Input placeholder="Lieu" {...field} />
+                      <Input
+                        placeholder="Lieu"
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -208,7 +248,10 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date limite d'inscription</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -221,7 +264,10 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date de début</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -234,7 +280,10 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date de fin</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -243,7 +292,7 @@ export default function CreateTournamentPage() {
 
               <FormField
                 control={form.control}
-                name="tournamentType"
+                name="type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type de tournoi</FormLabel>
@@ -258,7 +307,10 @@ export default function CreateTournamentPage() {
                       </FormControl>
                       <SelectContent>
                         {Object.values(TournamentType).map((value) => (
-                          <SelectItem key={value} value={value}>
+                          <SelectItem
+                            key={value}
+                            value={value}
+                          >
                             {tournamentTypeTranslation[value]}
                           </SelectItem>
                         ))}
@@ -285,7 +337,10 @@ export default function CreateTournamentPage() {
                       </FormControl>
                       <SelectContent>
                         {Object.values(TournamentFormat).map((value) => (
-                          <SelectItem key={value} value={value}>
+                          <SelectItem
+                            key={value}
+                            value={value}
+                          >
                             {tournamentFormatTranslation[value]}
                           </SelectItem>
                         ))}
@@ -321,7 +376,10 @@ export default function CreateTournamentPage() {
                     <FormItem>
                       <FormLabel>Âge minimum</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          {...field}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -334,7 +392,10 @@ export default function CreateTournamentPage() {
                     <FormItem>
                       <FormLabel>Âge maximum</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          {...field}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
@@ -342,7 +403,10 @@ export default function CreateTournamentPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button
+              type="submit"
+              className="w-full"
+            >
               Créer le tournoi
             </Button>
           </form>
