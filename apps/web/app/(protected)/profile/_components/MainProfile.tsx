@@ -342,6 +342,88 @@ const MainProfile = () => {
           </div>
         </div>
       </Card>
+
+      {/* Mes tournois */}
+      <Card className="p-6">
+        <div className="flex items-center space-x-2 mb-6">
+          <Trophy className="w-5 h-5" />
+          <h2 className="text-xl font-semibold">Mes tournois</h2>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="font-medium">Spring Championship 2024</span>
+                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
+                <Badge className="bg-purple-500 text-white text-xs">Elimination simple</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Paris, France • 15-17 mars 2024
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold text-green-600">Champion</div>
+              <div className="text-sm text-muted-foreground">1er place</div>
+              <div className="text-sm font-medium text-green-600">+100 pts</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="font-medium">Winter Cup 2024</span>
+                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
+                <Badge className="bg-teal-500 text-white text-xs">Système suisse</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Lyon, France • 20-21 janvier 2024
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold text-blue-600">Demi-finaliste</div>
+              <div className="text-sm text-muted-foreground">3e place</div>
+              <div className="text-sm font-medium text-green-600">+50 pts</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-3 border-b">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="font-medium">Regional Qualifier</span>
+                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
+                <Badge className="bg-purple-500 text-white text-xs">Elimination simple</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Marseille, France • 10 février 2024
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold text-orange-600">Finaliste</div>
+              <div className="text-sm text-muted-foreground">2e place</div>
+              <div className="text-sm font-medium text-green-600">+75 pts</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="font-medium">Community Tournament</span>
+                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
+                <Badge className="bg-orange-500 text-white text-xs">Round robin</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Bordeaux, France • 5 janvier 2024
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-semibold text-gray-600">Quart de finaliste</div>
+              <div className="text-sm text-muted-foreground">5e place</div>
+              <div className="text-sm font-medium text-green-600">+25 pts</div>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };
