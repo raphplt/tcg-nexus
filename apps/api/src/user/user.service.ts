@@ -5,16 +5,20 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+// bcrypt types explicit to satisfy stricter lint rules
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { Player } from '../player/entities/player.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(Player)
+    private playerRepository: Repository<Player>
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -33,7 +37,18 @@ export class UserService {
       password: hashedPassword
     });
 
-    return this.userRepository.save(user);
+    // Save user first
+    const savedUser = await this.userRepository.save(user);
+
+    // Create associated player profile automatically
+    const player = this.playerRepository.create({
+      name: `${savedUser.firstName} ${savedUser.lastName}`.trim(),
+      user: savedUser
+    });
+    await this.playerRepository.save(player);
+
+    // Return saved user (player relation will be lazily loadable)
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {
@@ -77,13 +92,15 @@ export class UserService {
 
   async findById(id: number): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['player']
     });
   }
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { email }
+      where: { email },
+      relations: ['player']
     });
   }
 

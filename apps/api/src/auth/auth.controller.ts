@@ -128,7 +128,8 @@ export class AuthController {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      isPro: user.isPro
+      isPro: user.isPro,
+      playerId: user.player?.id
     };
   }
 }

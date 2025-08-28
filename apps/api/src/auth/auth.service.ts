@@ -51,7 +51,8 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role
+        role: user.role,
+        playerId: user.player?.id
       },
       tokens
     };
@@ -79,7 +80,8 @@ export class AuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          role: user.role
+          role: user.role,
+          playerId: user.player?.id
         },
         tokens
       };

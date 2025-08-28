@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { PlayerService } from './player.service';
-import { CreatePlayerDto } from './dto/create-player.dto';
-import { UpdatePlayerDto } from './dto/update-player.dto';
+// import { CreatePlayerDto } from './dto/create-player.dto';
+// import { UpdatePlayerDto } from './dto/update-player.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('player')
@@ -9,10 +9,10 @@ import { ApiTags } from '@nestjs/swagger';
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
-  @Post()
-  create(@Body() createPlayerDto: CreatePlayerDto) {
-    return this.playerService.create(createPlayerDto);
-  }
+  // @Post()
+  // create(@Body() createPlayerDto: CreatePlayerDto) {
+  //   return this.playerService.create(createPlayerDto);
+  // }
 
   @Get()
   findAll() {
@@ -24,10 +24,21 @@ export class PlayerController {
     return this.playerService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
-    return this.playerService.update(+id, updatePlayerDto);
+  @Get(':id/tournaments')
+  getTournamentsForPlayer(@Param('id', ParseIntPipe) id: number) {
+    return this.playerService.getTournamentsByPlayerId(id);
   }
+
+  // user -> player -> tournaments
+  @Get('/user/:userId/tournaments')
+  getTournamentsForUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.playerService.getTournamentsByUserId(userId);
+  }
+
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
+  //   return this.playerService.update(+id, updatePlayerDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

@@ -19,6 +19,8 @@ import {
   typeColor,
 } from "./utils";
 import { H1 } from "@/components/Shared/Titles";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserTournaments } from "@/contexts/UserTournamentsContext";
 
 export default function TournamentsPage() {
   const [page, setPage] = useState(1);
@@ -85,6 +87,10 @@ export default function TournamentsPage() {
     { label: "Statut", key: "status" },
   ];
 
+  const { tournaments: userTournaments } = useUserTournaments();
+
+  console.log("userTournaments:", userTournaments);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
@@ -122,6 +128,7 @@ export default function TournamentsPage() {
             sortBy={filters.sortBy}
             sortOrder={filters.sortOrder}
             setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))}
+            userTournaments={userTournaments}
           />
         </div>
         {data && (

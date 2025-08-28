@@ -25,6 +25,7 @@ export interface Filters {
   startDateTo: string;
   sortBy: string;
   sortOrder: "ASC" | "DESC";
+  userTournaments: Tournament[];
 }
 
 interface TournamentsTableProps {
@@ -39,6 +40,7 @@ interface TournamentsTableProps {
   sortBy: string;
   sortOrder: "ASC" | "DESC";
   setFilters: (filters: Partial<Filters>) => void;
+  userTournaments: Tournament[];
 }
 
 export function TournamentsTable({
@@ -53,6 +55,7 @@ export function TournamentsTable({
   sortBy,
   sortOrder,
   setFilters,
+  userTournaments,
 }: TournamentsTableProps) {
   const router = useRouter();
 
@@ -68,11 +71,11 @@ export function TournamentsTable({
 
   const register = async (tournamentId: number) => {
     try {
-      if (user) {
-        await tournamentService.register(tournamentId, user.id, "");
+      if (user?.playerId) {
+        await tournamentService.register(tournamentId, user.playerId, "");
         console.log("Inscription au tournoi réussie !");
       } else {
-        console.error("User non authentifié.");
+        console.error("User non authentifié ou pas de playerId.");
       }
     } catch (error) {
       console.error("Erreur lors de l'inscription au tournoi :", error);

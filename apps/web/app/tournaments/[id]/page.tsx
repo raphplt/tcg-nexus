@@ -121,11 +121,11 @@ export default function TournamentDetailsPage() {
   const register = async (tournamentId?: number) => {
     if (!tournamentId) return;
     try {
-      if (user) {
-        await tournamentService.register(tournamentId, user.id, "");
+      if (user?.playerId) {
+        await tournamentService.register(tournamentId, user.playerId, "");
         console.log("Inscription au tournoi réussie !");
       } else {
-        console.error("User non authentifié.");
+        console.error("User non authentifié ou playerId manquant.");
       }
     } catch (error) {
       console.error("Erreur lors de l'inscription au tournoi :", error);

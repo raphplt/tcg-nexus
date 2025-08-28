@@ -18,6 +18,7 @@ export interface AuthResponse {
     firstName: string;
     lastName: string;
     role: string;
+    playerId?: number;
   };
   tokens: AuthTokens;
 }

@@ -19,7 +19,6 @@ const HomePage = () => {
         <section className="flex flex-col gap-8 lg:col-span-1">
           <MarketplacePreview />
           <TrendingDecks />
-          {/* <MyCollection /> */}
         </section>
         <section className="flex flex-col gap-8 lg:col-span-1">
           <StrategicToolsPreview />
