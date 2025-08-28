@@ -34,4 +34,10 @@ export const tournamentService = {
       data,
     });
   },
+  
+  async register(tournamentId: number, playerId: number, notes?: string): Promise<void> {
+    await authedFetch<void>("POST", `/tournaments/${tournamentId}/register`, {
+      data: { playerId, notes },
+    });
+  },
 };
