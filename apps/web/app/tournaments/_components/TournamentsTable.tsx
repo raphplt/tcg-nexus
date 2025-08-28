@@ -12,6 +12,10 @@ import { Tournament } from "@/types/tournament";
 import { ArrowUp, ArrowDown, Eye, UserPlus } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
 import { Button } from "@/components/ui/button";
+import { tournamentService } from "@/services/tournament.service";
+import { useAuth } from "@/contexts/AuthContext";
+
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
 export interface Filters {
@@ -61,6 +65,8 @@ export function TournamentsTable({
       setFilters({ sortBy: key, sortOrder: "ASC" });
     }
   };
+
+  const { user } = useAuth();
 
   return (
     <Table>
@@ -163,6 +169,34 @@ export function TournamentsTable({
                 >
                   {tournamentStatusTranslation[tournament.status]}
                 </Badge>
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant={"ghost"}
+                  color="primary"
+                  onClick={async () => {
+                    try {
+                      const tournamentId = tournament.id;
+                      if (user) {
+                        await tournamentService.register(
+                          tournamentId,
+                          user.id,
+                          "",
+                        );
+                      } else {
+                        console.error("User is not authenticated.");
+                      }
+                      console.log("Tournoi rejoint avec succès !");
+                    } catch (error) {
+                      console.error(
+                        "Erreur lors de la tentative de rejoindre le tournoi :",
+                        error,
+                      );
+                    }
+                  }}
+                >
+                  Rejoindre
+                </Button>
               </TableCell>
               <TableCell className="space-x-2 whitespace-nowrap">
                 <Button
