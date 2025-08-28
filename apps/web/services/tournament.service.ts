@@ -30,14 +30,22 @@ export const tournamentService = {
   },
 
   async create(data: CreateTournamentDto): Promise<Tournament> {
-    return authedFetch<Tournament>("POST", "/tournaments",  {
+    return authedFetch<Tournament>("POST", "/tournaments", {
       data,
     });
   },
-  
-  async register(tournamentId: number, playerId: number, notes?: string): Promise<void> {
+
+  async register(
+    tournamentId: number,
+    playerId: number,
+    notes?: string,
+  ): Promise<void> {
     await authedFetch<void>("POST", `/tournaments/${tournamentId}/register`, {
       data: { playerId, notes },
     });
+  },
+
+  async getById(id: string): Promise<Tournament> {
+    return fetcher<Tournament>(`/tournaments/${id}`);
   },
 };
