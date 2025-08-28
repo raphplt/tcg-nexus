@@ -11,10 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tournament } from "@/types/tournament";
 import { ArrowUp, ArrowDown, Eye, UserPlus } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
-import { Button } from "@/components/ui/button";
 import { tournamentService } from "@/services/tournament.service";
 import { useAuth } from "@/contexts/AuthContext";
-
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -67,6 +65,19 @@ export function TournamentsTable({
   };
 
   const { user } = useAuth();
+
+  const register = async (tournamentId: number) => {
+    try {
+      if (user) {
+        await tournamentService.register(tournamentId, user.id, "");
+        console.log("Inscription au tournoi réussie !");
+      } else {
+        console.error("User non authentifié.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription au tournoi :", error);
+    }
+  };
 
   return (
     <Table>
@@ -170,39 +181,13 @@ export function TournamentsTable({
                   {tournamentStatusTranslation[tournament.status]}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <Button
-                  variant={"ghost"}
-                  color="primary"
-                  onClick={async () => {
-                    try {
-                      const tournamentId = tournament.id;
-                      if (user) {
-                        await tournamentService.register(
-                          tournamentId,
-                          user.id,
-                          "",
-                        );
-                      } else {
-                        console.error("User is not authenticated.");
-                      }
-                      console.log("Tournoi rejoint avec succès !");
-                    } catch (error) {
-                      console.error(
-                        "Erreur lors de la tentative de rejoindre le tournoi :",
-                        error,
-                      );
-                    }
-                  }}
-                >
-                  Rejoindre
-                </Button>
-              </TableCell>
               <TableCell className="space-x-2 whitespace-nowrap">
                 <Button
                   size="sm"
                   variant="secondary"
                   className="gap-1"
+                  disabled={!user}
+                  onClick={() => register(tournament.id)}
                 >
                   <UserPlus className="w-4 h-4" />
                   S&apos;inscrire
