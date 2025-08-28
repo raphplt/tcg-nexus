@@ -33,7 +33,7 @@ export class TournamentService {
   // Créer un nouveau tournoi
   async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
     const tournament = this.tournamentRepository.create(createTournamentDto);
-    console.log("Creating tournament with data:", tournament);
+    console.log('Creating tournament with data:', tournament);
     // Validation des dates
     if (tournament.startDate >= tournament.endDate) {
       throw new BadRequestException(
@@ -243,12 +243,10 @@ export class TournamentService {
     registrationDto: TournamentRegistrationDto
   ): Promise<TournamentRegistration> {
     const { tournamentId, playerId, notes } = registrationDto;
-
     const tournament = await this.findOne(tournamentId);
     const player = await this.playerRepository.findOne({
       where: { id: playerId }
     });
-
     if (!player) {
       throw new NotFoundException(`Joueur avec l'ID ${playerId} non trouvé`);
     }
