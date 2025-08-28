@@ -6,7 +6,7 @@ export type Tournament = {
   startDate: string;
   endDate: string;
   type: string;
-  status: string;
+  status: TournamentStatus;
   isPublic?: boolean;
   isFinished?: boolean;
   currentRound?: number;
@@ -101,4 +101,13 @@ export interface CreateTournamentDto {
   ageRestrictionMin?: number;
   ageRestrictionMax?: number;
   allowedFormats?: string[];
+}
+
+export enum TournamentStatus {
+  DRAFT = "draft",
+  REGISTRATION_OPEN = "registration_open",
+  REGISTRATION_CLOSED = "registration_closed",
+  IN_PROGRESS = "in_progress",
+  FINISHED = "finished",
+  CANCELLED = "cancelled",
 }

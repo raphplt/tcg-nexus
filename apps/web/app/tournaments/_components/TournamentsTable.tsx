@@ -8,7 +8,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Tournament } from "@/types/tournament";
+import { Tournament, TournamentStatus } from "@/types/tournament";
 import { ArrowUp, ArrowDown, Eye, UserPlus } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
 import { tournamentService } from "@/services/tournament.service";
@@ -160,11 +160,7 @@ export function TournamentsTable({
                       | undefined) || "outline"
                   }
                 >
-                  {
-                    tournamentTypeTranslation[
-                      tournament.type as keyof typeof tournamentTypeTranslation
-                    ]
-                  }
+                  {tournamentTypeTranslation[tournament.type]}
                 </Badge>
               </TableCell>
               <TableCell>
@@ -186,7 +182,10 @@ export function TournamentsTable({
                   size="sm"
                   variant="secondary"
                   className="gap-1"
-                  disabled={!user}
+                  disabled={
+                    !user ||
+                    tournament.status !== TournamentStatus.REGISTRATION_OPEN
+                  }
                   onClick={() => register(tournament.id)}
                 >
                   <UserPlus className="w-4 h-4" />
