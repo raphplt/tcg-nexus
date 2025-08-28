@@ -27,7 +27,6 @@ import { Flag, ShoppingCart, Info, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import { rarityToImage, typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
-import { randomUUID } from "crypto";
 
 const MOCK_COTE = {
   min: 8.5,
@@ -140,7 +139,6 @@ const Page = () => {
             </div>
           </div>
         </Card>
-        {/* Card Info */}
         <div className="flex-1 flex flex-col gap-6 justify-between">
           <Card className="shadow-lg border-2 border-primary/20">
             <CardHeader className="pb-2">
@@ -237,7 +235,6 @@ const Page = () => {
               )}
             </CardContent>
           </Card>
-          {/* Seller Info */}
           <Card className="flex items-center gap-4 p-4 border-2 border-secondary/30">
             <Avatar className="size-14">
               <AvatarImage
@@ -269,7 +266,6 @@ const Page = () => {
           </Card>
         </div>
       </div>
-      {/* Price + Actions */}
       <Card className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 shadow-lg border-2 border-primary/40">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 text-3xl font-bold text-primary">
