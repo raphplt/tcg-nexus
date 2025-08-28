@@ -36,6 +36,7 @@ import {
 import { statusColor, typeColor } from "../utils";
 import { formatPricing } from "@/utils/price";
 import { Tournament } from "@/types/tournament";
+import { useAuth } from "@/contexts/AuthContext";
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -105,6 +106,7 @@ const ErrorView = ({ message }: { message?: string }) => (
 
 export default function TournamentDetailsPage() {
   const { id } = useParams();
+  const { user } = useAuth();
 
   const {
     data: tournament,
@@ -115,6 +117,20 @@ export default function TournamentDetailsPage() {
     queryFn: () =>
       tournamentService.getById(id as string) as Promise<Tournament>,
   });
+
+  const register = async (tournamentId?: number) => {
+    if (!tournamentId) return;
+    try {
+      if (user) {
+        await tournamentService.register(tournamentId, user.id, "");
+        console.log("Inscription au tournoi réussie !");
+      } else {
+        console.error("User non authentifié.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription au tournoi :", error);
+    }
+  };
 
   const participantCount = tournament?.players?.length || 0;
   const matchesCount = tournament?.matches?.length || 0;
@@ -193,8 +209,9 @@ export default function TournamentDetailsPage() {
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button
-              disabled={!registrationOpen}
+              disabled={!registrationOpen || !user}
               className="shadow-md"
+              onClick={() => register(tournament?.id)}
             >
               {registrationOpen ? "S'inscrire" : "Inscriptions fermées"}
             </Button>
