@@ -33,13 +33,13 @@ export class MarketplaceService {
     private readonly listingRepository: Repository<Listing>
   ) {}
 
-  async create(createListingDto: CreateListingDto) {
-    if (!createListingDto.sellerId || !createListingDto.pokemonCardId) {
-      throw new BadRequestException('sellerId and pokemonCardId are required');
+  async create(createListingDto: CreateListingDto, user: User) {
+    if (!createListingDto.pokemonCardId) {
+      throw new BadRequestException('pokemonCardId is required');
     }
     const listing = this.listingRepository.create({
       ...createListingDto,
-      seller: { id: createListingDto.sellerId },
+      seller: user,
       pokemonCard: { id: createListingDto.pokemonCardId }
     });
     return this.listingRepository.save(listing);
@@ -147,5 +147,18 @@ export class MarketplaceService {
       );
     }
     await this.listingRepository.delete(id);
+  }
+
+  async findBySellerId(sellerId: number): Promise<Listing[]> {
+    return this.listingRepository.find({
+      where: { seller: { id: sellerId } },
+      relations: [
+        'seller',
+        'pokemonCard',
+        'pokemonCard.set',
+        'pokemonCard.set.serie'
+      ],
+      order: { createdAt: 'DESC' }
+    });
   }
 }
