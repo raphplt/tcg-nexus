@@ -114,11 +114,11 @@ const Header = () => {
               <li>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-8 w-8 rounded-full p-0"
-                    >
-                      <Avatar className="h-8 w-8">
+                    <Button className="h-8 w-8 rounded-full p-0">
+                      <Avatar
+                        className="h-8 w-8"
+                        color="blue"
+                      >
                         <AvatarImage
                           src={user.avatarUrl || ""}
                           alt={`${user.firstName} ${user.lastName}`}

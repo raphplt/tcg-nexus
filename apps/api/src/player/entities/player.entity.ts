@@ -4,7 +4,8 @@ import {
   Column,
   ManyToMany,
   OneToMany,
-  OneToOne
+  OneToOne,
+  JoinColumn
 } from 'typeorm';
 import { Tournament } from 'src/tournament/entities/tournament.entity';
 import { Statistics } from 'src/statistics/entities/statistic.entity';
@@ -19,7 +20,9 @@ export class Player {
   @Column()
   name: string;
 
+  // Owning side of one-to-one: creates userId FK on player table
   @OneToOne(() => User, (user) => user.player)
+  @JoinColumn()
   user: User;
 
   @ManyToMany(() => Tournament, (tournament) => tournament.players)
