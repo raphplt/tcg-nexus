@@ -81,6 +81,23 @@ export interface Player {
   name: string;
 }
 
+export interface TournamentRegistration {
+  id: number;
+  tournament: { id: number } | number;
+  player: { id: number } | number;
+  status: RegistrationStatus;
+  notes?: string | null;
+  registeredAt?: string;
+}
+
+export enum RegistrationStatus {
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  CANCELLED = "cancelled",
+  WAITLISTED = "waitlisted",
+  ELIMINATED = "eliminated",
+}
+
 // DTOs
 
 export interface CreateTournamentDto {

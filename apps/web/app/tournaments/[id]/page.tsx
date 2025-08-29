@@ -37,6 +37,7 @@ import { statusColor, typeColor } from "../utils";
 import { formatPricing } from "@/utils/price";
 import { Tournament } from "@/types/tournament";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserTournaments } from "@/contexts/UserTournamentsContext";
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -107,6 +108,7 @@ const ErrorView = ({ message }: { message?: string }) => (
 export default function TournamentDetailsPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { refresh: refreshUserTournaments } = useUserTournaments();
 
   const {
     data: tournament,
@@ -122,8 +124,19 @@ export default function TournamentDetailsPage() {
     if (!tournamentId) return;
     try {
       if (user?.playerId) {
-        await tournamentService.register(tournamentId, user.playerId, "");
-        console.log("Inscription au tournoi réussie !");
+        const registration = await tournamentService.register(
+          tournamentId,
+          user.playerId,
+          "",
+        );
+        console.log("Inscription au tournoi réussie !", registration);
+        if (registration.status === "confirmed") {
+          await refreshUserTournaments();
+        } else {
+          console.log(
+            "Inscription en attente (pending), pas d'ajout immédiat.",
+          );
+        }
       } else {
         console.error("User non authentifié ou playerId manquant.");
       }

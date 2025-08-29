@@ -15,6 +15,8 @@ import { tournamentService } from "@/services/tournament.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useUserTournaments } from "@/contexts/UserTournamentsContext";
+import toast from "react-hot-toast";
 
 export interface Filters {
   search: string;
@@ -68,12 +70,25 @@ export function TournamentsTable({
   };
 
   const { user } = useAuth();
+  const { refresh: refreshUserTournaments } = useUserTournaments();
 
   const register = async (tournamentId: number) => {
     try {
       if (user?.playerId) {
-        await tournamentService.register(tournamentId, user.playerId, "");
-        console.log("Inscription au tournoi réussie !");
+        const registration = await tournamentService.register(
+          tournamentId,
+          user.playerId,
+          "",
+        );
+        console.log("Inscription au tournoi réussie !", registration);
+        toast.success("Inscription au tournoi réussie !");
+        if (registration.status === "confirmed") {
+          await refreshUserTournaments();
+        } else {
+          console.log(
+            "Inscription en attente (non confirmée). Rafraîchissement différé.",
+          );
+        }
       } else {
         console.error("User non authentifié ou pas de playerId.");
       }

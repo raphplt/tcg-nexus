@@ -37,6 +37,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const checkAuth = async () => {
       try {
         const userData = await authService.getProfile();
+        if (userData && typeof userData.playerId === "undefined") {
+          console.warn("Profil utilisateur chargé sans playerId.", userData);
+        }
         setUser(userData);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
@@ -53,6 +56,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       await authService.login(credentials);
       const userData = await authService.getProfile();
+      if (userData && typeof userData.playerId === "undefined") {
+        console.warn("Profil utilisateur post-login sans playerId.", userData);
+      }
       setUser(userData);
       router.push("/");
     } catch (error) {
@@ -68,6 +74,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       await authService.register(userData);
       const user = await authService.getProfile();
+      if (user && typeof user.playerId === "undefined") {
+        console.warn("Profil utilisateur post-register sans playerId.", user);
+      }
       setUser(user);
       router.push("/");
     } catch (error) {

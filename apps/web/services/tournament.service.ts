@@ -1,5 +1,9 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { CreateTournamentDto, Tournament } from "@/types/tournament";
+import {
+  CreateTournamentDto,
+  Tournament,
+  TournamentRegistration,
+} from "@/types/tournament";
 import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface TournamentQueryParams extends PaginationParams {
@@ -39,10 +43,14 @@ export const tournamentService = {
     tournamentId: number,
     playerId: number,
     notes?: string,
-  ): Promise<void> {
-    await authedFetch<void>("POST", `/tournaments/${tournamentId}/register`, {
-      data: { playerId, notes },
-    });
+  ): Promise<TournamentRegistration> {
+    return authedFetch<TournamentRegistration>(
+      "POST",
+      `/tournaments/${tournamentId}/register`,
+      {
+        data: { playerId, notes },
+      },
+    );
   },
 
   async getById(id: string): Promise<Tournament> {
