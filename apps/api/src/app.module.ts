@@ -16,6 +16,9 @@ import { TournamentModule } from './tournament/tournament.module';
 import { AuthModule } from './auth/auth.module';
 import { ArticleModule } from './article/article.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
+import { CollectionModule } from './collection/collection.module';
+import { DeckModule } from './deck/deck.module';
+import { DeckCardModule } from './deck-card/deck-card.module';
 
 @Module({
   imports: [
@@ -42,7 +45,10 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
     SeedModule,
     AuthModule,
     ArticleModule,
-    MarketplaceModule
+    MarketplaceModule,
+    CollectionModule,
+    DeckModule,
+    DeckCardModule
   ],
   controllers: [AppController],
   providers: [AppService]
