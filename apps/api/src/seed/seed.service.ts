@@ -48,7 +48,9 @@ import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
 import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
 import { Currency } from 'src/common/enums/currency';
-
+import { Deck } from 'src/deck/entities/deck.entity';
+import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
+import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
 @Injectable()
 export class SeedService {
   constructor(
@@ -81,7 +83,13 @@ export class SeedService {
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
     @InjectRepository(Listing)
-    private readonly listingRepository: Repository<Listing>
+    private readonly listingRepository: Repository<Listing>,
+    @InjectRepository(DeckFormat)
+    private readonly formatRepository: Repository<DeckFormat>,
+    @InjectRepository(Deck)
+    private readonly deckRepository: Repository<Deck>,
+    @InjectRepository(DeckCard)
+    private readonly deckCardRepository: Repository<DeckCard>
   ) {}
 
   /**
@@ -288,7 +296,9 @@ export class SeedService {
         role: UserRole.USER,
         isPro: false,
         isActive: true,
-        emailVerified: true
+        emailVerified: true,
+        decks: [],
+        collections: []
       },
       {
         email: 'test2@test.com',
@@ -299,7 +309,9 @@ export class SeedService {
         role: UserRole.ADMIN,
         isPro: true,
         isActive: true,
-        emailVerified: true
+        emailVerified: true,
+        decks: [],
+        collections: []
       },
       {
         email: 'test3@test.com',
@@ -310,7 +322,9 @@ export class SeedService {
         role: UserRole.MODERATOR,
         isPro: true,
         isActive: true,
-        emailVerified: false
+        emailVerified: false,
+        decks: [],
+        collections: []
       }
     ];
     const users: User[] = [];
@@ -737,6 +751,54 @@ export class SeedService {
       }
     }
   }
+
+  async seedDeckFormats() {
+    const formatsData = [
+      { type: 'Standard', startDate: '2023-07-01', endDate: '2024-06-30' },
+      { type: 'Extended', startDate: '2023-07-01', endDate: '2024-06-30' },
+    ];
+
+    const formats: DeckFormat[] = [];
+
+    for (const f of formatsData) {
+      let format = await this.formatRepository.findOne({ where: { type: f.type } });
+      if (!format) {
+        format = this.formatRepository.create(f);
+        formats.push(format);
+      }
+    }
+
+    if (formats.length > 0) {
+      await this.formatRepository.save(formats);
+    }
+
+    return await this.formatRepository.find();
+  }
+
+  async seedDecks() {
+    const user = await this.userRepository.findOne({ where: { email: 'test1@test.com' } });
+    if (!user) return;
+
+    const formats = await this.seedDeckFormats();
+    if (formats.length === 0) return;
+
+    const cards = await this.pokemonCardRepository.find({ take: 2 });
+    if (cards.length < 2) return;
+
+    const deck1 = this.deckRepository.create({ name: 'Deck Demo 1', user, format: formats[0] });
+    const deck2 = this.deckRepository.create({ name: 'Deck Demo 2', user, format: formats[1] });
+    await this.deckRepository.save([deck1, deck2]);
+
+    const deckCards: DeckCard[] = [
+      this.deckCardRepository.create({ deck: deck1, card: cards[0], qty: 2, role: 'main' }),
+      this.deckCardRepository.create({ deck: deck1, card: cards[1], qty: 1, role: 'main' }),
+      this.deckCardRepository.create({ deck: deck2, card: cards[0], qty: 1, role: 'main' }),
+      this.deckCardRepository.create({ deck: deck2, card: cards[1], qty: 2, role: 'main' }),
+    ];
+
+    await this.deckCardRepository.save(deckCards);
+  }
+
 
   /**
    * Truncate all tables before seeding (Postgres version)
