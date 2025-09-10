@@ -12,7 +12,7 @@ import { CollectionItem } from 'src/collection-item/entities/collection-item.ent
 
 @Entity('collection')
 export class Collection {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   id: string;
 
   @Column({ type: 'varchar', length: 255 })

@@ -15,31 +15,36 @@ import { UpdateCollectionDto } from './dto/update-collection.dto';
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}
 
-  @Post()
-  create(@Body() createCollectionDto: CreateCollectionDto) {
-    return this.collectionService.create(createCollectionDto);
-  }
+  // @Post()
+  // create(@Body() createCollectionDto: CreateCollectionDto) {
+  //   return this.collectionService.create(createCollectionDto);
+  // }
 
   @Get()
   findAll() {
     return this.collectionService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.collectionService.findOne(+id);
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.collectionService.findByUserId(userId);
   }
 
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateCollectionDto: UpdateCollectionDto
-  ) {
-    return this.collectionService.update(+id, updateCollectionDto);
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.collectionService.findOne(+id);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.collectionService.remove(+id);
-  }
+  // @Patch(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateCollectionDto: UpdateCollectionDto
+  // ) {
+  //   return this.collectionService.update(+id, updateCollectionDto);
+  // }
+
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.collectionService.remove(+id);
+  // }
 }
