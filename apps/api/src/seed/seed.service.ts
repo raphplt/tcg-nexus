@@ -50,6 +50,7 @@ import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
 import { Currency } from 'src/common/enums/currency';
 import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
+import { DeckCardRole } from 'src/common/enums/deckCardRole';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
 @Injectable()
 export class SeedService {
@@ -204,10 +205,10 @@ export class SeedService {
         if (typeof firstEntryContent !== 'string') {
           throw new Error('Invalid content type, expected a string');
         }
-        const pokemons: any[] = JSON.parse(firstEntryContent);
+        const pokemonCards: any[] = JSON.parse(firstEntryContent);
 
         // Parcours de chaque carte du JSON
-        for (const cardData of pokemons) {
+        for (const cardData of pokemonCards) {
           // Récupération de l'ID du set dans le JSON
           const setId = cardData.set?.id;
           if (!setId) {
@@ -233,18 +234,20 @@ export class SeedService {
           delete cardData.id;
 
           // Nettoyer le nom de la carte pour retirer les caractères spéciaux
-          cardData.name = cardData.name ? this.cleanString(cardData.name) : '';
+          cardData.name = cardData.name
+            ? this.cleanString(cardData.name as string)
+            : '';
           cardData.illustrator = cardData.illustrator
-            ? this.cleanString(cardData.illustrator)
+            ? this.cleanString(cardData.illustrator as string)
             : null;
           cardData.description = cardData.description
-            ? this.cleanString(cardData.description)
+            ? this.cleanString(cardData.description as string)
             : null;
           cardData.evolveFrom = cardData.evolveFrom
-            ? this.cleanString(cardData.evolveFrom)
+            ? this.cleanString(cardData.evolveFrom as string)
             : null;
           cardData.effect = cardData.effect
-            ? this.cleanString(cardData.effect)
+            ? this.cleanString(cardData.effect as string)
             : null;
 
           // Optionnel : Nettoyage de l'objet variants pour retirer d'éventuels attributs non désirés
@@ -755,13 +758,15 @@ export class SeedService {
   async seedDeckFormats() {
     const formatsData = [
       { type: 'Standard', startDate: '2023-07-01', endDate: '2024-06-30' },
-      { type: 'Extended', startDate: '2023-07-01', endDate: '2024-06-30' },
+      { type: 'Extended', startDate: '2023-07-01', endDate: '2024-06-30' }
     ];
 
     const formats: DeckFormat[] = [];
 
     for (const f of formatsData) {
-      let format = await this.formatRepository.findOne({ where: { type: f.type } });
+      let format = await this.formatRepository.findOne({
+        where: { type: f.type }
+      });
       if (!format) {
         format = this.formatRepository.create(f);
         formats.push(format);
@@ -776,7 +781,9 @@ export class SeedService {
   }
 
   async seedDecks() {
-    const user = await this.userRepository.findOne({ where: { email: 'test1@test.com' } });
+    const user = await this.userRepository.findOne({
+      where: { email: 'test1@test.com' }
+    });
     if (!user) return;
 
     const formats = await this.seedDeckFormats();
@@ -785,20 +792,47 @@ export class SeedService {
     const cards = await this.pokemonCardRepository.find({ take: 2 });
     if (cards.length < 2) return;
 
-    const deck1 = this.deckRepository.create({ name: 'Deck Demo 1', user, format: formats[0] });
-    const deck2 = this.deckRepository.create({ name: 'Deck Demo 2', user, format: formats[1] });
+    const deck1 = this.deckRepository.create({
+      name: 'Deck Demo 1',
+      user,
+      format: formats[0]
+    });
+    const deck2 = this.deckRepository.create({
+      name: 'Deck Demo 2',
+      user,
+      format: formats[1]
+    });
     await this.deckRepository.save([deck1, deck2]);
 
     const deckCards: DeckCard[] = [
-      this.deckCardRepository.create({ deck: deck1, card: cards[0], qty: 2, role: 'main' }),
-      this.deckCardRepository.create({ deck: deck1, card: cards[1], qty: 1, role: 'main' }),
-      this.deckCardRepository.create({ deck: deck2, card: cards[0], qty: 1, role: 'main' }),
-      this.deckCardRepository.create({ deck: deck2, card: cards[1], qty: 2, role: 'main' }),
+      this.deckCardRepository.create({
+        deck: deck1,
+        card: cards[0],
+        qty: 2,
+        role: DeckCardRole.main
+      }),
+      this.deckCardRepository.create({
+        deck: deck1,
+        card: cards[1],
+        qty: 1,
+        role: DeckCardRole.main
+      }),
+      this.deckCardRepository.create({
+        deck: deck2,
+        card: cards[0],
+        qty: 1,
+        role: DeckCardRole.main
+      }),
+      this.deckCardRepository.create({
+        deck: deck2,
+        card: cards[1],
+        qty: 2,
+        role: DeckCardRole.main
+      })
     ];
 
     await this.deckCardRepository.save(deckCards);
   }
-
 
   /**
    * Truncate all tables before seeding (Postgres version)
