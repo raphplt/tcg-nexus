@@ -288,7 +288,8 @@ export class SeedService {
         role: UserRole.USER,
         isPro: false,
         isActive: true,
-        emailVerified: true
+        emailVerified: true,
+        collections: []
       },
       {
         email: 'test2@test.com',
@@ -299,7 +300,8 @@ export class SeedService {
         role: UserRole.ADMIN,
         isPro: true,
         isActive: true,
-        emailVerified: true
+        emailVerified: true,
+        collections: []
       },
       {
         email: 'test3@test.com',
@@ -310,7 +312,8 @@ export class SeedService {
         role: UserRole.MODERATOR,
         isPro: true,
         isActive: true,
-        emailVerified: false
+        emailVerified: false,
+        collections: []
       }
     ];
     const users: User[] = [];
