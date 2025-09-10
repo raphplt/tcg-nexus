@@ -4,6 +4,6 @@ import { DeckCardController } from './deck-card.controller';
 
 @Module({
   controllers: [DeckCardController],
-  providers: [DeckCardService],
+  providers: [DeckCardService]
 })
 export class DeckCardModule {}

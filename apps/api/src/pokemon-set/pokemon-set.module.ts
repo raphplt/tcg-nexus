@@ -9,6 +9,6 @@ import { PokemonSet } from './entities/pokemon-set.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([PokemonSerie, PokemonCard, PokemonSet])],
   controllers: [PokemonSetController],
-  providers: [PokemonSetService],
+  providers: [PokemonSetService]
 })
 export class PokemonSetModule {}

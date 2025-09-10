@@ -18,14 +18,17 @@ async function bootstrap() {
       .setTitle('TCG Nexus API')
       .setDescription('API documentation for TCG Nexus')
       .setVersion('1.0')
-      .addBearerAuth({
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'Authorization',
-        description: 'Entrer le token JWT',
-        in: 'header',
-      }, 'bearerAuth')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'Authorization',
+          description: 'Entrer le token JWT',
+          in: 'header'
+        },
+        'bearerAuth'
+      )
       .build();
     const documentFactory = () => SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, documentFactory, {

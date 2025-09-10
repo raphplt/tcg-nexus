@@ -17,10 +17,10 @@ import { TournamentOrganizer } from 'src/tournament/entities/tournament-organize
 import { TournamentNotification } from 'src/tournament/entities/tournament-notification.entity';
 import { Article } from 'src/article/entities/article.entity';
 import { Listing } from 'src/marketplace/entities';
-import {Deck} from "src/deck/entities/deck.entity";
-import {DeckFormat} from "src/deck-format/entities/deck-format.entity";
-import {DeckCard} from "src/deck-card/entities/deck-card.entity";
-import {Collection} from "src/collection/entities/collection.entity";
+import { Deck } from 'src/deck/entities/deck.entity';
+import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
+import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
+import { Collection } from 'src/collection/entities/collection.entity';
 
 @Module({
   imports: [

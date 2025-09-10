@@ -6,5 +6,5 @@ export enum TrainerType {
   AceSpec = 'Ace Spec',
   TechnicalMachine = 'Technical Machine',
   GoldenrodGameCorner = 'Goldenrod Game Corner',
-  RocketsSecretMachine = 'Rocket’s Secret Machine',
+  RocketsSecretMachine = 'Rocket’s Secret Machine'
 }

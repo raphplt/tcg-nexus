@@ -4,12 +4,13 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne, OneToMany
+  OneToOne,
+  OneToMany
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Player } from 'src/player/entities/player.entity';
-import { Deck } from "src/deck/entities/deck.entity";
-import { Collection } from "src/collection/entities/collection.entity";
+import { Deck } from 'src/deck/entities/deck.entity';
+import { Collection } from 'src/collection/entities/collection.entity';
 
 export enum UserRole {
   ADMIN = 'admin',

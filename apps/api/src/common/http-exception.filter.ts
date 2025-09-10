@@ -42,10 +42,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = message || 'Accès interdit.';
         break;
       case HttpStatus.NOT_FOUND:
-        message = message || "Ressource non trouvée.";
+        message = message || 'Ressource non trouvée.';
         break;
       case HttpStatus.CONFLICT:
-        message = message || "Conflit de données.";
+        message = message || 'Conflit de données.';
         break;
       default:
         message = message || 'Une erreur interne est survenue.';
@@ -59,4 +59,4 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error
     });
   }
-} 
+}

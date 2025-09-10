@@ -8,7 +8,7 @@ describe('MarketplaceController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MarketplaceController],
-      providers: [MarketplaceService],
+      providers: [MarketplaceService]
     }).compile();
 
     controller = module.get<MarketplaceController>(MarketplaceController);

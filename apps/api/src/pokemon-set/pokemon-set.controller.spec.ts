@@ -8,7 +8,7 @@ describe('PokemonSetController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PokemonSetController],
-      providers: [PokemonSetService],
+      providers: [PokemonSetService]
     }).compile();
 
     controller = module.get<PokemonSetController>(PokemonSetController);

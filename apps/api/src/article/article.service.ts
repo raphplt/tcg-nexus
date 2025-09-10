@@ -9,7 +9,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
-    private readonly articleRepository: Repository<Article>,
+    private readonly articleRepository: Repository<Article>
   ) {}
 
   create(createArticleDto: CreateArticleDto) {
@@ -18,7 +18,9 @@ export class ArticleService {
   }
 
   findAll() {
-    return this.articleRepository.find({ order: { publishedAt: 'DESC', createdAt: 'DESC' } });
+    return this.articleRepository.find({
+      order: { publishedAt: 'DESC', createdAt: 'DESC' }
+    });
   }
 
   findOne(id: number) {
@@ -32,4 +34,4 @@ export class ArticleService {
   remove(id: number) {
     return this.articleRepository.delete(id);
   }
-} 
+}

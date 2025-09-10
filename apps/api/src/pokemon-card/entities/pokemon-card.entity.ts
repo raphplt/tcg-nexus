@@ -1,9 +1,15 @@
-import {Entity, Column, ManyToOne, PrimaryGeneratedColumn, OneToMany} from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  OneToMany
+} from 'typeorm';
 import { EnergyType } from 'src/common/enums/energyType';
 import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { TrainerType } from 'src/common/enums/trainerType';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 
 @Entity()
 export class PokemonCard {

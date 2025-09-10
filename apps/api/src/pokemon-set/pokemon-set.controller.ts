@@ -5,7 +5,7 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  Delete
 } from '@nestjs/common';
 import { PokemonSetService } from './pokemon-set.service';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
@@ -35,7 +35,7 @@ export class PokemonSetController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updatePokemonSetDto: UpdatePokemonSetDto,
+    @Body() updatePokemonSetDto: UpdatePokemonSetDto
   ) {
     return this.pokemonSetService.update(id, updatePokemonSetDto);
   }

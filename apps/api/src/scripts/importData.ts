@@ -66,7 +66,7 @@ async function bootstrap() {
     await seedService.seedListings();
     logSuccess('Listings créés !');
 
-    logStep('Création des decks de test...')
+    logStep('Création des decks de test...');
     await seedService.seedDecks();
     logSuccess('Decks créés !');
 

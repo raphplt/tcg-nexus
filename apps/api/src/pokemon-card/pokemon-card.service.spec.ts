@@ -6,7 +6,7 @@ describe('PokemonCardService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PokemonCardService],
+      providers: [PokemonCardService]
     }).compile();
 
     service = module.get<PokemonCardService>(PokemonCardService);

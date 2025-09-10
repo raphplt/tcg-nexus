@@ -8,7 +8,7 @@ describe('DeckCardController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeckCardController],
-      providers: [DeckCardService],
+      providers: [DeckCardService]
     }).compile();
 
     controller = module.get<DeckCardController>(DeckCardController);
