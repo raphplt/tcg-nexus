@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@components/Layout/Header";
 import Footer from "@components/Layout/Footer";
-import Script from "next/script";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactQueryProvider } from "@/contexts/QueryClientContext";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "TCG Nexus",
@@ -17,23 +17,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <head>
-        <Script
-          id="theme-script"
-          src="/lib/theme-script.js"
-          strategy="beforeInteractive"
-        />
-      </head>
+    <html lang="fr" suppressHydrationWarning>
       <body className="antialiased">
-        <ReactQueryProvider>
-          <AuthProvider>
-            <Header />
-            <div className="mt-16 min-h-screen">{children}</div>
-            <Toaster />
-            <Footer />
-          </AuthProvider>
-        </ReactQueryProvider>
+        <ThemeProvider>
+          <ReactQueryProvider>
+            <AuthProvider>
+              <Header />
+              <div className="mt-16 min-h-screen">{children}</div>
+              <Toaster />
+              <Footer />
+            </AuthProvider>
+          </ReactQueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

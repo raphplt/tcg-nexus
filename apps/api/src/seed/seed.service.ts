@@ -594,7 +594,7 @@ export class SeedService {
       {
         title: 'Nouvelle extension Pokémon TCG : Tempête Argentée',
         image:
-          'https://den-cards.pokellector.com/354/Lugia-VSTAR.SWSH12.139.45504.png', // image de Lugia VSTAR
+          'https://images.pexels.com/photos/1716861/pexels-photo-1716861.jpeg',
         link: 'https://www.pokemon.com/fr/actu-pokemon/nouvelle-extension-tempete-argentee/',
         content:
           'Découvrez la nouvelle extension Tempête Argentée du JCC Pokémon avec de nouvelles cartes et mécaniques de jeu.',
@@ -603,7 +603,7 @@ export class SeedService {
       {
         title: 'Tournoi régional de Lyon : Résultats et analyses',
         image:
-          'https://toxigon.com/image/pikachu-holding-trophy-with-pokemon-cards-surrounding.webp', // illustration de tournoi
+          'https://images.pexels.com/photos/8430275/pexels-photo-8430275.jpeg',
         link: 'https://www.pokemon.com/fr/actu-pokemon/tournoi-lyon-2024/',
         content:
           'Retour sur le tournoi régional de Lyon avec les decks gagnants et les moments forts de la compétition.',
@@ -612,7 +612,7 @@ export class SeedService {
       {
         title: 'Guide stratégique : Bien débuter sur Pokémon TCG Online',
         image:
-          'https://upload.wikimedia.org/wikipedia/en/thumb/5/51/PokemonTCGO1stScreenshot.png/250px-PokemonTCGO1stScreenshot.png', // capture d’écran de TCG Online
+          'https://images.pexels.com/photos/243698/pexels-photo-243698.jpeg',
         link: 'https://www.pokemon.com/fr/strategie/guide-debutant-tcg-online/',
         content:
           'Nos conseils pour bien démarrer sur la plateforme Pokémon TCG Online et construire un deck efficace.',

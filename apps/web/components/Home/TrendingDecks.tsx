@@ -6,7 +6,7 @@ import Image from "next/image";
 import { XIcon } from "lucide-react";
 
 const TrendingDecks = () => (
-  <Card className="bg-card rounded-xl shadow p-6 mt-8">
+  <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
     <div className="flex items-center justify-between mb-4">
       <H2>Decks tendances</H2>
     </div>
