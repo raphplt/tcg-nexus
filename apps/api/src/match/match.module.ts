@@ -3,10 +3,25 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MatchService } from './match.service';
 import { MatchController } from './match.controller';
 import { Match } from './entities/match.entity';
+import { Tournament } from '../tournament/entities/tournament.entity';
+import { Player } from '../player/entities/player.entity';
+import { TournamentRegistration } from '../tournament/entities/tournament-registration.entity';
+import { Ranking } from '../ranking/entities/ranking.entity';
+import { Statistics } from '../statistics/entities/statistic.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Match])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Match,
+      Tournament,
+      Player,
+      TournamentRegistration,
+      Ranking,
+      Statistics
+    ])
+  ],
   controllers: [MatchController],
-  providers: [MatchService]
+  providers: [MatchService],
+  exports: [MatchService]
 })
 export class MatchModule {}
