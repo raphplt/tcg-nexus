@@ -12,44 +12,43 @@ import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import {useAuth} from "@/contexts/AuthContext";
+import MarketplaceFilters from "@app/marketplace/_components/MarketplaceFilters";
+import { DeckFormat } from "@/types/deckFormat";
 
 interface Option {
   label: string;
   value: string;
 }
 
-export interface MarketplaceFilters {
+
+export interface DecksFilters {
   search: string;
-  cardState: string;
-  currency: string;
   sortBy: string;
+  format: string;
   sortOrder: "ASC" | "DESC";
 }
-
-interface MarketplaceFiltersProps {
-  filters: MarketplaceFilters;
-  setFilters: (filters: Partial<MarketplaceFilters>) => void;
-  cardStateOptions: Option[];
-  currencyOptions: Option[];
+interface DecksFiltersProps {
+  filters: DecksFilters;
+  setFilters: (filters: Partial<DecksFilters>) => void;
+  formatOptions: Option[];
   sortOptions: Option[];
   resetFilters: () => void;
 }
 
-const MarketplaceFilters = ({
+const DecksFilters = ({
   filters,
   setFilters,
-  cardStateOptions,
-  currencyOptions,
+  formatOptions,
   sortOptions,
-  resetFilters,
-}: MarketplaceFiltersProps) => {
+  resetFilters
+}: DecksFiltersProps) => {
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const {isAuthenticated} = useAuth();
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
-      setFilters({ search: debouncedSearch });
+      setFilters({search: debouncedSearch});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
@@ -69,7 +68,7 @@ const MarketplaceFilters = ({
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom de la carte, vendeur..."
+              placeholder="Nom du deck"
               className="pl-9"
             />
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -90,50 +89,26 @@ const MarketplaceFilters = ({
             className="h-10"
             asChild
           >
-            <Link href="/marketplace/create">Créer une vente</Link>
+            <Link href="/decks/create">Créer un deck</Link>
           </Button>
         )}
       </div>
       {showAdvanced && (
         <div className="flex flex-wrap gap-4 items-end mt-4">
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="cardState">État</Label>
+            <Label htmlFor="format">Type</Label>
             <Select
-              value={filters.cardState || "ALL"}
+              value={filters.format || "ALL"}
               onValueChange={(value) =>
-                setFilters({ cardState: value === "ALL" ? "" : value })
+                setFilters({ format: value === "ALL" ? "" : value })
               }
             >
               <SelectTrigger className="w-full">
-                {cardStateOptions.find((opt) => opt.value === filters.cardState)
+                {formatOptions.find((opt) => opt.value === filters.format)
                   ?.label || "Tous"}
               </SelectTrigger>
               <SelectContent>
-                {cardStateOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="currency">Devise</Label>
-            <Select
-              value={filters.currency || "ALL"}
-              onValueChange={(value) =>
-                setFilters({ currency: value === "ALL" ? "" : value })
-              }
-            >
-              <SelectTrigger className="w-full">
-                {currencyOptions.find((opt) => opt.value === filters.currency)
-                  ?.label || "Toutes"}
-              </SelectTrigger>
-              <SelectContent>
-                {currencyOptions.map((opt) => (
+                {formatOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
@@ -196,4 +171,4 @@ const MarketplaceFilters = ({
   );
 };
 
-export default MarketplaceFilters;
+export default DecksFilters;

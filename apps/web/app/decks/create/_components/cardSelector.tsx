@@ -1,0 +1,155 @@
+'use client'
+
+import * as React from 'react'
+import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { authedFetch } from "@utils/fetch";
+
+interface CardComboboxProps {
+  onSelect: (card: CardType, qty: number) => void;
+  onClose?: () => void;
+  resetSignal?: number;
+}
+
+interface CardType {
+  id: string;
+  name: string;
+}
+
+export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
+  const [open, setOpen] = React.useState(false);
+  const [value, setValue] = React.useState('');
+  const [input, setInput] = React.useState('');
+  const [cards, setCards] = React.useState<CardType[]>([]);
+  const [selectedCard, setSelectedCard] = React.useState<CardType | null>(null);
+  const [qty, setQty] = React.useState(1);
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
+
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+  const timeoutRef = React.useRef<number | undefined>(undefined);
+
+  React.useEffect(() => {
+    setSelectedCard(null)
+    setValue('')
+    setInput('')
+    setCards([])
+    setPage(1)
+  }, [resetSignal])
+
+  // Fetch paginated cards
+  React.useEffect(() => {
+    if (!open) return;
+    const fetchCards = async () => {
+      setLoading(true);
+      try {
+        const res = await authedFetch(
+          "GET",
+          `/pokemon-card/paginated?page=${page}&limit=50`,
+        );
+        const newCards = res.data as CardType[];
+        setCards(prev => [...prev, ...newCards]);
+        setHasMore(newCards.length === 50);
+      } catch (err) {
+        console.error("Erreur fetch cartes :", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCards();
+  }, [page, open]);
+
+  // Scroll pour charger plus
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const bottom = e.currentTarget.scrollTop + e.currentTarget.clientHeight >= e.currentTarget.scrollHeight - 50;
+    if (bottom && !loading && hasMore) {
+      setPage(p => p + 1);
+    }
+  }
+
+  const handleSelect = (cardId: string) => {
+    const selected = cards.find(c => c.id === cardId);
+    if (selected) {
+      setSelectedCard(selected);
+      setValue(cardId);
+    }
+  }
+
+  const handleAddCard = () => {
+    if (!selectedCard || qty < 1) return;
+    onSelect(selectedCard, qty);
+    setSelectedCard(null);
+    setQty(1);
+    setValue('');
+    setOpen(false);
+  }
+
+  // Search cards
+  const handleSearchChange = (val: string) => {
+    setInput(val);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(async () => {
+      if (!val) return;
+      setLoading(true);
+      try {
+        const res = await authedFetch(
+          "GET",
+          `/pokemon-card/search/${encodeURIComponent(val)}`
+        );
+        setCards(res as CardType[]);
+        setHasMore(false);
+      } catch (err) {
+        console.error("Erreur fetch cartes :", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="w-full justify-between">
+          {selectedCard ? selectedCard.name : 'Sélectionner une carte'}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[400px] p-2">
+        <Input
+          placeholder="Rechercher une carte..."
+          value={input}
+          onChange={e => handleSearchChange(e.target.value)}
+        />
+        <div
+          className="max-h-60 overflow-y-auto mt-2"
+          onScroll={handleScroll}
+        >
+          {cards.map(card => (
+            <div
+              key={card.id}
+              className="flex justify-between items-center p-2 cursor-pointer hover:bg-gray-100"
+              onClick={() => handleSelect(card.id)}
+            >
+              <span>{card.name}</span>
+            </div>
+          ))}
+          {loading && <div className="p-2 text-sm text-muted-foreground">Chargement...</div>}
+        </div>
+
+        {selectedCard && (
+          <div className="flex gap-2 mt-2 items-center">
+            <Input
+              type="number"
+              value={qty}
+              min={1}
+              className="w-20"
+              onChange={e => setQty(Number(e.target.value))}
+            />
+            <Button onClick={handleAddCard}>Ajouter</Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}

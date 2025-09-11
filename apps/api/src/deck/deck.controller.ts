@@ -5,9 +5,9 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete, Query
 } from '@nestjs/common';
-import { DeckService } from './deck.service';
+import { DeckService, FindAllDecksParams } from './deck.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 
@@ -21,8 +21,8 @@ export class DeckController {
   }
 
   @Get()
-  findAll() {
-    return this.deckService.findAll();
+  findAll(@Query() query: FindAllDecksParams) {
+    return this.deckService.findAll(query);
   }
 
   @Get(':id')

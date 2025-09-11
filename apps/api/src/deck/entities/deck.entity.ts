@@ -22,6 +22,9 @@ export class Deck {
   @Column({ length: 100 })
   name: string;
 
+  @Column({ default: false })
+  isPublic: boolean;
+
   @ManyToOne(() => DeckFormat, (format) => format.decks, {
     eager: true,
     onDelete: 'SET NULL'

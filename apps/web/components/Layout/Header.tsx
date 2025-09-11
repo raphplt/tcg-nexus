@@ -81,6 +81,14 @@ const Header = () => {
           </li>
           <li>
             <Link
+              href="/decks"
+              className={linkStyle}
+            >
+              Decks
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/strategy"
               className={linkStyle}
             >
@@ -93,7 +101,6 @@ const Header = () => {
               <ThemeToggle />
             </li>
           )}
-
           {isLoading ? (
             <li>
               <Skeleton className="h-8 w-8 rounded-full" />

@@ -781,56 +781,47 @@ export class SeedService {
   }
 
   async seedDecks() {
-    const user = await this.userRepository.findOne({
-      where: { email: 'test1@test.com' }
-    });
-    if (!user) return;
+    const users = await this.userRepository.find();
+    if (users.length === 0) return;
 
     const formats = await this.seedDeckFormats();
     if (formats.length === 0) return;
 
-    const cards = await this.pokemonCardRepository.find({ take: 2 });
+    const cards = await this.pokemonCardRepository.find({ take: 5 });
     if (cards.length < 2) return;
+    const decks: Deck[] = [];
+    for (let i = 0; i < 20; i++) {
+      const randomUser = users[Math.floor(Math.random() * users.length)];
+      const randomFormat = formats[Math.floor(Math.random() * formats.length)];
+      const isPublic = i === 0 ? false : Math.random() > 0.5;
 
-    const deck1 = this.deckRepository.create({
-      name: 'Deck Demo 1',
-      user,
-      format: formats[0]
-    });
-    const deck2 = this.deckRepository.create({
-      name: 'Deck Demo 2',
-      user,
-      format: formats[1]
-    });
-    await this.deckRepository.save([deck1, deck2]);
+      const deck = this.deckRepository.create({
+        name: `Deck Demo ${i + 1}`,
+        user: randomUser,
+        format: randomFormat,
+        isPublic: isPublic
+      });
 
-    const deckCards: DeckCard[] = [
-      this.deckCardRepository.create({
-        deck: deck1,
-        card: cards[0],
-        qty: 2,
-        role: DeckCardRole.main
-      }),
-      this.deckCardRepository.create({
-        deck: deck1,
-        card: cards[1],
-        qty: 1,
-        role: DeckCardRole.main
-      }),
-      this.deckCardRepository.create({
-        deck: deck2,
-        card: cards[0],
-        qty: 1,
-        role: DeckCardRole.main
-      }),
-      this.deckCardRepository.create({
-        deck: deck2,
-        card: cards[1],
-        qty: 2,
-        role: DeckCardRole.main
-      })
-    ];
+      decks.push(deck);
+    }
+    const savedDecks = await this.deckRepository.save(decks);
 
+    const deckCards: DeckCard[] = [];
+    for (const deck of savedDecks) {
+      const cardCount = 10;
+
+      for (let j = 0; j < cardCount; j++) {
+        const randomCard = cards[Math.floor(Math.random() * cards.length)];
+        deckCards.push(
+          this.deckCardRepository.create({
+            deck,
+            card: randomCard,
+            qty: Math.floor(Math.random() * 3) + 1,
+            role: DeckCardRole.main
+          })
+        );
+      }
+    }
     await this.deckCardRepository.save(deckCards);
   }
 
