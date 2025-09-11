@@ -12,6 +12,12 @@ import {
   RegistrationPayment
 } from './entities';
 import { Player } from '../player/entities/player.entity';
+import { User } from '../user/entities/user.entity';
+import {
+  TournamentOrganizerGuard,
+  TournamentParticipantGuard,
+  TournamentOwnerGuard
+} from './guards';
 
 @Module({
   imports: [
@@ -23,11 +29,17 @@ import { Player } from '../player/entities/player.entity';
       TournamentOrganizer,
       TournamentNotification,
       RegistrationPayment,
-      Player
+      Player,
+      User
     ])
   ],
   controllers: [TournamentController],
-  providers: [TournamentService],
+  providers: [
+    TournamentService,
+    TournamentOrganizerGuard,
+    TournamentParticipantGuard,
+    TournamentOwnerGuard
+  ],
   exports: [TournamentService]
 })
 export class TournamentModule {}

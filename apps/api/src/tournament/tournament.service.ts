@@ -16,7 +16,12 @@ import {
   TournamentRegistration,
   RegistrationStatus
 } from './entities/tournament-registration.entity';
+import {
+  TournamentOrganizer,
+  OrganizerRole
+} from './entities/tournament-organizer.entity';
 import { Player } from '../player/entities/player.entity';
+import { User } from '../user/entities/user.entity';
 import { PaginationHelper } from '../helpers/pagination';
 
 @Injectable()
@@ -26,14 +31,22 @@ export class TournamentService {
     private tournamentRepository: Repository<Tournament>,
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
+    @InjectRepository(TournamentOrganizer)
+    private organizerRepository: Repository<TournamentOrganizer>,
     @InjectRepository(Player)
-    private playerRepository: Repository<Player>
+    private playerRepository: Repository<Player>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>
   ) {}
 
   // Créer un nouveau tournoi
-  async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
+  async create(
+    createTournamentDto: CreateTournamentDto,
+    userId: number
+  ): Promise<Tournament> {
     const tournament = this.tournamentRepository.create(createTournamentDto);
     console.log('Creating tournament with data:', tournament);
+
     // Validation des dates
     if (tournament.startDate >= tournament.endDate) {
       throw new BadRequestException(
@@ -61,7 +74,27 @@ export class TournamentService {
       );
     }
 
-    return this.tournamentRepository.save(tournament);
+    // Sauvegarder le tournoi
+    const savedTournament = await this.tournamentRepository.save(tournament);
+
+    // Créer l'organisateur propriétaire
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    const organizer = this.organizerRepository.create({
+      tournament: savedTournament,
+      userId: user.id,
+      name: `${user.firstName} ${user.lastName}`,
+      email: user.email,
+      role: OrganizerRole.OWNER,
+      isActive: true
+    });
+
+    await this.organizerRepository.save(organizer);
+
+    return savedTournament;
   }
 
   // Récupérer tous les tournois avec filtres et pagination
@@ -256,18 +289,28 @@ export class TournamentService {
       throw new BadRequestException('Les inscriptions ne sont pas ouvertes');
     }
 
-    if (
-      tournament.registrationDeadline &&
-      new Date() > tournament.registrationDeadline
-    ) {
+    // Vérifier la date limite d'inscription
+    const now = new Date();
+    const isLateRegistration =
+      tournament.registrationDeadline && now > tournament.registrationDeadline;
+
+    if (isLateRegistration && !tournament.allowLateRegistration) {
       throw new BadRequestException(
-        "La date limite d'inscription est dépassée"
+        "La date limite d'inscription est dépassée et les inscriptions tardives ne sont pas autorisées"
       );
     }
 
+    // Compter les inscriptions confirmées (pas seulement les joueurs dans la relation)
+    const confirmedRegistrations = await this.registrationRepository.count({
+      where: {
+        tournament: { id: tournamentId },
+        status: RegistrationStatus.CONFIRMED
+      }
+    });
+
     if (
       tournament.maxPlayers &&
-      tournament.players.length >= tournament.maxPlayers
+      confirmedRegistrations >= tournament.maxPlayers
     ) {
       throw new BadRequestException('Le tournoi est complet');
     }
@@ -278,7 +321,25 @@ export class TournamentService {
     });
 
     if (existingRegistration) {
-      throw new ConflictException('Le joueur est déjà inscrit à ce tournoi');
+      if (existingRegistration.status === RegistrationStatus.CANCELLED) {
+        // Réactiver l'inscription annulée
+        existingRegistration.status = tournament.requiresApproval
+          ? RegistrationStatus.PENDING
+          : RegistrationStatus.CONFIRMED;
+        existingRegistration.notes = notes ?? ''; // Ensure notes is never undefined
+        existingRegistration.registeredAt = new Date();
+        return this.registrationRepository.save(existingRegistration);
+      } else {
+        throw new ConflictException('Le joueur est déjà inscrit à ce tournoi');
+      }
+    }
+
+    // Déterminer le statut selon les règles
+    let registrationStatus = RegistrationStatus.CONFIRMED;
+    if (tournament.requiresApproval) {
+      registrationStatus = RegistrationStatus.PENDING;
+    } else if (isLateRegistration && tournament.allowLateRegistration) {
+      registrationStatus = RegistrationStatus.PENDING; // Inscription tardive en attente
     }
 
     const registration = this.registrationRepository.create({
@@ -286,9 +347,7 @@ export class TournamentService {
       player,
       notes,
       registeredAt: new Date(),
-      status: tournament.requiresApproval
-        ? RegistrationStatus.PENDING
-        : RegistrationStatus.CONFIRMED
+      status: registrationStatus
     });
 
     return this.registrationRepository.save(registration);
@@ -318,7 +377,13 @@ export class TournamentService {
       throw new NotFoundException('Inscription non trouvée');
     }
 
-    await this.registrationRepository.remove(registration);
+    if (registration.status === RegistrationStatus.CANCELLED) {
+      throw new BadRequestException('Cette inscription est déjà annulée');
+    }
+
+    // Marquer comme annulée plutôt que de supprimer (pour l'audit)
+    registration.status = RegistrationStatus.CANCELLED;
+    await this.registrationRepository.save(registration);
   }
 
   // Récupérer les tournois d'un joueur
