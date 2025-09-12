@@ -9,7 +9,13 @@ export type PokemonSetType = {
   symbol?: string;
   tcgOnline?: boolean;
   releaseDate?: string;
-  cardCount?: number;
+  cardCount?: {
+    total: number;
+    official: number;
+    reverse: number;
+    holo: number;
+    firstEd: number;
+  };
   legal?: {
     standard: boolean;
     expanded: boolean;

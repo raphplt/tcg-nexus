@@ -31,11 +31,10 @@ const Header = () => {
     `${firstName} ${lastName}`.trim() || "Utilisateur";
 
   return (
-    <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center justify-between px-4 sm:px-8 z-50">
-      {/* Logo avec taille minimale */}
+    <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center px-4 sm:px-8 z-50">
       <Link
         href="/"
-        className="flex-shrink-0"
+        className="flex-shrink-0 mr-4"
       >
         <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20">
           <Image
@@ -49,13 +48,13 @@ const Header = () => {
         </div>
       </Link>
 
-      <div className="flex-1 px-4">
+      <div className="flex-1 min-w-0 mx-4">
         <SearchBar />
       </div>
 
-      <nav>
-        <ul className="flex items-center space-x-4 text-sm">
-          <li>
+      <nav className="flex-shrink-0">
+        <ul className="flex items-center space-x-2 sm:space-x-4 text-sm">
+          <li className="hidden sm:block">
             <Link
               href="/"
               className={linkStyle}
@@ -63,7 +62,7 @@ const Header = () => {
               Accueil
             </Link>
           </li>
-          <li>
+          <li className="hidden md:block">
             <Link
               href="/tournaments"
               className={linkStyle}
@@ -71,7 +70,7 @@ const Header = () => {
               Tournois
             </Link>
           </li>
-          <li>
+          <li className="hidden lg:block">
             <Link
               href="/marketplace"
               className={linkStyle}
@@ -79,7 +78,7 @@ const Header = () => {
               Marketplace
             </Link>
           </li>
-          <li>
+          <li className="hidden lg:block">
             <Link
               href="/strategy"
               className={linkStyle}

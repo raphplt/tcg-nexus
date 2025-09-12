@@ -19,6 +19,7 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
 import { CollectionModule } from './collection/collection.module';
 import { DeckModule } from './deck/deck.module';
 import { DeckCardModule } from './deck-card/deck-card.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { DeckCardModule } from './deck-card/deck-card.module';
     MarketplaceModule,
     CollectionModule,
     DeckModule,
-    DeckCardModule
+    DeckCardModule,
+    SearchModule
   ],
   controllers: [AppController],
   providers: [AppService]
