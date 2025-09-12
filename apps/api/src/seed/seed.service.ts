@@ -301,7 +301,6 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         decks: [],
-        collections: [],
         collections: []
       },
       {
@@ -315,7 +314,6 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         decks: [],
-        collections: [],
         collections: []
       },
       {
@@ -329,7 +327,6 @@ export class SeedService {
         isActive: true,
         emailVerified: false,
         decks: [],
-        collections: [],
         collections: []
       }
     ];

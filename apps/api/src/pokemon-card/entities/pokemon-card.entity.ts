@@ -5,13 +5,6 @@ import {
   PrimaryGeneratedColumn,
   OneToMany
 } from 'typeorm';
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  OneToMany
-} from 'typeorm';
 import { EnergyType } from 'src/common/enums/energyType';
 import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { TrainerType } from 'src/common/enums/trainerType';

@@ -6,13 +6,10 @@ import {
   UpdateDateColumn,
   OneToOne,
   OneToMany
-  OneToOne,
-  OneToMany
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Player } from 'src/player/entities/player.entity';
 import { Deck } from 'src/deck/entities/deck.entity';
-import { Collection } from 'src/collection/entities/collection.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
 
 export enum UserRole {
@@ -74,9 +71,6 @@ export class User {
 
   @OneToMany(() => Deck, (deck) => deck.user)
   decks: Deck[];
-
-  @OneToMany(() => Collection, (collection) => collection.user)
-  collections: Collection[];
 
   @OneToMany(() => Collection, (collection) => collection.user)
   collections: Collection[];
