@@ -32,7 +32,7 @@ const LatestArticles = () => {
   });
 
   return (
-    <Card className="bg-card rounded-xl shadow p-6 mt-8">
+    <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
       <H2 className="mb-4">Derniers articles</H2>
       {isLoading && <div>Chargement...</div>}
       {error && (

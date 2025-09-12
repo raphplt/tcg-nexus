@@ -9,7 +9,7 @@ import { PokemonSet } from './entities/pokemon-set.entity';
 export class PokemonSetService {
   constructor(
     @InjectRepository(PokemonSet)
-    private readonly pokemonSetRepository: Repository<PokemonSet>,
+    private readonly pokemonSetRepository: Repository<PokemonSet>
   ) {}
 
   async create(createPokemonSetDto: CreatePokemonSetDto): Promise<PokemonSet> {
@@ -23,7 +23,7 @@ export class PokemonSetService {
 
   async findOne(id: string): Promise<PokemonSet> {
     const pokemonSet = await this.pokemonSetRepository.findOne({
-      where: { id },
+      where: { id }
     });
     if (!pokemonSet) {
       throw new Error(`PokemonSet with id ${id} not found`);
@@ -33,7 +33,7 @@ export class PokemonSetService {
 
   async update(
     id: string,
-    updatePokemonSetDto: UpdatePokemonSetDto,
+    updatePokemonSetDto: UpdatePokemonSetDto
   ): Promise<PokemonSet> {
     await this.pokemonSetRepository.update(id, updatePokemonSetDto);
     return this.findOne(id);

@@ -17,6 +17,9 @@ import { AuthModule } from './auth/auth.module';
 import { ArticleModule } from './article/article.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { CollectionModule } from './collection/collection.module';
+import { DeckModule } from './deck/deck.module';
+import { DeckCardModule } from './deck-card/deck-card.module';
+import { CollectionModule } from './collection/collection.module';
 import { CollectionItemModule } from './collection-item/collection-item.module';
 import { CardStateModule } from './card-state/card-state.module';
 
@@ -46,6 +49,9 @@ import { CardStateModule } from './card-state/card-state.module';
     AuthModule,
     ArticleModule,
     MarketplaceModule,
+    CollectionModule,
+    DeckModule,
+    DeckCardModule,
     CollectionModule,
     CollectionItemModule,
     CardStateModule

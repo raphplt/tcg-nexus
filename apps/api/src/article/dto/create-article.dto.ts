@@ -19,4 +19,4 @@ export class CreateArticleDto {
   @IsOptional()
   @IsDateString()
   publishedAt?: string;
-} 
+}

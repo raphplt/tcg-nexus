@@ -29,8 +29,22 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [mounted, setMounted] = useState(false);
+
+  // Éviter l'hydratation mismatch en attendant que le composant soit monté
+  useEffect(() => {
+    setMounted(true);
+    
+    // Appliquer le thème initial après le montage
+    const storedTheme = localStorage.getItem(storageKey) as Theme;
+    if (storedTheme) {
+      setTheme(storedTheme);
+    }
+  }, [storageKey]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const root = window.document.documentElement;
 
     root.classList.remove("light", "dark");
@@ -42,11 +56,13 @@ export function ThemeProvider({
         : "light";
 
       root.classList.add(systemTheme);
+      root.setAttribute("data-theme", systemTheme);
       return;
     }
 
     root.classList.add(theme);
-  }, [theme]);
+    root.setAttribute("data-theme", theme);
+  }, [theme, mounted]);
 
   const value = {
     theme,
@@ -56,12 +72,17 @@ export function ThemeProvider({
     },
   };
 
-  useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme;
-    if (storedTheme) {
-      setTheme(storedTheme);
-    }
-  }, [storageKey]);
+  // Pendant l'hydratation, ne pas rendre le contenu pour éviter les différences
+  if (!mounted) {
+    return (
+      <ThemeProviderContext.Provider
+        {...props}
+        value={value}
+      >
+        {children}
+      </ThemeProviderContext.Provider>
+    );
+  }
 
   return (
     <ThemeProviderContext.Provider

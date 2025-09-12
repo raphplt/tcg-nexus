@@ -243,12 +243,10 @@ export class TournamentService {
     registrationDto: TournamentRegistrationDto
   ): Promise<TournamentRegistration> {
     const { tournamentId, playerId, notes } = registrationDto;
-
     const tournament = await this.findOne(tournamentId);
     const player = await this.playerRepository.findOne({
       where: { id: playerId }
     });
-
     if (!player) {
       throw new NotFoundException(`Joueur avec l'ID ${playerId} non trouvé`);
     }

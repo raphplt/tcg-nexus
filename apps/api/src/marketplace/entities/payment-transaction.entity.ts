@@ -13,14 +13,14 @@ export enum PaymentMethod {
   CREDIT_CARD = 'CreditCard',
   PAYPAL = 'PayPal',
   BANK_TRANSFER = 'BankTransfer',
-  CRYPTO = 'Crypto',
+  CRYPTO = 'Crypto'
 }
 
 export enum PaymentStatus {
   INITIATED = 'Initiated',
   COMPLETED = 'Completed',
   FAILED = 'Failed',
-  REFUNDED = 'Refunded',
+  REFUNDED = 'Refunded'
 }
 
 @Entity()
@@ -28,7 +28,10 @@ export class PaymentTransaction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Order, (order) => order.payments, { nullable: false, onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, (order) => order.payments, {
+    nullable: false,
+    onDelete: 'CASCADE'
+  })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
@@ -49,4 +52,4 @@ export class PaymentTransaction {
 
   @UpdateDateColumn()
   updatedAt: Date;
-} 
+}

@@ -5,7 +5,7 @@ import {
   Body,
   Patch,
   Param,
-  Delete,
+  Delete
 } from '@nestjs/common';
 import { PokemonSeriesService } from './pokemon-series.service';
 import { CreatePokemonSeryDto } from './dto/create-pokemon-sery.dto';
@@ -35,7 +35,7 @@ export class PokemonSeriesController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updatePokemonSeryDto: UpdatePokemonSeryDto,
+    @Body() updatePokemonSeryDto: UpdatePokemonSeryDto
   ) {
     return this.pokemonSeriesService.update(+id, updatePokemonSeryDto);
   }

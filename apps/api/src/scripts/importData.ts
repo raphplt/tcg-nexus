@@ -66,6 +66,10 @@ async function bootstrap() {
     await seedService.seedListings();
     logSuccess('Listings créés !');
 
+    logStep('Création des decks de test...');
+    await seedService.seedDecks();
+    logSuccess('Decks créés !');
+
     logSuccess('🎉 Seed terminé avec succès !');
   } catch (error) {
     logError('Erreur lors du seed : ' + error);

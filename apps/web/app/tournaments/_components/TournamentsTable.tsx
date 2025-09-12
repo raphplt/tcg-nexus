@@ -9,8 +9,12 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tournament } from "@/types/tournament";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, Eye, UserPlus } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
+import { tournamentService } from "@/services/tournament.service";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export interface Filters {
   search: string;
@@ -27,7 +31,7 @@ interface TournamentsTableProps {
   data: PaginatedResult<Tournament> | undefined;
   isLoading: boolean;
   error: Error | null;
-  tableHeaders: { label: string; key: keyof Tournament }[];
+  tableHeaders: { label: string; key: keyof Tournament | "actions" }[];
   statusColor: Record<string, string>;
   typeColor: Record<string, string>;
   tournamentStatusTranslation: Record<string, string>;
@@ -50,11 +54,28 @@ export function TournamentsTable({
   sortOrder,
   setFilters,
 }: TournamentsTableProps) {
+  const router = useRouter();
+
   const handleSort = (key: string) => {
     if (sortBy === key) {
       setFilters({ sortOrder: sortOrder === "ASC" ? "DESC" : "ASC" });
     } else {
       setFilters({ sortBy: key, sortOrder: "ASC" });
+    }
+  };
+
+  const { user } = useAuth();
+
+  const register = async (tournamentId: number) => {
+    try {
+      if (user) {
+        await tournamentService.register(tournamentId, user.id, "");
+        console.log("Inscription au tournoi réussie !");
+      } else {
+        console.error("User non authentifié.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription au tournoi :", error);
     }
   };
 
@@ -65,12 +86,17 @@ export function TournamentsTable({
           {tableHeaders.map((header) => (
             <TableHead
               key={header.key}
-              onClick={() => handleSort(header.key)}
-              className="cursor-pointer select-none group"
+              onClick={() => {
+                if (header.key !== "actions") handleSort(header.key as string);
+              }}
+              className={`cursor-pointer select-none group ${
+                header.key === "actions" ? "cursor-default" : ""
+              }`}
             >
               <span className="inline-flex items-center gap-1">
                 {header.label}
-                {sortBy === header.key &&
+                {header.key !== "actions" &&
+                  sortBy === header.key &&
                   (sortOrder === "ASC" ? (
                     <ArrowUp className="w-3 h-3 text-primary group-hover:text-primary/80" />
                   ) : (
@@ -85,7 +111,7 @@ export function TournamentsTable({
         {isLoading ? (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={6}
               className="text-center py-8 text-lg animate-pulse"
             >
               Chargement des tournois...
@@ -94,7 +120,7 @@ export function TournamentsTable({
         ) : error ? (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={6}
               className="text-center text-destructive py-8"
             >
               Erreur lors du chargement des tournois
@@ -126,9 +152,12 @@ export function TournamentsTable({
               <TableCell>
                 <Badge
                   variant={
-                    (typeColor[
-                      tournament.type as keyof typeof typeColor
-                    ] as any) || "outline"
+                    (typeColor[tournament.type] as
+                      | "default"
+                      | "secondary"
+                      | "destructive"
+                      | "outline"
+                      | undefined) || "outline"
                   }
                 >
                   {
@@ -141,18 +170,46 @@ export function TournamentsTable({
               <TableCell>
                 <Badge
                   variant={
-                    (statusColor[tournament.status] as any) || "secondary"
+                    (statusColor[tournament.status] as
+                      | "default"
+                      | "secondary"
+                      | "destructive"
+                      | "outline"
+                      | undefined) || "secondary"
                   }
                 >
                   {tournamentStatusTranslation[tournament.status]}
                 </Badge>
+              </TableCell>
+              <TableCell className="space-x-2 whitespace-nowrap">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-1"
+                  disabled={!user}
+                  onClick={() => register(tournament.id)}
+                >
+                  <UserPlus className="w-4 h-4" />
+                  S&apos;inscrire
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1"
+                  onClick={() => {
+                    router.push(`/tournaments/${tournament.id}`);
+                  }}
+                >
+                  <Eye className="w-4 h-4" />
+                  Détails
+                </Button>
               </TableCell>
             </TableRow>
           ))
         ) : (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={6}
               className="text-center py-8 text-muted-foreground"
             >
               Aucun tournoi trouvé.

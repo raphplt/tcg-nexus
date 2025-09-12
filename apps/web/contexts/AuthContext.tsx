@@ -38,8 +38,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const userData = await authService.getProfile();
         setUser(userData);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Failed to fetch user profile:", error);
+        // Si c'est une erreur 401, l'utilisateur n'est simplement pas connecté
+        // Pas besoin de logger une erreur critique
+        if (error.response?.status !== 401) {
+          console.error("Unexpected error during auth check:", error);
+        }
         setUser(null);
       } finally {
         setIsLoading(false);
