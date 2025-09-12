@@ -35,16 +35,33 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Ne pas essayer de rafraîchir le token pour certaines routes
+    const skipRefreshRoutes = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/logout",
+      "/auth/refresh",
+    ];
+    const shouldSkipRefresh = skipRefreshRoutes.some((route) =>
+      originalRequest.url?.includes(route),
+    );
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !shouldSkipRefresh
+    ) {
       if (isRefreshing) {
         // Si on est déjà en train de rafraîchir, on met la requête en queue
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(() => {
-          return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then(() => {
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;

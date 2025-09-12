@@ -166,10 +166,10 @@ const SearchBar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center w-full max-w-2xl mx-auto">
+      <div className="flex items-center justify-center w-full">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-card rounded-md p-2 border border-border hover:border-primary transition-all duration-300 w-1/2 cursor-pointer"
+          className="flex items-center gap-2 bg-card rounded-md p-2 border border-border hover:border-primary transition-all duration-300 w-full max-w-md cursor-pointer"
         >
           <SearchIcon className="text-muted-foreground size-4" />
           <p className="text-muted-foreground text-sm">

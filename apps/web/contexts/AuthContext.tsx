@@ -39,9 +39,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await authService.getProfile();
         setUser(userData);
       } catch (error: any) {
-        console.error("Failed to fetch user profile:", error);
         // Si c'est une erreur 401, l'utilisateur n'est simplement pas connecté
-        // Pas besoin de logger une erreur critique
+        // Pas besoin de logger une erreur
         if (error.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);
         }
@@ -50,7 +49,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
       }
     };
-    checkAuth();
+
+    // Vérifier si on a des cookies d'authentification avant de faire la requête
+    const hasAuthCookie =
+      document.cookie.includes("accessToken") ||
+      document.cookie.includes("refreshToken");
+
+    if (hasAuthCookie) {
+      checkAuth();
+    } else {
+      // Pas de cookies d'auth, pas besoin de vérifier
+      setUser(null);
+      setIsLoading(false);
+    }
   }, []);
 
   const login = async (credentials: LoginRequest) => {
