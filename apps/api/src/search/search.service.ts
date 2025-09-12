@@ -11,6 +11,12 @@ import {
   SearchResultItem,
   GlobalSearchResult
 } from './dto/global-search.dto';
+import {
+  SuggestionsPreviewResult,
+  SuggestionsDetailResult,
+  SuggestionPreviewItem,
+  SuggestionDetailItem
+} from './dto/suggestions.dto';
 
 @Injectable()
 export class SearchService {
@@ -306,7 +312,7 @@ export class SearchService {
     });
   }
 
-  // Méthode pour obtenir des suggestions de recherche
+  // Méthode pour obtenir des suggestions de recherche (legacy)
   async getSearchSuggestions(
     query: string,
     limit: number = 5
@@ -340,5 +346,182 @@ export class SearchService {
 
     // Supprimer les doublons et limiter
     return [...new Set(suggestions)].slice(0, limit);
+  }
+
+  // Méthode pour obtenir des suggestions preview (infos essentielles)
+  async getSuggestionsPreview(
+    query: string,
+    limit: number = 8
+  ): Promise<SuggestionsPreviewResult> {
+    if (!query || query.trim().length < 2) {
+      return {
+        suggestions: [],
+        total: 0,
+        query
+      };
+    }
+
+    const suggestions: SuggestionPreviewItem[] = [];
+    const searchTerm = query.trim();
+
+    // Suggestions basées sur les cartes Pokémon
+    const cards = await this.pokemonCardRepository
+      .createQueryBuilder('card')
+      .leftJoinAndSelect('card.set', 'set')
+      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
+      .orderBy('card.name', 'ASC')
+      .limit(Math.ceil(limit / 2))
+      .getMany();
+
+    suggestions.push(
+      ...cards.map((card) => ({
+        id: card.id,
+        type: 'card' as const,
+        title: card.name || 'Carte sans nom',
+        subtitle: card.set?.name || 'Set inconnu',
+        image: card.image
+      }))
+    );
+
+    // Suggestions basées sur les tournois
+    const tournaments = await this.tournamentRepository
+      .createQueryBuilder('tournament')
+      .where('tournament.name ILIKE :query', { query: `%${searchTerm}%` })
+      .orderBy('tournament.createdAt', 'DESC')
+      .limit(Math.ceil(limit / 2))
+      .getMany();
+
+    suggestions.push(
+      ...tournaments.map((tournament) => ({
+        id: tournament.id,
+        type: 'tournament' as const,
+        title: tournament.name,
+        subtitle: tournament.location || 'Lieu non spécifié'
+      }))
+    );
+
+    // Suggestions basées sur les joueurs
+    const players = await this.playerRepository
+      .createQueryBuilder('player')
+      .leftJoinAndSelect('player.user', 'user')
+      .where('player.name ILIKE :query', { query: `%${searchTerm}%` })
+      .orWhere('user.firstName ILIKE :query', { query: `%${searchTerm}%` })
+      .orWhere('user.lastName ILIKE :query', { query: `%${searchTerm}%` })
+      .orderBy('player.name', 'ASC')
+      .limit(Math.ceil(limit / 4))
+      .getMany();
+
+    suggestions.push(
+      ...players.map((player) => ({
+        id: player.id,
+        type: 'player' as const,
+        title: player.name,
+        subtitle:
+          `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim()
+      }))
+    );
+
+    // Supprimer les doublons et limiter
+    const uniqueSuggestions = suggestions
+      .filter(
+        (item, index, self) =>
+          index ===
+          self.findIndex((t) => t.id === item.id && t.type === item.type)
+      )
+      .slice(0, limit);
+
+    return {
+      suggestions: uniqueSuggestions,
+      total: uniqueSuggestions.length,
+      query
+    };
+  }
+
+  // Méthode pour obtenir des suggestions détaillées
+  async getSuggestionsDetail(
+    query: string,
+    limit: number = 5
+  ): Promise<SuggestionsDetailResult> {
+    if (!query || query.trim().length < 2) {
+      return {
+        suggestions: [],
+        total: 0,
+        query
+      };
+    }
+
+    const suggestions: SuggestionDetailItem[] = [];
+    const searchTerm = query.trim();
+
+    // Suggestions basées sur les cartes Pokémon avec détails
+    const cards = await this.pokemonCardRepository
+      .createQueryBuilder('card')
+      .leftJoinAndSelect('card.set', 'set')
+      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
+      .orderBy('card.name', 'ASC')
+      .limit(Math.ceil(limit / 2))
+      .getMany();
+
+    suggestions.push(
+      ...cards.map((card) => ({
+        id: card.id,
+        type: 'card' as const,
+        title: card.name || 'Carte sans nom',
+        description: `${card.rarity || 'Rareté inconnue'} • ${card.set?.name || 'Set inconnu'}`,
+        url: `/pokemon/${card.id}`,
+        image: card.image,
+        metadata: {
+          rarity: card.rarity,
+          set: card.set?.name,
+          illustrator: card.illustrator,
+          category: card.category,
+          hp: card.hp,
+          types: card.types
+        }
+      }))
+    );
+
+    // Suggestions basées sur les tournois avec détails
+    const tournaments = await this.tournamentRepository
+      .createQueryBuilder('tournament')
+      .leftJoinAndSelect('tournament.players', 'players')
+      .where('tournament.name ILIKE :query', { query: `%${searchTerm}%` })
+      .orderBy('tournament.createdAt', 'DESC')
+      .limit(Math.ceil(limit / 2))
+      .getMany();
+
+    suggestions.push(
+      ...tournaments.map((tournament) => ({
+        id: tournament.id,
+        type: 'tournament' as const,
+        title: tournament.name,
+        description: `${tournament.location || 'Lieu non spécifié'} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
+        url: `/tournaments/${tournament.id}`,
+        metadata: {
+          status: tournament.status,
+          type: tournament.type,
+          location: tournament.location,
+          startDate: tournament.startDate,
+          endDate: tournament.endDate,
+          playerCount: tournament.players?.length || 0,
+          isPublic: tournament.isPublic
+        }
+      }))
+    );
+
+    // Supprimer les doublons et limiter
+    const uniqueSuggestions = suggestions
+      .filter(
+        (item, index, self) =>
+          index ===
+          self.findIndex((t) => t.id === item.id && t.type === item.type)
+      )
+      .slice(0, limit);
+
+    return {
+      suggestions: uniqueSuggestions,
+      total: uniqueSuggestions.length,
+      query
+    };
   }
 }

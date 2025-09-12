@@ -32,7 +32,6 @@ const Header = () => {
 
   return (
     <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center justify-between px-4 sm:px-8 z-50">
-      {/* Logo avec taille minimale */}
       <Link
         href="/"
         className="flex-shrink-0"
