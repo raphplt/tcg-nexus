@@ -1,4 +1,4 @@
-import { Pricing } from "@/app/tournaments/interfaces";
+import { Pricing } from "@/types/tournament";
 
 export function formatPricing(pricing?: Pricing | null): string {
   if (!pricing) return "Non défini";
@@ -39,8 +39,24 @@ export function formatPricing(pricing?: Pricing | null): string {
   if (pricing.priceDescription) parts.push(pricing.priceDescription);
   if (pricing.refundable) parts.push("Remboursable");
 
-  // Type (ex: standard, premium...) si pertinent
   if (pricing.type) parts.push(pricing.type.replace(/_/g, " "));
 
   return parts.length ? parts.join(" • ") : "Non défini";
 }
+
+// Format price for marketplace
+export const formatPrice = (
+  price: string | number,
+  currency: string,
+): string => {
+  const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+
+  try {
+    return numericPrice.toLocaleString(undefined, {
+      style: "currency",
+      currency: currency,
+    });
+  } catch {
+    return `${numericPrice.toFixed(2)} ${currency}`;
+  }
+};
