@@ -5,9 +5,10 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  Query
 } from '@nestjs/common';
-import { MatchService } from './match.service';
+import { MatchQueryDto, MatchService } from './match.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -23,8 +24,8 @@ export class MatchController {
   }
 
   @Get()
-  findAll() {
-    return this.matchService.findAll();
+  findAll(@Query() query: MatchQueryDto) {
+    return this.matchService.findAll(query);
   }
 
   @Get(':id')

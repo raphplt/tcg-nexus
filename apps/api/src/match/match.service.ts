@@ -65,9 +65,10 @@ export class MatchService {
       notes
     } = createMatchDto;
 
-    const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId }
-    });
+    const tournament: Tournament | null =
+      await this.tournamentRepository.findOne({
+        where: { id: tournamentId }
+      });
     if (!tournament) {
       throw new NotFoundException('Tournoi non trouvé');
     }
@@ -90,13 +91,14 @@ export class MatchService {
           `Joueur A avec l'ID ${playerAId} non trouvé`
         );
       }
-      const registrationA = await this.registrationRepository.findOne({
-        where: {
-          tournament: { id: tournamentId },
-          player: { id: playerAId },
-          status: RegistrationStatus.CONFIRMED
-        }
-      });
+      const registrationA: TournamentRegistration | null =
+        await this.registrationRepository.findOne({
+          where: {
+            tournament: { id: tournamentId },
+            player: { id: playerAId },
+            status: RegistrationStatus.CONFIRMED
+          }
+        });
       if (!registrationA) {
         throw new BadRequestException(
           `Le joueur A n'est pas inscrit à ce tournoi`
@@ -113,13 +115,14 @@ export class MatchService {
           `Joueur B avec l'ID ${playerBId} non trouvé`
         );
       }
-      const registrationB = await this.registrationRepository.findOne({
-        where: {
-          tournament: { id: tournamentId },
-          player: { id: playerBId },
-          status: RegistrationStatus.CONFIRMED
-        }
-      });
+      const registrationB: TournamentRegistration | null =
+        await this.registrationRepository.findOne({
+          where: {
+            tournament: { id: tournamentId },
+            player: { id: playerBId },
+            status: RegistrationStatus.CONFIRMED
+          }
+        });
       if (!registrationB) {
         throw new BadRequestException(
           `Le joueur B n'est pas inscrit à ce tournoi`
@@ -127,16 +130,25 @@ export class MatchService {
       }
     }
 
-    const match = this.matchRepository.create({
-      tournament: { id: tournamentId } as Tournament,
-      playerA: playerA ? ({ id: playerAId } as Player) : null,
-      playerB: playerB ? ({ id: playerBId } as Player) : null,
+    if (!tournament || !playerA || !playerB) {
+      throw new BadRequestException('Données invalides');
+    }
+    if (!round || !phase || !scheduledDate || !notes) {
+      throw new BadRequestException('Données invalides');
+    }
+
+    const matchData: Partial<Match> = {
+      tournament,
+      playerA: playerA || undefined,
+      playerB: playerB || undefined,
       round,
       phase,
       scheduledDate,
       notes,
       status: MatchStatus.SCHEDULED
-    });
+    };
+
+    const match = this.matchRepository.create(matchData);
 
     return this.matchRepository.save(match);
   }
@@ -161,7 +173,6 @@ export class MatchService {
       .leftJoinAndSelect('match.winner', 'winner')
       .leftJoinAndSelect('match.statistics', 'statistics');
 
-    // ✅ utiliser les alias joints (tournament.id, playerA.id, playerB.id)
     if (tournamentId != null) {
       qb.andWhere('tournament.id = :tournamentId', { tournamentId });
     }
