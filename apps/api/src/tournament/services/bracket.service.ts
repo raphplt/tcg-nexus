@@ -1,18 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Tournament, TournamentType } from '../entities/tournament.entity';
-import {
-  Match,
-  MatchStatus,
-  MatchPhase
-} from '../../match/entities/match.entity';
+import { Match, MatchPhase } from '../../match/entities/match.entity';
 import { Player } from '../../player/entities/player.entity';
 import {
   TournamentRegistration,
   RegistrationStatus
 } from '../entities/tournament-registration.entity';
 import { Ranking } from '../../ranking/entities/ranking.entity';
+import { MatchService } from '../../match/match.service';
 
 export interface BracketNode {
   matchId?: number;
@@ -64,18 +61,15 @@ export class BracketService {
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
     @InjectRepository(Ranking)
-    private rankingRepository: Repository<Ranking>
+    private rankingRepository: Repository<Ranking>,
+    private matchService: MatchService
   ) {}
 
   /**
    * Génère le bracket complet pour un tournoi selon son type
    */
-  async generateBracket(
-    tournamentId: number,
-    manager?: EntityManager
-  ): Promise<BracketStructure> {
-    const repo = manager || this.tournamentRepository;
-    const tournament = await repo.findOne(Tournament, {
+  async generateBracket(tournamentId: number): Promise<BracketStructure> {
+    const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: ['registrations', 'registrations.player']
     });
@@ -106,21 +100,18 @@ export class BracketService {
       case TournamentType.SINGLE_ELIMINATION:
         bracketStructure = await this.generateSingleEliminationBracket(
           seededPlayers,
-          tournament,
-          manager
+          tournament
         );
         break;
 
       case TournamentType.DOUBLE_ELIMINATION:
         bracketStructure = await this.generateDoubleEliminationBracket(
           seededPlayers,
-          tournament,
-          manager
+          tournament
         );
         break;
 
       case TournamentType.SWISS_SYSTEM:
-        // Swiss n'utilise pas de bracket traditionnel
         bracketStructure = {
           type: TournamentType.SWISS_SYSTEM,
           totalRounds: this.calculateSwissRounds(seededPlayers.length),
@@ -131,8 +122,7 @@ export class BracketService {
       case TournamentType.ROUND_ROBIN:
         bracketStructure = await this.generateRoundRobinBracket(
           seededPlayers,
-          tournament,
-          manager
+          tournament
         );
         break;
 
@@ -142,10 +132,9 @@ export class BracketService {
         );
     }
 
-    // Mettre à jour le tournoi avec le nombre total de rounds
     tournament.totalRounds = bracketStructure.totalRounds;
     tournament.currentRound = 1;
-    await repo.save(tournament);
+    await this.tournamentRepository.save(tournament);
 
     return bracketStructure;
   }
@@ -219,8 +208,7 @@ export class BracketService {
    */
   private async generateSingleEliminationBracket(
     players: Player[],
-    tournament: Tournament,
-    manager?: EntityManager
+    tournament: Tournament
   ): Promise<BracketStructure> {
     const playerCount = players.length;
     const totalRounds = Math.ceil(Math.log2(playerCount));
@@ -275,9 +263,7 @@ export class BracketService {
     }
 
     // Créer les matches en base
-    if (manager) {
-      await this.createMatchesFromBracket(tournament, rounds, manager);
-    }
+    await this.createMatchesFromBracket(tournament, rounds);
 
     return {
       type: TournamentType.SINGLE_ELIMINATION,
@@ -291,8 +277,7 @@ export class BracketService {
    */
   private async generateDoubleEliminationBracket(
     players: Player[],
-    tournament: Tournament,
-    manager?: EntityManager
+    tournament: Tournament
   ): Promise<BracketStructure> {
     // Implémentation simplifiée - bracket winner + loser
     //TODO: Implémenter la logique complète du double elimination
@@ -302,7 +287,7 @@ export class BracketService {
 
     // Pour l'instant, on génère comme un single elimination
     // TODO: Implémenter la logique complète du double elimination
-    return this.generateSingleEliminationBracket(players, tournament, manager);
+    return this.generateSingleEliminationBracket(players, tournament);
   }
 
   /**
@@ -310,8 +295,7 @@ export class BracketService {
    */
   private async generateRoundRobinBracket(
     players: Player[],
-    tournament: Tournament,
-    manager?: EntityManager
+    tournament: Tournament
   ): Promise<BracketStructure> {
     const playerCount = players.length;
     const totalRounds = playerCount - 1;
@@ -358,9 +342,7 @@ export class BracketService {
       }
     }
 
-    if (manager) {
-      await this.createMatchesFromBracket(tournament, rounds, manager);
-    }
+    await this.createMatchesFromBracket(tournament, rounds);
 
     return {
       type: TournamentType.ROUND_ROBIN,
@@ -406,23 +388,20 @@ export class BracketService {
    */
   private async createMatchesFromBracket(
     tournament: Tournament,
-    rounds: { index: number; matches: BracketNode[] }[],
-    manager: EntityManager
+    rounds: { index: number; matches: BracketNode[] }[]
   ): Promise<void> {
     for (const round of rounds) {
       for (const node of round.matches) {
         if (node.playerA || node.playerB) {
-          const match = manager.create(Match, {
-            tournament,
-            playerA: node.playerA ? ({ id: node.playerA.id } as Player) : null,
-            playerB: node.playerB ? ({ id: node.playerB.id } as Player) : null,
+          await this.matchService.create({
+            tournamentId: tournament.id,
+            playerAId: node.playerA?.id,
+            playerBId: node.playerB?.id,
             round: node.round,
             phase: node.phase,
-            status: MatchStatus.SCHEDULED,
-            scheduledDate: new Date(tournament.startDate)
+            scheduledDate: new Date(tournament.startDate),
+            notes: `Match généré automatiquement`
           });
-
-          await manager.save(match);
         }
       }
     }

@@ -26,6 +26,7 @@ import { TournamentOrchestrationService } from './services/tournament-orchestrat
 import { TournamentStateService } from './services/tournament-state.service';
 import { RankingModule } from '../ranking/ranking.module';
 import { MatchModule } from '../match/match.module';
+import { MatchService } from '../match/match.service';
 
 @Module({
   imports: [

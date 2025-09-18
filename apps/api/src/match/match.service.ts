@@ -547,7 +547,8 @@ export class MatchService {
 
       for (let i = 0; i < winners.length; i += 2) {
         if (i + 1 < winners.length) {
-          const newMatch = manager.create(Match, {
+          // Utiliser le repository standard plutôt que le manager pour éviter les conflits
+          const newMatch = this.matchRepository.create({
             tournament,
             playerA: winners[i],
             playerB: winners[i + 1],
@@ -555,18 +556,18 @@ export class MatchService {
             phase: this.getPhaseForRound(
               nextRound,
               tournament.totalRounds || 0
-            ) as any,
+            ),
             status: MatchStatus.SCHEDULED,
             scheduledDate: new Date()
           });
 
-          await manager.save(Match, newMatch);
+          await this.matchRepository.save(newMatch);
         }
       }
 
       // Mettre à jour le round du tournoi
       tournament.currentRound = nextRound;
-      await manager.save(Tournament, tournament);
+      await manager.save(tournament);
     }
   }
 

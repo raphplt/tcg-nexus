@@ -22,6 +22,7 @@ import {
 import { BracketService } from './bracket.service';
 import { SeedingService, SeedingMethod } from './seeding.service';
 import { RankingService } from '../../ranking/ranking.service';
+import { MatchService } from '../../match/match.service';
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;
@@ -48,6 +49,7 @@ export class TournamentOrchestrationService {
     private bracketService: BracketService,
     private seedingService: SeedingService,
     private rankingService: RankingService,
+    private matchService: MatchService,
     private dataSource: DataSource
   ) {}
 
@@ -72,10 +74,8 @@ export class TournamentOrchestrationService {
       await this.validateTournamentStart(tournament, options.checkInRequired);
 
       // Générer le bracket selon le type de tournoi
-      const bracketStructure = await this.bracketService.generateBracket(
-        tournamentId,
-        manager
-      );
+      const bracketStructure =
+        await this.bracketService.generateBracket(tournamentId);
 
       // Mettre à jour le statut du tournoi
       tournament.status = TournamentStatus.IN_PROGRESS;
@@ -85,7 +85,7 @@ export class TournamentOrchestrationService {
       await manager.save(tournament);
 
       // Initialiser les classements
-      await this.rankingService.updateTournamentRankings(tournamentId, manager);
+      await this.rankingService.updateTournamentRankings(tournamentId);
 
       return tournament;
     });
@@ -127,7 +127,7 @@ export class TournamentOrchestrationService {
       }
 
       // Mettre à jour les classements
-      await this.rankingService.updateTournamentRankings(tournamentId, manager);
+      await this.rankingService.updateTournamentRankings(tournamentId);
 
       const newRound = tournament.currentRound! + 1;
       let matchesCreated = 0;
@@ -146,17 +146,15 @@ export class TournamentOrchestrationService {
           for (const pairing of swissPairings.pairings) {
             if (pairing.playerB) {
               // Pas de bye
-              const match = manager.create(Match, {
-                tournament,
-                playerA: pairing.playerA,
-                playerB: pairing.playerB,
+              await this.matchService.create({
+                tournamentId: tournament.id,
+                playerAId: pairing.playerA.id,
+                playerBId: pairing.playerB.id,
                 round: newRound,
                 phase: MatchPhase.QUALIFICATION,
-                status: MatchStatus.SCHEDULED,
-                scheduledDate: new Date()
+                scheduledDate: new Date(),
+                notes: `Round ${newRound} - Table ${pairing.tableNumber}`
               });
-
-              await manager.save(match);
               matchesCreated++;
             }
           }
@@ -223,7 +221,7 @@ export class TournamentOrchestrationService {
       }
 
       // Mettre à jour les classements finaux
-      await this.rankingService.updateTournamentRankings(tournamentId, manager);
+      await this.rankingService.updateTournamentRankings(tournamentId);
 
       // Marquer les joueurs non éliminés comme éliminés au round actuel
       const activeRegistrations = await manager.find(TournamentRegistration, {
@@ -427,17 +425,15 @@ export class TournamentOrchestrationService {
     // Créer les matches du prochain round
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
-        const match = manager.create(Match, {
-          tournament,
-          playerA: winners[i],
-          playerB: winners[i + 1],
+        await this.matchService.create({
+          tournamentId: tournament.id,
+          playerAId: winners[i].id,
+          playerBId: winners[i + 1].id,
           round: newRound,
           phase: this.getPhaseForRound(newRound, tournament.totalRounds || 0),
-          status: MatchStatus.SCHEDULED,
-          scheduledDate: new Date()
+          scheduledDate: new Date(),
+          notes: `Round ${newRound} - Élimination`
         });
-
-        await manager.save(match);
         matchesCreated++;
       }
     }

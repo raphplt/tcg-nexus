@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateRankingDto } from './dto/create-ranking.dto';
 import { UpdateRankingDto } from './dto/update-ranking.dto';
 import { Ranking } from './entities/ranking.entity';
@@ -137,42 +137,32 @@ export class RankingService {
   /**
    * Met à jour tous les classements d'un tournoi
    */
-  async updateTournamentRankings(
-    tournamentId: number,
-    manager?: EntityManager
-  ): Promise<Ranking[]> {
-    const repo = manager || this.rankingRepository;
-
-    const tournament = await (manager || this.tournamentRepository).findOne(
-      Tournament,
-      {
-        where: { id: tournamentId },
-        relations: [
-          'matches',
-          'matches.playerA',
-          'matches.playerB',
-          'matches.winner'
-        ]
-      }
-    );
+  async updateTournamentRankings(tournamentId: number): Promise<Ranking[]> {
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+      relations: [
+        'matches',
+        'matches.playerA',
+        'matches.playerB',
+        'matches.winner'
+      ]
+    });
 
     if (!tournament) {
       throw new NotFoundException('Tournoi non trouvé');
     }
 
-    // Calculer les statistiques pour chaque joueur
-    const playerStats = await this.calculatePlayerStatistics(tournament);
+    const playerStats = this.calculatePlayerStatistics(tournament);
 
-    // Mettre à jour ou créer les rankings
     const rankings: Ranking[] = [];
 
     for (const [playerId, stats] of playerStats.entries()) {
-      let ranking = await repo.findOne(Ranking, {
+      let ranking = await this.rankingRepository.findOne({
         where: { tournament: { id: tournamentId }, player: { id: playerId } }
       });
 
       if (!ranking) {
-        ranking = repo.create(Ranking, {
+        ranking = this.rankingRepository.create({
           tournament: { id: tournamentId } as Tournament,
           player: { id: playerId } as Player,
           rank: 0,
@@ -206,7 +196,7 @@ export class RankingService {
     });
 
     // Sauvegarder
-    await repo.save(rankings);
+    await this.rankingRepository.save(rankings);
 
     return rankings;
   }
@@ -299,7 +289,7 @@ export class RankingService {
 
       case TournamentType.SINGLE_ELIMINATION:
       case TournamentType.DOUBLE_ELIMINATION:
-        return { win: 1, draw: 0, loss: 0 }; // En élimination, pas de points progressifs
+        return { win: 1, draw: 0, loss: 0 };
 
       default:
         return { win: 3, draw: 1, loss: 0 };
