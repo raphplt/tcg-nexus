@@ -32,6 +32,7 @@ import {
 import { OrganizerRole } from './entities/tournament-organizer.entity';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
+import { TournamentStatus } from './entities';
 
 @ApiTags('tournaments')
 @ApiBearerAuth()
@@ -127,5 +128,157 @@ export class TournamentController {
   @UseGuards(TournamentOwnerGuard)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.remove(id);
+  }
+
+  @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
+  async startTournament(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() options?: { seedingMethod?: string; checkInRequired?: boolean }
+  ) {
+    return this.tournamentService.startTournament(id, options);
+  }
+
+  @Post(':id/finish')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
+  async finishTournament(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.finishTournament(id);
+  }
+
+  @Post(':id/cancel')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
+  async cancelTournament(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: { reason?: string }
+  ) {
+    return this.tournamentService.cancelTournament(id, body?.reason);
+  }
+
+  @Post(':id/advance-round')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
+  async advanceToNextRound(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.advanceToNextRound(id);
+  }
+
+  @Get(':id/bracket')
+  async getBracket(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.getBracket(id);
+  }
+
+  @Get(':id/pairings')
+  async getCurrentPairings(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('round', ParseIntPipe) round?: number
+  ) {
+    return this.tournamentService.getCurrentPairings(id, round);
+  }
+
+  @Get(':id/rankings')
+  async getTournamentRankings(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.getTournamentRankings(id);
+  }
+
+  @Get(':id/progress')
+  async getTournamentProgress(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.getTournamentProgress(id);
+  }
+
+  @Get(':id/state/transitions')
+  async getAvailableTransitions(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.getAvailableTransitions(id);
+  }
+
+  @Post(':id/state/validate')
+  async validateStateTransition(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { targetStatus: string }
+  ) {
+    return this.tournamentService.validateStateTransition(
+      id,
+      body.targetStatus as TournamentStatus
+    );
+  }
+
+  @Get(':id/matches')
+  async getTournamentMatches(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('round', ParseIntPipe) round?: number,
+    @Query('status') status?: string
+  ) {
+    return this.tournamentService.getTournamentMatches(id, { round, status });
+  }
+
+  @Get(':id/matches/:matchId')
+  async getTournamentMatch(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('matchId', ParseIntPipe) matchId: number
+  ) {
+    return this.tournamentService.getTournamentMatch(id, matchId);
+  }
+
+  // ============= REGISTRATION MANAGEMENT =============
+
+  @Get(':id/registrations')
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR
+  )
+  async getTournamentRegistrations(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('status') status?: string
+  ) {
+    return this.tournamentService.getTournamentRegistrations(id, status);
+  }
+
+  @Patch(':id/registrations/:registrationId/confirm')
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR
+  )
+  async confirmRegistration(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('registrationId', ParseIntPipe) registrationId: number
+  ) {
+    return this.tournamentService.confirmRegistration(id, registrationId);
+  }
+
+  @Patch(':id/registrations/:registrationId/cancel')
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR
+  )
+  async cancelRegistration(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('registrationId', ParseIntPipe) registrationId: number,
+    @Body() body?: { reason?: string }
+  ) {
+    return this.tournamentService.cancelRegistration(
+      id,
+      registrationId,
+      body?.reason
+    );
+  }
+
+  @Patch(':id/registrations/:registrationId/check-in')
+  async checkInPlayer(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('registrationId', ParseIntPipe) registrationId: number,
+    @CurrentUser() user: User
+  ) {
+    return this.tournamentService.checkInPlayer(id, registrationId, user.id);
   }
 }

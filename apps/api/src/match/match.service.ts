@@ -22,6 +22,7 @@ import {
   TournamentRegistration,
   RegistrationStatus
 } from '../tournament/entities/tournament-registration.entity';
+import { TournamentType } from '../tournament/entities/tournament.entity';
 import { Ranking } from '../ranking/entities/ranking.entity';
 import { Statistics } from '../statistics/entities/statistic.entity';
 
@@ -314,6 +315,9 @@ export class MatchService {
         }
         await this.createMatchStatistics(match, manager);
 
+        // Vérifier si le tournoi peut avancer automatiquement
+        await this.checkTournamentProgression(match, manager);
+
         return savedMatch;
       }
     );
@@ -477,5 +481,102 @@ export class MatchService {
 
       await manager.save(stat);
     }
+  }
+
+  /**
+   * Vérifie si le tournoi peut progresser automatiquement
+   */
+  private async checkTournamentProgression(
+    match: Match,
+    manager: EntityManager
+  ): Promise<void> {
+    const tournament = await manager.findOne(Tournament, {
+      where: { id: match.tournament.id },
+      relations: ['matches']
+    });
+
+    if (!tournament) return;
+
+    // Vérifier si tous les matches du round actuel sont terminés
+    const currentRoundMatches = tournament.matches.filter(
+      (m) => m.round === tournament.currentRound
+    );
+
+    const unfinishedMatches = currentRoundMatches.filter(
+      (m) =>
+        m.status !== MatchStatus.FINISHED && m.status !== MatchStatus.FORFEIT
+    );
+
+    // Si tous les matches du round sont terminés, on peut potentiellement avancer
+    if (unfinishedMatches.length === 0) {
+      // Pour l'élimination, propager automatiquement les vainqueurs
+      if (
+        tournament.type === TournamentType.SINGLE_ELIMINATION ||
+        tournament.type === TournamentType.DOUBLE_ELIMINATION
+      ) {
+        await this.propagateEliminationWinners(tournament, manager);
+      }
+    }
+  }
+
+  /**
+   * Propage les vainqueurs dans un bracket d'élimination
+   */
+  private async propagateEliminationWinners(
+    tournament: Tournament,
+    manager: EntityManager
+  ): Promise<void> {
+    const currentRound = tournament.currentRound || 1;
+    const nextRound = currentRound + 1;
+
+    // Récupérer les matches du round actuel avec vainqueurs
+    const currentRoundMatches = tournament.matches.filter(
+      (m) => m.round === currentRound && m.winner
+    );
+
+    if (currentRoundMatches.length === 0) return;
+
+    // Créer les matches du round suivant si pas déjà créés
+    const nextRoundMatches = tournament.matches.filter(
+      (m) => m.round === nextRound
+    );
+
+    if (nextRoundMatches.length === 0 && currentRoundMatches.length > 1) {
+      // Créer les nouveaux matches
+      const winners = currentRoundMatches.map((m) => m.winner!);
+
+      for (let i = 0; i < winners.length; i += 2) {
+        if (i + 1 < winners.length) {
+          const newMatch = manager.create(Match, {
+            tournament,
+            playerA: winners[i],
+            playerB: winners[i + 1],
+            round: nextRound,
+            phase: this.getPhaseForRound(
+              nextRound,
+              tournament.totalRounds || 0
+            ) as any,
+            status: MatchStatus.SCHEDULED,
+            scheduledDate: new Date()
+          });
+
+          await manager.save(Match, newMatch);
+        }
+      }
+
+      // Mettre à jour le round du tournoi
+      tournament.currentRound = nextRound;
+      await manager.save(Tournament, tournament);
+    }
+  }
+
+  /**
+   * Détermine la phase selon le round et le total
+   */
+  private getPhaseForRound(round: number, totalRounds: number): MatchPhase {
+    if (round === totalRounds) return MatchPhase.FINAL;
+    if (round === totalRounds - 1) return MatchPhase.SEMI_FINAL;
+    if (round === totalRounds - 2) return MatchPhase.QUARTER_FINAL;
+    return MatchPhase.QUALIFICATION;
   }
 }
