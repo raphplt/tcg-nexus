@@ -6,11 +6,14 @@ import { Collection } from "@/types/collection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button"; // <-- ajout du bouton
+import { H1 } from "@/components/Shared/Titles";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCollections = async () => {
@@ -38,11 +41,22 @@ const Page = () => {
     return <div>Loading...</div>;
   }
 
-  console.log("Rendering collections:", collections);
+  const onPressSmash = () => {
+    router.push("/pokemon/smash-or-pass");
+  };
 
   return (
     <div className="flex flex-col items-center">
-      <h1 className="text-2xl font-bold mb-6 mt-3">Collections</h1>
+      <H1 className="mt-4">Collections</H1>
+
+      <Button
+        variant="default"
+        className="mt-1 mb-2"
+        onClick={onPressSmash}
+      >
+        Smash or Pass
+      </Button>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-center">
         {collections.map((collection) => (
           <Card

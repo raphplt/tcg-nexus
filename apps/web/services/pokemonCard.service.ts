@@ -1,5 +1,5 @@
 import api from "../utils/fetch";
-import type { PokemonCardType } from "../types/cardPokemon";
+import type { PokemonCardType, PokemonSerieType } from "../types/cardPokemon";
 import type { PaginatedResult, PaginationParams } from "../types/pagination";
 
 export const pokemonCardService = {
@@ -33,8 +33,17 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async getRandom(): Promise<PokemonCardType> {
-    const response = await api.get<PokemonCardType>("/pokemon-card/random");
+  async getRandom(serieId?: string): Promise<PokemonCardType> {
+    console.log("Fetching random card with serieId:", serieId);
+    const response = await api.get<PokemonCardType>("/pokemon-card/random", {
+      params: serieId ? { serieId } : undefined,
+    });
+    console.log("Random card:", response.data);
+    return response.data;
+  },
+
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
     return response.data;
   },
 };

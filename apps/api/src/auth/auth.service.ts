@@ -12,13 +12,15 @@ import { User } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponse, JwtPayload } from './interfaces/auth.interface';
+import { CollectionService } from 'src/collection/collection.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private collectionService: CollectionService
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -69,6 +71,11 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password
       });
+
+      // await this.collectionService.create({
+      //   name: 'wishlist',
+      //   userId: user.id
+      // });
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);

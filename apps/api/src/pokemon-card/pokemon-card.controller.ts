@@ -46,8 +46,8 @@ export class PokemonCardController {
   }
 
   @Get('random')
-  findRandom() {
-    return this.pokemonCardService.findRandom();
+  findRandom(@Query('serieId') serieId?: string) {
+    return this.pokemonCardService.findRandom(serieId);
   }
 
   @Get(':id')
