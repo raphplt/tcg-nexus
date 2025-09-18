@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PokemonCardModule } from './pokemon-card/pokemon-card.module';
 import { PokemonSetModule } from './pokemon-set/pokemon-set.module';
 import { PokemonSeriesModule } from './pokemon-series/pokemon-series.module';
@@ -53,6 +55,12 @@ import { SearchModule } from './search/search.module';
     SearchModule
   ],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard
+    }
+  ]
 })
 export class AppModule {}

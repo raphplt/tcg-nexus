@@ -20,6 +20,7 @@ import { UpdateTournamentStatusDto } from './dto/update-tournament-status.dto';
 import { TournamentRegistrationDto } from './dto/tournament-registration.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Public } from '../auth/decorators/public.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/entities/user.entity';
@@ -50,21 +51,25 @@ export class TournamentController {
     return this.tournamentService.create(createTournamentDto, user.id);
   }
 
+  @Public()
   @Get()
   async findAll(@Query() query: TournamentQueryDto) {
     return this.tournamentService.findAll(query);
   }
 
+  @Public()
   @Get('upcoming')
   async getUpcomingTournaments(@Query('limit') limit?: number) {
     return this.tournamentService.getUpcomingTournaments(limit);
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.findOne(id);
   }
 
+  @Public()
   @Get(':id/stats')
   async getTournamentStats(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentStats(id);
@@ -168,11 +173,13 @@ export class TournamentController {
     return this.tournamentService.advanceToNextRound(id);
   }
 
+  @Public()
   @Get(':id/bracket')
   async getBracket(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getBracket(id);
   }
 
+  @Public()
   @Get(':id/pairings')
   async getCurrentPairings(
     @Param('id', ParseIntPipe) id: number,
@@ -181,11 +188,13 @@ export class TournamentController {
     return this.tournamentService.getCurrentPairings(id, round);
   }
 
+  @Public()
   @Get(':id/rankings')
   async getTournamentRankings(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentRankings(id);
   }
 
+  @Public()
   @Get(':id/progress')
   async getTournamentProgress(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentProgress(id);
@@ -207,6 +216,7 @@ export class TournamentController {
     );
   }
 
+  @Public()
   @Get(':id/matches')
   async getTournamentMatches(
     @Param('id', ParseIntPipe) id: number,
@@ -216,6 +226,7 @@ export class TournamentController {
     return this.tournamentService.getTournamentMatches(id, { round, status });
   }
 
+  @Public()
   @Get(':id/matches/:matchId')
   async getTournamentMatch(
     @Param('id', ParseIntPipe) id: number,
