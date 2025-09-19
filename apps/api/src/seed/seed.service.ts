@@ -711,22 +711,23 @@ export class SeedService {
       seedingMethod
     );
 
-    // 6. Générer le bracket complet
-    console.log('🏆 Génération du bracket...');
+    // 6. Démarrer le tournoi AVANT de générer le bracket
     tournament.players = seededPlayers;
+    tournament.status = TournamentStatus.IN_PROGRESS;
+    tournament.currentRound = 1;
     await this.tournamentRepository.save(tournament);
 
+    // 7. Générer le bracket complet (maintenant que le tournoi est IN_PROGRESS)
+    console.log('🏆 Génération du bracket...');
     const bracketStructure = await this.bracketService.generateBracket(
       tournament.id
     );
 
-    // 7. Démarrer le tournoi
-    tournament.status = TournamentStatus.IN_PROGRESS;
-    tournament.currentRound = 1;
+    // 8. Mettre à jour le nombre total de rounds
     tournament.totalRounds = bracketStructure.totalRounds;
     await this.tournamentRepository.save(tournament);
 
-    // 8. Créer les rankings initiaux
+    // 9. Créer les rankings initiaux
     for (let i = 0; i < seededPlayers.length; i++) {
       const ranking = this.rankingRepository.create({
         tournament,
