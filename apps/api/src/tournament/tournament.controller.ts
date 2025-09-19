@@ -143,7 +143,7 @@ export class TournamentController {
     @Param('id', ParseIntPipe) id: number,
     @Body() options?: { seedingMethod?: string; checkInRequired?: boolean }
   ) {
-    return this.tournamentService.startTournament(id, options);
+    return await this.tournamentService.startTournament(id, options);
   }
 
   @Post(':id/finish')
@@ -151,7 +151,7 @@ export class TournamentController {
   @UseGuards(TournamentOrganizerGuard)
   @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
   async finishTournament(@Param('id', ParseIntPipe) id: number) {
-    return this.tournamentService.finishTournament(id);
+    return await this.tournamentService.finishTournament(id);
   }
 
   @Post(':id/cancel')
@@ -162,7 +162,7 @@ export class TournamentController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body?: { reason?: string }
   ) {
-    return this.tournamentService.cancelTournament(id, body?.reason);
+    return await this.tournamentService.cancelTournament(id, body?.reason);
   }
 
   @Post(':id/advance-round')
@@ -170,13 +170,13 @@ export class TournamentController {
   @UseGuards(TournamentOrganizerGuard)
   @TournamentOrganizerRoles(OrganizerRole.OWNER, OrganizerRole.ADMIN)
   async advanceToNextRound(@Param('id', ParseIntPipe) id: number) {
-    return this.tournamentService.advanceToNextRound(id);
+    return await this.tournamentService.advanceToNextRound(id);
   }
 
   @Public()
   @Get(':id/bracket')
   async getBracket(@Param('id', ParseIntPipe) id: number) {
-    return this.tournamentService.getBracket(id);
+    return await this.tournamentService.getBracket(id);
   }
 
   @Public()
@@ -185,28 +185,28 @@ export class TournamentController {
     @Param('id', ParseIntPipe) id: number,
     @Query('round', ParseIntPipe) round?: number
   ) {
-    return this.tournamentService.getCurrentPairings(id, round);
+    return await this.tournamentService.getCurrentPairings(id, round);
   }
 
   @Public()
   @Get(':id/rankings')
   async getTournamentRankings(@Param('id', ParseIntPipe) id: number) {
-    return this.tournamentService.getTournamentRankings(id);
+    return await this.tournamentService.getTournamentRankings(id);
   }
 
   @Public()
   @Get(':id/progress')
-  async getTournamentProgress(@Param('id', ParseIntPipe) id: number) {
+  getTournamentProgress(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentProgress(id);
   }
 
   @Get(':id/state/transitions')
-  async getAvailableTransitions(@Param('id', ParseIntPipe) id: number) {
+  getAvailableTransitions(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.getAvailableTransitions(id);
   }
 
   @Post(':id/state/validate')
-  async validateStateTransition(
+  validateStateTransition(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { targetStatus: string }
   ) {
@@ -218,7 +218,7 @@ export class TournamentController {
 
   @Public()
   @Get(':id/matches')
-  async getTournamentMatches(
+  getTournamentMatches(
     @Param('id', ParseIntPipe) id: number,
     @Query('round', ParseIntPipe) round?: number,
     @Query('status') status?: string
@@ -228,14 +228,12 @@ export class TournamentController {
 
   @Public()
   @Get(':id/matches/:matchId')
-  async getTournamentMatch(
+  getTournamentMatch(
     @Param('id', ParseIntPipe) id: number,
     @Param('matchId', ParseIntPipe) matchId: number
   ) {
     return this.tournamentService.getTournamentMatch(id, matchId);
   }
-
-  // ============= REGISTRATION MANAGEMENT =============
 
   @Get(':id/registrations')
   @UseGuards(TournamentOrganizerGuard)
@@ -244,7 +242,7 @@ export class TournamentController {
     OrganizerRole.ADMIN,
     OrganizerRole.MODERATOR
   )
-  async getTournamentRegistrations(
+  getTournamentRegistrations(
     @Param('id', ParseIntPipe) id: number,
     @Query('status') status?: string
   ) {
@@ -258,7 +256,7 @@ export class TournamentController {
     OrganizerRole.ADMIN,
     OrganizerRole.MODERATOR
   )
-  async confirmRegistration(
+  confirmRegistration(
     @Param('id', ParseIntPipe) id: number,
     @Param('registrationId', ParseIntPipe) registrationId: number
   ) {
@@ -272,7 +270,7 @@ export class TournamentController {
     OrganizerRole.ADMIN,
     OrganizerRole.MODERATOR
   )
-  async cancelRegistration(
+  cancelRegistration(
     @Param('id', ParseIntPipe) id: number,
     @Param('registrationId', ParseIntPipe) registrationId: number,
     @Body() body?: { reason?: string }
@@ -285,7 +283,7 @@ export class TournamentController {
   }
 
   @Patch(':id/registrations/:registrationId/check-in')
-  async checkInPlayer(
+  checkInPlayer(
     @Param('id', ParseIntPipe) id: number,
     @Param('registrationId', ParseIntPipe) registrationId: number,
     @CurrentUser() user: User
