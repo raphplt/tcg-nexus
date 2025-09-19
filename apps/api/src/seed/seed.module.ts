@@ -21,6 +21,9 @@ import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
+import { SeedingService } from 'src/tournament/services/seeding.service';
+import { BracketService } from 'src/tournament/services/bracket.service';
+import { MatchService } from 'src/match/match.service';
 
 @Module({
   imports: [
@@ -47,6 +50,6 @@ import { Collection } from 'src/collection/entities/collection.entity';
     ])
   ],
   controllers: [SeedController],
-  providers: [SeedService]
+  providers: [SeedService, SeedingService, BracketService, MatchService]
 })
 export class SeedModule {}

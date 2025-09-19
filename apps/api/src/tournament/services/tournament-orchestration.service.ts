@@ -70,22 +70,18 @@ export class TournamentOrchestrationService {
         throw new NotFoundException('Tournoi non trouvé');
       }
 
-      // Vérifications préalables
-      await this.validateTournamentStart(tournament, options.checkInRequired);
+      this.validateTournamentStart(tournament, options.checkInRequired);
 
-      // Générer le bracket selon le type de tournoi
       const bracketStructure =
         await this.bracketService.generateBracket(tournamentId);
 
-      // Mettre à jour le statut du tournoi
       tournament.status = TournamentStatus.IN_PROGRESS;
       tournament.currentRound = 1;
       tournament.totalRounds = bracketStructure.totalRounds;
 
       await manager.save(tournament);
 
-      // Initialiser les classements
-      await this.rankingService.updateTournamentRankings(tournamentId);
+      this.rankingService.updateTournamentRankings(tournamentId);
 
       return tournament;
     });
@@ -126,8 +122,7 @@ export class TournamentOrchestrationService {
         );
       }
 
-      // Mettre à jour les classements
-      await this.rankingService.updateTournamentRankings(tournamentId);
+      this.rankingService.updateTournamentRankings(tournamentId);
 
       const newRound = tournament.currentRound! + 1;
       let matchesCreated = 0;
@@ -142,11 +137,9 @@ export class TournamentOrchestrationService {
             newRound
           );
 
-          // Créer les nouveaux matches
           for (const pairing of swissPairings.pairings) {
             if (pairing.playerB) {
-              // Pas de bye
-              await this.matchService.create({
+              this.matchService.create({
                 tournamentId: tournament.id,
                 playerAId: pairing.playerA.id,
                 playerBId: pairing.playerB.id,
@@ -162,7 +155,6 @@ export class TournamentOrchestrationService {
           playersAdvanced = swissPairings.pairings.length;
         }
       } else if (tournament.type === TournamentType.ROUND_ROBIN) {
-        // Round robin : tous les matches sont déjà créés
         playersAdvanced = tournament.registrations.filter(
           (reg) => reg.status === RegistrationStatus.CONFIRMED
         ).length;
@@ -170,7 +162,6 @@ export class TournamentOrchestrationService {
         tournament.type === TournamentType.SINGLE_ELIMINATION ||
         tournament.type === TournamentType.DOUBLE_ELIMINATION
       ) {
-        // Élimination : propager les vainqueurs automatiquement
         const result = await this.advanceEliminationRound(
           tournament,
           newRound,
@@ -181,7 +172,6 @@ export class TournamentOrchestrationService {
         playersEliminated = result.playersEliminated;
       }
 
-      // Vérifier si le tournoi est terminé
       if (
         newRound > tournament.totalRounds! ||
         this.isTournamentComplete(tournament, newRound)
@@ -220,8 +210,7 @@ export class TournamentOrchestrationService {
         throw new BadRequestException('Le tournoi est déjà terminé');
       }
 
-      // Mettre à jour les classements finaux
-      await this.rankingService.updateTournamentRankings(tournamentId);
+      this.rankingService.updateTournamentRankings(tournamentId);
 
       // Marquer les joueurs non éliminés comme éliminés au round actuel
       const activeRegistrations = await manager.find(TournamentRegistration, {
@@ -422,10 +411,9 @@ export class TournamentOrchestrationService {
       }
     }
 
-    // Créer les matches du prochain round
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
-        await this.matchService.create({
+        this.matchService.create({
           tournamentId: tournament.id,
           playerAId: winners[i].id,
           playerBId: winners[i + 1].id,
@@ -459,7 +447,6 @@ export class TournamentOrchestrationService {
     currentRound: number
   ): boolean {
     if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
-      // Un seul joueur restant
       const activeRegistrations = tournament.registrations.filter(
         (reg) =>
           reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt
@@ -471,7 +458,6 @@ export class TournamentOrchestrationService {
       tournament.type === TournamentType.SWISS_SYSTEM ||
       tournament.type === TournamentType.ROUND_ROBIN
     ) {
-      // Tous les rounds sont terminés
       return currentRound > (tournament.totalRounds || 0);
     }
 

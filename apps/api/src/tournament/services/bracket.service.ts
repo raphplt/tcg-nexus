@@ -71,7 +71,11 @@ export class BracketService {
   async generateBracket(tournamentId: number): Promise<BracketStructure> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
-      relations: ['registrations', 'registrations.player']
+      relations: [
+        'registrations',
+        'registrations.player',
+        'registrations.player.user'
+      ]
     });
 
     if (!tournament) {
@@ -98,14 +102,14 @@ export class BracketService {
 
     switch (tournament.type) {
       case TournamentType.SINGLE_ELIMINATION:
-        bracketStructure = await this.generateSingleEliminationBracket(
+        bracketStructure = this.generateSingleEliminationBracket(
           seededPlayers,
           tournament
         );
         break;
 
       case TournamentType.DOUBLE_ELIMINATION:
-        bracketStructure = await this.generateDoubleEliminationBracket(
+        bracketStructure = this.generateDoubleEliminationBracket(
           seededPlayers,
           tournament
         );
@@ -120,7 +124,7 @@ export class BracketService {
         break;
 
       case TournamentType.ROUND_ROBIN:
-        bracketStructure = await this.generateRoundRobinBracket(
+        bracketStructure = this.generateRoundRobinBracket(
           seededPlayers,
           tournament
         );
@@ -148,7 +152,12 @@ export class BracketService {
   ): Promise<SwissPairing> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
-      relations: ['registrations', 'registrations.player', 'rankings']
+      relations: [
+        'registrations',
+        'registrations.player',
+        'registrations.player.user',
+        'rankings'
+      ]
     });
 
     if (!tournament) {
@@ -206,10 +215,10 @@ export class BracketService {
   /**
    * Génère le bracket pour élimination simple
    */
-  private async generateSingleEliminationBracket(
+  private generateSingleEliminationBracket(
     players: Player[],
     tournament: Tournament
-  ): Promise<BracketStructure> {
+  ): BracketStructure {
     const playerCount = players.length;
     const totalRounds = Math.ceil(Math.log2(playerCount));
 
@@ -242,7 +251,7 @@ export class BracketService {
           if (playerAIndex < players.length) {
             node.playerA = {
               id: players[playerAIndex].id,
-              name: players[playerAIndex].name,
+              name: `${players[playerAIndex].user?.firstName || ''} ${players[playerAIndex].user?.lastName || ''}`.trim(),
               seed: playerAIndex + 1
             };
           }
@@ -250,7 +259,7 @@ export class BracketService {
           if (playerBIndex < players.length) {
             node.playerB = {
               id: players[playerBIndex].id,
-              name: players[playerBIndex].name,
+              name: `${players[playerBIndex].user?.firstName || ''} ${players[playerBIndex].user?.lastName || ''}`.trim(),
               seed: playerBIndex + 1
             };
           }
@@ -263,7 +272,7 @@ export class BracketService {
     }
 
     // Créer les matches en base
-    await this.createMatchesFromBracket(tournament, rounds);
+    this.createMatchesFromBracket(tournament, rounds);
 
     return {
       type: TournamentType.SINGLE_ELIMINATION,
@@ -275,10 +284,10 @@ export class BracketService {
   /**
    * Génère le bracket pour élimination double
    */
-  private async generateDoubleEliminationBracket(
+  private generateDoubleEliminationBracket(
     players: Player[],
     tournament: Tournament
-  ): Promise<BracketStructure> {
+  ): BracketStructure {
     // Implémentation simplifiée - bracket winner + loser
     //TODO: Implémenter la logique complète du double elimination
     // const playerCount = players.length;
@@ -293,10 +302,10 @@ export class BracketService {
   /**
    * Génère le bracket pour round robin
    */
-  private async generateRoundRobinBracket(
+  private generateRoundRobinBracket(
     players: Player[],
     tournament: Tournament
-  ): Promise<BracketStructure> {
+  ): BracketStructure {
     const playerCount = players.length;
     const totalRounds = playerCount - 1;
     const rounds: { index: number; matches: BracketNode[] }[] = [];
@@ -317,12 +326,12 @@ export class BracketService {
             position: match,
             playerA: {
               id: players[playerAIndex].id,
-              name: players[playerAIndex].name,
+              name: `${players[playerAIndex].user?.firstName || ''} ${players[playerAIndex].user?.lastName || ''}`.trim(),
               seed: playerAIndex + 1
             },
             playerB: {
               id: players[playerBIndex].id,
-              name: players[playerBIndex].name,
+              name: `${players[playerBIndex].user?.firstName || ''} ${players[playerBIndex].user?.lastName || ''}`.trim(),
               seed: playerBIndex + 1
             },
             phase: MatchPhase.QUALIFICATION
@@ -342,7 +351,7 @@ export class BracketService {
       }
     }
 
-    await this.createMatchesFromBracket(tournament, rounds);
+    this.createMatchesFromBracket(tournament, rounds);
 
     return {
       type: TournamentType.ROUND_ROBIN,
@@ -386,14 +395,14 @@ export class BracketService {
   /**
    * Crée les matches en base à partir du bracket
    */
-  private async createMatchesFromBracket(
+  private createMatchesFromBracket(
     tournament: Tournament,
     rounds: { index: number; matches: BracketNode[] }[]
-  ): Promise<void> {
+  ): void {
     for (const round of rounds) {
       for (const node of round.matches) {
         if (node.playerA || node.playerB) {
-          await this.matchService.create({
+          this.matchService.create({
             tournamentId: tournament.id,
             playerAId: node.playerA?.id,
             playerBId: node.playerB?.id,
@@ -485,7 +494,9 @@ export class BracketService {
       relations: [
         'matches',
         'matches.playerA',
+        'matches.playerA.user',
         'matches.playerB',
+        'matches.playerB.user',
         'matches.winner'
       ]
     });
@@ -514,13 +525,13 @@ export class BracketService {
         playerA: match.playerA
           ? {
               id: match.playerA.id,
-              name: match.playerA.name
+              name: `${match.playerA.user?.firstName || ''} ${match.playerA.user?.lastName || ''}`.trim()
             }
           : undefined,
         playerB: match.playerB
           ? {
               id: match.playerB.id,
-              name: match.playerB.name
+              name: `${match.playerB.user?.firstName || ''} ${match.playerB.user?.lastName || ''}`.trim()
             }
           : undefined,
         winnerId: match.winner?.id,

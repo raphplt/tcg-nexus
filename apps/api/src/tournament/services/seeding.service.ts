@@ -19,6 +19,20 @@ export interface SeededPlayer extends Player {
   score?: number;
 }
 
+interface PlayerRankingStats {
+  ranking_playerId: string;
+  avgPoints: string;
+  avgWinRate: string;
+  tournamentCount: string;
+}
+
+interface PlayerDetailedStats {
+  avgPoints: string;
+  avgWinRate: string;
+  tournamentCount: string;
+  bestRank: string;
+}
+
 @Injectable()
 export class SeedingService {
   constructor(
@@ -83,7 +97,7 @@ export class SeedingService {
     const playerRankings = await this.rankingRepository
       .createQueryBuilder('ranking')
       .select([
-        'ranking.playerId',
+        'ranking.playerId as ranking_playerId',
         'AVG(ranking.points) as avgPoints',
         'AVG(ranking.winRate) as avgWinRate',
         'COUNT(ranking.id) as tournamentCount'
@@ -92,14 +106,14 @@ export class SeedingService {
         playerIds: players.map((p) => p.id)
       })
       .groupBy('ranking.playerId')
-      .getRawMany();
+      .getRawMany<PlayerRankingStats>();
 
     // Créer un map pour un accès rapide
     const rankingMap = new Map<
       number,
       { avgPoints: number; avgWinRate: number; tournamentCount: number }
     >();
-    playerRankings.forEach((r: any) => {
+    playerRankings.forEach((r: PlayerRankingStats) => {
       rankingMap.set(parseInt(r.ranking_playerId), {
         avgPoints: parseFloat(r.avgPoints) || 0,
         avgWinRate: parseFloat(r.avgWinRate) || 0,
@@ -238,7 +252,7 @@ export class SeedingService {
     avgWinRate: number;
     tournamentCount: number;
     bestRank: number;
-    recentForm: number; // Performance des 5 derniers tournois
+    recentForm: number;
   }> {
     const stats = await this.rankingRepository
       .createQueryBuilder('ranking')
@@ -250,7 +264,7 @@ export class SeedingService {
         'COUNT(ranking.id) as tournamentCount',
         'MIN(ranking.rank) as bestRank'
       ])
-      .getRawOne();
+      .getRawOne<PlayerDetailedStats>();
 
     // Récupérer les 5 derniers tournois pour la forme récente
     const recentRankings = await this.rankingRepository
@@ -268,10 +282,10 @@ export class SeedingService {
         : 0;
 
     return {
-      avgPoints: parseFloat(stats?.avgPoints) || 0,
-      avgWinRate: parseFloat(stats?.avgWinRate) || 0,
-      tournamentCount: parseInt(stats?.tournamentCount) || 0,
-      bestRank: parseInt(stats?.bestRank) || 999,
+      avgPoints: parseFloat(stats?.avgPoints || '0') || 0,
+      avgWinRate: parseFloat(stats?.avgWinRate || '0') || 0,
+      tournamentCount: parseInt(stats?.tournamentCount || '0') || 0,
+      bestRank: parseInt(stats?.bestRank || '999') || 999,
       recentForm
     };
   }
