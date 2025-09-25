@@ -23,8 +23,6 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../user/entities/user.entity';
 import { MatchPermissionGuard } from './guards/match-permission.guard';
 
 @ApiTags('matches')
@@ -63,12 +61,10 @@ export class MatchController {
     return this.matchService.remove(id);
   }
 
-  // ============= MATCH OPERATIONS =============
-
   @Post(':id/start')
   @HttpCode(HttpStatus.OK)
   @UseGuards(MatchPermissionGuard)
-  async startMatch(
+  startMatch(
     @Param('id', ParseIntPipe) id: number,
     @Body() startMatchDto: StartMatchDto
   ) {
@@ -78,7 +74,7 @@ export class MatchController {
   @Post(':id/report-score')
   @HttpCode(HttpStatus.OK)
   @UseGuards(MatchPermissionGuard)
-  async reportScore(
+  reportScore(
     @Param('id', ParseIntPipe) id: number,
     @Body() reportScoreDto: ReportScoreDto
   ) {
@@ -88,17 +84,15 @@ export class MatchController {
   @Post(':id/reset')
   @HttpCode(HttpStatus.OK)
   @UseGuards(MatchPermissionGuard)
-  async resetMatch(
+  resetMatch(
     @Param('id', ParseIntPipe) id: number,
     @Body() resetMatchDto: ResetMatchDto
   ) {
     return this.matchService.resetMatch(id, resetMatchDto);
   }
 
-  // ============= MATCH QUERIES =============
-
   @Get('tournament/:tournamentId/round/:round')
-  async getMatchesByRound(
+  getMatchesByRound(
     @Param('tournamentId', ParseIntPipe) tournamentId: number,
     @Param('round', ParseIntPipe) round: number
   ) {
@@ -106,7 +100,7 @@ export class MatchController {
   }
 
   @Get('player/:playerId/tournament/:tournamentId')
-  async getPlayerMatches(
+  getPlayerMatches(
     @Param('playerId', ParseIntPipe) playerId: number,
     @Param('tournamentId', ParseIntPipe) tournamentId: number
   ) {

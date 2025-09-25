@@ -7,8 +7,6 @@ import {
 import { authedFetch, fetcher } from "@/utils/fetch";
 
 export const matchService = {
-  // ============= MATCH OPERATIONS =============
-
   async getMatch(id: number): Promise<Match> {
     return fetcher<Match>(`/matches/${id}`);
   },
@@ -30,8 +28,6 @@ export const matchService = {
       data,
     });
   },
-
-  // ============= MATCH QUERIES =============
 
   async getMatchesByRound(
     tournamentId: number,
