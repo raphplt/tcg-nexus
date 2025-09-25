@@ -19,6 +19,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('marketplace')
 @Controller('listings')
@@ -34,11 +35,13 @@ export class MarketplaceController {
   }
 
   @Get()
+  @Public()
   getAllListings(@Query() query: FindAllListingsQuery) {
     return this.marketplaceService.findAll(query);
   }
 
   @Get(':id')
+  @Public()
   getListingById(@Param('id') id: string) {
     return this.marketplaceService.findOne(+id);
   }

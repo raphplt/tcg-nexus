@@ -178,8 +178,7 @@ export class SearchService {
       .createQueryBuilder('player')
       .leftJoinAndSelect('player.user', 'user')
       .leftJoinAndSelect('player.tournaments', 'tournaments')
-      .where('player.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('user.firstName ILIKE :query', { query: `%${query}%` })
+      .where('user.firstName ILIKE :query', { query: `%${query}%` })
       .orWhere('user.lastName ILIKE :query', { query: `%${query}%` })
       .orWhere('user.email ILIKE :query', { query: `%${query}%` })
       .limit(limit)
@@ -188,8 +187,9 @@ export class SearchService {
     return players.map((player) => ({
       id: player.id,
       type: 'player' as const,
-      title: player.name,
-      description: `${player.user?.firstName || ''} ${player.user?.lastName || ''} • ${player.tournaments?.length || 0} tournois`,
+      title:
+        `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim(),
+      description: `${player.user?.email || ''} • ${player.tournaments?.length || 0} tournois`,
       url: `/players/${player.id}`,
       metadata: {
         userId: player.user?.id,
@@ -404,10 +404,9 @@ export class SearchService {
     const players = await this.playerRepository
       .createQueryBuilder('player')
       .leftJoinAndSelect('player.user', 'user')
-      .where('player.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orWhere('user.firstName ILIKE :query', { query: `%${searchTerm}%` })
+      .where('user.firstName ILIKE :query', { query: `%${searchTerm}%` })
       .orWhere('user.lastName ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('player.name', 'ASC')
+      .orderBy('user.firstName', 'ASC')
       .limit(Math.ceil(limit / 4))
       .getMany();
 
@@ -415,9 +414,9 @@ export class SearchService {
       ...players.map((player) => ({
         id: player.id,
         type: 'player' as const,
-        title: player.name,
-        subtitle:
-          `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim()
+        title:
+          `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim(),
+        subtitle: player.user?.email || ''
       }))
     );
 

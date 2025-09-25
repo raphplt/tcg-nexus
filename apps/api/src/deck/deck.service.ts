@@ -68,7 +68,12 @@ export class DeckService {
       qb.andWhere('user.id = :userId', { userId: resolvedUserId });
     }
 
-    return PaginationHelper.paginateQueryBuilder(qb, { page, limit }, 'deck.createdAt', 'DESC');
+    return PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      'deck.createdAt',
+      'DESC'
+    );
   }
 
   async findOneWithCards(id: number): Promise<Deck> {
@@ -81,7 +86,10 @@ export class DeckService {
   }
 
   async updateMeta(id: number, dto: UpdateDeckDto, user: User): Promise<Deck> {
-    const deck = await this.deckRepo.findOne({ where: { id }, relations: ['user'] });
+    const deck = await this.deckRepo.findOne({
+      where: { id },
+      relations: ['user']
+    });
     if (!deck) throw new NotFoundException('Deck not found');
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to update this deck');
@@ -94,7 +102,10 @@ export class DeckService {
   }
 
   async delete(id: number, user: User): Promise<void> {
-    const deck = await this.deckRepo.findOne({ where: { id }, relations: ['user'] });
+    const deck = await this.deckRepo.findOne({
+      where: { id },
+      relations: ['user']
+    });
     if (!deck) throw new NotFoundException('Deck not found');
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to delete this deck');
@@ -107,12 +118,17 @@ export class DeckService {
     params: { cardId: string; qty: number; role?: DeckCardRole },
     user: User
   ): Promise<DeckCard> {
-    const deck = await this.deckRepo.findOne({ where: { id: deckId }, relations: ['user'] });
+    const deck = await this.deckRepo.findOne({
+      where: { id: deckId },
+      relations: ['user']
+    });
     if (!deck) throw new NotFoundException('Deck not found');
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to modify this deck');
     }
-    const card = await this.pokemonCardRepo.findOne({ where: { id: params.cardId } });
+    const card = await this.pokemonCardRepo.findOne({
+      where: { id: params.cardId }
+    });
     if (!card) throw new NotFoundException('Pokemon card not found');
     const deckCard = this.deckCardRepo.create({
       deck: { id: deckId } as any,
@@ -129,7 +145,10 @@ export class DeckService {
     role: DeckCardRole | undefined,
     user: User
   ): Promise<void> {
-    const deck = await this.deckRepo.findOne({ where: { id: deckId }, relations: ['user'] });
+    const deck = await this.deckRepo.findOne({
+      where: { id: deckId },
+      relations: ['user']
+    });
     if (!deck) throw new NotFoundException('Deck not found');
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to modify this deck');

@@ -52,6 +52,12 @@ import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 import { DeckCardRole } from 'src/common/enums/deckCardRole';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
+import {
+  SeedingService,
+  SeedingMethod
+} from 'src/tournament/services/seeding.service';
+import { BracketService } from 'src/tournament/services/bracket.service';
+import { MatchService } from 'src/match/match.service';
 @Injectable()
 export class SeedService {
   constructor(
@@ -90,7 +96,10 @@ export class SeedService {
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
     @InjectRepository(DeckCard)
-    private readonly deckCardRepository: Repository<DeckCard>
+    private readonly deckCardRepository: Repository<DeckCard>,
+    private readonly seedingService: SeedingService,
+    private readonly bracketService: BracketService,
+    private readonly matchService: MatchService
   ) {}
 
   /**
@@ -178,8 +187,7 @@ export class SeedService {
     const series = await this.importPokemonSeries();
     const sets = await this.importPokemonSets();
 
-    // Récupère le chemin du fichier zip
-    const zipPath = path.resolve(__dirname, '../common/data/pokemons.zip');
+    const zipPath = path.resolve(__dirname, '../common/data/pokemon.zip');
     let zip: AdmZip;
     try {
       zip = new AdmZip(zipPath);
@@ -201,21 +209,16 @@ export class SeedService {
       const firstEntryContent = content.getData().toString('utf8');
 
       try {
-        // Parse le contenu JSON
         if (typeof firstEntryContent !== 'string') {
           throw new Error('Invalid content type, expected a string');
         }
         const pokemonCards: any[] = JSON.parse(firstEntryContent);
 
-        // Parcours de chaque carte du JSON
         for (const cardData of pokemonCards) {
-          // Récupération de l'ID du set dans le JSON
           const setId = cardData.set?.id;
           if (!setId) {
-            // console.warn(`Carte ${cardData.id} sans set défini.`);
             continue;
           }
-          // Recherche du set correspondant en BDD
           const set = await this.pokemonSetRepository.findOne({
             where: { id: setId }
           });
@@ -225,15 +228,12 @@ export class SeedService {
             );
             continue;
           }
-          // Supprime la propriété "set" du JSON et lui réassigne le set trouvé
           delete cardData.set;
           cardData.set = set;
 
-          // Assigner l'id à tcgDexId et supprimer l'id de cardData
           cardData.tcgDexId = cardData.id;
           delete cardData.id;
 
-          // Nettoyer le nom de la carte pour retirer les caractères spéciaux
           cardData.name = cardData.name
             ? this.cleanString(cardData.name as string)
             : '';
@@ -250,21 +250,16 @@ export class SeedService {
             ? this.cleanString(cardData.effect as string)
             : null;
 
-          // Optionnel : Nettoyage de l'objet variants pour retirer d'éventuels attributs non désirés
           if (cardData.variants && cardData.variants.wPromo !== undefined) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { wPromo, ...validVariants } = cardData.variants;
+            const { ...validVariants } = cardData.variants;
             cardData.variants = validVariants;
           }
-
-          // Création de l'entité PokemonCard à partir des données
           const card = this.pokemonCardRepository.create(
             cardData as DeepPartial<PokemonCard>
           );
           cards.push(card);
         }
 
-        // Sauvegarde des cartes en base
         if (cards.length > 0) {
           const batchSize = 500;
           for (let i = 0; i < cards.length; i += batchSize) {
@@ -356,13 +351,41 @@ export class SeedService {
   async seedTournaments() {
     // Crée quelques joueurs (réutilise si déjà existants)
     const players: Player[] = [];
-    for (let i = 1; i <= 4; i++) {
-      const name = `Player${i}`;
-      let player = await this.playerRepository.findOne({ where: { name } });
+
+    // Get existing users to create players for them
+    const users = await this.userRepository.find({ take: 4 });
+
+    for (const user of users) {
+      let player = await this.playerRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: ['user']
+      });
       if (!player) {
-        player = this.playerRepository.create({ name });
+        player = this.playerRepository.create({ user });
         await this.playerRepository.save(player);
       }
+      players.push(player);
+    }
+
+    // If we don't have enough players, create additional users and players
+    while (players.length < 4) {
+      const userIndex = players.length + 1;
+      const newUser = this.userRepository.create({
+        email: `player${userIndex}@test.com`,
+        firstName: `Player`,
+        lastName: `${userIndex}`,
+        password: await bcrypt.hash(`password${userIndex}`, 10),
+        role: UserRole.USER,
+        isPro: false,
+        isActive: true,
+        emailVerified: true,
+        decks: [],
+        collections: []
+      });
+      await this.userRepository.save(newUser);
+
+      const player = this.playerRepository.create({ user: newUser });
+      await this.playerRepository.save(player);
       players.push(player);
     }
 
@@ -584,6 +607,147 @@ export class SeedService {
       createdTournaments.push(tournament);
     }
     return createdTournaments;
+  }
+
+  /**
+   * Seed a complete tournament with proper seeding and bracket generation
+   */
+  async seedCompleteTournament(
+    name: string = 'Tournoi Complet avec Seeding',
+    playerCount: number = 8,
+    tournamentType: TournamentType = TournamentType.SINGLE_ELIMINATION,
+    seedingMethod: SeedingMethod = SeedingMethod.RANKING
+  ): Promise<Tournament> {
+    // 1. Créer ou récupérer des utilisateurs/joueurs
+    const players: Player[] = [];
+    const users = await this.userRepository.find({ take: playerCount });
+
+    // Si pas assez d'utilisateurs, en créer
+    let currentUserCount = users.length;
+    while (currentUserCount < playerCount) {
+      const userIndex = currentUserCount + 1;
+      const newUser = this.userRepository.create({
+        email: `player${userIndex}@tournament.com`,
+        firstName: `Player`,
+        lastName: `${userIndex}`,
+        password: await bcrypt.hash(`password${userIndex}`, 10),
+        role: UserRole.USER,
+        isPro: false,
+        isActive: true,
+        emailVerified: true,
+        decks: [],
+        collections: []
+      });
+      await this.userRepository.save(newUser);
+      users.push(newUser);
+      currentUserCount++;
+    }
+
+    // Créer les joueurs associés
+    for (const user of users.slice(0, playerCount)) {
+      let player = await this.playerRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: ['user']
+      });
+      if (!player) {
+        player = this.playerRepository.create({ user });
+        await this.playerRepository.save(player);
+      }
+      players.push(player);
+    }
+
+    // 2. Créer le tournoi
+    const tournament = this.tournamentRepository.create({
+      name,
+      description: `Tournoi automatique avec ${playerCount} joueurs`,
+      location: 'Tournoi de démonstration',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 jours
+      type: tournamentType,
+      status: TournamentStatus.REGISTRATION_OPEN,
+      isFinished: false,
+      isPublic: true,
+      minPlayers: playerCount,
+      maxPlayers: playerCount
+    });
+    await this.tournamentRepository.save(tournament);
+
+    // 3. Inscrire tous les joueurs
+    for (const player of players) {
+      const registration = this.tournamentRegistrationRepository.create({
+        tournament,
+        player,
+        status: RegistrationStatus.CONFIRMED,
+        paymentCompleted: true,
+        checkedIn: true
+      });
+      await this.tournamentRegistrationRepository.save(registration);
+    }
+
+    // 4. Ajouter les configurations du tournoi
+    const pricing = this.tournamentPricingRepository.create({
+      tournament,
+      type: PricingType.FREE,
+      basePrice: 0,
+      refundable: true,
+      refundFeePercentage: 0
+    });
+    await this.tournamentPricingRepository.save(pricing);
+
+    const reward = this.tournamentRewardRepository.create({
+      tournament,
+      position: 1,
+      name: 'Trophée du Champion',
+      type: RewardType.PRODUCT,
+      isActive: true
+    });
+    await this.tournamentRewardRepository.save(reward);
+
+    // 5. Appliquer le seeding
+    console.log(`🎯 Application du seeding méthode: ${seedingMethod}`);
+    const seededPlayers = await this.seedingService.seedPlayers(
+      players,
+      tournament,
+      seedingMethod
+    );
+
+    // 6. Démarrer le tournoi AVANT de générer le bracket
+    tournament.players = seededPlayers;
+    tournament.status = TournamentStatus.IN_PROGRESS;
+    tournament.currentRound = 1;
+    await this.tournamentRepository.save(tournament);
+
+    // 7. Générer le bracket complet (maintenant que le tournoi est IN_PROGRESS)
+    console.log('🏆 Génération du bracket...');
+    const bracketStructure = await this.bracketService.generateBracket(
+      tournament.id
+    );
+
+    // 8. Mettre à jour le nombre total de rounds
+    tournament.totalRounds = bracketStructure.totalRounds;
+    await this.tournamentRepository.save(tournament);
+
+    // 9. Créer les rankings initiaux
+    for (let i = 0; i < seededPlayers.length; i++) {
+      const ranking = this.rankingRepository.create({
+        tournament,
+        player: seededPlayers[i],
+        rank: i + 1,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        winRate: 0
+      });
+      await this.rankingRepository.save(ranking);
+    }
+
+    console.log(`✅ Tournoi complet créé: ${tournament.name}`);
+    console.log(`   - ${playerCount} joueurs inscrits et seedés`);
+    console.log(`   - ${bracketStructure.totalRounds} rounds générés`);
+    console.log(`   - Statut: ${tournament.status}`);
+
+    return tournament;
   }
 
   /**

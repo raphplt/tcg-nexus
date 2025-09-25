@@ -28,6 +28,7 @@ import {
   Settings2,
   Bell,
   ListChecks,
+  BarChart3,
 } from "lucide-react";
 import {
   tournamentStatusTranslation,
@@ -37,6 +38,8 @@ import { statusColor, typeColor } from "../utils";
 import { formatPricing } from "@/utils/price";
 import { Tournament } from "@/types/tournament";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import Link from "next/link";
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -117,6 +120,8 @@ export default function TournamentDetailsPage() {
     queryFn: () =>
       tournamentService.getById(id as string) as Promise<Tournament>,
   });
+
+  const permissions = usePermissions(user, tournament);
 
   const register = async (tournamentId?: number) => {
     if (!tournamentId) return;
@@ -215,6 +220,48 @@ export default function TournamentDetailsPage() {
             >
               {registrationOpen ? "S'inscrire" : "Inscriptions fermées"}
             </Button>
+
+            {/* Boutons d'administration */}
+            {permissions.canViewAdmin && (
+              <Button
+                variant="outline"
+                className="shadow-md"
+                asChild
+              >
+                <Link href={`/tournaments/${id}/admin`}>
+                  <Settings2 className="size-4 mr-2" /> Administration
+                </Link>
+              </Button>
+            )}
+
+            {/* Bouton Bracket */}
+            {tournament?.status === "in_progress" && (
+              <Button
+                variant="secondary"
+                className="shadow-md"
+                asChild
+              >
+                <Link href={`/tournaments/${id}/bracket`}>
+                  <Trophy className="size-4 mr-2" /> Voir le bracket
+                </Link>
+              </Button>
+            )}
+
+            {/* Bouton Dashboard Joueur */}
+            {user?.player &&
+              (tournament?.status === "in_progress" ||
+                tournament?.status === "finished") && (
+                <Button
+                  variant="outline"
+                  className="shadow-md"
+                  asChild
+                >
+                  <Link href={`/tournaments/${id}/player`}>
+                    <BarChart3 className="size-4 mr-2" /> Mon dashboard
+                  </Link>
+                </Button>
+              )}
+
             <Button
               variant="secondary"
               className="shadow-md"

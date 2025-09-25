@@ -5,11 +5,13 @@ import {
   SuggestionsPreviewResult,
   SuggestionsDetailResult
 } from './dto/suggestions.dto';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @Controller('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
+  @Public()
   @Get()
   async globalSearch(
     @Query(new ValidationPipe({ transform: true })) searchDto: GlobalSearchDto
@@ -17,6 +19,7 @@ export class SearchController {
     return this.searchService.globalSearch(searchDto);
   }
 
+  @Public()
   @Get('suggestions')
   async getSearchSuggestions(
     @Query('q') query: string,
@@ -25,6 +28,7 @@ export class SearchController {
     return this.searchService.getSearchSuggestions(query, limit);
   }
 
+  @Public()
   @Get('suggestions/preview')
   async getSuggestionsPreview(
     @Query('q') query: string,
@@ -33,6 +37,7 @@ export class SearchController {
     return this.searchService.getSuggestionsPreview(query, limit);
   }
 
+  @Public()
   @Get('suggestions/detail')
   async getSuggestionsDetail(
     @Query('q') query: string,

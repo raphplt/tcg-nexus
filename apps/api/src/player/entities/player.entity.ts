@@ -1,7 +1,6 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  Column,
   ManyToMany,
   OneToMany,
   OneToOne,
@@ -16,9 +15,6 @@ import { User } from 'src/user/entities/user.entity';
 export class Player {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  name: string;
 
   @OneToOne(() => User, (user) => user.player)
   @JoinColumn()

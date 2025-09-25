@@ -47,7 +47,7 @@ export class Match {
   playerB: Player;
 
   @ManyToOne(() => Player, { nullable: true })
-  winner: Player;
+  winner?: Player;
 
   @Column({ default: 1 })
   round: number;
@@ -70,10 +70,10 @@ export class Match {
   scheduledDate: Date;
 
   @Column({ nullable: true })
-  startedAt: Date;
+  startedAt?: Date;
 
   @Column({ nullable: true })
-  finishedAt: Date;
+  finishedAt?: Date;
 
   @Column({ default: 0 })
   playerAScore: number;
