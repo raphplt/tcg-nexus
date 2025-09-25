@@ -28,7 +28,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
           if (req && req.cookies) {
-            return req.cookies['refreshToken'];
+            return (req.cookies['refreshToken'] as string) || null;
           }
           return null;
         }
@@ -39,14 +39,23 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, payload: JwtPayload): Promise<User & { refreshToken?: string }> {
-    const refreshToken: string | undefined = req.cookies?.refreshToken;
+  async validate(
+    req: Request,
+    payload: JwtPayload
+  ): Promise<User & { refreshToken?: string }> {
+    const refreshToken: string | undefined = req.cookies?.refreshToken as
+      | string
+      | undefined;
     const user = await this.userService.findById(payload.sub);
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    return { ...user, refreshToken };
+    const result: User & { refreshToken?: string } = { ...user };
+    if (refreshToken) {
+      result.refreshToken = refreshToken;
+    }
+    return result;
   }
 }
