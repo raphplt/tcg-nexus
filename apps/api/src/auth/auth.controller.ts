@@ -18,6 +18,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
 import { Response, Request as ExpressRequest } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -26,6 +27,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
+  @Public()
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
@@ -51,6 +53,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() registerDto: RegisterDto,
