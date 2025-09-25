@@ -87,7 +87,7 @@ export default function TournamentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-2">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-3/4 mx-auto">
         <H1
           className="text-center mb-2"
           variant="primary"

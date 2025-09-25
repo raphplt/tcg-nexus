@@ -132,8 +132,13 @@ export function TournamentsTable({
               key={tournament.id}
               className="transition-all hover:scale-[1.01] hover:shadow-lg"
             >
-              <TableCell className="font-semibold text-lg text-primary">
-                {tournament.name}
+              <TableCell className="font-semibold text-lg text-primary max-w-xs">
+                <div
+                  className="truncate"
+                  title={tournament.name}
+                >
+                  {tournament.name}
+                </div>
               </TableCell>
               <TableCell>
                 <span className="font-mono">
