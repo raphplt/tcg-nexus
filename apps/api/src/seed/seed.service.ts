@@ -152,17 +152,37 @@ export class SeedService {
       });
 
       if (!existingSet) {
+        // Prefer explicit serieId from JSON, fallback to nested serie?.id if present
+        const serieId = (setData as any).serieId ?? (setData as any).serie?.id;
+
+        if (!serieId) {
+          // No series information, skip this set to avoid wrong linkage
+          const warnMsg = `Set '${setData.name as string}' (id: ${(setData as any).id}) without serieId – skipped.`;
+          console.warn(warnMsg);
+          continue;
+        }
+
         const serie = await this.pokemonSerieRepository.findOne({
-          where: { id: setData.serie?.id }
+          where: { id: serieId as string }
         });
 
-        if (serie) {
-          const newSet = this.pokemonSetRepository.create({
-            ...setData,
-            serie
-          });
-          sets.push(newSet);
+        if (!serie) {
+          console.warn(
+            `Serie with id '${String(serieId)}' not found for set '${setData.name as string}' – skipped.`
+          );
+          continue;
         }
+
+        // Remove foreign key hints from raw JSON to avoid confusion, then attach relation
+        const setProps = { ...(setData as Record<string, unknown>) };
+        delete (setProps as any).serieId;
+        delete (setProps as any).serie;
+
+        const newSet = this.pokemonSetRepository.create({
+          ...(setProps as DeepPartial<PokemonSet>),
+          serie
+        });
+        sets.push(newSet);
       }
     }
 
