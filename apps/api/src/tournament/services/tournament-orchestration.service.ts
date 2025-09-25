@@ -81,7 +81,7 @@ export class TournamentOrchestrationService {
 
       await manager.save(tournament);
 
-      this.rankingService.updateTournamentRankings(tournamentId);
+      void this.rankingService.updateTournamentRankings(tournamentId);
 
       return tournament;
     });
@@ -122,7 +122,7 @@ export class TournamentOrchestrationService {
         );
       }
 
-      this.rankingService.updateTournamentRankings(tournamentId);
+      void this.rankingService.updateTournamentRankings(tournamentId);
 
       const newRound = tournament.currentRound! + 1;
       let matchesCreated = 0;
@@ -139,7 +139,7 @@ export class TournamentOrchestrationService {
 
           for (const pairing of swissPairings.pairings) {
             if (pairing.playerB) {
-              this.matchService.create({
+              void this.matchService.create({
                 tournamentId: tournament.id,
                 playerAId: pairing.playerA.id,
                 playerBId: pairing.playerB.id,
@@ -210,7 +210,7 @@ export class TournamentOrchestrationService {
         throw new BadRequestException('Le tournoi est déjà terminé');
       }
 
-      this.rankingService.updateTournamentRankings(tournamentId);
+      void this.rankingService.updateTournamentRankings(tournamentId);
 
       // Marquer les joueurs non éliminés comme éliminés au round actuel
       const activeRegistrations = await manager.find(TournamentRegistration, {
@@ -413,10 +413,10 @@ export class TournamentOrchestrationService {
 
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
-        this.matchService.create({
+        void this.matchService.create({
           tournamentId: tournament.id,
-          playerAId: winners[i].id,
-          playerBId: winners[i + 1].id,
+          playerAId: (winners[i] as any).id,
+          playerBId: (winners[i + 1] as any).id,
           round: newRound,
           phase: this.getPhaseForRound(newRound, tournament.totalRounds || 0),
           scheduledDate: new Date(),

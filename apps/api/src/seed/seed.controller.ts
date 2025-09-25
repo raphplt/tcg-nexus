@@ -1,4 +1,4 @@
-import { Controller, Post, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Query } from '@nestjs/common';
 import { SeedService } from './seed.service';
 import { ApiTags, ApiQuery } from '@nestjs/swagger';
 import { TournamentType } from 'src/tournament/entities/tournament.entity';

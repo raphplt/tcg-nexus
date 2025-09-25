@@ -60,5 +60,5 @@ export class Listing {
   expiresAt: Date;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.listing)
-  orderItems: any[];
+  orderItems: OrderItem[];
 }

@@ -381,7 +381,6 @@ export class TournamentService {
       throw new BadRequestException('Cette inscription est déjà annulée');
     }
 
-    // Marquer comme annulée plutôt que de supprimer (pour l'audit)
     registration.status = RegistrationStatus.CANCELLED;
     await this.registrationRepository.save(registration);
   }
@@ -470,8 +469,6 @@ export class TournamentService {
     return transitions[currentStatus] || [];
   }
 
-  // ============= BRACKET & TOURNAMENT ORCHESTRATION =============
-
   /**
    * Démarre un tournoi
    */
@@ -528,7 +525,6 @@ export class TournamentService {
         targetRound
       );
     } else {
-      // Pour les autres types, récupérer les matches du round
       return this.matchService.getMatchesByRound(tournamentId, targetRound);
     }
   }
@@ -536,23 +532,21 @@ export class TournamentService {
   /**
    * Récupère les classements d'un tournoi
    */
-  async getTournamentRankings(tournamentId: number) {
+  getTournamentRankings(tournamentId: number) {
     return this.rankingService.getTournamentRankings(tournamentId);
   }
 
   /**
    * Récupère le progrès d'un tournoi
    */
-  async getTournamentProgress(tournamentId: number) {
+  getTournamentProgress(tournamentId: number) {
     return this.orchestrationService.getTournamentProgress(tournamentId);
   }
-
-  // ============= MATCH MANAGEMENT =============
 
   /**
    * Récupère les matches d'un tournoi
    */
-  async getTournamentMatches(
+  getTournamentMatches(
     tournamentId: number,
     filters?: { round?: number; status?: string }
   ) {
@@ -569,14 +563,16 @@ export class TournamentService {
   async getTournamentMatch(tournamentId: number, matchId: number) {
     const match = await this.matchService.findOne(matchId);
 
-    if (match.tournament.id !== tournamentId) {
+    if (!match) {
+      throw new NotFoundException('Match non trouvé');
+    }
+
+    if (match.tournament?.id !== tournamentId) {
       throw new NotFoundException('Match non trouvé dans ce tournoi');
     }
 
     return match;
   }
-
-  // ============= REGISTRATION MANAGEMENT =============
 
   /**
    * Récupère les inscriptions d'un tournoi
@@ -612,7 +608,6 @@ export class TournamentService {
       throw new BadRequestException('Cette inscription est déjà confirmée');
     }
 
-    // Vérifier les limites du tournoi
     const confirmedCount = await this.registrationRepository.count({
       where: {
         tournament: { id: tournamentId },

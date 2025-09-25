@@ -92,8 +92,6 @@ export interface Player {
   };
 }
 
-// Bracket & Match Management
-
 export interface BracketStructure {
   type:
     | "single_elimination"
@@ -133,7 +131,7 @@ export interface SwissPairing {
   round: number;
   pairings: {
     playerA: Player;
-    playerB?: Player; // null pour bye
+    playerB?: Player;
     tableNumber: number;
   }[];
 }

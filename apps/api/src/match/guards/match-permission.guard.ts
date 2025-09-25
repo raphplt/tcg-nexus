@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { Match } from '../entities/match.entity';
 import { TournamentOrganizer } from '../../tournament/entities/tournament-organizer.entity';
 import { User, UserRole } from '../../user/entities/user.entity';
+import { Request } from 'express';
 
 @Injectable()
 export class MatchPermissionGuard implements CanActivate {
@@ -21,7 +22,7 @@ export class MatchPermissionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const user: User = request.user as User;
     const matchId = parseInt(request.params?.id as string);
 
@@ -78,8 +79,8 @@ export class MatchPermissionGuard implements CanActivate {
     );
   }
 
-  private getActionFromRequest(request: any): string {
-    const path = (request.route?.path as string) || (request.url as string);
+  private getActionFromRequest(request: Request): string {
+    const path = (request.route?.path as string) || request.url;
     if (path?.includes('report-score')) return 'report-score';
     if (path?.includes('reset')) return 'reset';
     if (path?.includes('start')) return 'start';

@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDeckCardDto } from './dto/create-deck-card.dto';
-import { UpdateDeckCardDto } from './dto/update-deck-card.dto';
 
 @Injectable()
 export class DeckCardService {
-  create(createDeckCardDto: CreateDeckCardDto) {
+  create() {
     return 'This action adds a new deckCard';
   }
 
@@ -16,7 +14,7 @@ export class DeckCardService {
     return `This action returns a #${id} deckCard`;
   }
 
-  update(id: number, updateDeckCardDto: UpdateDeckCardDto) {
+  update(id: number) {
     return `This action updates a #${id} deckCard`;
   }
 

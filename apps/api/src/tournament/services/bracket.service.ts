@@ -402,7 +402,7 @@ export class BracketService {
     for (const round of rounds) {
       for (const node of round.matches) {
         if (node.playerA || node.playerB) {
-          this.matchService.create({
+          void this.matchService.create({
             tournamentId: tournament.id,
             playerAId: node.playerA?.id,
             playerBId: node.playerB?.id,
