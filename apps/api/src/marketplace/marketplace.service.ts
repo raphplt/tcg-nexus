@@ -2,7 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException
+  ForbiddenException,
+  Logger
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,6 +33,8 @@ export class MarketplaceService {
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>
   ) {}
+
+  private readonly logger = new Logger(MarketplaceService.name);
 
   async create(createListingDto: CreateListingDto) {
     if (!createListingDto.sellerId || !createListingDto.pokemonCardId) {
@@ -127,6 +130,9 @@ export class MarketplaceService {
     });
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+      this.logger.warn(
+        `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`
+      );
       throw new ForbiddenException(
         'You are not allowed to update this listing'
       );
@@ -142,6 +148,9 @@ export class MarketplaceService {
     });
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+      this.logger.warn(
+        `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`
+      );
       throw new ForbiddenException(
         'You are not allowed to delete this listing'
       );
