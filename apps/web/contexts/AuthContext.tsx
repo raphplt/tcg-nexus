@@ -26,7 +26,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -39,9 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await authService.getProfile();
         setUser(userData);
       } catch (error: any) {
-        // Si c'est une erreur 401, l'utilisateur n'est simplement pas connecté
-        // Pas besoin de logger une erreur
-        if (error.response?.status !== 401) {
+        if (error?.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);
         }
         setUser(null);
@@ -50,26 +48,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    // Vérifier si on a des cookies d'authentification avant de faire la requête
-    const hasAuthCookie =
-      document.cookie.includes("accessToken") ||
-      document.cookie.includes("refreshToken");
-
-    if (hasAuthCookie) {
-      checkAuth();
-    } else {
-      // Pas de cookies d'auth, pas besoin de vérifier
-      setUser(null);
-      setIsLoading(false);
-    }
+    checkAuth();
   }, []);
 
   const login = async (credentials: LoginRequest) => {
     try {
       setIsLoading(true);
-      await authService.login(credentials);
-      const userData = await authService.getProfile();
-      setUser(userData);
+      const { user: loggedInUser } = await authService.login(credentials);
+      setUser(loggedInUser);
       router.push("/");
     } catch (error) {
       console.error("Login failed:", error);
@@ -82,8 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterRequest) => {
     try {
       setIsLoading(true);
-      await authService.register(userData);
-      const user = await authService.getProfile();
+      const { user } = await authService.register(userData);
       setUser(user);
       router.push("/");
     } catch (error) {
@@ -94,12 +79,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    setIsLoading(true);
-    authService.logout();
-    setUser(null);
-    setIsLoading(false);
-    router.push("/auth/login");
+  const logout = async () => {
+    try {
+      setIsLoading(true);
+      await authService.logout();
+    } finally {
+      setUser(null);
+      setIsLoading(false);
+      router.push("/auth/login");
+    }
   };
 
   const value: AuthContextType = {
@@ -112,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);

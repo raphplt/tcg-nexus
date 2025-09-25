@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@components/Layout/Header";
 import Footer from "@components/Layout/Footer";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ReactQueryProvider } from "@/contexts/QueryClientContext";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
+import ClientProviders from "@/components/ClientProviders";
 import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "TCG Nexus",
@@ -17,17 +16,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html
+      lang="fr"
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         <ThemeProvider>
-          <ReactQueryProvider>
-            <AuthProvider>
-              <Header />
-              <div className="mt-16 min-h-screen">{children}</div>
-              <Toaster />
-              <Footer />
-            </AuthProvider>
-          </ReactQueryProvider>
+          <ClientProviders>
+            <Header />
+            <div className="mt-16 min-h-screen">{children}</div>
+            <Toaster />
+            <Footer />
+          </ClientProviders>
         </ThemeProvider>
       </body>
     </html>
