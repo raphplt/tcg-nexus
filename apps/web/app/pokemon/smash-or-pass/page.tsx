@@ -20,16 +20,16 @@ function usePokemonSeries() {
 }
 
 // Hook pour récupérer une carte aléatoire
-function useRandomCard(selectedSerie: string) {
-  return useQuery({
-    queryKey: ["pokemon-cards", "random", selectedSerie],
-    queryFn: () =>
-      pokemonCardService.getRandom(
-        selectedSerie || undefined,
-        selectedRarity === "all" ? undefined : selectedRarity,
-      ),
-  });
-}
+// function useRandomCard(selectedSerie: string) {
+//   return useQuery({
+//     queryKey: ["pokemon-cards", "random", selectedSerie],
+//     queryFn: () =>
+//       pokemonCardService.getRandom(
+//         selectedSerie || undefined,
+//         selectedRarity ? (selectedRarity as PokemonRarity) : undefined,
+//       ),
+//   });
+// }
 
 function PokemonCard({
   card,
@@ -80,7 +80,7 @@ function PokemonCard({
 export default function PokemonMatchPage() {
   const { data: series } = usePokemonSeries();
   const [selectedSerie, setSelectedSerie] = useState("");
-  const [selectedRarity, setSelectedRarity] = useState<string>("all");
+  const [selectedRarity, setSelectedRarity] = useState<string>("");
   const [direction, setDirection] = useState<"left" | "right" | null>(null);
 
   // Hook modifié pour inclure la rareté
@@ -93,7 +93,7 @@ export default function PokemonMatchPage() {
     queryFn: () =>
       pokemonCardService.getRandom(
         selectedSerie || undefined,
-        selectedRarity || undefined,
+        selectedRarity ? (selectedRarity as PokemonRarity) : undefined,
       ),
   });
 
@@ -159,7 +159,6 @@ export default function PokemonMatchPage() {
             <SelectValue placeholder="Filtrer par rareté" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Toutes</SelectItem> {/* Option par défaut */}
             {Object.values(PokemonRarity).map((rarity) => (
               <SelectItem
                 key={rarity}
