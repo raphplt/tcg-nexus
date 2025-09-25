@@ -2,16 +2,23 @@ import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import Image from "next/image";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { PaginatedResult } from "@/types/pagination";
+import { Listing } from "@/types/listing";
+import { marketplaceService } from "@/services/marketplace.service";
+import { formatPrice } from "@/utils/price";
+import { useRouter } from "next/navigation";
 
 const MarketplacePreview = () => {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["pokemon-cards", "marketplace-preview"],
-    queryFn: () => pokemonCardService.getPaginated({ page: 1, limit: 3 }),
+  const router = useRouter();
+  const { data, isLoading, error } = usePaginatedQuery<
+    PaginatedResult<Listing>
+  >(["listings", 3], marketplaceService.getPaginated, {
+    page: 1,
+    limit: 3,
   });
 
   return (
@@ -34,10 +41,10 @@ const MarketplacePreview = () => {
             className="flex items-center gap-4 p-3 rounded-lg border hover:shadow-md transition bg-background"
           >
             <div className="flex-shrink-0">
-              {card.image ? (
+              {card.pokemonCard.image ? (
                 <Image
-                  src={card.image + "/low.png"}
-                  alt={card.name || "Pokemon Card"}
+                  src={card.pokemonCard.image + "/low.png"}
+                  alt={card.pokemonCard.name || "Pokemon Card"}
                   width={56}
                   height={80}
                   className="object-cover rounded border"
@@ -49,16 +56,24 @@ const MarketplacePreview = () => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold truncate">{card.name}</div>
+              <div className="font-semibold truncate">
+                {card.pokemonCard.name}
+              </div>
               <div className="text-xs text-muted-foreground truncate">
-                {card.set?.name || "Set inconnu"}
+                {card.pokemonCard.set?.name || "Set inconnu"}
               </div>
               <div className="text-xs text-muted-foreground">
-                {card.rarity || "Rareté inconnue"}
+                {card.pokemonCard.rarity || "Rareté inconnue"}
+              </div>
+              <div className="text-sm font-medium text-primary mt-1">
+                {formatPrice(card.price, card.currency)}
               </div>
             </div>
 
-            <Button variant="secondary">
+            <Button
+              variant="secondary"
+              onClick={() => router.push(`/marketplace/${card.id}`)}
+            >
               <ShoppingCart className="mr-2 w-4 h-4" />
               Acheter
             </Button>

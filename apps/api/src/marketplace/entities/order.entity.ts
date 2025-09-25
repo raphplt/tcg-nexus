@@ -45,11 +45,11 @@ export class Order {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => OrderItem, (orderItem: any) => orderItem.order, {
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true
   })
-  orderItems: any[];
+  orderItems: OrderItem[];
 
-  @OneToMany(() => PaymentTransaction, (payment: any) => payment.order)
-  payments: any[];
+  @OneToMany(() => PaymentTransaction, (payment) => payment.order)
+  payments: PaymentTransaction[];
 }

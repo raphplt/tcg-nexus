@@ -30,7 +30,7 @@ import { PokemonCardType } from "@/types/cardPokemon";
 import { FormSchema } from "../utils";
 import { cardStates, currencyOptions } from "@/utils/variables";
 import { CardState, Currency } from "@/utils/enums";
-import { CardSelector } from "./CardSelector";
+import { CardSelector } from "./cardSelector";
 import { useRouter } from "next/navigation";
 
 const CardForm = () => {

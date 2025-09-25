@@ -5,15 +5,30 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseIntPipe
 } from '@nestjs/common';
-import { MatchService } from './match.service';
+import { MatchQueryDto, MatchService } from './match.service';
 import { CreateMatchDto } from './dto/create-match.dto';
 import { UpdateMatchDto } from './dto/update-match.dto';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ReportScoreDto,
+  StartMatchDto,
+  ResetMatchDto
+} from './dto/match-operations.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { MatchPermissionGuard } from './guards/match-permission.guard';
 
-@ApiTags('match')
-@Controller('match')
+@ApiTags('matches')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('matches')
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
 
@@ -23,22 +38,72 @@ export class MatchController {
   }
 
   @Get()
-  findAll() {
-    return this.matchService.findAll();
+  findAll(@Query() query: MatchQueryDto) {
+    return this.matchService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.matchService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.matchService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMatchDto: UpdateMatchDto) {
-    return this.matchService.update(+id, updateMatchDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMatchDto: UpdateMatchDto
+  ) {
+    return this.matchService.update(id, updateMatchDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.matchService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.matchService.remove(id);
+  }
+
+  @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(MatchPermissionGuard)
+  startMatch(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() startMatchDto: StartMatchDto
+  ) {
+    return this.matchService.startMatch(id, startMatchDto);
+  }
+
+  @Post(':id/report-score')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(MatchPermissionGuard)
+  reportScore(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() reportScoreDto: ReportScoreDto
+  ) {
+    return this.matchService.reportScore(id, reportScoreDto);
+  }
+
+  @Post(':id/reset')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(MatchPermissionGuard)
+  resetMatch(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() resetMatchDto: ResetMatchDto
+  ) {
+    return this.matchService.resetMatch(id, resetMatchDto);
+  }
+
+  @Get('tournament/:tournamentId/round/:round')
+  getMatchesByRound(
+    @Param('tournamentId', ParseIntPipe) tournamentId: number,
+    @Param('round', ParseIntPipe) round: number
+  ) {
+    return this.matchService.getMatchesByRound(tournamentId, round);
+  }
+
+  @Get('player/:playerId/tournament/:tournamentId')
+  getPlayerMatches(
+    @Param('playerId', ParseIntPipe) playerId: number,
+    @Param('tournamentId', ParseIntPipe) tournamentId: number
+  ) {
+    return this.matchService.getPlayerMatches(tournamentId, playerId);
   }
 }
