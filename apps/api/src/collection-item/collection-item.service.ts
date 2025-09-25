@@ -1,26 +1,81 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
-import { UpdateCollectionItemDto } from './dto/update-collection-item.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CollectionItem } from './entities/collection-item.entity';
+import { Collection } from 'src/collection/entities/collection.entity';
+import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { User } from 'src/user/entities/user.entity';
+import { CardState } from 'src/card-state/entities/card-state.entity';
 
 @Injectable()
 export class CollectionItemService {
-  create(createCollectionItemDto: CreateCollectionItemDto) {
-    return 'This action adds a new collectionItem';
-  }
+  constructor(
+    @InjectRepository(CollectionItem)
+    private readonly collectionItemRepo: Repository<CollectionItem>,
 
-  findAll() {
-    return `This action returns all collectionItem`;
-  }
+    @InjectRepository(Collection)
+    private readonly collectionRepo: Repository<Collection>,
 
-  findOne(id: number) {
-    return `This action returns a #${id} collectionItem`;
-  }
+    @InjectRepository(PokemonCard)
+    private readonly pokemonCardRepo: Repository<PokemonCard>,
 
-  update(id: number, updateCollectionItemDto: UpdateCollectionItemDto) {
-    return `This action updates a #${id} collectionItem`;
-  }
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
 
-  remove(id: number) {
-    return `This action removes a #${id} collectionItem`;
+    @InjectRepository(CardState)
+    private readonly cardStateRepo: Repository<CardState>
+  ) {}
+
+  /**
+   * Ajouter une carte Pokémon dans la wishlist d'un user
+   */
+  async addToWishlist(
+    userId: number | string,
+    pokemonCardId: string
+  ): Promise<CollectionItem> {
+    const userIdNum = typeof userId === 'string' ? Number(userId) : userId;
+
+    // Vérifier que l'utilisateur existe
+    const user = await this.userRepo.findOne({ where: { id: userIdNum } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+
+    // Vérifier que la carte existe
+    const card = await this.pokemonCardRepo.findOne({
+      where: { id: pokemonCardId }
+    });
+    if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
+
+    // Récupérer ou créer la wishlist
+    let wishlist = await this.collectionRepo.findOne({
+      where: { user: { id: userIdNum }, name: 'wishlist' },
+      relations: ['items', 'items.pokemonCard']
+    });
+
+    if (!wishlist) {
+      wishlist = this.collectionRepo.create({
+        name: 'wishlist',
+        user,
+        is_public: false
+      });
+      wishlist = await this.collectionRepo.save(wishlist);
+    }
+
+    // Vérifier si la carte est déjà dans la wishlist
+    let item = wishlist.items?.find((i) => i.pokemonCard.id === card.id);
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    // Par défaut : cardState id = 1
+    item = this.collectionItemRepo.create({
+      collection: wishlist,
+      pokemonCard: card,
+      cardState: { id: 1 } as CardState,
+      quantity: 1
+    });
+
+    return this.collectionItemRepo.save(item);
   }
 }

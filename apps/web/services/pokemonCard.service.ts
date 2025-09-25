@@ -1,6 +1,8 @@
 import api from "../utils/fetch";
 import type { PokemonCardType, PokemonSerieType } from "../types/cardPokemon";
 import type { PaginatedResult, PaginationParams } from "../types/pagination";
+import { CollectionItemType } from "@/types/collection";
+import { PokemonRarity } from "../types/enums/pokemonCardsType";
 
 export const pokemonCardService = {
   async getPaginated(
@@ -33,17 +35,35 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async getRandom(serieId?: string): Promise<PokemonCardType> {
-    console.log("Fetching random card with serieId:", serieId);
-    const response = await api.get<PokemonCardType>("/pokemon-card/random", {
-      params: serieId ? { serieId } : undefined,
-    });
-    console.log("Random card:", response.data);
-    return response.data;
-  },
+  async getRandom(serieId?: string, rarity?: PokemonRarity): Promise<PokemonCardType> {
+  console.log("Fetching random card with serieId:", serieId, "and rarity:", rarity);
+
+  const params: Record<string, string> = {};
+  if (serieId) params.serieId = serieId;
+  if (rarity) params.rarity = rarity;
+
+  const response = await api.get<PokemonCardType>("/pokemon-card/random", {
+    params: Object.keys(params).length > 0 ? params : undefined,
+  });
+
+  console.log("Random card:", response.data);
+  return response.data;
+},
+
 
   async getAllSeries(): Promise<PokemonSerieType[]> {
     const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data;
+  },
+
+  async addToWishlist(
+    userId: number,
+    pokemonCardId: string
+  ): Promise<CollectionItemType> {
+    const response = await api.patch<CollectionItemType>(
+      `/collection-item/wishlist/${userId}`,
+      { pokemonCardId }
+    );
     return response.data;
   },
 };

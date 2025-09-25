@@ -6,6 +6,7 @@ import { CollectionItem } from './entities/collection-item.entity';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
 import { CardState } from 'src/card-state/entities/card-state.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { CardState } from 'src/card-state/entities/card-state.entity';
       CollectionItem,
       PokemonCard,
       Collection,
-      CardState
+      CardState,
+      User
     ])
   ],
   controllers: [CollectionItemController],

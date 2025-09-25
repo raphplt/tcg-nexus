@@ -28,6 +28,7 @@
     "dependencies": {
         "@nestjs/swagger": "^11.2.0",
         "bcryptjs": "^3.0.2",
+        "lucide-react": "^0.544.0",
         "sonner": "^2.0.6"
     }
 }

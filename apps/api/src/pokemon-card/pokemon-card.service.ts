@@ -102,18 +102,35 @@ export class PokemonCardService {
 
   // pokemon-card.service.ts
 
-  async findRandom(serieId?: string): Promise<PokemonCard | null> {
-    console.log('Fetching random card with serieId:', serieId);
-    const qb = this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .leftJoinAndSelect('card.set', 'set')
-      .leftJoin('set.serie', 'serie');
+  async findRandom(
+    serieId?: string,
+    rarity?: string
+  ): Promise<PokemonCard | null> {
+    console.log(
+      'Fetching random card with serieId:',
+      serieId,
+      'and rarity:',
+      rarity
+    );
 
-    if (serieId) {
-      qb.where('serie.id = :serieId', { serieId });
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder('pokemonCard')
+      .leftJoinAndSelect('pokemonCard.set', 'pokemonSet')
+      .leftJoin('pokemonSet.serie', 'pokemonSerie');
+
+    if (serieId && serieId.trim() !== '') {
+      qb.andWhere('pokemonSerie.id = :serieId', { serieId });
     }
 
-    console.log('Querying for random card:', qb.getQuery());
+    if (rarity && rarity.trim() !== '') {
+      qb.andWhere('pokemonCard.rarity = :rarity', { rarity });
+    }
+
+    console.log(
+      'Querying for random card lucas:',
+      qb.getQuery(),
+      qb.getParameters()
+    );
 
     const card = await qb.orderBy('RANDOM()').limit(1).getOne();
     return card ?? null;
