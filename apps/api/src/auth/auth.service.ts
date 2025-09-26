@@ -92,11 +92,21 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password
       });
+      console.log('UserId:', user.id);
 
-      // await this.collectionService.create({
-      //   name: 'wishlist',
-      //   userId: user.id
-      // });
+      await this.collectionService.create({
+        name: 'Wishlist',
+        description: 'Default wishlist',
+        isPublic: false,
+        userId: user.id
+      });
+
+      await this.collectionService.create({
+        name: 'Favoris',
+        description: 'Default Favoris',
+        isPublic: false,
+        userId: user.id
+      });
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);

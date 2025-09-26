@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Collection } from './entities/collection.entity';
 import { CreateCollectionDto } from './dto/create-collection.dto';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class CollectionService {
@@ -32,12 +33,9 @@ export class CollectionService {
     });
   }
 
-  // async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
-  //   const { userId, ...data } = createCollectionDto;
-  //   const newCollection = this.collectionRepository.create({
-  //     ...data,
-  //     user: { id: Number(userId) } // Associe l'utilisateur à la collection
-  //   });
-  //   return await this.collectionRepository.save(newCollection);
-  // }
+  async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
+    const collection = this.collectionRepository.create(createCollectionDto);
+    collection.user = { id: Number(createCollectionDto.userId) } as User;
+    return await this.collectionRepository.save(collection);
+  }
 }

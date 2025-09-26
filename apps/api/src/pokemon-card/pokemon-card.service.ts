@@ -107,15 +107,6 @@ export class PokemonCardService {
     rarity?: string,
     setId?: string
   ): Promise<PokemonCard | null> {
-    console.log(
-      'Fetching random card with serieId:',
-      serieId,
-      'rarity:',
-      rarity,
-      'setId:',
-      setId
-    );
-
     const qb = this.pokemonCardRepository
       .createQueryBuilder('pokemonCard')
       .leftJoinAndSelect('pokemonCard.set', 'pokemonSet')
@@ -132,8 +123,6 @@ export class PokemonCardService {
     if (setId && setId.trim() !== '') {
       qb.andWhere('pokemonSet.id = :setId', { setId });
     }
-
-    console.log('Querying for random card:', qb.getQuery(), qb.getParameters());
 
     const card = await qb.orderBy('RANDOM()').limit(1).getOne();
     return card ?? null;
