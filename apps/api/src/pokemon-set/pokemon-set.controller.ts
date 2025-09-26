@@ -11,6 +11,7 @@ import { PokemonSetService } from './pokemon-set.service';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
 import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('pokemon-set')
 @Controller('pokemon-set')
@@ -23,6 +24,7 @@ export class PokemonSetController {
   }
 
   @Get()
+  @Public()
   findAll() {
     return this.pokemonSetService.findAll();
   }

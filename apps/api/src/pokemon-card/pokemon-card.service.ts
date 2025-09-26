@@ -104,13 +104,16 @@ export class PokemonCardService {
 
   async findRandom(
     serieId?: string,
-    rarity?: string
+    rarity?: string,
+    setId?: string
   ): Promise<PokemonCard | null> {
     console.log(
       'Fetching random card with serieId:',
       serieId,
-      'and rarity:',
-      rarity
+      'rarity:',
+      rarity,
+      'setId:',
+      setId
     );
 
     const qb = this.pokemonCardRepository
@@ -126,11 +129,11 @@ export class PokemonCardService {
       qb.andWhere('pokemonCard.rarity = :rarity', { rarity });
     }
 
-    console.log(
-      'Querying for random card lucas:',
-      qb.getQuery(),
-      qb.getParameters()
-    );
+    if (setId && setId.trim() !== '') {
+      qb.andWhere('pokemonSet.id = :setId', { setId });
+    }
+
+    console.log('Querying for random card:', qb.getQuery(), qb.getParameters());
 
     const card = await qb.orderBy('RANDOM()').limit(1).getOne();
     return card ?? null;

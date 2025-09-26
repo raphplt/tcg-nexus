@@ -54,7 +54,7 @@ const Page = () => {
         className="mt-1 mb-2"
         onClick={onPressSmash}
       >
-        Smash or Pass
+        Card Swipe
       </Button>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-center">
