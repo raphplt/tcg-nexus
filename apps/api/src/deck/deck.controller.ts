@@ -39,7 +39,11 @@ export class DeckController {
     @Query('limit') limit?: number,
     @CurrentUser() user?: User
   ) {
-    return this.deckService.findAllForUser(user as User, { userId, page, limit });
+    return this.deckService.findAllForUser(user as User, {
+      userId,
+      page,
+      limit
+    });
   }
 
   @Get(':id')
@@ -82,10 +86,9 @@ export class DeckController {
   removeCard(
     @Param('id') id: string,
     @Param('cardId') cardId: string,
-    @Query('role') role: DeckCardRole,
     @CurrentUser() user: User
   ) {
-    return this.deckService.removeCard(+id, cardId, role, user);
+    return this.deckService.removeCard(+id, cardId, user);
   }
 
   @Post(':id/clone')
