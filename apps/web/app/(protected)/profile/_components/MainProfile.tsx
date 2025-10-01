@@ -113,7 +113,6 @@ const MainProfile = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      {/* En-tête du profil */}
       <Card className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-6">
@@ -180,7 +179,6 @@ const MainProfile = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Informations personnelles */}
         <div className="lg:col-span-2">
           <Card className="p-6">
             <div className="flex items-center space-x-2 mb-6">
@@ -355,8 +353,12 @@ const MainProfile = () => {
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="font-medium">Spring Championship 2024</span>
-                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
-                <Badge className="bg-purple-500 text-white text-xs">Elimination simple</Badge>
+                <Badge className="bg-green-500 text-white text-xs">
+                  Terminé
+                </Badge>
+                <Badge className="bg-purple-500 text-white text-xs">
+                  Elimination simple
+                </Badge>
               </div>
               <div className="text-sm text-muted-foreground">
                 Paris, France • 15-17 mars 2024
@@ -373,8 +375,12 @@ const MainProfile = () => {
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="font-medium">Winter Cup 2024</span>
-                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
-                <Badge className="bg-teal-500 text-white text-xs">Système suisse</Badge>
+                <Badge className="bg-green-500 text-white text-xs">
+                  Terminé
+                </Badge>
+                <Badge className="bg-teal-500 text-white text-xs">
+                  Système suisse
+                </Badge>
               </div>
               <div className="text-sm text-muted-foreground">
                 Lyon, France • 20-21 janvier 2024
@@ -391,8 +397,12 @@ const MainProfile = () => {
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="font-medium">Regional Qualifier</span>
-                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
-                <Badge className="bg-purple-500 text-white text-xs">Elimination simple</Badge>
+                <Badge className="bg-green-500 text-white text-xs">
+                  Terminé
+                </Badge>
+                <Badge className="bg-purple-500 text-white text-xs">
+                  Elimination simple
+                </Badge>
               </div>
               <div className="text-sm text-muted-foreground">
                 Marseille, France • 10 février 2024
@@ -409,15 +419,21 @@ const MainProfile = () => {
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="font-medium">Community Tournament</span>
-                <Badge className="bg-green-500 text-white text-xs">Terminé</Badge>
-                <Badge className="bg-orange-500 text-white text-xs">Round robin</Badge>
+                <Badge className="bg-green-500 text-white text-xs">
+                  Terminé
+                </Badge>
+                <Badge className="bg-orange-500 text-white text-xs">
+                  Round robin
+                </Badge>
               </div>
               <div className="text-sm text-muted-foreground">
                 Bordeaux, France • 5 janvier 2024
               </div>
             </div>
             <div className="text-right">
-              <div className="font-semibold text-gray-600">Quart de finaliste</div>
+              <div className="font-semibold text-gray-600">
+                Quart de finaliste
+              </div>
               <div className="text-sm text-muted-foreground">5e place</div>
               <div className="text-sm font-medium text-green-600">+25 pts</div>
             </div>
