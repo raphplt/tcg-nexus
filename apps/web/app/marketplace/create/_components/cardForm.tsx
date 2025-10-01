@@ -36,8 +36,34 @@ import { useRouter } from "next/navigation";
 const CardForm = () => {
   const [loading, setLoading] = useState(false);
   const [resetCardSelect, setResetCardSelect] = useState(0);
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+
+  // Vérifier que l'utilisateur est authentifié
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Vérification de l'authentification...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    console.log("Utilisateur non authentifié:", { isAuthenticated, user, isLoading });
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground mb-4">
+          Vous devez être connecté pour créer une vente.
+        </p>
+        <Link href="/auth/login">
+          <Button>Se connecter</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  console.log("Utilisateur authentifié:", { user: user.id, isAuthenticated });
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -52,18 +78,27 @@ const CardForm = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    console.log("État de l'authentification:", { user, isAuthenticated });
+    
+    if (!user?.id) {
+      toast.error("Erreur d'authentification. Veuillez vous reconnecter.");
+      return;
+    }
+
+    console.log("Données de création:", { user: user.id, data });
     setLoading(true);
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
     const isoDate = expiresAt.toISOString();
+    
     // Convert cardState from value (label) to key (enum key)
     let cardStateKey = Object.keys(CardState).find(
       (key) => CardState[key as keyof typeof CardState] === data.cardState,
     );
     // fallback if not found
     if (!cardStateKey) cardStateKey = data.cardState;
+    
     const creationData = {
-      sellerId: user?.id,
       pokemonCardId: data.cardId,
       price: data.price,
       currency: data.currency,
@@ -72,27 +107,34 @@ const CardForm = () => {
       cardState: cardStateKey,
       expiresAt: isoDate,
     };
-    const creationPromise = authedFetch("POST", "/listings", {
-      data: creationData,
-    });
 
-    toast.promise(creationPromise, {
-      loading: "Chargement...",
-      success: (data: PokemonCardType) => {
-        setLoading(false);
-        if (data?.id) {
-          setResetCardSelect((prev) => prev + 1);
-          form.reset();
-          router.push(`/marketplace/${data.id}`);
-          return `La vente a été créée avec succès.`;
-        }
-        return "Une erreur est survenue, veuillez ressayer plus tard.";
-      },
-      error: () => {
-        setLoading(false);
-        return "Une erreur est survenue, veuillez ressayer plus tard.";
-      },
-    });
+    try {
+      const result = await authedFetch("POST", "/listings", {
+        data: creationData,
+      });
+
+      if (result?.id) {
+        setResetCardSelect((prev) => prev + 1);
+        form.reset();
+        toast.success("La vente a été créée avec succès !");
+        router.push(`/marketplace/${result.id}`);
+      } else {
+        toast.error("Une erreur est survenue lors de la création de la vente.");
+      }
+    } catch (error: any) {
+      console.error("Erreur création vente:", error);
+      
+      if (error.response?.status === 401) {
+        toast.error("Session expirée. Veuillez vous reconnecter.");
+        router.push("/auth/login");
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Une erreur est survenue lors de la création de la vente.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

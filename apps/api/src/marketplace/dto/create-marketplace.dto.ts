@@ -12,9 +12,10 @@ import {
 } from 'class-validator';
 
 export class CreateListingDto {
+  @IsOptional()
   @IsInt()
   @IsPositive()
-  sellerId: number;
+  sellerId?: number;
 
   @IsString()
   @IsNotEmpty()
