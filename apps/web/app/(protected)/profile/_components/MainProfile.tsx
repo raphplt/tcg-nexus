@@ -19,16 +19,39 @@ import {
   Calendar,
   Shield,
   Star,
+  ShoppingBag,
+  Search,
+  Eye,
+  EyeOff,
+  Trash2,
+  X as XIcon,
+  Euro,
+  DollarSign,
+  PoundSterling,
 } from "lucide-react";
+import { marketplaceService } from "@/services/marketplace.service";
+import { Listing } from "@/types/listing";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+
 
 const MainProfile = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
   });
+
+  // États pour la section "Mes ventes"
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
+  const [salesLoading, setSalesLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   React.useEffect(() => {
     if (user) {
@@ -37,8 +60,13 @@ const MainProfile = () => {
         lastName: user.lastName,
         email: user.email,
       });
+      loadMyListings();
     }
   }, [user]);
+
+  React.useEffect(() => {
+    filterListings();
+  }, [listings, searchTerm, statusFilter]);
 
   const getUserInitials = (firstName: string, lastName: string) => {
     return (
@@ -93,6 +121,128 @@ const MainProfile = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Fonctions pour la section "Mes ventes"
+  const loadMyListings = async () => {
+    try {
+      setSalesLoading(true);
+      const data = await marketplaceService.getMyListings();
+      setListings(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des ventes:", error);
+      toast.error("Erreur lors du chargement de vos ventes");
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  const filterListings = () => {
+    let filtered = listings;
+
+    // Filtre par recherche
+    if (searchTerm) {
+      filtered = filtered.filter(listing =>
+        (listing.pokemonCard?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (listing.pokemonCard?.set?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtre par statut
+    if (statusFilter === "active") {
+      filtered = filtered.filter(listing => listing.quantityAvailable > 0);
+    } else if (statusFilter === "inactive") {
+      filtered = filtered.filter(listing => listing.quantityAvailable === 0);
+    }
+
+    setFilteredListings(filtered);
+  };
+
+  const getCurrencyIcon = (currency: string) => {
+    switch (currency) {
+      case "EUR":
+        return <Euro className="w-4 h-4" />;
+      case "USD":
+        return <DollarSign className="w-4 h-4" />;
+      case "GBP":
+        return <PoundSterling className="w-4 h-4" />;
+      default:
+        return <Euro className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusBadge = (quantity: number) => {
+    if (quantity > 0) {
+      return <Badge className="bg-green-500 text-white">Actif</Badge>;
+    } else {
+      return <Badge className="bg-gray-500 text-white">Inactif</Badge>;
+    }
+  };
+
+  const handleEdit = async (listing: Listing) => {
+    try {
+      router.push(`/marketplace/${listing.id}/edit`);
+    } catch (error) {
+      toast.error("Erreur lors de la navigation vers l'édition");
+    }
+  };
+
+  const handleToggleStatus = async (listing: Listing) => {
+    try {
+      setActionLoading(listing.id);
+      const newQuantity = listing.quantityAvailable > 0 ? 0 : 1;
+      
+      await marketplaceService.updateListing(listing.id.toString(), {
+        quantityAvailable: newQuantity
+      });
+      
+      // Mettre à jour la liste locale
+      setListings(prev => prev.map(l => 
+        l.id === listing.id 
+          ? { ...l, quantityAvailable: newQuantity }
+          : l
+      ));
+      
+      toast.success(
+        newQuantity > 0 
+          ? "Vente réactivée avec succès" 
+          : "Vente désactivée avec succès"
+      );
+    } catch (error) {
+      toast.error("Erreur lors du changement de statut");
+      console.error("Erreur toggle status:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (listing: Listing) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette vente ?")) {
+      return;
+    }
+
+    try {
+      setActionLoading(listing.id);
+      await marketplaceService.deleteListing(listing.id.toString());
+      
+      // Mettre à jour la liste locale
+      setListings(prev => prev.filter(l => l.id !== listing.id));
+      
+      toast.success("Vente supprimée avec succès");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression");
+      console.error("Erreur suppression:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCreateFirstSale = () => {
+    router.push("/marketplace/create");
+  };
+
+  const handleRefreshSales = () => {
+    loadMyListings();
   };
 
   if (isLoading) {
@@ -439,6 +589,264 @@ const MainProfile = () => {
             </div>
           </div>
         </div>
+      </Card>
+
+      {/* Mes ventes */}
+      <Card className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-2">
+            <ShoppingBag className="w-5 h-5" />
+            <h2 className="text-xl font-semibold">Mes ventes</h2>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary">
+                {listings.length} ventes
+              </Badge>
+              {filteredListings.length !== listings.length && (
+                <Badge variant="outline">
+                  {filteredListings.length} résultats
+                </Badge>
+              )}
+            </div>
+          </div>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleRefreshSales}
+            disabled={salesLoading}
+            title="Actualiser la liste des ventes"
+            aria-label="Actualiser la liste des ventes"
+          >
+            {salesLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+            ) : (
+              "Actualiser"
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleCreateFirstSale}
+            title="Créer une nouvelle vente"
+            aria-label="Créer une nouvelle vente"
+          >
+            Créer une vente
+          </Button>
+        </div>
+      </div>
+
+        {/* Filtres et recherche */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <Label htmlFor="search" className="sr-only">Rechercher</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Rechercher par nom de carte ou série..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <XIcon className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant={statusFilter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("all")}
+              title="Afficher toutes les ventes"
+              aria-label="Afficher toutes les ventes"
+            >
+              Tous
+            </Button>
+            <Button
+              variant={statusFilter === "active" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("active")}
+              title="Afficher seulement les ventes actives"
+              aria-label="Afficher seulement les ventes actives"
+            >
+              Actifs
+            </Button>
+            <Button
+              variant={statusFilter === "inactive" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter("inactive")}
+              title="Afficher seulement les ventes inactives"
+              aria-label="Afficher seulement les ventes inactives"
+            >
+              Inactifs
+            </Button>
+          </div>
+        </div>
+
+        {salesLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Chargement de vos ventes...</p>
+          </div>
+        ) : filteredListings.length === 0 ? (
+          <div className="text-center py-8">
+            <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {listings.length === 0 
+                ? "Vous n'avez pas encore créé de ventes" 
+                : "Aucune vente ne correspond à vos critères"
+              }
+            </p>
+            {listings.length === 0 ? (
+              <div className="space-y-4 mt-6">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Commencez par vendre vos cartes Pokémon !
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Créez votre première vente pour commencer à gagner de l'argent avec votre collection
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={handleCreateFirstSale}
+                    className="px-6"
+                  >
+                    Créer ma première vente
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Aucune vente ne correspond à vos critères de recherche
+                </p>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Réinitialiser les filtres
+                </Button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredListings.map((listing) => (
+              <div
+                key={listing.id}
+                className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="font-semibold text-lg">{listing.pokemonCard?.name || "N/A"}</span>
+                      {getStatusBadge(listing.quantityAvailable)}
+                      <Badge variant="outline">{listing.cardState}</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-2">
+                        <span>Set: {listing.pokemonCard?.set?.name || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span>État: {listing.cardState}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-4 mt-2 text-sm">
+                      <div className="flex items-center space-x-1">
+                        {getCurrencyIcon(listing.currency)}
+                        <span className="font-medium">{listing.price}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className={listing.quantityAvailable > 0 ? "text-green-600" : "text-gray-500"}>
+                          Quantité: {listing.quantityAvailable}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span>Créé le: {new Date(listing.createdAt).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric"
+                        })}</span>
+                      </div>
+                      {listing.expiresAt && (
+                        <div className="flex items-center space-x-1">
+                          <span className="text-orange-600">
+                            Expire le: {new Date(listing.expiresAt).toLocaleDateString("fr-FR", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric"
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(listing)}
+                      className="h-8 w-8 p-0"
+                      disabled={actionLoading === listing.id}
+                      title="Modifier cette vente"
+                      aria-label="Modifier cette vente"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleStatus(listing)}
+                      className="h-8 w-8 p-0"
+                      disabled={actionLoading === listing.id}
+                      title={listing.quantityAvailable > 0 ? "Désactiver cette vente" : "Réactiver cette vente"}
+                      aria-label={listing.quantityAvailable > 0 ? "Désactiver cette vente" : "Réactiver cette vente"}
+                    >
+                      {actionLoading === listing.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                      ) : listing.quantityAvailable > 0 ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(listing)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      disabled={actionLoading === listing.id}
+                      title="Supprimer cette vente"
+                      aria-label="Supprimer cette vente"
+                    >
+                      {actionLoading === listing.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );

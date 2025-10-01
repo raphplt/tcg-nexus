@@ -30,14 +30,21 @@ export class MarketplaceController {
   @ApiBearerAuth()
   @Post()
   @Roles('pro')
-  createListing(@Body() createListingDto: CreateListingDto) {
-    return this.marketplaceService.create(createListingDto);
+  createListing(@Body() createListingDto: CreateListingDto, @CurrentUser() user: User) {
+    return this.marketplaceService.create(createListingDto, user);
   }
 
   @Get()
   @Public()
   getAllListings(@Query() query: FindAllListingsQuery) {
     return this.marketplaceService.findAll(query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('my-listings')
+  getMyListings(@CurrentUser() user: User) {
+    return this.marketplaceService.findBySellerId(user.id);
   }
 
   @Get(':id')
