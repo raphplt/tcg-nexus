@@ -379,6 +379,123 @@ body {
     }
   }
 
+  /* Collection page specific styles */
+  .collection-card-preview {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .collection-card-preview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      rgba(var(--color-primary), 0.1) 0%, 
+      rgba(var(--color-secondary), 0.1) 50%, 
+      rgba(var(--color-accent), 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .collection-card:hover .collection-card-preview::before {
+    opacity: 1;
+  }
+
+  /* Card preview placeholder styles */
+  .card-preview-placeholder {
+    background: linear-gradient(45deg, 
+      rgba(255, 255, 255, 0.1) 25%, 
+      transparent 25%, 
+      transparent 75%, 
+      rgba(255, 255, 255, 0.1) 75%);
+    background-size: 8px 8px;
+    animation: cardShimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes cardShimmer {
+    0%, 100% {
+      background-position: 0 0;
+    }
+    50% {
+      background-position: 8px 8px;
+    }
+  }
+
+  /* Enhanced button hover effects */
+  .discovery-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .discovery-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+  }
+
+  .discovery-button:hover::before {
+    left: 100%;
+  }
+
+  /* Search input enhancements */
+  .search-input {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .search-input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Empty state animation */
+  .empty-state-icon {
+    animation: gentleFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes gentleFloat {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Collection grid animations */
+  .collection-grid-item {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+  }
+
+  .collection-grid-item:nth-child(1) { animation-delay: 0.1s; }
+  .collection-grid-item:nth-child(2) { animation-delay: 0.2s; }
+  .collection-grid-item:nth-child(3) { animation-delay: 0.3s; }
+  .collection-grid-item:nth-child(4) { animation-delay: 0.4s; }
+  .collection-grid-item:nth-child(5) { animation-delay: 0.5s; }
+  .collection-grid-item:nth-child(6) { animation-delay: 0.6s; }
+  .collection-grid-item:nth-child(7) { animation-delay: 0.7s; }
+  .collection-grid-item:nth-child(8) { animation-delay: 0.8s; }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* Responsive adjustments */
   @media (max-width: 768px) {
     .pokemon-card-image:hover {
@@ -387,6 +504,14 @@ body {
     
     .marketplace-card:hover {
       transform: none;
+    }
+
+    .collection-grid-item {
+      animation-delay: 0s !important;
+    }
+
+    .discovery-button::before {
+      display: none;
     }
   }
 }

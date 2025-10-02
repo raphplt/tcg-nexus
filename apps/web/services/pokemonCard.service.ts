@@ -44,15 +44,6 @@ export const pokemonCardService = {
     rarity?: PokemonRarity,
     set?: string,
   ): Promise<PokemonCardType> {
-    console.log(
-      "Fetching random card with serieId:",
-      serieId,
-      "and rarity:",
-      rarity,
-      "and set:",
-      set,
-    );
-
     const params: Record<string, string> = {};
     if (serieId) params.serieId = serieId;
     if (rarity) params.rarity = rarity;
@@ -62,7 +53,6 @@ export const pokemonCardService = {
       params: Object.keys(params).length > 0 ? params : undefined,
     });
 
-    console.log("Random card:", response.data);
     return response.data;
   },
 
