@@ -21,6 +21,7 @@ import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
+import { CardState } from 'src/card-state/entities/card-state.entity';
 import { Statistics } from 'src/statistics/entities/statistic.entity';
 import { SeedingService } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
@@ -48,6 +49,7 @@ import { MatchService } from 'src/match/match.service';
       DeckFormat,
       DeckCard,
       Collection,
+      CardState,
       Statistics
     ])
   ],

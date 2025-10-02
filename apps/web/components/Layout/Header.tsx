@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import SearchBar from "./SearchBar";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -17,21 +17,26 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, LogOut } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
+import { usePathname } from "next/navigation";
+import { FULLSCREEN_PATHS } from "@/utils/constants";
+import { getUserInitials, getUserDisplayName } from "@/utils/text";
 
 const Header = () => {
-  const linkStyle =
-    "text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline hover:underline-offset-4";
   const { isAuthenticated, user, logout, isLoading } = useAuth();
 
-  const getUserInitials = (firstName: string, lastName: string) =>
-    `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
-    "U";
+  const currentPath = usePathname();
 
-  const getUserDisplayName = (firstName: string, lastName: string) =>
-    `${firstName} ${lastName}`.trim() || "Utilisateur";
+  const isFullscreenPath = FULLSCREEN_PATHS.includes(currentPath);
+
+  if (isFullscreenPath) {
+    return null;
+  }
 
   return (
-    <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center px-4 sm:px-8 z-50">
+    <header
+      className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b
+    border-border shadow-sm flex items-center px-4 sm:px-8 z-50"
+    >
       <Link
         href="/"
         className="flex-shrink-0 mr-4"
@@ -57,7 +62,7 @@ const Header = () => {
           <li className="hidden sm:block">
             <Link
               href="/"
-              className={linkStyle}
+              className="link-style"
             >
               Accueil
             </Link>
@@ -65,7 +70,7 @@ const Header = () => {
           <li className="hidden md:block">
             <Link
               href="/tournaments"
-              className={linkStyle}
+              className="link-style"
             >
               Tournois
             </Link>
@@ -73,7 +78,7 @@ const Header = () => {
           <li className="hidden lg:block">
             <Link
               href="/marketplace"
-              className={linkStyle}
+              className="link-style"
             >
               Marketplace
             </Link>
@@ -81,17 +86,9 @@ const Header = () => {
           <li className="hidden lg:block">
             <Link
               href="/strategy"
-              className={linkStyle}
+              className="link-style"
             >
               Stratégie
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/collection"
-              className={linkStyle}
-            >
-              Collection
             </Link>
           </li>
 
@@ -109,12 +106,21 @@ const Header = () => {
             <>
               <li>
                 <Link
+                  href="/collection"
+                  className="link-style"
+                >
+                  Collection
+                </Link>
+              </li>
+
+              {/* <li>
+                <Link
                   href="/dashboard"
-                  className={linkStyle}
+                  className="link-style"
                 >
                   Tableau de bord
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <ThemeToggle />
               </li>

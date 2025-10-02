@@ -6,7 +6,8 @@ export enum CardStateCode {
   EX = 'EX', // Excellent
   GD = 'GD', // Good
   LP = 'LP', // Lightly Played
-  PL = 'PL' // Played
+  PL = 'PL', // Played
+  Poor = 'Poor' // Poor
 }
 
 @Entity('card_state')

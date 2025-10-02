@@ -1,4 +1,4 @@
- @import "tailwindcss";
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
 :root {
@@ -388,5 +388,12 @@ body {
     .marketplace-card:hover {
       transform: none;
     }
+  }
+}
+
+
+@layer components {
+  .link-style {
+    @apply text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline underline-offset-4;
   }
 }

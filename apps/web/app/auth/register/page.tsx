@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,42 +26,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-// Schéma de validation Zod
-const registerSchema = z
-  .object({
-    firstName: z
-      .string()
-      .min(1, "Le prénom est requis")
-      .min(2, "Le prénom doit contenir au moins 2 caractères"),
-    lastName: z
-      .string()
-      .min(1, "Le nom est requis")
-      .min(2, "Le nom doit contenir au moins 2 caractères"),
-    email: z
-      .string()
-      .min(1, "L'email est requis")
-      .email("Format d'email invalide"),
-    password: z
-      .string()
-      .min(6, "Le mot de passe doit contenir au moins 6 caractères")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre",
-      ),
-    confirmPassword: z
-      .string()
-      .min(1, "La confirmation du mot de passe est requise"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
+import { registerSchema } from "./utils";
+import { ArrowLeft, Home } from "lucide-react";
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const RegisterPage = () => {
   const { register, isLoading } = useAuth();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<RegisterFormValues>({
@@ -87,13 +60,43 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-primary/5 p-4 relative">
+      <div className="absolute top-4 left-4 flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="hover:bg-secondary/50 transition-colors z-40"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/")}
+          className="hover:bg-secondary/50 transition-colors z-40"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Accueil
+        </Button>
+      </div>
+
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-secondary/10 via-transparent to-primary/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+      </div>
+
+      <Card className="w-full max-w-md relative z-10 bg-background/95 backdrop-blur-sm border border-primary/20 shadow-2xl">
+        <CardHeader className="space-y-1 pb-6">
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Inscription
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-muted-foreground">
             Créez votre compte TCG Nexus
           </CardDescription>
         </CardHeader>
@@ -208,7 +211,7 @@ const RegisterPage = () => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={isLoading}
               >
                 {isLoading ? "Inscription..." : "S'inscrire"}
@@ -216,12 +219,12 @@ const RegisterPage = () => {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
+        <CardFooter className="flex flex-col space-y-4 pt-6">
           <div className="text-sm text-center text-muted-foreground">
             Déjà un compte ?{" "}
             <Link
               href="/auth/login"
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
             >
               Se connecter
             </Link>

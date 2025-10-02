@@ -42,6 +42,10 @@ async function bootstrap() {
     await seedService.seedUsers();
     logSuccess('Utilisateurs créés !');
 
+    logStep('Création des CardState...');
+    await seedService.seedCardStates();
+    logSuccess('CardState créés !');
+
     logStep('Création des tournois de test...');
     await seedService.seedTournaments();
     logSuccess('Tournois créés !');

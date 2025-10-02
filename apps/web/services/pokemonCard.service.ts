@@ -72,4 +72,26 @@ export const pokemonCardService = {
     );
     return response.data;
   },
+
+  async addToFavorites(
+    userId: number,
+    pokemonCardId: string
+  ): Promise<CollectionItemType> {
+    const response = await api.patch<CollectionItemType>(
+      `/collection-item/favorites/${userId}`,
+      { pokemonCardId }
+    );
+    return response.data;
+  },
+
+  async addToCollection(
+    collectionId: string,
+    pokemonCardId: string
+  ): Promise<CollectionItemType> {
+    const response = await api.patch<CollectionItemType>(
+      `/collection-item/collection/${collectionId}`,
+      { pokemonCardId }
+    );
+    return response.data;
+  },
 };

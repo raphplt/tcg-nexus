@@ -16,33 +16,19 @@ import { CollectionService } from 'src/collection/collection.service';
 
 @Injectable()
 export class AuthService {
-  private readonly bcryptCompare: (
-    data: string,
-    encrypted: string
-  ) => Promise<boolean>;
-
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private collectionService: CollectionService
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    this.bcryptCompare = (bcrypt as any).compare as (
-      data: string,
-      encrypted: string
-    ) => Promise<boolean>;
-  }
+  ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findByEmail(email);
 
     if (user && user.password) {
       try {
-        const isPasswordValid: boolean = await this.bcryptCompare(
-          password,
-          user.password
-        );
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (isPasswordValid) {
           return user;
         }
@@ -96,14 +82,14 @@ export class AuthService {
 
       await this.collectionService.create({
         name: 'Wishlist',
-        description: 'Default wishlist',
+        description: 'Default Wishlist',
         isPublic: false,
         userId: user.id
       });
 
       await this.collectionService.create({
-        name: 'Favoris',
-        description: 'Default Favoris',
+        name: 'Favorites',
+        description: 'Default Favorites',
         isPublic: false,
         userId: user.id
       });
@@ -140,7 +126,7 @@ export class AuthService {
     }
 
     try {
-      const refreshTokenMatches: boolean = await this.bcryptCompare(
+      const refreshTokenMatches = await bcrypt.compare(
         refreshToken,
         user.refreshToken
       );
