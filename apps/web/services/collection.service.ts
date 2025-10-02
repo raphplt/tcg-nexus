@@ -33,4 +33,11 @@ export const collectionService = {
   async getById(id: string): Promise<Collection> {
     return fetcher<Collection>(`/collection/${id}`);
   },
+
+  async createCollection(collection: Collection): Promise<Collection> {
+    return fetcher<Collection>("/collection", {
+      method: "POST",
+      body: collection,
+    });
+  },
 };

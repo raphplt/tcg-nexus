@@ -1,14 +1,14 @@
 import type { PokemonCardType } from "../types/cardPokemon";
 
 export interface Collection {
-    id: number;
-    name: string;
-    description: string;
-    isPublic: boolean;
-    startDate: string;
-    updateDate: string;
-    userId: number;
-  }
+  id: number;
+  name: string;
+  description: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  userId: number;
+}
   
   export interface CollectionItemType {
   id: number;

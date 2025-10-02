@@ -16,6 +16,7 @@ import { H1 } from "@/components/Shared/Titles";
 import { useRouter } from "next/navigation";
 import { Search, Plus, Heart, Eye, Calendar, Users } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
+import CreateCollection from "./_components/CreateCollection";
 
 const Page = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -36,7 +37,6 @@ const Page = () => {
         const result = await collectionService.getByUserId(user.id);
         console.log("Fetched collections for user:", result);
 
-        // Handle both possible formats: direct array or paginated result
         const collectionsData = Array.isArray(result)
           ? result
           : result.data || [];
@@ -52,12 +52,30 @@ const Page = () => {
     fetchCollections();
   }, [user?.id]);
 
-  // Filter collections based on search query
+  // Filter coxllections based on search query
   const filteredCollections = collections.filter(
     (collection) =>
       collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       collection.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const refreshCollections = async () => {
+    if (!user?.id) return;
+
+    try {
+      const result = await collectionService.getByUserId(user.id);
+      const collectionsData = Array.isArray(result)
+        ? result
+        : result.data || [];
+      setCollections(collectionsData);
+    } catch (error) {
+      console.error("Error refreshing collections:", error);
+    }
+  };
+
+  const onCreateCollection = () => {
+    console.log("Create collection clicked");
+  };
 
   if (loading) {
     return (
@@ -80,11 +98,6 @@ const Page = () => {
     router.push("/pokemon/smash-or-pass");
   };
 
-  const onCreateCollection = () => {
-    // TODO: Implement create collection logic
-    console.log("Create collection clicked");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-7xl mx-auto">
@@ -101,7 +114,6 @@ const Page = () => {
             cartes avec notre fonctionnalité de swipe
           </p>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
               variant="default"
@@ -116,18 +128,9 @@ const Page = () => {
               </span>
             </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-2 border-primary/30 hover:border-primary hover:bg-primary/5 font-semibold px-8 py-3 rounded-lg transition-all duration-300"
-              onClick={onCreateCollection}
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Créer une Collection
-            </Button>
+            <CreateCollection onCollectionCreated={refreshCollections} />
           </div>
 
-          {/* Search Bar */}
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -140,7 +143,6 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Collections Grid */}
         {filteredCollections.length === 0 ? (
           <div className="text-center py-16">
             <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 max-w-md mx-auto border border-border/50">
@@ -172,8 +174,8 @@ const Page = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCollections.map((collection, index) => {
-              const createdDate = new Date(collection.startDate);
-              const updatedDate = new Date(collection.updateDate);
+              const createdDate = new Date(collection.created_at);
+              const updatedDate = new Date(collection.updated_at);
               const isValidCreatedDate = !isNaN(createdDate.getTime());
               const isValidUpdatedDate = !isNaN(updatedDate.getTime());
 
@@ -197,11 +199,11 @@ const Page = () => {
                     </div>
                     <div className="absolute top-2 right-2">
                       <Badge
-                        variant={collection.isPublic ? "default" : "secondary"}
+                        variant={collection.is_public ? "default" : "secondary"}
                         className="text-xs"
                       >
                         <Eye className="h-3 w-3 mr-1" />
-                        {collection.isPublic ? "Public" : "Privé"}
+                        {collection.is_public ? "Public" : "Privé"}
                       </Badge>
                     </div>
                   </div>
