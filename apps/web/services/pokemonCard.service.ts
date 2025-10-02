@@ -1,5 +1,9 @@
 import api from "../utils/fetch";
-import type { PokemonCardType, PokemonSerieType, PokemonSetType } from "../types/cardPokemon";
+import type {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "../types/cardPokemon";
 import type { PaginatedResult, PaginationParams } from "../types/pagination";
 import { CollectionItemType } from "@/types/collection";
 import { PokemonRarity } from "../types/enums/pokemonCardsType";
@@ -35,22 +39,32 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async getRandom(serieId?: string, rarity?: PokemonRarity, set?: string): Promise<PokemonCardType> {
-  console.log("Fetching random card with serieId:", serieId, "and rarity:", rarity, "and set:", set);
+  async getRandom(
+    serieId?: string,
+    rarity?: PokemonRarity,
+    set?: string,
+  ): Promise<PokemonCardType> {
+    console.log(
+      "Fetching random card with serieId:",
+      serieId,
+      "and rarity:",
+      rarity,
+      "and set:",
+      set,
+    );
 
-  const params: Record<string, string> = {};
-  if (serieId) params.serieId = serieId;
-  if (rarity) params.rarity = rarity;
-  if (set) params.set = set;
+    const params: Record<string, string> = {};
+    if (serieId) params.serieId = serieId;
+    if (rarity) params.rarity = rarity;
+    if (set) params.set = set;
 
-  const response = await api.get<PokemonCardType>("/pokemon-card/random", {
-    params: Object.keys(params).length > 0 ? params : undefined,
-  });
+    const response = await api.get<PokemonCardType>("/pokemon-card/random", {
+      params: Object.keys(params).length > 0 ? params : undefined,
+    });
 
-  console.log("Random card:", response.data);
-  return response.data;
-},
-
+    console.log("Random card:", response.data);
+    return response.data;
+  },
 
   async getAllSeries(): Promise<PokemonSerieType[]> {
     const response = await api.get<PokemonSerieType[]>("/pokemon-series");
@@ -64,33 +78,33 @@ export const pokemonCardService = {
 
   async addToWishlist(
     userId: number,
-    pokemonCardId: string
+    pokemonCardId: string,
   ): Promise<CollectionItemType> {
     const response = await api.patch<CollectionItemType>(
       `/collection-item/wishlist/${userId}`,
-      { pokemonCardId }
+      { pokemonCardId },
     );
     return response.data;
   },
 
   async addToFavorites(
     userId: number,
-    pokemonCardId: string
+    pokemonCardId: string,
   ): Promise<CollectionItemType> {
     const response = await api.patch<CollectionItemType>(
       `/collection-item/favorites/${userId}`,
-      { pokemonCardId }
+      { pokemonCardId },
     );
     return response.data;
   },
 
   async addToCollection(
     collectionId: string,
-    pokemonCardId: string
+    pokemonCardId: string,
   ): Promise<CollectionItemType> {
     const response = await api.patch<CollectionItemType>(
       `/collection-item/collection/${collectionId}`,
-      { pokemonCardId }
+      { pokemonCardId },
     );
     return response.data;
   },

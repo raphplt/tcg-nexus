@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { PokemonRarity } from "../../../types/enums/pokemonCardsType";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, Star, ListPlus, X } from "lucide-react";
+import { FavoriteButton } from "@/components/Home/FavoritesButton";
 
 function usePokemonSeries() {
   return useQuery({
@@ -83,24 +83,18 @@ function PokemonCard({
 }
 
 export default function PokemonMatchPage() {
-  const { data: series } = usePokemonSeries();
-  const { data: sets } = usePokemonSets();
-  const [direction, setDrag] = useState<"left" | "right" | null>(null);
   const { user } = useAuth();
 
-  const [selectedSerie, setSelectedSerie] = useState<string>("");
+  if (!user) return null;
+  const { data: series } = usePokemonSeries();
+  const { data: sets } = usePokemonSets();
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
+
+  const [selectedSerie, setSelectedSerie] = useState("");
   const [selectedRarity, setSelectedRarity] = useState<string>("");
   const [selectedSet, setSelectedSet] = useState<string>("");
-  const [selectedCollection, setSelectedCollection] = useState<string>("");
-  const [showCollectionSelector, setShowCollectionSelector] = useState(false);
 
-  // Fetch user's collections
-  const { data: collections } = useQuery({
-    queryKey: ["collections", user?.id],
-    queryFn: () => collectionService.getByUserId(user?.id || 0),
-    enabled: !!user?.id,
-  });
-
+  // Hook modifié pour inclure la rareté
   const {
     data: card,
     isLoading,
@@ -118,75 +112,21 @@ export default function PokemonMatchPage() {
   });
 
   const swipe = async (dir: "left" | "right") => {
-    setDrag(dir);
+    setDirection(dir);
 
-    if (card && user?.id) {
-      try {
-        switch (dir) {
-          case "right":
-            await pokemonCardService.addToWishlist(user.id, card.id);
-            console.log(`${card.name} ajoutée à la wishlist !`);
-            break;
-          case "left":
-            // Left signifie "skip" - on ne fait rien de spécial
-            console.log(`Skipped ${card.name}`);
-            break;
-        }
-      } catch (error) {
-        console.error("Erreur lors de l'ajout :", error);
-      }
-    }
-
-    setTimeout(() => {
-      setDrag(null);
-      refetch();
-    }, 400);
-  };
-
-  const addToWishlist = async () => {
-    if (card && user?.id) {
+    if (dir === "right" && card && user?.id) {
       try {
         await pokemonCardService.addToWishlist(user.id, card.id);
-
         console.log(`${card.name} ajoutée à la wishlist !`);
-        refetch();
       } catch (error) {
         console.error("Erreur lors de l'ajout à la wishlist :", error);
       }
     }
-  };
 
-  const addToFavorites = async () => {
-    if (card && user?.id) {
-      try {
-        await pokemonCardService.addToFavorites(user.id, card.id);
-
-        console.log(`${card.name} ajoutée aux favoris !`);
-        refetch();
-      } catch (error) {
-        console.error("Erreur lors de l'ajout aux favoris :", error);
-      }
-    }
-  };
-
-  const addToSelectedCollection = async () => {
-    if (card && selectedCollection) {
-      try {
-        await pokemonCardService.addToCollection(selectedCollection, card.id);
-
-        console.log(`${card.name} ajoutée à la collection sélectionnée !`);
-        refetch();
-        setShowCollectionSelector(false);
-        setSelectedCollection("");
-      } catch (error) {
-        console.error("Erreur lors de l'ajout à la collection :", error);
-      }
-    }
-  };
-
-  const skip = async () => {
-    console.log(`Skipped ${card?.name}`);
-    refetch();
+    setTimeout(() => {
+      setDirection(null);
+      refetch();
+    }, 400);
   };
 
   if (isLoading)
@@ -285,107 +225,25 @@ export default function PokemonMatchPage() {
         direction={direction}
       />
 
-      {/* Actions Section */}
-      <div className="flex flex-col gap-4 mt-6">
-        {/* Boutons principaux de swipe */}
-        <div className="flex gap-6 justify-center">
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full w-16 h-16 border-2 border-red-500 hover:bg-secondary"
-            onClick={() => swipe("left")}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="rounded-full w-16 h-16 border-2 border-green-500 hover:bg-secondary"
-            onClick={() => swipe("right")}
-          >
-            ❤️
-          </Button>
-        </div>
+      <div className="flex gap-6 mt-6 items-center">
+        <button
+          className="rounded-full w-16 h-16 border-2 border-red-500 hover:bg-red-500 hover:text-white"
+          onClick={() => swipe("left")}
+        >
+          👎
+        </button>
 
-        {/* Boutons d'action détaillés */}
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Button
-            onClick={skip}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-          >
-            Skip
-          </Button>
-          <Button
-            onClick={addToWishlist}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-          >
-            <Heart className="mr-2 h-4 w-4" />
-            Wishlist
-          </Button>
-          <Button
-            onClick={addToFavorites}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-          >
-            <Star className="mr-2 h-4 w-4" />
-            Favorites
-          </Button>
-          <Button
-            onClick={() => setShowCollectionSelector(!showCollectionSelector)}
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-          >
-            <ListPlus className="mr-2 h-4 w-4" />
-            Choisir Collection
-          </Button>
-        </div>
+        <FavoriteButton
+          cardId={card.id}
+          userId={user.id}
+        />
 
-        {/* Sélecteur de collection */}
-        {showCollectionSelector && (
-          <div className="flex gap-2 justify-center items-center mt-2">
-            <Select
-              onValueChange={setSelectedCollection}
-              defaultValue={selectedCollection}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Choisir une collection" />
-              </SelectTrigger>
-              <SelectContent>
-                {collections?.data?.map((collection: any) => (
-                  <SelectItem
-                    key={collection.id}
-                    value={collection.id}
-                  >
-                    {collection.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={addToSelectedCollection}
-              disabled={!selectedCollection}
-              size="sm"
-            >
-              Ajouter
-            </Button>
-            <Button
-              onClick={() => {
-                setShowCollectionSelector(false);
-                setSelectedCollection("");
-              }}
-              variant="outline"
-              size="sm"
-            >
-              Annuler
-            </Button>
-          </div>
-        )}
+        <button
+          className="rounded-full w-16 h-16 border-2 border-green-500 hover:bg-green-500 hover:text-white"
+          onClick={() => swipe("right")}
+        >
+          👍
+        </button>
       </div>
     </div>
   );

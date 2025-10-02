@@ -30,6 +30,9 @@ export class CollectionItemController {
     @Param('collectionId') collectionId: string,
     @Body('pokemonCardId') pokemonCardId: string
   ) {
-    return this.collectionItemService.addToCollection(collectionId, pokemonCardId);
+    return this.collectionItemService.addToCollection(
+      collectionId,
+      pokemonCardId
+    );
   }
 }
