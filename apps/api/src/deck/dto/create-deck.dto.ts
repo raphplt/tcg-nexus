@@ -1,4 +1,10 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString
+} from 'class-validator';
 
 export class CreateDeckDto {
   @IsInt()
@@ -11,4 +17,12 @@ export class CreateDeckDto {
   @IsOptional()
   @IsInt()
   formatId?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublic?: boolean;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }

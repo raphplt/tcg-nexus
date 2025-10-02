@@ -31,10 +31,8 @@ export class DeckService {
     }
     const deck = this.deckRepo.create({
       name: createDeckDto.name,
-      user: { id: createDeckDto.userId } as any,
-      format: createDeckDto.formatId
-        ? ({ id: createDeckDto.formatId } as any)
-        : undefined
+      user: { id: createDeckDto.userId },
+      format: { id: createDeckDto.formatId }
     });
     return this.deckRepo.save(deck);
   }
@@ -96,7 +94,7 @@ export class DeckService {
     }
     Object.assign(deck, {
       name: dto.name ?? deck.name,
-      format: dto.formatId ? ({ id: dto.formatId } as any) : deck.format
+      format: dto.formatId ? { id: dto.formatId } : deck.format
     });
     return this.deckRepo.save(deck);
   }
@@ -131,20 +129,15 @@ export class DeckService {
     });
     if (!card) throw new NotFoundException('Pokemon card not found');
     const deckCard = this.deckCardRepo.create({
-      deck: { id: deckId } as any,
-      card: { id: params.cardId } as any,
+      deck: { id: deckId },
+      card: { id: params.cardId },
       qty: params.qty || 1,
       role: params.role || DeckCardRole.main
     });
     return this.deckCardRepo.save(deckCard);
   }
 
-  async removeCard(
-    deckId: number,
-    cardId: string,
-    role: DeckCardRole | undefined,
-    user: User
-  ): Promise<void> {
+  async removeCard(deckId: number, cardId: string, user: User): Promise<void> {
     const deck = await this.deckRepo.findOne({
       where: { id: deckId },
       relations: ['user']
@@ -153,8 +146,7 @@ export class DeckService {
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to modify this deck');
     }
-    const where: any = { deck: { id: deckId }, card: { id: cardId } };
-    if (role) where.role = role;
+    const where = { deck: { id: deckId }, card: { id: cardId } };
     const toDelete = await this.deckCardRepo.find({ where });
     if (toDelete.length === 0) return;
     await this.deckCardRepo.remove(toDelete);
@@ -171,15 +163,15 @@ export class DeckService {
     }
     const cloned = this.deckRepo.create({
       name: `${deck.name} (copy)`,
-      user: { id: user.id } as any,
-      format: deck.format ? ({ id: deck.format.id } as any) : undefined
+      user: { id: user.id },
+      format: deck.format ? { id: deck.format.id } : undefined
     });
     const saved = await this.deckRepo.save(cloned);
     if (deck.cards?.length) {
       const clonedCards = deck.cards.map((dc) =>
         this.deckCardRepo.create({
-          deck: { id: saved.id } as any,
-          card: { id: dc.card.id } as any,
+          deck: { id: saved.id },
+          card: { id: dc.card.id },
           qty: dc.qty,
           role: dc.role
         })
