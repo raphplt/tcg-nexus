@@ -1,14 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import TournamentPreview from "@/components/Home/TournamentPreview";
 import MarketplacePreview from "@/components/Home/MarketplacePreview";
 import StrategicToolsPreview from "@/components/Home/StrategicToolsPreview";
 import LatestArticles from "@/components/Home/LatestArticles";
 import RandomCard from "@/components/Home/RandomCard";
 import TrendingDecks from "@/components/Home/TrendingDecks";
+import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted via-background to-accent/20">
       <section className="relative overflow-hidden border-b-4 border-black bg-gradient-to-r from-primary/10 via-background to-secondary/10">
@@ -33,7 +35,7 @@ const HomePage = () => {
                 <TournamentPreview />
               </div>
               <div className="card-hover">
-                <RandomCard />
+                <RandomCard userId={user?.id ?? 0} />
               </div>
             </div>
             <div className="space-y-8">
