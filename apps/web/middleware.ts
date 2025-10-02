@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PROTECTED_ROUTES, AUTH_ROUTES } from "@/utils/constants";
 
+function parseCookieHeader(cookieHeader: string): Record<string, string> {
+  const cookies: Record<string, string> = {};
+  cookieHeader.split(";").forEach((cookie) => {
+    const parts = cookie.trim().split("=");
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      cookies[parts[0]] = parts[1];
+    }
+  });
+  return cookies;
+}
+
+function mergeCookies(
+  existingCookies: string,
+  newCookies: Array<string>,
+): string {
+  const existing = parseCookieHeader(existingCookies);
+  const merged = { ...existing };
+
+  newCookies.forEach((newCookie) => {
+    const setCookiePart = newCookie.split(";")[0];
+    if (setCookiePart) {
+      const parts = setCookiePart.trim().split("=");
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        merged[parts[0]] = parts[1];
+      }
+    }
+  });
+
+  return Object.entries(merged)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("; ");
+}
+
 async function checkAuth(request: NextRequest): Promise<boolean> {
   try {
     const API_BASE_URL =
@@ -8,18 +41,51 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
 
     const cookies = request.cookies.toString();
 
-    if (!cookies) {
+    if (!cookies || !cookies.includes("accessToken")) {
       return false;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      let response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: "POST",
         headers: {
           Cookie: cookies,
           "Content-Type": "application/json",
         },
       });
+
+      if (
+        !response.ok &&
+        response.status === 401 &&
+        cookies.includes("refreshToken")
+      ) {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          headers: {
+            Cookie: cookies,
+            "Content-Type": "application/json",
+            "x-remember-me": "false",
+          },
+        });
+
+        if (refreshResponse.ok) {
+          const setCookieHeader = refreshResponse.headers.get("set-cookie");
+          if (setCookieHeader) {
+            const cookieStrings = setCookieHeader
+              .split(",")
+              .map((cookie) => cookie.trim());
+            const updatedCookies = mergeCookies(cookies, cookieStrings);
+
+            response = await fetch(`${API_BASE_URL}/auth/profile`, {
+              method: "POST",
+              headers: {
+                Cookie: updatedCookies,
+                "Content-Type": "application/json",
+              },
+            });
+          }
+        }
+      }
 
       return response.ok;
     } catch (apiError) {

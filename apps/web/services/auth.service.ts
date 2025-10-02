@@ -26,8 +26,38 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token);
     }
   });
-  
+
   failedQueue = [];
+};
+
+let refreshTimer: NodeJS.Timeout | null = null;
+
+const clearRefreshTimer = () => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+};
+
+// Fonction pour programmer le refresh proactif
+const scheduleRefresh = (tokenExpirationTime: number) => {
+  clearRefreshTimer();
+
+  const refreshTime = Math.max(
+    tokenExpirationTime - Date.now() - 5 * 60 * 1000,
+    2 * 60 * 1000,
+  );
+
+  refreshTimer = setTimeout(async () => {
+    try {
+      await api.post("/auth/refresh");
+
+      scheduleRefresh(Date.now() + 12 * 60 * 1000);
+    } catch (error) {
+      console.error("Proactive refresh failed:", error);
+      clearRefreshTimer();
+    }
+  }, refreshTime);
 };
 
 api.interceptors.response.use(
@@ -35,7 +65,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Ne pas essayer de rafraîchir le token pour certaines routes
     const skipRefreshRoutes = [
       "/auth/login",
       "/auth/register",
@@ -80,12 +109,13 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export const authService = {
+  scheduleRefresh,
+
   async login(credentials: LoginRequest): Promise<{ user: User }> {
-    // On retire rememberMe du body, on le passe juste dans le header
     const { rememberMe, ...loginPayload } = credentials;
     const response = await api.post<{ user: User }>(
       "/auth/login",
@@ -94,9 +124,12 @@ export const authService = {
         headers: {
           "x-remember-me": rememberMe ? "true" : "false",
         },
-        withCredentials: true
-      }
+        withCredentials: true,
+      },
     );
+
+    scheduleRefresh(Date.now() + 14 * 60 * 1000);
+
     return response.data;
   },
 
@@ -113,10 +146,14 @@ export const authService = {
         },
       },
     );
+
+    scheduleRefresh(Date.now() + 14 * 60 * 1000);
+
     return response.data;
   },
 
   async logout(): Promise<void> {
+    clearRefreshTimer();
     await api.post("/auth/logout");
   },
 
