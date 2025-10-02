@@ -14,6 +14,7 @@
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
+    "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

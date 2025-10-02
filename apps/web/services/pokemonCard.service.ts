@@ -80,7 +80,7 @@ export const pokemonCardService = {
     userId: number,
     pokemonCardId: string,
   ): Promise<CollectionItemType> {
-    const response = await api.patch<CollectionItemType>(
+    const response = await api.post<CollectionItemType>(
       `/collection-item/wishlist/${userId}`,
       { pokemonCardId },
     );
@@ -91,7 +91,7 @@ export const pokemonCardService = {
     userId: number,
     pokemonCardId: string,
   ): Promise<CollectionItemType> {
-    const response = await api.patch<CollectionItemType>(
+    const response = await api.post<CollectionItemType>(
       `/collection-item/favorites/${userId}`,
       { pokemonCardId },
     );
@@ -102,7 +102,7 @@ export const pokemonCardService = {
     collectionId: string,
     pokemonCardId: string,
   ): Promise<CollectionItemType> {
-    const response = await api.patch<CollectionItemType>(
+    const response = await api.post<CollectionItemType>(
       `/collection-item/collection/${collectionId}`,
       { pokemonCardId },
     );
