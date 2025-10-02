@@ -16,15 +16,21 @@ export const collectionService = {
    * @param params Query params (page, limit, search, category, isPublic, sortBy, sortOrder)
    */
   async getAll(
-    params: CollectionQueryParams = {}
+    params: CollectionQueryParams = {},
   ): Promise<PaginatedResult<Collection>> {
     return fetcher<PaginatedResult<Collection>>("/collection", { params });
   },
 
   async getByUserId(
     userId: number,
-    params: CollectionQueryParams = {}
+    params: CollectionQueryParams = {},
   ): Promise<PaginatedResult<Collection>> {
-    return fetcher<PaginatedResult<Collection>>(`/collection/user/${userId}`, { params });
+    return fetcher<PaginatedResult<Collection>>(`/collection/user/${userId}`, {
+      params,
+    });
+  },
+
+  async getById(id: string): Promise<Collection> {
+    return fetcher<Collection>(`/collection/${id}`);
   },
 };

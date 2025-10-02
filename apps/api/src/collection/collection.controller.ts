@@ -1,24 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete
-} from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { CollectionService } from './collection.service';
-// import { CreateCollectionDto } from './dto/create-collection.dto';
-// import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { Collection } from './entities/collection.entity';
 
 @Controller('collection')
 export class CollectionController {
   constructor(private readonly collectionService: CollectionService) {}
-
-  // @Post()
-  // create(@Body() createCollectionDto: CreateCollectionDto) {
-  //   return this.collectionService.create(createCollectionDto);
-  // }
 
   @Get()
   findAll() {
@@ -30,21 +16,9 @@ export class CollectionController {
     return this.collectionService.findByUserId(userId);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.collectionService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateCollectionDto: UpdateCollectionDto
-  // ) {
-  //   return this.collectionService.update(+id, updateCollectionDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.collectionService.remove(+id);
-  // }
+  @Get(':id')
+  findOneById(@Param('id') id: string): Promise<Collection> {
+    console.log('Fetching collection with ID:', id);
+    return this.collectionService.findOneById(id);
+  }
 }

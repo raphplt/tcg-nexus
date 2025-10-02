@@ -33,6 +33,18 @@ export class CollectionService {
     });
   }
 
+  async findOneById(id: string): Promise<Collection> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: id },
+      relations: ['items']
+    });
+    console.log('Found collection:', collection);
+    if (!collection) {
+      throw new Error(`Collection with id ${id} not found`);
+    }
+    return collection;
+  }
+
   async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
     const collection = this.collectionRepository.create(createCollectionDto);
     collection.user = { id: Number(createCollectionDto.userId) } as User;

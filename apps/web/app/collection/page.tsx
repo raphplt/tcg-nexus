@@ -87,6 +87,7 @@ const Page = () => {
             <Button
               variant="default"
               className="w-full mt-2"
+              onClick={() => router.push(`/collection/${collection.id}`)}
             >
               Voir
             </Button>
