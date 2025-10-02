@@ -44,13 +44,18 @@ export class CollectionItemService {
       where: { id: pokemonCardId }
     });
     if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
-
+    console.log('userIdNum:', userIdNum);
     // Récupérer ou créer la wishlist
-    let wishlist = await this.collectionRepo.findOne({
-      where: { user: { id: userIdNum }, name: 'wishlist' },
-      relations: ['items', 'items.pokemonCard']
-    });
+    let wishlist = await this.collectionRepo
+      .createQueryBuilder('collection')
+      .leftJoinAndSelect('collection.items', 'item')
+      .leftJoinAndSelect('item.pokemonCard', 'pokemonCard')
+      .leftJoinAndSelect('collection.user', 'user')
+      .where('collection.name = :name', { name: 'wishlist' })
+      .andWhere('user.id = :userId', { userId: userIdNum })
+      .getOne();
 
+    console.log('Wishlist found:', wishlist);
     if (!wishlist) {
       wishlist = this.collectionRepo.create({
         name: 'wishlist',
