@@ -35,17 +35,14 @@ export class CollectionItemService {
   ): Promise<CollectionItem> {
     const userIdNum = typeof userId === 'string' ? Number(userId) : userId;
 
-    // Vérifier que l'utilisateur existe
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
     if (!user) throw new NotFoundException('Utilisateur non trouvé');
 
-    // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId }
     });
     if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
     console.log('userIdNum:', userIdNum);
-    // Récupérer ou créer la wishlist
     let wishlist = await this.collectionRepo
       .createQueryBuilder('collection')
       .leftJoinAndSelect('collection.items', 'item')
@@ -65,7 +62,6 @@ export class CollectionItemService {
       wishlist = await this.collectionRepo.save(wishlist);
     }
 
-    // Vérifier si la carte est déjà dans la wishlist
     let item = wishlist.items?.find((i) => i.pokemonCard.id === card.id);
 
     if (item) {
@@ -73,9 +69,58 @@ export class CollectionItemService {
       return this.collectionItemRepo.save(item);
     }
 
-    // Par défaut : cardState id = 1
     item = this.collectionItemRepo.create({
       collection: wishlist,
+      pokemonCard: card,
+      cardState: { id: 1 } as CardState,
+      quantity: 1
+    });
+
+    return this.collectionItemRepo.save(item);
+  }
+
+  async addToFavorites(
+    userId: number | string,
+    pokemonCardId: string
+  ): Promise<CollectionItem> {
+    const userIdNum = typeof userId === 'string' ? Number(userId) : userId;
+
+    const user = await this.userRepo.findOne({ where: { id: userIdNum } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+
+    const card = await this.pokemonCardRepo.findOne({
+      where: { id: pokemonCardId }
+    });
+    if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
+    console.log('userIdNum:', userIdNum);
+    let favoris = await this.collectionRepo
+      .createQueryBuilder('collection')
+      .leftJoinAndSelect('collection.items', 'item')
+      .leftJoinAndSelect('item.pokemonCard', 'pokemonCard')
+      .leftJoinAndSelect('collection.user', 'user')
+      .where('collection.name = :name', { name: 'Favoris' })
+      .andWhere('user.id = :userId', { userId: userIdNum })
+      .getOne();
+
+    console.log('Favoris found:', favoris);
+    if (!favoris) {
+      favoris = this.collectionRepo.create({
+        name: 'Favoris',
+        user,
+        is_public: false
+      });
+      favoris = await this.collectionRepo.save(favoris);
+    }
+
+    let item = favoris.items?.find((i) => i.pokemonCard.id === card.id);
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection: favoris,
       pokemonCard: card,
       cardState: { id: 1 } as CardState,
       quantity: 1

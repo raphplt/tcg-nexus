@@ -10,6 +10,7 @@ import { H1 } from "@/components/Shared/Titles";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PokemonRarity } from "../../../types/enums/pokemonCardsType";
 import { useAuth } from "@/contexts/AuthContext";
+import { FavoriteButton } from "@/components/Home/FavoritesButton";
 
 // Hook pour récupérer les séries
 function usePokemonSeries() {
@@ -217,13 +218,19 @@ function usePokemonSeries() {
           direction={direction}
         />
 
-        <div className="flex gap-6 mt-6">
+        <div className="flex gap-6 mt-6 items-center">
           <button
             className="rounded-full w-16 h-16 border-2 border-red-500 hover:bg-red-500 hover:text-white"
             onClick={() => swipe("left")}
           >
             👎
           </button>
+
+          <FavoriteButton
+            cardId={card.id}
+            userId={user.id}
+          />
+
           <button
             className="rounded-full w-16 h-16 border-2 border-green-500 hover:bg-green-500 hover:text-white"
             onClick={() => swipe("right")}

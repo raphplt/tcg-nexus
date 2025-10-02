@@ -72,4 +72,16 @@ export const pokemonCardService = {
     );
     return response.data;
   },
+
+  async addToFavorites(
+    userId: number, 
+    pokemonCardId: string
+  ): Promise<CollectionItemType> {
+    const response = await api.patch<CollectionItemType>(
+      `/collection-item/favorites/${userId}`,
+      { pokemonCardId }
+    );
+    console.log("Added to favorites:", response.data);
+    return response.data;
+  },
 };

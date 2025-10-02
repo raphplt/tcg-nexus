@@ -14,4 +14,13 @@ export class CollectionItemController {
   ) {
     return this.collectionItemService.addToWishlist(userId, pokemonCardId);
   }
+
+  @Patch('favorites/:userId')
+  @Public()
+  async addToFavorites(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Body('pokemonCardId') pokemonCardId: string
+  ) {
+    return this.collectionItemService.addToFavorites(userId, pokemonCardId);
+  }
 }
