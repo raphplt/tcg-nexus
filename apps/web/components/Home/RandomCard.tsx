@@ -1,13 +1,12 @@
-import React, { use } from "react";
+import React from "react";
 import { Card } from "../ui/card";
 import { H2 } from "../Shared/Titles";
 import { useQuery } from "@tanstack/react-query";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { Star, RefreshCw, Info } from "lucide-react";
+import { RefreshCw, Info } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
 import { FavoriteButton } from "./FavoritesButton";
 const RandomCard = ({ userId }: { userId: number }) => {
   const {
@@ -19,18 +18,6 @@ const RandomCard = ({ userId }: { userId: number }) => {
     queryKey: ["pokemon-cards", "random"],
     queryFn: () => pokemonCardService.getRandom(),
   });
-  const user = useAuth();
-  const handleAddToFavorites = async () => {
-    if (!card) return;
-    try {
-      console.log("user ID:", userId);
-      await pokemonCardService.addToFavorites(userId, card.id);
-      alert(`${card.name} ajouté aux favoris !`);
-    } catch (err) {
-      console.error(err);
-      alert("Impossible d'ajouter la carte aux favoris");
-    }
-  };
 
   return (
     <Card className="bg-card rounded-xl shadow p-6 flex flex-col items-center">
@@ -69,10 +56,7 @@ const RandomCard = ({ userId }: { userId: number }) => {
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <FavoriteButton
-                cardId={card.id}
-                userId={user.id}
-              />
+              <FavoriteButton cardId={card.id} />
               <Button
                 variant="outline"
                 size="icon"

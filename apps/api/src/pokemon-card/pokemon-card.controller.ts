@@ -33,6 +33,7 @@ export class PokemonCardController {
     return this.pokemonCardService.findAll();
   }
 
+  @Public()
   @Get('paginated')
   findAllPaginated(@Query() paginationDto: PaginationDto) {
     return this.pokemonCardService.findAllPaginated(
@@ -41,6 +42,7 @@ export class PokemonCardController {
     );
   }
 
+  @Public()
   @Get('search/:search')
   findBySearch(@Param('search') search: string) {
     return this.pokemonCardService.findBySearch(search);
@@ -57,6 +59,7 @@ export class PokemonCardController {
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.pokemonCardService.findOne(id);
   }

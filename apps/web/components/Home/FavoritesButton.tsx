@@ -1,29 +1,28 @@
-import { Button, ButtonProps } from "../ui/button";
+import { Button } from "../ui/button";
 import { Star } from "lucide-react";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { useState, ReactNode } from "react";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-interface FavoriteButtonProps extends ButtonProps {
-  cardId: string;
-  userId: number;
-  children?: ReactNode;
-}
-
-export const FavoriteButton = ({
-  cardId,
-  userId,
-  ...props
-}: FavoriteButtonProps) => {
+export const FavoriteButton = ({ cardId }: { cardId: string }) => {
   const [loading, setLoading] = useState(false);
-
+  const { user } = useAuth();
+  const router = useRouter();
   const handleAddToFavorites = async () => {
     setLoading(true);
     try {
-      await pokemonCardService.addToFavorites(userId, cardId);
-      alert("Carte ajoutée aux favoris !");
+      if (!user?.id) {
+        router.push("/auth/login");
+        return;
+      }
+
+      await pokemonCardService.addToFavorites(user.id, cardId);
+      toast.success("Carte ajoutée aux favoris !");
     } catch (error) {
       console.error("Erreur ajout favoris :", error);
-      alert("Impossible d'ajouter aux favoris");
+      toast.error("Impossible d'ajouter aux favoris");
     } finally {
       setLoading(false);
     }
@@ -36,7 +35,6 @@ export const FavoriteButton = ({
       aria-label="Ajouter aux favoris"
       onClick={handleAddToFavorites}
       disabled={loading}
-      {...props}
     >
       <Star className="w-5 h-5" />
     </Button>
