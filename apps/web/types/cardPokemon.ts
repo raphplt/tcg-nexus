@@ -22,6 +22,14 @@ export type PokemonSetType = {
   };
 };
 
+export type PokemonSerieType = {
+  id: number;
+  name: string;
+  logo?: string;
+};
+
+
+
 export type PokemonCardType = {
   id: string;
   tcgDexId?: string;

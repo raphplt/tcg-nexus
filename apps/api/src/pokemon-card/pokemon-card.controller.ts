@@ -48,8 +48,12 @@ export class PokemonCardController {
 
   @Get('random')
   @Public()
-  findRandom() {
-    return this.pokemonCardService.findRandom();
+  findRandom(
+    @Query('serieId') serieId?: string,
+    @Query('rarity') rarity?: string,
+    @Query('set') set?: string
+  ) {
+    return this.pokemonCardService.findRandom(serieId, rarity, set);
   }
 
   @Get(':id')

@@ -8,12 +8,14 @@ import { UserModule } from '../user/user.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { CollectionModule } from 'src/collection/collection.module';
 
 @Module({
   imports: [
     ConfigModule,
     UserModule,
     PassportModule,
+    CollectionModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {

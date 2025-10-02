@@ -18,10 +18,12 @@ import { TournamentModule } from './tournament/tournament.module';
 import { AuthModule } from './auth/auth.module';
 import { ArticleModule } from './article/article.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
-import { CollectionModule } from './collection/collection.module';
 import { DeckModule } from './deck/deck.module';
 import { DeckCardModule } from './deck-card/deck-card.module';
 import { SearchModule } from './search/search.module';
+import { CollectionModule } from './collection/collection.module';
+import { CollectionItemModule } from './collection-item/collection-item.module';
+import { CardStateModule } from './card-state/card-state.module';
 
 @Module({
   imports: [
@@ -52,7 +54,10 @@ import { SearchModule } from './search/search.module';
     CollectionModule,
     DeckModule,
     DeckCardModule,
-    SearchModule
+    SearchModule,
+    CollectionModule,
+    CollectionItemModule,
+    CardStateModule
   ],
   controllers: [AppController],
   providers: [

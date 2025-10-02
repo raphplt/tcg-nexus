@@ -86,6 +86,14 @@ const Header = () => {
               Stratégie
             </Link>
           </li>
+          <li>
+            <Link
+              href="/collection"
+              className={linkStyle}
+            >
+              Collection
+            </Link>
+          </li>
 
           {!isAuthenticated && (
             <li>

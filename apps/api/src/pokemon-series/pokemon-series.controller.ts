@@ -11,6 +11,7 @@ import { PokemonSeriesService } from './pokemon-series.service';
 import { CreatePokemonSeryDto } from './dto/create-pokemon-sery.dto';
 import { UpdatePokemonSeryDto } from './dto/update-pokemon-sery.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('pokemon-series')
 @Controller('pokemon-series')
@@ -23,11 +24,13 @@ export class PokemonSeriesController {
   }
 
   @Get()
+  @Public()
   findAll() {
     return this.pokemonSeriesService.findAll();
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.pokemonSeriesService.findOne(+id);
   }

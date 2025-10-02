@@ -12,6 +12,7 @@ import { User } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponse, JwtPayload } from './interfaces/auth.interface';
+import { CollectionService } from 'src/collection/collection.service';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,8 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private collectionService: CollectionService
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     this.bcryptCompare = (bcrypt as any).compare as (
@@ -89,6 +91,21 @@ export class AuthService {
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
         password: registerDto.password
+      });
+      console.log('UserId:', user.id);
+
+      await this.collectionService.create({
+        name: 'Wishlist',
+        description: 'Default wishlist',
+        isPublic: false,
+        userId: user.id
+      });
+
+      await this.collectionService.create({
+        name: 'Favoris',
+        description: 'Default Favoris',
+        isPublic: false,
+        userId: user.id
       });
 
       const tokens = await this.generateTokens(user);

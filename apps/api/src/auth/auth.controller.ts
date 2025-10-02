@@ -51,7 +51,6 @@ export class AuthController {
     res.json({ user: result.user, tokens: result.tokens });
     return;
   }
-
   @Post('register')
   @Public()
   @HttpCode(HttpStatus.CREATED)
