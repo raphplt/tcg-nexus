@@ -26,9 +26,9 @@ export class CollectionService {
         'created_at',
         'updated_at',
         'user',
-        'is_public'
+        'isPublic'
       ],
-      where: { is_public: true },
+      where: { isPublic: true },
       relations: ['user']
     });
   }
@@ -56,8 +56,9 @@ export class CollectionService {
     const collection = this.collectionRepository.create({
       name: createCollectionDto.name,
       description: createCollectionDto.description,
-      is_public: createCollectionDto.isPublic || false
+      isPublic: createCollectionDto.isPublic || false
     });
+    console.log('Creating collection:', collection);
     collection.user = { id: Number(createCollectionDto.userId) } as User;
     return await this.collectionRepository.save(collection);
   }
@@ -118,7 +119,7 @@ export class CollectionService {
     const skip = (page - 1) * limit;
 
     const [collections, total] = await this.collectionRepository.findAndCount({
-      where: { is_public: true },
+      where: { isPublic: true },
       relations: ['user'],
       skip,
       take: limit,

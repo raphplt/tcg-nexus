@@ -66,7 +66,7 @@ export class CollectionItemService {
         name: 'Wishlist',
         description: 'Default wishlist (auto-generated)',
         user,
-        is_public: false
+        isPublic: false
       });
       wishlist = await this.collectionRepo.save(wishlist);
     }

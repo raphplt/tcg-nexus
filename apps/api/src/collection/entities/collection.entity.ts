@@ -22,7 +22,7 @@ export class Collection {
   description?: string;
 
   @Column({ type: 'boolean', default: false })
-  is_public: boolean;
+  isPublic: boolean;
 
   @ManyToOne(() => User, (user) => user.collections, { onDelete: 'CASCADE' })
   user: User;

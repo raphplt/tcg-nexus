@@ -129,13 +129,13 @@ export class SeedService {
       this.collectionRepository.create({
         name: 'Wishlist',
         description: 'Default wishlist',
-        is_public: false,
+        isPublic: false,
         user: { id: userId } as User
       }),
       this.collectionRepository.create({
         name: 'Favorites',
         description: 'Default favorites',
-        is_public: false,
+        isPublic: false,
         user: { id: userId } as User
       })
     ]);
