@@ -2,8 +2,17 @@
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { FULLSCREEN_PATHS } from "@/utils/constants";
 
 export default function Footer() {
+  const currentPath = usePathname();
+  const isFullscreenPath = FULLSCREEN_PATHS.includes(currentPath);
+
+  if (isFullscreenPath) {
+    return null;
+  }
+
   return (
     <footer className="bg-background border-t-4 border-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -38,6 +38,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const userData = await authService.getProfile();
         setUser(userData);
+
+        if (userData && typeof window !== "undefined") {
+          authService.scheduleRefresh(Date.now() + 14 * 60 * 1000);
+        }
       } catch (error: any) {
         if (error?.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);

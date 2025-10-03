@@ -5,10 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { Star, RefreshCw, Info } from "lucide-react";
+import { RefreshCw, Info } from "lucide-react";
 import Link from "next/link";
-
-const RandomCard = () => {
+import { FavoriteButton } from "./FavoritesButton";
+const RandomCard = ({ userId }: { userId: number }) => {
   const {
     data: card,
     isLoading,
@@ -56,14 +56,7 @@ const RandomCard = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Ajouter aux favoris"
-                onClick={() => alert("Fonction favori à implémenter")}
-              >
-                <Star className="w-5 h-5" />
-              </Button>
+              <FavoriteButton cardId={card.id} />
               <Button
                 variant="outline"
                 size="icon"
@@ -89,5 +82,4 @@ const RandomCard = () => {
     </Card>
   );
 };
-
 export default RandomCard;

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
@@ -52,6 +50,11 @@ import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 import { DeckCardRole } from 'src/common/enums/deckCardRole';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
+import { Collection } from 'src/collection/entities/collection.entity';
+import {
+  CardState as CardStateEntity,
+  CardStateCode
+} from 'src/card-state/entities/card-state.entity';
 import {
   SeedingService,
   SeedingMethod
@@ -97,6 +100,10 @@ export class SeedService {
     private readonly deckRepository: Repository<Deck>,
     @InjectRepository(DeckCard)
     private readonly deckCardRepository: Repository<DeckCard>,
+    @InjectRepository(Collection)
+    private readonly collectionRepository: Repository<Collection>,
+    @InjectRepository(CardStateEntity)
+    private readonly cardStateRepository: Repository<CardStateEntity>,
     private readonly seedingService: SeedingService,
     private readonly bracketService: BracketService,
     private readonly matchService: MatchService
@@ -111,6 +118,58 @@ export class SeedService {
     // Convert special characters to their ASCII equivalents or remove them
     // eslint-disable-next-line no-control-regex
     return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+  }
+
+  /**
+   * Create default collections for a user
+   * @param {number} userId - The user ID
+   */
+  async createDefaultCollections(userId: number): Promise<void> {
+    await this.collectionRepository.save([
+      this.collectionRepository.create({
+        name: 'Wishlist',
+        description: 'Default wishlist',
+        isPublic: false,
+        user: { id: userId } as User
+      }),
+      this.collectionRepository.create({
+        name: 'Favorites',
+        description: 'Default favorites',
+        isPublic: false,
+        user: { id: userId } as User
+      })
+    ]);
+  }
+
+  /**
+   * Seed card states
+   */
+  async seedCardStates(): Promise<CardStateEntity[]> {
+    const cardStatesData = [
+      { code: CardStateCode.NM, label: 'Near Mint' },
+      { code: CardStateCode.EX, label: 'Excellent' },
+      { code: CardStateCode.GD, label: 'Good' },
+      { code: CardStateCode.LP, label: 'Lightly Played' },
+      { code: CardStateCode.PL, label: 'Played' },
+      { code: CardStateCode.Poor, label: 'Poor' }
+    ];
+
+    const states: CardStateEntity[] = [];
+    for (const stateData of cardStatesData) {
+      let state = await this.cardStateRepository.findOne({
+        where: { code: stateData.code }
+      });
+      if (!state) {
+        state = this.cardStateRepository.create(stateData);
+        states.push(state);
+      }
+    }
+
+    if (states.length > 0) {
+      await this.cardStateRepository.save(states);
+    }
+
+    return await this.cardStateRepository.find();
   }
   /**
    * Seed the database with the Pokemon Series data
@@ -361,6 +420,11 @@ export class SeedService {
     }
     if (users.length > 0) {
       await this.userRepository.save(users);
+
+      // Créer les collections par défaut pour chaque nouvel utilisateur
+      for (const user of users) {
+        await this.createDefaultCollections(user.id);
+      }
     }
     return users;
   }
@@ -403,6 +467,9 @@ export class SeedService {
         collections: []
       });
       await this.userRepository.save(newUser);
+
+      // Créer les collections par défaut pour le nouvel utilisateur
+      await this.createDefaultCollections(newUser.id);
 
       const player = this.playerRepository.create({ user: newUser });
       await this.playerRepository.save(player);
@@ -659,6 +726,9 @@ export class SeedService {
         collections: []
       });
       await this.userRepository.save(newUser);
+
+      // Créer les collections par défaut pour le nouvel utilisateur
+      await this.createDefaultCollections(newUser.id);
       users.push(newUser);
       currentUserCount++;
     }

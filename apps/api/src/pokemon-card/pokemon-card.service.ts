@@ -90,13 +90,41 @@ export class PokemonCardService {
     );
   }
 
-  async findRandom(): Promise<PokemonCard> {
-    const count = await this.pokemonCardRepository.count();
-    const randomIndex = Math.floor(Math.random() * count);
-    const randomCard = await this.pokemonCardRepository.find({
-      skip: randomIndex,
-      take: 1
-    });
-    return randomCard[0];
+  // async findRandom(): Promise<PokemonCard> {
+  //   const count = await this.pokemonCardRepository.count();
+  //   const randomIndex = Math.floor(Math.random() * count);
+  //   const randomCard = await this.pokemonCardRepository.find({
+  //     skip: randomIndex,
+  //     take: 1
+  //   });
+  //   return randomCard[0];
+  // }
+
+  // pokemon-card.service.ts
+
+  async findRandom(
+    serieId?: string,
+    rarity?: string,
+    setId?: string
+  ): Promise<PokemonCard | null> {
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder('pokemonCard')
+      .leftJoinAndSelect('pokemonCard.set', 'pokemonSet')
+      .leftJoin('pokemonSet.serie', 'pokemonSerie');
+
+    if (serieId && serieId.trim() !== '') {
+      qb.andWhere('pokemonSerie.id = :serieId', { serieId });
+    }
+
+    if (rarity && rarity.trim() !== '') {
+      qb.andWhere('pokemonCard.rarity = :rarity', { rarity });
+    }
+
+    if (setId && setId.trim() !== '') {
+      qb.andWhere('pokemonSet.id = :setId', { setId });
+    }
+
+    const card = await qb.orderBy('RANDOM()').limit(1).getOne();
+    return card ?? null;
   }
 }

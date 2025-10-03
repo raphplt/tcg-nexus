@@ -1,26 +1,136 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Collection } from './entities/collection.entity';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class CollectionService {
-  create(createCollectionDto: CreateCollectionDto) {
-    return 'This action adds a new collection';
+  constructor(
+    @InjectRepository(Collection)
+    private collectionRepository: Repository<Collection>
+  ) {}
+
+  async findAll(): Promise<Collection[]> {
+    return this.collectionRepository.find({
+      select: [
+        'id',
+        'name',
+        'description',
+        'created_at',
+        'updated_at',
+        'user',
+        'isPublic'
+      ],
+      where: { isPublic: true },
+      relations: ['user']
+    });
   }
 
-  findAll() {
-    return `This action returns all collection`;
+  async findByUserId(userId: string): Promise<Collection[]> {
+    return await this.collectionRepository.find({
+      where: { user: { id: Number(userId) } },
+      relations: ['user', 'items']
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} collection`;
+  async findOneById(id: string): Promise<Collection> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: id },
+      relations: ['items', 'user']
+    });
+    console.log('Found collection:', collection);
+    if (!collection) {
+      throw new NotFoundException(`Collection with id ${id} not found`);
+    }
+    return collection;
   }
 
-  update(id: number, updateCollectionDto: UpdateCollectionDto) {
-    return `This action updates a #${id} collection`;
+  async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
+    const collection = this.collectionRepository.create({
+      name: createCollectionDto.name,
+      description: createCollectionDto.description,
+      isPublic: createCollectionDto.isPublic || false
+    });
+    console.log('Creating collection:', collection);
+    collection.user = { id: Number(createCollectionDto.userId) } as User;
+    return await this.collectionRepository.save(collection);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} collection`;
+  async update(
+    id: string,
+    updateCollectionDto: UpdateCollectionDto,
+    userId: number
+  ): Promise<Collection> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: id },
+      relations: ['user']
+    });
+
+    if (!collection) {
+      throw new NotFoundException(`Collection with id ${id} not found`);
+    }
+
+    if (collection.user.id !== userId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que vos propres collections'
+      );
+    }
+
+    Object.assign(collection, updateCollectionDto);
+
+    return await this.collectionRepository.save(collection);
+  }
+
+  async delete(id: string, userId: number): Promise<void> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: id },
+      relations: ['user']
+    });
+
+    if (!collection) {
+      throw new NotFoundException(`Collection with id ${id} not found`);
+    }
+
+    if (collection.user.id !== userId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez supprimer que vos propres collections'
+      );
+    }
+
+    await this.collectionRepository.delete(id);
+  }
+
+  async findAllPaginated(
+    page: number,
+    limit: number
+  ): Promise<{
+    collections: Collection[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const [collections, total] = await this.collectionRepository.findAndCount({
+      where: { isPublic: true },
+      relations: ['user'],
+      skip,
+      take: limit,
+      order: { created_at: 'DESC' }
+    });
+
+    return {
+      collections,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 }

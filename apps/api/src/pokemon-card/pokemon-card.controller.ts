@@ -33,6 +33,7 @@ export class PokemonCardController {
     return this.pokemonCardService.findAll();
   }
 
+  @Public()
   @Get('paginated')
   findAllPaginated(@Query() paginationDto: PaginationDto) {
     return this.pokemonCardService.findAllPaginated(
@@ -41,6 +42,7 @@ export class PokemonCardController {
     );
   }
 
+  @Public()
   @Get('search/:search')
   findBySearch(@Param('search') search: string) {
     return this.pokemonCardService.findBySearch(search);
@@ -48,11 +50,16 @@ export class PokemonCardController {
 
   @Get('random')
   @Public()
-  findRandom() {
-    return this.pokemonCardService.findRandom();
+  findRandom(
+    @Query('serieId') serieId?: string,
+    @Query('rarity') rarity?: string,
+    @Query('set') set?: string
+  ) {
+    return this.pokemonCardService.findRandom(serieId, rarity, set);
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.pokemonCardService.findOne(id);
   }

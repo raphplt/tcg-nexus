@@ -12,35 +12,23 @@ import { User } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponse, JwtPayload } from './interfaces/auth.interface';
+import { CollectionService } from 'src/collection/collection.service';
 
 @Injectable()
 export class AuthService {
-  private readonly bcryptCompare: (
-    data: string,
-    encrypted: string
-  ) => Promise<boolean>;
-
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    this.bcryptCompare = (bcrypt as any).compare as (
-      data: string,
-      encrypted: string
-    ) => Promise<boolean>;
-  }
+    private configService: ConfigService,
+    private collectionService: CollectionService
+  ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findByEmail(email);
 
     if (user && user.password) {
       try {
-        const isPasswordValid: boolean = await this.bcryptCompare(
-          password,
-          user.password
-        );
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         if (isPasswordValid) {
           return user;
         }
@@ -90,6 +78,21 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password
       });
+      console.log('UserId:', user.id);
+
+      await this.collectionService.create({
+        name: 'Wishlist',
+        description: 'Default Wishlist',
+        isPublic: false,
+        userId: user.id
+      });
+
+      await this.collectionService.create({
+        name: 'Favorites',
+        description: 'Default Favorites',
+        isPublic: false,
+        userId: user.id
+      });
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
@@ -123,7 +126,7 @@ export class AuthService {
     }
 
     try {
-      const refreshTokenMatches: boolean = await this.bcryptCompare(
+      const refreshTokenMatches = await bcrypt.compare(
         refreshToken,
         user.refreshToken
       );

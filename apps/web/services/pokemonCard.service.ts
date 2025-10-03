@@ -1,6 +1,12 @@
 import api from "../utils/fetch";
-import type { PokemonCardType } from "../types/cardPokemon";
+import type {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "../types/cardPokemon";
 import type { PaginatedResult, PaginationParams } from "../types/pagination";
+import { CollectionItemType } from "@/types/collection";
+import { PokemonRarity } from "../types/enums/pokemonCardsType";
 
 export const pokemonCardService = {
   async getPaginated(
@@ -33,8 +39,63 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async getRandom(): Promise<PokemonCardType> {
-    const response = await api.get<PokemonCardType>("/pokemon-card/random");
+  async getRandom(
+    serieId?: string,
+    rarity?: PokemonRarity,
+    set?: string,
+  ): Promise<PokemonCardType> {
+    const params: Record<string, string> = {};
+    if (serieId) params.serieId = serieId;
+    if (rarity) params.rarity = rarity;
+    if (set) params.set = set;
+
+    const response = await api.get<PokemonCardType>("/pokemon-card/random", {
+      params: Object.keys(params).length > 0 ? params : undefined,
+    });
+
+    return response.data;
+  },
+
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data;
+  },
+
+  async getAllSets(): Promise<PokemonSetType[]> {
+    const response = await api.get<PokemonSetType[]>("/pokemon-set");
+    return response.data;
+  },
+
+  async addToWishlist(
+    userId: number,
+    pokemonCardId: string,
+  ): Promise<CollectionItemType> {
+    const response = await api.post<CollectionItemType>(
+      `/collection-item/wishlist/${userId}`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
+
+  async addToFavorites(
+    userId: number,
+    pokemonCardId: string,
+  ): Promise<CollectionItemType> {
+    const response = await api.post<CollectionItemType>(
+      `/collection-item/favorites/${userId}`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
+
+  async addToCollection(
+    collectionId: string,
+    pokemonCardId: string,
+  ): Promise<CollectionItemType> {
+    const response = await api.post<CollectionItemType>(
+      `/collection-item/collection/${collectionId}`,
+      { pokemonCardId },
+    );
     return response.data;
   },
 };
