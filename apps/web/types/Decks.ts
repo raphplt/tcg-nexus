@@ -1,13 +1,13 @@
-import { CardState } from "@/utils/enums";
 import { User } from "./auth";
-import { PokemonCardType } from "./cardPokemon";
 import { DeckFormat } from "@/types/deckFormat";
+import {DeckCards} from "@/types/deck-cards";
 
 export interface Decks {
   id: number;
   name: string;
   user: User;
   format: DeckFormat;
-  createdAt: Date;
-  updatedAt: Date;
+  cards?: DeckCards[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }

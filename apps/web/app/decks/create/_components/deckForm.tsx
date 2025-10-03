@@ -10,24 +10,14 @@ import { Button } from "@components/ui/button";
 import { Switch } from "@components/ui/switch";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@components/ui/select";
 import { Loader2, Trash2 } from "lucide-react";
-import { CardSelector } from "./cardSelector";
+import { CardSelector } from "../../_components/cardSelector";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { decksService } from "@/services/decks.service";
+import { FormSchema } from "./utils"
 
-const DeckSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
-  formatId: z.number().min(1, "Le format est requis"),
-  isPublic: z.boolean(),
-  cards: z.array(z.object({
-    cardId: z.string(),
-    name: z.string(),
-    qty: z.number().min(1),
-  }))
-});
-
-type DeckFormValues = z.infer<typeof DeckSchema>;
+type DeckFormValues = z.infer<typeof FormSchema>;
 
 interface FormatOption {
   id: number;
@@ -48,9 +38,10 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showCardModal, setShowCardModal] = useState(false);
+  const [cardsMap, setCardsMap] = useState<Record<string, string>>({});
 
   const form = useForm<DeckFormValues>({
-    resolver: zodResolver(DeckSchema),
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       name: "",
       formatId: 0,
@@ -59,14 +50,16 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     }
   });
   const cards = form.watch("cards");
-  const addCard = (card: CardType, qty: number) => {
+  const addCard = (card: CardType, qty: number, role: string) => {
     const existing = form.getValues("cards").find(c => c.cardId === card.id);
     if (existing) {
       form.setValue("cards", form.getValues("cards").map(c =>
-        c.cardId === card.id ? { ...c, qty: c.qty + qty } : c
+        c.cardId === card.id ? { ...c, qty: c.qty + qty, role: role } : c
       ));
+
     } else {
-      form.setValue("cards", [...form.getValues("cards"), { cardId: card.id, qty, name: card.name }]);
+      form.setValue("cards", [...form.getValues("cards"), { cardId: card.id, qty, role }]);
+      setCardsMap(prev => ({ ...prev, [card.id]: card.name }));
     }
   };
 
@@ -76,22 +69,26 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
 
   const onSubmit = async (data: DeckFormValues) => {
     if (!user) return;
+    console.log(data.cards)
     setLoading(true);
 
     try {
       const creationData = {
-        userId: user.id,
-        name: data.name,
+        deckName: data.name,
         formatId: data.formatId,
         isPublic: data.isPublic,
         cards: data.cards
       };
-      console.log(creationData);
       const response = await decksService.create(creationData)
       if (response)
       {
         toast.success("Deck créé avec succès !");
-        form.reset();
+        form.reset({
+          name: "",
+          formatId: 0,
+          isPublic: false,
+          cards: []
+        });
       }
     } catch (err) {
       console.error(err);
@@ -170,7 +167,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
             <ul className="space-y-1">
               {cards.map((c:any) => (
                 <li key={c.cardId} className="flex justify-between items-center border p-2 rounded">
-                  <span>{c.name} x{c.qty}</span>
+                  <span>{cardsMap[c.cardId]} x{c.qty}</span>
                   <Button size="sm" variant="destructive" onClick={() => removeCard(c.cardId)} type="button">
                     <Trash2 size={16} />
                   </Button>
@@ -181,14 +178,17 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
           {/* Modal pour ajouter les cartes */}
           {showCardModal && (
             <CardSelector
-              onSelect={(card: CardType, qty: number) => {
-                addCard(card, qty);
+              onSelect={(card: CardType, qty: number, role: string) => {
+                addCard(card, qty, role);
                 setShowCardModal(false);
               }}
               onClose={() => setShowCardModal(false)}
             />
           )}
           <div className="flex justify-end mt-4">
+            <Button type="button" variant="secondary" className="mr-2" onClick={() => router.back()}>
+              Retour
+            </Button>
             <Button type="submit" disabled={loading}>
               {loading ? <Loader2 className="animate-spin" /> : "Créer le deck"}
             </Button>

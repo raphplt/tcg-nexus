@@ -103,7 +103,7 @@ export  default function page()
           <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
             <DecksTable
               data={data}
-              isLoading={isLoading}
+              dataLoading={isLoading}
               error={error}
               tableHeaders={tableHeaders}
               sortBy={filters.sortBy}

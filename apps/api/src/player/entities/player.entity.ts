@@ -1,10 +1,10 @@
 import {
   Entity,
   PrimaryGeneratedColumn,
-  Column,
   ManyToMany,
   OneToMany,
-  OneToOne
+  OneToOne,
+  JoinColumn
 } from 'typeorm';
 import { Tournament } from 'src/tournament/entities/tournament.entity';
 import { Statistics } from 'src/statistics/entities/statistic.entity';
@@ -16,10 +16,8 @@ export class Player {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
-
   @OneToOne(() => User, (user) => user.player)
+  @JoinColumn()
   user: User;
 
   @ManyToMany(() => Tournament, (tournament) => tournament.players)

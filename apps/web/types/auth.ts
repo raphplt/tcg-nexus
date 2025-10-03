@@ -6,6 +6,10 @@ export interface User {
   lastName: string;
   role: "admin" | "moderator" | "user";
   isPro: boolean;
+  player?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface AuthTokens {

@@ -2,7 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException
+  ForbiddenException,
+  Logger
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -33,13 +34,16 @@ export class MarketplaceService {
     private readonly listingRepository: Repository<Listing>
   ) {}
 
-  async create(createListingDto: CreateListingDto) {
-    if (!createListingDto.sellerId || !createListingDto.pokemonCardId) {
-      throw new BadRequestException('sellerId and pokemonCardId are required');
+  private readonly logger = new Logger(MarketplaceService.name);
+
+
+  async create(createListingDto: CreateListingDto, user: User) {
+    if (!createListingDto.pokemonCardId) {
+      throw new BadRequestException('pokemonCardId is required');
     }
     const listing = this.listingRepository.create({
       ...createListingDto,
-      seller: { id: createListingDto.sellerId },
+      seller: user,
       pokemonCard: { id: createListingDto.pokemonCardId }
     });
     return this.listingRepository.save(listing);
@@ -127,6 +131,9 @@ export class MarketplaceService {
     });
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+      this.logger.warn(
+        `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`
+      );
       throw new ForbiddenException(
         'You are not allowed to update this listing'
       );
@@ -142,10 +149,26 @@ export class MarketplaceService {
     });
     if (!listing) throw new NotFoundException('Listing not found');
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+      this.logger.warn(
+        `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`
+      );
       throw new ForbiddenException(
         'You are not allowed to delete this listing'
       );
     }
     await this.listingRepository.delete(id);
+  }
+
+  async findBySellerId(sellerId: number): Promise<Listing[]> {
+    return this.listingRepository.find({
+      where: { seller: { id: sellerId } },
+      relations: [
+        'seller',
+        'pokemonCard',
+        'pokemonCard.set',
+        'pokemonCard.set.serie'
+      ],
+      order: { createdAt: 'DESC' }
+    });
   }
 }

@@ -15,17 +15,38 @@ import { AuthResponse, JwtPayload } from './interfaces/auth.interface';
 
 @Injectable()
 export class AuthService {
+  private readonly bcryptCompare: (
+    data: string,
+    encrypted: string
+  ) => Promise<boolean>;
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService
-  ) {}
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    this.bcryptCompare = (bcrypt as any).compare as (
+      data: string,
+      encrypted: string
+    ) => Promise<boolean>;
+  }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findByEmail(email);
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-      return user;
+    if (user && user.password) {
+      try {
+        const isPasswordValid: boolean = await this.bcryptCompare(
+          password,
+          user.password
+        );
+        if (isPasswordValid) {
+          return user;
+        }
+      } catch {
+        return null;
+      }
     }
 
     return null;
@@ -101,12 +122,16 @@ export class AuthService {
       throw new UnauthorizedException('Access denied');
     }
 
-    const refreshTokenMatches = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken
-    );
+    try {
+      const refreshTokenMatches: boolean = await this.bcryptCompare(
+        refreshToken,
+        user.refreshToken
+      );
 
-    if (!refreshTokenMatches) {
+      if (!refreshTokenMatches) {
+        throw new UnauthorizedException('Access denied');
+      }
+    } catch {
       throw new UnauthorizedException('Access denied');
     }
 

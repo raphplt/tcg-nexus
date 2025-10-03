@@ -14,28 +14,41 @@ import { CreateListingDto } from './dto/create-marketplace.dto';
 import { FindAllListingsQuery } from './dto/ind-all-listings-query.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/auth/decorators/public.decorator';
 
 @ApiTags('marketplace')
 @Controller('listings')
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Post()
-  createListing(@Body() createListingDto: CreateListingDto) {
-    return this.marketplaceService.create(createListingDto);
+  @Roles('pro')
+  createListing(@Body() createListingDto: CreateListingDto, @CurrentUser() user: User) {
+    return this.marketplaceService.create(createListingDto, user);
   }
 
   @Get()
+  @Public()
   getAllListings(@Query() query: FindAllListingsQuery) {
     return this.marketplaceService.findAll(query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('my-listings')
+  getMyListings(@CurrentUser() user: User) {
+    return this.marketplaceService.findBySellerId(user.id);
+  }
+
   @Get(':id')
+  @Public()
   getListingById(@Param('id') id: string) {
     return this.marketplaceService.findOne(+id);
   }

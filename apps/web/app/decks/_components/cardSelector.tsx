@@ -5,9 +5,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@components/ui/popover"
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { authedFetch } from "@utils/fetch";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@components/ui/select";
 
 interface CardComboboxProps {
-  onSelect: (card: CardType, qty: number) => void;
+  onSelect: (card: CardType, qty: number, role: string) => void;
   onClose?: () => void;
   resetSignal?: number;
 }
@@ -24,6 +25,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
   const [cards, setCards] = React.useState<CardType[]>([]);
   const [selectedCard, setSelectedCard] = React.useState<CardType | null>(null);
   const [qty, setQty] = React.useState(1);
+  const [role, setRole] = React.useState("main");
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
@@ -79,7 +81,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
 
   const handleAddCard = () => {
     if (!selectedCard || qty < 1) return;
-    onSelect(selectedCard, qty);
+    onSelect(selectedCard, qty, role);
     setSelectedCard(null);
     setQty(1);
     setValue('');
@@ -137,7 +139,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
           {loading && <div className="p-2 text-sm text-muted-foreground">Chargement...</div>}
         </div>
 
-        {selectedCard && (
+        {selectedCard !== null && (
           <div className="flex gap-2 mt-2 items-center">
             <Input
               type="number"
@@ -146,6 +148,18 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
               className="w-20"
               onChange={e => setQty(Number(e.target.value))}
             />
+            <Select
+                defaultValue={role}
+                onValueChange={setRole}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Choisir" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="main">Principal</SelectItem>
+                <SelectItem value="side">Secondaire</SelectItem>
+              </SelectContent>
+            </Select>
             <Button onClick={handleAddCard}>Ajouter</Button>
           </div>
         )}

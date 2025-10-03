@@ -26,24 +26,30 @@ export type Tournament = {
 };
 export interface Match {
   id: number;
+  tournament: Tournament;
+  playerA?: Player;
+  playerB?: Player;
+  winner?: Player;
   round: number;
-  phase?: string | null;
-  status: string;
+  phase: "qualification" | "quarter_final" | "semi_final" | "final";
+  status: "scheduled" | "in_progress" | "finished" | "forfeit" | "cancelled";
   scheduledDate?: string | null;
   startedAt?: string | null;
   finishedAt?: string | null;
-  playerAScore?: number | null;
-  playerBScore?: number | null;
+  playerAScore: number;
+  playerBScore: number;
   notes?: string | null;
 }
 export interface Ranking {
   id: number;
+  tournament: Tournament;
+  player: Player;
   rank: number;
   points: number;
   wins: number;
   losses: number;
   draws: number;
-  winRate?: string | null;
+  winRate: number;
 }
 export interface Reward {
   id: number;
@@ -75,10 +81,89 @@ export interface Notification {
   status?: string | null;
 }
 
-//TODO : à compléter
 export interface Player {
   id: number;
   name: string;
+  user?: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface BracketStructure {
+  type:
+    | "single_elimination"
+    | "double_elimination"
+    | "swiss_system"
+    | "round_robin";
+  totalRounds: number;
+  rounds: BracketRound[];
+}
+
+export interface BracketRound {
+  index: number;
+  matches: BracketMatch[];
+}
+
+export interface BracketMatch {
+  matchId?: number;
+  round: number;
+  position: number;
+  playerA?: {
+    id: number;
+    name: string;
+    seed?: number;
+  };
+  playerB?: {
+    id: number;
+    name: string;
+    seed?: number;
+  };
+  winnerId?: number;
+  nextMatchId?: number;
+  nextSlot?: "A" | "B";
+  phase: "qualification" | "quarter_final" | "semi_final" | "final";
+}
+
+export interface SwissPairing {
+  round: number;
+  pairings: {
+    playerA: Player;
+    playerB?: Player;
+    tableNumber: number;
+  }[];
+}
+
+export interface TournamentProgress {
+  status: string;
+  currentRound: number;
+  totalRounds: number;
+  completedMatches: number;
+  totalMatches: number;
+  activePlayers: number;
+  eliminatedPlayers: number;
+  progressPercentage: number;
+}
+
+export interface TournamentRegistration {
+  id: number;
+  tournament: Tournament;
+  player: Player;
+  status: "pending" | "confirmed" | "cancelled" | "waitlisted" | "eliminated";
+  notes?: string;
+  eliminatedAt?: string;
+  eliminatedRound?: number;
+  checkedIn: boolean;
+  checkedInAt?: string;
+  registeredAt: string;
+}
+
+export interface StateTransition {
+  currentStatus: string;
+  availableTransitions: string[];
+  transitionDescriptions: Record<string, string>;
 }
 
 // DTOs
@@ -101,4 +186,34 @@ export interface CreateTournamentDto {
   ageRestrictionMin?: number;
   ageRestrictionMax?: number;
   allowedFormats?: string[];
+}
+
+export interface ReportScoreDto {
+  playerAScore: number;
+  playerBScore: number;
+  isForfeit?: boolean;
+  notes?: string;
+}
+
+export interface StartMatchDto {
+  notes?: string;
+}
+
+export interface ResetMatchDto {
+  reason: string;
+}
+
+export interface StartTournamentOptions {
+  seedingMethod?: "random" | "ranking" | "elo" | "manual";
+  checkInRequired?: boolean;
+}
+
+export interface UpdateTournamentStatusDto {
+  status: string;
+}
+
+export interface TournamentRegistrationDto {
+  tournamentId: number;
+  playerId: number;
+  notes?: string;
 }
