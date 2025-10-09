@@ -12,7 +12,7 @@ import type { PaginatedResult } from "@/types/pagination";
 import type { Listing } from "@/types/listing";
 
 const cardStateOptions = [
-  { label: "Tous", value: "" },
+  { label: "Tous", value: "ALL" },
   { label: "NM (Near Mint)", value: "NM" },
   { label: "EX (Excellent)", value: "EX" },
   { label: "GD (Good)", value: "GD" },
@@ -20,7 +20,7 @@ const cardStateOptions = [
   { label: "PO (Poor)", value: "PO" },
 ];
 const currencyOptions = [
-  { label: "Toutes", value: "" },
+  { label: "Toutes", value: "ALL" },
   { label: "EUR", value: "EUR" },
   { label: "USD", value: "USD" },
 ];

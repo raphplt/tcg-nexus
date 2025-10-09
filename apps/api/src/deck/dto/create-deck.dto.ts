@@ -1,28 +1,29 @@
-import {
-  IsBoolean,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString
-} from 'class-validator';
+import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
+
+class DeckCardInputDto {
+    @IsUUID()
+    cardId: string;
+
+    @IsInt()
+    qty: number;
+
+    @IsString()
+    role: string;
+}
 
 export class CreateDeckDto {
-  @IsInt()
-  userId: number;
+    @IsString()
+    @IsNotEmpty()
+    deckName: string;
 
-  @IsString()
-  @IsNotEmpty()
-  name: string;
+    @IsBoolean()
+    isPublic: boolean;
 
-  @IsOptional()
-  @IsInt()
-  formatId?: number;
+    @IsInt()
+    formatId: number;
 
-  @IsOptional()
-  @IsBoolean()
-  isPublic?: boolean;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
+    @ValidateNested({ each: true })
+    @Type(() => DeckCardInputDto)
+    cards: DeckCardInputDto[];
 }

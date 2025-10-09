@@ -22,13 +22,8 @@ export class Deck {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ nullable: true })
-  description: string;
-
   @Column({ default: false })
   isPublic: boolean;
-
-  // Relations
 
   @ManyToOne(() => DeckFormat, (format) => format.decks, {
     eager: true,
@@ -37,7 +32,7 @@ export class Deck {
   format: DeckFormat;
 
   @OneToMany(() => DeckCard, (deckCard) => deckCard.deck, { cascade: true })
-  cards?: DeckCard[];
+  cards: DeckCard[];
 
   @CreateDateColumn()
   createdAt: Date;

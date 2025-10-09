@@ -85,6 +85,24 @@ const Header = () => {
           </li>
           <li className="hidden lg:block">
             <Link
+              href="/decks"
+              className={linkStyle}
+            >
+              Decks
+            </Link>
+          </li>
+          {isAuthenticated && (
+              <li className="hidden lg:block">
+                <Link
+                    href="/decks/me"
+                    className={linkStyle}
+                >
+                  Mes decks
+                </Link>
+              </li>
+          )}
+          <li>
+            <Link
               href="/strategy"
               className="link-style"
             >
@@ -97,7 +115,6 @@ const Header = () => {
               <ThemeToggle />
             </li>
           )}
-
           {isLoading ? (
             <li>
               <Skeleton className="h-8 w-8 rounded-full" />
