@@ -24,6 +24,7 @@ import { SearchModule } from './search/search.module';
 import { CollectionModule } from './collection/collection.module';
 import { CollectionItemModule } from './collection-item/collection-item.module';
 import { CardStateModule } from './card-state/card-state.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -57,7 +58,8 @@ import { CardStateModule } from './card-state/card-state.module';
     SearchModule,
     CollectionModule,
     CollectionItemModule,
-    CardStateModule
+    CardStateModule,
+    AiModule
   ],
   controllers: [AppController],
   providers: [
