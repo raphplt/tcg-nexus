@@ -69,9 +69,11 @@ export interface Pricing {
 }
 export interface Organizer {
   id: number;
+  userId: number;
   name: string;
   email?: string | null;
-  role?: string | null;
+  role?: "owner" | "admin" | "moderator" | "judge" | null;
+  isActive: boolean;
 }
 export interface Notification {
   id: number;

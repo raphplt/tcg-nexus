@@ -33,7 +33,6 @@ export default function TournamentAdminPage() {
   );
   const permissions = usePermissions(user, tournament);
 
-  // Rediriger si pas de permissions
   if (!isLoading && !permissions.canViewAdmin) {
     router.push(`/tournaments/${id}`);
     return null;

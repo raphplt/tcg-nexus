@@ -7,7 +7,6 @@ import { H1, H2 } from "@/components/Shared/Titles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -40,72 +39,9 @@ import { Tournament } from "@/types/tournament";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import Link from "next/link";
-
-function formatDate(date?: string | null) {
-  if (!date) return "-";
-  try {
-    return new Date(date).toLocaleString(undefined, {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return date;
-  }
-}
-
-const LoadingView = () => (
-  <div className="max-w-6xl mx-auto py-10 px-4 space-y-8">
-    <div className="space-y-3">
-      <Skeleton className="h-8 w-64" />
-      <div className="flex gap-2">
-        <Skeleton className="h-6 w-28" />
-        <Skeleton className="h-6 w-28" />
-      </div>
-      <Skeleton className="h-5 w-72" />
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i}>
-          <CardContent className="p-4">
-            <Skeleton className="h-4 w-24 mb-2" />
-            <Skeleton className="h-7 w-16" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <Skeleton className="h-6 w-40" />
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-32 w-full" />
-      </CardContent>
-    </Card>
-  </div>
-);
-
-const ErrorView = ({ message }: { message?: string }) => (
-  <div className="max-w-6xl mx-auto py-16 px-4">
-    <Card className="border-destructive">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
-          <Info className="size-5" /> Erreur de chargement
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">
-          {message || "Impossible de récupérer les détails du tournoi."}
-        </p>
-      </CardContent>
-    </Card>
-  </div>
-);
+import { formatDate } from "@/utils/date";
+import LoadingView from "./_components/LoadingView";
+import ErrorView from "./_components/ErrorView";
 
 export default function TournamentDetailsPage() {
   const { id } = useParams();
@@ -161,7 +97,6 @@ export default function TournamentDetailsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
       <div className="max-w-6xl mx-auto py-10 px-4 space-y-8">
-        {/* Header */}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <Badge
@@ -221,7 +156,6 @@ export default function TournamentDetailsPage() {
               {registrationOpen ? "S'inscrire" : "Inscriptions fermées"}
             </Button>
 
-            {/* Boutons d'administration */}
             {permissions.canViewAdmin && (
               <Button
                 variant="outline"
@@ -234,7 +168,6 @@ export default function TournamentDetailsPage() {
               </Button>
             )}
 
-            {/* Bouton Bracket */}
             {tournament?.status === "in_progress" && (
               <Button
                 variant="secondary"

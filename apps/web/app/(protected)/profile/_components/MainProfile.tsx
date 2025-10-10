@@ -1,7 +1,7 @@
 "use client";
 import Loader from "@/components/Layout/Loader";
 import { useAuth } from "@/contexts/AuthContext";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ import { marketplaceService } from "@/services/marketplace.service";
 import { Listing } from "@/types/listing";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
-
+import { getUserInitials, getRoleBadgeColor, getRoleLabel } from "../utils";
 
 const MainProfile = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -45,15 +45,16 @@ const MainProfile = () => {
     email: "",
   });
 
-  // États pour la section "Mes ventes"
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [salesLoading, setSalesLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       setEditForm({
         firstName: user.firstName,
@@ -64,38 +65,9 @@ const MainProfile = () => {
     }
   }, [user]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     filterListings();
   }, [listings, searchTerm, statusFilter]);
-
-  const getUserInitials = (firstName: string, lastName: string) => {
-    return (
-      `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
-      "U"
-    );
-  };
-
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "bg-red-500 text-white";
-      case "moderator":
-        return "bg-blue-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
-
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "Administrateur";
-      case "moderator":
-        return "Modérateur";
-      default:
-        return "Utilisateur";
-    }
-  };
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -123,8 +95,7 @@ const MainProfile = () => {
     }));
   };
 
-  // Fonctions pour la section "Mes ventes"
-  const loadMyListings = async () => {
+    const loadMyListings = async () => {
     try {
       setSalesLoading(true);
       const data = await marketplaceService.getMyListings();
@@ -140,19 +111,22 @@ const MainProfile = () => {
   const filterListings = () => {
     let filtered = listings;
 
-    // Filtre par recherche
     if (searchTerm) {
-      filtered = filtered.filter(listing =>
-        (listing.pokemonCard?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-        (listing.pokemonCard?.set?.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (listing) =>
+          (listing.pokemonCard?.name?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase(),
+          ) ||
+          (listing.pokemonCard?.set?.name?.toLowerCase() || "").includes(
+            searchTerm.toLowerCase(),
+          ),
       );
     }
 
-    // Filtre par statut
     if (statusFilter === "active") {
-      filtered = filtered.filter(listing => listing.quantityAvailable > 0);
+      filtered = filtered.filter((listing) => listing.quantityAvailable > 0);
     } else if (statusFilter === "inactive") {
-      filtered = filtered.filter(listing => listing.quantityAvailable === 0);
+      filtered = filtered.filter((listing) => listing.quantityAvailable === 0);
     }
 
     setFilteredListings(filtered);
@@ -191,22 +165,22 @@ const MainProfile = () => {
     try {
       setActionLoading(listing.id);
       const newQuantity = listing.quantityAvailable > 0 ? 0 : 1;
-      
+
       await marketplaceService.updateListing(listing.id.toString(), {
-        quantityAvailable: newQuantity
+        quantityAvailable: newQuantity,
       });
-      
+
       // Mettre à jour la liste locale
-      setListings(prev => prev.map(l => 
-        l.id === listing.id 
-          ? { ...l, quantityAvailable: newQuantity }
-          : l
-      ));
-      
+      setListings((prev) =>
+        prev.map((l) =>
+          l.id === listing.id ? { ...l, quantityAvailable: newQuantity } : l,
+        ),
+      );
+
       toast.success(
-        newQuantity > 0 
-          ? "Vente réactivée avec succès" 
-          : "Vente désactivée avec succès"
+        newQuantity > 0
+          ? "Vente réactivée avec succès"
+          : "Vente désactivée avec succès",
       );
     } catch (error) {
       toast.error("Erreur lors du changement de statut");
@@ -224,10 +198,10 @@ const MainProfile = () => {
     try {
       setActionLoading(listing.id);
       await marketplaceService.deleteListing(listing.id.toString());
-      
+
       // Mettre à jour la liste locale
-      setListings(prev => prev.filter(l => l.id !== listing.id));
-      
+      setListings((prev) => prev.filter((l) => l.id !== listing.id));
+
       toast.success("Vente supprimée avec succès");
     } catch (error) {
       toast.error("Erreur lors de la suppression");
@@ -593,14 +567,12 @@ const MainProfile = () => {
 
       {/* Mes ventes */}
       <Card className="p-6">
-                      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
             <ShoppingBag className="w-5 h-5" />
             <h2 className="text-xl font-semibold">Mes ventes</h2>
             <div className="flex items-center space-x-2">
-              <Badge variant="secondary">
-                {listings.length} ventes
-              </Badge>
+              <Badge variant="secondary">{listings.length} ventes</Badge>
               {filteredListings.length !== listings.length && (
                 <Badge variant="outline">
                   {filteredListings.length} résultats
@@ -608,37 +580,42 @@ const MainProfile = () => {
               )}
             </div>
           </div>
-        <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleRefreshSales}
-            disabled={salesLoading}
-            title="Actualiser la liste des ventes"
-            aria-label="Actualiser la liste des ventes"
-          >
-            {salesLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-            ) : (
-              "Actualiser"
-            )}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleCreateFirstSale}
-            title="Créer une nouvelle vente"
-            aria-label="Créer une nouvelle vente"
-          >
-            Créer une vente
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshSales}
+              disabled={salesLoading}
+              title="Actualiser la liste des ventes"
+              aria-label="Actualiser la liste des ventes"
+            >
+              {salesLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+              ) : (
+                "Actualiser"
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCreateFirstSale}
+              title="Créer une nouvelle vente"
+              aria-label="Créer une nouvelle vente"
+            >
+              Créer une vente
+            </Button>
+          </div>
         </div>
-      </div>
 
         {/* Filtres et recherche */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1">
-            <Label htmlFor="search" className="sr-only">Rechercher</Label>
+            <Label
+              htmlFor="search"
+              className="sr-only"
+            >
+              Rechercher
+            </Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -695,16 +672,17 @@ const MainProfile = () => {
         {salesLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Chargement de vos ventes...</p>
+            <p className="mt-2 text-muted-foreground">
+              Chargement de vos ventes...
+            </p>
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="text-center py-8">
             <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {listings.length === 0 
-                ? "Vous n'avez pas encore créé de ventes" 
-                : "Aucune vente ne correspond à vos critères"
-              }
+              {listings.length === 0
+                ? "Vous n'avez pas encore créé de ventes"
+                : "Aucune vente ne correspond à vos critères"}
             </p>
             {listings.length === 0 ? (
               <div className="space-y-4 mt-6">
@@ -713,11 +691,12 @@ const MainProfile = () => {
                     Commencez par vendre vos cartes Pokémon !
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Créez votre première vente pour commencer à gagner de l'argent avec votre collection
+                    Créez votre première vente pour commencer à gagner de
+                    l'argent avec votre collection
                   </p>
                 </div>
                 <div className="flex justify-center">
-                  <Button 
+                  <Button
                     onClick={handleCreateFirstSale}
                     className="px-6"
                   >
@@ -730,7 +709,7 @@ const MainProfile = () => {
                 <p className="text-sm text-muted-foreground mb-3">
                   Aucune vente ne correspond à vos critères de recherche
                 </p>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => {
                     setSearchTerm("");
@@ -752,14 +731,18 @@ const MainProfile = () => {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className="font-semibold text-lg">{listing.pokemonCard?.name || "N/A"}</span>
+                      <span className="font-semibold text-lg">
+                        {listing.pokemonCard?.name || "N/A"}
+                      </span>
                       {getStatusBadge(listing.quantityAvailable)}
                       <Badge variant="outline">{listing.cardState}</Badge>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-2">
-                        <span>Set: {listing.pokemonCard?.set?.name || "N/A"}</span>
+                        <span>
+                          Set: {listing.pokemonCard?.set?.name || "N/A"}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span>État: {listing.cardState}</span>
@@ -772,25 +755,41 @@ const MainProfile = () => {
                         <span className="font-medium">{listing.price}</span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <span className={listing.quantityAvailable > 0 ? "text-green-600" : "text-gray-500"}>
+                        <span
+                          className={
+                            listing.quantityAvailable > 0
+                              ? "text-green-600"
+                              : "text-gray-500"
+                          }
+                        >
                           Quantité: {listing.quantityAvailable}
                         </span>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <span>Créé le: {new Date(listing.createdAt).toLocaleDateString("fr-FR", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric"
-                        })}</span>
+                        <span>
+                          Créé le:{" "}
+                          {new Date(listing.createdAt).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            },
+                          )}
+                        </span>
                       </div>
                       {listing.expiresAt && (
                         <div className="flex items-center space-x-1">
                           <span className="text-orange-600">
-                            Expire le: {new Date(listing.expiresAt).toLocaleDateString("fr-FR", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric"
-                            })}
+                            Expire le:{" "}
+                            {new Date(listing.expiresAt).toLocaleDateString(
+                              "fr-FR",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              },
+                            )}
                           </span>
                         </div>
                       )}
@@ -815,8 +814,16 @@ const MainProfile = () => {
                       onClick={() => handleToggleStatus(listing)}
                       className="h-8 w-8 p-0"
                       disabled={actionLoading === listing.id}
-                      title={listing.quantityAvailable > 0 ? "Désactiver cette vente" : "Réactiver cette vente"}
-                      aria-label={listing.quantityAvailable > 0 ? "Désactiver cette vente" : "Réactiver cette vente"}
+                      title={
+                        listing.quantityAvailable > 0
+                          ? "Désactiver cette vente"
+                          : "Réactiver cette vente"
+                      }
+                      aria-label={
+                        listing.quantityAvailable > 0
+                          ? "Désactiver cette vente"
+                          : "Réactiver cette vente"
+                      }
                     >
                       {actionLoading === listing.id ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

@@ -40,8 +40,10 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
     const cookies = request.cookies.toString();
+    console.log("[Middleware] Checking auth, has cookies:", !!cookies, "has accessToken:", cookies.includes("accessToken"));
 
     if (!cookies || !cookies.includes("accessToken")) {
+      console.log("[Middleware] No accessToken found");
       return false;
     }
 
@@ -87,13 +89,14 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
         }
       }
 
+      console.log("[Middleware] Profile check result:", response.ok);
       return response.ok;
     } catch (apiError) {
-      console.error("API auth check failed:", apiError);
+      console.error("[Middleware] API auth check failed:", apiError);
       return false;
     }
   } catch (error) {
-    console.error("Error checking auth:", error);
+    console.error("[Middleware] Error checking auth:", error);
     return false;
   }
 }
@@ -109,6 +112,8 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedRoute) {
     const isAuthenticated = await checkAuth(request);
+
+    console.log("isAuthenticated middleware", isAuthenticated);
 
     if (!isAuthenticated) {
       const loginUrl = new URL("/auth/login", request.url);

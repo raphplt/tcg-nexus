@@ -36,13 +36,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("[AuthContext] Checking auth...");
         const userData = await authService.getProfile();
+        console.log("[AuthContext] Auth check SUCCESS - User:", userData?.email);
         setUser(userData);
 
         if (userData && typeof window !== "undefined") {
           authService.scheduleRefresh(Date.now() + 14 * 60 * 1000);
         }
       } catch (error: any) {
+        console.log("[AuthContext] Auth check FAILED:", error?.response?.status || error.message);
         if (error?.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);
         }
@@ -93,6 +96,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       router.push("/auth/login");
     }
   };
+
+  console.log("[AuthContext] isAuthenticated:", isAuthenticated, "user:", user?.email || "null");
 
   const value: AuthContextType = {
     user,
