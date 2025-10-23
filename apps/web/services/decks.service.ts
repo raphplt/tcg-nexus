@@ -2,7 +2,8 @@ import type { PaginationParams, PaginatedResult } from "@/types/pagination";
 import { Listing } from "@/types/listing";
 import { authedFetch, fetcher } from "@/utils/fetch";
 import { Decks } from "@/types/Decks";
-import {DeckCards} from "@/types/deck-cards";
+import { DeckCards } from "@/types/deck-cards";
+import {usePaginatedQuery} from "@hooks/usePaginatedQuery";
 
 export interface DecksQueryParams extends PaginationParams {
   search?: string;
@@ -15,9 +16,9 @@ export interface DecksQueryParams extends PaginationParams {
 
 interface card {
   id?: number;
-  cardId: string,
-  name: string,
-  qty: number,
+  cardId: string;
+  name: string;
+  qty: number;
   role: string;
 }
 
@@ -28,18 +29,15 @@ interface createDeckParams {
   cards: card[];
 }
 
-type updateDeckParams =  {
+type updateDeckParams = {
   cardsToAdd: any;
-  cardsToRemove: { id : number }[] | [];
+  cardsToRemove: { id: number }[] | [];
   cardsToUpdate: DeckCards[] | [];
 } & Partial<{
   deckName: string;
   formatId: string;
   isPublic: boolean;
 }>;
-
-
-
 
 export const decksService = {
   /**
@@ -53,7 +51,7 @@ export const decksService = {
   },
 
   async getUserDecksPaginated(
-      params: DecksQueryParams = {},
+    params: DecksQueryParams = {},
   ): Promise<PaginatedResult<Decks>> {
     return fetcher<PaginatedResult<Decks>>("/deck/me", { params });
   },
@@ -62,19 +60,30 @@ export const decksService = {
    * Récupère un deck par son ID
    * @param id ID du deck
    */
-  async getDeckById(id: string){
+  async getDeckById(id: string) {
     return fetcher(`/deck/${id}`);
   },
-  async create(data:createDeckParams)
-  {
-    return authedFetch("POST","/deck", { data: data });
+  async create(data: createDeckParams) {
+    return authedFetch("POST", "/deck", { data: data });
   },
-  async removeDeck(deckId: number)
-  {
+  async removeDeck(deckId: number) {
     return authedFetch("DELETE", `/deck/${deckId}`);
   },
-  async update(id: number, data: updateDeckParams)
-  {
-    return authedFetch("PATCH",`/deck/${id}`, { data: data });
+  async update(id: number, data: updateDeckParams) {
+    return authedFetch("PATCH", `/deck/${id}`, { data: data });
+  },
+  useUserDecksPaginated(page: number, filters: any) {
+    return usePaginatedQuery<PaginatedResult<Decks>>(
+        ["decks", page, filters.search, filters.sortBy, filters.sortOrder],
+        decksService.getUserDecksPaginated,
+        {
+          page,
+          limit: 8,
+          search: filters.search || undefined,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder,
+          formatId: filters.format || undefined,
+        },
+    );
   },
 };

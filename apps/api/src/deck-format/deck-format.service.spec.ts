@@ -6,7 +6,7 @@ describe('DeckFormatService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [DeckFormatService],
+      providers: [DeckFormatService]
     }).compile();
 
     service = module.get<DeckFormatService>(DeckFormatService);

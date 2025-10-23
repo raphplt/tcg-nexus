@@ -7,6 +7,6 @@ import { DeckFormat } from './entities/deck-format.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([DeckFormat])],
   controllers: [DeckFormatController],
-  providers: [DeckFormatService],
+  providers: [DeckFormatService]
 })
 export class DeckFormatModule {}

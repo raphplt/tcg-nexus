@@ -49,4 +49,4 @@ export const marketplaceService = {
   async deleteListing(id: string): Promise<void> {
     return authedFetch<void>("DELETE", `/listings/${id}`);
   },
-}; 
+};

@@ -1,6 +1,6 @@
 import { User } from "./auth";
 import { DeckFormat } from "@/types/deckFormat";
-import {DeckCards} from "@/types/deck-cards";
+import { DeckCards } from "@/types/deck-cards";
 
 export interface Decks {
   id: number;

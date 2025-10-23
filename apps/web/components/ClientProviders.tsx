@@ -10,4 +10,4 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
       <AuthProvider>{children}</AuthProvider>
     </ReactQueryProvider>
   );
-} 
+}

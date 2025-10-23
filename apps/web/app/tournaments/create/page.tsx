@@ -25,12 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
-import {
-  CircleAlert,
-  CheckCircle,
-  ArrowLeft,
-  ShieldAlert,
-} from "lucide-react";
+import { CircleAlert, CheckCircle, ArrowLeft, ShieldAlert } from "lucide-react";
 import {
   TournamentStatus,
   TournamentType,
@@ -112,7 +107,7 @@ export default function CreateTournamentPage() {
         location: values.location,
         startDate: new Date(values.startDate),
         endDate: new Date(values.endDate),
-        type: values.type, 
+        type: values.type,
         registrationDeadline: values.registrationDeadline
           ? new Date(values.registrationDeadline)
           : undefined,

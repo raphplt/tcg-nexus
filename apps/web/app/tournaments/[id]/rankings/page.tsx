@@ -5,7 +5,14 @@ import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Download, RefreshCw, Medal, Crown } from "lucide-react";
+import {
+  ArrowLeft,
+  Trophy,
+  Download,
+  RefreshCw,
+  Medal,
+  Crown,
+} from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { useTournament } from "@/hooks/useTournament";
 import { useRankings } from "@/hooks/useRankings";
@@ -20,7 +27,7 @@ export default function RankingsPage() {
 
   React.useEffect(() => {
     if (!autoRefresh) return;
-    
+
     const interval = setInterval(() => {
       if (tournament?.status === "in_progress") {
         refetch();
@@ -32,25 +39,35 @@ export default function RankingsPage() {
 
   const exportRankings = () => {
     if (!rankings.length) return;
-    
+
     const csv = [
-      ["Rang", "Joueur", "Points", "Victoires", "Défaites", "Égalités", "% Victoires"].join(","),
-      ...rankings.map(r => [
-        r.rank,
-        r.player.name,
-        r.points,
-        r.wins,
-        r.losses,
-        r.draws,
-        r.winRate.toFixed(1)
-      ].join(","))
+      [
+        "Rang",
+        "Joueur",
+        "Points",
+        "Victoires",
+        "Défaites",
+        "Égalités",
+        "% Victoires",
+      ].join(","),
+      ...rankings.map((r) =>
+        [
+          r.rank,
+          r.player.name,
+          r.points,
+          r.wins,
+          r.losses,
+          r.draws,
+          r.winRate.toFixed(1),
+        ].join(","),
+      ),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `classement-${tournament?.name}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `classement-${tournament?.name}-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -74,13 +91,17 @@ export default function RankingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+            >
               <Link href={`/tournaments/${id}`}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Retour au tournoi
               </Link>
             </Button>
-            
+
             <div>
               <H1 className="mb-2">Classements - {tournament?.name}</H1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -92,7 +113,10 @@ export default function RankingsPage() {
                   </>
                 )}
                 {tournament?.status === "in_progress" && (
-                  <Badge variant="secondary" className="animate-pulse">
+                  <Badge
+                    variant="secondary"
+                    className="animate-pulse"
+                  >
                     Mise à jour automatique
                   </Badge>
                 )}
@@ -106,10 +130,12 @@ export default function RankingsPage() {
               size="sm"
               onClick={() => setAutoRefresh(!autoRefresh)}
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${autoRefresh ? "animate-spin" : ""}`}
+              />
               {autoRefresh ? "Auto" : "Manuel"}
             </Button>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -140,7 +166,9 @@ export default function RankingsPage() {
                   </div>
                   <div className="mt-2">
                     <p className="font-bold">{rankings[1]?.player.name}</p>
-                    <p className="text-sm text-muted-foreground">{rankings[1]?.points} pts</p>
+                    <p className="text-sm text-muted-foreground">
+                      {rankings[1]?.points} pts
+                    </p>
                   </div>
                 </div>
 
@@ -150,9 +178,18 @@ export default function RankingsPage() {
                     <Crown className="w-10 h-10 text-yellow-500" />
                   </div>
                   <div className="mt-2">
-                    <p className="font-bold text-lg">{rankings[0]?.player.name}</p>
-                    <p className="text-sm text-muted-foreground">{rankings[0]?.points} pts</p>
-                    <Badge variant="default" className="mt-1">Champion</Badge>
+                    <p className="font-bold text-lg">
+                      {rankings[0]?.player.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {rankings[0]?.points} pts
+                    </p>
+                    <Badge
+                      variant="default"
+                      className="mt-1"
+                    >
+                      Champion
+                    </Badge>
                   </div>
                 </div>
 
@@ -163,7 +200,9 @@ export default function RankingsPage() {
                   </div>
                   <div className="mt-2">
                     <p className="font-bold">{rankings[2]?.player.name}</p>
-                    <p className="text-sm text-muted-foreground">{rankings[2]?.points} pts</p>
+                    <p className="text-sm text-muted-foreground">
+                      {rankings[2]?.points} pts
+                    </p>
                   </div>
                 </div>
               </div>
@@ -176,33 +215,43 @@ export default function RankingsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.totalPlayers}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {stats.totalPlayers}
+                </div>
                 <div className="text-sm text-muted-foreground">Joueurs</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.totalMatches}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {stats.totalMatches}
+                </div>
                 <div className="text-sm text-muted-foreground">Matches</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.avgPoints}</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {stats.avgPoints}
+                </div>
                 <div className="text-sm text-muted-foreground">Points moy.</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold text-orange-600">{stats.perfectRecord}</div>
-                <div className="text-sm text-muted-foreground">Sans défaite</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {stats.perfectRecord}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Sans défaite
+                </div>
               </CardContent>
             </Card>
           </div>
         )}
 
         {/* Classement détaillé */}
-        <RankingsDisplay 
+        <RankingsDisplay
           rankings={rankings}
           tournament={tournament}
           isLoading={isLoading}

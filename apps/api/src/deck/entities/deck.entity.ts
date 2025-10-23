@@ -32,7 +32,7 @@ export class Deck {
   format: DeckFormat;
 
   @OneToMany(() => DeckCard, (deckCard) => deckCard.deck, { cascade: true })
-  cards: DeckCard[];
+  cards?: DeckCard[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,4 +1,9 @@
-import {Injectable, BadRequestException, NotFoundException, ForbiddenException} from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException
+} from '@nestjs/common';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
 import { PaginationHelper } from '../helpers/pagination';
@@ -6,9 +11,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deck } from './entities/deck.entity';
 import { DeckCard } from '../deck-card/entities/deck-card.entity';
-import {User, UserRole} from '../user/entities/user.entity';
-import {PokemonCard} from "../pokemon-card/entities/pokemon-card.entity";
-import {DeckFormat} from "../deck-format/entities/deck-format.entity";
+import { User, UserRole } from '../user/entities/user.entity';
+import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { DeckFormat } from '../deck-format/entities/deck-format.entity';
+import {DeckCardRole} from "../common/enums/deckCardRole";
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -20,7 +26,6 @@ export interface FindAllDecksParams {
 
 @Injectable()
 export class DeckService {
-
   constructor(
     @InjectRepository(DeckCard)
     private readonly deckCardRepo: Repository<DeckCard>,
@@ -33,13 +38,13 @@ export class DeckService {
   ) {}
   async createDeck(user: User, dto: CreateDeckDto) {
     const format = await this.formatRepo.findOneBy({ id: dto.formatId });
-    if (!format) throw new NotFoundException("Format introuvable");
+    if (!format) throw new NotFoundException('Format introuvable');
 
     const deck = this.decksRepository.create({
       name: dto.deckName,
       isPublic: dto.isPublic,
       user,
-      format,
+      format
     });
 
     await this.decksRepository.save(deck);
@@ -53,7 +58,8 @@ export class DeckService {
       const deckCard = this.deckCardRepo.create({
         card: cardEntity,
         qty: carte.qty,
-        deck: deck,
+        role: carte.role,
+        deck: deck
       });
       cards.push(deckCard);
     }
@@ -61,14 +67,11 @@ export class DeckService {
     await this.deckCardRepo.save(cards);
     return await this.decksRepository.findOne({
       where: { id: deck.id },
-      relations: ['cards', 'cards.card'], // 'cards.card' pour avoir les infos de chaque carte
+      relations: ['cards', 'cards.card']
     });
   }
 
-
-  async findAll(
-    params: FindAllDecksParams = {}
-  ) {
+  async findAll(params: FindAllDecksParams = {}) {
     const {
       formatId = 0,
       page = 1,
@@ -81,14 +84,17 @@ export class DeckService {
       .createQueryBuilder('deck')
       .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
-        .andWhere('deck.isPublic = true');
+      .andWhere('deck.isPublic = true');
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
     }
     if (search) {
-      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', { search: `%${search}%` });
+      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
+        search: `%${search}%`
+      });
     }
-    const orderColumn = sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
+    const orderColumn =
+      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
@@ -97,8 +103,7 @@ export class DeckService {
     );
   }
 
-  async findAllFromUser(user: User, params: FindAllDecksParams = {})
-  {
+  async findAllFromUser(user: User, params: FindAllDecksParams = {}) {
     const {
       formatId = 0,
       page = 1,
@@ -108,22 +113,25 @@ export class DeckService {
       search
     } = params;
     const qb = this.decksRepository
-        .createQueryBuilder('deck')
-        .leftJoinAndSelect('deck.user', 'user')
-        .leftJoinAndSelect('deck.format', 'format')
-        .andWhere('user.id = :userId', { userId: user.id });
+      .createQueryBuilder('deck')
+      .leftJoinAndSelect('deck.user', 'user')
+      .leftJoinAndSelect('deck.format', 'format')
+      .andWhere('user.id = :userId', { userId: user.id });
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
     }
     if (search) {
-      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', { search: `%${search}%` });
+      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
+        search: `%${search}%`
+      });
     }
-    const orderColumn = sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
+    const orderColumn =
+      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
     return PaginationHelper.paginateQueryBuilder(
-        qb,
-        { page, limit },
-        orderColumn,
-        sortOrder
+      qb,
+      { page, limit },
+      orderColumn,
+      sortOrder
     );
   }
   async findOneWithCards(id: number): Promise<Deck> {
@@ -138,26 +146,21 @@ export class DeckService {
   async updateDeck(deckId: number, user: User, dto: UpdateDeckDto) {
     const deck = await this.decksRepository.findOne({
       where: { id: deckId, user: { id: user.id } },
-      relations: ['cards'],
+      relations: ['cards']
     });
 
-    if (!deck) throw new NotFoundException("Deck introuvable");
+    if (!deck) throw new NotFoundException('Deck introuvable');
 
-
-    if (dto.deckName)
-    {
+    if (dto.deckName) {
       deck.name = dto.deckName;
     }
-    if (dto.isPublic)
-    {
+    if (dto.isPublic) {
       deck.isPublic = dto.isPublic;
     }
-    if (dto.formatId)
-    {
+    if (dto.formatId) {
       const format = await this.formatRepo.findOneBy({ id: dto.formatId });
-      if (!format) throw new NotFoundException("Format introuvable");
-      if (format)
-      {
+      if (!format) throw new NotFoundException('Format introuvable');
+      if (format) {
         deck.format = format;
       }
     }
@@ -168,8 +171,7 @@ export class DeckService {
       await this.deckCardRepo.delete(dto.cardsToRemove);
     }
 
-    if (dto.cardsToAdd.length > 0)
-    {
+    if (dto.cardsToAdd.length > 0) {
       const cards: DeckCard[] = [];
       for (const carte of dto.cardsToAdd) {
         const cardEntity = await this.cardRepo.findOneBy({ id: carte.cardId });
@@ -179,7 +181,8 @@ export class DeckService {
         const deckCard = this.deckCardRepo.create({
           card: cardEntity,
           qty: carte.qty,
-          deck: deck,
+          role: carte.role as DeckCardRole,
+          deck: deck
         });
         cards.push(deckCard);
       }
@@ -187,19 +190,17 @@ export class DeckService {
       await this.deckCardRepo.save(cards);
     }
 
-    if (dto.cardsToUpdate.length > 0)
-    {
+    if (dto.cardsToUpdate.length > 0) {
       const cards: DeckCard[] = [];
       for (const carte of dto.cardsToUpdate) {
         const cardEntity = await this.deckCardRepo.findOneBy({ id: carte.id });
         if (!cardEntity) {
           throw new NotFoundException(`Carte ${carte.id} introuvable`);
         }
-        if (carte.qty){
+        if (carte.qty) {
           cardEntity.qty = carte.qty;
         }
-        if (carte.role)
-        {
+        if (carte.role) {
           cardEntity.role = carte.role;
         }
         this.deckCardRepo.save(cardEntity);
@@ -208,10 +209,9 @@ export class DeckService {
       await this.deckCardRepo.save(cards);
     }
 
-
     return this.decksRepository.findOne({
       where: { id: deck.id },
-      relations: ['cards', 'cards.card'],
+      relations: ['cards', 'cards.card']
     });
   }
 
@@ -240,16 +240,15 @@ export class DeckService {
     const saved = await this.decksRepository.save(cloned);
     if (deck.cards?.length) {
       const clonedCards = deck.cards.map((dc) =>
-          this.deckCardRepo.create({
-            deck: { id: saved.id },
-            card: { id: dc.card.id },
-            qty: dc.qty,
-            role: dc.role
-          })
+        this.deckCardRepo.create({
+          deck: { id: saved.id },
+          card: { id: dc.card.id },
+          qty: dc.qty,
+          role: dc.role
+        })
       );
       await this.deckCardRepo.save(clonedCards);
     }
     return this.findOneWithCards(saved.id);
   }
-
 }

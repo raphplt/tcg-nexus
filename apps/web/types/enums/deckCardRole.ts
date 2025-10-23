@@ -1,4 +1,4 @@
 export enum DeckCardRole {
-    main = 'main',
-    side = 'side'
+  main = "main",
+  side = "side",
 }

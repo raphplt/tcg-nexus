@@ -2,13 +2,12 @@
 
 ## 1. Contexte
 
-* **Numéro et date du RUN** : 1 – 2025-06-13
-* **Objectifs du RUN** :
-
-  * Initialiser la structure du monorepo (TurboRepo).
-  * Mettre en place un microservice `apps/fetch` récupérant toutes les cartes Pokémon existantes.
-  * Créer les bases de l’API NestJS : modèles et routes CRUD pour `cards`, `sets`, `extensions`.
-  * Débuter le front-end Next.js : page d’accueil affichant une carte aléatoire, recherche basique et routing.
+- **Numéro et date du RUN** : 1 – 2025-06-13
+- **Objectifs du RUN** :
+  - Initialiser la structure du monorepo (TurboRepo).
+  - Mettre en place un microservice `apps/fetch` récupérant toutes les cartes Pokémon existantes.
+  - Créer les bases de l’API NestJS : modèles et routes CRUD pour `cards`, `sets`, `extensions`.
+  - Débuter le front-end Next.js : page d’accueil affichant une carte aléatoire, recherche basique et routing.
 
 ## 2. Bilan du RUN précédent
 
@@ -32,21 +31,21 @@ Premier RUN – pas de bilan précédent
 
 ## 4. Problèmes & Blocages
 
-* **Logique métier incomplète** : services CRUD pas encore complets.
-* **Base de données incomplète** : manque de tables pour `User`, `Deck`, `Tournament` (initialisés mais non fonctionnels).
-* **Modèles de données** : définir clairement `Tournament`, `User`, `Deck`, etc.
+- **Logique métier incomplète** : services CRUD pas encore complets.
+- **Base de données incomplète** : manque de tables pour `User`, `Deck`, `Tournament` (initialisés mais non fonctionnels).
+- **Modèles de données** : définir clairement `Tournament`, `User`, `Deck`, etc.
 
 ## 5. Démonstrations & Preuves
 
-* `apps/fetch/src/index.ts` : microservice de récupération des cartes Pokémon.
-* `apps/api/src/cards/card.model.ts` & `apps/api/src/cards/card.controller.ts` : exemples de modèle et route CRUD.
-* `apps/web/pages/index.tsx` : page d’accueil avec carte aléatoire.
-* `apps/web/components/SearchBar.tsx` : composant de recherche basique.
+- `apps/fetch/src/index.ts` : microservice de récupération des cartes Pokémon.
+- `apps/api/src/cards/card.model.ts` & `apps/api/src/cards/card.controller.ts` : exemples de modèle et route CRUD.
+- `apps/web/pages/index.tsx` : page d’accueil avec carte aléatoire.
+- `apps/web/components/SearchBar.tsx` : composant de recherche basique.
 
 ## 6. Plan d’action pour le prochain RUN
 
-* Finir la configuration de la base de données.
-* Implémenter les CRUD réels pour Tournois, Utilisateurs et Decks.
-* Mettre en place l’authentification (inscription, connexion, JWT).
-* Priorité : routes et affichage dynamiques pour les tournois.
-* Responsables: équipe back-end (API) & équipe front-end (UI).
+- Finir la configuration de la base de données.
+- Implémenter les CRUD réels pour Tournois, Utilisateurs et Decks.
+- Mettre en place l’authentification (inscription, connexion, JWT).
+- Priorité : routes et affichage dynamiques pour les tournois.
+- Responsables: équipe back-end (API) & équipe front-end (UI).

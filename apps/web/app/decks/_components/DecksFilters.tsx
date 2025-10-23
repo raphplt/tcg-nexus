@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import {useAuth} from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import MarketplaceFilters from "@app/marketplace/_components/MarketplaceFilters";
 import { DeckFormat } from "@/types/deckFormat";
 
@@ -19,7 +19,6 @@ interface Option {
   label: string;
   value: string;
 }
-
 
 export interface DecksFilters {
   search: string;
@@ -40,15 +39,15 @@ const DecksFilters = ({
   setFilters,
   formatOptions,
   sortOptions,
-  resetFilters
+  resetFilters,
 }: DecksFiltersProps) => {
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const {isAuthenticated} = useAuth();
+  const { isAuthenticated } = useAuth();
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
-      setFilters({search: debouncedSearch});
+      setFilters({ search: debouncedSearch });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);

@@ -3,31 +3,32 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@components/ui/card";
-import {DeckFormUpdate} from "@app/decks/[id]/update/_components/deckFormUpdate";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
+import { DeckFormUpdate } from "@app/decks/[id]/update/_components/deckFormUpdate";
 import React, { useEffect, useState } from "react";
 import { authedFetch } from "@utils/fetch";
-import {Skeleton} from "@components/ui/skeleton";
+import { Skeleton } from "@components/ui/skeleton";
 
-export default function page()
-{
-  const { isAuthenticated} = useAuth()
+export default function page() {
+  const { isAuthenticated } = useAuth();
   const [formatList, setFormatList] = useState([]);
   const [formatLoading, setFormatLoading] = useState(true);
   useEffect(() => {
     const listFormat = async () => {
       return await authedFetch("GET", "deck-format");
-    }
-    listFormat().then(res => {
+    };
+    listFormat().then((res) => {
       setFormatList(res);
       setFormatLoading(false);
     });
   }, []);
-  if (!isAuthenticated)
-  {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-        <Alert variant="destructive" className="mx-auto max-w-3xl">
+        <Alert
+          variant="destructive"
+          className="mx-auto max-w-3xl"
+        >
           <AlertCircleIcon />
           <AlertTitle>Connexion requise.</AlertTitle>
           <AlertDescription>
@@ -38,13 +39,12 @@ export default function page()
     );
   }
 
-  if (formatLoading)
-  {
+  if (formatLoading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-          <Skeleton className="mx-auto max-w-3xl h-120"/>
-        </div>
-    )
+      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
+        <Skeleton className="mx-auto max-w-3xl h-120" />
+      </div>
+    );
   }
 
   return (
@@ -52,9 +52,6 @@ export default function page()
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
           <CardTitle>Modifier un deck</CardTitle>
-          <CardDescription>
-            Veuillez remplir ce formulaire pour pouvoir Modifier le deck.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <DeckFormUpdate formats={formatList} />

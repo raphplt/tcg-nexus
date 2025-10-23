@@ -1,100 +1,85 @@
 "use client";
 import { H1 } from "@components/Shared/Titles";
 import DecksFilters, {
-  DecksFilters as DecksFiltersType
+  DecksFilters as DecksFiltersType,
 } from "@app/decks/_components/DecksFilters";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/types/pagination";
 import type { Listing } from "@/types/listing";
 import DecksTable from "@app/decks/_components/DecksTable";
 import DecksPagination from "@app/decks/_components/DecksPagination";
-import {authedFetch} from "@utils/fetch";
-import {useAuth} from "@/contexts/AuthContext";
-import {Decks} from "@/types/Decks";
-import {decksService} from "@/services/decks.service";
+import { authedFetch } from "@utils/fetch";
+import { useAuth } from "@/contexts/AuthContext";
+import { Decks } from "@/types/Decks";
+import { decksService } from "@/services/decks.service";
 import { DeckFormat } from "@/types/deckFormat";
-import {Alert, AlertDescription, AlertTitle} from "@components/ui/alert";
-import {AlertCircleIcon} from "lucide-react";
-export  default function page()
-{
-    const { user, isAuthenticated } = useAuth();
+import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
+import { AlertCircleIcon } from "lucide-react";
+export default function page() {
+  const { user, isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
-  const [formatList, setFormatList] = useState<[]|DeckFormat[]>([])
+  const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersType>({
     search: "",
     format: "",
     sortBy: "createdAt",
-    sortOrder: "DESC"
+    sortOrder: "DESC",
   });
 
   const resetFilters = () => {
-      setFilters({
-          search: "",
-          format: "",
-          sortBy: "createdAt",
-          sortOrder: "DESC",
-      });
-      setPage(1);
+    setFilters({
+      search: "",
+      format: "",
+      sortBy: "createdAt",
+      sortOrder: "DESC",
+    });
+    setPage(1);
   };
-  const { data, isLoading, error } = usePaginatedQuery<
-    PaginatedResult<Decks>
-  >(
-    [
-      "decks",
-      page,
-      filters.search,
-      filters.sortBy,
-      filters.sortOrder,
-    ],
-      decksService.getUserDecksPaginated,
-    {
-      page,
-      limit: 8,
-      search: filters.search || undefined,
-      sortBy: filters.sortBy,
-      sortOrder: filters.sortOrder,
-      formatId: filters.format || undefined,
-    },
-  );
+  const { data, isLoading, error } = decksService.useUserDecksPaginated(page, filters);
 
   const tableHeaders: { label: string; key: keyof Decks | string }[] = [
     { label: "Nom", key: "name" },
-    { label: "Type", key: "format.type" }
+    { label: "Type", key: "format.type" },
   ];
 
   const formatOptions = [
-      { label: "Tous", value: "ALL" },
-      ...formatList.map((data) => ({ label: data.type, value: data.id.toString() }))
+    { label: "Tous", value: "ALL" },
+    ...formatList.map((data) => ({
+      label: data.type,
+      value: data.id.toString(),
+    })),
   ];
 
   const sortOptions = [
-      { label: "Date de création", value: "createdAt" },
-      { label: "Nom", value: "name" },
-      { label: "Type", value: "format.type" },
+    { label: "Date de création", value: "createdAt" },
+    { label: "Nom", value: "name" },
+    { label: "Type", value: "format.type" },
   ];
-    useEffect(() => {
-         const listFormat = async () => {
-            return await authedFetch("GET", "deck-format");
-        }
-        listFormat().then(res => {
-            setFormatList(res);
-        });
-    }, []);
-    if (!isAuthenticated)
-    {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-                <Alert variant="destructive" className="mx-auto max-w-3xl">
-                    <AlertCircleIcon />
-                    <AlertTitle>Connexion requise.</AlertTitle>
-                    <AlertDescription>
-                        <p>Vous devez être connecté pour voir vos decks.</p>
-                    </AlertDescription>
-                </Alert>
-            </div>
-        );
-    }
+  useEffect(() => {
+    const listFormat = async () => {
+      return await authedFetch("GET", "deck-format");
+    };
+    listFormat().then((res) => {
+      setFormatList(res);
+    });
+  }, []);
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
+        <Alert
+          variant="destructive"
+          className="mx-auto max-w-3xl"
+        >
+          <AlertCircleIcon />
+          <AlertTitle>Connexion requise.</AlertTitle>
+          <AlertDescription>
+            <p>Vous devez être connecté pour voir vos decks.</p>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
@@ -115,25 +100,25 @@ export  default function page()
           }}
         />
 
-          <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
-            <DecksTable
-              data={data}
-              dataLoading={isLoading}
-              error={error}
-              tableHeaders={tableHeaders}
-              sortBy={filters.sortBy}
-              sortOrder={filters.sortOrder}
-              setFilters={(f) => setFilters((prev: any) => ({ ...prev, ...f }))}
-            />
-          </div>
-          {data && (
-            <DecksPagination
-              meta={data.meta}
-              page={page}
-              setPage={setPage}
-            />
-          )}
+        <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
+          <DecksTable
+            data={data}
+            dataLoading={isLoading}
+            error={error}
+            tableHeaders={tableHeaders}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            setFilters={(f) => setFilters((prev: any) => ({ ...prev, ...f }))}
+          />
+        </div>
+        {data && (
+          <DecksPagination
+            meta={data.meta}
+            page={page}
+            setPage={setPage}
+          />
+        )}
       </div>
     </div>
-  )
+  );
 }

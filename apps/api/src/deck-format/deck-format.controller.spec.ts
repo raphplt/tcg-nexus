@@ -6,7 +6,7 @@ describe('DeckFormatController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [DeckFormatController],
+      controllers: [DeckFormatController]
     }).compile();
 
     controller = module.get<DeckFormatController>(DeckFormatController);

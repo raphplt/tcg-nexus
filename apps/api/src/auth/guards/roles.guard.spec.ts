@@ -12,8 +12,8 @@ describe('RolesGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user })
       }),
-      getHandler: () => (function handler() {}) as any,
-      getClass: () => (class TestClass {}) as any
+      getHandler: () => function handler() {} as any,
+      getClass: () => class TestClass {} as any
     } as unknown as ExecutionContext;
   };
 
@@ -23,19 +23,25 @@ describe('RolesGuard', () => {
   });
 
   it('autorise si aucun rôle requis', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined as any);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue(undefined as any);
     const ctx = createContext({ role: UserRole.USER });
     expect(guard.canActivate(ctx)).toBe(true);
   });
 
   it("refuse si rôle requis et utilisateur ne l'a pas", () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN] as any);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.ADMIN] as any);
     const ctx = createContext({ role: UserRole.USER });
     expect(guard.canActivate(ctx)).toBe(false);
   });
 
   it('autorise si rôle correspond', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.MODERATOR] as any);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([UserRole.MODERATOR] as any);
     const ctx = createContext({ role: UserRole.MODERATOR });
     expect(guard.canActivate(ctx)).toBe(true);
   });
@@ -52,5 +58,3 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(ctx)).toBe(false);
   });
 });
-
-

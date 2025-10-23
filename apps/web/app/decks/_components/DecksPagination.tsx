@@ -14,11 +14,7 @@ interface DecksPaginationProps {
   setPage: (page: number) => void;
 }
 
-const DecksPagination = ({
-                                 meta,
-                                 page,
-                                 setPage,
-                               }: DecksPaginationProps) => {
+const DecksPagination = ({ meta, page, setPage }: DecksPaginationProps) => {
   if (!meta) return null;
   if (meta.totalPages < 2) return null;
   return (
@@ -32,7 +28,7 @@ const DecksPagination = ({
               setPage(page - 1);
               window.scrollTo({
                 top: 0,
-                behavior: 'smooth',
+                behavior: "smooth",
               });
             }}
             aria-disabled={!meta.hasPreviousPage}
@@ -52,7 +48,7 @@ const DecksPagination = ({
                 setPage(i + 1);
                 window.scrollTo({
                   top: 0,
-                  behavior: 'smooth',
+                  behavior: "smooth",
                 });
               }}
             >
@@ -68,7 +64,7 @@ const DecksPagination = ({
               setPage(page + 1);
               window.scrollTo({
                 top: 0,
-                behavior: 'smooth',
+                behavior: "smooth",
               });
             }}
             aria-disabled={!meta.hasNextPage}

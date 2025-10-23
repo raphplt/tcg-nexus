@@ -29,7 +29,10 @@ const CollectionDetailPage = () => {
         const collectionData = await collectionService.getById(id as string);
         setCollection(collectionData);
       } catch (error) {
-        console.error("Erreur lors de la récupération de la collection :", error);
+        console.error(
+          "Erreur lors de la récupération de la collection :",
+          error,
+        );
       } finally {
         setLoading(false);
       }
@@ -90,7 +93,11 @@ const CollectionDetailPage = () => {
                     >
                       <Star className="w-5 h-5" />
                     </Button>
-                    <Button variant="secondary" size="icon" asChild>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      asChild
+                    >
                       <Link href={`/pokemon/${card.id}`}>
                         <Info className="w-5 h-5" />
                       </Link>

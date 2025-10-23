@@ -5,17 +5,20 @@ import {
   Body,
   Patch,
   Param,
-  Delete, Query, UseGuards
+  Delete,
+  Query,
+  UseGuards
 } from '@nestjs/common';
 import { DeckService, FindAllDecksParams } from './deck.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
-import {CurrentUser} from "../auth/decorators/current-user.decorator";
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
-import {JwtAuthGuard} from "../auth/guards/jwt-auth.guard";
-import {ApiBearerAuth} from "@nestjs/swagger";
-import {Public} from "../auth/decorators/public.decorator";
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 
+@ApiTags('decks')
 @Controller('deck')
 export class DeckController {
   constructor(private readonly deckService: DeckService) {}
@@ -34,9 +37,11 @@ export class DeckController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/me')
-  findAllFromUSer(@CurrentUser() user: User, @Query() query: FindAllDecksParams)
-  {
-    return this.deckService.findAllFromUser(user,query);
+  findAllFromUSer(
+    @CurrentUser() user: User,
+    @Query() query: FindAllDecksParams
+  ) {
+    return this.deckService.findAllFromUser(user, query);
   }
 
   @Public()
@@ -47,7 +52,11 @@ export class DeckController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @CurrentUser() user: User, @Body() updateDeckDto: UpdateDeckDto) {
+  update(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() updateDeckDto: UpdateDeckDto
+  ) {
     return this.deckService.updateDeck(+id, user, updateDeckDto);
   }
 

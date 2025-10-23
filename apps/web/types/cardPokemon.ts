@@ -28,8 +28,6 @@ export type PokemonSerieType = {
   logo?: string;
 };
 
-
-
 export type PokemonCardType = {
   id: string;
   tcgDexId?: string;
