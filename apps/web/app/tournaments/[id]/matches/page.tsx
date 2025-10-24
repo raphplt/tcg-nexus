@@ -48,7 +48,9 @@ export default function MatchesPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { tournament } = useTournament(id as string);
-  const { matches, stats, isLoading, startMatch, resetMatch } = useMatches(id as string);
+  const { matches, stats, isLoading, startMatch, resetMatch } = useMatches(
+    id as string,
+  );
   const permissions = usePermissions(user, tournament);
 
   const [filters, setFilters] = useState({
@@ -63,13 +65,18 @@ export default function MatchesPage() {
     if (filters.status && match.status !== filters.status) return false;
     if (filters.player) {
       const playerId = parseInt(filters.player);
-      if (match.playerA?.id !== playerId && match.playerB?.id !== playerId) return false;
+      if (match.playerA?.id !== playerId && match.playerB?.id !== playerId)
+        return false;
     }
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const playerAName = match.playerA?.name?.toLowerCase() || "";
       const playerBName = match.playerB?.name?.toLowerCase() || "";
-      if (!playerAName.includes(searchLower) && !playerBName.includes(searchLower)) return false;
+      if (
+        !playerAName.includes(searchLower) &&
+        !playerBName.includes(searchLower)
+      )
+        return false;
     }
     return true;
   });
@@ -125,7 +132,9 @@ export default function MatchesPage() {
     });
   };
 
-  const rounds = tournament?.totalRounds ? Array.from({ length: tournament.totalRounds }, (_, i) => i + 1) : [];
+  const rounds = tournament?.totalRounds
+    ? Array.from({ length: tournament.totalRounds }, (_, i) => i + 1)
+    : [];
 
   if (isLoading) {
     return (
@@ -145,7 +154,11 @@ export default function MatchesPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="sm" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -162,7 +175,10 @@ export default function MatchesPage() {
             </div>
           </div>
 
-          <Button variant="outline" asChild>
+          <Button
+            variant="outline"
+            asChild
+          >
             <Link href={`/tournaments/${id}/bracket`}>
               <Trophy className="w-4 h-4 mr-2" />
               Voir le bracket
@@ -174,25 +190,33 @@ export default function MatchesPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.total}
+              </div>
               <div className="text-sm text-muted-foreground">Total</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.finished}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.finished}
+              </div>
               <div className="text-sm text-muted-foreground">Terminés</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{stats.inProgress}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.inProgress}
+              </div>
               <div className="text-sm text-muted-foreground">En cours</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-600">{stats.scheduled}</div>
+              <div className="text-2xl font-bold text-gray-600">
+                {stats.scheduled}
+              </div>
               <div className="text-sm text-muted-foreground">Programmés</div>
             </CardContent>
           </Card>
@@ -217,21 +241,31 @@ export default function MatchesPage() {
                     placeholder="Nom du joueur..."
                     className="pl-8"
                     value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, search: e.target.value })
+                    }
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="round">Round</Label>
-                <Select value={filters.round} onValueChange={(value) => setFilters({ ...filters, round: value })}>
+                <Select
+                  value={filters.round}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, round: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous les rounds" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Tous les rounds</SelectItem>
                     {rounds.map((round) => (
-                      <SelectItem key={round} value={round.toString()}>
+                      <SelectItem
+                        key={round}
+                        value={round.toString()}
+                      >
                         Round {round}
                       </SelectItem>
                     ))}
@@ -241,7 +275,12 @@ export default function MatchesPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Statut</Label>
-                <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
@@ -258,7 +297,14 @@ export default function MatchesPage() {
               <div className="flex items-end">
                 <Button
                   variant="outline"
-                  onClick={() => setFilters({ round: "", status: "", player: "", search: "" })}
+                  onClick={() =>
+                    setFilters({
+                      round: "",
+                      status: "",
+                      player: "",
+                      search: "",
+                    })
+                  }
                   className="w-full"
                 >
                   Réinitialiser
@@ -290,14 +336,18 @@ export default function MatchesPage() {
                     <TableRow
                       key={match.id}
                       className="hover:bg-muted/50 cursor-pointer"
-                      onClick={() => router.push(`/tournaments/${id}/matches/${match.id}`)}
+                      onClick={() =>
+                        router.push(`/tournaments/${id}/matches/${match.id}`)
+                      }
                     >
                       <TableCell className="font-medium">#{match.id}</TableCell>
                       <TableCell>
                         <Badge variant="outline">Round {match.round}</Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{getPhaseLabel(match.phase)}</span>
+                        <span className="text-sm">
+                          {getPhaseLabel(match.phase)}
+                        </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -307,21 +357,28 @@ export default function MatchesPage() {
                                 {match.playerA?.name[0] || "?"}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm">{match.playerA?.name || "TBD"}</span>
+                            <span className="text-sm">
+                              {match.playerA?.name || "TBD"}
+                            </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">vs</span>
+                          <span className="text-xs text-muted-foreground">
+                            vs
+                          </span>
                           <div className="flex items-center gap-1">
                             <Avatar className="w-6 h-6">
                               <AvatarFallback className="text-xs">
                                 {match.playerB?.name[0] || "?"}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm">{match.playerB?.name || "TBD"}</span>
+                            <span className="text-sm">
+                              {match.playerB?.name || "TBD"}
+                            </span>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {match.status === "finished" || match.status === "forfeit" ? (
+                        {match.status === "finished" ||
+                        match.status === "forfeit" ? (
                           <span className="font-medium">
                             {match.playerAScore} - {match.playerBScore}
                           </span>
@@ -337,42 +394,57 @@ export default function MatchesPage() {
                       </TableCell>
                       <TableCell>{formatDate(match.scheduledDate)}</TableCell>
                       <TableCell>
-                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/tournaments/${id}/matches/${match.id}`}>
+                        <div
+                          className="flex gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <Link
+                              href={`/tournaments/${id}/matches/${match.id}`}
+                            >
                               <Eye className="w-3 h-3" />
                             </Link>
                           </Button>
-                          
-                          {permissions.canStartMatches && match.status === "scheduled" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => startMatch(match.id)}
-                            >
-                              <Play className="w-3 h-3" />
-                            </Button>
-                          )}
-                          
-                          {permissions.canResetMatches && (match.status === "finished" || match.status === "forfeit") && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const reason = prompt("Raison du reset :");
-                                if (reason) resetMatch(match.id, { reason });
-                              }}
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                            </Button>
-                          )}
+
+                          {permissions.canStartMatches &&
+                            match.status === "scheduled" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => startMatch(match.id)}
+                              >
+                                <Play className="w-3 h-3" />
+                              </Button>
+                            )}
+
+                          {permissions.canResetMatches &&
+                            (match.status === "finished" ||
+                              match.status === "forfeit") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const reason = prompt("Raison du reset :");
+                                  if (reason) resetMatch(match.id, { reason });
+                                }}
+                              >
+                                <RotateCcw className="w-3 h-3" />
+                              </Button>
+                            )}
                         </div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell
+                      colSpan={8}
+                      className="text-center py-8"
+                    >
                       <div className="text-muted-foreground">
                         <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>Aucun match trouvé avec ces filtres</p>
@@ -396,8 +468,10 @@ export default function MatchesPage() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const scheduledMatches = matches.filter(m => m.status === "scheduled");
-                    scheduledMatches.forEach(match => startMatch(match.id));
+                    const scheduledMatches = matches.filter(
+                      (m) => m.status === "scheduled",
+                    );
+                    scheduledMatches.forEach((match) => startMatch(match.id));
                   }}
                   disabled={stats.scheduled === 0}
                 >

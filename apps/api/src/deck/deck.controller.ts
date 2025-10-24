@@ -9,86 +9,61 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common';
-import { DeckService } from './deck.service';
+import { DeckService, FindAllDecksParams } from './deck.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
-import { DeckCardRole } from '../common/enums/deckCardRole';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('decks')
-@Controller('decks')
+@Controller('deck')
 export class DeckController {
   constructor(private readonly deckService: DeckService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  create(@Body() createDeckDto: CreateDeckDto) {
-    return this.deckService.create(createDeckDto);
+  create(@CurrentUser() user: User, @Body() createDeckDto: CreateDeckDto) {
+    return this.deckService.createDeck(user, createDeckDto);
   }
 
+  @Public()
   @Get()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  findAll(
-    @Query('userId') userId: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @CurrentUser() user?: User
-  ) {
-    return this.deckService.findAllForUser(user as User, {
-      userId,
-      page,
-      limit
-    });
+  findAll(@Query() query: FindAllDecksParams) {
+    return this.deckService.findAll(query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('/me')
+  findAllFromUSer(
+    @CurrentUser() user: User,
+    @Query() query: FindAllDecksParams
+  ) {
+    return this.deckService.findAllFromUser(user, query);
+  }
+
+  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.deckService.findOneWithCards(+id);
   }
 
-  @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateDeckDto: UpdateDeckDto,
-    @CurrentUser() user: User
+    @CurrentUser() user: User,
+    @Body() updateDeckDto: UpdateDeckDto
   ) {
-    return this.deckService.updateMeta(+id, updateDeckDto, user);
+    return this.deckService.updateDeck(+id, user, updateDeckDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  remove(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.deckService.delete(+id, user);
-  }
-
-  @Post(':id/cards')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  addCard(
-    @Param('id') id: string,
-    @Body() body: { cardId: string; qty: number; role?: DeckCardRole },
-    @CurrentUser() user: User
-  ) {
-    return this.deckService.addCard(+id, body, user);
-  }
-
-  @Delete(':id/cards/:cardId')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  removeCard(
-    @Param('id') id: string,
-    @Param('cardId') cardId: string,
-    @CurrentUser() user: User
-  ) {
-    return this.deckService.removeCard(+id, cardId, user);
+  remove(@Param('id') id: string) {
+    return this.deckService.remove(+id);
   }
 
   @Post(':id/clone')

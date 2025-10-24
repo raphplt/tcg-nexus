@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import {useAuth} from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Option {
   label: string;
@@ -46,7 +46,7 @@ const MarketplaceFilters = ({
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const {isAuthenticated} = useAuth();
+  const { isAuthenticated } = useAuth();
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
       setFilters({ search: debouncedSearch });
@@ -109,7 +109,6 @@ const MarketplaceFilters = ({
                   ?.label || "Tous"}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous</SelectItem>
                 {cardStateOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
@@ -134,7 +133,6 @@ const MarketplaceFilters = ({
                   ?.label || "Toutes"}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Toutes</SelectItem>
                 {currencyOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}

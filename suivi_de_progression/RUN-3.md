@@ -18,7 +18,7 @@
 - Objectifs **atteints** :
   - Page Marketplace avec listing et filtres ✅
   - Création de tournois ✅
-  - Bouton "Rejoindre" un tournoi ✅ 
+  - Bouton "Rejoindre" un tournoi ✅
   - Authentification avec rôles `pro`/`customer` ✅
   - Section Collection (listing + filtres + wishlist) ✅
 - Objectifs **partiellement atteints** :
@@ -30,16 +30,16 @@
 
 ## 3. Avancement des User Stories
 
-| User Story                                                                      | Statut      | Commentaires                                                                                                             |
-| ------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Consulter les tournois listés** afin de choisir celui qui m'intéresse.        | **Done**    | Listing avec filtres + bouton "Rejoindre" + affichage des participants implémentés.                                      |
-| **Créer un deck** en ajoutant des cartes depuis ma collection.                  | In Progress | Entités `Deck` et `DeckCard` créées ; endpoints API fonctionnels ; page frontend non démarrée.                           |
-| **Mettre en vente une carte** avec un prix fixé.                                | **Done**    | Formulaire de création + section "Mes ventes" dans le profil avec gestion (édition/suppression/activation).              |
-| **Consulter ma collection personnelle** pour suivre mes cartes.                 | **Done**    | Page frontend et API créées ; listing + filtres + wishlist implémentés.                                                   |
-| **Recevoir une recommandation de deck** basée sur mes cartes et le méta actuel. | Blocked     | Endpoint `analyzeDeck` non démarré.                                                                                      |
-| **Parcourir les cartes en vente (Marketplace)**                                 | **Done**    | Listing avec filtres, tri et pagination.                                                                                  |
-| **Créer un tournoi** (formulaire + création côté API).                          | **Done**    | Création complète avec contrôle des rôles (`isPro`).                                                                      |
-| **Rejoindre un tournoi**                                                        | **Done**    | Endpoint `POST /tournaments/:id/register` + UI bouton "Rejoindre" + affichage de la liste des participants.              |
+| User Story                                                                      | Statut      | Commentaires                                                                                                |
+| ------------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| **Consulter les tournois listés** afin de choisir celui qui m'intéresse.        | **Done**    | Listing avec filtres + bouton "Rejoindre" + affichage des participants implémentés.                         |
+| **Créer un deck** en ajoutant des cartes depuis ma collection.                  | In Progress | Entités `Deck` et `DeckCard` créées ; endpoints API fonctionnels ; page frontend non démarrée.              |
+| **Mettre en vente une carte** avec un prix fixé.                                | **Done**    | Formulaire de création + section "Mes ventes" dans le profil avec gestion (édition/suppression/activation). |
+| **Consulter ma collection personnelle** pour suivre mes cartes.                 | **Done**    | Page frontend et API créées ; listing + filtres + wishlist implémentés.                                     |
+| **Recevoir une recommandation de deck** basée sur mes cartes et le méta actuel. | Blocked     | Endpoint `analyzeDeck` non démarré.                                                                         |
+| **Parcourir les cartes en vente (Marketplace)**                                 | **Done**    | Listing avec filtres, tri et pagination.                                                                    |
+| **Créer un tournoi** (formulaire + création côté API).                          | **Done**    | Création complète avec contrôle des rôles (`isPro`).                                                        |
+| **Rejoindre un tournoi**                                                        | **Done**    | Endpoint `POST /tournaments/:id/register` + UI bouton "Rejoindre" + affichage de la liste des participants. |
 
 ## 4. Problèmes & Blocages
 
@@ -99,4 +99,3 @@
   - Tests & qualité : `@Jounayd` (tests manuels + unitaires)
   - Analyse de deck : `@raphplt` (endpoint prototype)
   - Collection & Wishlist : `@raphplt` (API + UI) / `@aymardl` (UI)
-

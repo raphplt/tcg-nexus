@@ -34,7 +34,7 @@ export function ThemeProvider({
   // Éviter l'hydratation mismatch en attendant que le composant soit monté
   useEffect(() => {
     setMounted(true);
-    
+
     // Appliquer le thème initial après le montage
     const storedTheme = localStorage.getItem(storageKey) as Theme;
     if (storedTheme) {

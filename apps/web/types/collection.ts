@@ -9,8 +9,8 @@ export interface Collection {
   updatedAt: string;
   userId: number;
 }
-  
-  export interface CollectionItemType {
+
+export interface CollectionItemType {
   id: number;
   quantity: number;
   pokemonCard: PokemonCardType;
@@ -18,5 +18,5 @@ export interface Collection {
   cardState: {
     id: number;
     name: string;
-  }
-};
+  };
+}

@@ -22,13 +22,8 @@ export class Deck {
   @Column({ length: 100 })
   name: string;
 
-  @Column({ nullable: true })
-  description: string;
-
   @Column({ default: false })
   isPublic: boolean;
-
-  // Relations
 
   @ManyToOne(() => DeckFormat, (format) => format.decks, {
     eager: true,

@@ -30,7 +30,10 @@ export class MarketplaceController {
   @ApiBearerAuth()
   @Post()
   @Roles('pro')
-  createListing(@Body() createListingDto: CreateListingDto, @CurrentUser() user: User) {
+  createListing(
+    @Body() createListingDto: CreateListingDto,
+    @CurrentUser() user: User
+  ) {
     return this.marketplaceService.create(createListingDto, user);
   }
 

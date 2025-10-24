@@ -14,7 +14,11 @@ interface TournamentsPaginationProps {
   setPage: (page: number) => void;
 }
 
-export function TournamentsPagination({ meta, page, setPage }: TournamentsPaginationProps) {
+export function TournamentsPagination({
+  meta,
+  page,
+  setPage,
+}: TournamentsPaginationProps) {
   if (!meta) return null;
   return (
     <Pagination className="mt-8">
@@ -64,4 +68,4 @@ export function TournamentsPagination({ meta, page, setPage }: TournamentsPagina
       </PaginationContent>
     </Pagination>
   );
-} 
+}

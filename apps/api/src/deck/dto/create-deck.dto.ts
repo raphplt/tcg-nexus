@@ -1,28 +1,38 @@
 import {
-  IsBoolean,
+  IsBoolean, IsEnum,
   IsInt,
   IsNotEmpty,
   IsOptional,
-  IsString
+  IsString,
+  IsUUID,
+  ValidateNested
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import {DeckCardRole} from "../../common/enums/deckCardRole";
+
+class DeckCardInputDto {
+  @IsUUID()
+  cardId: string;
+
+  @IsInt()
+  qty: number;
+
+  @IsEnum(DeckCardRole)
+  role: DeckCardRole;
+}
 
 export class CreateDeckDto {
-  @IsInt()
-  userId: number;
-
   @IsString()
   @IsNotEmpty()
-  name: string;
+  deckName: string;
 
-  @IsOptional()
-  @IsInt()
-  formatId?: number;
-
-  @IsOptional()
   @IsBoolean()
-  isPublic?: boolean;
+  isPublic: boolean;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  formatId: number;
+
+  @ValidateNested({ each: true })
+  @Type(() => DeckCardInputDto)
+  cards: DeckCardInputDto[];
 }

@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -21,15 +21,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
-  Trophy, 
-  Clock, 
-  AlertTriangle,
-  CheckCircle,
-  X
-} from "lucide-react";
+import { Trophy, Clock, AlertTriangle, CheckCircle, X } from "lucide-react";
 import { Match, ReportScoreDto } from "@/types/tournament";
 import { useMatches } from "@/hooks/useMatches";
 import { useMatchPermissions } from "@/hooks/usePermissions";
@@ -39,7 +33,7 @@ const scoreSchema = z.object({
   playerAScore: z.number().min(0, "Le score doit être positif"),
   playerBScore: z.number().min(0, "Le score doit être positif"),
   isForfeit: z.boolean().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 type ScoreFormData = z.infer<typeof scoreSchema>;
@@ -52,7 +46,9 @@ interface MatchScoreFormProps {
 export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
   const { user } = useAuth();
   const permissions = useMatchPermissions(user, match);
-  const { reportScore, isReporting } = useMatches(match.tournament.id.toString());
+  const { reportScore, isReporting } = useMatches(
+    match.tournament.id.toString(),
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState<ScoreFormData | null>(null);
 
@@ -61,20 +57,23 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
     handleSubmit,
     watch,
     formState: { errors, isValid },
-    reset
+    reset,
   } = useForm<ScoreFormData>({
     resolver: zodResolver(scoreSchema),
     defaultValues: {
       playerAScore: match.playerAScore || 0,
       playerBScore: match.playerBScore || 0,
       isForfeit: false,
-      notes: match.notes || ""
-    }
+      notes: match.notes || "",
+    },
   });
 
   const watchedValues = watch();
   const hasWinner = watchedValues.playerAScore !== watchedValues.playerBScore;
-  const winner = watchedValues.playerAScore > watchedValues.playerBScore ? match.playerA : match.playerB;
+  const winner =
+    watchedValues.playerAScore > watchedValues.playerBScore
+      ? match.playerA
+      : match.playerB;
 
   const onSubmit = (data: ScoreFormData) => {
     setFormData(data);
@@ -92,14 +91,34 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
 
   const getMatchStatusBadge = () => {
     switch (match.status) {
-      case 'scheduled':
-        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Programmé</Badge>;
-      case 'in_progress':
-        return <Badge variant="secondary"><Trophy className="w-3 h-3 mr-1" />En cours</Badge>;
-      case 'finished':
-        return <Badge variant="default"><CheckCircle className="w-3 h-3 mr-1" />Terminé</Badge>;
-      case 'forfeit':
-        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Forfait</Badge>;
+      case "scheduled":
+        return (
+          <Badge variant="outline">
+            <Clock className="w-3 h-3 mr-1" />
+            Programmé
+          </Badge>
+        );
+      case "in_progress":
+        return (
+          <Badge variant="secondary">
+            <Trophy className="w-3 h-3 mr-1" />
+            En cours
+          </Badge>
+        );
+      case "finished":
+        return (
+          <Badge variant="default">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Terminé
+          </Badge>
+        );
+      case "forfeit":
+        return (
+          <Badge variant="destructive">
+            <X className="w-3 h-3 mr-1" />
+            Forfait
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{match.status}</Badge>;
     }
@@ -118,7 +137,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
     );
   }
 
-  if (match.status === 'finished' || match.status === 'forfeit') {
+  if (match.status === "finished" || match.status === "forfeit") {
     return (
       <Card>
         <CardHeader>
@@ -130,14 +149,20 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         <CardContent>
           <div className="grid grid-cols-3 gap-4 items-center">
             {/* Joueur A */}
-            <div className={`text-center p-4 rounded-lg ${
-              match.winner?.id === match.playerA?.id ? 'bg-green-100 border-2 border-green-300' : 'bg-gray-50'
-            }`}>
+            <div
+              className={`text-center p-4 rounded-lg ${
+                match.winner?.id === match.playerA?.id
+                  ? "bg-green-100 border-2 border-green-300"
+                  : "bg-gray-50"
+              }`}
+            >
               <Avatar className="w-12 h-12 mx-auto mb-2">
                 <AvatarFallback>{match.playerA?.name[0]}</AvatarFallback>
               </Avatar>
               <p className="font-medium">{match.playerA?.name}</p>
-              <div className="text-2xl font-bold mt-2">{match.playerAScore}</div>
+              <div className="text-2xl font-bold mt-2">
+                {match.playerAScore}
+              </div>
               {match.winner?.id === match.playerA?.id && (
                 <Trophy className="w-5 h-5 mx-auto mt-1 text-yellow-500" />
               )}
@@ -145,18 +170,26 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
 
             {/* VS */}
             <div className="text-center">
-              <span className="text-4xl font-bold text-muted-foreground">VS</span>
+              <span className="text-4xl font-bold text-muted-foreground">
+                VS
+              </span>
             </div>
 
             {/* Joueur B */}
-            <div className={`text-center p-4 rounded-lg ${
-              match.winner?.id === match.playerB?.id ? 'bg-green-100 border-2 border-green-300' : 'bg-gray-50'
-            }`}>
+            <div
+              className={`text-center p-4 rounded-lg ${
+                match.winner?.id === match.playerB?.id
+                  ? "bg-green-100 border-2 border-green-300"
+                  : "bg-gray-50"
+              }`}
+            >
               <Avatar className="w-12 h-12 mx-auto mb-2">
                 <AvatarFallback>{match.playerB?.name[0]}</AvatarFallback>
               </Avatar>
               <p className="font-medium">{match.playerB?.name}</p>
-              <div className="text-2xl font-bold mt-2">{match.playerBScore}</div>
+              <div className="text-2xl font-bold mt-2">
+                {match.playerBScore}
+              </div>
               {match.winner?.id === match.playerB?.id && (
                 <Trophy className="w-5 h-5 mx-auto mt-1 text-yellow-500" />
               )}
@@ -183,7 +216,10 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
             {/* Interface de score */}
             <div className="grid grid-cols-3 gap-4 items-center">
               {/* Joueur A */}
@@ -204,14 +240,18 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                     {...register("playerAScore", { valueAsNumber: true })}
                   />
                   {errors.playerAScore && (
-                    <p className="text-sm text-destructive">{errors.playerAScore.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.playerAScore.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* VS avec preview du vainqueur */}
               <div className="text-center">
-                <span className="text-4xl font-bold text-muted-foreground mb-4 block">VS</span>
+                <span className="text-4xl font-bold text-muted-foreground mb-4 block">
+                  VS
+                </span>
                 {hasWinner && !watchedValues.isForfeit && (
                   <div className="space-y-2">
                     <Trophy className="w-8 h-8 mx-auto text-yellow-500" />
@@ -243,7 +283,9 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                     {...register("playerBScore", { valueAsNumber: true })}
                   />
                   {errors.playerBScore && (
-                    <p className="text-sm text-destructive">{errors.playerBScore.message}</p>
+                    <p className="text-sm text-destructive">
+                      {errors.playerBScore.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -256,7 +298,10 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                   id="forfeit"
                   {...register("isForfeit")}
                 />
-                <Label htmlFor="forfeit" className="flex items-center gap-2">
+                <Label
+                  htmlFor="forfeit"
+                  className="flex items-center gap-2"
+                >
                   <AlertTriangle className="w-4 h-4 text-orange-500" />
                   Match par forfait
                 </Label>
@@ -275,7 +320,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
             {/* Actions */}
             <div className="flex gap-3 pt-4">
               <AlertDialogTrigger asChild>
-                <Button 
+                <Button
                   type="submit"
                   disabled={!isValid || isReporting}
                   className="flex-1"
@@ -283,9 +328,9 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                   {isReporting ? "Enregistrement..." : "Valider le résultat"}
                 </Button>
               </AlertDialogTrigger>
-              
-              <Button 
-                type="button" 
+
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => reset()}
               >
@@ -297,7 +342,10 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
       </Card>
 
       {/* Confirmation Modal */}
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+      <AlertDialog
+        open={showConfirmation}
+        onOpenChange={setShowConfirmation}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer le résultat</AlertDialogTitle>
@@ -305,27 +353,37 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
               {formData && (
                 <div className="space-y-3">
                   <p>Voulez-vous enregistrer ce résultat ?</p>
-                  
+
                   <div className="bg-muted p-3 rounded">
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{match.playerA?.name}</span>
-                      <span className="text-2xl font-bold">{formData.playerAScore}</span>
+                      <span className="text-2xl font-bold">
+                        {formData.playerAScore}
+                      </span>
                     </div>
-                    <div className="text-center text-sm text-muted-foreground my-1">VS</div>
+                    <div className="text-center text-sm text-muted-foreground my-1">
+                      VS
+                    </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium">{match.playerB?.name}</span>
-                      <span className="text-2xl font-bold">{formData.playerBScore}</span>
+                      <span className="text-2xl font-bold">
+                        {formData.playerBScore}
+                      </span>
                     </div>
                   </div>
 
                   {formData.isForfeit && (
-                    <p className="text-orange-600 font-medium">⚠️ Match par forfait</p>
+                    <p className="text-orange-600 font-medium">
+                      ⚠️ Match par forfait
+                    </p>
                   )}
 
                   {formData.notes && (
                     <div>
                       <p className="text-sm font-medium">Notes :</p>
-                      <p className="text-sm text-muted-foreground">{formData.notes}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formData.notes}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -334,7 +392,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmSubmit}
               disabled={isReporting}
             >

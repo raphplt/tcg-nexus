@@ -41,7 +41,8 @@ const MarketplaceSection: React.FC = () => {
       id: "1",
       seller: {
         name: "PokemonMaster42",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PokemonMaster42",
+        avatar:
+          "https://api.dicebear.com/7.x/avataaars/svg?seed=PokemonMaster42",
         rating: 4.8,
         location: "Paris, France",
       },
@@ -61,16 +62,17 @@ const MarketplaceSection: React.FC = () => {
       id: "2",
       seller: {
         name: "CardCollectorPro",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CardCollectorPro",
+        avatar:
+          "https://api.dicebear.com/7.x/avataaars/svg?seed=CardCollectorPro",
         rating: 4.9,
         location: "Lyon, France",
       },
-      price: 18.50,
+      price: 18.5,
       currency: "EUR",
       condition: "Mint",
       quantity: 1,
       shipping: {
-        cost: 3.50,
+        cost: 3.5,
         time: "1-2 jours",
       },
       trend: "up",
@@ -90,7 +92,7 @@ const MarketplaceSection: React.FC = () => {
       condition: "Lightly Played",
       quantity: 3,
       shipping: {
-        cost: 2.50,
+        cost: 2.5,
         time: "3-5 jours",
       },
       trend: "stable",
@@ -105,12 +107,12 @@ const MarketplaceSection: React.FC = () => {
         rating: 4.6,
         location: "Toulouse, France",
       },
-      price: 22.00,
+      price: 22.0,
       currency: "EUR",
       condition: "Mint",
       quantity: 1,
       shipping: {
-        cost: 4.00,
+        cost: 4.0,
         time: "1 jour",
       },
       trend: "up",
@@ -144,13 +146,15 @@ const MarketplaceSection: React.FC = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
+
     if (diffInHours < 24) {
       return `Il y a ${diffInHours}h`;
     } else {
       const diffInDays = Math.floor(diffInHours / 24);
-      return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+      return `Il y a ${diffInDays} jour${diffInDays > 1 ? "s" : ""}`;
     }
   };
 
@@ -165,7 +169,10 @@ const MarketplaceSection: React.FC = () => {
       <CardContent>
         <div className="space-y-4">
           {mockListings.map((listing) => (
-            <Card key={listing.id} className="marketplace-card">
+            <Card
+              key={listing.id}
+              className="marketplace-card"
+            >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
@@ -176,7 +183,7 @@ const MarketplaceSection: React.FC = () => {
                         {listing.seller.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-semibold">{listing.seller.name}</h4>
@@ -187,7 +194,7 @@ const MarketplaceSection: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
@@ -198,22 +205,26 @@ const MarketplaceSection: React.FC = () => {
                           <span>{formatDate(listing.postedAt)}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={getConditionColor(listing.condition)}>
                           {listing.condition}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {listing.quantity} disponible{listing.quantity > 1 ? 's' : ''}
+                          {listing.quantity} disponible
+                          {listing.quantity > 1 ? "s" : ""}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Livraison: {listing.shipping.cost}€ ({listing.shipping.time})</span>
+                        <span>
+                          Livraison: {listing.shipping.cost}€ (
+                          {listing.shipping.time})
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Price and Actions */}
                   <div className="text-right">
                     <div className="flex items-center gap-2 mb-2">
@@ -222,16 +233,21 @@ const MarketplaceSection: React.FC = () => {
                       </span>
                       <div className="flex items-center gap-1">
                         {getTrendIcon(listing.trend)}
-                        <span className={`text-sm font-medium ${
-                          listing.trend === 'up' ? 'trend-up' : 
-                          listing.trend === 'down' ? 'trend-down' : 
-                          'trend-stable'
-                        }`}>
-                          {listing.trendValue > 0 ? '+' : ''}{listing.trendValue}%
+                        <span
+                          className={`text-sm font-medium ${
+                            listing.trend === "up"
+                              ? "trend-up"
+                              : listing.trend === "down"
+                                ? "trend-down"
+                                : "trend-stable"
+                          }`}
+                        >
+                          {listing.trendValue > 0 ? "+" : ""}
+                          {listing.trendValue}%
                         </span>
                       </div>
                     </div>
-                    
+
                     <Button className="w-full">
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Acheter
@@ -242,9 +258,12 @@ const MarketplaceSection: React.FC = () => {
             </Card>
           ))}
         </div>
-        
+
         <div className="mt-6 text-center">
-          <Button variant="outline" className="w-full">
+          <Button
+            variant="outline"
+            className="w-full"
+          >
             Voir toutes les ventes
           </Button>
         </div>

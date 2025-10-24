@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { DeckService } from './deck.service';
 import { DeckController } from './deck.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { Deck } from './entities/deck.entity';
-import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
-import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
-import { DeckCardService } from 'src/deck-card/deck-card.service';
+import { DeckFormat } from '../deck-format/entities/deck-format.entity';
+import { User } from '../user/entities/user.entity';
+import { DeckCard } from '../deck-card/entities/deck-card.entity';
+import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Deck, DeckCard, PokemonCard, DeckFormat])
+    TypeOrmModule.forFeature([Deck, DeckCard, DeckFormat, PokemonCard, User])
   ],
   controllers: [DeckController],
-  providers: [DeckService, DeckCardService]
+  providers: [DeckService]
 })
 export class DeckModule {}

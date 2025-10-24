@@ -36,7 +36,6 @@ export class MarketplaceService {
 
   private readonly logger = new Logger(MarketplaceService.name);
 
-
   async create(createListingDto: CreateListingDto, user: User) {
     if (!createListingDto.pokemonCardId) {
       throw new BadRequestException('pokemonCardId is required');

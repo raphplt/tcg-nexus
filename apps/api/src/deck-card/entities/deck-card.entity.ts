@@ -20,6 +20,6 @@ export class DeckCard {
   @Column({ type: 'int', default: 1 })
   qty: number;
 
-  @Column({ type: 'enum', enum: DeckCardRole, default: 'main' })
+  @Column({ type: 'enum', enum: DeckCardRole, default: DeckCardRole.main })
   role: DeckCardRole;
 }
