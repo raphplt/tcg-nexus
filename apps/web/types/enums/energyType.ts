@@ -1,4 +1,4 @@
 export enum EnergyType {
-  Basic = 'Basic',
-  Special = 'Special',
+  Basic = "Basic",
+  Special = "Special",
 }

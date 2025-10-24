@@ -20,6 +20,7 @@ import { ArticleModule } from './article/article.module';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 import { DeckModule } from './deck/deck.module';
 import { DeckCardModule } from './deck-card/deck-card.module';
+import { DeckFormatModule } from './deck-format/deck-format.module';
 import { SearchModule } from './search/search.module';
 import { CollectionModule } from './collection/collection.module';
 import { CollectionItemModule } from './collection-item/collection-item.module';
@@ -55,6 +56,7 @@ import { AiModule } from './ai/ai.module';
     CollectionModule,
     DeckModule,
     DeckCardModule,
+    DeckFormatModule,
     SearchModule,
     CollectionModule,
     CollectionItemModule,

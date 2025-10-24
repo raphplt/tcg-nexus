@@ -44,12 +44,12 @@ export default function PlayerDashboardPage() {
   const { rankings, getPlayerRanking } = useRankings(id as string);
 
   // Récupérer les matches du joueur
-  const {
-    data: playerMatches = [],
-    isLoading: matchesLoading,
-  } = useQuery<Match[]>({
+  const { data: playerMatches = [], isLoading: matchesLoading } = useQuery<
+    Match[]
+  >({
     queryKey: ["player", user?.player?.id, "tournament", id, "matches"],
-    queryFn: () => matchService.getPlayerMatches(user!.player!.id, parseInt(id as string)),
+    queryFn: () =>
+      matchService.getPlayerMatches(user!.player!.id, parseInt(id as string)),
     enabled: !!user?.player?.id && !!id,
   });
 
@@ -73,7 +73,7 @@ export default function PlayerDashboardPage() {
 
   const getMatchResult = (match: Match) => {
     if (!user?.player) return null;
-    
+
     if (match.status !== "finished" && match.status !== "forfeit") {
       return <Badge variant="outline">À jouer</Badge>;
     }
@@ -81,13 +81,25 @@ export default function PlayerDashboardPage() {
     const isPlayerA = match.playerA?.id === user.player.id;
     const playerScore = isPlayerA ? match.playerAScore : match.playerBScore;
     const opponentScore = isPlayerA ? match.playerBScore : match.playerAScore;
-    
+
     if (match.winner?.id === user.player.id) {
-      return <Badge variant="default">Victoire ({playerScore}-{opponentScore})</Badge>;
+      return (
+        <Badge variant="default">
+          Victoire ({playerScore}-{opponentScore})
+        </Badge>
+      );
     } else if (match.winner) {
-      return <Badge variant="destructive">Défaite ({playerScore}-{opponentScore})</Badge>;
+      return (
+        <Badge variant="destructive">
+          Défaite ({playerScore}-{opponentScore})
+        </Badge>
+      );
     } else {
-      return <Badge variant="secondary">Égalité ({playerScore}-{opponentScore})</Badge>;
+      return (
+        <Badge variant="secondary">
+          Égalité ({playerScore}-{opponentScore})
+        </Badge>
+      );
     }
   };
 
@@ -106,11 +118,19 @@ export default function PlayerDashboardPage() {
     });
   };
 
-  const nextMatch = playerMatches.find(m => m.status === "scheduled" || m.status === "in_progress");
-  const completedMatches = playerMatches.filter(m => m.status === "finished" || m.status === "forfeit");
-  const wins = completedMatches.filter(m => m.winner?.id === user?.player?.id).length;
-  const losses = completedMatches.filter(m => m.winner && m.winner.id !== user?.player?.id).length;
-  const draws = completedMatches.filter(m => !m.winner).length;
+  const nextMatch = playerMatches.find(
+    (m) => m.status === "scheduled" || m.status === "in_progress",
+  );
+  const completedMatches = playerMatches.filter(
+    (m) => m.status === "finished" || m.status === "forfeit",
+  );
+  const wins = completedMatches.filter(
+    (m) => m.winner?.id === user?.player?.id,
+  ).length;
+  const losses = completedMatches.filter(
+    (m) => m.winner && m.winner.id !== user?.player?.id,
+  ).length;
+  const draws = completedMatches.filter((m) => !m.winner).length;
 
   if (!user?.player) {
     return (
@@ -134,7 +154,11 @@ export default function PlayerDashboardPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="sm" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -167,10 +191,13 @@ export default function PlayerDashboardPage() {
                   </AvatarFallback>
                 </Avatar>
                 <h3 className="text-xl font-bold mb-2">{user.player.name}</h3>
-                
+
                 {playerRanking && (
                   <div className="space-y-2">
-                    <Badge variant="outline" className="text-lg px-3 py-1">
+                    <Badge
+                      variant="outline"
+                      className="text-lg px-3 py-1"
+                    >
                       Rang #{playerRanking.rank}
                     </Badge>
                     <div className="text-sm text-muted-foreground">
@@ -209,11 +236,15 @@ export default function PlayerDashboardPage() {
                   <div className="pt-3 border-t space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Points :</span>
-                      <span className="font-medium">{playerRanking.points}</span>
+                      <span className="font-medium">
+                        {playerRanking.points}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>% Victoires :</span>
-                      <span className="font-medium">{playerRanking.winRate.toFixed(1)}%</span>
+                      <span className="font-medium">
+                        {playerRanking.winRate.toFixed(1)}%
+                      </span>
                     </div>
                   </div>
                 )}
@@ -233,14 +264,16 @@ export default function PlayerDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(nextMatch.status)}
-                      <span className="font-medium">Round {nextMatch.round}</span>
+                      <span className="font-medium">
+                        Round {nextMatch.round}
+                      </span>
                     </div>
-                    
+
                     <div className="text-center p-3 bg-muted rounded">
                       <p className="font-medium">VS</p>
                       <p className="text-lg">{getOpponent(nextMatch)?.name}</p>
                     </div>
-                    
+
                     {nextMatch.scheduledDate && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4" />
@@ -248,8 +281,8 @@ export default function PlayerDashboardPage() {
                       </div>
                     )}
 
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       asChild
                     >
                       <Link href={`/tournaments/${id}/matches/${nextMatch.id}`}>
@@ -290,13 +323,15 @@ export default function PlayerDashboardPage() {
                         .map((match) => {
                           const opponent = getOpponent(match);
                           const result = getMatchResult(match);
-                          
+
                           return (
                             <TableRow key={match.id}>
                               <TableCell>
-                                <Badge variant="outline">Round {match.round}</Badge>
+                                <Badge variant="outline">
+                                  Round {match.round}
+                                </Badge>
                               </TableCell>
-                              
+
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <Avatar className="w-6 h-6">
@@ -307,31 +342,43 @@ export default function PlayerDashboardPage() {
                                   <span>{opponent?.name || "TBD"}</span>
                                 </div>
                               </TableCell>
-                              
+
                               <TableCell>{result}</TableCell>
-                              
+
                               <TableCell>
-                                {match.status === "finished" || match.status === "forfeit" ? (
+                                {match.status === "finished" ||
+                                match.status === "forfeit" ? (
                                   <span className="font-medium">
-                                    {user.player.id === match.playerA?.id 
+                                    {user.player.id === match.playerA?.id
                                       ? `${match.playerAScore}-${match.playerBScore}`
-                                      : `${match.playerBScore}-${match.playerAScore}`
-                                    }
+                                      : `${match.playerBScore}-${match.playerAScore}`}
                                   </span>
                                 ) : (
-                                  <span className="text-muted-foreground">-</span>
+                                  <span className="text-muted-foreground">
+                                    -
+                                  </span>
                                 )}
                               </TableCell>
-                              
+
                               <TableCell>
                                 <span className="text-sm">
-                                  {formatDate(match.finishedAt || match.startedAt || match.scheduledDate)}
+                                  {formatDate(
+                                    match.finishedAt ||
+                                      match.startedAt ||
+                                      match.scheduledDate,
+                                  )}
                                 </span>
                               </TableCell>
-                              
+
                               <TableCell>
-                                <Button variant="outline" size="sm" asChild>
-                                  <Link href={`/tournaments/${id}/matches/${match.id}`}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                >
+                                  <Link
+                                    href={`/tournaments/${id}/matches/${match.id}`}
+                                  >
                                     Voir
                                   </Link>
                                 </Button>
@@ -341,7 +388,10 @@ export default function PlayerDashboardPage() {
                         })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell
+                          colSpan={6}
+                          className="text-center py-8"
+                        >
                           <div className="text-muted-foreground">
                             <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p>Aucun match programmé pour le moment</p>
@@ -356,32 +406,50 @@ export default function PlayerDashboardPage() {
 
             {/* Liens rapides */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <Button variant="outline" className="h-auto p-4" asChild>
+              <Button
+                variant="outline"
+                className="h-auto p-4"
+                asChild
+              >
                 <Link href={`/tournaments/${id}/bracket`}>
                   <div className="text-center">
                     <Trophy className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Bracket</div>
-                    <div className="text-xs text-muted-foreground">Voir la progression</div>
+                    <div className="text-xs text-muted-foreground">
+                      Voir la progression
+                    </div>
                   </div>
                 </Link>
               </Button>
-              
-              <Button variant="outline" className="h-auto p-4" asChild>
+
+              <Button
+                variant="outline"
+                className="h-auto p-4"
+                asChild
+              >
                 <Link href={`/tournaments/${id}/rankings`}>
                   <div className="text-center">
                     <TrendingUp className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Classements</div>
-                    <div className="text-xs text-muted-foreground">Voir ma position</div>
+                    <div className="text-xs text-muted-foreground">
+                      Voir ma position
+                    </div>
                   </div>
                 </Link>
               </Button>
-              
-              <Button variant="outline" className="h-auto p-4" asChild>
+
+              <Button
+                variant="outline"
+                className="h-auto p-4"
+                asChild
+              >
                 <Link href={`/tournaments/${id}/matches`}>
                   <div className="text-center">
                     <Clock className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Tous les matches</div>
-                    <div className="text-xs text-muted-foreground">Voir le planning</div>
+                    <div className="text-xs text-muted-foreground">
+                      Voir le planning
+                    </div>
                   </div>
                 </Link>
               </Button>

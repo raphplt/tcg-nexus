@@ -1,4 +1,4 @@
-## API 
+## API
 
 ### Remplir la base de données:
 

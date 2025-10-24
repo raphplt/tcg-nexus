@@ -50,7 +50,11 @@ const CardForm = () => {
   }
 
   if (!isAuthenticated || !user) {
-    console.log("Utilisateur non authentifié:", { isAuthenticated, user, isLoading });
+    console.log("Utilisateur non authentifié:", {
+      isAuthenticated,
+      user,
+      isLoading,
+    });
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground mb-4">
@@ -79,7 +83,7 @@ const CardForm = () => {
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     console.log("État de l'authentification:", { user, isAuthenticated });
-    
+
     if (!user?.id) {
       toast.error("Erreur d'authentification. Veuillez vous reconnecter.");
       return;
@@ -90,14 +94,14 @@ const CardForm = () => {
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
     const isoDate = expiresAt.toISOString();
-    
+
     // Convert cardState from value (label) to key (enum key)
     let cardStateKey = Object.keys(CardState).find(
       (key) => CardState[key as keyof typeof CardState] === data.cardState,
     );
     // fallback if not found
     if (!cardStateKey) cardStateKey = data.cardState;
-    
+
     const creationData = {
       pokemonCardId: data.cardId,
       price: data.price,
@@ -123,7 +127,7 @@ const CardForm = () => {
       }
     } catch (error: any) {
       console.error("Erreur création vente:", error);
-      
+
       if (error.response?.status === 401) {
         toast.error("Session expirée. Veuillez vous reconnecter.");
         router.push("/auth/login");

@@ -32,6 +32,7 @@ const Header = () => {
     return null;
   }
 
+  let linkStyle;
   return (
     <header
       className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b
@@ -85,6 +86,24 @@ const Header = () => {
           </li>
           <li className="hidden lg:block">
             <Link
+              href="/decks"
+              className={linkStyle}
+            >
+              Decks
+            </Link>
+          </li>
+          {isAuthenticated && (
+            <li className="hidden lg:block">
+              <Link
+                href="/decks/me"
+                className={linkStyle}
+              >
+                Mes decks
+              </Link>
+            </li>
+          )}
+          <li>
+            <Link
               href="/strategy"
               className="link-style"
             >
@@ -97,7 +116,6 @@ const Header = () => {
               <ThemeToggle />
             </li>
           )}
-
           {isLoading ? (
             <li>
               <Skeleton className="h-8 w-8 rounded-full" />

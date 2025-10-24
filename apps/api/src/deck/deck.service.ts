@@ -1,81 +1,141 @@
 import {
-  BadRequestException,
-  ForbiddenException,
   Injectable,
-  NotFoundException
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
+import { PaginationHelper } from '../helpers/pagination';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Deck } from './entities/deck.entity';
-import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
-import { DeckCardRole } from 'src/common/enums/deckCardRole';
-import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
+import { DeckCard } from '../deck-card/entities/deck-card.entity';
 import { User, UserRole } from '../user/entities/user.entity';
+import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { DeckFormat } from '../deck-format/entities/deck-format.entity';
+import {DeckCardRole} from "../common/enums/deckCardRole";
+export interface FindAllDecksParams {
+  formatId?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+  search?: string;
+}
 
 @Injectable()
 export class DeckService {
   constructor(
-    @InjectRepository(Deck) private readonly deckRepo: Repository<Deck>,
     @InjectRepository(DeckCard)
     private readonly deckCardRepo: Repository<DeckCard>,
     @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepo: Repository<PokemonCard>
+    private readonly cardRepo: Repository<PokemonCard>,
+    @InjectRepository(DeckFormat)
+    private readonly formatRepo: Repository<DeckFormat>,
+    @InjectRepository(Deck)
+    private readonly decksRepository: Repository<Deck>
   ) {}
+  async createDeck(user: User, dto: CreateDeckDto) {
+    const format = await this.formatRepo.findOneBy({ id: dto.formatId });
+    if (!format) throw new NotFoundException('Format introuvable');
 
-  async create(createDeckDto: CreateDeckDto) {
-    if (!createDeckDto.userId || !createDeckDto.name) {
-      throw new BadRequestException('userId and name are required');
-    }
-    const deck = this.deckRepo.create({
-      name: createDeckDto.name,
-      user: { id: createDeckDto.userId },
-      format: { id: createDeckDto.formatId }
+    const deck = this.decksRepository.create({
+      name: dto.deckName,
+      isPublic: dto.isPublic,
+      user,
+      format
     });
-    return this.deckRepo.save(deck);
+
+    await this.decksRepository.save(deck);
+    // Créer les DeckCards
+    const cards: DeckCard[] = [];
+    for (const carte of dto.cards) {
+      const cardEntity = await this.cardRepo.findOneBy({ id: carte.cardId });
+      if (!cardEntity) {
+        throw new NotFoundException(`Carte ${carte.cardId} introuvable`);
+      }
+      const deckCard = this.deckCardRepo.create({
+        card: cardEntity,
+        qty: carte.qty,
+        role: carte.role,
+        deck: deck
+      });
+      cards.push(deckCard);
+    }
+    // Sauvegarder toutes les cartes
+    await this.deckCardRepo.save(cards);
+    return await this.decksRepository.findOne({
+      where: { id: deck.id },
+      relations: ['cards', 'cards.card']
+    });
   }
 
-  async findAllForUser(
-    user: User,
-    query: { userId?: string; page?: number; limit?: number }
-  ): Promise<PaginatedResult<Deck>> {
-    const { page, limit } = PaginationHelper.validateParams({
-      page: query.page,
-      limit: query.limit
-    });
-
-    let resolvedUserId: number | undefined;
-    if (query.userId === 'me') {
-      resolvedUserId = user.id;
-    } else if (query.userId) {
-      resolvedUserId = parseInt(query.userId, 10);
-      if (Number.isNaN(resolvedUserId)) {
-        throw new BadRequestException('Invalid userId');
-      }
-    }
-
-    const qb = this.deckRepo
+  async findAll(params: FindAllDecksParams = {}) {
+    const {
+      formatId = 0,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+      search
+    } = params;
+    const qb = this.decksRepository
       .createQueryBuilder('deck')
+      .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
-      .leftJoin('deck.user', 'user')
-      .addSelect(['user.id', 'user.firstName', 'user.lastName']);
-
-    if (resolvedUserId) {
-      qb.andWhere('user.id = :userId', { userId: resolvedUserId });
+      .andWhere('deck.isPublic = true');
+    if (formatId !== 0) {
+      qb.andWhere('format.id = :formatId', { formatId });
     }
-
+    if (search) {
+      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
+        search: `%${search}%`
+      });
+    }
+    const orderColumn =
+      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
-      'deck.createdAt',
-      'DESC'
+      orderColumn,
+      sortOrder
     );
   }
 
+  async findAllFromUser(user: User, params: FindAllDecksParams = {}) {
+    const {
+      formatId = 0,
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+      search
+    } = params;
+    const qb = this.decksRepository
+      .createQueryBuilder('deck')
+      .leftJoinAndSelect('deck.user', 'user')
+      .leftJoinAndSelect('deck.format', 'format')
+      .andWhere('user.id = :userId', { userId: user.id });
+    if (formatId !== 0) {
+      qb.andWhere('format.id = :formatId', { formatId });
+    }
+    if (search) {
+      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
+        search: `%${search}%`
+      });
+    }
+    const orderColumn =
+      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
+    return PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      orderColumn,
+      sortOrder
+    );
+  }
   async findOneWithCards(id: number): Promise<Deck> {
-    const deck = await this.deckRepo.findOne({
+    const deck = await this.decksRepository.findOne({
       where: { id },
       relations: ['user', 'format', 'cards', 'cards.card']
     });
@@ -83,77 +143,86 @@ export class DeckService {
     return deck;
   }
 
-  async updateMeta(id: number, dto: UpdateDeckDto, user: User): Promise<Deck> {
-    const deck = await this.deckRepo.findOne({
-      where: { id },
-      relations: ['user']
+  async updateDeck(deckId: number, user: User, dto: UpdateDeckDto) {
+    const deck = await this.decksRepository.findOne({
+      where: { id: deckId, user: { id: user.id } },
+      relations: ['cards']
     });
-    if (!deck) throw new NotFoundException('Deck not found');
-    if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Not allowed to update this deck');
+
+    if (!deck) throw new NotFoundException('Deck introuvable');
+
+    if (dto.deckName) {
+      deck.name = dto.deckName;
     }
-    Object.assign(deck, {
-      name: dto.name ?? deck.name,
-      format: dto.formatId ? { id: dto.formatId } : deck.format
+    if (dto.isPublic) {
+      deck.isPublic = dto.isPublic;
+    }
+    if (dto.formatId) {
+      const format = await this.formatRepo.findOneBy({ id: dto.formatId });
+      if (!format) throw new NotFoundException('Format introuvable');
+      if (format) {
+        deck.format = format;
+      }
+    }
+    await this.decksRepository.save(deck);
+
+    // Supprimer les cartes
+    if (dto.cardsToRemove && dto.cardsToRemove.length) {
+      await this.deckCardRepo.delete(dto.cardsToRemove);
+    }
+
+    if (dto.cardsToAdd.length > 0) {
+      const cards: DeckCard[] = [];
+      for (const carte of dto.cardsToAdd) {
+        const cardEntity = await this.cardRepo.findOneBy({ id: carte.cardId });
+        if (!cardEntity) {
+          throw new NotFoundException(`Carte ${carte.cardId} introuvable`);
+        }
+        const deckCard = this.deckCardRepo.create({
+          card: cardEntity,
+          qty: carte.qty,
+          role: carte.role as DeckCardRole,
+          deck: deck
+        });
+        cards.push(deckCard);
+      }
+      // Sauvegarder toutes les cartes
+      await this.deckCardRepo.save(cards);
+    }
+
+    if (dto.cardsToUpdate.length > 0) {
+      const cards: DeckCard[] = [];
+      for (const carte of dto.cardsToUpdate) {
+        const cardEntity = await this.deckCardRepo.findOneBy({ id: carte.id });
+        if (!cardEntity) {
+          throw new NotFoundException(`Carte ${carte.id} introuvable`);
+        }
+        if (carte.qty) {
+          cardEntity.qty = carte.qty;
+        }
+        if (carte.role) {
+          cardEntity.role = carte.role;
+        }
+        this.deckCardRepo.save(cardEntity);
+      }
+      // Sauvegarder toutes les cartes
+      await this.deckCardRepo.save(cards);
+    }
+
+    return this.decksRepository.findOne({
+      where: { id: deck.id },
+      relations: ['cards', 'cards.card']
     });
-    return this.deckRepo.save(deck);
   }
 
-  async delete(id: number, user: User): Promise<void> {
-    const deck = await this.deckRepo.findOne({
-      where: { id },
-      relations: ['user']
-    });
-    if (!deck) throw new NotFoundException('Deck not found');
-    if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Not allowed to delete this deck');
-    }
-    await this.deckRepo.delete(id);
+  async remove(id: number) {
+    const deck = await this.decksRepository.findOne({ where: { id } });
+    if (!deck) throw new NotFoundException(`Deck #${id} not found`);
+    await this.decksRepository.remove(deck);
+    return { message: `Deck ${deck.name} supprimé avec succès` };
   }
-
-  async addCard(
-    deckId: number,
-    params: { cardId: string; qty: number; role?: DeckCardRole },
-    user: User
-  ): Promise<DeckCard> {
-    const deck = await this.deckRepo.findOne({
-      where: { id: deckId },
-      relations: ['user']
-    });
-    if (!deck) throw new NotFoundException('Deck not found');
-    if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Not allowed to modify this deck');
-    }
-    const card = await this.pokemonCardRepo.findOne({
-      where: { id: params.cardId }
-    });
-    if (!card) throw new NotFoundException('Pokemon card not found');
-    const deckCard = this.deckCardRepo.create({
-      deck: { id: deckId },
-      card: { id: params.cardId },
-      qty: params.qty || 1,
-      role: params.role || DeckCardRole.main
-    });
-    return this.deckCardRepo.save(deckCard);
-  }
-
-  async removeCard(deckId: number, cardId: string, user: User): Promise<void> {
-    const deck = await this.deckRepo.findOne({
-      where: { id: deckId },
-      relations: ['user']
-    });
-    if (!deck) throw new NotFoundException('Deck not found');
-    if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Not allowed to modify this deck');
-    }
-    const where = { deck: { id: deckId }, card: { id: cardId } };
-    const toDelete = await this.deckCardRepo.find({ where });
-    if (toDelete.length === 0) return;
-    await this.deckCardRepo.remove(toDelete);
-  }
-
   async cloneDeck(id: number, user: User): Promise<Deck> {
-    const deck = await this.deckRepo.findOne({
+    const deck = await this.decksRepository.findOne({
       where: { id },
       relations: ['user', 'format', 'cards', 'cards.card']
     });
@@ -161,12 +230,14 @@ export class DeckService {
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Not allowed to clone this deck');
     }
-    const cloned = this.deckRepo.create({
+
+    const cloned = this.decksRepository.create({
       name: `${deck.name} (copy)`,
-      user: { id: user.id },
-      format: deck.format ? { id: deck.format.id } : undefined
+      isPublic: deck.isPublic,
+      user,
+      format: deck.format
     });
-    const saved = await this.deckRepo.save(cloned);
+    const saved = await this.decksRepository.save(cloned);
     if (deck.cards?.length) {
       const clonedCards = deck.cards.map((dc) =>
         this.deckCardRepo.create({

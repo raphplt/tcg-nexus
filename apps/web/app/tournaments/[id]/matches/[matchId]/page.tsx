@@ -8,14 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Clock, 
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
   Trophy,
   Play,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { tournamentService } from "@/services/tournament.service";
@@ -31,19 +31,25 @@ export default function MatchPage() {
   const { id, matchId } = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  
+
   const {
     data: match,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery<Match>({
     queryKey: ["tournament", id, "match", matchId],
-    queryFn: () => tournamentService.getTournamentMatch(parseInt(id as string), parseInt(matchId as string)),
-    enabled: !!id && !!matchId
+    queryFn: () =>
+      tournamentService.getTournamentMatch(
+        parseInt(id as string),
+        parseInt(matchId as string),
+      ),
+    enabled: !!id && !!matchId,
   });
 
-  const { startMatch, resetMatch, isStarting, isResetting } = useMatches(id as string);
+  const { startMatch, resetMatch, isStarting, isResetting } = useMatches(
+    id as string,
+  );
   const permissions = useMatchPermissions(user, match);
 
   const formatDate = (date?: string) => {
@@ -53,26 +59,28 @@ export default function MatchPage() {
       month: "short",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
   const getPhaseLabel = (phase: string) => {
     switch (phase) {
-      case 'final':
-        return 'Finale';
-      case 'semi_final':
-        return 'Demi-finale';
-      case 'quarter_final':
-        return 'Quart de finale';
+      case "final":
+        return "Finale";
+      case "semi_final":
+        return "Demi-finale";
+      case "quarter_final":
+        return "Quart de finale";
       default:
-        return 'Qualification';
+        return "Qualification";
     }
   };
 
   const handleStartMatch = () => {
     if (match) {
-      startMatch(match.id, { notes: `Match démarré à ${new Date().toLocaleTimeString()}` });
+      startMatch(match.id, {
+        notes: `Match démarré à ${new Date().toLocaleTimeString()}`,
+      });
     }
   };
 
@@ -119,13 +127,17 @@ export default function MatchPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" size="sm" asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
             </Link>
           </Button>
-          
+
           <div className="flex-1">
             <H1 className="mb-2">
               Match #{match.id} - {getPhaseLabel(match.phase)}
@@ -146,7 +158,7 @@ export default function MatchPage() {
 
           {/* Actions rapides */}
           <div className="flex gap-2">
-            {permissions.canStartMatch && match.status === 'scheduled' && (
+            {permissions.canStartMatch && match.status === "scheduled" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -157,18 +169,19 @@ export default function MatchPage() {
                 {isStarting ? "Démarrage..." : "Démarrer"}
               </Button>
             )}
-            
-            {permissions.canResetMatch && (match.status === 'finished' || match.status === 'forfeit') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetMatch}
-                disabled={isResetting}
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                {isResetting ? "Reset..." : "Reset"}
-              </Button>
-            )}
+
+            {permissions.canResetMatch &&
+              (match.status === "finished" || match.status === "forfeit") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetMatch}
+                  disabled={isResetting}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  {isResetting ? "Reset..." : "Reset"}
+                </Button>
+              )}
           </div>
         </div>
 
@@ -182,12 +195,22 @@ export default function MatchPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <span className="text-sm text-muted-foreground">Statut :</span>
+                  <span className="text-sm text-muted-foreground">
+                    Statut :
+                  </span>
                   <div className="mt-1">
-                    {match.status === 'scheduled' && <Badge variant="outline">Programmé</Badge>}
-                    {match.status === 'in_progress' && <Badge variant="secondary">En cours</Badge>}
-                    {match.status === 'finished' && <Badge variant="default">Terminé</Badge>}
-                    {match.status === 'forfeit' && <Badge variant="destructive">Forfait</Badge>}
+                    {match.status === "scheduled" && (
+                      <Badge variant="outline">Programmé</Badge>
+                    )}
+                    {match.status === "in_progress" && (
+                      <Badge variant="secondary">En cours</Badge>
+                    )}
+                    {match.status === "finished" && (
+                      <Badge variant="default">Terminé</Badge>
+                    )}
+                    {match.status === "forfeit" && (
+                      <Badge variant="destructive">Forfait</Badge>
+                    )}
                   </div>
                 </div>
 
@@ -203,15 +226,21 @@ export default function MatchPage() {
 
                 {match.startedAt && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Démarré à :</span>
+                    <span className="text-sm text-muted-foreground">
+                      Démarré à :
+                    </span>
                     <p className="font-medium">{formatDate(match.startedAt)}</p>
                   </div>
                 )}
 
                 {match.finishedAt && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Terminé à :</span>
-                    <p className="font-medium">{formatDate(match.finishedAt)}</p>
+                    <span className="text-sm text-muted-foreground">
+                      Terminé à :
+                    </span>
+                    <p className="font-medium">
+                      {formatDate(match.finishedAt)}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -223,14 +252,22 @@ export default function MatchPage() {
                 <CardTitle>Navigation</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  asChild
+                >
                   <Link href={`/tournaments/${id}/bracket`}>
                     <Trophy className="w-4 h-4 mr-2" />
                     Voir le bracket
                   </Link>
                 </Button>
-                
-                <Button variant="outline" className="w-full" asChild>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  asChild
+                >
                   <Link href={`/tournaments/${id}/matches`}>
                     <Clock className="w-4 h-4 mr-2" />
                     Tous les matches
@@ -242,8 +279,8 @@ export default function MatchPage() {
 
           {/* Formulaire de score */}
           <div className="lg:col-span-2">
-            <MatchScoreForm 
-              match={match} 
+            <MatchScoreForm
+              match={match}
               onSuccess={() => {
                 refetch();
                 router.refresh();

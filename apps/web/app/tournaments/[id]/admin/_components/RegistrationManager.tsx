@@ -53,9 +53,13 @@ interface RegistrationManagerProps {
   tournamentId: number;
 }
 
-export function RegistrationManager({ tournamentId }: RegistrationManagerProps) {
+export function RegistrationManager({
+  tournamentId,
+}: RegistrationManagerProps) {
   const queryClient = useQueryClient();
-  const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>([]);
+  const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>(
+    [],
+  );
   const [filters, setFilters] = useState({
     status: "",
     search: "",
@@ -88,8 +92,18 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
   });
 
   const cancelMutation = useMutation({
-    mutationFn: ({ registrationId, reason }: { registrationId: number; reason?: string }) =>
-      tournamentService.cancelRegistration(tournamentId, registrationId, reason),
+    mutationFn: ({
+      registrationId,
+      reason,
+    }: {
+      registrationId: number;
+      reason?: string;
+    }) =>
+      tournamentService.cancelRegistration(
+        tournamentId,
+        registrationId,
+        reason,
+      ),
     onSuccess: () => {
       toast.success("Inscription annulée");
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
@@ -171,7 +185,10 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
           confirmMutation.mutate(regId);
           break;
         case "cancel":
-          cancelMutation.mutate({ registrationId: regId, reason: "Action groupée" });
+          cancelMutation.mutate({
+            registrationId: regId,
+            reason: "Action groupée",
+          });
           break;
         case "checkin":
           checkInMutation.mutate(regId);
@@ -186,20 +203,22 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
   const exportRegistrations = () => {
     const csv = [
       ["Joueur", "Statut", "Check-in", "Inscription", "Notes"].join(","),
-      ...filteredRegistrations.map((reg) => [
-        reg.player.name,
-        reg.status,
-        reg.checkedIn ? "Oui" : "Non",
-        new Date(reg.registeredAt).toLocaleDateString(),
-        reg.notes || "",
-      ].join(","))
+      ...filteredRegistrations.map((reg) =>
+        [
+          reg.player.name,
+          reg.status,
+          reg.checkedIn ? "Oui" : "Non",
+          new Date(reg.registeredAt).toLocaleDateString(),
+          reg.notes || "",
+        ].join(","),
+      ),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `inscriptions-tournoi-${tournamentId}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `inscriptions-tournoi-${tournamentId}-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -220,31 +239,41 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.total}
+              </div>
               <div className="text-sm text-muted-foreground">Total</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{stats.confirmed}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {stats.confirmed}
+              </div>
               <div className="text-sm text-muted-foreground">Confirmées</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{stats.pending}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {stats.pending}
+              </div>
               <div className="text-sm text-muted-foreground">En attente</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600">{stats.checkedIn}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.checkedIn}
+              </div>
               <div className="text-sm text-muted-foreground">Check-in</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{stats.cancelled}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {stats.cancelled}
+              </div>
               <div className="text-sm text-muted-foreground">Annulées</div>
             </CardContent>
           </Card>
@@ -269,14 +298,21 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                     placeholder="Nom du joueur..."
                     className="pl-8"
                     value={filters.search}
-                    onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                    onChange={(e) =>
+                      setFilters({ ...filters, search: e.target.value })
+                    }
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Statut</Label>
-                <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, status: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
@@ -291,7 +327,12 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
 
               <div className="space-y-2">
                 <Label>Check-in</Label>
-                <Select value={filters.checkedIn} onValueChange={(value) => setFilters({ ...filters, checkedIn: value })}>
+                <Select
+                  value={filters.checkedIn}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, checkedIn: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
@@ -306,7 +347,9 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
               <div className="flex items-end">
                 <Button
                   variant="outline"
-                  onClick={() => setFilters({ status: "", search: "", checkedIn: "" })}
+                  onClick={() =>
+                    setFilters({ status: "", search: "", checkedIn: "" })
+                  }
                   className="w-full"
                 >
                   Réinitialiser
@@ -319,7 +362,7 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
               <span className="text-sm text-muted-foreground">
                 {selectedRegistrations.length} sélectionnée(s)
               </span>
-              
+
               {selectedRegistrations.length > 0 && (
                 <>
                   <Button
@@ -330,7 +373,7 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Confirmer ({selectedRegistrations.length})
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -339,7 +382,7 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                     <X className="w-4 h-4 mr-2" />
                     Annuler
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -352,7 +395,11 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
               )}
 
               <div className="ml-auto">
-                <Button variant="outline" size="sm" onClick={exportRegistrations}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportRegistrations}
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Exporter
                 </Button>
@@ -369,10 +416,15 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedRegistrations.length === filteredRegistrations.length}
+                      checked={
+                        selectedRegistrations.length ===
+                        filteredRegistrations.length
+                      }
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedRegistrations(filteredRegistrations.map(r => r.id));
+                          setSelectedRegistrations(
+                            filteredRegistrations.map((r) => r.id),
+                          );
                         } else {
                           setSelectedRegistrations([]);
                         }
@@ -393,17 +445,26 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                     <TableRow key={registration.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selectedRegistrations.includes(registration.id)}
+                          checked={selectedRegistrations.includes(
+                            registration.id,
+                          )}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedRegistrations([...selectedRegistrations, registration.id]);
+                              setSelectedRegistrations([
+                                ...selectedRegistrations,
+                                registration.id,
+                              ]);
                             } else {
-                              setSelectedRegistrations(selectedRegistrations.filter(id => id !== registration.id));
+                              setSelectedRegistrations(
+                                selectedRegistrations.filter(
+                                  (id) => id !== registration.id,
+                                ),
+                              );
                             }
                           }}
                         />
                       </TableCell>
-                      
+
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
@@ -412,75 +473,94 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{registration.player.name}</p>
+                            <p className="font-medium">
+                              {registration.player.name}
+                            </p>
                             <p className="text-xs text-muted-foreground">
                               ID: {registration.player.id}
                             </p>
                           </div>
                         </div>
                       </TableCell>
-                      
-                      <TableCell>{getStatusBadge(registration.status)}</TableCell>
-                      
+
+                      <TableCell>
+                        {getStatusBadge(registration.status)}
+                      </TableCell>
+
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {registration.checkedIn ? (
                             <>
                               <UserCheck className="w-4 h-4 text-green-500" />
                               <span className="text-sm text-green-600">
-                                {registration.checkedInAt && formatDate(registration.checkedInAt)}
+                                {registration.checkedInAt &&
+                                  formatDate(registration.checkedInAt)}
                               </span>
                             </>
                           ) : (
                             <>
                               <UserX className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-muted-foreground">Non</span>
+                              <span className="text-sm text-muted-foreground">
+                                Non
+                              </span>
                             </>
                           )}
                         </div>
                       </TableCell>
-                      
+
                       <TableCell>
-                        <span className="text-sm">{formatDate(registration.registeredAt)}</span>
+                        <span className="text-sm">
+                          {formatDate(registration.registeredAt)}
+                        </span>
                       </TableCell>
-                      
+
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
                           {registration.notes || "-"}
                         </span>
                       </TableCell>
-                      
+
                       <TableCell>
                         <div className="flex gap-1">
                           {registration.status === "pending" && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => confirmMutation.mutate(registration.id)}
+                              onClick={() =>
+                                confirmMutation.mutate(registration.id)
+                              }
                               disabled={confirmMutation.isPending}
                             >
                               <CheckCircle className="w-3 h-3" />
                             </Button>
                           )}
-                          
-                          {registration.status === "confirmed" && !registration.checkedIn && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => checkInMutation.mutate(registration.id)}
-                              disabled={checkInMutation.isPending}
-                            >
-                              <UserCheck className="w-3 h-3" />
-                            </Button>
-                          )}
-                          
+
+                          {registration.status === "confirmed" &&
+                            !registration.checkedIn && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  checkInMutation.mutate(registration.id)
+                                }
+                                disabled={checkInMutation.isPending}
+                              >
+                                <UserCheck className="w-3 h-3" />
+                              </Button>
+                            )}
+
                           {registration.status !== "cancelled" && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const reason = prompt("Raison de l'annulation (optionnelle) :");
-                                cancelMutation.mutate({ registrationId: registration.id, reason: reason || undefined });
+                                const reason = prompt(
+                                  "Raison de l'annulation (optionnelle) :",
+                                );
+                                cancelMutation.mutate({
+                                  registrationId: registration.id,
+                                  reason: reason || undefined,
+                                });
                               }}
                               disabled={cancelMutation.isPending}
                             >
@@ -493,7 +573,10 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-8"
+                    >
                       <div className="text-muted-foreground">
                         <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>Aucune inscription trouvée</p>
@@ -508,7 +591,10 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
       </div>
 
       {/* Modal de confirmation pour actions bulk */}
-      <AlertDialog open={!!bulkAction} onOpenChange={() => setBulkAction(null)}>
+      <AlertDialog
+        open={!!bulkAction}
+        onOpenChange={() => setBulkAction(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer l'action groupée</AlertDialogTitle>
@@ -520,7 +606,10 @@ export function RegistrationManager({ tournamentId }: RegistrationManagerProps) 
                 <p>Annuler {selectedRegistrations.length} inscription(s) ?</p>
               )}
               {bulkAction === "checkin" && (
-                <p>Effectuer le check-in pour {selectedRegistrations.length} joueur(s) ?</p>
+                <p>
+                  Effectuer le check-in pour {selectedRegistrations.length}{" "}
+                  joueur(s) ?
+                </p>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
