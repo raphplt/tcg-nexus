@@ -78,7 +78,6 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password
       });
-      console.log('UserId:', user.id);
 
       await this.collectionService.create({
         name: 'Wishlist',

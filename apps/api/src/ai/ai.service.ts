@@ -4,7 +4,7 @@ import {
   BadRequestException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AnalyzeDeckDto } from './dto/analyze-deck.dto';
 import { DeckAnalysisResponseDto } from './dto/analyze-deck-response.dto';
 import { Deck } from '../deck/entities/deck.entity';
@@ -39,7 +39,9 @@ export class AiService {
       cards = deck.cards?.map((dc) => ({ card: dc.card, qty: dc.qty })) || [];
     } else if (dto.cardIds && dto.cardIds.length > 0) {
       // Analyser une liste de cartes
-      const pokemonCards = await this.pokemonCardRepo.findByIds(dto.cardIds);
+      const pokemonCards = await this.pokemonCardRepo.find({
+        where: { id: In(dto.cardIds) }
+      });
 
       if (pokemonCards.length === 0) {
         throw new BadRequestException('No cards found');

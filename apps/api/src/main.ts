@@ -14,29 +14,31 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     app.use(cookieParser());
 
-    const config = new DocumentBuilder()
-      .setTitle('TCG Nexus API')
-      .setDescription('API documentation for TCG Nexus')
-      .setVersion('1.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          name: 'Authorization',
-          description: 'Entrer le token JWT',
-          in: 'header'
-        },
-        'bearerAuth'
-      )
-      .build();
-    const documentFactory = () => SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, documentFactory, {
-      swaggerOptions: {
-        docExpansion: 'none',
-        defaultModelsExpandDepth: -1
-      }
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      const config = new DocumentBuilder()
+        .setTitle('TCG Nexus API')
+        .setDescription('API documentation for TCG Nexus')
+        .setVersion('1.0')
+        .addBearerAuth(
+          {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            name: 'Authorization',
+            description: 'Entrer le token JWT',
+            in: 'header'
+          },
+          'bearerAuth'
+        )
+        .build();
+      const documentFactory = () => SwaggerModule.createDocument(app, config);
+      SwaggerModule.setup('api', app, documentFactory, {
+        swaggerOptions: {
+          docExpansion: 'none',
+          defaultModelsExpandDepth: -1
+        }
+      });
+    }
 
     app.useGlobalPipes(
       new ValidationPipe({

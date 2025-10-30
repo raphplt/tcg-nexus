@@ -19,6 +19,8 @@ import { User } from '../user/entities/user.entity';
 import { Response, Request as ExpressRequest } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { UseGuards as UseGuardsDecorator } from '@nestjs/common';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -26,6 +28,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @UseGuards(LocalAuthGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60 } })
   @Post('login')
   @Public()
   @HttpCode(HttpStatus.OK)
@@ -48,9 +52,11 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
     });
-    res.json({ user: result.user, tokens: result.tokens });
+    res.json({ user: result.user });
     return;
   }
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 300 } })
   @Post('register')
   @Public()
   @HttpCode(HttpStatus.CREATED)
@@ -78,6 +84,8 @@ export class AuthController {
   }
 
   @UseGuards(JwtRefreshGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 300 } })
   @ApiBearerAuth()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)

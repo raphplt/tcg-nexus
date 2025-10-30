@@ -34,12 +34,17 @@ function mergeCookies(
     .join("; ");
 }
 
+function buildCookieHeader(request: NextRequest): string {
+  const parts = request.cookies.getAll().map((c) => `${c.name}=${c.value}`);
+  return parts.join("; ");
+}
+
 async function checkAuth(request: NextRequest): Promise<boolean> {
   try {
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-    const cookies = request.cookies.toString();
+    const cookies = buildCookieHeader(request);
 
     if (!cookies || !cookies.includes("accessToken")) {
       return false;
@@ -69,21 +74,7 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
         });
 
         if (refreshResponse.ok) {
-          const setCookieHeader = refreshResponse.headers.get("set-cookie");
-          if (setCookieHeader) {
-            const cookieStrings = setCookieHeader
-              .split(",")
-              .map((cookie) => cookie.trim());
-            const updatedCookies = mergeCookies(cookies, cookieStrings);
-
-            response = await fetch(`${API_BASE_URL}/auth/profile`, {
-              method: "POST",
-              headers: {
-                Cookie: updatedCookies,
-                "Content-Type": "application/json",
-              },
-            });
-          }
+          return true;
         }
       }
 

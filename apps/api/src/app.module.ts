@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
@@ -30,6 +31,14 @@ import { AiModule } from './ai/ai.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10
+        }
+      ]
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST,
@@ -38,7 +47,7 @@ import { AiModule } from './ai/ai.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
-      synchronize: true
+      synchronize: process.env.NODE_ENV !== 'production'
     }),
     UserModule,
     PokemonCardModule,
