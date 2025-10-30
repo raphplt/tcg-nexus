@@ -1,6 +1,5 @@
 import {
   Injectable,
-  BadRequestException,
   NotFoundException,
   ForbiddenException
 } from '@nestjs/common';
@@ -14,7 +13,7 @@ import { DeckCard } from '../deck-card/entities/deck-card.entity';
 import { User, UserRole } from '../user/entities/user.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
-import {DeckCardRole} from "../common/enums/deckCardRole";
+import { DeckCardRole } from '../common/enums/deckCardRole';
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -168,7 +167,7 @@ export class DeckService {
 
     // Supprimer les cartes
     if (dto.cardsToRemove && dto.cardsToRemove.length) {
-      await this.deckCardRepo.delete(dto.cardsToRemove);
+      await this.deckCardRepo.delete(dto.cardsToRemove.map((c) => c.id));
     }
 
     if (dto.cardsToAdd.length > 0) {
@@ -203,7 +202,7 @@ export class DeckService {
         if (carte.role) {
           cardEntity.role = carte.role;
         }
-        this.deckCardRepo.save(cardEntity);
+        await this.deckCardRepo.save(cardEntity);
       }
       // Sauvegarder toutes les cartes
       await this.deckCardRepo.save(cards);
