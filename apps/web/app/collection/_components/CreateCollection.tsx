@@ -30,7 +30,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
 
-// Schéma de validation pour le formulaire
 const createCollectionSchema = z.object({
   name: z
     .string()
@@ -75,33 +74,26 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Préparer les données selon l'API
       const collectionData = {
         name: values.name,
         description: values.description || "",
         isPublic: values.is_public,
-        userId: user.id, // L'API attend userId dans le DTO
+        userId: user.id
       };
-
-      console.log("Creating collection with data:", collectionData);
 
       const response = await collectionService.createCollection(
         collectionData as any,
       );
-      console.log("Collection created successfully:", response);
 
       toast.success("Collection créée avec succès !");
 
-      // Réinitialiser le formulaire et fermer la modale
       form.reset();
       setOpen(false);
 
-      // Notifier le parent que la collection a été créée
       if (onCollectionCreated) {
         onCollectionCreated();
       }
     } catch (error) {
-      console.error("Error creating collection:", error);
       toast.error("Erreur lors de la création de la collection");
     } finally {
       setIsSubmitting(false);

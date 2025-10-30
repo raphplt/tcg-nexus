@@ -7,7 +7,7 @@ import {
   StartMatchDto,
   ResetMatchDto,
 } from "@/types/tournament";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export function useMatches(tournamentId: string) {
   const queryClient = useQueryClient();

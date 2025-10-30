@@ -35,13 +35,11 @@ const Page = () => {
 
       try {
         const result = await collectionService.getByUserId(user.id);
-        console.log("Fetched collections for user:", result);
 
         const collectionsData = Array.isArray(result)
           ? result
           : result.data || [];
         setCollections(collectionsData);
-        console.log("Collections set to state:", collectionsData);
       } catch (error) {
         console.error("Error fetching collections:", error);
       } finally {
@@ -52,7 +50,6 @@ const Page = () => {
     fetchCollections();
   }, [user?.id]);
 
-  // Filter coxllections based on search query
   const filteredCollections = collections.filter(
     (collection) =>
       collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,9 +70,7 @@ const Page = () => {
     }
   };
 
-  const onCreateCollection = () => {
-    console.log("Create collection clicked");
-  };
+  const onCreateCollection = () => {};
 
   if (loading) {
     return (
@@ -174,8 +169,8 @@ const Page = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCollections.map((collection, index) => {
-              const createdDate = new Date(collection.created_at);
-              const updatedDate = new Date(collection.updated_at);
+              const createdDate = new Date(collection.createdAt);
+              const updatedDate = new Date(collection.updatedAt);
               const isValidCreatedDate = !isNaN(createdDate.getTime());
               const isValidUpdatedDate = !isNaN(updatedDate.getTime());
 
@@ -199,11 +194,11 @@ const Page = () => {
                     </div>
                     <div className="absolute top-2 right-2">
                       <Badge
-                        variant={collection.is_public ? "default" : "secondary"}
+                        variant={collection.isPublic ? "default" : "secondary"}
                         className="text-xs"
                       >
                         <Eye className="h-3 w-3 mr-1" />
-                        {collection.is_public ? "Public" : "Privé"}
+                        {collection.isPublic ? "Public" : "Privé"}
                       </Badge>
                     </div>
                   </div>

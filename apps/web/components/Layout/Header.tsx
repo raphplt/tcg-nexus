@@ -92,16 +92,7 @@ const Header = () => {
               Decks
             </Link>
           </li>
-          {isAuthenticated && (
-            <li className="hidden lg:block">
-              <Link
-                href="/decks/me"
-                className={linkStyle}
-              >
-                Mes decks
-              </Link>
-            </li>
-          )}
+
           <li>
             <Link
               href="/strategy"

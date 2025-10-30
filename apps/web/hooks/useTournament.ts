@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tournamentService } from "@/services/tournament.service";
 import { Tournament, StartTournamentOptions } from "@/types/tournament";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export function useTournament(id: string) {
   const queryClient = useQueryClient();
@@ -19,22 +19,19 @@ export function useTournament(id: string) {
     enabled: !!id,
   });
 
-  // Progression du tournoi
   const { data: progress, isLoading: progressLoading } = useQuery({
     queryKey: ["tournament", id, "progress"],
     queryFn: () => tournamentService.getProgress(tournamentId),
     enabled: !!tournamentId,
-    refetchInterval: tournament?.status === "in_progress" ? 30000 : false, // Refresh toutes les 30s si en cours
+    refetchInterval: tournament?.status === "in_progress" ? 30000 : false,
   });
 
-  // Transitions disponibles
   const { data: transitions } = useQuery({
     queryKey: ["tournament", id, "transitions"],
     queryFn: () => tournamentService.getAvailableTransitions(tournamentId),
     enabled: !!tournamentId,
   });
 
-  // Mutations pour les actions
   const startMutation = useMutation({
     mutationFn: (options?: StartTournamentOptions) =>
       tournamentService.startTournament(tournamentId, options),

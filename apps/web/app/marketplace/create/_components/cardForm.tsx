@@ -82,24 +82,19 @@ const CardForm = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    console.log("État de l'authentification:", { user, isAuthenticated });
-
     if (!user?.id) {
       toast.error("Erreur d'authentification. Veuillez vous reconnecter.");
       return;
     }
 
-    console.log("Données de création:", { user: user.id, data });
     setLoading(true);
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
     const isoDate = expiresAt.toISOString();
 
-    // Convert cardState from value (label) to key (enum key)
     let cardStateKey = Object.keys(CardState).find(
       (key) => CardState[key as keyof typeof CardState] === data.cardState,
     );
-    // fallback if not found
     if (!cardStateKey) cardStateKey = data.cardState;
 
     const creationData = {

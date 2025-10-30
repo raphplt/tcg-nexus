@@ -117,7 +117,6 @@ export default function PokemonMatchPage() {
     if (dir === "right" && card && user?.id) {
       try {
         await pokemonCardService.addToWishlist(user.id, card.id);
-        console.log(`${card.name} ajoutée à la wishlist !`);
       } catch (error) {
         console.error("Erreur lors de l'ajout à la wishlist :", error);
       }

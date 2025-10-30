@@ -29,6 +29,27 @@ import {
 import { CircleAlert, Eye, EyeOff, ArrowLeft, Home } from "lucide-react";
 import { loginSchema } from "./utils";
 
+// Dev accounts for quick login (only in development)
+const DEV_ACCOUNTS = [
+  {
+    email: "test1@test.com",
+    password: "password1",
+    role: "User",
+  },
+  {
+    email: "test2@test.com",
+    password: "password2",
+    role: "Admin",
+  },
+  {
+    email: "test3@test.com",
+    password: "password3",
+    role: "Moderator",
+  },
+];
+
+const isDev = process.env.NODE_ENV === "development";
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
@@ -58,9 +79,20 @@ const LoginPage = () => {
     }
   };
 
+  const handleQuickLogin = async (email: string, password: string) => {
+    try {
+      setError(null);
+      await login({ email, password, rememberMe });
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        "Une erreur est survenue lors de la connexion";
+      setError(errorMessage);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/10 to-primary/5 p-4 relative">
-      {/* Boutons de navigation */}
       <div className="absolute top-4 left-4 flex gap-2">
         <Button
           variant="ghost"
@@ -192,6 +224,31 @@ const LoginPage = () => {
                   Se souvenir de moi
                 </label>
               </div>
+
+              {isDev && (
+                <div className="pt-4 border-t border-border/40">
+                  <p className="text-xs text-muted-foreground mb-3 text-center">
+                    🔧 Mode Développement - Connexion Rapide
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {DEV_ACCOUNTS.map((account) => (
+                      <Button
+                        key={account.email}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleQuickLogin(account.email, account.password)
+                        }
+                        disabled={isLoading}
+                        className="text-xs"
+                      >
+                        Se connecter en tant que {account.role} ({account.email})
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </form>
           </Form>
         </CardContent>

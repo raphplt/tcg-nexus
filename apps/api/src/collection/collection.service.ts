@@ -45,7 +45,6 @@ export class CollectionService {
       where: { id: id },
       relations: ['items', 'user']
     });
-    console.log('Found collection:', collection);
     if (!collection) {
       throw new NotFoundException(`Collection with id ${id} not found`);
     }
@@ -58,7 +57,6 @@ export class CollectionService {
       description: createCollectionDto.description,
       isPublic: createCollectionDto.isPublic || false
     });
-    console.log('Creating collection:', collection);
     collection.user = { id: Number(createCollectionDto.userId) } as User;
     return await this.collectionRepository.save(collection);
   }
