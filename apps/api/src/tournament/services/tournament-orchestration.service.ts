@@ -415,8 +415,8 @@ export class TournamentOrchestrationService {
       if (i + 1 < winners.length) {
         void this.matchService.create({
           tournamentId: tournament.id,
-          playerAId: (winners[i] as any).id,
-          playerBId: (winners[i + 1] as any).id,
+          playerAId: winners[i].id,
+          playerBId: winners[i + 1].id,
           round: newRound,
           phase: this.getPhaseForRound(newRound, tournament.totalRounds || 0),
           scheduledDate: new Date(),

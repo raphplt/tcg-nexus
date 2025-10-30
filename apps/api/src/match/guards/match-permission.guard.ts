@@ -24,7 +24,7 @@ export class MatchPermissionGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const user: User = request.user as User;
-    const matchId = parseInt(request.params?.id as string);
+    const matchId = parseInt(request.params?.id);
 
     if (!user || !matchId) {
       throw new ForbiddenException('Accès non autorisé');

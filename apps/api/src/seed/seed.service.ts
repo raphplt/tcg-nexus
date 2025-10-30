@@ -45,6 +45,7 @@ import {
 import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
 import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
+import { PriceHistory } from 'src/marketplace/entities/price-history.entity';
 import { Currency } from 'src/common/enums/currency';
 import { Deck } from 'src/deck/entities/deck.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
@@ -94,6 +95,8 @@ export class SeedService {
     private readonly articleRepository: Repository<Article>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
+    @InjectRepository(PriceHistory)
+    private readonly priceHistoryRepository: Repository<PriceHistory>,
     @InjectRepository(DeckFormat)
     private readonly formatRepository: Repository<DeckFormat>,
     @InjectRepository(Deck)
@@ -404,6 +407,23 @@ export class SeedService {
         collections: []
       }
     ];
+
+    // Créer 12 utilisateurs supplémentaires pour avoir plus de vendeurs
+    for (let i = 4; i <= 15; i++) {
+      usersData.push({
+        email: `seller${i}@test.com`,
+        firstName: `Seller`,
+        lastName: `${i}`,
+        password: `password${i}`,
+        avatarUrl: `https://via.placeholder.com/150?text=Seller${i}`,
+        role: UserRole.USER,
+        isPro: i % 3 === 0, // 1/3 des vendeurs sont pro
+        isActive: true,
+        emailVerified: true,
+        decks: [],
+        collections: []
+      });
+    }
     const users: User[] = [];
     for (const userData of usersData) {
       const existing = await this.userRepository.findOne({
@@ -888,125 +908,128 @@ export class SeedService {
 
   /**
    * Seed test listings
+   * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
   async seedListings() {
-    // Récupère les 3 premiers utilisateurs et 3 premières cartes Pokémon
-    const sellers = await this.userRepository.find({ take: 3 });
-    const cards = await this.pokemonCardRepository.find({ take: 3 });
-    if (sellers.length < 1 || cards.length < 1) return;
+    // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
+    const sellers = await this.userRepository.find();
+    // Limiter à 500 cartes pour éviter les performances trop longues
+    const cards = await this.pokemonCardRepository.find({ take: 500 });
 
-    const listingsSeed = [
-      // Seller 1, Card 1
-      {
-        seller: sellers[0],
-        pokemonCard: cards[0],
-        price: 5.99,
-        currency: Currency.EUR,
-        quantityAvailable: 2,
-        cardState: CardState.NM,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[0],
-        pokemonCard: cards[1],
-        price: 3.5,
-        currency: Currency.USD,
-        quantityAvailable: 1,
-        cardState: CardState.EX,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[0],
-        pokemonCard: cards[2],
-        price: 7.0,
-        currency: Currency.GBP,
-        quantityAvailable: 3,
-        cardState: CardState.GD,
-        expiresAt: undefined
-      },
-      // Seller 2, Card 1
-      {
-        seller: sellers[1],
-        pokemonCard: cards[0],
-        price: 6.5,
-        currency: Currency.EUR,
-        quantityAvailable: 1,
-        cardState: CardState.LP,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[1],
-        pokemonCard: cards[1],
-        price: 2.99,
-        currency: Currency.USD,
-        quantityAvailable: 2,
-        cardState: CardState.PL,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[1],
-        pokemonCard: cards[2],
-        price: 8.25,
-        currency: Currency.GBP,
-        quantityAvailable: 1,
-        cardState: CardState.Poor,
-        expiresAt: undefined
-      },
-      // Seller 3, Card 1
-      {
-        seller: sellers[2],
-        pokemonCard: cards[0],
-        price: 4.75,
-        currency: Currency.EUR,
-        quantityAvailable: 1,
-        cardState: CardState.EX,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[2],
-        pokemonCard: cards[1],
-        price: 5.0,
-        currency: Currency.USD,
-        quantityAvailable: 2,
-        cardState: CardState.NM,
-        expiresAt: undefined
-      },
-      {
-        seller: sellers[2],
-        pokemonCard: cards[2],
-        price: 9.99,
-        currency: Currency.GBP,
-        quantityAvailable: 1,
-        cardState: CardState.LP,
-        expiresAt: undefined
-      },
-      // Un extra pour la diversité
-      {
-        seller: sellers[0],
-        pokemonCard: cards[0],
-        price: 10.0,
-        currency: Currency.EUR,
-        quantityAvailable: 1,
-        cardState: CardState.Poor,
-        expiresAt: undefined
-      }
+    if (sellers.length < 1 || cards.length < 1) {
+      console.log('Pas assez de vendeurs ou de cartes pour créer des listings');
+      return;
+    }
+
+    const currencies = [Currency.EUR, Currency.USD, Currency.GBP];
+    const cardStates = [
+      CardState.NM,
+      CardState.EX,
+      CardState.GD,
+      CardState.LP,
+      CardState.PL,
+      CardState.Poor
     ];
 
-    for (const listing of listingsSeed) {
-      const exists = await this.listingRepository.findOne({
-        where: {
-          seller: { id: listing.seller.id },
-          pokemonCard: { id: listing.pokemonCard.id },
-          price: listing.price
-        },
-        relations: ['seller', 'pokemonCard']
-      });
-      if (!exists) {
-        await this.listingRepository.save(
-          this.listingRepository.create(listing)
-        );
+    const listingsToCreate: Listing[] = [];
+    const priceHistoriesToCreate: PriceHistory[] = [];
+    const now = new Date();
+
+    // Pour chaque carte, créer entre 0 et 5 listings (au lieu de 20)
+    for (const card of cards) {
+      // Nombre aléatoire de listings pour cette carte (entre 0 et 5)
+      const listingCount = Math.floor(Math.random() * 6);
+
+      for (let i = 0; i < listingCount; i++) {
+        // Sélectionner un vendeur aléatoire
+        const randomSeller =
+          sellers[Math.floor(Math.random() * sellers.length)];
+
+        // Générer un prix aléatoire entre 0.50 et 100.00
+        const basePrice = Math.random() * 99.5 + 0.5;
+        const price = Math.round(basePrice * 100) / 100;
+
+        // Sélectionner une devise aléatoire
+        const currency =
+          currencies[Math.floor(Math.random() * currencies.length)];
+
+        // Sélectionner un état aléatoire
+        const cardState =
+          cardStates[Math.floor(Math.random() * cardStates.length)];
+
+        // Quantité disponible entre 1 et 5
+        const quantityAvailable = Math.floor(Math.random() * 5) + 1;
+
+        // Créer le listing
+        const listing = this.listingRepository.create({
+          seller: randomSeller,
+          pokemonCard: card,
+          price: price,
+          currency: currency,
+          quantityAvailable: quantityAvailable,
+          cardState: cardState,
+          expiresAt: undefined
+        });
+
+        listingsToCreate.push(listing);
+
+        // Créer seulement 1-2 entrées d'historique au lieu de 1-5
+        const historicalEntries = Math.floor(Math.random() * 2) + 1;
+
+        for (let j = 0; j < historicalEntries; j++) {
+          const daysAgo = Math.floor(Math.random() * 90);
+          const recordedAt = new Date(
+            now.getTime() - daysAgo * 24 * 60 * 60 * 1000
+          );
+
+          const priceVariation = 1 + (Math.random() - 0.5) * 0.4;
+          const historicalPrice =
+            Math.round(price * priceVariation * 100) / 100;
+
+          const priceHistory = this.priceHistoryRepository.create({
+            pokemonCard: card,
+            price: historicalPrice,
+            currency: currency,
+            cardState: cardState,
+            quantityAvailable: quantityAvailable,
+            recordedAt: recordedAt
+          });
+
+          priceHistoriesToCreate.push(priceHistory);
+        }
+
+        // Enregistrer aussi le prix actuel dans l'historique
+        const currentPriceHistory = this.priceHistoryRepository.create({
+          pokemonCard: card,
+          price: price,
+          currency: currency,
+          cardState: cardState,
+          quantityAvailable: quantityAvailable,
+          recordedAt: now
+        });
+        priceHistoriesToCreate.push(currentPriceHistory);
       }
     }
+
+    // Sauvegarder en batch (par lots de 500 pour éviter les problèmes de mémoire)
+    const batchSize = 500;
+    let savedCount = 0;
+
+    for (let i = 0; i < listingsToCreate.length; i += batchSize) {
+      const batch = listingsToCreate.slice(i, i + batchSize);
+      await this.listingRepository.save(batch);
+      savedCount += batch.length;
+    }
+
+    // Sauvegarder l'historique de prix en batch
+    for (let i = 0; i < priceHistoriesToCreate.length; i += batchSize) {
+      const batch = priceHistoriesToCreate.slice(i, i + batchSize);
+      await this.priceHistoryRepository.save(batch);
+    }
+
+    console.log(
+      `✅ ${savedCount} listings créés pour ${cards.length} cartes avec ${sellers.length} vendeurs`
+    );
   }
 
   async seedDeckFormats() {

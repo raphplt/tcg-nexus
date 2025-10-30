@@ -1,6 +1,7 @@
 import { EnergyType } from "./enums/energyType";
 import { PokemonCardsType } from "./enums/pokemonCardsType";
 import { TrainerType } from "./enums/trainerType";
+import { Rarity } from "./listing";
 
 export type PokemonSetType = {
   id: string;
@@ -36,7 +37,7 @@ export type PokemonCardType = {
   image?: string;
   category?: PokemonCardsType;
   illustrator?: string;
-  rarity?: string;
+  rarity?: Rarity;
   variants?: {
     normal: boolean;
     reverse: boolean;

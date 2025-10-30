@@ -1,14 +1,12 @@
-import { CardState } from "./enums";
-
 export const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const cardStates = [
-  { label: "Near Mint", value: CardState.NM },
-  { label: "Excellent", value: CardState.EX },
-  { label: "Good", value: CardState.GD },
-  { label: "Lightly Played", value: CardState.LP },
-  { label: "Played", value: CardState.PL },
-  { label: "Poor", value: CardState.Poor },
+  { label: "Near Mint", value: "NM" },
+  { label: "Excellent", value: "EX" },
+  { label: "Good", value: "GD" },
+  { label: "Lightly Played", value: "LP" },
+  { label: "Played", value: "PL" },
+  { label: "Poor", value: "Poor" },
 ];
 
 export const languages = [

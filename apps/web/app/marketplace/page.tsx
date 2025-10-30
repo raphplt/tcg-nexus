@@ -1,130 +1,246 @@
 "use client";
-import { H1 } from "@/components/Shared/Titles";
-import { useState } from "react";
-import MarketplaceFilters, {
-  MarketplaceFilters as MarketplaceFiltersType,
-} from "./_components/MarketplaceFilters";
-import MarketplaceTable from "./_components/MarketplaceTable";
-import MarketplacePagination from "./_components/MarketplacePagination";
-import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+
+import { useQuery } from "@tanstack/react-query";
+import { H1, H2 } from "@/components/Shared/Titles";
+import { CardCard } from "@/components/Marketplace/CardCard";
+import { SellerCard } from "@/components/Marketplace/SellerCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { marketplaceService } from "@/services/marketplace.service";
-import type { PaginatedResult } from "@/types/pagination";
-import type { Listing } from "@/types/listing";
+import { pokemonCardService } from "@/services/pokemonCard.service";
+import { ArrowRight, Flame, TrendingUp, Star, Package } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
-const cardStateOptions = [
-  { label: "Tous", value: "ALL" },
-  { label: "NM (Near Mint)", value: "NM" },
-  { label: "EX (Excellent)", value: "EX" },
-  { label: "GD (Good)", value: "GD" },
-  { label: "PL (Played)", value: "PL" },
-  { label: "PO (Poor)", value: "PO" },
-];
-const currencyOptions = [
-  { label: "Toutes", value: "ALL" },
-  { label: "EUR", value: "EUR" },
-  { label: "USD", value: "USD" },
-];
-const sortOptions = [
-  { label: "Date d'ajout", value: "createdAt" },
-  { label: "Prix", value: "price" },
-  { label: "Quantité", value: "quantityAvailable" },
-];
-
-export default function MarketplacePage() {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<MarketplaceFiltersType>({
-    search: "",
-    cardState: "",
-    currency: "",
-    sortBy: "createdAt",
-    sortOrder: "DESC",
+export default function MarketplaceHomePage() {
+  // Fetch popular cards
+  const { data: popularCards, isLoading: loadingPopular } = useQuery({
+    queryKey: ["marketplace", "popular"],
+    queryFn: () => marketplaceService.getPopularCards(8),
   });
 
-  const { data, isLoading, error } = usePaginatedQuery<
-    PaginatedResult<Listing>
-  >(
-    [
-      "listings",
-      page,
-      filters.search,
-      filters.cardState,
-      filters.currency,
-      filters.sortBy,
-      filters.sortOrder,
-    ],
-    marketplaceService.getPaginated,
-    {
-      page,
-      limit: 8,
-      search: filters.search || undefined,
-      cardState: filters.cardState || undefined,
-      currency: filters.currency || undefined,
-      sortBy: filters.sortBy,
-      sortOrder: filters.sortOrder,
-    },
-  );
+  // Fetch trending cards
+  const { data: trendingCards, isLoading: loadingTrending } = useQuery({
+    queryKey: ["marketplace", "trending"],
+    queryFn: () => marketplaceService.getTrendingCards(8, 7),
+  });
 
-  const resetFilters = () => {
-    setFilters({
-      search: "",
-      cardState: "",
-      currency: "",
-      sortBy: "createdAt",
-      sortOrder: "DESC",
-    });
-    setPage(1);
-  };
+  // Fetch best sellers
+  const { data: bestSellers, isLoading: loadingSellers } = useQuery({
+    queryKey: ["marketplace", "best-sellers"],
+    queryFn: () => marketplaceService.getBestSellers(6),
+  });
 
-  const tableHeaders: { label: string; key: keyof Listing | string }[] = [
-    { label: "Carte", key: "pokemonCard" },
-    { label: "Prix", key: "price" },
-    { label: "Qté", key: "quantityAvailable" },
-    { label: "État", key: "cardState" },
-    { label: "Expire", key: "expiresAt" },
-    { label: "Vendeur", key: "seller" },
-  ];
+  // Fetch series
+  const { data: series, isLoading: loadingSeries } = useQuery({
+    queryKey: ["pokemon-series"],
+    queryFn: () => pokemonCardService.getAllSeries(),
+  });
+
+  // Fetch sets
+  const { data: sets, isLoading: loadingSets } = useQuery({
+    queryKey: ["pokemon-sets"],
+    queryFn: () => pokemonCardService.getAllSets(),
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-      <div className="max-w-5xl mx-auto">
-        <H1
-          className="text-center mb-2"
-          variant="primary"
-        >
-          Marketplace
-        </H1>
-        <p className="text-center text-muted-foreground mb-10 text-lg">
-          Découvrez et vendez vos cartes Pokémon !
-        </p>
-        <MarketplaceFilters
-          filters={filters}
-          setFilters={(newFilters) => {
-            setFilters((prev) => ({ ...prev, ...newFilters }));
-            setPage(1);
-          }}
-          cardStateOptions={cardStateOptions}
-          currencyOptions={currencyOptions}
-          sortOptions={sortOptions}
-          resetFilters={resetFilters}
-        />
-        <div className="rounded-xl shadow-2xl bg-card/80 backdrop-blur-md border border-border overflow-hidden">
-          <MarketplaceTable
-            data={data}
-            isLoading={isLoading}
-            error={error}
-            tableHeaders={tableHeaders}
-            sortBy={filters.sortBy}
-            sortOrder={filters.sortOrder}
-            setFilters={(f) => setFilters((prev) => ({ ...prev, ...f }))}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Hero Section */}
+        <div className="text-center space-y-4">
+          <H1 className="text-4xl md:text-5xl font-bold" variant="primary">
+            Marketplace TCG Nexus
+          </H1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Découvrez, achetez et vendez vos cartes Pokémon. Trouvez les meilleures
+            offres et les meilleurs vendeurs de la communauté.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center mt-6">
+            <Button asChild size="lg">
+              <Link href="/marketplace/cards">
+                Explorer les cartes
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/marketplace/create">Vendre une carte</Link>
+            </Button>
+          </div>
         </div>
-        {data && (
-          <MarketplacePagination
-            meta={data.meta}
-            page={page}
-            setPage={setPage}
-          />
-        )}
+
+        {/* Trending Cards Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Flame className="w-6 h-6 text-primary" />
+              <H2>Cartes en tendance</H2>
+            </div>
+            <Button variant="ghost" asChild>
+              <Link href="/marketplace/cards?sortBy=popularity">
+                Voir tout <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+          {loadingTrending ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-80" />
+              ))}
+            </div>
+          ) : trendingCards && trendingCards.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {trendingCards.slice(0, 8).map((item) => (
+                <CardCard
+                  key={item.card.id}
+                  card={item.card}
+                  minPrice={item.minPrice}
+                  listingCount={item.recentListingCount}
+                  showTrend={true}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Aucune carte en tendance pour le moment
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Popular Cards Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Star className="w-6 h-6 text-primary" />
+              <H2>Cartes populaires</H2>
+            </div>
+            <Button variant="ghost" asChild>
+              <Link href="/marketplace/cards?sortBy=popularity">
+                Voir tout <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+          {loadingPopular ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-80" />
+              ))}
+            </div>
+          ) : popularCards && popularCards.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {popularCards.slice(0, 8).map((item) => (
+                <CardCard
+                  key={item.card.id}
+                  card={item.card}
+                  minPrice={item.minPrice}
+                  avgPrice={item.avgPrice}
+                  listingCount={item.listingCount}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Aucune carte populaire pour le moment
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Best Sellers Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              <H2>Meilleurs vendeurs</H2>
+            </div>
+            <Button variant="ghost" asChild>
+              <Link href="/marketplace/cards">
+                Voir tout <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+          {loadingSellers ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+          ) : bestSellers && bestSellers.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {bestSellers.map((seller) => (
+                <SellerCard
+                  key={seller.seller.id}
+                  seller={seller.seller}
+                  totalSales={seller.totalSales}
+                  totalRevenue={seller.totalRevenue}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Aucun vendeur pour le moment
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Series/Extensions Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Package className="w-6 h-6 text-primary" />
+              <H2>Séries et extensions</H2>
+            </div>
+            <Button variant="ghost" asChild>
+              <Link href="/marketplace/cards">
+                Voir toutes les séries <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+          {loadingSeries || loadingSets ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-32" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {sets?.slice(0, 12).map((set) => (
+                <Link
+                  key={set.id}
+                  href={`/marketplace/cards?setId=${set.id}`}
+                >
+                  <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer h-full">
+                    <CardHeader className="pb-3">
+                      <div className="aspect-square relative mb-3 bg-muted rounded-lg overflow-hidden">
+                        {set.logo ? (
+                          <Image
+                            src={set.logo}
+                            alt={set.name}
+                            fill
+                            className="object-contain group-hover:scale-105 transition-transform duration-200"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                            {set.name}
+                          </div>
+                        )}
+                      </div>
+                      <CardTitle className="text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {set.name}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

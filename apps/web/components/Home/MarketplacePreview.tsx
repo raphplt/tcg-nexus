@@ -38,7 +38,7 @@ const MarketplacePreview = () => {
         {data?.data?.map((card) => (
           <Link
             key={card.id}
-            href={`/marketplace/${card.id}`}
+            href={`/marketplace/cards/${card.pokemonCard.id}`}
             className="flex items-center gap-4 p-3 rounded-lg border hover:shadow-md transition bg-background"
           >
             <div className="flex-shrink-0">
@@ -75,7 +75,7 @@ const MarketplacePreview = () => {
               variant="secondary"
               asChild
             >
-              <Link href={`/marketplace/${card.id}`}>
+              <Link href={`/marketplace/cards/${card.id}`}>
                 <ShoppingCart className="mr-2 w-4 h-4" />
                 Acheter
               </Link>

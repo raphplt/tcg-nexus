@@ -28,7 +28,6 @@ interface PokemonCardDetailProps {
 }
 
 const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
-  // Fix URL typo: tcgdx.net -> tcgdex.net
   const fixImageUrl = (url: string) => {
     return url.replace("tcgdx.net", "tcgdex.net");
   };
@@ -44,18 +43,6 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
       return JSON.stringify(value);
     }
     return "";
-  };
-
-  const getRarityColor = (rarity: string) => {
-    const colors: Record<string, string> = {
-      Commun: "bg-gray-500",
-      Peu: "bg-green-500",
-      Rare: "bg-blue-500",
-      "Rare Holo": "bg-purple-500",
-      "Rare Ultra": "bg-yellow-500",
-      "Rare Secret": "bg-red-500",
-    };
-    return colors[rarity] || "bg-gray-500";
   };
 
   return (
