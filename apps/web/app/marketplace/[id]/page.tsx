@@ -97,9 +97,8 @@ const Page = () => {
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4 flex flex-col gap-8">
-      {/* Header + Card Image */}
       <div className="flex flex-col md:flex-row gap-8">
-        <Card className="flex-1 flex flex-col items-center justify-center p-6 gap-4 shadow-xl border-2 border-primary/30">
+        <Card className="flex-1 flex flex-col items-center justify-center p-6 gap-4 ">
           <div className="w-full flex flex-col items-center gap-2">
             <Image
               src={card?.image + "/high.png"}
