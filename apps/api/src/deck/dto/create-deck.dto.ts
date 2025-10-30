@@ -1,14 +1,14 @@
 import {
-  IsBoolean, IsEnum,
+  IsBoolean,
+  IsEnum,
   IsInt,
   IsNotEmpty,
-  IsOptional,
   IsString,
   IsUUID,
   ValidateNested
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import {DeckCardRole} from "../../common/enums/deckCardRole";
+import { DeckCardRole } from '../../common/enums/deckCardRole';
 
 class DeckCardInputDto {
   @IsUUID()

@@ -11,7 +11,7 @@ import DecksTable from "@app/decks/_components/DecksTable";
 import DecksPagination from "@app/decks/_components/DecksPagination";
 import { authedFetch } from "@utils/fetch";
 import { useAuth } from "@/contexts/AuthContext";
-import { Decks } from "@/types/Decks";
+import { Deck } from "@/types/Decks";
 import { decksService } from "@/services/decks.service";
 import { DeckFormat } from "@/types/deckFormat";
 export default function page() {
@@ -34,7 +34,7 @@ export default function page() {
     });
     setPage(1);
   };
-  const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<Decks>>(
+  const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<Deck>>(
     ["decks", page, filters.search, filters.sortBy, filters.sortOrder],
     decksService.getPaginated,
     {
@@ -47,7 +47,7 @@ export default function page() {
     },
   );
 
-  const tableHeaders: { label: string; key: keyof Decks | string }[] = [
+  const tableHeaders: { label: string; key: keyof Deck | string }[] = [
     { label: "Nom", key: "name" },
     { label: "Type", key: "format.type" },
   ];

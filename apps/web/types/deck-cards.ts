@@ -1,11 +1,11 @@
 import { DeckCardRole } from "@/types/enums/deckCardRole";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { Deck } from "./Decks";
 
-export interface DeckCards {
+export interface DeckCard {
   id?: number;
-  name: string;
-  cardId?: string;
   qty: number;
+  deck: Deck;
   role: DeckCardRole;
   card?: PokemonCardType;
 }

@@ -1,4 +1,4 @@
-import { DeckCards } from "@/types/deck-cards";
+import { DeckCard } from "@/types/deck-cards";
 
 export interface FormatOption {
   id: number;
@@ -16,7 +16,7 @@ export interface cardsArrayDel {
 export type UpdateData = {
   cardsToAdd: any;
   cardsToRemove: cardsArrayDel[] | [];
-  cardsToUpdate: DeckCards[] | [];
+  cardsToUpdate: DeckCard[] | [];
 } & Partial<{
   deckName: string;
   formatId: string;

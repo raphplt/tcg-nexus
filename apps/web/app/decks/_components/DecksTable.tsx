@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Trash2, Pencil } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
 import { useRouter } from "next/navigation";
-import { Decks } from "@/types/Decks";
+import { Deck } from "@/types/Decks";
 import { Button } from "@components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -33,10 +33,10 @@ export interface DecksFilters {
 }
 
 interface DecksTableProps {
-  data: PaginatedResult<Decks> | undefined;
+  data: PaginatedResult<Deck> | undefined;
   dataLoading: boolean;
   error: Error | null;
-  tableHeaders: { label: string; key: keyof Decks | string }[];
+  tableHeaders: { label: string; key: keyof Deck | string }[];
   sortBy: string;
   sortOrder: "ASC" | "DESC";
   setFilters: (filters: Partial<DecksFilters>) => void;
@@ -54,7 +54,7 @@ const DecksTable = ({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedDeckId, setSelectedDeckId] = useState<null | number>(null);
-  const [deckList, setDeckList] = useState<Decks[]>(data?.data || []);
+  const [deckList, setDeckList] = useState<Deck[]>(data?.data || []);
   const { user, isLoading } = useAuth();
 
   const handleSort = (key: string) => {
@@ -128,7 +128,7 @@ const DecksTable = ({
               </TableCell>
             </TableRow>
           ) : deckList.length ? (
-            deckList.map((deck: Decks) => (
+            deckList.map((deck: Deck) => (
               <TableRow
                 key={deck.id}
                 className="transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group"

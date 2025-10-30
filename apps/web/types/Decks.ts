@@ -1,13 +1,13 @@
 import { User } from "./auth";
 import { DeckFormat } from "@/types/deckFormat";
-import { DeckCards } from "@/types/deck-cards";
+import { DeckCard } from "@/types/deck-cards";
 
-export interface Decks {
+export interface Deck {
   id: number;
   name: string;
   user: User;
   format: DeckFormat;
-  cards?: DeckCards[];
+  cards?: DeckCard[];
   createdAt?: Date;
   updatedAt?: Date;
 }

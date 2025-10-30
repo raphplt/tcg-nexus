@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Decks } from "@/types/Decks";
+import { Deck } from "@/types/Decks";
 import { decksService } from "@/services/decks.service";
 import { useParams } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Badge } from "@components/ui/badge";
 import Image from "next/image";
 import { Skeleton } from "@components/ui/skeleton";
 export default function page() {
-  const [deck, setDeck] = useState<null | Decks>(null);
+  const [deck, setDeck] = useState<null | Deck>(null);
   const [deckLoading, setDeckLoading] = useState(true);
   const { id } = useParams();
   useEffect(() => {
@@ -58,7 +58,10 @@ export default function page() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 ">
         {deck?.cards &&
           deck?.cards.map((c) => (
-            <Card key={c.id} className="border-2 border-primary/30 p-2">
+            <Card
+              key={c.id}
+              className="border-2 border-primary/30 p-2"
+            >
               <Image
                 src={c?.card?.image + "/high.png"}
                 alt={c?.card?.name || "Carte inconnue"}

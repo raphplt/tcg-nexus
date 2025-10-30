@@ -29,7 +29,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { decksService } from "@/services/decks.service";
 import { FormSchema } from "./utils";
-import { DeckCards } from "@/types/deck-cards";
+import { DeckCard } from "@/types/deck-cards";
 import { Badge } from "@components/ui/badge";
 import { Label } from "@components/ui/label";
 import {
@@ -55,14 +55,14 @@ export const DeckFormUpdate: React.FC<DeckFormProps> = ({ formats }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [showCardModal, setShowCardModal] = useState(false);
-  const [cardsMap, setCardsMap] = useState<[] | DeckCards[]>([]);
+  const [cardsMap, setCardsMap] = useState<[] | DeckCard[]>([]);
   const [deck, setDeck] = useState(null);
   const [open, setOpen] = useState(false);
   const [cardsToDelete, setCardsToDelete] = useState<[] | cardsArrayDel[]>([]);
-  const [cardsToUpdate, setCardsToUpdate] = useState<[] | DeckCards[]>([]);
+  const [cardsToUpdate, setCardsToUpdate] = useState<[] | DeckCard[]>([]);
   const [deckLoading, setDeckLoading] = useState(true);
-  const [currentCard, setCurrentCard] = useState<null | DeckCards>(null);
-  const [updatedCard, setUpdatedCard] = useState<Partial<DeckCards> | null>(
+  const [currentCard, setCurrentCard] = useState<null | DeckCard>(null);
+  const [updatedCard, setUpdatedCard] = useState<Partial<DeckCard> | null>(
     null,
   );
   const { id } = useParams();
@@ -77,7 +77,7 @@ export const DeckFormUpdate: React.FC<DeckFormProps> = ({ formats }) => {
     },
   });
   const { dirtyFields } = form.formState;
-  const addCard = (card: DeckCards) => {
+  const addCard = (card: DeckCard) => {
     const currentCards = form.getValues("cards") || [];
     const existingFormCard = currentCards.find(
       (c) => c.cardId === card.cardId && c.role === card.role,
@@ -179,8 +179,8 @@ export const DeckFormUpdate: React.FC<DeckFormProps> = ({ formats }) => {
   };
 
   const updateCard = (
-    card: Partial<DeckCards>,
-    oldCard: Pick<DeckCards, "qty" | "role">,
+    card: Partial<DeckCard>,
+    oldCard: Pick<DeckCard, "qty" | "role">,
   ) => {
     const currentCards = form.getValues("cards") || [];
     const existingFormCard = currentCards.find(
@@ -270,7 +270,7 @@ export const DeckFormUpdate: React.FC<DeckFormProps> = ({ formats }) => {
     }
   };
 
-  const removeCard = (card: Pick<DeckCards, "id" | "cardId" | "role">) => {
+  const removeCard = (card: Pick<DeckCard, "id" | "cardId" | "role">) => {
     if (card.id && deck?.cards?.some((c) => c.id === card.id)) {
       setCardsToDelete((prev) => [...prev, { id: card.id }]);
       setCardsMap((prev) => prev.filter((c) => c.id !== card.id));
@@ -565,7 +565,7 @@ export const DeckFormUpdate: React.FC<DeckFormProps> = ({ formats }) => {
                 onValueChange={(v) => {
                   if (v) {
                     setUpdatedCard((c) =>
-                      c ? ({ ...c, role: v } as DeckCards) : null,
+                      c ? ({ ...c, role: v } as DeckCard) : null,
                     );
                   }
                 }}
