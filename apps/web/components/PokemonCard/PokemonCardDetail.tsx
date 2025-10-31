@@ -71,16 +71,6 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
             <div className="space-y-6">
               <div>
                 <h1 className="text-4xl font-bold mb-2 flex items-center gap-2">
-                  {Array.isArray(card.types) &&
-                    card.types.map((type) => (
-                      <Image
-                        key={type}
-                        src={typeToImage[slugify(type.toLowerCase())] || ""}
-                        alt={type}
-                        width={32}
-                        height={32}
-                      />
-                    ))}
                   {safeRender(card.name)}
                 </h1>
                 <div className="flex flex-wrap gap-2 mb-4">

@@ -1,8 +1,9 @@
-import { Rarity } from "@/types/listing";
+import { Rarity } from "../types/listing";
+import { RemotePattern } from "next/dist/shared/lib/image-config";
 
 export const typeToImage: Record<string, string> = {
   plante: "/images/types/Type-Plante-JCC.png",
-  feu: "/images/types/Type-Feu-JCC-Miniature.png",
+  feu: "/images/types/Type-Feu-JCC.png",
   eau: "/images/types/Type-Eau-JCC.png",
   électrique: "/images/types/Type-Électrique-JCC.png",
   psy: "/images/types/Type-Psy-JCC.png",
@@ -41,3 +42,42 @@ export function getTypeImage(type: string): string | undefined {
 export function getRarityImage(rarity: Rarity): string | undefined {
   return rarityToImage[rarity] || undefined;
 }
+
+export const remotePatterns: RemotePattern[] = [
+  {
+    protocol: "https",
+    hostname: "assets.tcgdex.net",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "den-cards.pokellector.com",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "toxigon.com",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "upload.wikimedia.org",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "images.pexels.com",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "www.pexels.com",
+    port: "",
+    pathname: "/**",
+  },
+];

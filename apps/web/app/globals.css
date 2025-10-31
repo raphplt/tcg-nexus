@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
 
 :root {
   --background: oklch(1.0000 0 0);
@@ -34,7 +33,7 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0 0 0);
   --sidebar-ring: oklch(0.5117 0.1800 28.58);
-  --font-sans: 'Lato', sans-serif;
+  --font-sans: var(--font-lato, 'Lato', sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
   --radius: 0px;
@@ -81,7 +80,7 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(1 0 0);
   --sidebar-ring: oklch(0.5117 0.1800 28.58);
-  --font-sans: 'Lato', sans-serif;
+  --font-sans: var(--font-lato, 'Lato', sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
   --radius: 0px;
