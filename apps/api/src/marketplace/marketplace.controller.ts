@@ -27,7 +27,6 @@ import { Public } from 'src/auth/decorators/public.decorator';
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
-  // Listings endpoints (also available at /listings via ListingsController for backward compatibility)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Post('listings')
@@ -121,28 +120,6 @@ export class MarketplaceController {
     @Query('cardState') cardState?: string
   ) {
     return this.marketplaceService.getCardStatistics(id, currency, cardState);
-  }
-
-  // Cartes populaires et en tendance
-  @Get('popular')
-  @Public()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  getPopularCards(@Query('limit') limit?: number) {
-    return this.marketplaceService.getPopularCards(limit ? +limit : 10);
-  }
-
-  @Get('trending')
-  @Public()
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'days', required: false, type: Number })
-  getTrendingCards(
-    @Query('limit') limit?: number,
-    @Query('days') days?: number
-  ) {
-    return this.marketplaceService.getTrendingCards(
-      limit ? +limit : 10,
-      days ? +days : 7
-    );
   }
 
   // Meilleurs vendeurs

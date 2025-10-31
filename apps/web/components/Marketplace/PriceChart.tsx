@@ -46,23 +46,21 @@ export function PriceChart({
     );
   }
 
-  // Format data for chart
-  const chartData = data.map((item) => ({
-    date: new Date(item.recordedAt).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-    }),
-    price: parseFloat(item.price.toString()),
-    fullDate: new Date(item.recordedAt),
-  }));
+  const chartData = data
+    .map((item) => ({
+      date: new Date(item.recordedAt).toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+      price: parseFloat(item.price.toString()),
+      fullDate: new Date(item.recordedAt),
+    }))
+    .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
 
-  // Calculate trend
   const firstPrice = chartData[0]?.price;
   const lastPrice = chartData[chartData.length - 1]?.price;
   const trend =
-    firstPrice && lastPrice
-      ? ((lastPrice - firstPrice) / firstPrice) * 100
-      : 0;
+    firstPrice && lastPrice ? ((lastPrice - firstPrice) / firstPrice) * 100 : 0;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -118,9 +116,15 @@ export function PriceChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer
+          width="100%"
+          height={300}
+        >
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              className="stroke-muted"
+            />
             <XAxis
               dataKey="date"
               className="text-xs"
@@ -133,12 +137,13 @@ export function PriceChart({
             />
             <Tooltip content={<CustomTooltip />} />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="price"
               stroke="hsl(var(--primary))"
               strokeWidth={2}
               dot={{ r: 4, fill: "hsl(var(--primary))" }}
               activeDot={{ r: 6 }}
+              connectNulls={false}
             />
           </LineChart>
         </ResponsiveContainer>

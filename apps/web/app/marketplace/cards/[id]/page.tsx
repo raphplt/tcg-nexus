@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { marketplaceService } from "@/services/marketplace.service";
@@ -36,6 +36,8 @@ import { rarityToImage, typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
 import { cardStates } from "@/utils/variables";
 import { getCardStateColor } from "../../utils";
+import { cardEventTracker } from "@/services/card-event-tracker.service";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 
 export default function CardDetailPage() {
   const { id } = useParams();
@@ -81,6 +83,15 @@ export default function CardDetailPage() {
       }),
     enabled: !!id,
   });
+
+  // Track view event when card is loaded
+  useEffect(() => {
+    if (id && card) {
+      cardEventTracker.trackView(id as string, {
+        referrer: document.referrer || undefined,
+      });
+    }
+  }, [id, card]);
 
   if (loadingCard) {
     return (
@@ -136,6 +147,7 @@ export default function CardDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
+        <MarketplaceBreadcrumb />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <Card>
             <CardContent className="p-6">
@@ -181,7 +193,6 @@ export default function CardDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Card Info */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -327,7 +338,6 @@ export default function CardDetailPage() {
           </div>
         </div>
 
-        {/* Price History Chart */}
         {stats && priceHistory.length > 0 && (
           <PriceChart
             data={priceHistory}
@@ -336,7 +346,6 @@ export default function CardDetailPage() {
           />
         )}
 
-        {/* Available Listings */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -434,6 +443,14 @@ export default function CardDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => {
+                            if (id) {
+                              cardEventTracker.trackAddToCart(
+                                id as string,
+                                listing.id,
+                              );
+                            }
+                          }}
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
                           Ajouter

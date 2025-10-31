@@ -3,11 +3,17 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { FULLSCREEN_PATHS } from "@/utils/constants";
 
 export default function Footer() {
   const currentPath = usePathname();
   const isFullscreenPath = FULLSCREEN_PATHS.includes(currentPath);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   if (isFullscreenPath) {
     return null;
@@ -198,7 +204,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} TCG Nexus. Tous droits réservés.
+              &copy; {currentYear || ""} TCG Nexus. Tous droits réservés.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>Fait avec ❤️ pour la communauté Pokémon TCG</span>

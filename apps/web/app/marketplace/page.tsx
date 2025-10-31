@@ -12,6 +12,7 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import { ArrowRight, Flame, TrendingUp, Star, Package } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 
 export default function MarketplaceHomePage() {
   // Récupère les cartes populaires
@@ -23,7 +24,7 @@ export default function MarketplaceHomePage() {
   // Récupère les cartes en tendance
   const { data: trendingCards, isLoading: loadingTrending } = useQuery({
     queryKey: ["marketplace", "trending"],
-    queryFn: () => marketplaceService.getTrendingCards(8, 7),
+    queryFn: () => marketplaceService.getTrendingCards(8, true),
   });
 
   // Récupère les meilleurs vendeurs
@@ -47,6 +48,7 @@ export default function MarketplaceHomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-12">
+        <MarketplaceBreadcrumb />
         <div className="text-center space-y-4">
           <H1
             className="text-4xl md:text-5xl font-bold"
@@ -110,8 +112,10 @@ export default function MarketplaceHomePage() {
                   key={item.card.id}
                   card={item.card}
                   minPrice={item.minPrice}
-                  listingCount={item.recentListingCount}
+                  listingCount={item.listingCount}
                   showTrend={true}
+                  trendValue={item.trendScore}
+                  isTrending={true}
                 />
               ))}
             </div>
@@ -158,6 +162,7 @@ export default function MarketplaceHomePage() {
                   minPrice={item.minPrice}
                   avgPrice={item.avgPrice}
                   listingCount={item.listingCount}
+                  isPopular={true}
                 />
               ))}
             </div>

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/utils/price";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Star, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PokemonCardType } from "@/types/cardPokemon";
 
@@ -18,6 +18,8 @@ interface CardCardProps {
   className?: string;
   showTrend?: boolean;
   trendValue?: number;
+  isPopular?: boolean;
+  isTrending?: boolean;
 }
 
 export function CardCard({
@@ -29,6 +31,8 @@ export function CardCard({
   className,
   showTrend = false,
   trendValue,
+  isPopular = false,
+  isTrending = false,
 }: CardCardProps) {
   const hasListings = listingCount !== undefined && listingCount > 0;
 
@@ -53,6 +57,29 @@ export function CardCard({
               className="object-contain group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
+            {(isPopular || isTrending) && (
+              <div className="absolute top-2 right-2 flex gap-1">
+                {isPopular && (
+                  <Badge
+                    variant="default"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-1"
+                    title="Popularité calculée sur 90 jours"
+                  >
+                    <Star className="w-3 h-3 fill-current" />⭐
+                  </Badge>
+                )}
+                {isTrending && (
+                  <Badge
+                    variant="default"
+                    className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
+                    title="Momentum récent (7 jours vs 30 jours)"
+                  >
+                    <Flame className="w-3 h-3 fill-current" />
+                    🔥
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
@@ -130,4 +157,3 @@ export function CardCard({
     </Link>
   );
 }
-

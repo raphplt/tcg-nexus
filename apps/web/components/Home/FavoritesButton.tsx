@@ -1,6 +1,7 @@
 import { Button } from "../ui/button";
 import { Star } from "lucide-react";
 import { pokemonCardService } from "@/services/pokemonCard.service";
+import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -44,6 +45,7 @@ export const FavoriteButton = ({ cardId }: { cardId: string }) => {
       }
 
       await pokemonCardService.addToFavorites(user.id, cardId);
+      await cardEventTracker.trackFavorite(cardId);
       toast.success("Carte ajoutée aux favoris !");
       setIsFavorite(true);
     } catch (error) {

@@ -20,11 +20,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { marketplaceService } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
+import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { PaginatedResult } from "@/types/pagination";
 import { Search, X, SlidersHorizontal } from "lucide-react";
 import { cardStates, languages, currencyOptions } from "@/utils/variables";
 import MarketplacePagination from "../_components/MarketplacePagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 
 interface FilterState {
   search: string;
@@ -102,6 +105,23 @@ export default function MarketplaceCardsPage() {
     },
   );
 
+  const debouncedSearch = useDebounce(filters.search, 500);
+
+  // Track search events when search query changes and results are returned
+  useEffect(() => {
+    if (debouncedSearch && debouncedSearch.trim() && data?.data) {
+      // Track search for each card in results
+      data.data.forEach((item: any) => {
+        const card = item.card || item;
+        if (card?.id) {
+          cardEventTracker.trackSearch(card.id, debouncedSearch.trim(), {
+            resultsCount: data.meta.totalItems,
+          });
+        }
+      });
+    }
+  }, [debouncedSearch, data]);
+
   // Sync page from URL params on mount
   useEffect(() => {
     const pageParam = searchParams.get("page");
@@ -166,6 +186,9 @@ export default function MarketplaceCardsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <MarketplaceBreadcrumb />
+        </div>
         <div className="mb-8">
           <H1
             className="text-center mb-2"

@@ -16,6 +16,7 @@ import { ShoppingBag, TrendingUp, Star, Package, MessageCircle } from "lucide-re
 import Link from "next/link";
 import { formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 
 export default function SellerPage() {
   const { id } = useParams();
@@ -79,6 +80,7 @@ export default function SellerPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
+        <MarketplaceBreadcrumb />
         <Card>
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">

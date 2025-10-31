@@ -49,7 +49,8 @@ export interface PopularCard {
 
 export interface TrendingCard {
   card: PokemonCardType;
-  recentListingCount: number;
+  trendScore: number;
+  listingCount: number;
   minPrice: number;
 }
 
@@ -148,10 +149,10 @@ export const marketplaceService = {
    */
   async getTrendingCards(
     limit: number = 10,
-    days: number = 7,
+    excludePopular?: boolean,
   ): Promise<TrendingCard[]> {
     return fetcher<TrendingCard[]>("/marketplace/trending", {
-      params: { limit, days },
+      params: { limit, excludePopular },
     });
   },
 

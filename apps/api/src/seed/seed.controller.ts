@@ -19,6 +19,9 @@ export class SeedController {
     const users = await this.seedService.seedUsers();
     const tournaments = await this.seedService.seedTournaments();
     await this.seedService.importPokemon();
+    await this.seedService.seedListings();
+    await this.seedService.seedCardEvents();
+    await this.seedService.seedCardPopularityMetrics();
     return { users, tournaments };
   }
 
@@ -39,5 +42,17 @@ export class SeedController {
       tournamentType,
       seedingMethod
     );
+  }
+
+  @Post('card-events')
+  async seedCardEvents() {
+    await this.seedService.seedCardEvents();
+    return { message: 'Card events seeded successfully' };
+  }
+
+  @Post('card-popularity-metrics')
+  async seedCardPopularityMetrics() {
+    await this.seedService.seedCardPopularityMetrics();
+    return { message: 'Card popularity metrics seeded successfully' };
   }
 }
