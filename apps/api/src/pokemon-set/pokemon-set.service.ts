@@ -18,7 +18,11 @@ export class PokemonSetService {
   }
 
   async findAll(): Promise<PokemonSet[]> {
-    return this.pokemonSetRepository.find();
+    return this.pokemonSetRepository.find({
+      order: {
+        releaseDate: 'DESC'
+      }
+    });
   }
 
   async findOne(id: string): Promise<PokemonSet> {
