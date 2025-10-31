@@ -365,9 +365,11 @@ export class MarketplaceService {
 
   /**
    * Get best sellers (users with most sales)
+   * Falls back to sellers with most active listings if no sales found
    */
   async getBestSellers(limit: number = 10) {
-    const sellers = await this.orderRepository
+    // Try to get sellers based on actual sales (orders with Paid/Shipped status)
+    const sellersFromOrders = await this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.buyer', 'buyer')
       .leftJoin('order.orderItems', 'orderItem')
@@ -394,17 +396,82 @@ export class MarketplaceService {
       .limit(limit)
       .getRawMany();
 
-    return sellers.map((seller) => ({
-      seller: {
-        id: seller.seller_id,
-        firstName: seller.seller_firstName,
-        lastName: seller.seller_lastName,
-        avatarUrl: seller.seller_avatarUrl,
-        isPro: seller.seller_isPro
-      },
-      totalSales: parseInt(seller.total_sales) || 0,
-      totalRevenue: parseFloat(seller.total_revenue) || 0
-    }));
+    // If we have enough sellers from orders, return them
+    if (sellersFromOrders.length >= limit) {
+      return sellersFromOrders.map((seller) => ({
+        seller: {
+          id: seller.seller_id,
+          firstName: seller.seller_firstName,
+          lastName: seller.seller_lastName,
+          avatarUrl: seller.seller_avatarUrl,
+          isPro: seller.seller_isPro
+        },
+        totalSales: parseInt(seller.total_sales) || 0,
+        totalRevenue: parseFloat(seller.total_revenue) || 0
+      }));
+    }
+
+    // Otherwise, get sellers based on active listings (fallback)
+    const sellersFromListings = await this.listingRepository
+      .createQueryBuilder('listing')
+      .leftJoinAndSelect('listing.seller', 'seller')
+      .select([
+        'seller.id',
+        'seller.firstName',
+        'seller.lastName',
+        'seller.avatarUrl',
+        'seller.isPro'
+      ])
+      .addSelect('COUNT(listing.id)', 'active_listings')
+      .addSelect('SUM(listing.price)', 'total_listing_value')
+      .where('(listing.expiresAt IS NULL OR listing.expiresAt > :now)', {
+        now: new Date()
+      })
+      .andWhere('listing.quantityAvailable > 0')
+      .groupBy('seller.id')
+      .addGroupBy('seller.firstName')
+      .addGroupBy('seller.lastName')
+      .addGroupBy('seller.avatarUrl')
+      .addGroupBy('seller.isPro')
+      .orderBy('active_listings', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    // Merge results: prioritize sellers from orders, then add from listings
+    const sellerIdsFromOrders = new Set(
+      sellersFromOrders.map((s: any) => s.seller_id as number)
+    );
+
+    const sellersFromListingsFiltered = sellersFromListings.filter(
+      (s) => !sellerIdsFromOrders.has(s.seller_id)
+    );
+
+    const allSellers = [
+      ...sellersFromOrders.map((seller) => ({
+        seller: {
+          id: seller.seller_id,
+          firstName: seller.seller_firstName,
+          lastName: seller.seller_lastName,
+          avatarUrl: seller.seller_avatarUrl,
+          isPro: seller.seller_isPro
+        },
+        totalSales: parseInt(seller.total_sales) || 0,
+        totalRevenue: parseFloat(seller.total_revenue) || 0
+      })),
+      ...sellersFromListingsFiltered.map((seller) => ({
+        seller: {
+          id: seller.seller_id,
+          firstName: seller.seller_firstName,
+          lastName: seller.seller_lastName,
+          avatarUrl: seller.seller_avatarUrl,
+          isPro: seller.seller_isPro
+        },
+        totalSales: 0,
+        totalRevenue: parseFloat(seller.total_listing_value) || 0
+      }))
+    ].slice(0, limit);
+
+    return allSellers;
   }
 
   /**

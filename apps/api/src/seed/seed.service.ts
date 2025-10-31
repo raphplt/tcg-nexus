@@ -67,6 +67,7 @@ import {
 } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
+import { faker } from '@faker-js/faker';
 @Injectable()
 export class SeedService {
   constructor(
@@ -417,16 +418,15 @@ export class SeedService {
       }
     ];
 
-    // Créer 12 utilisateurs supplémentaires pour avoir plus de vendeurs
     for (let i = 4; i <= 15; i++) {
       usersData.push({
         email: `seller${i}@test.com`,
-        firstName: `Seller`,
-        lastName: `${i}`,
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
         password: `password${i}`,
         avatarUrl: `https://via.placeholder.com/150?text=Seller${i}`,
         role: UserRole.USER,
-        isPro: i % 3 === 0, // 1/3 des vendeurs sont pro
+        isPro: i % 3 === 0,
         isActive: true,
         emailVerified: true,
         decks: [],
