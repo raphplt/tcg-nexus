@@ -14,31 +14,31 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function MarketplaceHomePage() {
-  // Fetch popular cards
+  // Récupère les cartes populaires
   const { data: popularCards, isLoading: loadingPopular } = useQuery({
     queryKey: ["marketplace", "popular"],
     queryFn: () => marketplaceService.getPopularCards(8),
   });
 
-  // Fetch trending cards
+  // Récupère les cartes en tendance
   const { data: trendingCards, isLoading: loadingTrending } = useQuery({
     queryKey: ["marketplace", "trending"],
     queryFn: () => marketplaceService.getTrendingCards(8, 7),
   });
 
-  // Fetch best sellers
+  // Récupère les meilleurs vendeurs
   const { data: bestSellers, isLoading: loadingSellers } = useQuery({
     queryKey: ["marketplace", "best-sellers"],
     queryFn: () => marketplaceService.getBestSellers(6),
   });
 
-  // Fetch series
+  // Récupère les séries
   const { data: series, isLoading: loadingSeries } = useQuery({
     queryKey: ["pokemon-series"],
     queryFn: () => pokemonCardService.getAllSeries(),
   });
 
-  // Fetch sets
+  // Récupère les sets
   const { data: sets, isLoading: loadingSets } = useQuery({
     queryKey: ["pokemon-sets"],
     queryFn: () => pokemonCardService.getAllSets(),
@@ -47,7 +47,6 @@ export default function MarketplaceHomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* Hero Section */}
         <div className="text-center space-y-4">
           <H1
             className="text-4xl md:text-5xl font-bold"
@@ -79,7 +78,7 @@ export default function MarketplaceHomePage() {
           </div>
         </div>
 
-        {/* Trending Cards Section */}
+        {/* Section des cartes en tendance */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -125,7 +124,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Popular Cards Section */}
+        {/* Section des cartes populaires */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -171,7 +170,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Best Sellers Section */}
+        {/* Section des meilleurs vendeurs */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -216,7 +215,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Series/Extensions Section */}
+        {/* Section des séries et extensions */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

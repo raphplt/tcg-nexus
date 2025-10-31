@@ -123,7 +123,7 @@ export class MarketplaceController {
     return this.marketplaceService.getCardStatistics(id, currency, cardState);
   }
 
-  // Popular and trending
+  // Cartes populaires et en tendance
   @Get('popular')
   @Public()
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -145,7 +145,7 @@ export class MarketplaceController {
     );
   }
 
-  // Best sellers
+  // Meilleurs vendeurs
   @Get('best-sellers')
   @Public()
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -153,7 +153,7 @@ export class MarketplaceController {
     return this.marketplaceService.getBestSellers(limit ? +limit : 10);
   }
 
-  // Seller endpoints
+  // Vendeurs
   @Get('sellers/:id')
   @Public()
   getSellerStatistics(@Param('id', ParseIntPipe) id: number) {
