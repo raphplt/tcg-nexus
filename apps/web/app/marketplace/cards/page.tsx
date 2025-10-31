@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { H1 } from "@/components/Shared/Titles";
@@ -43,7 +43,9 @@ interface FilterState {
 export default function MarketplaceCardsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(
+    parseInt(searchParams.get("page") || "1", 10),
+  );
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
@@ -97,8 +99,19 @@ export default function MarketplaceCardsPage() {
       page,
       limit: 24,
       ...filters,
-    }
+    },
   );
+
+  // Sync page from URL params on mount
+  useEffect(() => {
+    const pageParam = searchParams.get("page");
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        setPage(pageNum);
+      }
+    }
+  }, [searchParams]);
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
     const updated = { ...filters, ...newFilters };
@@ -113,6 +126,19 @@ export default function MarketplaceCardsPage() {
       }
     });
     router.push(`/marketplace/cards?${params.toString()}`);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    // Update URL params with new page
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "" && value !== null) {
+        params.set(key, String(value));
+      }
+    });
+    params.set("page", String(newPage));
+    router.push(`/marketplace/cards?${params.toString()}`, { scroll: false });
   };
 
   const resetFilters = () => {
@@ -141,7 +167,10 @@ export default function MarketplaceCardsPage() {
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <H1 className="text-center mb-2" variant="primary">
+          <H1
+            className="text-center mb-2"
+            variant="primary"
+          >
             Catalogue de cartes
           </H1>
           <p className="text-center text-muted-foreground text-lg">
@@ -159,7 +188,9 @@ export default function MarketplaceCardsPage() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 {activeFiltersCount > 0 && (
-                  <Badge variant="secondary">{activeFiltersCount} actif(s)</Badge>
+                  <Badge variant="secondary">
+                    {activeFiltersCount} actif(s)
+                  </Badge>
                 )}
                 <Button
                   variant="outline"
@@ -218,7 +249,9 @@ export default function MarketplaceCardsPage() {
                   <Select
                     value={filters.serieId || "all"}
                     onValueChange={(value) =>
-                      updateFilters({ serieId: value === "all" ? undefined : value })
+                      updateFilters({
+                        serieId: value === "all" ? undefined : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -227,7 +260,10 @@ export default function MarketplaceCardsPage() {
                     <SelectContent>
                       <SelectItem value="all">Toutes les séries</SelectItem>
                       {series?.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
+                        <SelectItem
+                          key={s.id}
+                          value={s.id.toString()}
+                        >
                           {s.name}
                         </SelectItem>
                       ))}
@@ -240,7 +276,9 @@ export default function MarketplaceCardsPage() {
                   <Select
                     value={filters.setId || "all"}
                     onValueChange={(value) =>
-                      updateFilters({ setId: value === "all" ? undefined : value })
+                      updateFilters({
+                        setId: value === "all" ? undefined : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -249,7 +287,10 @@ export default function MarketplaceCardsPage() {
                     <SelectContent>
                       <SelectItem value="all">Toutes les extensions</SelectItem>
                       {sets?.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
+                        <SelectItem
+                          key={s.id}
+                          value={s.id}
+                        >
                           {s.name}
                         </SelectItem>
                       ))}
@@ -262,7 +303,9 @@ export default function MarketplaceCardsPage() {
                   <Input
                     placeholder="Ex: Rare Holo"
                     value={filters.rarity || ""}
-                    onChange={(e) => updateFilters({ rarity: e.target.value || undefined })}
+                    onChange={(e) =>
+                      updateFilters({ rarity: e.target.value || undefined })
+                    }
                   />
                 </div>
 
@@ -271,7 +314,9 @@ export default function MarketplaceCardsPage() {
                   <Select
                     value={filters.cardState || "all"}
                     onValueChange={(value) =>
-                      updateFilters({ cardState: value === "all" ? undefined : value })
+                      updateFilters({
+                        cardState: value === "all" ? undefined : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -280,7 +325,10 @@ export default function MarketplaceCardsPage() {
                     <SelectContent>
                       <SelectItem value="all">Tous les états</SelectItem>
                       {cardStates.map((cs) => (
-                        <SelectItem key={cs.value} value={cs.value}>
+                        <SelectItem
+                          key={cs.value}
+                          value={cs.value}
+                        >
                           {cs.label}
                         </SelectItem>
                       ))}
@@ -293,7 +341,9 @@ export default function MarketplaceCardsPage() {
                   <Select
                     value={filters.currency || "all"}
                     onValueChange={(value) =>
-                      updateFilters({ currency: value === "all" ? undefined : value })
+                      updateFilters({
+                        currency: value === "all" ? undefined : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -302,7 +352,10 @@ export default function MarketplaceCardsPage() {
                     <SelectContent>
                       <SelectItem value="all">Toutes les devises</SelectItem>
                       {currencyOptions.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
+                        <SelectItem
+                          key={c.value}
+                          value={c.value}
+                        >
                           {c.label}
                         </SelectItem>
                       ))}
@@ -315,7 +368,9 @@ export default function MarketplaceCardsPage() {
                   <Select
                     value={filters.language || "all"}
                     onValueChange={(value) =>
-                      updateFilters({ language: value === "all" ? undefined : value })
+                      updateFilters({
+                        language: value === "all" ? undefined : value,
+                      })
                     }
                   >
                     <SelectTrigger>
@@ -324,7 +379,10 @@ export default function MarketplaceCardsPage() {
                     <SelectContent>
                       <SelectItem value="all">Toutes les langues</SelectItem>
                       {languages.map((l) => (
-                        <SelectItem key={l.value} value={l.value}>
+                        <SelectItem
+                          key={l.value}
+                          value={l.value}
+                        >
                           {l.label}
                         </SelectItem>
                       ))}
@@ -340,7 +398,9 @@ export default function MarketplaceCardsPage() {
                     value={filters.priceMin || ""}
                     onChange={(e) =>
                       updateFilters({
-                        priceMin: e.target.value ? parseFloat(e.target.value) : undefined,
+                        priceMin: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
                       })
                     }
                   />
@@ -354,7 +414,9 @@ export default function MarketplaceCardsPage() {
                     value={filters.priceMax || ""}
                     onChange={(e) =>
                       updateFilters({
-                        priceMax: e.target.value ? parseFloat(e.target.value) : undefined,
+                        priceMax: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
                       })
                     }
                   />
@@ -362,7 +424,10 @@ export default function MarketplaceCardsPage() {
 
                 {activeFiltersCount > 0 && (
                   <div className="col-span-full">
-                    <Button variant="outline" onClick={resetFilters}>
+                    <Button
+                      variant="outline"
+                      onClick={resetFilters}
+                    >
                       <X className="w-4 h-4 mr-2" />
                       Réinitialiser les filtres
                     </Button>
@@ -377,7 +442,10 @@ export default function MarketplaceCardsPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
-              <Skeleton key={i} className="h-80" />
+              <Skeleton
+                key={i}
+                className="h-80"
+              />
             ))}
           </div>
         ) : error ? (
@@ -389,7 +457,8 @@ export default function MarketplaceCardsPage() {
         ) : data && data.data.length > 0 ? (
           <>
             <div className="mb-4 text-sm text-muted-foreground">
-              {data.meta.totalItems} carte{data.meta.totalItems > 1 ? "s" : ""} trouvée
+              {data.meta.totalItems} carte{data.meta.totalItems > 1 ? "s" : ""}{" "}
+              trouvée
               {data.meta.totalItems > 1 ? "s" : ""}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
@@ -411,7 +480,7 @@ export default function MarketplaceCardsPage() {
               <MarketplacePagination
                 meta={data.meta}
                 page={page}
-                setPage={setPage}
+                setPage={handlePageChange}
               />
             )}
           </>
