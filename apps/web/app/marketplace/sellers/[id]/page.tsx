@@ -15,7 +15,7 @@ import { formatPrice } from "@/utils/price";
 import { ShoppingBag, TrendingUp, Star, Package, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { formatPrice as formatPriceUtil } from "@/utils/price";
-import { getCardStateColor } from "../utils";
+import { getCardStateColor } from "../../utils";
 
 export default function SellerPage() {
   const { id } = useParams();
@@ -60,16 +60,25 @@ export default function SellerPage() {
     );
   }
 
-  const seller = listings?.[0]?.seller || {
-    id: sellerId,
-    firstName: "Unknown",
-    lastName: "Seller",
-  };
+  const seller = listings?.[0]?.seller;
+
+  if (!seller) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              Vendeur non trouvé
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Seller Header */}
         <Card>
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -86,7 +95,10 @@ export default function SellerPage() {
                     {seller.firstName} {seller.lastName}
                   </H1>
                   {seller.isPro && (
-                    <Badge variant="secondary" className="text-sm">
+                    <Badge
+                      variant="secondary"
+                      className="text-sm"
+                    >
                       Vendeur Pro
                     </Badge>
                   )}
@@ -103,7 +115,10 @@ export default function SellerPage() {
               </div>
               <div className="flex gap-2">
                 <Link href={`/marketplace/sellers/${sellerId}`}>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                  <Badge
+                    variant="outline"
+                    className="cursor-pointer hover:bg-accent"
+                  >
                     <MessageCircle className="w-3 h-3 mr-1" />
                     Contacter
                   </Badge>
@@ -185,14 +200,18 @@ export default function SellerPage() {
           <div className="flex items-center justify-between mb-6">
             <H2>Offres du vendeur</H2>
             <Badge variant="secondary">
-              {listings?.length || 0} offre{listings && listings.length > 1 ? "s" : ""}
+              {listings?.length || 0} offre
+              {listings && listings.length > 1 ? "s" : ""}
             </Badge>
           </div>
 
           {loadingListings ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-80" />
+                <Skeleton
+                  key={i}
+                  className="h-80"
+                />
               ))}
             </div>
           ) : listings && listings.length > 0 ? (
@@ -255,11 +274,16 @@ export default function SellerPage() {
                           </TableCell>
                           <TableCell>{listing.quantityAvailable}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {new Date(listing.createdAt).toLocaleDateString("fr-FR")}
+                            {new Date(listing.createdAt).toLocaleDateString(
+                              "fr-FR",
+                            )}
                           </TableCell>
                           <TableCell>
                             <Link href={`/marketplace/${listing.id}`}>
-                              <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                              <Badge
+                                variant="outline"
+                                className="cursor-pointer hover:bg-accent"
+                              >
                                 Voir
                               </Badge>
                             </Link>

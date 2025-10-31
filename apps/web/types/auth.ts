@@ -1,3 +1,5 @@
+import { Player } from "./tournament";
+
 export interface User {
   avatarUrl: string;
   id: number;
@@ -6,10 +8,8 @@ export interface User {
   lastName: string;
   role: UserRole;
   isPro: boolean;
-  player?: {
-    id: number;
-    name: string;
-  };
+  player?: Player;
+  createdAt: Date;
 }
 
 export enum UserRole {
