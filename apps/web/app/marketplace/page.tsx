@@ -13,6 +13,7 @@ import { ArrowRight, Flame, TrendingUp, Star, Package } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import SetCard from "@/components/Marketplace/SetCard";
 
 export default function MarketplaceHomePage() {
   // Récupère les cartes populaires
@@ -248,33 +249,10 @@ export default function MarketplaceHomePage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {sets?.slice(0, 12).map((set) => (
-                <Link
+                <SetCard
                   key={set.id}
-                  href={`/marketplace/cards?setId=${set.id}`}
-                >
-                  <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer h-full">
-                    <CardHeader className="pb-3">
-                      <div className="aspect-square relative mb-3 bg-muted rounded-lg overflow-hidden">
-                        {set.logo ? (
-                          <Image
-                            src={set.logo}
-                            alt={set.name}
-                            fill
-                            className="object-contain group-hover:scale-105 transition-transform duration-200"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                            {set.name}
-                          </div>
-                        )}
-                      </div>
-                      <CardTitle className="text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                        {set.name}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                </Link>
+                  set={set}
+                />
               ))}
             </div>
           )}

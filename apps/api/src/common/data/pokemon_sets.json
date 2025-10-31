@@ -20,7 +20,9 @@
             "official": "BS",
             "localized": "BAS"
         },
-        "serieId": "base"
+        "serieId": "base",
+        "symbol": "/images/icons/set-de-base-icon.png",
+        "logo": "/images/icons/set-de-base.webp"
     },
     {
         "cardCount": {
@@ -38,13 +40,14 @@
         },
         "name": "Jungle",
         "releaseDate": "1999-06-16",
-        "symbol": "https://assets.tcgdex.net/univ/base/base2/symbol",
+        "symbol": "/images/icons/jungle-icon.png",
         "tcgOnline": "JU",
         "abbreviation": {
             "official": "JU",
             "localized": "JUN"
         },
-        "serieId": "base"
+        "serieId": "base",
+        "logo": "/images/icons/jungle.webp"
     },
     {
         "cardCount": {
@@ -62,9 +65,10 @@
         },
         "name": "Wizards Black Star Promos",
         "releaseDate": "1999-07-01",
-        "symbol": "https://assets.tcgdex.net/univ/base/basep/symbol",
+        "symbol": "/images/icons/evolutions-a-paldea-icon.webp",
         "tcgOnline": "PR",
-        "serieId": "base"
+        "serieId": "base",
+        "logo": "/images/icons/evolutions-a-paldea.webp"
     },
     {
         "cardCount": {
@@ -100,13 +104,14 @@
         },
         "name": "Fossile",
         "releaseDate": "1999-10-10",
-        "symbol": "https://assets.tcgdex.net/univ/base/base3/symbol",
+        "symbol": "/images/icons/fossile-icon.png",
         "tcgOnline": "FO",
         "abbreviation": {
             "official": "FO",
             "localized": "FOS"
         },
-        "serieId": "base"
+        "serieId": "base",
+        "logo": "/images/icons/fossile.webp"
     },
     {
         "cardCount": {
@@ -142,13 +147,14 @@
         },
         "name": "Team Rocket",
         "releaseDate": "2000-04-24",
-        "symbol": "https://assets.tcgdex.net/univ/base/base5/symbol",
+        "symbol": "/images/icons/team-rocket-icon.png",
         "tcgOnline": "TR",
         "abbreviation": {
             "official": "RO",
             "localized": "ROC"
         },
-        "serieId": "base"
+        "serieId": "base",
+        "logo": "/images/icons/team-rocket.webp"
     },
     {
         "cardCount": {
@@ -166,13 +172,14 @@
         },
         "name": "Neo Genesis",
         "releaseDate": "2000-12-16",
-        "symbol": "https://assets.tcgdex.net/univ/neo/neo1/symbol",
+        "symbol": "/images/icons/neo-genesis-icon.png",
         "tcgOnline": "N1",
         "abbreviation": {
             "official": "N1",
             "localized": "NGS"
         },
-        "serieId": "neo"
+        "serieId": "neo",
+        "logo": "/images/icons/neo-genesis.webp"
     },
     {
         "cardCount": {
@@ -190,13 +197,14 @@
         },
         "name": "Neo Discovery",
         "releaseDate": "2001-06-01",
-        "symbol": "https://assets.tcgdex.net/univ/neo/neo2/symbol",
+        "symbol": "/images/icons/neo-discovery-icon.png",
         "tcgOnline": "N2",
         "abbreviation": {
             "official": "N2",
             "localized": "NDS"
         },
-        "serieId": "neo"
+        "serieId": "neo",
+        "logo": "/images/icons/neo-discovery.webp"
     },
     {
         "cardCount": {
@@ -214,13 +222,14 @@
         },
         "name": "Neo Revelation",
         "releaseDate": "2001-09-21",
-        "symbol": "https://assets.tcgdex.net/univ/neo/neo3/symbol",
+        "symbol": "/images/icons/neo-revelation-icon.png",
         "tcgOnline": "N3",
         "abbreviation": {
             "official": "N3",
             "localized": "NRE"
         },
-        "serieId": "neo"
+        "serieId": "neo",
+        "logo": "/images/icons/neo-revelation.webp"
     },
     {
         "cardCount": {
@@ -238,13 +247,14 @@
         },
         "name": "Neo Destiny",
         "releaseDate": "2002-02-28",
-        "symbol": "https://assets.tcgdex.net/univ/neo/neo4/symbol",
+        "symbol": "/images/icons/neo-destiny-icon.webp",
         "tcgOnline": "N4",
         "abbreviation": {
             "official": "N4",
             "localized": "NDT"
         },
-        "serieId": "neo"
+        "serieId": "neo",
+        "logo": "/images/icons/neo-destiny.webp"
     },
     {
         "cardCount": {
@@ -262,13 +272,14 @@
         },
         "name": "Expedition",
         "releaseDate": "2002-09-15",
-        "symbol": "https://assets.tcgdex.net/univ/ecard/ecard1/symbol",
+        "symbol": "/images/icons/expedition-icon.webp",
         "tcgOnline": "EX",
         "abbreviation": {
             "official": "EX",
             "localized": "EXP"
         },
-        "serieId": "ecard"
+        "serieId": "ecard",
+        "logo": "/images/icons/expedition.webp"
     },
     {
         "cardCount": {
@@ -286,13 +297,14 @@
         },
         "name": "Aquapolis",
         "releaseDate": "2003-01-15",
-        "symbol": "https://assets.tcgdex.net/univ/ecard/ecard2/symbol",
+        "symbol": "/images/icons/aquapolis-icon.webp",
         "tcgOnline": "AQ",
         "abbreviation": {
             "official": "AQ",
             "localized": "AQU"
         },
-        "serieId": "ecard"
+        "serieId": "ecard",
+        "logo": "/images/icons/aquapolis.webp"
     },
     {
         "cardCount": {
@@ -310,13 +322,14 @@
         },
         "name": "EX Rubis & Saphir",
         "releaseDate": "2003-07-01",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex1/symbol",
+        "symbol": "/images/icons/rubis-saphir-icon.webp",
         "tcgOnline": "RS",
         "abbreviation": {
             "official": "RS",
             "localized": "R&S"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/rubis-saphir.webp"
     },
     {
         "cardCount": {
@@ -334,13 +347,14 @@
         },
         "name": "EX Tempête de sable",
         "releaseDate": "2003-09-18",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex2/symbol",
+        "symbol": "/images/icons/tempete-de-sable-icon.webp",
         "tcgOnline": "SS",
         "abbreviation": {
             "official": "SS",
             "localized": "TES"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/tempete-de-sable.webp"
     },
     {
         "cardCount": {
@@ -378,13 +392,14 @@
         },
         "name": "EX Dragon",
         "releaseDate": "2003-11-24",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex3/symbol",
+        "symbol": "/images/icons/ex-dragon-icon.webp",
         "tcgOnline": "DR",
         "abbreviation": {
             "official": "DR",
             "localized": "DRG"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/ex-dragon.webp"
     },
     {
         "cardCount": {
@@ -402,13 +417,14 @@
         },
         "name": "EX Team Magma vs Team Aqua",
         "releaseDate": "2004-03-01",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex4/symbol",
+        "symbol": "/images/icons/team-magma-vs-team-aqua-icon.webp",
         "tcgOnline": "MA",
         "abbreviation": {
             "official": "MA",
             "localized": "M&A"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/team-magma-vs-team-aqua.webp"
     },
     {
         "cardCount": {
@@ -426,13 +442,14 @@
         },
         "name": "EX Légendes Oubliées",
         "releaseDate": "2004-06-01",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex5/symbol",
+        "symbol": "/images/icons/legendes-oubliees-icon.webp",
         "tcgOnline": "HL",
         "abbreviation": {
             "official": "HL",
             "localized": "LOU"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/legendes-oubliees.webp"
     },
     {
         "cardCount": {
@@ -450,12 +467,13 @@
         },
         "name": "EX Kit dresseur (Latias)",
         "releaseDate": "2004-07-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latia/symbol",
+        "symbol": "/images/icons/expedition-icon.webp",
         "abbreviation": {
             "official": "TK1A",
             "localized": "KDA"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/expedition.webp"
     },
     {
         "cardCount": {
@@ -473,12 +491,13 @@
         },
         "name": "EX Kit dresseur (Latios)",
         "releaseDate": "2004-07-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latio/symbol",
+        "symbol": "/images/icons/expedition-icon.webp",
         "abbreviation": {
             "official": "TK1O",
             "localized": "KDL"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/expedition.webp"
     },
     {
         "cardCount": {
@@ -496,13 +515,14 @@
         },
         "name": "EX Rouge Feu & Vert Feuille",
         "releaseDate": "2004-09-01",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex6/symbol",
+        "symbol": "/images/icons/rouge-feu-et-vert-feuille-icon.webp",
         "tcgOnline": "RG",
         "abbreviation": {
             "official": "RG",
             "localized": "RFV"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/rouge-feu-et-vert-feuille.webp"
     },
     {
         "cardCount": {
@@ -520,12 +540,13 @@
         },
         "name": "POP Série 1",
         "releaseDate": "2004-09-01",
-        "symbol": "https://assets.tcgdex.net/univ/pop/pop1/symbol",
+        "symbol": "/images/icons/151-icon.webp",
         "abbreviation": {
             "official": "P1",
             "localized": "P01"
         },
-        "serieId": "pop"
+        "serieId": "pop",
+        "logo": "/images/icons/151.webp"
     },
     {
         "cardCount": {
@@ -543,13 +564,14 @@
         },
         "name": "EX Deoxys",
         "releaseDate": "2005-02-01",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex8/symbol",
+        "symbol": "/images/icons/ex-deoxys-icon.webp",
         "tcgOnline": "DX",
         "abbreviation": {
             "official": "DX",
             "localized": "DEO"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/ex-deoxys.webp"
     },
     {
         "cardCount": {
@@ -567,13 +589,14 @@
         },
         "name": "EX Émeraude",
         "releaseDate": "2005-05-09",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex9/symbol",
+        "symbol": "/images/icons/emeraude-icon.webp",
         "tcgOnline": "EM",
         "abbreviation": {
             "official": "EM",
             "localized": "EME"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/emeraude.webp"
     },
     {
         "cardCount": {
@@ -614,13 +637,14 @@
         },
         "name": "EX Forces Cachées",
         "releaseDate": "2005-08-22",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex10/symbol",
+        "symbol": "/images/icons/forces-cachees-icon.webp",
         "tcgOnline": "UF",
         "abbreviation": {
             "official": "UF",
             "localized": "FCH"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/forces-cachees.webp"
     },
     {
         "cardCount": {
@@ -638,7 +662,9 @@
         },
         "name": "EX Forces Cachées Collection Zarbi",
         "releaseDate": "2005-08-22",
-        "serieId": "ex"
+        "serieId": "ex",
+        "symbol": "/images/icons/forces-cachees-icon.webp",
+        "logo": "/images/icons/forces-cachees.webp"
     },
     {
         "cardCount": {
@@ -656,13 +682,14 @@
         },
         "name": "EX Espèces Delta",
         "releaseDate": "2005-10-31",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex11/symbol",
+        "symbol": "/images/icons/especes-delta-icon.webp",
         "tcgOnline": "DS",
         "abbreviation": {
             "official": "DS",
             "localized": "ESD"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/especes-delta.webp"
     },
     {
         "cardCount": {
@@ -680,13 +707,14 @@
         },
         "name": "EX Créateurs de légendes",
         "releaseDate": "2006-02-13",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex12/symbol",
+        "symbol": "/images/icons/createurs-de-legendes-icon.webp",
         "tcgOnline": "LM",
         "abbreviation": {
             "official": "LM",
             "localized": "CDL"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/createurs-de-legendes.webp"
     },
     {
         "cardCount": {
@@ -704,12 +732,13 @@
         },
         "name": "EX Kit dresseur (Négapi)",
         "releaseDate": "2006-03-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-n/symbol",
+        "symbol": "/images/icons/expedition-icon.webp",
         "abbreviation": {
             "official": "TK2M",
             "localized": "NEG"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/expedition.webp"
     },
     {
         "cardCount": {
@@ -727,12 +756,13 @@
         },
         "name": "EX Kit dresseur (Positi)",
         "releaseDate": "2006-03-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-p/symbol",
+        "symbol": "/images/icons/expedition-icon.webp",
         "abbreviation": {
             "official": "TK2P",
             "localized": "POS"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/expedition.webp"
     },
     {
         "cardCount": {
@@ -773,13 +803,14 @@
         },
         "name": "EX Fantômes Holon",
         "releaseDate": "2006-05-03",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex13/symbol",
+        "symbol": "/images/icons/fantomes-holon-icon.webp",
         "tcgOnline": "HP",
         "abbreviation": {
             "official": "HP",
             "localized": "FAN"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/fantomes-holon.webp"
     },
     {
         "cardCount": {
@@ -820,13 +851,14 @@
         },
         "name": "EX Gardiens de Cristal",
         "releaseDate": "2006-08-30",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex14/symbol",
+        "symbol": "/images/icons/gardiens-de-cristal-icon.webp",
         "tcgOnline": "CG",
         "abbreviation": {
             "official": "CG",
             "localized": "GDC"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/gardiens-de-cristal.webp"
     },
     {
         "cardCount": {
@@ -844,13 +876,14 @@
         },
         "name": "EX Île des Dragons",
         "releaseDate": "2006-11-08",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex15/symbol",
+        "symbol": "/images/icons/iles-des-dragons-icon.webp",
         "tcgOnline": "DF",
         "abbreviation": {
             "official": "DF",
             "localized": "IDR"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/iles-des-dragons.webp"
     },
     {
         "cardCount": {
@@ -868,13 +901,14 @@
         },
         "name": "EX Gardiens du Pouvoir",
         "releaseDate": "2007-02-17",
-        "symbol": "https://assets.tcgdex.net/univ/ex/ex16/symbol",
+        "symbol": "/images/icons/gardiens-du-pouvoir-icon.webp",
         "tcgOnline": "PK",
         "abbreviation": {
             "official": "PK",
             "localized": "GDP"
         },
-        "serieId": "ex"
+        "serieId": "ex",
+        "logo": "/images/icons/gardiens-du-pouvoir.webp"
     },
     {
         "cardCount": {
@@ -910,10 +944,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp1/logo",
+        "logo": "/images/icons/diamant-et-perle.webp",
         "name": "Diamant & Perle",
         "releaseDate": "2007-05-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp1/symbol",
+        "symbol": "/images/icons/diamant-et-perle-icon.webp",
         "tcgOnline": "DP",
         "abbreviation": {
             "official": "DP",
@@ -935,10 +969,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp2/logo",
+        "logo": "/images/icons/tresors-mysterieux.webp",
         "name": "Trésors Mystérieux",
         "releaseDate": "2007-08-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp2/symbol",
+        "symbol": "/images/icons/tresors-mysterieux-icon.webp",
         "tcgOnline": "MT",
         "abbreviation": {
             "official": "MT",
@@ -1006,10 +1040,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp3/logo",
+        "logo": "/images/icons/merveilles-secretes.webp",
         "name": "Merveilles Secrètes",
         "releaseDate": "2007-11-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp3/symbol",
+        "symbol": "/images/icons/merveilles-secretes-icon.webp",
         "tcgOnline": "SW",
         "abbreviation": {
             "official": "SW",
@@ -1031,10 +1065,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp4/logo",
+        "logo": "/images/icons/duels-au-sommet.webp",
         "name": "Duels au Sommets",
         "releaseDate": "2008-02-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp4/symbol",
+        "symbol": "/images/icons/duels-au-sommet-icon.webp",
         "tcgOnline": "GE",
         "abbreviation": {
             "official": "GE",
@@ -1079,10 +1113,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp5/logo",
+        "logo": "/images/icons/aube-majestueuse.webp",
         "name": "Aube Majestueuse",
         "releaseDate": "2008-05-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp5/symbol",
+        "symbol": "/images/icons/aube-majestueuse-icon.webp",
         "tcgOnline": "MD",
         "abbreviation": {
             "official": "MD",
@@ -1104,10 +1138,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp6/logo",
+        "logo": "/images/icons/eveil-des-legendes.webp",
         "name": "Éveil des Légendes",
         "releaseDate": "2008-08-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp6/symbol",
+        "symbol": "/images/icons/eveil-des-legendes-icon.webp",
         "tcgOnline": "LA",
         "abbreviation": {
             "official": "LA",
@@ -1129,10 +1163,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/dp/dp7/logo",
+        "logo": "/images/icons/tempete.webp",
         "name": "Tempête",
         "releaseDate": "2008-11-01",
-        "symbol": "https://assets.tcgdex.net/univ/dp/dp7/symbol",
+        "symbol": "/images/icons/tempete-icon.webp",
         "tcgOnline": "SF",
         "abbreviation": {
             "official": "FS",
@@ -1154,10 +1188,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/pl/pl1/logo",
+        "logo": "/images/icons/platine.webp",
         "name": "Platine",
         "releaseDate": "2009-02-11",
-        "symbol": "https://assets.tcgdex.net/univ/pl/pl1/symbol",
+        "symbol": "/images/icons/platine-icon.webp",
         "tcgOnline": "PL",
         "abbreviation": {
             "official": "PL",
@@ -1202,10 +1236,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/pl/pl2/logo",
+        "logo": "/images/icons/rivaux-emergents.webp",
         "name": "Rivaux Émergeants",
         "releaseDate": "2009-05-16",
-        "symbol": "https://assets.tcgdex.net/univ/pl/pl2/symbol",
+        "symbol": "/images/icons/rivaux-emergents-icon.webp",
         "tcgOnline": "RR",
         "abbreviation": {
             "official": "RR",
@@ -1227,10 +1261,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/pl/pl3/logo",
+        "logo": "/images/icons/vainqueurs-supremes.webp",
         "name": "Vainqueurs Suprêmes",
         "releaseDate": "2009-08-19",
-        "symbol": "https://assets.tcgdex.net/univ/pl/pl3/symbol",
+        "symbol": "/images/icons/vainqueurs-supremes-icon.webp",
         "tcgOnline": "SV",
         "abbreviation": {
             "official": "SV",
@@ -1252,10 +1286,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/hgss/hgss1/logo",
+        "logo": "/images/icons/heartgold-soulsilver.webp",
         "name": "HeartGold SoulSilver",
         "releaseDate": "2010-02-10",
-        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss1/symbol",
+        "symbol": "/images/icons/heartgold-soulsilver-icon.webp",
         "tcgOnline": "HS",
         "abbreviation": {
             "official": "HS",
@@ -1343,10 +1377,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/hgss/hgss2/logo",
+        "logo": "/images/icons/dechainement.webp",
         "name": "Déchaînement",
         "releaseDate": "2010-05-12",
-        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss2/symbol",
+        "symbol": "/images/icons/dechainement-icon.webp",
         "tcgOnline": "UL",
         "abbreviation": {
             "official": "UL",
@@ -1368,10 +1402,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/hgss/hgss3/logo",
+        "logo": "/images/icons/indomptable.webp",
         "name": "Indomptable",
         "releaseDate": "2010-08-18",
-        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss3/symbol",
+        "symbol": "/images/icons/indomptable-icon.webp",
         "tcgOnline": "UD",
         "abbreviation": {
             "official": "UND",
@@ -1393,10 +1427,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/hgss/hgss4/logo",
+        "logo": "/images/icons/triomphe.webp",
         "name": "Triomphant",
         "releaseDate": "2010-11-03",
-        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss4/symbol",
+        "symbol": "/images/icons/triomphe-icon.webp",
         "tcgOnline": "TM",
         "abbreviation": {
             "official": "TRI",
@@ -1418,10 +1452,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/col/col1/logo",
+        "logo": "/images/icons/l-appel-des-légendes.webp",
         "name": "L'appel des Légendes",
         "releaseDate": "2011-02-09",
-        "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol",
+        "symbol": "/images/icons/l-appel-des-légendes-icon.png",
         "tcgOnline": "CL",
         "abbreviation": {
             "official": "COL",
@@ -1443,10 +1477,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw1/logo",
+        "logo": "/images/icons/noir-blanc.webp",
         "name": "Noir & Blanc",
         "releaseDate": "2011-04-25",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw1/symbol",
+        "symbol": "/images/icons/noir-blanc-icon.png",
         "tcgOnline": "BLW",
         "abbreviation": {
             "official": "BLW",
@@ -1498,7 +1532,9 @@
             "official": "MCD11",
             "localized": "M12"
         },
-        "serieId": "mc"
+        "serieId": "mc",
+        "symbol": "/images/icons/noir-blanc-mcdonalds-icon.webp",
+        "logo": "/images/icons/noir-blanc-mcdonalds.webp"
     },
     {
         "cardCount": {
@@ -1514,10 +1550,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw2/logo",
+        "logo": "/images/icons/pouvoirs-emergents.webp",
         "name": "Pouvoirs Émergents",
         "releaseDate": "2011-08-31",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw2/symbol",
+        "symbol": "/images/icons/pouvoirs-emergents-icon.png",
         "tcgOnline": "EPO",
         "abbreviation": {
             "official": "EP",
@@ -1583,10 +1619,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw3/logo",
+        "logo": "/images/icons/nobles-victoires.webp",
         "name": "Nobles Victoires",
         "releaseDate": "2011-11-16",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw3/symbol",
+        "symbol": "/images/icons/nobles-victoires-icon.webp",
         "tcgOnline": "NVI",
         "abbreviation": {
             "official": "NVI",
@@ -1608,10 +1644,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw4/logo",
+        "logo": "/images/icons/destinees-futures.webp",
         "name": "Destinées Futures",
         "releaseDate": "2012-02-08",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw4/symbol",
+        "symbol": "/images/icons/destinees-futures-icon.webp",
         "tcgOnline": "NXD",
         "abbreviation": {
             "official": "NEX",
@@ -1633,10 +1669,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw5/logo",
+        "logo": "/images/icons/explorateurs-obscurs.webp",
         "name": "Explorateurs Obscurs",
         "releaseDate": "2012-05-09",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw5/symbol",
+        "symbol": "/images/icons/explorateurs-obscurs-icon.png",
         "tcgOnline": "DEX",
         "abbreviation": {
             "official": "DEX",
@@ -1658,10 +1694,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw6/logo",
+        "logo": "/images/icons/dragons-exaltes.webp",
         "name": "Dragons Éxaltés",
         "releaseDate": "2012-08-15",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw6/symbol",
+        "symbol": "/images/icons/dragons-exaltes-icon.webp",
         "tcgOnline": "DRX",
         "abbreviation": {
             "official": "DRX",
@@ -1683,10 +1719,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/dv1/logo",
+        "logo": "/images/icons/coffre-des-dragons.webp",
         "name": "Coffre des Dragons",
         "releaseDate": "2012-10-05",
-        "symbol": "https://assets.tcgdex.net/univ/bw/dv1/symbol",
+        "symbol": "/images/icons/coffre-des-dragons-icon.webp",
         "tcgOnline": "DRV",
         "abbreviation": {
             "official": "DRV",
@@ -1708,10 +1744,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw7/logo",
+        "logo": "/images/icons/frontieres-franchies.webp",
         "name": "Frontières Franchies",
         "releaseDate": "2012-11-07",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw7/symbol",
+        "symbol": "/images/icons/frontieres-franchies-icon.webp",
         "tcgOnline": "BCR",
         "abbreviation": {
             "official": "BCR",
@@ -1733,10 +1769,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw8/logo",
+        "logo": "/images/icons/tempete-plasma.webp",
         "name": "Tempète Plasma",
         "releaseDate": "2013-02-06",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw8/symbol",
+        "symbol": "/images/icons/tempete-plasma-icon.webp",
         "tcgOnline": "PLS",
         "abbreviation": {
             "official": "PLS"
@@ -1757,10 +1793,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw9/logo",
+        "logo": "/images/icons/glaciation-plasma.webp",
         "name": "Glaciation Plasma",
         "releaseDate": "2013-05-08",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw9/symbol",
+        "symbol": "/images/icons/glaciation-plasma-icon.webp",
         "tcgOnline": "PLF",
         "abbreviation": {
             "official": "PLF",
@@ -1782,10 +1818,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/bw/bw10/logo",
+        "logo": "/images/icons/explosion-plasma.webp",
         "name": "Explosion Plasma",
         "releaseDate": "2013-08-14",
-        "symbol": "https://assets.tcgdex.net/univ/bw/bw10/symbol",
+        "symbol": "/images/icons/explosion-plasma-icon.webp",
         "tcgOnline": "PLB",
         "abbreviation": {
             "official": "PLB",
@@ -1809,13 +1845,14 @@
         },
         "name": "Promo XY",
         "releaseDate": "2013-10-12",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xyp/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "tcgOnline": "PR-XY",
         "abbreviation": {
             "official": "XYP",
             "localized": "PXY"
         },
-        "serieId": "xy"
+        "serieId": "xy",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -1867,10 +1904,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy0/logo",
+        "logo": "/images/icons/xy-bienvenue-a-kalos.webp",
         "name": "Bienvenue à Kalos",
         "releaseDate": "2013-11-08",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy0/symbol",
+        "symbol": "/images/icons/xy-bienvenue-a-kalos-icon.webp",
         "tcgOnline": "KSS",
         "abbreviation": {
             "official": "KSS",
@@ -1894,7 +1931,9 @@
         },
         "name": "carte alternative A Jaune",
         "releaseDate": "2014-02-05",
-        "serieId": "xy"
+        "serieId": "xy",
+        "symbol": "/images/icons/aquapolis-icon.webp",
+        "logo": "/images/icons/aquapolis.webp"
     },
     {
         "cardCount": {
@@ -1910,10 +1949,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy1/logo",
+        "logo": "/images/icons/xy.webp",
         "name": "XY",
         "releaseDate": "2014-02-05",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy1/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "tcgOnline": "XY",
         "abbreviation": {
             "official": "XY",
@@ -1937,12 +1976,13 @@
         },
         "name": "XY Kit du dresseur (Nymphali)",
         "releaseDate": "2014-03-12",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-sy/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK6S",
             "localized": "NYM"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -1960,12 +2000,13 @@
         },
         "name": "XY Kit du dresseur (Bruyverne)",
         "releaseDate": "2014-03-12",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-n/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK6N",
             "localized": "BRU"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -1981,10 +2022,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy2/logo",
+        "logo": "/images/icons/xy-etincelles.webp",
         "name": "Étincelles",
         "releaseDate": "2014-05-07",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy2/symbol",
+        "symbol": "/images/icons/xy-etincelles-icon.webp",
         "tcgOnline": "FLF",
         "abbreviation": {
             "official": "FLF",
@@ -2028,10 +2069,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy3/logo",
+        "logo": "/images/icons/poings-furieux.webp",
         "name": "Poings Furieux",
         "releaseDate": "2014-08-13",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy3/symbol",
+        "symbol": "/images/icons/poings-furieux-icon.webp",
         "tcgOnline": "FFI",
         "abbreviation": {
             "official": "FFI",
@@ -2055,12 +2096,13 @@
         },
         "name": "XY Kit du dresseur (Scalproie)",
         "releaseDate": "2014-11-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-b/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK7A",
             "localized": "SCA"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2078,12 +2120,13 @@
         },
         "name": "XY Kit du dresseur (Grodoudou)",
         "releaseDate": "2014-11-01",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-w/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK7B",
             "localized": "GRO"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2099,10 +2142,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy4/logo",
+        "logo": "/images/icons/vigueur-spectrale.webp",
         "name": "Vigueur Spectrale",
         "releaseDate": "2014-11-05",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy4/symbol",
+        "symbol": "/images/icons/vigueur-spectrale-icon.webp",
         "tcgOnline": "PHF",
         "abbreviation": {
             "official": "PHF",
@@ -2124,10 +2167,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy5/logo",
+        "logo": "/images/icons/primo-choc.webp",
         "name": "Primo-Choc",
         "releaseDate": "2015-02-04",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy5/symbol",
+        "symbol": "/images/icons/primo-choc-icon.webp",
         "tcgOnline": "PRC",
         "abbreviation": {
             "official": "PRC",
@@ -2149,10 +2192,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/dc1/logo",
+        "logo": "/images/icons/double-danger.webp",
         "name": "Double Danger",
         "releaseDate": "2015-03-25",
-        "symbol": "https://assets.tcgdex.net/univ/xy/dc1/symbol",
+        "symbol": "/images/icons/double-danger-icon.webp",
         "tcgOnline": "DCR",
         "abbreviation": {
             "official": "DCR",
@@ -2176,12 +2219,13 @@
         },
         "name": "XY Kit du dresseur (Latios)",
         "releaseDate": "2015-04-29",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-latio/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK8O",
             "localized": "LTS"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2199,12 +2243,13 @@
         },
         "name": "XY Kit du dresseur (Latias)",
         "releaseDate": "2015-04-29",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-latia/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK8A",
             "localized": "LTA"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2220,10 +2265,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy6/logo",
+        "logo": "/images/icons/ciel-rugissant.webp",
         "name": "Ciel Rugissant",
         "releaseDate": "2015-05-06",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy6/symbol",
+        "symbol": "/images/icons/ciel-rugissant-icon.webp",
         "tcgOnline": "ROS",
         "abbreviation": {
             "official": "ROS",
@@ -2245,10 +2290,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy7/logo",
+        "logo": "/images/icons/origines-antiques.webp",
         "name": "Origines Antiques",
         "releaseDate": "2015-08-12",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy7/symbol",
+        "symbol": "/images/icons/origines-antiques-icon.webp",
         "tcgOnline": "AOR",
         "abbreviation": {
             "official": "AOR",
@@ -2270,10 +2315,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy8/logo",
+        "logo": "/images/icons/impulsion-turbo.webp",
         "name": "Impulsion Turbo",
         "releaseDate": "2015-11-04",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy8/symbol",
+        "symbol": "/images/icons/impulsion-turbo-icon.webp",
         "tcgOnline": "BKT",
         "abbreviation": {
             "official": "BKT",
@@ -2317,10 +2362,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy9/logo",
+        "logo": "/images/icons/rupture-turbo.webp",
         "name": "Rupture Turbo",
         "releaseDate": "2016-02-03",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy9/symbol",
+        "symbol": "/images/icons/rupture-turbo-icon.webp",
         "tcgOnline": "BKP",
         "abbreviation": {
             "official": "BKP",
@@ -2342,10 +2387,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/g1/logo",
+        "logo": "/images/icons/generations.webp",
         "name": "Générations",
         "releaseDate": "2016-02-22",
-        "symbol": "https://assets.tcgdex.net/univ/xy/g1/symbol",
+        "symbol": "/images/icons/generations-icon.webp",
         "tcgOnline": "GEN",
         "abbreviation": {
             "official": "GEN",
@@ -2369,12 +2414,13 @@
         },
         "name": "XY Kit du dresseur (Suicune)",
         "releaseDate": "2016-04-27",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-su/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK9S",
             "localized": "SUI"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2392,12 +2438,13 @@
         },
         "name": "XY Kit du dresseur (Pikachu Libre)",
         "releaseDate": "2016-04-27",
-        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-p/symbol",
+        "symbol": "/images/icons/xy-icon.webp",
         "abbreviation": {
             "official": "TK9P",
             "localized": "PLB"
         },
-        "serieId": "tk"
+        "serieId": "tk",
+        "logo": "/images/icons/xy.webp"
     },
     {
         "cardCount": {
@@ -2413,10 +2460,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy10/logo",
+        "logo": "/images/icons/impact-des-destins.webp",
         "name": "Impact des Destins",
         "releaseDate": "2016-05-02",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy10/symbol",
+        "symbol": "/images/icons/impact-des-destins-icon.webp",
         "tcgOnline": "FCO",
         "abbreviation": {
             "official": "FCO",
@@ -2438,10 +2485,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy11/logo",
+        "logo": "/images/icons/offensive-vapeur.webp",
         "name": "Offensive Vapeur",
         "releaseDate": "2016-08-03",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy11/symbol",
+        "symbol": "/images/icons/offensive-vapeur-icon.webp",
         "tcgOnline": "STS",
         "abbreviation": {
             "official": "STS",
@@ -2485,10 +2532,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/xy/xy12/logo",
+        "logo": "/images/icons/xy-evolutions.webp",
         "name": "Évolutions",
         "releaseDate": "2016-11-02",
-        "symbol": "https://assets.tcgdex.net/univ/xy/xy12/symbol",
+        "symbol": "/images/icons/xy-evolutions-icon.webp",
         "tcgOnline": "EVO",
         "abbreviation": {
             "official": "EVO",
@@ -2512,13 +2559,14 @@
         },
         "name": "Soleil et Lune",
         "releaseDate": "2017-02-03",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm1/symbol",
+        "symbol": "/images/icons/soleil-et-lune-icon.webp",
         "tcgOnline": "SUM",
         "abbreviation": {
             "official": "SUM",
             "localized": "S&L"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/soleil-et-lune.webp"
     },
     {
         "cardCount": {
@@ -2606,13 +2654,14 @@
         },
         "name": "Gardiens Ascendants",
         "releaseDate": "2017-05-05",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm2/symbol",
+        "symbol": "/images/icons/gardiens-ascendants-icon.webp",
         "tcgOnline": "GRI",
         "abbreviation": {
             "official": "GRI",
             "localized": "GAS"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/gardiens-ascendants.webp"
     },
     {
         "cardCount": {
@@ -2652,13 +2701,14 @@
         },
         "name": "Ombres Ardentes",
         "releaseDate": "2017-08-04",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm3/symbol",
+        "symbol": "/images/icons/ombres-ardentes-icon.webp",
         "tcgOnline": "BUS",
         "abbreviation": {
             "official": "BUS",
             "localized": "OAR"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/ombres-ardentes.webp"
     },
     {
         "cardCount": {
@@ -2681,7 +2731,9 @@
             "official": "SLG",
             "localized": "LBR"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "symbol": "/images/icons/legendes-brillantes-icon.webp",
+        "logo": "/images/icons/legendes-brillantes.webp"
     },
     {
         "cardCount": {
@@ -2699,13 +2751,14 @@
         },
         "name": "Invasion Carmin",
         "releaseDate": "2017-11-03",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm4/symbol",
+        "symbol": "/images/icons/invasion-carmin-icon.webp",
         "tcgOnline": "CIN",
         "abbreviation": {
             "official": "CIN",
             "localized": "INC"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/invasion-carmin.webp"
     },
     {
         "cardCount": {
@@ -2723,13 +2776,14 @@
         },
         "name": "Ultra-Prisme",
         "releaseDate": "2018-02-02",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm5/symbol",
+        "symbol": "/images/icons/ultra-prisme-icon.webp",
         "tcgOnline": "UPR",
         "abbreviation": {
             "official": "UPR",
             "localized": "UPR"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/ultra-prisme.webp"
     },
     {
         "cardCount": {
@@ -2747,13 +2801,14 @@
         },
         "name": "Lumière Interdite",
         "releaseDate": "2018-05-04",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm6/symbol",
+        "symbol": "/images/icons/lumiere-interdite-icon.webp",
         "tcgOnline": "FLI",
         "abbreviation": {
             "official": "FLI",
             "localized": "LUI"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/lumiere-interdite.webp"
     },
     {
         "cardCount": {
@@ -2789,13 +2844,14 @@
         },
         "name": "Tempête Céleste",
         "releaseDate": "2018-08-03",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm7/symbol",
+        "symbol": "/images/icons/tempete-celeste-icon.webp",
         "tcgOnline": "CES",
         "abbreviation": {
             "official": "CES",
             "localized": "TCE"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/tempete-celeste.webp"
     },
     {
         "cardCount": {
@@ -2818,7 +2874,9 @@
             "official": "DRM",
             "localized": "MDD"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "symbol": "/images/icons/majeste-des-dragons-icon.webp",
+        "logo": "/images/icons/majeste-des-dragons.webp"
     },
     {
         "cardCount": {
@@ -2836,13 +2894,14 @@
         },
         "name": "Tonnerre Perdu",
         "releaseDate": "2018-11-02",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm8/symbol",
+        "symbol": "/images/icons/tonnerre-perdu-icon.webp",
         "tcgOnline": "LOT",
         "abbreviation": {
             "official": "LOT",
             "localized": "TPD"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/tonnerre-perdu.webp"
     },
     {
         "cardCount": {
@@ -2860,13 +2919,14 @@
         },
         "name": "Duo de Choc",
         "releaseDate": "2019-01-31",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm9/symbol",
+        "symbol": "/images/icons/duo-de-choc-icon.webp",
         "tcgOnline": "TEU",
         "abbreviation": {
             "official": "TEU",
             "localized": "DDC"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/duo-de-choc.webp"
     },
     {
         "cardCount": {
@@ -2908,13 +2968,14 @@
         },
         "name": "Alliance Infaillible",
         "releaseDate": "2019-05-03",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm10/symbol",
+        "symbol": "/images/icons/alliance-infaillible-icon.webp",
         "tcgOnline": "UNB",
         "abbreviation": {
             "official": "UNB",
             "localized": "AIF"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/alliance-infaillible.webp"
     },
     {
         "cardCount": {
@@ -2932,13 +2993,14 @@
         },
         "name": "Harmonie des Esprits",
         "releaseDate": "2019-08-02",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm11/symbol",
+        "symbol": "/images/icons/harmonie-des-esprits-icon.webp",
         "tcgOnline": "UNM",
         "abbreviation": {
             "official": "UNM",
             "localized": "HES"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/harmonie-des-esprits.webp"
     },
     {
         "cardCount": {
@@ -2956,8 +3018,9 @@
         },
         "name": "Carte Alternative A Jaune",
         "releaseDate": "2019-08-23",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sma/symbol",
-        "serieId": "sm"
+        "symbol": "/images/icons/aquapolis-icon.webp",
+        "serieId": "sm",
+        "logo": "/images/icons/aquapolis.webp"
     },
     {
         "cardCount": {
@@ -2975,13 +3038,14 @@
         },
         "name": "Destinées Occultes",
         "releaseDate": "2019-08-23",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm115/symbol",
+        "symbol": "/images/icons/destinees-occultes-icon.webp",
         "tcgOnline": "HIF",
         "abbreviation": {
             "official": "HIF",
             "localized": "DOC"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/destinees-occultes.webp"
     },
     {
         "cardCount": {
@@ -3017,13 +3081,14 @@
         },
         "name": "Éclipse Cosmique",
         "releaseDate": "2019-11-01",
-        "symbol": "https://assets.tcgdex.net/univ/sm/sm12/symbol",
+        "symbol": "/images/icons/eclipse-comsique-icon.webp",
         "tcgOnline": "CEC",
         "abbreviation": {
             "official": "CEC",
             "localized": "ECO"
         },
-        "serieId": "sm"
+        "serieId": "sm",
+        "logo": "/images/icons/eclipse-comsique.webp"
     },
     {
         "cardCount": {
@@ -3059,10 +3124,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh1/logo",
+        "logo": "/images/icons/épée-et-bouclier.webp",
         "name": "Épée et Bouclier",
         "releaseDate": "2020-02-07",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh1/symbol",
+        "symbol": "/images/icons/épée-et-bouclier-icon.png",
         "tcgOnline": "SSH",
         "abbreviation": {
             "official": "SSH",
@@ -3084,10 +3149,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh2/logo",
+        "logo": "/images/icons/clash-des-rebelles.webp",
         "name": "Clash des Rebelles",
         "releaseDate": "2020-05-01",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh2/symbol",
+        "symbol": "/images/icons/clash-des-rebelles-icon.png",
         "tcgOnline": "RCL",
         "abbreviation": {
             "official": "RCL",
@@ -3109,10 +3174,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh3/logo",
+        "logo": "/images/icons/ténèbres-embrasées.webp",
         "name": "Ténèbres Embrasées",
         "releaseDate": "2020-08-14",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh3/symbol",
+        "symbol": "/images/icons/ténèbres-embrasées-icon.png",
         "tcgOnline": "DAA",
         "abbreviation": {
             "official": "DAA",
@@ -3134,10 +3199,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh3.5/logo",
+        "logo": "/images/icons/la-voie-du-maïtre.webp",
         "name": "La Voie du Maître",
         "releaseDate": "2020-09-25",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh3.5/symbol",
+        "symbol": "/images/icons/la-voie-du-maïtre-icon.png",
         "tcgOnline": "CPA",
         "abbreviation": {
             "official": "CPA",
@@ -3159,10 +3224,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh4/logo",
+        "logo": "/images/icons/evolutions-a-paldea.webp",
         "name": "Voltage Éclatant",
         "releaseDate": "2020-11-13",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4/symbol",
+        "symbol": "/images/icons/evolutions-a-paldea-icon.webp",
         "tcgOnline": "VIV",
         "abbreviation": {
             "official": "VIV",
@@ -3186,12 +3251,13 @@
         },
         "name": "Promo McDonald's 2021",
         "releaseDate": "2021-02-09",
-        "symbol": "https://assets.tcgdex.net/univ/mc/2021swsh/symbol",
+        "symbol": "/images/icons/mcdonalds-2021-icon.png",
         "abbreviation": {
             "official": "MCD21",
             "localized": "M21"
         },
-        "serieId": "mc"
+        "serieId": "mc",
+        "logo": "/images/icons/mcdonalds-2021.webp"
     },
     {
         "cardCount": {
@@ -3207,10 +3273,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh4.5/logo",
+        "logo": "/images/icons/destinées-radieuses.webp",
         "name": "Déstinées Radieuses",
         "releaseDate": "2021-02-19",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4.5/symbol",
+        "symbol": "/images/icons/destinées-radieuses-icon.png",
         "tcgOnline": "SHF",
         "abbreviation": {
             "official": "SHF",
@@ -3232,10 +3298,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh5/logo",
+        "logo": "/images/icons/styles-de-combat.webp",
         "name": "Styles de combat",
         "releaseDate": "2021-03-19",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh5/symbol",
+        "symbol": "/images/icons/styles-de-combat-icon.png",
         "tcgOnline": "BST",
         "abbreviation": {
             "official": "BST",
@@ -3257,10 +3323,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh6/logo",
+        "logo": "/images/icons/règne-de-glace.webp",
         "name": "Règne de Glace",
         "releaseDate": "2021-06-18",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh6/symbol",
+        "symbol": "/images/icons/règne-de-glace-icon.png",
         "tcgOnline": "CRE",
         "abbreviation": {
             "official": "CRE",
@@ -3282,10 +3348,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh7/logo",
+        "logo": "/images/icons/évolution-céleste.webp",
         "name": "Évolution Céleste",
         "releaseDate": "2021-08-27",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh7/symbol",
+        "symbol": "/images/icons/évolution-céleste-icon.png",
         "tcgOnline": "EVS",
         "abbreviation": {
             "official": "EVS",
@@ -3307,10 +3373,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/cel25/logo",
+        "logo": "/images/icons/célébrations.webp",
         "name": "Célébrations",
         "releaseDate": "2021-10-08",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/cel25/symbol",
+        "symbol": "/images/icons/célébrations-icon.png",
         "tcgOnline": "CEL",
         "abbreviation": {
             "official": "CEL",
@@ -3332,10 +3398,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh8/logo",
+        "logo": "/images/icons/poing-de-fusion.webp",
         "name": "Poing de Fusion",
         "releaseDate": "2021-11-12",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh8/symbol",
+        "symbol": "/images/icons/poing-de-fusion-icon.png",
         "tcgOnline": "FST",
         "abbreviation": {
             "official": "FST",
@@ -3357,10 +3423,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh9/logo",
+        "logo": "/images/icons/stars-étincelantes.webp",
         "name": "Stars Étincelantes",
         "releaseDate": "2022-02-25",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh9/symbol",
+        "symbol": "/images/icons/stars-étincelantes-icon.png",
         "tcgOnline": "BRS",
         "abbreviation": {
             "official": "BRS",
@@ -3382,10 +3448,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh10/logo",
+        "logo": "/images/icons/astres-radieux.webp",
         "name": "Astres Radieux",
         "releaseDate": "2022-05-27",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh10/symbol",
+        "symbol": "/images/icons/astres-radieux-icon.png",
         "tcgOnline": "ASR",
         "abbreviation": {
             "official": "ASR",
@@ -3407,10 +3473,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh10.5/logo",
+        "logo": "/images/icons/pokémon-go.webp",
         "name": "Pokémon GO",
         "releaseDate": "2022-07-01",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh10.5/symbol",
+        "symbol": "/images/icons/pokémon-go-icon.png",
         "tcgOnline": "PGO",
         "abbreviation": {
             "official": "PGO",
@@ -3432,10 +3498,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh11/logo",
+        "logo": "/images/icons/lor.webp",
         "name": "Origine Perdue",
         "releaseDate": "2022-09-09",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh11/symbol",
+        "symbol": "/images/icons/lor-icon.webp",
         "abbreviation": {
             "official": "LOR",
             "localized": "ORP"
@@ -3456,10 +3522,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh12/logo",
+        "logo": "/images/icons/tempête-argentée.webp",
         "name": "Tempête Argentée",
         "releaseDate": "2022-11-11",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12/symbol",
+        "symbol": "/images/icons/tempête-argentée-icon.png",
         "abbreviation": {
             "official": "SIT",
             "localized": "TAR"
@@ -3480,10 +3546,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh12.5/logo",
+        "logo": "/images/icons/zénith-suprême.webp",
         "name": "Zénith Suprême",
         "releaseDate": "2023-01-20",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12.5/symbol",
+        "symbol": "/images/icons/zénith-suprême-icon.png",
         "abbreviation": {
             "official": "CRZ",
             "localized": "ZEN"
@@ -3525,10 +3591,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv01/logo",
+        "logo": "/images/icons/ecarlate-et-violet.webp",
         "name": "Écarlate et Violet",
         "releaseDate": "2023-03-31",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv01/symbol",
+        "symbol": "/images/icons/ecarlate-et-violet-icon.webp",
         "abbreviation": {
             "official": "SV",
             "localized": "E&V"
@@ -3549,10 +3615,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv02/logo",
+        "logo": "/images/icons/evolutions-a-paldea.webp",
         "name": "Évolutions à Paldea",
         "releaseDate": "2023-06-09",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv02/symbol",
+        "symbol": "/images/icons/evolutions-a-paldea-icon.webp",
         "abbreviation": {
             "official": "PAL",
             "localized": "EAP"
@@ -3573,10 +3639,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv03/logo",
+        "logo": "/images/icons/flammes-obsidiennes.webp",
         "name": "Flammes Obsidiennes",
         "releaseDate": "2023-08-11",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv03/symbol",
+        "symbol": "/images/icons/flammes-obsidiennes-icon.webp",
         "abbreviation": {
             "official": "OBF",
             "localized": "FLO"
@@ -3597,10 +3663,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv03.5/logo",
+        "logo": "/images/icons/151.webp",
         "name": "151",
         "releaseDate": "2023-09-22",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv03.5/symbol",
+        "symbol": "/images/icons/151-icon.webp",
         "abbreviation": {
             "official": "MEW",
             "localized": "151"
@@ -3621,10 +3687,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv04/logo",
+        "logo": "/images/icons/faille-paradoxe.webp",
         "name": "Faille Paradoxe",
         "releaseDate": "2023-11-03",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv04/symbol",
+        "symbol": "/images/icons/faille-paradoxe-icon.webp",
         "abbreviation": {
             "official": "PAR",
             "localized": "FAP"
@@ -3645,10 +3711,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv04.5/logo",
+        "logo": "/images/icons/destinees-de-paldea.webp",
         "name": "Destinées de Paldea",
         "releaseDate": "2024-01-26",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv04.5/symbol",
+        "symbol": "/images/icons/destinees-de-paldea-icon.webp",
         "abbreviation": {
             "official": "PAF",
             "localized": "DDP"
@@ -3669,10 +3735,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv05/logo",
+        "logo": "/images/icons/forces-temporelles.webp",
         "name": "Forces Temporelles",
         "releaseDate": "2024-03-22",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv05/symbol",
+        "symbol": "/images/icons/forces-temporelles-icon.webp",
         "abbreviation": {
             "official": "TEF",
             "localized": "FTP"
@@ -3693,10 +3759,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv06/logo",
+        "logo": "/images/icons/mascarade-crepusculaire.webp",
         "name": "Mascarade Crépusculaire",
         "releaseDate": "2024-05-24",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv06/symbol",
+        "symbol": "/images/icons/mascarade-crepusculaire-icon.webp",
         "abbreviation": {
             "official": "TWM",
             "localized": "MCR"
@@ -3717,10 +3783,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv06.5/logo",
+        "logo": "/images/icons/fable-nebuleuse.webp",
         "name": "Fable Nébuleuse",
         "releaseDate": "2024-08-02",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv06.5/symbol",
+        "symbol": "/images/icons/fable-nebuleuse-icon.webp",
         "abbreviation": {
             "official": "SFA",
             "localized": "FNE"
@@ -3741,10 +3807,11 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv07/logo",
+        "logo": "/images/icons/couronne-stellaire.webp",
         "name": "Couronne Stellaire",
         "releaseDate": "2024-09-13",
-        "serieId": "sv"
+        "serieId": "sv",
+        "symbol": "/images/icons/couronne-stellaire-icon.webp"
     },
     {
         "cardCount": {
@@ -3760,14 +3827,15 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv08/logo",
+        "logo": "/images/icons/etincelles-deferlantes.webp",
         "name": "Étincelles Déferlantes",
         "releaseDate": "2024-11-08",
         "abbreviation": {
             "official": "SSP",
             "localized": "ETD"
         },
-        "serieId": "sv"
+        "serieId": "sv",
+        "symbol": "/images/icons/etincelles-deferlantes-icon.webp"
     },
     {
         "cardCount": {
@@ -3783,12 +3851,13 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv08.5/logo",
+        "logo": "/images/icons/evolutions-prismatiques.webp",
         "name": "Évolutions Prismatiques",
         "releaseDate": "2025-01-17",
         "abbreviation": {
             "official": "PRE"
         },
-        "serieId": "sv"
+        "serieId": "sv",
+        "symbol": "/images/icons/evolutions-prismatiques-icon.webp"
     }
 ]
