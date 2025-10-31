@@ -1,6 +1,8 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
 import { Listing } from "@/types/listing";
 import { fetcher, authedFetch } from "@/utils/fetch";
+import { PokemonCardType } from "@/types/cardPokemon";
+import { User } from "@/types/auth";
 
 export interface MarketplaceQueryParams extends PaginationParams {
   search?: string;
@@ -39,46 +41,20 @@ export interface CardStatistics {
 }
 
 export interface PopularCard {
-  card: {
-    id: string;
-    name: string;
-    image?: string;
-    rarity?: string;
-    set: {
-      name: string;
-      logo?: string;
-      serie: { name: string };
-    };
-  };
+  card: PokemonCardType;
   listingCount: number;
   minPrice: number;
   avgPrice: number;
 }
 
 export interface TrendingCard {
-  card: {
-    id: string;
-    name: string;
-    image?: string;
-    rarity?: string;
-    set: {
-      name: string;
-      logo?: string;
-      serie: { name: string };
-    };
-  };
+  card: PokemonCardType;
   recentListingCount: number;
   minPrice: number;
 }
 
 export interface BestSeller {
-  seller: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    avatarUrl?: string;
-    isPro: boolean;
-  };
+  seller: User;
   totalSales: number;
   totalRevenue: number;
 }

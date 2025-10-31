@@ -4,12 +4,18 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: "admin" | "moderator" | "user";
+  role: UserRole;
   isPro: boolean;
   player?: {
     id: number;
     name: string;
   };
+}
+
+export enum UserRole {
+  ADMIN = "admin",
+  USER = "user",
+  MODERATOR = "moderator",
 }
 
 export interface AuthTokens {

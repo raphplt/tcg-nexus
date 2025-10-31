@@ -7,22 +7,10 @@ import Link from "next/link";
 import { formatPrice } from "@/utils/price";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PokemonCardType } from "@/types/cardPokemon";
 
 interface CardCardProps {
-  card: {
-    id: string;
-    name: string;
-    image?: string;
-    rarity?: string;
-    set?: {
-      id: string;
-      name: string;
-      logo?: string;
-      serie?: {
-        name: string;
-      };
-    };
-  };
+  card: PokemonCardType;
   minPrice?: number;
   avgPrice?: number;
   listingCount?: number;
@@ -49,24 +37,22 @@ export function CardCard({
       <Card
         className={cn(
           "group hover:shadow-lg transition-all duration-200 cursor-pointer h-full flex flex-col",
-          className
+          className,
         )}
       >
         <CardHeader className="pb-3">
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-muted mb-3">
-            {card.image ? (
-              <Image
-                src={card.image + "/high.png"}
-                alt={card.name}
-                fill
-                className="object-contain group-hover:scale-105 transition-transform duration-200"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                No Image
-              </div>
-            )}
+            <Image
+              src={
+                card.image
+                  ? card.image + "/high.png"
+                  : "/images/carte-pokemon-dos.jpg"
+              }
+              alt={card.name ?? ""}
+              fill
+              className="object-contain group-hover:scale-105 transition-transform duration-200"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
           </div>
           <div className="space-y-1">
             <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
@@ -82,12 +68,18 @@ export function CardCard({
         <CardContent className="pt-0 mt-auto">
           <div className="flex flex-wrap gap-2 mb-3">
             {card.rarity && (
-              <Badge variant="outline" className="text-xs">
+              <Badge
+                variant="outline"
+                className="text-xs"
+              >
                 {card.rarity}
               </Badge>
             )}
             {hasListings && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge
+                variant="secondary"
+                className="text-xs"
+              >
                 {listingCount} offre{listingCount > 1 ? "s" : ""}
               </Badge>
             )}
@@ -114,7 +106,7 @@ export function CardCard({
                             "text-xs font-medium",
                             trendValue > 0 && "text-green-600",
                             trendValue < 0 && "text-red-600",
-                            trendValue === 0 && "text-muted-foreground"
+                            trendValue === 0 && "text-muted-foreground",
                           )}
                         >
                           {Math.abs(trendValue).toFixed(1)}%
