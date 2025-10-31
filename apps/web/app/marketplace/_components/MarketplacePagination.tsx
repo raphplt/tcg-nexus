@@ -23,50 +23,42 @@ const MarketplacePagination = ({
   const currentPage = meta?.currentPage || page;
   const totalPages = meta?.totalPages || 1;
 
-  // Generate smart page numbers to display
+  // Calcul du nombre de pages à afficher
   const pageNumbers = useMemo(() => {
     const pages: (number | "ellipsis")[] = [];
-    const maxVisiblePages = 7; // Maximum number of page buttons to show
-    const sidePages = 2; // Number of pages on each side of current page
+    const maxVisiblePages = 7; // Nombre maximum de pages à afficher
+    const sidePages = 2; // Nombre de pages de chaque côté de la page courante
 
     if (totalPages <= maxVisiblePages) {
-      // If total pages is small, show all
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always show first page
       pages.push(1);
 
       let startPage = Math.max(2, currentPage - sidePages);
       let endPage = Math.min(totalPages - 1, currentPage + sidePages);
 
-      // Adjust if we're near the start
       if (currentPage <= sidePages + 2) {
         endPage = Math.min(maxVisiblePages - 2, totalPages - 1);
       }
 
-      // Adjust if we're near the end
       if (currentPage >= totalPages - sidePages - 1) {
         startPage = Math.max(2, totalPages - maxVisiblePages + 2);
       }
 
-      // Add ellipsis after first page if needed
       if (startPage > 2) {
         pages.push("ellipsis");
       }
 
-      // Add pages around current page
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
 
-      // Add ellipsis before last page if needed
       if (endPage < totalPages - 1) {
         pages.push("ellipsis");
       }
 
-      // Always show last page
       pages.push(totalPages);
     }
 
