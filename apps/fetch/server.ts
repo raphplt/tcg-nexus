@@ -159,11 +159,10 @@ class TcgDexService {
 						cardsDetails.push(...chunkDetails);
 
 						if (i + chunkSize < cards.length) {
-							await delay(30000); // 30 seconds delay
+							await delay(30000);
 						}
 					}
 
-					console.log("All cards details fetched successfully.");
 					return cardsDetails;
 				} catch (error) {
 					console.error("Error fetching cards details:", error);
