@@ -243,7 +243,6 @@ export class CardPopularityService {
       score += weight;
     });
 
-    // Normalisation simple (on peut ajuster selon les besoins)
     return score;
   }
 
@@ -299,7 +298,7 @@ export class CardPopularityService {
 
     const growthRatio = ((recentDailyAvg - baseDailyAvg) / baseDailyAvg) * 100;
 
-    // Pénaliser si trop de listings (pour éviter l'explosion d'offres)
+    // Pénaliser si trop de listings
     const listings = await this.listingRepository.count({
       where: { pokemonCard: { id: cardId } }
     });
@@ -321,7 +320,7 @@ export class CardPopularityService {
       order: {
         popularityScore: 'DESC'
       },
-      take: limit * 2 // Prendre plus pour filtrer
+      take: limit * 2
     });
 
     // Grouper par carte et prendre le score le plus récent
@@ -350,6 +349,7 @@ export class CardPopularityService {
           ? {
               name: metric.card.set.name,
               logo: metric.card.set.logo,
+              symbol: metric.card.set.symbol,
               serie: metric.card.set.serie
                 ? { name: metric.card.set.serie.name }
                 : null
@@ -394,7 +394,7 @@ export class CardPopularityService {
       (a, b) => b.trendScore - a.trendScore
     );
 
-    // Exclure les top populaires si demandé
+    // Exclure les top populaires (pour ne pas avoir de doublons dans les résultats)
     if (excludePopular) {
       const popularCards = await this.getPopularCards(limit);
       const popularCardIds = new Set(popularCards.map((c) => c.card.id));
@@ -411,6 +411,7 @@ export class CardPopularityService {
           ? {
               name: metric.card.set.name,
               logo: metric.card.set.logo,
+              symbol: metric.card.set.symbol,
               serie: metric.card.set.serie
                 ? { name: metric.card.set.serie.name }
                 : null

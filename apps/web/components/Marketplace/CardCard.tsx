@@ -36,6 +36,7 @@ export function CardCard({
 }: CardCardProps) {
   const hasListings = listingCount !== undefined && listingCount > 0;
 
+
   return (
     <Link href={`/marketplace/cards/${card.id}`}>
       <Card
@@ -86,9 +87,17 @@ export function CardCard({
               {card.name}
             </h3>
             {card.set && (
-              <p className="text-sm text-muted-foreground line-clamp-1">
-                {card.set.name}
-              </p>
+              <div className="flex items-center gap-2">
+                <Image
+                  src={card.set.symbol || ""}
+                  alt={card.set.name}
+                  width={16}
+                  height={16}
+                />
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {card.set.name}
+                </p>
+              </div>
             )}
           </div>
         </CardHeader>

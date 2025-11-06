@@ -172,6 +172,12 @@ export default function CardDetailPage() {
                     variant="outline"
                     className="text-sm px-3 py-1"
                   >
+                    <Image
+                      src={card.set.symbol || ""}
+                      alt={card.set.name}
+                      width={16}
+                      height={16}
+                    />
                     {card.set.name}
                   </Badge>
                 )}
