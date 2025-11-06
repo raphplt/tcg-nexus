@@ -1,50 +1,28 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { H1, H2 } from "@/components/Shared/Titles";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { marketplaceService } from "@/services/marketplace.service";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { ArrowRight, Flame, TrendingUp, Star, Package } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import SetCard from "@/components/Marketplace/SetCard";
+import { useMarketplaceHome } from "@/hooks/useMarketplace";
 
 export default function MarketplaceHomePage() {
-  // Récupère les cartes populaires
-  const { data: popularCards, isLoading: loadingPopular } = useQuery({
-    queryKey: ["marketplace", "popular"],
-    queryFn: () => marketplaceService.getPopularCards(8),
-  });
-
-  // Récupère les cartes en tendance
-  const { data: trendingCards, isLoading: loadingTrending } = useQuery({
-    queryKey: ["marketplace", "trending"],
-    queryFn: () => marketplaceService.getTrendingCards(8, true),
-  });
-
-  // Récupère les meilleurs vendeurs
-  const { data: bestSellers, isLoading: loadingSellers } = useQuery({
-    queryKey: ["marketplace", "best-sellers"],
-    queryFn: () => marketplaceService.getBestSellers(6),
-  });
-
-  // Récupère les séries
-  const { data: series, isLoading: loadingSeries } = useQuery({
-    queryKey: ["pokemon-series"],
-    queryFn: () => pokemonCardService.getAllSeries(),
-  });
-
-  // Récupère les sets
-  const { data: sets, isLoading: loadingSets } = useQuery({
-    queryKey: ["pokemon-sets"],
-    queryFn: () => pokemonCardService.getAllSets(),
-  });
+  const {
+    popularCards,
+    trendingCards,
+    bestSellers,
+    sets,
+    loadingPopular,
+    loadingTrending,
+    loadingSellers,
+    loadingSets,
+  } = useMarketplaceHome();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
@@ -221,7 +199,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Section des séries et extensions */}
+        {/* Section des sets */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -237,7 +215,7 @@ export default function MarketplaceHomePage() {
               </Link>
             </Button>
           </div>
-          {loadingSeries || loadingSets ? (
+          {loadingSets ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton

@@ -53,7 +53,7 @@ export function CardCard({
                   ? card.image + "/high.png"
                   : "/images/carte-pokemon-dos.jpg"
               }
-              alt={card.name ?? ""}
+              alt={""}
               fill
               className="object-contain group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -83,14 +83,17 @@ export function CardCard({
             )}
           </div>
           <div className="space-y-1">
-            <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-              {card.name}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
+                {card.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">#{card.localId}</p>
+            </div>
             {card.set && (
               <div className="flex items-center gap-2">
                 <Image
                   src={card.set.symbol || ""}
-                  alt={card.set.name}
+                  alt={""}
                   width={16}
                   height={16}
                 />

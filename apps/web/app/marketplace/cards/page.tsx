@@ -2,46 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { H1 } from "@/components/Shared/Titles";
 import { CardCard } from "@/components/Marketplace/CardCard";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { marketplaceService } from "@/services/marketplace.service";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
-import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
-import { PaginatedResult } from "@/types/pagination";
-import { Search, X, SlidersHorizontal } from "lucide-react";
-import { cardStates, languages, currencyOptions } from "@/utils/variables";
 import MarketplacePagination from "../_components/MarketplacePagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-
-interface FilterState {
-  search: string;
-  setId?: string;
-  serieId?: string;
-  rarity?: string;
-  currency?: string;
-  cardState?: string;
-  language?: string;
-  priceMin?: number;
-  priceMax?: number;
-  sortBy: string;
-  sortOrder: "ASC" | "DESC";
-}
+import { useMarketplaceCards, FilterState } from "@/hooks/useMarketplace";
+import MarketplaceSearch from "../_components/MarketplaceSearch";
 
 export default function MarketplaceCardsPage() {
   const router = useRouter();
@@ -65,52 +35,19 @@ export default function MarketplaceCardsPage() {
     priceMax: searchParams.get("priceMax")
       ? parseFloat(searchParams.get("priceMax")!)
       : undefined,
-    sortBy: searchParams.get("sortBy") || "name",
+    sortBy: searchParams.get("sortBy") || "localId",
     sortOrder: (searchParams.get("sortOrder") as "ASC" | "DESC") || "ASC",
   });
 
-  // Fetch sets and series for filters
-  const { data: sets } = useQuery({
-    queryKey: ["pokemon-sets"],
-    queryFn: () => pokemonCardService.getAllSets(),
-  });
-
-  const { data: series } = useQuery({
-    queryKey: ["pokemon-series"],
-    queryFn: () => pokemonCardService.getAllSeries(),
-  });
-
-  // Fetch cards with marketplace data
-  const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<any>>(
-    [
-      "marketplace-cards",
-      page,
-      filters.search,
-      filters.setId,
-      filters.serieId,
-      filters.rarity,
-      filters.currency,
-      filters.cardState,
-      filters.language,
-      filters.priceMin,
-      filters.priceMax,
-      filters.sortBy,
-      filters.sortOrder,
-    ],
-    marketplaceService.getCardsWithMarketplaceData,
-    {
-      page,
-      limit: 24,
-      ...filters,
-    },
+  const { sets, series, data, isLoading, error } = useMarketplaceCards(
+    filters,
+    page,
   );
 
   const debouncedSearch = useDebounce(filters.search, 500);
 
-  // Track search events when search query changes and results are returned
   useEffect(() => {
     if (debouncedSearch && debouncedSearch.trim() && data?.data) {
-      // Track search for each card in results
       data.data.forEach((item: any) => {
         const card = item.card || item;
         if (card?.id) {
@@ -122,14 +59,37 @@ export default function MarketplaceCardsPage() {
     }
   }, [debouncedSearch, data]);
 
-  // Sync page from URL params on mount
   useEffect(() => {
+    const newFilters: FilterState = {
+      search: searchParams.get("search") || "",
+      setId: searchParams.get("setId") || undefined,
+      serieId: searchParams.get("serieId") || undefined,
+      rarity: searchParams.get("rarity") || undefined,
+      currency: searchParams.get("currency") || undefined,
+      cardState: searchParams.get("cardState") || undefined,
+      language: searchParams.get("language") || undefined,
+      priceMin: searchParams.get("priceMin")
+        ? parseFloat(searchParams.get("priceMin")!)
+        : undefined,
+      priceMax: searchParams.get("priceMax")
+        ? parseFloat(searchParams.get("priceMax")!)
+        : undefined,
+      sortBy: searchParams.get("sortBy") || "name",
+      sortOrder: (searchParams.get("sortOrder") as "ASC" | "DESC") || "ASC",
+    };
+
+    setFilters(newFilters);
+
     const pageParam = searchParams.get("page");
     if (pageParam) {
       const pageNum = parseInt(pageParam, 10);
       if (!isNaN(pageNum) && pageNum > 0) {
         setPage(pageNum);
+      } else {
+        setPage(1);
       }
+    } else {
+      setPage(1);
     }
   }, [searchParams]);
 
@@ -138,7 +98,6 @@ export default function MarketplaceCardsPage() {
     setFilters(updated);
     setPage(1);
 
-    // Update URL params
     const params = new URLSearchParams();
     Object.entries(updated).forEach(([key, value]) => {
       if (value !== undefined && value !== "" && value !== null) {
@@ -150,7 +109,6 @@ export default function MarketplaceCardsPage() {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    // Update URL params with new page
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== "" && value !== null) {
@@ -201,267 +159,18 @@ export default function MarketplaceCardsPage() {
           </p>
         </div>
 
-        {/* Search and Filter Bar */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Search className="w-5 h-5" />
-                Recherche et filtres
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                {activeFiltersCount > 0 && (
-                  <Badge variant="secondary">
-                    {activeFiltersCount} actif(s)
-                  </Badge>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <SlidersHorizontal className="w-4 h-4 mr-2" />
-                  {showFilters ? "Masquer" : "Filtres"}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Rechercher une carte..."
-                  value={filters.search}
-                  onChange={(e) => updateFilters({ search: e.target.value })}
-                  className="w-full"
-                />
-              </div>
-              <Select
-                value={filters.sortBy}
-                onValueChange={(value) => updateFilters({ sortBy: value })}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Nom</SelectItem>
-                  <SelectItem value="price">Prix</SelectItem>
-                  <SelectItem value="popularity">Popularité</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={filters.sortOrder}
-                onValueChange={(value) =>
-                  updateFilters({ sortOrder: value as "ASC" | "DESC" })
-                }
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ASC">Croissant</SelectItem>
-                  <SelectItem value="DESC">Décroissant</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <MarketplaceSearch
+          filters={filters}
+          setFilters={setFilters}
+          activeFiltersCount={activeFiltersCount}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          resetFilters={resetFilters}
+          series={series || []}
+          sets={sets || []}
+          updateFilters={updateFilters}
+        />
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
-                <div>
-                  <Label>Série</Label>
-                  <Select
-                    value={filters.serieId || "all"}
-                    onValueChange={(value) =>
-                      updateFilters({
-                        serieId: value === "all" ? undefined : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les séries" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les séries</SelectItem>
-                      {series?.map((s) => (
-                        <SelectItem
-                          key={s.id}
-                          value={s.id.toString()}
-                        >
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Extension</Label>
-                  <Select
-                    value={filters.setId || "all"}
-                    onValueChange={(value) =>
-                      updateFilters({
-                        setId: value === "all" ? undefined : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les extensions" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les extensions</SelectItem>
-                      {sets?.map((s) => (
-                        <SelectItem
-                          key={s.id}
-                          value={s.id}
-                        >
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Rareté</Label>
-                  <Input
-                    placeholder="Ex: Rare Holo"
-                    value={filters.rarity || ""}
-                    onChange={(e) =>
-                      updateFilters({ rarity: e.target.value || undefined })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>État</Label>
-                  <Select
-                    value={filters.cardState || "all"}
-                    onValueChange={(value) =>
-                      updateFilters({
-                        cardState: value === "all" ? undefined : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tous les états" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les états</SelectItem>
-                      {cardStates.map((cs) => (
-                        <SelectItem
-                          key={cs.value}
-                          value={cs.value}
-                        >
-                          {cs.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Devise</Label>
-                  <Select
-                    value={filters.currency || "all"}
-                    onValueChange={(value) =>
-                      updateFilters({
-                        currency: value === "all" ? undefined : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les devises" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les devises</SelectItem>
-                      {currencyOptions.map((c) => (
-                        <SelectItem
-                          key={c.value}
-                          value={c.value}
-                        >
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Langue</Label>
-                  <Select
-                    value={filters.language || "all"}
-                    onValueChange={(value) =>
-                      updateFilters({
-                        language: value === "all" ? undefined : value,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Toutes les langues" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Toutes les langues</SelectItem>
-                      {languages.map((l) => (
-                        <SelectItem
-                          key={l.value}
-                          value={l.value}
-                        >
-                          {l.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Prix min (€)</Label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={filters.priceMin || ""}
-                    onChange={(e) =>
-                      updateFilters({
-                        priceMin: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <Label>Prix max (€)</Label>
-                  <Input
-                    type="number"
-                    placeholder="9999"
-                    value={filters.priceMax || ""}
-                    onChange={(e) =>
-                      updateFilters({
-                        priceMax: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
-                  />
-                </div>
-
-                {activeFiltersCount > 0 && (
-                  <div className="col-span-full">
-                    <Button
-                      variant="outline"
-                      onClick={resetFilters}
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Réinitialiser les filtres
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Results */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (

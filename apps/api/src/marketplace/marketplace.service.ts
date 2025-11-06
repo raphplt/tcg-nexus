@@ -224,7 +224,6 @@ export class MarketplaceService {
     const maxPrice = Math.max(...prices);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
 
-    // Get price history from last 90 days
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
@@ -368,7 +367,6 @@ export class MarketplaceService {
    * Falls back to sellers with most active listings if no sales found
    */
   async getBestSellers(limit: number = 10) {
-    // Try to get sellers based on actual sales (orders with Paid/Shipped status)
     const sellersFromOrders = await this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.buyer', 'buyer')
@@ -396,7 +394,6 @@ export class MarketplaceService {
       .limit(limit)
       .getRawMany();
 
-    // If we have enough sellers from orders, return them
     if (sellersFromOrders.length >= limit) {
       return sellersFromOrders.map((seller) => ({
         seller: {
@@ -411,7 +408,6 @@ export class MarketplaceService {
       }));
     }
 
-    // Otherwise, get sellers based on active listings (fallback)
     const sellersFromListings = await this.listingRepository
       .createQueryBuilder('listing')
       .leftJoinAndSelect('listing.seller', 'seller')
@@ -437,7 +433,6 @@ export class MarketplaceService {
       .limit(limit)
       .getRawMany();
 
-    // Merge results: prioritize sellers from orders, then add from listings
     const sellerIdsFromOrders = new Set(
       sellersFromOrders.map((s: any) => s.seller_id as number)
     );
@@ -569,13 +564,23 @@ export class MarketplaceService {
         'set.id',
         'set.name',
         'set.logo',
+        'set.symbol',
         'serie.id',
         'serie.name'
       ])
       .addSelect('COUNT(DISTINCT listing.id)', 'listing_count')
       .addSelect('MIN(listing.price)', 'min_price')
-      .addSelect('AVG(listing.price)', 'avg_price')
-      .groupBy('card.id')
+      .addSelect('AVG(listing.price)', 'avg_price');
+
+    if (sortBy === 'localId') {
+      qb.addSelect(
+        `LPAD(COALESCE(card.localId, ''), 10, '0')`,
+        'localId_padded'
+      );
+    }
+
+    qb.groupBy('card.id')
+      .addGroupBy('card.localId')
       .addGroupBy('set.id')
       .addGroupBy('serie.id');
 

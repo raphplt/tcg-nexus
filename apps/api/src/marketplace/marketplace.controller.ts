@@ -75,7 +75,6 @@ export class MarketplaceController {
     return this.marketplaceService.delete(+id, user);
   }
 
-  // Cards endpoints
   @Get('cards')
   @Public()
   @ApiQuery({ name: 'page', required: false, type: Number })
