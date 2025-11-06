@@ -10,18 +10,10 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { OrderItem } from './order-item.entity';
+import { CartItem } from 'src/user_cart/entities/cart-item.entity';
 import { Currency } from '../../common/enums/currency';
 import { Languages } from 'src/common/enums/languages';
-
-export enum CardState {
-  NM = 'NM',
-  EX = 'EX',
-  GD = 'GD',
-  LP = 'LP',
-  PL = 'PL',
-  Poor = 'Poor'
-}
-
+import { CardState } from 'src/common/enums/pokemonCardsType';
 @Entity()
 export class Listing {
   @PrimaryGeneratedColumn()
@@ -61,4 +53,7 @@ export class Listing {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.listing)
   orderItems: OrderItem[];
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.listing)
+  cartItems: CartItem[];
 }

@@ -8,7 +8,7 @@ import * as pokemonSetsData from 'src/common/data/pokemon_sets.json';
 import * as AdmZip from 'adm-zip';
 import * as path from 'path';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
-import { User, UserRole } from 'src/user/entities/user.entity';
+import { User } from 'src/user/entities/user.entity';
 import {
   Tournament,
   TournamentType,
@@ -44,7 +44,7 @@ import {
 } from 'src/tournament/entities/tournament-notification.entity';
 import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
-import { Listing, CardState } from 'src/marketplace/entities/listing.entity';
+import { Listing } from 'src/marketplace/entities/listing.entity';
 import { PriceHistory } from 'src/marketplace/entities/price-history.entity';
 import {
   CardEvent,
@@ -68,6 +68,8 @@ import {
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
 import { faker } from '@faker-js/faker';
+import { CardState } from 'src/common/enums/pokemonCardsType';
+import { UserRole } from 'src/common/enums/user';
 @Injectable()
 export class SeedService {
   constructor(

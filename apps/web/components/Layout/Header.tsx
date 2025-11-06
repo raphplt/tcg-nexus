@@ -15,11 +15,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, ShoppingCart } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { usePathname } from "next/navigation";
 import { FULLSCREEN_PATHS } from "@/utils/constants";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
+import CartDropdown from "../Marketplace/CartDropdown";
 
 const Header = () => {
   const [mounted, setMounted] = useState(false);
@@ -142,7 +143,9 @@ const Header = () => {
               </li>
             </>
           ) : showUserMenu ? (
-            <li>
+            <li className="flex items-center space-x-2">
+              <CartDropdown />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

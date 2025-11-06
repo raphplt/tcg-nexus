@@ -11,10 +11,11 @@ import { Listing } from './entities/listing.entity';
 import { PriceHistory } from './entities/price-history.entity';
 import { CreateListingDto } from './dto/create-marketplace.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
-import { User, UserRole } from '../user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
 import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { Order } from './entities/order.entity';
+import { UserRole } from 'src/common/enums/user';
 
 export interface FindAllListingsParams {
   sellerId?: number;

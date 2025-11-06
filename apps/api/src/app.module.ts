@@ -28,6 +28,7 @@ import { CollectionModule } from './collection/collection.module';
 import { CollectionItemModule } from './collection-item/collection-item.module';
 import { CardStateModule } from './card-state/card-state.module';
 import { AiModule } from './ai/ai.module';
+import { UserCartModule } from './user_cart/user_cart.module';
 
 @Module({
   imports: [
@@ -72,7 +73,8 @@ import { AiModule } from './ai/ai.module';
     CollectionModule,
     CollectionItemModule,
     CardStateModule,
-    AiModule
+    AiModule,
+    UserCartModule
   ],
   controllers: [AppController],
   providers: [

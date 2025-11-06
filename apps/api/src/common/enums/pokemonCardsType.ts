@@ -3,3 +3,12 @@ export enum PokemonCardsType {
   Energy = 'Energy',
   Trainer = 'Trainer'
 }
+
+export enum CardState {
+  NM = 'NM',
+  EX = 'EX',
+  GD = 'GD',
+  LP = 'LP',
+  PL = 'PL',
+  Poor = 'Poor'
+}

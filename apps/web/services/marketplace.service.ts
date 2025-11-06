@@ -178,4 +178,23 @@ export const marketplaceService = {
   async getSellerListings(sellerId: number): Promise<Listing[]> {
     return fetcher<Listing[]>(`/marketplace/sellers/${sellerId}/listings`);
   },
+
+  /**
+   * Récupère les listings pour une carte spécifique avec filtres
+   */
+  async getCardListings(
+    cardId: string,
+    filters?: {
+      currency?: string;
+      cardState?: string;
+      limit?: number;
+    },
+  ): Promise<PaginatedResult<Listing>> {
+    return this.getPaginated({
+      pokemonCardId: cardId,
+      currency: filters?.currency,
+      cardState: filters?.cardState,
+      limit: filters?.limit || 50,
+    });
+  },
 };

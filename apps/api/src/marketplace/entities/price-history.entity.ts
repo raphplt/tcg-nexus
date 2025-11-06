@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { Currency } from 'src/common/enums/currency';
-import { CardState } from './listing.entity';
+import { CardState } from 'src/common/enums/pokemonCardsType';
 
 @Entity()
 @Index(['pokemonCard', 'recordedAt'])

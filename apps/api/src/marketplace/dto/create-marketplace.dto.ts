@@ -1,5 +1,5 @@
+import { CardState } from 'src/common/enums/pokemonCardsType';
 import { Currency } from '../../common/enums/currency';
-import { CardState } from '../entities/listing.entity';
 import {
   IsEnum,
   IsInt,

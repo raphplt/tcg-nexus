@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { marketplaceService } from "@/services/marketplace.service";
-import { pokemonCardService } from "@/services/pokemonCard.service";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { PriceChart } from "@/components/Marketplace/PriceChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/utils/price";
@@ -38,60 +34,66 @@ import { cardStates } from "@/utils/variables";
 import { getCardStateColor } from "../../utils";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import { useCardDetails } from "@/hooks/useCardDetails";
+import { useCartStore } from "@/store/cart.store";
+import { useAuth } from "@/contexts/AuthContext";
+import toast from "react-hot-toast";
 
 export default function CardDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [currencyFilter, setCurrencyFilter] = useState<string>("all");
   const [cardStateFilter, setCardStateFilter] = useState<string>("all");
+  const [addingToListingId, setAddingToListingId] = useState<number | null>(
+    null,
+  );
 
-  // Récupère les détails de la carte
-  const { data: card, isLoading: loadingCard } = useQuery({
-    queryKey: ["pokemon-card", id],
-    queryFn: () => pokemonCardService.getById(id as string),
-    enabled: !!id,
+  const { addItem, isLoading: isCartLoading } = useCartStore();
+
+  const {
+    card,
+    stats,
+    listings: filteredListings,
+    priceHistory,
+    isGoodDeal,
+    loadingCard,
+    loadingListings,
+  } = useCardDetails({
+    cardId: id as string,
+    currencyFilter,
+    cardStateFilter,
   });
 
-  // Récupère les statistiques de la carte
-  const { data: stats, isLoading: loadingStats } = useQuery({
-    queryKey: ["card-stats", id, currencyFilter, cardStateFilter],
-    queryFn: () =>
-      marketplaceService.getCardStatistics(
-        id as string,
-        currencyFilter && currencyFilter !== "all" ? currencyFilter : undefined,
-        cardStateFilter && cardStateFilter !== "all"
-          ? cardStateFilter
-          : undefined,
-      ),
-    enabled: !!id,
-  });
-
-  // Récupère les offres disponibles pour la carte
-  const { data: listings, isLoading: loadingListings } = useQuery({
-    queryKey: ["card-listings", id, currencyFilter, cardStateFilter],
-    queryFn: () =>
-      marketplaceService.getPaginated({
-        pokemonCardId: id as string,
-        currency:
-          currencyFilter && currencyFilter !== "all"
-            ? currencyFilter
-            : undefined,
-        cardState:
-          cardStateFilter && cardStateFilter !== "all"
-            ? cardStateFilter
-            : undefined,
-        limit: 50,
-      }),
-    enabled: !!id,
-  });
-
-  // Track view event when card is loaded
-  useEffect(() => {
-    if (id && card) {
-      cardEventTracker.trackView(id as string, {
-        referrer: document.referrer || undefined,
-      });
+  const handleAddToCart = async (listingId: number) => {
+    if (!isAuthenticated) {
+      toast.error("Vous devez être connecté pour ajouter au panier");
+      router.push("/auth/login");
+      return;
     }
-  }, [id, card]);
+
+    setAddingToListingId(listingId);
+    try {
+      // Track l'événement
+      if (id) {
+        cardEventTracker.trackAddToCart(id as string, listingId);
+      }
+
+      // Ajouter au panier
+      await addItem({
+        listingId,
+        quantity: 1,
+      });
+
+      toast.success("Article ajouté au panier !");
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message || "Erreur lors de l'ajout au panier";
+      toast.error(errorMessage);
+    } finally {
+      setAddingToListingId(null);
+    }
+  };
 
   if (loadingCard) {
     return (
@@ -115,34 +117,6 @@ export default function CardDetailPage() {
       </Alert>
     );
   }
-
-  const filteredListings = listings?.data || [];
-  const minPriceListing =
-    filteredListings.length > 0
-      ? filteredListings.reduce((min, listing) =>
-          parseFloat(listing.price.toString()) <
-          parseFloat(min.price.toString())
-            ? listing
-            : min,
-        )
-      : null;
-
-  // Calcul du trend du prix
-  const priceHistory = stats?.priceHistory || [];
-  const firstPrice = priceHistory[0]?.price;
-  const lastPrice = priceHistory[priceHistory.length - 1]?.price;
-  const trend =
-    priceHistory.length > 1 &&
-    firstPrice !== undefined &&
-    lastPrice !== undefined
-      ? ((lastPrice - firstPrice) / firstPrice) * 100
-      : 0;
-
-  const isGoodDeal =
-    stats &&
-    minPriceListing &&
-    stats.avgPrice &&
-    parseFloat(minPriceListing.price.toString()) < stats.avgPrice * 0.8;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
@@ -270,7 +244,6 @@ export default function CardDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Price Summary */}
             {stats && (
               <Card>
                 <CardHeader>
@@ -449,17 +422,26 @@ export default function CardDetailPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => {
-                            if (id) {
-                              cardEventTracker.trackAddToCart(
-                                id as string,
-                                listing.id,
-                              );
-                            }
-                          }}
+                          onClick={() => handleAddToCart(listing.id)}
+                          disabled={
+                            isCartLoading ||
+                            addingToListingId === listing.id ||
+                            listing.quantityAvailable === 0
+                          }
                         >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Ajouter
+                          {addingToListingId === listing.id ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Ajout...
+                            </>
+                          ) : listing.quantityAvailable === 0 ? (
+                            "Indisponible"
+                          ) : (
+                            <>
+                              <ShoppingCart className="w-4 h-4 mr-2" />
+                              Ajouter
+                            </>
+                          )}
                         </Button>
                       </TableCell>
                     </TableRow>

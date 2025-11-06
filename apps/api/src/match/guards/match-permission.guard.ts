@@ -9,8 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match } from '../entities/match.entity';
 import { TournamentOrganizer } from '../../tournament/entities/tournament-organizer.entity';
-import { User, UserRole } from '../../user/entities/user.entity';
+import { User } from '../../user/entities/user.entity';
 import { Request } from 'express';
+import { UserRole } from 'src/common/enums/user';
 
 @Injectable()
 export class MatchPermissionGuard implements CanActivate {

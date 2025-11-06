@@ -16,8 +16,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User, UserRole } from './entities/user.entity';
+import { User } from './entities/user.entity';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('users')
 @ApiBearerAuth()
