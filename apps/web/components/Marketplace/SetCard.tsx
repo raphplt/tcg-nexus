@@ -4,7 +4,6 @@ import { PokemonSetType } from "@/types/cardPokemon";
 import Link from "next/link";
 
 const SetCard = ({ set }: { set: PokemonSetType }) => {
-  console.log("set", set);
   return (
     <Link
       key={set.id}

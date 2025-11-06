@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "./SearchBar";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -22,7 +22,12 @@ import { FULLSCREEN_PATHS } from "@/utils/constants";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
 
 const Header = () => {
+  const [mounted, setMounted] = useState(false);
   const { isAuthenticated, user, logout, isLoading } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const currentPath = usePathname();
 
@@ -102,15 +107,21 @@ const Header = () => {
             </Link>
           </li>
 
-          {!isAuthenticated && (
-            <li>
-              <ThemeToggle />
-            </li>
-          )}
-          {isLoading ? (
-            <li>
-              <Skeleton className="h-8 w-8 rounded-full" />
-            </li>
+          {!mounted || isLoading ? (
+            <>
+              <li>
+                <ThemeToggle />
+              </li>
+              <li>
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </li>
+            </>
+          ) : !isAuthenticated ? (
+            <>
+              <li>
+                <ThemeToggle />
+              </li>
+            </>
           ) : isAuthenticated && user ? (
             <>
               <li>

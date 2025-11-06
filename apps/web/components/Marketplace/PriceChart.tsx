@@ -12,14 +12,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/utils/price";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface PriceChartProps {
-  data: Array<{
-    price: number;
-    currency: string;
-    recordedAt: Date | string;
-  }>;
+  data: Array<{ price: number; currency: string; recordedAt: Date | string }>;
   currency?: string;
   className?: string;
   showTrend?: boolean;
@@ -47,14 +42,17 @@ export function PriceChart({
   }
 
   const chartData = data
-    .map((item) => ({
-      date: new Date(item.recordedAt).toLocaleDateString("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-      }),
-      price: parseFloat(item.price.toString()),
-      fullDate: new Date(item.recordedAt),
-    }))
+    .map((item) => {
+      const d = new Date(item.recordedAt);
+      return {
+        date: d.toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+        }),
+        price: Number(item.price),
+        fullDate: d,
+      };
+    })
     .sort((a, b) => a.fullDate.getTime() - b.fullDate.getTime());
 
   const firstPrice = chartData[0]?.price;
@@ -64,17 +62,18 @@ export function PriceChart({
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const p = payload[0];
       return (
         <div className="bg-popover border border-border rounded-lg shadow-lg p-3">
           <p className="text-sm font-semibold mb-1">
-            {payload[0].payload.fullDate.toLocaleDateString("fr-FR", {
+            {p.payload.fullDate.toLocaleDateString("fr-FR", {
               day: "2-digit",
               month: "long",
               year: "numeric",
             })}
           </p>
           <p className="text-sm text-primary font-medium">
-            {formatPrice(payload[0].value, currency)}
+            {formatPrice(p.value, currency)}
           </p>
         </div>
       );
@@ -116,39 +115,40 @@ export function PriceChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer
-          width="100%"
-          height={300}
-        >
-          <LineChart data={chartData}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              className="stroke-muted"
-            />
-            <XAxis
-              dataKey="date"
-              className="text-xs"
-              tick={{ fill: "currentColor" }}
-            />
-            <YAxis
-              className="text-xs"
-              tick={{ fill: "currentColor" }}
-              tickFormatter={(value) => formatPrice(value, currency)}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="linear"
-              dataKey="price"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={{ r: 4, fill: "hsl(var(--primary))" }}
-              activeDot={{ r: 6 }}
-              connectNulls={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="text-primary">
+          <ResponsiveContainer
+            width="100%"
+            height={300}
+          >
+            <LineChart data={chartData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-muted"
+              />
+              <XAxis
+                dataKey="date"
+                className="text-xs"
+                tick={{ fill: "currentColor" }}
+              />
+              <YAxis
+                className="text-xs"
+                tick={{ fill: "currentColor" }}
+                tickFormatter={(v) => formatPrice(v, currency)}
+              />
+              <Tooltip content={CustomTooltip} />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="currentColor"
+                strokeWidth={2}
+                dot={{ r: 4, fill: "currentColor" }}
+                activeDot={{ r: 6 }}
+                connectNulls={true}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
 }
-

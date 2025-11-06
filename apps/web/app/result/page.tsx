@@ -7,8 +7,6 @@ const Result = () => {
   const results = searchParams.get("results");
   const searchResults = results ? JSON.parse(results) : [];
 
-  console.log("results", searchResults);
-
   return (
     <div>
       <h1>Résultats</h1>

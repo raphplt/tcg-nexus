@@ -62,8 +62,6 @@ export class TournamentService {
     userId: number
   ): Promise<Tournament> {
     const tournament = this.tournamentRepository.create(createTournamentDto);
-    console.log('Creating tournament with data:', tournament);
-
     // Validation des dates
     if (tournament.startDate >= tournament.endDate) {
       throw new BadRequestException(

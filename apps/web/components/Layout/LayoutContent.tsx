@@ -18,7 +18,9 @@ export default function LayoutContent({ children }: LayoutContentProps) {
 
   return (
     <>
-      <Header />
+      <Suspense fallback={null}>
+        <Header />
+      </Suspense>
       <div className={isFullscreenPath ? "min-h-screen" : "mt-16 min-h-screen"}>
         <Suspense
           fallback={

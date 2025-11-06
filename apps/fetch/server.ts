@@ -138,43 +138,37 @@ class TcgDexService {
 
   async getAllCardsDetails(): Promise<any> {
     try {
-      console.log("Fetching all cards...");
-      const cards = await this.tcgdex.fetch("cards");
-      if (!cards) {
-        console.log("No cards found.");
-        return [];
-      }
+					const cards = await this.tcgdex.fetch("cards");
+					if (!cards) {
+						return [];
+					}
 
-      const chunkSize = 1000;
-      const delay = (ms: number) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
+					const chunkSize = 1000;
+					const delay = (ms: number) =>
+						new Promise((resolve) => setTimeout(resolve, ms));
 
-      const cardsDetails: any[] = [];
-      for (let i = 0; i < cards.length; i += chunkSize) {
-        console.log(`Processing chunk from index ${i} to ${i + chunkSize}...`);
-        const chunk = cards.slice(i, i + chunkSize);
-        const cardsPromises = chunk.map(async (card: any) => {
-          const cardData = await this.tcgdex.fetch("cards", card.id);
-          return cardData;
-        });
+					const cardsDetails: any[] = [];
+					for (let i = 0; i < cards.length; i += chunkSize) {
+						const chunk = cards.slice(i, i + chunkSize);
+						const cardsPromises = chunk.map(async (card: any) => {
+							const cardData = await this.tcgdex.fetch("cards", card.id);
+							return cardData;
+						});
 
-        const chunkDetails = await Promise.all(cardsPromises);
-        cardsDetails.push(...chunkDetails);
+						const chunkDetails = await Promise.all(cardsPromises);
+						cardsDetails.push(...chunkDetails);
 
-        if (i + chunkSize < cards.length) {
-          console.log(
-            "Waiting for 30 seconds before processing the next chunk...",
-          );
-          await delay(30000); // 30 seconds delay
-        }
-      }
+						if (i + chunkSize < cards.length) {
+							await delay(30000); // 30 seconds delay
+						}
+					}
 
-      console.log("All cards details fetched successfully.");
-      return cardsDetails;
-    } catch (error) {
-      console.error("Error fetching cards details:", error);
-      throw new Error("Erreur lors de la récupération des données des cartes");
-    }
+					console.log("All cards details fetched successfully.");
+					return cardsDetails;
+				} catch (error) {
+					console.error("Error fetching cards details:", error);
+					throw new Error("Erreur lors de la récupération des données des cartes");
+				}
   }
 }
 

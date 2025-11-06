@@ -56,7 +56,6 @@ export const decksService = {
   },
 
   async create(data: createDeckParams) {
-    console.log("coucou raphael");
     return authedFetch("POST", "/deck", { data });
   },
 
