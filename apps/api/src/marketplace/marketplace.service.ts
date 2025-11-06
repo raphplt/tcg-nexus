@@ -546,7 +546,7 @@ export class MarketplaceService {
       cardState,
       priceMin,
       priceMax,
-      sortBy = 'name',
+      sortBy = 'localId',
       sortOrder = 'ASC'
     } = params;
 
@@ -570,19 +570,18 @@ export class MarketplaceService {
       ])
       .addSelect('COUNT(DISTINCT listing.id)', 'listing_count')
       .addSelect('MIN(listing.price)', 'min_price')
-      .addSelect('AVG(listing.price)', 'avg_price');
-
-    if (sortBy === 'localId') {
-      qb.addSelect(
-        `LPAD(COALESCE(card.localId, ''), 10, '0')`,
-        'localId_padded'
-      );
-    }
-
-    qb.groupBy('card.id')
+      .addSelect('AVG(listing.price)', 'avg_price')
+      .groupBy('card.id')
+      .addGroupBy('card.name')
+      .addGroupBy('card.image')
+      .addGroupBy('card.rarity')
       .addGroupBy('card.localId')
       .addGroupBy('set.id')
-      .addGroupBy('serie.id');
+      .addGroupBy('set.name')
+      .addGroupBy('set.logo')
+      .addGroupBy('set.symbol')
+      .addGroupBy('serie.id')
+      .addGroupBy('serie.name');
 
     if (search) {
       qb.andWhere('card.name ILIKE :search', { search: `%${search}%` });
@@ -617,13 +616,23 @@ export class MarketplaceService {
       });
     }
 
-    // Sorting
+    // Sorting with safeguards
     if (sortBy === 'price') {
       qb.orderBy('min_price', sortOrder);
     } else if (sortBy === 'popularity') {
       qb.orderBy('listing_count', 'DESC');
-    } else {
+    } else if (sortBy === 'localId') {
+      // For localId, sort as text but it will work for numeric strings
+      // Since we added it to GROUP BY, we can reference it directly
+      qb.orderBy('card.localId', sortOrder);
+      // Add secondary sort by name for consistency
+      qb.addOrderBy('card.name', 'ASC');
+    } else if (sortBy === 'name' || sortBy === 'rarity') {
+      // Safe fields that are in GROUP BY
       qb.orderBy(`card.${sortBy}`, sortOrder);
+    } else {
+      // Fallback to name if sortBy is not recognized
+      qb.orderBy('card.name', sortOrder);
     }
 
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });

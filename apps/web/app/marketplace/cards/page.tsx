@@ -74,7 +74,7 @@ export default function MarketplaceCardsPage() {
       priceMax: searchParams.get("priceMax")
         ? parseFloat(searchParams.get("priceMax")!)
         : undefined,
-      sortBy: searchParams.get("sortBy") || "name",
+      sortBy: searchParams.get("sortBy") || "localId",
       sortOrder: (searchParams.get("sortOrder") as "ASC" | "DESC") || "ASC",
     };
 
@@ -122,7 +122,7 @@ export default function MarketplaceCardsPage() {
   const resetFilters = () => {
     const defaultFilters: FilterState = {
       search: "",
-      sortBy: "name",
+      sortBy: "localId",
       sortOrder: "ASC",
     };
     setFilters(defaultFilters);
