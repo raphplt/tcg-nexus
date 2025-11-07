@@ -14,17 +14,20 @@ import { DeckForm } from "./_components/deckForm";
 import React, { useEffect, useState } from "react";
 import { authedFetch } from "@utils/fetch";
 import { Skeleton } from "@components/ui/skeleton";
+import { DeckFormat } from "@/types/deckFormat";
 
 export default function CreateDeckPage() {
   const { isAuthenticated } = useAuth();
-  const [formatList, setFormatList] = useState([]);
+  const [formatList, setFormatList] = useState<DeckFormat[]>([]);
   const [formatLoading, setFormatLoading] = useState(true);
   useEffect(() => {
     const listFormat = async () => {
       return await authedFetch("GET", "deck-format");
     };
     listFormat().then((res) => {
-      setFormatList(res);
+      if (res && typeof res === "object" && "data" in res) {
+        setFormatList(res.data as DeckFormat[]);
+      }
       setFormatLoading(false);
     });
   }, []);

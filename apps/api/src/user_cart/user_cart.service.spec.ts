@@ -370,7 +370,7 @@ describe('UserCartService', () => {
         cartItems: [mockCartItem]
       };
       userCartRepo.findOne.mockResolvedValue(cartWithItems);
-      cartItemRepo.remove.mockResolvedValue([mockCartItem] as CartItem[]);
+      (cartItemRepo.remove as jest.Mock).mockResolvedValue([mockCartItem]);
 
       await service.clearCart(1);
 

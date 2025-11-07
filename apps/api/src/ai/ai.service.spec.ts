@@ -34,10 +34,6 @@ describe('AiService', () => {
     }).compile();
 
     service = module.get<AiService>(AiService);
-    deckRepo = module.get<Repository<Deck>>(getRepositoryToken(Deck));
-    pokemonCardRepo = module.get<Repository<PokemonCard>>(
-      getRepositoryToken(PokemonCard)
-    );
   });
 
   afterEach(() => {

@@ -23,6 +23,7 @@ type MarketplaceSearchProps = {
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
   resetFilters: () => void;
+  setFilters: (filters: Partial<FilterState>) => void;
   series: PokemonSerieType[];
   sets: PokemonSetType[];
   updateFilters: (filters: Partial<FilterState>) => void;
@@ -34,6 +35,7 @@ const MarketplaceSearch = ({
   showFilters,
   setShowFilters,
   resetFilters,
+  setFilters,
   series,
   sets,
   updateFilters,

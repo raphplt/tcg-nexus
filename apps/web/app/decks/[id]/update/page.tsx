@@ -8,17 +8,22 @@ import React, { useEffect, useState } from "react";
 import { authedFetch } from "@utils/fetch";
 import { Skeleton } from "@components/ui/skeleton";
 import DeckFormUpdate from "./_components/deckFormUpdate";
+import { DeckFormat } from "@/types/deckFormat";
 
 export default function UpdateDeckPage() {
   const { isAuthenticated } = useAuth();
-  const [formatList, setFormatList] = useState([]);
+  const [formatList, setFormatList] = useState<DeckFormat[]>([]);
   const [formatLoading, setFormatLoading] = useState(true);
+
+  //TODO faire ca mieux en utilisant un service.
   useEffect(() => {
     const listFormat = async () => {
       return await authedFetch("GET", "deck-format");
     };
     listFormat().then((res) => {
-      setFormatList(res);
+      if (res && typeof res === "object" && "data" in res) {
+        setFormatList(res.data as DeckFormat[]);
+      }
       setFormatLoading(false);
     });
   }, []);

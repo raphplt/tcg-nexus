@@ -16,7 +16,7 @@ import { AlertCircleIcon } from "lucide-react";
 export default function MyDecksPage() {
   const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
-  const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
+  const [formatList, setFormatList] = useState<DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersType>({
     search: "",
     format: "",
@@ -61,7 +61,9 @@ export default function MyDecksPage() {
       return await authedFetch("GET", "deck-format");
     };
     listFormat().then((res) => {
-      setFormatList(res);
+      if (res && typeof res === "object" && "data" in res) {
+        setFormatList(res.data as DeckFormat[]);
+      }
     });
   }, []);
   if (!isAuthenticated) {
