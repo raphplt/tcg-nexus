@@ -70,6 +70,12 @@ import { MatchService } from 'src/match/match.service';
 import { faker } from '@faker-js/faker';
 import { CardState } from 'src/common/enums/pokemonCardsType';
 import { UserRole } from 'src/common/enums/user';
+import {
+  Achievement,
+  AchievementType,
+  AchievementCategory
+} from 'src/achievement/entities/achievement.entity';
+import { UserAchievement } from 'src/achievement/entities/user-achievement.entity';
 @Injectable()
 export class SeedService {
   constructor(
@@ -119,6 +125,10 @@ export class SeedService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CardStateEntity)
     private readonly cardStateRepository: Repository<CardStateEntity>,
+    @InjectRepository(Achievement)
+    private readonly achievementRepository: Repository<Achievement>,
+    @InjectRepository(UserAchievement)
+    private readonly userAchievementRepository: Repository<UserAchievement>,
     private readonly seedingService: SeedingService,
     private readonly bracketService: BracketService,
     private readonly matchService: MatchService
@@ -1494,6 +1504,407 @@ export class SeedService {
     console.log(
       `✅ ${savedCount} métriques de popularité créées pour ${eventsByCardAndDate.size} cartes`
     );
+  }
+
+  /**
+   * Seed achievements
+   */
+  async seedAchievements() {
+    const achievementsData: Array<{
+      code: string;
+      name: string;
+      description: string;
+      icon: string;
+      type: AchievementType;
+      category: AchievementCategory;
+      target: number;
+      points: number;
+      isSecret: boolean;
+    }> = [
+      // ACCOUNT
+      {
+        code: 'ACCOUNT_CREATED',
+        name: 'Bienvenue !',
+        description: 'Créer un compte sur TCG Nexus',
+        icon: '🎉',
+        type: AchievementType.ACCOUNT_CREATED,
+        category: AchievementCategory.ACCOUNT,
+        target: 1,
+        points: 10,
+        isSecret: false
+      },
+      {
+        code: 'PROFILE_COMPLETED',
+        name: 'Profil complet',
+        description: 'Compléter son profil utilisateur',
+        icon: '✅',
+        type: AchievementType.PROFILE_COMPLETED,
+        category: AchievementCategory.ACCOUNT,
+        target: 1,
+        points: 25,
+        isSecret: false
+      },
+
+      // MARKETPLACE
+      {
+        code: 'FIRST_CARD_BOUGHT',
+        name: 'Premier achat',
+        description: 'Acheter sa première carte',
+        icon: '💳',
+        type: AchievementType.FIRST_CARD_BOUGHT,
+        category: AchievementCategory.MARKETPLACE,
+        target: 1,
+        points: 50,
+        isSecret: false
+      },
+      {
+        code: 'FIRST_CARD_LISTED',
+        name: 'Premier vendeur',
+        description: 'Mettre sa première carte en vente',
+        icon: '🏷️',
+        type: AchievementType.FIRST_CARD_LISTED,
+        category: AchievementCategory.MARKETPLACE,
+        target: 1,
+        points: 50,
+        isSecret: false
+      },
+      {
+        code: 'FIRST_SALE',
+        name: 'Première vente',
+        description: 'Réaliser sa première vente',
+        icon: '💰',
+        type: AchievementType.FIRST_SALE,
+        category: AchievementCategory.MARKETPLACE,
+        target: 1,
+        points: 75,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_BOUGHT_10',
+        name: 'Acheteur régulier',
+        description: 'Acheter 10 cartes',
+        icon: '🛒',
+        type: AchievementType.CARDS_BOUGHT_10,
+        category: AchievementCategory.MARKETPLACE,
+        target: 10,
+        points: 100,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_BOUGHT_50',
+        name: 'Collectionneur passionné',
+        description: 'Acheter 50 cartes',
+        icon: '🛍️',
+        type: AchievementType.CARDS_BOUGHT_50,
+        category: AchievementCategory.MARKETPLACE,
+        target: 50,
+        points: 250,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_BOUGHT_100',
+        name: 'Acheteur expert',
+        description: 'Acheter 100 cartes',
+        icon: '💎',
+        type: AchievementType.CARDS_BOUGHT_100,
+        category: AchievementCategory.MARKETPLACE,
+        target: 100,
+        points: 500,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_SOLD_10',
+        name: 'Vendeur confirmé',
+        description: 'Vendre 10 cartes',
+        icon: '📦',
+        type: AchievementType.CARDS_SOLD_10,
+        category: AchievementCategory.MARKETPLACE,
+        target: 10,
+        points: 150,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_SOLD_50',
+        name: 'Vendeur professionnel',
+        description: 'Vendre 50 cartes',
+        icon: '🏪',
+        type: AchievementType.CARDS_SOLD_50,
+        category: AchievementCategory.MARKETPLACE,
+        target: 50,
+        points: 400,
+        isSecret: false
+      },
+      {
+        code: 'CARDS_SOLD_100',
+        name: 'Maître marchand',
+        description: 'Vendre 100 cartes',
+        icon: '👑',
+        type: AchievementType.CARDS_SOLD_100,
+        category: AchievementCategory.MARKETPLACE,
+        target: 100,
+        points: 750,
+        isSecret: false
+      },
+
+      // DECKS
+      {
+        code: 'FIRST_DECK_CREATED',
+        name: 'Stratège débutant',
+        description: 'Créer son premier deck',
+        icon: '📚',
+        type: AchievementType.FIRST_DECK_CREATED,
+        category: AchievementCategory.DECK,
+        target: 1,
+        points: 50,
+        isSecret: false
+      },
+      {
+        code: 'DECKS_CREATED_5',
+        name: 'Constructeur de decks',
+        description: 'Créer 5 decks différents',
+        icon: '🎴',
+        type: AchievementType.DECKS_CREATED_5,
+        category: AchievementCategory.DECK,
+        target: 5,
+        points: 100,
+        isSecret: false
+      },
+      {
+        code: 'DECKS_CREATED_10',
+        name: 'Architecte stratégique',
+        description: 'Créer 10 decks différents',
+        icon: '🏗️',
+        type: AchievementType.DECKS_CREATED_10,
+        category: AchievementCategory.DECK,
+        target: 10,
+        points: 200,
+        isSecret: false
+      },
+      {
+        code: 'DECKS_CREATED_25',
+        name: 'Maître deck builder',
+        description: 'Créer 25 decks différents',
+        icon: '🎯',
+        type: AchievementType.DECKS_CREATED_25,
+        category: AchievementCategory.DECK,
+        target: 25,
+        points: 500,
+        isSecret: false
+      },
+
+      // TOURNAMENTS
+      {
+        code: 'FIRST_TOURNAMENT_JOINED',
+        name: 'Premier tournoi',
+        description: 'Participer à son premier tournoi',
+        icon: '🎮',
+        type: AchievementType.FIRST_TOURNAMENT_JOINED,
+        category: AchievementCategory.TOURNAMENT,
+        target: 1,
+        points: 75,
+        isSecret: false
+      },
+      {
+        code: 'FIRST_TOURNAMENT_WIN',
+        name: 'Première victoire',
+        description: 'Remporter son premier tournoi',
+        icon: '🏆',
+        type: AchievementType.FIRST_TOURNAMENT_WIN,
+        category: AchievementCategory.TOURNAMENT,
+        target: 1,
+        points: 200,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_JOINED_5',
+        name: 'Compétiteur régulier',
+        description: 'Participer à 5 tournois',
+        icon: '⚔️',
+        type: AchievementType.TOURNAMENTS_JOINED_5,
+        category: AchievementCategory.TOURNAMENT,
+        target: 5,
+        points: 150,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_JOINED_10',
+        name: 'Vétéran des tournois',
+        description: 'Participer à 10 tournois',
+        icon: '🎖️',
+        type: AchievementType.TOURNAMENTS_JOINED_10,
+        category: AchievementCategory.TOURNAMENT,
+        target: 10,
+        points: 300,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_JOINED_25',
+        name: 'Compétiteur acharné',
+        description: 'Participer à 25 tournois',
+        icon: '🔥',
+        type: AchievementType.TOURNAMENTS_JOINED_25,
+        category: AchievementCategory.TOURNAMENT,
+        target: 25,
+        points: 600,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_WON_3',
+        name: 'Triple champion',
+        description: 'Remporter 3 tournois',
+        icon: '🥉',
+        type: AchievementType.TOURNAMENTS_WON_3,
+        category: AchievementCategory.TOURNAMENT,
+        target: 3,
+        points: 400,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_WON_5',
+        name: 'Champion confirmé',
+        description: 'Remporter 5 tournois',
+        icon: '🥈',
+        type: AchievementType.TOURNAMENTS_WON_5,
+        category: AchievementCategory.TOURNAMENT,
+        target: 5,
+        points: 750,
+        isSecret: false
+      },
+      {
+        code: 'TOURNAMENTS_WON_10',
+        name: 'Légende vivante',
+        description: 'Remporter 10 tournois',
+        icon: '🥇',
+        type: AchievementType.TOURNAMENTS_WON_10,
+        category: AchievementCategory.TOURNAMENT,
+        target: 10,
+        points: 1500,
+        isSecret: false
+      },
+
+      // MATCHES
+      {
+        code: 'FIRST_MATCH_WIN',
+        name: 'Première victoire en match',
+        description: 'Gagner son premier match',
+        icon: '🎯',
+        type: AchievementType.FIRST_MATCH_WIN,
+        category: AchievementCategory.MATCH,
+        target: 1,
+        points: 25,
+        isSecret: false
+      },
+      {
+        code: 'MATCHES_WON_10',
+        name: 'Joueur confirmé',
+        description: 'Gagner 10 matchs',
+        icon: '⭐',
+        type: AchievementType.MATCHES_WON_10,
+        category: AchievementCategory.MATCH,
+        target: 10,
+        points: 100,
+        isSecret: false
+      },
+      {
+        code: 'MATCHES_WON_50',
+        name: 'Joueur expérimenté',
+        description: 'Gagner 50 matchs',
+        icon: '🌟',
+        type: AchievementType.MATCHES_WON_50,
+        category: AchievementCategory.MATCH,
+        target: 50,
+        points: 300,
+        isSecret: false
+      },
+      {
+        code: 'MATCHES_WON_100',
+        name: 'Maître du combat',
+        description: 'Gagner 100 matchs',
+        icon: '💫',
+        type: AchievementType.MATCHES_WON_100,
+        category: AchievementCategory.MATCH,
+        target: 100,
+        points: 750,
+        isSecret: false
+      },
+
+      // COLLECTION
+      {
+        code: 'COLLECTOR_BEGINNER',
+        name: 'Collectionneur débutant',
+        description: 'Posséder 10 cartes dans sa collection',
+        icon: '📇',
+        type: AchievementType.COLLECTOR_BEGINNER,
+        category: AchievementCategory.COLLECTION,
+        target: 10,
+        points: 50,
+        isSecret: false
+      },
+      {
+        code: 'COLLECTOR_INTERMEDIATE',
+        name: 'Collectionneur intermédiaire',
+        description: 'Posséder 50 cartes dans sa collection',
+        icon: '📊',
+        type: AchievementType.COLLECTOR_INTERMEDIATE,
+        category: AchievementCategory.COLLECTION,
+        target: 50,
+        points: 150,
+        isSecret: false
+      },
+      {
+        code: 'COLLECTOR_ADVANCED',
+        name: 'Collectionneur avancé',
+        description: 'Posséder 100 cartes dans sa collection',
+        icon: '📈',
+        type: AchievementType.COLLECTOR_ADVANCED,
+        category: AchievementCategory.COLLECTION,
+        target: 100,
+        points: 300,
+        isSecret: false
+      },
+      {
+        code: 'COLLECTOR_EXPERT',
+        name: 'Collectionneur expert',
+        description: 'Posséder 500 cartes dans sa collection',
+        icon: '📚',
+        type: AchievementType.COLLECTOR_EXPERT,
+        category: AchievementCategory.COLLECTION,
+        target: 500,
+        points: 1000,
+        isSecret: false
+      },
+      {
+        code: 'COLLECTOR_MASTER',
+        name: 'Maître collectionneur',
+        description: 'Posséder 1000 cartes dans sa collection',
+        icon: '👑',
+        type: AchievementType.COLLECTOR_MASTER,
+        category: AchievementCategory.COLLECTION,
+        target: 1000,
+        points: 2500,
+        isSecret: false
+      }
+    ];
+
+    const achievements: Achievement[] = [];
+    for (const data of achievementsData) {
+      const existing = await this.achievementRepository.findOne({
+        where: { code: data.code }
+      });
+      if (!existing) {
+        const achievement = this.achievementRepository.create(data);
+        achievements.push(achievement);
+      }
+    }
+
+    if (achievements.length > 0) {
+      await this.achievementRepository.save(achievements);
+      console.log(`✅ ${achievements.length} achievements créés`);
+    } else {
+      console.log('ℹ️  Tous les achievements existent déjà');
+    }
+
+    return achievements;
   }
 
   /**

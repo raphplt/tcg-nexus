@@ -26,6 +26,8 @@ import { Statistics } from 'src/statistics/entities/statistic.entity';
 import { SeedingService } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
+import { Achievement } from 'src/achievement/entities/achievement.entity';
+import { UserAchievement } from 'src/achievement/entities/user-achievement.entity';
 
 @Module({
   imports: [
@@ -53,7 +55,9 @@ import { MatchService } from 'src/match/match.service';
       DeckCard,
       Collection,
       CardState,
-      Statistics
+      Statistics,
+      Achievement,
+      UserAchievement
     ])
   ],
   controllers: [SeedController],

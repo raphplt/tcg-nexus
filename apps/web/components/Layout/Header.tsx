@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, ShoppingCart } from "lucide-react";
+import { User, LogOut, ShoppingCart, Trophy } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { usePathname } from "next/navigation";
 import { FULLSCREEN_PATHS } from "@/utils/constants";
@@ -185,6 +185,14 @@ const Header = () => {
                       className="flex items-center"
                     >
                       <User className="mr-2 h-4 w-4" /> Profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/profile/achievements"
+                      className="flex items-center"
+                    >
+                      <Trophy className="mr-2 h-4 w-4" /> Achievements
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

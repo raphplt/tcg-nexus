@@ -9,12 +9,14 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { AchievementEventsService } from 'src/achievement/achievement-events.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    private achievementEventsService: AchievementEventsService
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -33,7 +35,14 @@ export class UserService {
       password: hashedPassword
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Déclencher l'achievement de création de compte
+    this.achievementEventsService.onAccountCreated(savedUser.id).catch((err) => {
+      console.error('Error triggering account created achievement:', err);
+    });
+
+    return savedUser;
   }
 
   async findAll(): Promise<User[]> {

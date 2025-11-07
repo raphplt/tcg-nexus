@@ -22,6 +22,7 @@ export class SeedController {
     await this.seedService.seedListings();
     await this.seedService.seedCardEvents();
     await this.seedService.seedCardPopularityMetrics();
+    await this.seedService.seedAchievements();
     return { users, tournaments };
   }
 
@@ -54,5 +55,11 @@ export class SeedController {
   async seedCardPopularityMetrics() {
     await this.seedService.seedCardPopularityMetrics();
     return { message: 'Card popularity metrics seeded successfully' };
+  }
+
+  @Post('achievements')
+  async seedAchievements() {
+    await this.seedService.seedAchievements();
+    return { message: 'Achievements seeded successfully' };
   }
 }
