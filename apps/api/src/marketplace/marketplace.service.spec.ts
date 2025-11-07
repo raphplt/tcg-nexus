@@ -21,11 +21,12 @@ describe('MarketplaceService', () => {
       delete: jest.fn()
     };
 
-    const priceHistoryRepoMock: Partial<jest.Mocked<Repository<PriceHistory>>> = {
-      findOne: jest.fn(),
-      save: jest.fn(),
-      create: jest.fn()
-    };
+    const priceHistoryRepoMock: Partial<jest.Mocked<Repository<PriceHistory>>> =
+      {
+        findOne: jest.fn(),
+        save: jest.fn(),
+        create: jest.fn()
+      };
 
     const pokemonCardRepoMock: Partial<jest.Mocked<Repository<PokemonCard>>> = {
       findOne: jest.fn()
@@ -41,8 +42,14 @@ describe('MarketplaceService', () => {
       providers: [
         MarketplaceService,
         { provide: getRepositoryToken(Listing), useValue: repoMock },
-        { provide: getRepositoryToken(PriceHistory), useValue: priceHistoryRepoMock },
-        { provide: getRepositoryToken(PokemonCard), useValue: pokemonCardRepoMock },
+        {
+          provide: getRepositoryToken(PriceHistory),
+          useValue: priceHistoryRepoMock
+        },
+        {
+          provide: getRepositoryToken(PokemonCard),
+          useValue: pokemonCardRepoMock
+        },
         { provide: getRepositoryToken(Order), useValue: orderRepoMock }
       ]
     }).compile();

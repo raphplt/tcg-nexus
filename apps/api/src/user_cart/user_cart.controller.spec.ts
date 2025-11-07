@@ -180,9 +180,9 @@ describe('UserCartController', () => {
         new NotFoundException('Cart item not found')
       );
 
-      await expect(
-        controller.removeItemFromCart(mockUser, 1)
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.removeItemFromCart(mockUser, 1)).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 
@@ -206,9 +206,7 @@ describe('UserCartController', () => {
     });
 
     it('should throw NotFoundException if cart not found', async () => {
-      service.remove.mockRejectedValue(
-        new NotFoundException('Cart not found')
-      );
+      service.remove.mockRejectedValue(new NotFoundException('Cart not found'));
 
       await expect(controller.remove(1, mockUser)).rejects.toThrow(
         NotFoundException

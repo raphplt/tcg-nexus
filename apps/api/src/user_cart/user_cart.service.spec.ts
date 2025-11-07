@@ -286,9 +286,9 @@ describe('UserCartService', () => {
     it('should throw NotFoundException if cart item not found', async () => {
       cartItemRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should throw BadRequestException if user does not own cart', async () => {
@@ -302,9 +302,9 @@ describe('UserCartService', () => {
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithOtherCart);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('should throw BadRequestException if not enough quantity', async () => {
@@ -316,9 +316,9 @@ describe('UserCartService', () => {
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithCart);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 
