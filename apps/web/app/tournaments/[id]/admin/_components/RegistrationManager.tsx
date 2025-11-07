@@ -40,14 +40,13 @@ import {
   Download,
   CheckCircle,
   X,
-  Clock,
   UserCheck,
   UserX,
   Filter,
 } from "lucide-react";
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 interface RegistrationManagerProps {
   tournamentId: number;

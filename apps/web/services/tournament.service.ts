@@ -8,7 +8,6 @@ import {
   TournamentRegistration,
   StateTransition,
   StartTournamentOptions,
-  UpdateTournamentStatusDto,
   Match,
   Ranking,
 } from "@/types/tournament";

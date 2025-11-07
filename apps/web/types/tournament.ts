@@ -1,3 +1,5 @@
+import { User } from "./auth";
+
 export type Tournament = {
   id: number;
   name: string;
@@ -16,6 +18,8 @@ export type Tournament = {
   requiresApproval?: boolean;
   rules?: string | null;
   additionalInfo?: string | null;
+  maxPlayers?: number;
+  minPlayers?: number;
   players?: Player[];
   matches?: Match[];
   rankings?: Ranking[];
@@ -69,6 +73,7 @@ export interface Pricing {
 }
 export interface Organizer {
   id: number;
+  user: User;
   name: string;
   email?: string | null;
   role?: string | null;

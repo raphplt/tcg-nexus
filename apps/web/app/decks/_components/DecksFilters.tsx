@@ -12,8 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import MarketplaceFilters from "@app/marketplace/_components/MarketplaceFilters";
-import { DeckFormat } from "@/types/deckFormat";
 
 interface Option {
   label: string;

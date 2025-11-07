@@ -53,8 +53,8 @@ const RegisterPage = () => {
       await register(values);
     } catch (err: unknown) {
       const errorMessage =
-        (err as any)?.response?.data?.message ||
-        "Une erreur est survenue lors de l'inscription";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Une erreur est survenue lors de l'inscription";
       setError(errorMessage);
     }
   };

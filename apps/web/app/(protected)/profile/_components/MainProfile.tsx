@@ -187,7 +187,7 @@ const MainProfile = () => {
   const handleEdit = async (listing: Listing) => {
     try {
       router.push(`/marketplace/${listing.id}/edit`);
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la navigation vers l'édition");
     }
   };
@@ -723,7 +723,7 @@ const MainProfile = () => {
                   </p>
                   <p className="text-xs text-muted-foreground mb-4">
                     Créez votre première vente pour commencer à gagner de
-                    l'argent avec votre collection
+                    l&apos;argent avec votre collection
                   </p>
                 </div>
                 <div className="flex justify-center">

@@ -3,8 +3,12 @@ import { MarketplaceService } from './marketplace.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Listing } from './entities/listing.entity';
+import { PriceHistory } from './entities/price-history.entity';
+import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Order } from './entities/order.entity';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { User, UserRole } from '../user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
+import { UserRole } from '../common/enums/user';
 
 describe('MarketplaceService', () => {
   let service: MarketplaceService;
@@ -17,10 +21,36 @@ describe('MarketplaceService', () => {
       delete: jest.fn()
     };
 
+    const priceHistoryRepoMock: Partial<jest.Mocked<Repository<PriceHistory>>> =
+      {
+        findOne: jest.fn(),
+        save: jest.fn(),
+        create: jest.fn()
+      };
+
+    const pokemonCardRepoMock: Partial<jest.Mocked<Repository<PokemonCard>>> = {
+      findOne: jest.fn()
+    };
+
+    const orderRepoMock: Partial<jest.Mocked<Repository<Order>>> = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+      create: jest.fn()
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarketplaceService,
-        { provide: getRepositoryToken(Listing), useValue: repoMock }
+        { provide: getRepositoryToken(Listing), useValue: repoMock },
+        {
+          provide: getRepositoryToken(PriceHistory),
+          useValue: priceHistoryRepoMock
+        },
+        {
+          provide: getRepositoryToken(PokemonCard),
+          useValue: pokemonCardRepoMock
+        },
+        { provide: getRepositoryToken(Order), useValue: orderRepoMock }
       ]
     }).compile();
 
@@ -54,18 +84,18 @@ describe('MarketplaceService', () => {
 
     it('allows owner', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
-      repo.save.mockImplementation(async (l: any) => l);
+      repo.save.mockImplementation(async (l: Listing) => l);
       const res = await service.update(10, { price: 200 } as any, owner);
       expect(res).toBeDefined();
-      expect(repo.save).toHaveBeenCalled();
+      expect(jest.mocked(repo.save)).toHaveBeenCalled();
     });
 
     it('allows admin', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
-      repo.save.mockImplementation(async (l: any) => l);
+      repo.save.mockImplementation(async (l: Listing) => l);
       const res = await service.update(10, { price: 300 } as any, admin);
       expect(res).toBeDefined();
-      expect(repo.save).toHaveBeenCalled();
+      expect(jest.mocked(repo.save)).toHaveBeenCalled();
     });
   });
 
@@ -92,13 +122,13 @@ describe('MarketplaceService', () => {
     it('allows owner', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
       await service.delete(10, owner);
-      expect(repo.delete).toHaveBeenCalledWith(10);
+      expect(jest.mocked(repo.delete)).toHaveBeenCalledWith(10);
     });
 
     it('allows admin', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
       await service.delete(10, admin);
-      expect(repo.delete).toHaveBeenCalledWith(10);
+      expect(jest.mocked(repo.delete)).toHaveBeenCalledWith(10);
     });
   });
 });

@@ -390,7 +390,8 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         decks: [],
-        collections: []
+        collections: [],
+        tournamentOrganizers: []
       },
       {
         email: 'test2@test.com',
@@ -403,7 +404,8 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         decks: [],
-        collections: []
+        collections: [],
+        tournamentOrganizers: []
       },
       {
         email: 'test3@test.com',
@@ -416,7 +418,8 @@ export class SeedService {
         isActive: true,
         emailVerified: false,
         decks: [],
-        collections: []
+        collections: [],
+        tournamentOrganizers: []
       }
     ];
 
@@ -432,7 +435,8 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         decks: [],
-        collections: []
+        collections: [],
+        tournamentOrganizers: []
       });
     }
     const users: User[] = [];
@@ -633,13 +637,13 @@ export class SeedService {
       // Organisateur
       if (user) {
         let organizer = await this.tournamentOrganizerRepository.findOne({
-          where: { tournament: { id: tournament.id }, userId: user.id },
+          where: { tournament: { id: tournament.id }, user: { id: user.id } },
           relations: ['tournament']
         });
         if (!organizer) {
           organizer = this.tournamentOrganizerRepository.create({
             tournament,
-            userId: user.id,
+            user: user,
             name: user.firstName + ' ' + user.lastName,
             email: user.email,
             role: OrganizerRole.OWNER,

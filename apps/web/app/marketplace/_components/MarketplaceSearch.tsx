@@ -19,11 +19,11 @@ import React from "react";
 
 type MarketplaceSearchProps = {
   filters: FilterState;
-  setFilters: (filters: FilterState) => void;
   activeFiltersCount: number;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
   resetFilters: () => void;
+  setFilters: (filters: Partial<FilterState>) => void;
   series: PokemonSerieType[];
   sets: PokemonSetType[];
   updateFilters: (filters: Partial<FilterState>) => void;
@@ -31,11 +31,11 @@ type MarketplaceSearchProps = {
 
 const MarketplaceSearch = ({
   filters,
-  setFilters,
   activeFiltersCount,
   showFilters,
   setShowFilters,
   resetFilters,
+  setFilters,
   series,
   sets,
   updateFilters,

@@ -1,4 +1,4 @@
-import { authedFetch, fetcher } from "@/utils/fetch";
+import { authedFetch } from "@/utils/fetch";
 import {
   UserCart,
   CartItem,

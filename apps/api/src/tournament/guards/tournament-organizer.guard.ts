@@ -73,7 +73,7 @@ export class TournamentOrganizerGuard implements CanActivate {
     const organizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: parseInt(tournamentId) },
-        userId: user.id,
+        user: { id: user.id },
         isActive: true
       }
     });

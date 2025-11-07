@@ -15,7 +15,6 @@ export const FavoriteButton = ({ cardId }: { cardId: string }) => {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Réinitialiser l'état quand cardId change
   useEffect(() => {
     setIsFavorite(false);
     setIsAnimating(false);

@@ -71,7 +71,7 @@ const DecksTable = ({
     try {
       const response = await decksService.removeDeck(id);
       if (response) {
-        toast.success(response?.message || "Deck supprimé avec succès.");
+        toast.success("Deck supprimé avec succès.");
       }
     } catch (err) {
       console.error(err);

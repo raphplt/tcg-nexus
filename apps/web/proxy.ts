@@ -1,39 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PROTECTED_ROUTES, AUTH_ROUTES } from "@/utils/constants";
 
-function parseCookieHeader(cookieHeader: string): Record<string, string> {
-  const cookies: Record<string, string> = {};
-  cookieHeader.split(";").forEach((cookie) => {
-    const parts = cookie.trim().split("=");
-    if (parts.length === 2 && parts[0] && parts[1]) {
-      cookies[parts[0]] = parts[1];
-    }
-  });
-  return cookies;
-}
-
-function mergeCookies(
-  existingCookies: string,
-  newCookies: Array<string>,
-): string {
-  const existing = parseCookieHeader(existingCookies);
-  const merged = { ...existing };
-
-  newCookies.forEach((newCookie) => {
-    const setCookiePart = newCookie.split(";")[0];
-    if (setCookiePart) {
-      const parts = setCookiePart.trim().split("=");
-      if (parts.length === 2 && parts[0] && parts[1]) {
-        merged[parts[0]] = parts[1];
-      }
-    }
-  });
-
-  return Object.entries(merged)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("; ");
-}
-
 function buildCookieHeader(request: NextRequest): string {
   const parts = request.cookies.getAll().map((c) => `${c.name}=${c.value}`);
   return parts.join("; ");
@@ -51,7 +18,7 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
     }
 
     try {
-      let response = await fetch(`${API_BASE_URL}/auth/profile`, {
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: "POST",
         headers: {
           Cookie: cookies,

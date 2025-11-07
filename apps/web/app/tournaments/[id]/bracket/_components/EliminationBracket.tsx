@@ -3,7 +3,6 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Trophy, Crown, Medal, Target } from "lucide-react";
 import { BracketStructure, BracketMatch } from "@/types/tournament";

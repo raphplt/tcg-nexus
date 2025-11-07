@@ -1,7 +1,7 @@
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
 import { RolesGuard } from './roles.guard';
-import { UserRole } from '../../user/entities/user.entity';
+import { UserRole } from '../../common/enums/user';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;
@@ -12,8 +12,8 @@ describe('RolesGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ user })
       }),
-      getHandler: () => function handler() {} as any,
-      getClass: () => class TestClass {} as any
+      getHandler: () => function handler() {} as () => void,
+      getClass: () => class TestClass {} as new () => unknown
     } as unknown as ExecutionContext;
   };
 

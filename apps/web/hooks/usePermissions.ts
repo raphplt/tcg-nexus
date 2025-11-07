@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Tournament, Match } from "@/types/tournament";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 
 export function usePermissions(user: User | null, tournament?: Tournament) {
   return useMemo(() => {
@@ -19,16 +19,16 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
 
     // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = tournament.organizers?.some(
-      (org) => org.userId === user.id && org.isActive,
+      (org) => org.user.id === user.id,
     );
 
     const organizerRole = tournament.organizers?.find(
-      (org) => org.userId === user.id && org.isActive,
+      (org) => org.user.id === user.id,
     )?.role;
 
     // Permissions système
-    const isAdmin = user.role === "ADMIN";
-    const isModerator = user.role === "MODERATOR";
+    const isAdmin = user.role === UserRole.ADMIN;
+    const isModerator = user.role === UserRole.MODERATOR;
 
     // Permissions organisateur
     const isOwner = organizerRole === "owner";
@@ -95,10 +95,10 @@ export function useMatchPermissions(user: User | null, match?: Match) {
 
     // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = match.tournament?.organizers?.some(
-      (org) => org.userId === user.id && org.isActive,
+      (org) => org.user.id === user.id,
     );
 
-    const isAdmin = user.role === "ADMIN";
+    const isAdmin = user.role === UserRole.ADMIN;
 
     return {
       canReportScore: isPlayerInMatch || isOrganizer || isAdmin,

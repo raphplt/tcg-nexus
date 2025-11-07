@@ -13,6 +13,7 @@ import { Deck } from 'src/deck/entities/deck.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
 import { UserRole } from 'src/common/enums/user';
 import { UserCart } from 'src/user_cart/entities/user_cart.entity';
+import { TournamentOrganizer } from 'src/tournament/entities';
 
 @Entity()
 export class User {
@@ -67,6 +68,9 @@ export class User {
 
   @OneToOne(() => UserCart, (userCart) => userCart.user)
   userCart?: UserCart;
+
+  @OneToMany(() => TournamentOrganizer, (organizer) => organizer.user)
+  tournamentOrganizers: TournamentOrganizer[];
 
   // Dates
   @CreateDateColumn()

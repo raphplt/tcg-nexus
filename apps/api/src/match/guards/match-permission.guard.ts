@@ -56,7 +56,7 @@ export class MatchPermissionGuard implements CanActivate {
     const organizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: match.tournament.id },
-        userId: user.id,
+        user: { id: user.id },
         isActive: true
       }
     });

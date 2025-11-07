@@ -6,7 +6,6 @@ import { DeckAnalysisResponseDto } from './dto/analyze-deck-response.dto';
 
 describe('AiController', () => {
   let controller: AiController;
-  let service: AiService;
 
   const mockAiService = {
     analyzeDeck: jest.fn(),
@@ -29,7 +28,6 @@ describe('AiController', () => {
     }).compile();
 
     controller = module.get<AiController>(AiController);
-    service = module.get<AiService>(AiService);
   });
 
   afterEach(() => {
@@ -59,7 +57,7 @@ describe('AiController', () => {
 
       const result = await controller.analyzeDeck(dto);
 
-      expect(service.analyzeDeck).toHaveBeenCalledWith(dto);
+      expect(mockAiService.analyzeDeck).toHaveBeenCalledWith(dto);
       expect(result).toEqual(mockResponse);
     });
 
@@ -80,7 +78,7 @@ describe('AiController', () => {
 
       const result = await controller.analyzeDeck(dto);
 
-      expect(service.analyzeDeck).toHaveBeenCalledWith(dto);
+      expect(mockAiService.analyzeDeck).toHaveBeenCalledWith(dto);
       expect(result).toEqual(mockResponse);
     });
 

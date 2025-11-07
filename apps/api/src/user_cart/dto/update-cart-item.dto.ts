@@ -15,4 +15,3 @@ export class UpdateCartItemDto extends PartialType(CreateCartItemDto) {
   @Min(1)
   quantity?: number;
 }
-

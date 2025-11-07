@@ -1,9 +1,4 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsPositive,
-  Min
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsPositive, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCartItemDto {
@@ -26,4 +21,3 @@ export class CreateCartItemDto {
   @Min(1)
   quantity: number = 1;
 }
-

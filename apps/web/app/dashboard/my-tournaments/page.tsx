@@ -3,18 +3,9 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Trophy,
   Calendar,
@@ -41,7 +32,6 @@ export default function MyTournamentsPage() {
   const {
     data: playerTournaments = [],
     isLoading,
-    error,
   } = useQuery<Tournament[]>({
     queryKey: ["player", user?.player?.id, "tournaments"],
     queryFn: () => {
@@ -51,50 +41,6 @@ export default function MyTournamentsPage() {
     },
     enabled: !!user?.player?.id,
   });
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { variant: "outline" as const, label: "Brouillon" },
-      registration_open: {
-        variant: "secondary" as const,
-        label: "Inscriptions ouvertes",
-      },
-      registration_closed: {
-        variant: "outline" as const,
-        label: "Inscriptions fermées",
-      },
-      in_progress: { variant: "default" as const, label: "En cours" },
-      finished: { variant: "secondary" as const, label: "Terminé" },
-      cancelled: { variant: "destructive" as const, label: "Annulé" },
-    };
-
-    const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "single_elimination":
-        return <Target className="w-4 h-4" />;
-      case "double_elimination":
-        return <Trophy className="w-4 h-4" />;
-      case "swiss_system":
-        return <BarChart3 className="w-4 h-4" />;
-      case "round_robin":
-        return <Users className="w-4 h-4" />;
-      default:
-        return <Trophy className="w-4 h-4" />;
-    }
-  };
 
   // Séparer les tournois par statut
   const activeTournaments = playerTournaments.filter(

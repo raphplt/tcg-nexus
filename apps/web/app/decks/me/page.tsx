@@ -4,9 +4,6 @@ import DecksFilters, {
   DecksFilters as DecksFiltersType,
 } from "@app/decks/_components/DecksFilters";
 import React, { useEffect, useState } from "react";
-import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
-import type { PaginatedResult } from "@/types/pagination";
-import type { Listing } from "@/types/listing";
 import DecksTable from "@app/decks/_components/DecksTable";
 import DecksPagination from "@app/decks/_components/DecksPagination";
 import { authedFetch } from "@utils/fetch";
@@ -16,10 +13,10 @@ import { decksService } from "@/services/decks.service";
 import { DeckFormat } from "@/types/deckFormat";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
-export default function page() {
-  const { user, isAuthenticated } = useAuth();
+export default function MyDecksPage() {
+  const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
-  const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
+  const [formatList, setFormatList] = useState<DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersType>({
     search: "",
     format: "",
@@ -64,7 +61,9 @@ export default function page() {
       return await authedFetch("GET", "deck-format");
     };
     listFormat().then((res) => {
-      setFormatList(res);
+      if (res && typeof res === "object" && "data" in res) {
+        setFormatList(res.data as DeckFormat[]);
+      }
     });
   }, []);
   if (!isAuthenticated) {

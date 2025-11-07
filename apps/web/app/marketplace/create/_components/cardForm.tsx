@@ -26,7 +26,6 @@ import {
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { PokemonCardType } from "@/types/cardPokemon";
 import { FormSchema } from "../utils";
 import { cardStates, currencyOptions } from "@/utils/variables";
 import { CardState, Currency } from "@/utils/enums";
@@ -69,10 +68,12 @@ const CardForm = () => {
 
   console.log("Utilisateur authentifié:", { user: user.id, isAuthenticated });
 
-  const form = useForm<z.infer<typeof FormSchema>>({
+  type FormValues = z.infer<typeof FormSchema>;
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      cardId: "",
+      cardId: undefined as any,
       price: 0,
       quantityAvailable: 1,
       cardState: CardState.NM,
@@ -81,7 +82,7 @@ const CardForm = () => {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     if (!user?.id) {
       toast.error("Erreur d'authentification. Veuillez vous reconnecter.");
       return;
@@ -112,7 +113,7 @@ const CardForm = () => {
         data: creationData,
       });
 
-      if (result?.id) {
+      if (result && typeof result === "object" && "id" in result) {
         setResetCardSelect((prev) => prev + 1);
         form.reset();
         toast.success("La vente a été créée avec succès !");
@@ -169,6 +170,10 @@ const CardForm = () => {
                     type="number"
                     placeholder="Prix"
                     {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(e.target.valueAsNumber || 0)
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -222,6 +227,10 @@ const CardForm = () => {
                     type="number"
                     placeholder="Nombre"
                     {...field}
+                    value={field.value ?? ""}
+                    onChange={(e) =>
+                      field.onChange(e.target.valueAsNumber || 0)
+                    }
                   />
                 </FormControl>
                 <FormMessage />

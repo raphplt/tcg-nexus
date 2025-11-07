@@ -104,7 +104,7 @@ describe('UserCartService', () => {
       const result = await service.findOrCreateCart(1);
 
       expect(result).toEqual(mockCart);
-      expect(userCartRepo.findOne).toHaveBeenCalledWith({
+      expect(jest.mocked(userCartRepo.findOne)).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
         relations: ['user']
       });
@@ -121,7 +121,7 @@ describe('UserCartService', () => {
       expect(userCartRepo.create).toHaveBeenCalledWith({
         user: { id: 1 }
       });
-      expect(userCartRepo.save).toHaveBeenCalled();
+      expect(jest.mocked(userCartRepo.save)).toHaveBeenCalled();
     });
   });
 
@@ -136,7 +136,7 @@ describe('UserCartService', () => {
       const result = await service.findCartByUserId(1);
 
       expect(result).toEqual(cartWithItems);
-      expect(userCartRepo.findOne).toHaveBeenCalledWith({
+      expect(jest.mocked(userCartRepo.findOne)).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
         relations: [
           'user',
@@ -213,7 +213,7 @@ describe('UserCartService', () => {
 
       expect(result).toEqual(mockCartItem);
       expect(cartItemRepo.create).toHaveBeenCalled();
-      expect(cartItemRepo.save).toHaveBeenCalled();
+      expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
     it('should update quantity if item already exists', async () => {
@@ -229,7 +229,7 @@ describe('UserCartService', () => {
       const result = await service.addItemToCart(1, createDto);
 
       expect(result.quantity).toBe(3);
-      expect(cartItemRepo.save).toHaveBeenCalled();
+      expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if listing not found', async () => {
@@ -280,15 +280,15 @@ describe('UserCartService', () => {
       const result = await service.updateCartItem(1, 1, updateDto);
 
       expect(result.quantity).toBe(3);
-      expect(cartItemRepo.save).toHaveBeenCalled();
+      expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if cart item not found', async () => {
       cartItemRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('should throw BadRequestException if user does not own cart', async () => {
@@ -302,9 +302,9 @@ describe('UserCartService', () => {
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithOtherCart);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('should throw BadRequestException if not enough quantity', async () => {
@@ -316,9 +316,9 @@ describe('UserCartService', () => {
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithCart);
 
-      await expect(
-        service.updateCartItem(1, 1, updateDto)
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 
@@ -333,7 +333,9 @@ describe('UserCartService', () => {
 
       await service.removeItemFromCart(1, 1);
 
-      expect(cartItemRepo.remove).toHaveBeenCalledWith(cartItemWithCart);
+      expect(jest.mocked(cartItemRepo.remove)).toHaveBeenCalledWith(
+        cartItemWithCart
+      );
     });
 
     it('should throw NotFoundException if cart item not found', async () => {
@@ -368,11 +370,13 @@ describe('UserCartService', () => {
         cartItems: [mockCartItem]
       };
       userCartRepo.findOne.mockResolvedValue(cartWithItems);
-      cartItemRepo.remove.mockResolvedValue([mockCartItem] as any);
+      (cartItemRepo.remove as jest.Mock).mockResolvedValue([mockCartItem]);
 
       await service.clearCart(1);
 
-      expect(cartItemRepo.remove).toHaveBeenCalledWith([mockCartItem]);
+      expect(jest.mocked(cartItemRepo.remove)).toHaveBeenCalledWith([
+        mockCartItem
+      ]);
     });
 
     it('should do nothing if cart does not exist', async () => {
@@ -380,7 +384,7 @@ describe('UserCartService', () => {
 
       await service.clearCart(1);
 
-      expect(cartItemRepo.remove).not.toHaveBeenCalled();
+      expect(jest.mocked(cartItemRepo.remove)).not.toHaveBeenCalled();
     });
   });
 
@@ -391,7 +395,7 @@ describe('UserCartService', () => {
 
       await service.remove(1, 1);
 
-      expect(userCartRepo.remove).toHaveBeenCalledWith(mockCart);
+      expect(jest.mocked(userCartRepo.remove)).toHaveBeenCalledWith(mockCart);
     });
 
     it('should throw NotFoundException if cart not found', async () => {

@@ -66,10 +66,10 @@ export default function CartPage() {
     try {
       await updateItem(itemId, { quantity: newQuantity });
       toast.success("Quantité mise à jour");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage =
-        error?.response?.data?.message ||
-        "Erreur lors de la mise à jour de la quantité";
+        (error as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Erreur lors de la mise à jour de la quantité";
       toast.error(errorMessage);
     } finally {
       setUpdatingItemId(null);
@@ -81,10 +81,10 @@ export default function CartPage() {
     try {
       await removeItem(itemId);
       toast.success("Article retiré du panier");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage =
-        error?.response?.data?.message ||
-        "Erreur lors de la suppression de l'article";
+        (error as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Erreur lors de la suppression de l'article";
       toast.error(errorMessage);
     } finally {
       setRemovingItemId(null);
@@ -99,9 +99,10 @@ export default function CartPage() {
     try {
       await clearCart();
       toast.success("Panier vidé");
-    } catch (error: any) {
+    } catch (error: unknown) {
       const errorMessage =
-        error?.response?.data?.message || "Erreur lors du vidage du panier";
+        (error as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Erreur lors du vidage du panier";
       toast.error(errorMessage);
     }
   };

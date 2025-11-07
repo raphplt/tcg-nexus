@@ -305,9 +305,9 @@ export class MarketplaceService {
           serie: { name: card.serie_name }
         }
       },
-      listingCount: parseInt(card.listing_count) || 0,
-      minPrice: parseFloat(card.min_price) || 0,
-      avgPrice: parseFloat(card.avg_price) || 0
+      listingCount: parseInt(String(card.listing_count), 10) || 0,
+      minPrice: parseFloat(String(card.min_price)) || 0,
+      avgPrice: parseFloat(String(card.avg_price)) || 0
     }));
   }
 
@@ -358,8 +358,8 @@ export class MarketplaceService {
           serie: { name: card.serie_name }
         }
       },
-      recentListingCount: parseInt(card.recent_listing_count) || 0,
-      minPrice: parseFloat(card.min_price) || 0
+      recentListingCount: parseInt(String(card.recent_listing_count), 10) || 0,
+      minPrice: parseFloat(String(card.min_price)) || 0
     }));
   }
 
@@ -404,8 +404,8 @@ export class MarketplaceService {
           avatarUrl: seller.seller_avatarUrl,
           isPro: seller.seller_isPro
         },
-        totalSales: parseInt(seller.total_sales) || 0,
-        totalRevenue: parseFloat(seller.total_revenue) || 0
+        totalSales: parseInt(String(seller.total_sales), 10) || 0,
+        totalRevenue: parseFloat(String(seller.total_revenue)) || 0
       }));
     }
 
@@ -435,11 +435,11 @@ export class MarketplaceService {
       .getRawMany();
 
     const sellerIdsFromOrders = new Set(
-      sellersFromOrders.map((s: any) => s.seller_id as number)
+      sellersFromOrders.map((s: { seller_id: number }) => s.seller_id)
     );
 
     const sellersFromListingsFiltered = sellersFromListings.filter(
-      (s) => !sellerIdsFromOrders.has(s.seller_id)
+      (s: { seller_id: number }) => !sellerIdsFromOrders.has(s.seller_id)
     );
 
     const allSellers = [
@@ -451,8 +451,8 @@ export class MarketplaceService {
           avatarUrl: seller.seller_avatarUrl,
           isPro: seller.seller_isPro
         },
-        totalSales: parseInt(seller.total_sales) || 0,
-        totalRevenue: parseFloat(seller.total_revenue) || 0
+        totalSales: parseInt(String(seller.total_sales), 10) || 0,
+        totalRevenue: parseFloat(String(seller.total_revenue)) || 0
       })),
       ...sellersFromListingsFiltered.map((seller) => ({
         seller: {
@@ -463,7 +463,7 @@ export class MarketplaceService {
           isPro: seller.seller_isPro
         },
         totalSales: 0,
-        totalRevenue: parseFloat(seller.total_listing_value) || 0
+        totalRevenue: parseFloat(String(seller.total_listing_value)) || 0
       }))
     ].slice(0, limit);
 

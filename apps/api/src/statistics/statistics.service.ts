@@ -4,7 +4,7 @@ import { UpdateStatisticDto } from './dto/update-statistic.dto';
 
 @Injectable()
 export class StatisticsService {
-  create(createStatisticDto: CreateStatisticDto) {
+  create(_createStatisticDto: CreateStatisticDto) {
     return 'This action adds a new statistic';
   }
 
@@ -16,7 +16,7 @@ export class StatisticsService {
     return `This action returns a #${id} statistic`;
   }
 
-  update(id: number, updateStatisticDto: UpdateStatisticDto) {
+  update(id: number, _updateStatisticDto: UpdateStatisticDto) {
     return `This action updates a #${id} statistic`;
   }
 

@@ -3,16 +3,28 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { marketplaceService } from "@/services/marketplace.service";
-import { SellerCard } from "@/components/Marketplace/SellerCard";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { H1, H2 } from "@/components/Shared/Titles";
 import { formatPrice } from "@/utils/price";
-import { ShoppingBag, TrendingUp, Star, Package, MessageCircle } from "lucide-react";
+import {
+  ShoppingBag,
+  TrendingUp,
+  Star,
+  Package,
+  MessageCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
@@ -197,7 +209,6 @@ export default function SellerPage() {
           </Card>
         </div>
 
-        {/* Listings */}
         <div>
           <div className="flex items-center justify-between mb-6">
             <H2>Offres du vendeur</H2>

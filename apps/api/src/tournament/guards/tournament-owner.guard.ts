@@ -56,7 +56,7 @@ export class TournamentOwnerGuard implements CanActivate {
     const organizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: parseInt(tournamentId) },
-        userId: user.id,
+        user: { id: user.id },
         role: OrganizerRole.OWNER,
         isActive: true
       }

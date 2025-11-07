@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { AiService } from './ai.service';
 import { Deck } from '../deck/entities/deck.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
@@ -9,15 +8,13 @@ import { PokemonCardsType } from '../common/enums/pokemonCardsType';
 
 describe('AiService', () => {
   let service: AiService;
-  let deckRepo: Repository<Deck>;
-  let pokemonCardRepo: Repository<PokemonCard>;
 
   const mockDeckRepo = {
     findOne: jest.fn()
   };
 
   const mockPokemonCardRepo = {
-    findByIds: jest.fn()
+    find: jest.fn()
   };
 
   beforeEach(async () => {
@@ -36,10 +33,6 @@ describe('AiService', () => {
     }).compile();
 
     service = module.get<AiService>(AiService);
-    deckRepo = module.get<Repository<Deck>>(getRepositoryToken(Deck));
-    pokemonCardRepo = module.get<Repository<PokemonCard>>(
-      getRepositoryToken(PokemonCard)
-    );
   });
 
   afterEach(() => {
@@ -66,7 +59,7 @@ describe('AiService', () => {
     });
 
     it('should throw BadRequestException when no cards found by cardIds', async () => {
-      mockPokemonCardRepo.findByIds.mockResolvedValue([]);
+      mockPokemonCardRepo.find.mockResolvedValue([]);
 
       await expect(
         service.analyzeDeck({ cardIds: ['invalid-id'] })
@@ -138,7 +131,7 @@ describe('AiService', () => {
         }
       ];
 
-      mockPokemonCardRepo.findByIds.mockResolvedValue(mockPokemonCards);
+      mockPokemonCardRepo.find.mockResolvedValue(mockPokemonCards);
 
       const result = await service.analyzeDeck({
         cardIds: ['card1', 'card2', 'card2']

@@ -3,10 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { collectionService } from "@/services/collection.service";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { H1 } from "@/components/Shared/Titles";
 import {
@@ -232,10 +230,7 @@ export default function PokemonMatchPage() {
           👎
         </button>
 
-        <FavoriteButton
-          cardId={card.id}
-          userId={user.id}
-        />
+        <FavoriteButton cardId={card.id} />
 
         <button
           className="rounded-full w-16 h-16 border-2 border-green-500 hover:bg-green-500 hover:text-white"

@@ -58,7 +58,13 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
           `/pokemon-card/paginated?page=${page}&limit=100`,
         );
         setIsSearching(false);
-        const newCards = res.data;
+        const resData =
+          typeof res === "object" && res !== null && "data" in res
+            ? (res as { data: unknown }).data
+            : [];
+        const newCards = Array.isArray(resData)
+          ? (resData as PokemonCardType[])
+          : [];
         setCards((prev) => [...prev, ...newCards]);
         setHasMore(newCards.length === 100);
       } catch (err) {
@@ -100,7 +106,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
       );
       setIsSearching(true);
       setCards([]);
-      setCards(res);
+      setCards(res as PokemonCardType[]);
       setHasMore(false);
     } catch (err) {
       console.error("Erreur fetch cartes :", err);

@@ -7,23 +7,18 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@components/ui/badge";
 import Image from "next/image";
 import { Skeleton } from "@components/ui/skeleton";
-export default function page() {
+export default function DeckPage() {
   const [deck, setDeck] = useState<null | Deck>(null);
   const [deckLoading, setDeckLoading] = useState(true);
   const { id } = useParams();
   useEffect(() => {
     const loadDeck = async () => {
       setDeckLoading(true);
-      try {
-        const response = await decksService.getDeckById(id as string);
-        if (response) {
-          setDeck(response);
-        }
-      } catch (e) {
-      } finally {
-        setDeckLoading(false);
+      const response = await decksService.getDeckById(id as string);
+      if (response) {
+        setDeck(response as Deck);
       }
-    };
+    }
     loadDeck();
   }, [id]);
 

@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { formatPrice } from "@/utils/price";
-import { Star, ShoppingBag, TrendingUp } from "lucide-react";
+import { ShoppingBag, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SellerCardProps {

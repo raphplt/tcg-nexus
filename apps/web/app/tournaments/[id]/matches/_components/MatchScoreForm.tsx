@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trophy, Clock, AlertTriangle, CheckCircle, X } from "lucide-react";
-import { Match, ReportScoreDto } from "@/types/tournament";
+import { Match } from "@/types/tournament";
 import { useMatches } from "@/hooks/useMatches";
 import { useMatchPermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
