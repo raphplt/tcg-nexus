@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { AiService } from './ai.service';
 import { Deck } from '../deck/entities/deck.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
