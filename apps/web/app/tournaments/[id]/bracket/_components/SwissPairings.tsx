@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Swords, Coffee, Clock, CheckCircle } from "lucide-react";
-import { SwissPairing, Match } from "@/types/tournament";
+import { SwissPairing, Match, Player } from "@/types/tournament";
 
 interface SwissPairingsProps {
   pairings: SwissPairing | Match[];
@@ -134,33 +134,55 @@ export function SwissPairings({
   onMatchClick,
   interactive = true,
 }: SwissPairingsProps) {
-  // Convertir les données selon le format reçu
   const pairingData = "pairings" in pairings ? pairings.pairings : pairings;
 
-  // Transformer les matches en format de paires si nécessaire
   const formattedPairings = Array.isArray(pairingData)
     ? pairingData.map((item, index) => {
-        if ("playerA" in item && "playerB" in item) {
-          // Format SwissPairing
-          return {
-            playerA: item.playerA,
-            playerB: item.playerB,
-            tableNumber: item.tableNumber,
-            matchId: undefined,
-            status: "scheduled",
-          };
-        } else {
-          // Format Match
-          const match = item as any;
-          return {
-            playerA: match.playerA,
-            playerB: match.playerB,
-            tableNumber: index + 1,
-            matchId: match.id,
-            status: match.status,
-          };
-        }
-      })
+      // Vérifier si c'est un format SwissPairing (a tableNumber) ou Match (a id)
+      if ("tableNumber" in item) {
+        // Format SwissPairing
+        const pairing = item as {
+          playerA: Player;
+          playerB?: Player;
+          tableNumber: number;
+        };
+        return {
+          playerA: {
+            id: pairing.playerA.id,
+            name: pairing.playerA.name,
+          },
+          playerB: pairing.playerB
+            ? {
+                id: pairing.playerB.id,
+                name: pairing.playerB.name,
+              }
+            : undefined,
+          tableNumber: pairing.tableNumber,
+          matchId: undefined,
+          status: "scheduled",
+        };
+      } else {
+        // Format Match
+        const match = item as Match;
+        return {
+          playerA: match.playerA
+            ? {
+                id: match.playerA.id,
+                name: match.playerA.name,
+              }
+            : { id: 0, name: "TBD" },
+          playerB: match.playerB
+            ? {
+                id: match.playerB.id,
+                name: match.playerB.name,
+              }
+            : undefined,
+          tableNumber: index + 1,
+          matchId: match.id,
+          status: match.status,
+        };
+      }
+    })
     : [];
 
   const byeCount = formattedPairings.filter((p) => !p.playerB).length;

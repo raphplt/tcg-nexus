@@ -53,14 +53,14 @@ const formSchema = z
     isPublic: z.boolean().optional(),
     allowLateRegistration: z.boolean().optional(),
     requiresApproval: z.boolean().optional(),
-    maxPlayers: z.coerce.number().int().positive().optional(),
-    minPlayers: z.coerce.number().int().positive().optional(),
-    currentRound: z.coerce.number().int().min(0).optional(),
-    totalRounds: z.coerce.number().int().min(0).optional(),
+    maxPlayers: z.number().int().positive().optional(),
+    minPlayers: z.number().int().positive().optional(),
+    currentRound: z.number().int().min(0).optional(),
+    totalRounds: z.number().int().min(0).optional(),
     rules: z.string().optional(),
     additionalInfo: z.string().optional(),
-    ageRestrictionMin: z.coerce.number().min(0).optional(),
-    ageRestrictionMax: z.coerce.number().min(0).optional(),
+    ageRestrictionMin: z.number().min(0).optional(),
+    ageRestrictionMax: z.number().min(0).optional(),
     allowedFormats: z.array(z.string()).optional(),
   })
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
@@ -373,6 +373,10 @@ export default function CreateTournamentPage() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber || undefined)
+                          }
                         />
                       </FormControl>
                     </FormItem>
@@ -389,6 +393,10 @@ export default function CreateTournamentPage() {
                         <Input
                           type="number"
                           {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.valueAsNumber || undefined)
+                          }
                         />
                       </FormControl>
                     </FormItem>

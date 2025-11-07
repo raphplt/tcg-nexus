@@ -392,7 +392,9 @@ export default function MatchesPage() {
                           {getStatusBadge(match.status)}
                         </div>
                       </TableCell>
-                      <TableCell>{formatDate(match.scheduledDate)}</TableCell>
+                      <TableCell>
+                        {formatDate(match.scheduledDate ?? undefined)}
+                      </TableCell>
                       <TableCell>
                         <div
                           className="flex gap-1"

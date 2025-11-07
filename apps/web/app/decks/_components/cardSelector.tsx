@@ -26,8 +26,8 @@ interface CardComboboxProps {
 
 export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
-  const [input, setInput] = useState("");
+  const [value, setValue] = useState<number | undefined>(undefined);
+  const [input, setInput] = useState<string>("");
   const [cards, setCards] = useState<CardType[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
   const [qty, setQty] = useState(1);
@@ -41,7 +41,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
 
   useEffect(() => {
     setSelectedCard(null);
-    setValue("");
+    setValue(undefined);
     setInput("");
     setCards([]);
     setPage(1);
@@ -53,8 +53,11 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     const fetchCards = async () => {
       setLoading(true);
       try {
-        const res = await pokemonCardService.getPaginated({page: page, limit: 50})
-        const newCards = res.data as CardType[];
+        const res = await pokemonCardService.getPaginated({
+          page: page,
+          limit: 50,
+        });
+        const newCards = res.data as any[]; //TODO typer ca
         setCards((prev) => [...prev, ...newCards]);
         setHasMore(newCards.length === 50);
       } catch (err) {
@@ -76,7 +79,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     }
   };
 
-  const handleSelect = (cardId: string) => {
+  const handleSelect = (cardId: number) => {
     const selected = cards.find((c) => c.id === cardId);
     if (selected) {
       setSelectedCard(selected);
@@ -89,7 +92,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     onSelect(selectedCard, qty, role);
     setSelectedCard(null);
     setQty(1);
-    setValue("");
+    setValue(undefined);
     setOpen(false);
   };
 
@@ -142,7 +145,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
             <div
               key={card.id}
               className="flex justify-between items-center p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSelect(card.id)}
+              onClick={() => handleSelect(card.id as number)}
             >
               <span>{card.name}</span>
             </div>

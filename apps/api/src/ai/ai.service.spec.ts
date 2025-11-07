@@ -17,7 +17,7 @@ describe('AiService', () => {
   };
 
   const mockPokemonCardRepo = {
-    findByIds: jest.fn()
+    find: jest.fn()
   };
 
   beforeEach(async () => {
@@ -66,7 +66,7 @@ describe('AiService', () => {
     });
 
     it('should throw BadRequestException when no cards found by cardIds', async () => {
-      mockPokemonCardRepo.findByIds.mockResolvedValue([]);
+      mockPokemonCardRepo.find.mockResolvedValue([]);
 
       await expect(
         service.analyzeDeck({ cardIds: ['invalid-id'] })
@@ -138,7 +138,7 @@ describe('AiService', () => {
         }
       ];
 
-      mockPokemonCardRepo.findByIds.mockResolvedValue(mockPokemonCards);
+      mockPokemonCardRepo.find.mockResolvedValue(mockPokemonCards);
 
       const result = await service.analyzeDeck({
         cardIds: ['card1', 'card2', 'card2']

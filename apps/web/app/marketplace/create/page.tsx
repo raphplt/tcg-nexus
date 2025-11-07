@@ -11,8 +11,8 @@ import React from "react";
 import { AlertCircleIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
-import CardForm from "./_components/CardForm";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import CardForm from "./_components/cardForm";
 const CreateSell = () => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {

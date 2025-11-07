@@ -8,6 +8,7 @@ export interface Collection {
   createdAt: string;
   updatedAt: string;
   userId: number;
+  items: CollectionItemType[];
 }
 
 export interface CollectionItemType {

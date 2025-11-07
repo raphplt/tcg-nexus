@@ -232,10 +232,7 @@ export default function PokemonMatchPage() {
           👎
         </button>
 
-        <FavoriteButton
-          cardId={card.id}
-          userId={user.id}
-        />
+        <FavoriteButton cardId={card.id} />
 
         <button
           className="rounded-full w-16 h-16 border-2 border-green-500 hover:bg-green-500 hover:text-white"

@@ -7,6 +7,7 @@ import {
   StartMatchDto,
   ResetMatchDto,
 } from "@/types/tournament";
+import { PaginatedResult } from "@/types/pagination";
 import toast from "react-hot-toast";
 
 export function useMatches(tournamentId: string) {
@@ -18,7 +19,7 @@ export function useMatches(tournamentId: string) {
     data: matchesData,
     isLoading,
     error,
-  } = useQuery({
+  } = useQuery<PaginatedResult<Match>>({
     queryKey: ["tournament", tournamentId, "matches"],
     queryFn: () => tournamentService.getTournamentMatches(id),
     enabled: !!id,
@@ -78,39 +79,42 @@ export function useMatches(tournamentId: string) {
 
   // Helper functions
   const getMatchesByRound = (round: number) => {
-    return matchesData?.matches?.filter((match) => match.round === round) || [];
+    return (
+      matchesData?.data?.filter((match: Match) => match.round === round) || []
+    );
   };
 
   const getMatchesByStatus = (status: string) => {
     return (
-      matchesData?.matches?.filter((match) => match.status === status) || []
+      matchesData?.data?.filter((match: Match) => match.status === status) || []
     );
   };
 
   const getPlayerMatches = (playerId: number) => {
     return (
-      matchesData?.matches?.filter(
-        (match) =>
+      matchesData?.data?.filter(
+        (match: Match) =>
           match.playerA?.id === playerId || match.playerB?.id === playerId,
       ) || []
     );
   };
 
   const getMatchStats = () => {
-    const matches = matchesData?.matches || [];
+    const matches = matchesData?.data || [];
     return {
       total: matches.length,
-      scheduled: matches.filter((m) => m.status === "scheduled").length,
-      inProgress: matches.filter((m) => m.status === "in_progress").length,
-      finished: matches.filter((m) => m.status === "finished").length,
-      forfeit: matches.filter((m) => m.status === "forfeit").length,
+      scheduled: matches.filter((m: Match) => m.status === "scheduled").length,
+      inProgress: matches.filter((m: Match) => m.status === "in_progress")
+        .length,
+      finished: matches.filter((m: Match) => m.status === "finished").length,
+      forfeit: matches.filter((m: Match) => m.status === "forfeit").length,
     };
   };
 
   return {
     // Données
-    matches: matchesData?.matches || [],
-    total: matchesData?.total || 0,
+    matches: matchesData?.data || [],
+    total: matchesData?.meta?.totalItems || 0,
     isLoading,
     error,
 

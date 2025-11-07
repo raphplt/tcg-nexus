@@ -118,11 +118,9 @@ export default function TournamentAdminPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar - Contrôles et vue d'ensemble */}
           <div className="lg:col-span-1 space-y-6">
             <TournamentControls tournament={tournament} />
 
-            {/* Vue d'ensemble rapide */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -182,7 +180,6 @@ export default function TournamentAdminPage() {
             </Card>
           </div>
 
-          {/* Contenu principal */}
           <div className="lg:col-span-3">
             <Tabs
               defaultValue="overview"
@@ -253,7 +250,9 @@ export default function TournamentAdminPage() {
                             Inscription jusqu'au :
                           </span>
                           <p className="font-medium">
-                            {formatDate(tournament.registrationDeadline)}
+                            {formatDate(
+                              tournament.registrationDeadline ?? undefined,
+                            )}
                           </p>
                         </div>
                       </div>

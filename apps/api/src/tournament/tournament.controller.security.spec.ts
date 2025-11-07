@@ -4,6 +4,12 @@ import { TournamentService } from './tournament.service';
 import { TournamentOrganizerGuard } from './guards/tournament-organizer.guard';
 import { TournamentParticipantGuard } from './guards/tournament-participant.guard';
 import { TournamentOwnerGuard } from './guards/tournament-owner.guard';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { TournamentOrganizer } from './entities/tournament-organizer.entity';
+import { Tournament } from './entities/tournament.entity';
+import { TournamentRegistration } from './entities/tournament-registration.entity';
+import { Player } from '../player/entities/player.entity';
+import { Reflector } from '@nestjs/core';
 
 describe('TournamentController Security', () => {
   let controller: TournamentController;
@@ -41,6 +47,36 @@ describe('TournamentController Security', () => {
           provide: TournamentOwnerGuard,
           useValue: {
             canActivate: jest.fn().mockReturnValue(true)
+          }
+        },
+        {
+          provide: Reflector,
+          useValue: {
+            getAllAndOverride: jest.fn()
+          }
+        },
+        {
+          provide: getRepositoryToken(TournamentOrganizer),
+          useValue: {
+            findOne: jest.fn()
+          }
+        },
+        {
+          provide: getRepositoryToken(Tournament),
+          useValue: {
+            findOne: jest.fn()
+          }
+        },
+        {
+          provide: getRepositoryToken(TournamentRegistration),
+          useValue: {
+            findOne: jest.fn()
+          }
+        },
+        {
+          provide: getRepositoryToken(Player),
+          useValue: {
+            findOne: jest.fn()
           }
         }
       ]

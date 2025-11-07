@@ -349,7 +349,7 @@ export default function PlayerDashboardPage() {
                                 {match.status === "finished" ||
                                 match.status === "forfeit" ? (
                                   <span className="font-medium">
-                                    {user.player.id === match.playerA?.id
+                                    {user?.player?.id === match.playerA?.id
                                       ? `${match.playerAScore}-${match.playerBScore}`
                                       : `${match.playerBScore}-${match.playerAScore}`}
                                   </span>
@@ -363,9 +363,10 @@ export default function PlayerDashboardPage() {
                               <TableCell>
                                 <span className="text-sm">
                                   {formatDate(
-                                    match.finishedAt ||
-                                      match.startedAt ||
-                                      match.scheduledDate,
+                                    (match.finishedAt ??
+                                      match.startedAt ??
+                                      match.scheduledDate) ||
+                                      undefined,
                                   )}
                                 </span>
                               </TableCell>

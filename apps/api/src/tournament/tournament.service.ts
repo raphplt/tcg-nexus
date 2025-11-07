@@ -100,7 +100,7 @@ export class TournamentService {
 
     const organizer = this.organizerRepository.create({
       tournament: savedTournament,
-      userId: user.id,
+      user: user,
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       role: OrganizerRole.OWNER,

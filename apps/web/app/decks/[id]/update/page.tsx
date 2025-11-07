@@ -4,10 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
-import { DeckFormUpdate } from "@app/decks/[id]/update/_components/deckFormUpdate";
 import React, { useEffect, useState } from "react";
 import { authedFetch } from "@utils/fetch";
 import { Skeleton } from "@components/ui/skeleton";
+import DeckFormUpdate from "./_components/deckFormUpdate";
 
 export default function page() {
   const { isAuthenticated } = useAuth();

@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import RatingChart from "./RatingChart";
-import PriceChart from "./PriceChart";
 import { typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
 import {
@@ -14,12 +13,10 @@ import {
   Plus,
   ShoppingCart,
   Zap,
-  Shield,
   Sword,
   Star,
   Calendar,
   User,
-  Package,
   ExternalLink,
 } from "lucide-react";
 
@@ -130,7 +127,7 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <RatingChart cardName={safeRender(card.name)} />
-                <PriceChart cardName={safeRender(card.name)} />
+                {/* <PriceChart cardName={safeRender(card.name)} /> */}
               </div>
             </div>
           </div>
