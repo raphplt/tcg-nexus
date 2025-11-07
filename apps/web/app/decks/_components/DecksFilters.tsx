@@ -12,8 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import MarketplaceFilters from "@app/marketplace/_components/MarketplaceFilters";
-import { DeckFormat } from "@/types/deckFormat";
+import { usePathname } from "next/navigation";
 
 interface Option {
   label: string;
@@ -45,11 +44,11 @@ const DecksFilters = ({
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
   useEffect(() => {
     if (debouncedSearch !== filters.search) {
       setFilters({ search: debouncedSearch });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   useEffect(() => {
@@ -83,13 +82,24 @@ const DecksFilters = ({
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
         {isAuthenticated && (
-          <Button
-            type="button"
-            className="h-10"
-            asChild
-          >
-            <Link href="/decks/create">Créer un deck</Link>
-          </Button>
+          <>
+            <Button
+              type="button"
+              className="h-10"
+              asChild
+            >
+              <Link href="/decks/create">Créer un deck</Link>
+            </Button>
+            {pathname !== "/decks/me" && (
+              <Button
+                type="button"
+                className="h-10"
+                asChild
+              >
+                <Link href="/decks/me">Mes decks</Link>
+              </Button>
+            )}
+          </>
         )}
       </div>
       {showAdvanced && (
