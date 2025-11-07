@@ -68,10 +68,12 @@ export class CollectionController {
 
   @Get(':id/items')
   @Public()
-  @ApiOperation({ summary: 'Récupérer les items d\'une collection avec pagination et recherche' })
+  @ApiOperation({
+    summary: "Récupérer les items d'une collection avec pagination et recherche"
+  })
   @ApiResponse({
     status: 200,
-    description: 'Items de la collection paginés',
+    description: 'Items de la collection paginés'
   })
   @ApiResponse({ status: 404, description: 'Collection non trouvée' })
   async findCollectionItems(

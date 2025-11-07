@@ -159,7 +159,9 @@ export class CollectionService {
       where: { id: collectionId }
     });
     if (!collection) {
-      throw new NotFoundException(`Collection with id ${collectionId} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collectionId} not found`
+      );
     }
 
     const skip = (page - 1) * limit;
@@ -181,10 +183,18 @@ export class CollectionService {
     }
 
     // Trier
-    const validSortBy = ['added_at', 'quantity', 'pokemonCard.name', 'pokemonCard.rarity'];
+    const validSortBy = [
+      'added_at',
+      'quantity',
+      'pokemonCard.name',
+      'pokemonCard.rarity'
+    ];
     const sortField = validSortBy.includes(sortBy) ? sortBy : 'added_at';
-    
-    if (sortField === 'pokemonCard.name' || sortField === 'pokemonCard.rarity') {
+
+    if (
+      sortField === 'pokemonCard.name' ||
+      sortField === 'pokemonCard.rarity'
+    ) {
       queryBuilder.orderBy(sortField, sortOrder);
     } else {
       queryBuilder.orderBy(`item.${sortField}`, sortOrder);
@@ -194,10 +204,7 @@ export class CollectionService {
     const totalItems = await queryBuilder.getCount();
 
     // Appliquer pagination
-    const items = await queryBuilder
-      .skip(skip)
-      .take(limit)
-      .getMany();
+    const items = await queryBuilder.skip(skip).take(limit).getMany();
 
     const totalPages = Math.ceil(totalItems / limit);
 

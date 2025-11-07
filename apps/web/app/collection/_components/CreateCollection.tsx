@@ -75,11 +75,14 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      const collectionData: Omit<Collection, "id" | "createdAt" | "updatedAt" | "items"> = {
+      const collectionData: Omit<
+        Collection,
+        "id" | "created_at" | "updatedAt" | "items" | "user"
+      > = {
         name: values.name,
         description: values.description || "",
         isPublic: values.is_public,
-        userId: user.id
+        userId: user.id,
       };
 
       await collectionService.createCollection(collectionData as Collection);
