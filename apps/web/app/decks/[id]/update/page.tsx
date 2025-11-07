@@ -9,7 +9,7 @@ import { authedFetch } from "@utils/fetch";
 import { Skeleton } from "@components/ui/skeleton";
 import DeckFormUpdate from "./_components/deckFormUpdate";
 
-export default function page() {
+export default function UpdateDeckPage() {
   const { isAuthenticated } = useAuth();
   const [formatList, setFormatList] = useState([]);
   const [formatLoading, setFormatLoading] = useState(true);

@@ -14,7 +14,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,7 +33,7 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
-import { Tournament, StartTournamentOptions } from "@/types/tournament";
+import { Tournament } from "@/types/tournament";
 import { useTournament } from "@/hooks/useTournament";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";

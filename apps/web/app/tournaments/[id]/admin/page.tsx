@@ -10,9 +10,7 @@ import {
   ArrowLeft,
   Users,
   Trophy,
-  Calendar,
   BarChart3,
-  Settings,
   Eye,
   Swords,
 } from "lucide-react";

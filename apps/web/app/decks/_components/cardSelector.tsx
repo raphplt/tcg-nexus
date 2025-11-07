@@ -16,32 +16,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@components/ui/select";
-import CardType from "@/types/card";
-import {pokemonCardService} from "@/services/pokemonCard.service";
+import { pokemonCardService } from "@/services/pokemonCard.service";
+import { PokemonCardType } from "@/types/cardPokemon";
 interface CardComboboxProps {
-  onSelect: (card: CardType, qty: number, role: string) => void;
+  onSelect: (card: PokemonCardType, qty: number, role: string) => void;
   onClose?: () => void;
   resetSignal?: number;
 }
 
 export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState<number | undefined>(undefined);
   const [input, setInput] = useState<string>("");
-  const [cards, setCards] = useState<CardType[]>([]);
-  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const [cards, setCards] = useState<PokemonCardType[]>([]);
+  const [selectedCard, setSelectedCard] = useState<PokemonCardType | null>(
+    null,
+  );
   const [qty, setQty] = useState(1);
   const [role, setRole] = useState("main");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  const listRef = useRef<HTMLDivElement | null>(null);
   const timeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     setSelectedCard(null);
-    setValue(undefined);
     setInput("");
     setCards([]);
     setPage(1);
@@ -57,7 +55,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
           page: page,
           limit: 50,
         });
-        const newCards = res.data as any[]; //TODO typer ca
+        const newCards = res.data;
         setCards((prev) => [...prev, ...newCards]);
         setHasMore(newCards.length === 50);
       } catch (err) {
@@ -79,11 +77,10 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     }
   };
 
-  const handleSelect = (cardId: number) => {
+  const handleSelect = (cardId: string) => {
     const selected = cards.find((c) => c.id === cardId);
     if (selected) {
       setSelectedCard(selected);
-      setValue(cardId);
     }
   };
 
@@ -92,7 +89,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     onSelect(selectedCard, qty, role);
     setSelectedCard(null);
     setQty(1);
-    setValue(undefined);
     setOpen(false);
   };
 
@@ -108,7 +104,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
           "GET",
           `/pokemon-card/search/${encodeURIComponent(val)}`,
         );
-        setCards(res as CardType[]);
+        setCards(res as PokemonCardType[]);
         setHasMore(false);
       } catch (err) {
         console.error("Erreur fetch cartes :", err);
@@ -145,7 +141,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
             <div
               key={card.id}
               className="flex justify-between items-center p-2 cursor-pointer hover:bg-gray-100"
-              onClick={() => handleSelect(card.id as number)}
+              onClick={() => handleSelect(card.id)}
             >
               <span>{card.name}</span>
             </div>

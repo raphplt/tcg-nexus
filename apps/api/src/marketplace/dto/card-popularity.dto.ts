@@ -43,15 +43,15 @@ export class GetTrendingCardsQueryDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }: { value: unknown }) => parseInt(String(value), 10))
   limit?: number;
 
   @IsOptional()
   @IsBoolean()
-  @Transform(({ value }) => {
+  @Transform(({ value }: { value: unknown }): boolean => {
     if (value === 'true' || value === true) return true;
     if (value === 'false' || value === false) return false;
-    return value;
+    return false;
   })
   excludePopular?: boolean;
 }

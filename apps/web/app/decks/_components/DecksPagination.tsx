@@ -8,8 +8,15 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 
+interface PaginationMeta {
+  totalPages: number;
+  currentPage: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 interface DecksPaginationProps {
-  meta: any;
+  meta: PaginationMeta | null;
   page: number;
   setPage: (page: number) => void;
 }

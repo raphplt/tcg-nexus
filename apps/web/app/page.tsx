@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
 import TournamentPreview from "@/components/Home/TournamentPreview";
 import MarketplacePreview from "@/components/Home/MarketplacePreview";
 import StrategicToolsPreview from "@/components/Home/StrategicToolsPreview";
@@ -21,7 +21,7 @@ const HomePage = () => {
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
               Votre plateforme complète pour le trading de cartes Pokémon, les
-              tournois et l'analyse stratégique
+              tournois et l&apos;analyse stratégique
             </p>
           </div>
         </div>

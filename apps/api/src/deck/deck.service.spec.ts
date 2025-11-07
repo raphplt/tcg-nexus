@@ -5,7 +5,6 @@ import { DeckCard } from '../deck-card/entities/deck-card.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { Deck } from './entities/deck.entity';
-import { Repository } from 'typeorm';
 
 describe('DeckService', () => {
   let service: DeckService;

@@ -19,7 +19,6 @@ import React from "react";
 
 type MarketplaceSearchProps = {
   filters: FilterState;
-  setFilters: (filters: FilterState) => void;
   activeFiltersCount: number;
   showFilters: boolean;
   setShowFilters: (showFilters: boolean) => void;
@@ -31,7 +30,6 @@ type MarketplaceSearchProps = {
 
 const MarketplaceSearch = ({
   filters,
-  setFilters,
   activeFiltersCount,
   showFilters,
   setShowFilters,

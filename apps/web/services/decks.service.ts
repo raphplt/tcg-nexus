@@ -1,5 +1,4 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { Listing } from "@/types/listing";
 import { authedFetch, fetcher } from "@/utils/fetch";
 import { Deck } from "@/types/Decks";
 import { DeckCard } from "@/types/deck-cards";

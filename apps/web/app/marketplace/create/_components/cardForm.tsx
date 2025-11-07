@@ -113,7 +113,7 @@ const CardForm = () => {
         data: creationData,
       });
 
-      if (result?.id) {
+      if (result && typeof result === "object" && "id" in result) {
         setResetCardSelect((prev) => prev + 1);
         form.reset();
         toast.success("La vente a été créée avec succès !");

@@ -9,8 +9,6 @@ import { PokemonCardsType } from '../common/enums/pokemonCardsType';
 
 describe('AiService', () => {
   let service: AiService;
-  let deckRepo: Repository<Deck>;
-  let pokemonCardRepo: Repository<PokemonCard>;
 
   const mockDeckRepo = {
     findOne: jest.fn()

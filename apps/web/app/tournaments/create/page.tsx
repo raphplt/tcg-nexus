@@ -34,7 +34,6 @@ import {
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { tournamentService } from "@/services/tournament.service";
-import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateTournamentDto } from "@/types/tournament";
 

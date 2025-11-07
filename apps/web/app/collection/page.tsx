@@ -168,11 +168,10 @@ const Page = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredCollections.map((collection, index) => {
+            {filteredCollections.map((collection) => {
               const createdDate = new Date(collection.createdAt);
               const updatedDate = new Date(collection.updatedAt);
               const isValidCreatedDate = !isNaN(createdDate.getTime());
-              const isValidUpdatedDate = !isNaN(updatedDate.getTime());
 
               return (
                 <Card

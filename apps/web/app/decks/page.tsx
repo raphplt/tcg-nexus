@@ -5,17 +5,14 @@ import DecksFilters, {
 } from "@app/decks/_components/DecksFilters";
 import { useEffect, useState } from "react";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
-import type { PaginatedResult } from "@/types/pagination";
-import type { Listing } from "@/types/listing";
 import DecksTable from "@app/decks/_components/DecksTable";
 import DecksPagination from "@app/decks/_components/DecksPagination";
 import { authedFetch } from "@utils/fetch";
-import { useAuth } from "@/contexts/AuthContext";
 import { Deck } from "@/types/Decks";
 import { decksService } from "@/services/decks.service";
 import { DeckFormat } from "@/types/deckFormat";
-export default function page() {
-  const { user } = useAuth();
+import { PaginatedResult } from "@/types/pagination";
+export default function DecksPage() {
   const [page, setPage] = useState(1);
   const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersType>({
@@ -70,7 +67,7 @@ export default function page() {
       return await authedFetch("GET", "deck-format");
     };
     listFormat().then((res) => {
-      setFormatList(res);
+      setFormatList(res as DeckFormat[]);
     });
   }, []);
 

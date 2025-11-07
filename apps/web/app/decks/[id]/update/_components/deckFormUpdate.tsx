@@ -613,7 +613,7 @@
 import React from "react";
 import { DeckFormProps } from "@/types/formDeck";
 
-const deckFormUpdate = ({ formats }: DeckFormProps) => {
+const deckFormUpdate = (_props: DeckFormProps) => {
   return <div>deckFormUpdate</div>;
 };
 

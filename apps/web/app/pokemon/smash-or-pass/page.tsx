@@ -3,10 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { collectionService } from "@/services/collection.service";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { H1 } from "@/components/Shared/Titles";
 import {

@@ -20,7 +20,7 @@ const Test = () => {
         "/listings",
       );
       setListings(response.data);
-    } catch (err: any) {
+    } catch {
       setError("Erreur lors du chargement des ventes");
     } finally {
       setLoading(false);
@@ -42,7 +42,7 @@ const Test = () => {
       };
       await authedFetch("POST", "/listings", { data: testData });
       await fetchListings();
-    } catch (err: any) {
+    } catch {
       setError("Erreur lors de la création de la vente");
     } finally {
       setLoading(false);

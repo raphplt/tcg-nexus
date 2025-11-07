@@ -2,11 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonCardService } from './pokemon-card.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PokemonCard } from './entities/pokemon-card.entity';
-import { Repository } from 'typeorm';
 
 describe('PokemonCardService', () => {
   let service: PokemonCardService;
-  let repository: Repository<PokemonCard>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -41,9 +39,6 @@ describe('PokemonCardService', () => {
     }).compile();
 
     service = module.get<PokemonCardService>(PokemonCardService);
-    repository = module.get<Repository<PokemonCard>>(
-      getRepositoryToken(PokemonCard)
-    );
   });
 
   it('should be defined', () => {

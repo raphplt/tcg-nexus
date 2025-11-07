@@ -24,9 +24,6 @@ import {
   Trophy,
   Crown,
   Medal,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Eye,
   BarChart3,
 } from "lucide-react";

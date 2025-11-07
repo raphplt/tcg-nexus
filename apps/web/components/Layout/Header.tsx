@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, ShoppingCart } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { usePathname } from "next/navigation";
 import { FULLSCREEN_PATHS } from "@/utils/constants";

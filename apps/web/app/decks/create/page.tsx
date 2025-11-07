@@ -15,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import { authedFetch } from "@utils/fetch";
 import { Skeleton } from "@components/ui/skeleton";
 
-export default function page() {
+export default function CreateDeckPage() {
   const { isAuthenticated } = useAuth();
   const [formatList, setFormatList] = useState([]);
   const [formatLoading, setFormatLoading] = useState(true);

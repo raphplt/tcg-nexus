@@ -71,10 +71,10 @@ const LoginPage = () => {
     try {
       setError(null);
       await login({ ...values, rememberMe });
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage =
-        err.response?.data?.message ||
-        "Une erreur est survenue lors de la connexion";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Une erreur est survenue lors de la connexion";
       setError(errorMessage);
     }
   };
@@ -83,10 +83,10 @@ const LoginPage = () => {
     try {
       setError(null);
       await login({ email, password, rememberMe });
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMessage =
-        err.response?.data?.message ||
-        "Une erreur est survenue lors de la connexion";
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Une erreur est survenue lors de la connexion";
       setError(errorMessage);
     }
   };

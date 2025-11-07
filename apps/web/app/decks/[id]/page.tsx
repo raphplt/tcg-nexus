@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@components/ui/badge";
 import Image from "next/image";
 import { Skeleton } from "@components/ui/skeleton";
-export default function page() {
+export default function DeckPage() {
   const [deck, setDeck] = useState<null | Deck>(null);
   const [deckLoading, setDeckLoading] = useState(true);
   const { id } = useParams();
@@ -19,7 +19,8 @@ export default function page() {
         if (response) {
           setDeck(response);
         }
-      } catch (e) {
+      } catch {
+        // Error handled silently
       } finally {
         setDeckLoading(false);
       }

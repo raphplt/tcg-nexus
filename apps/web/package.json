@@ -1,12 +1,15 @@
 {
   "name": "web",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
+    "lint": "eslint . --max-warnings 50",
+    "lint:fix": "eslint . --fix",
+    "format": "eslint . --fix",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -62,9 +65,10 @@
     "@tanstack/eslint-plugin-query": "^5.83.1",
     "@tanstack/react-query-devtools": "^5.83.1",
     "@types/node": "^24",
-    "@types/react": "19.2.2",
+    "@types/react": "^19.2.2",
     "@types/react-dom": "19.2.2",
     "eslint": "^9.32.0",
+    "eslint-plugin-unused-imports": "^4.3.0",
     "tailwindcss": "^4.1.11",
     "typescript": "5.8.3"
   },

@@ -30,7 +30,10 @@ export const secureApi = axios.create({
  * Utilisation :
  * const { data } = useQuery({ queryKey: ['tournaments'], queryFn: () => fetcher('/tournaments') })
  */
-export async function fetcher<T = any>(url: string, config?: any): Promise<T> {
+export async function fetcher<T = unknown>(
+  url: string,
+  config?: Record<string, unknown>,
+): Promise<T> {
   const response = await secureApi.get<T>(url, {
     ...config,
     withCredentials: true,
@@ -49,14 +52,14 @@ export async function fetcher<T = any>(url: string, config?: any): Promise<T> {
  * Utilisation :
  * await authedFetch('POST', '/tournaments', { data: { ... } })
  */
-export async function authedFetch<T = any>(
+export async function authedFetch<T = unknown>(
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   url: string,
   options: {
-    data?: any;
-    params?: any;
-    headers?: any;
-    [key: string]: any;
+    data?: unknown;
+    params?: Record<string, unknown>;
+    headers?: Record<string, string>;
+    [key: string]: unknown;
   } = {},
 ): Promise<T> {
   const config = {

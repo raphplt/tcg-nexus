@@ -84,18 +84,18 @@ describe('MarketplaceService', () => {
 
     it('allows owner', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
-      repo.save.mockImplementation(async (l: any) => l);
+      repo.save.mockImplementation(async (l: Listing) => l);
       const res = await service.update(10, { price: 200 } as any, owner);
       expect(res).toBeDefined();
-      expect(repo.save).toHaveBeenCalled();
+      expect(jest.mocked(repo.save)).toHaveBeenCalled();
     });
 
     it('allows admin', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
-      repo.save.mockImplementation(async (l: any) => l);
+      repo.save.mockImplementation(async (l: Listing) => l);
       const res = await service.update(10, { price: 300 } as any, admin);
       expect(res).toBeDefined();
-      expect(repo.save).toHaveBeenCalled();
+      expect(jest.mocked(repo.save)).toHaveBeenCalled();
     });
   });
 
@@ -122,13 +122,13 @@ describe('MarketplaceService', () => {
     it('allows owner', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
       await service.delete(10, owner);
-      expect(repo.delete).toHaveBeenCalledWith(10);
+      expect(jest.mocked(repo.delete)).toHaveBeenCalledWith(10);
     });
 
     it('allows admin', async () => {
       repo.findOne.mockResolvedValue({ ...listing } as any);
       await service.delete(10, admin);
-      expect(repo.delete).toHaveBeenCalledWith(10);
+      expect(jest.mocked(repo.delete)).toHaveBeenCalledWith(10);
     });
   });
 });

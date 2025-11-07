@@ -29,6 +29,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
+import type { Collection } from "@/types/collection";
 
 const createCollectionSchema = z.object({
   name: z
@@ -74,16 +75,14 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
     setIsSubmitting(true);
 
     try {
-      const collectionData = {
+      const collectionData: Omit<Collection, "id" | "createdAt" | "updatedAt" | "items"> = {
         name: values.name,
         description: values.description || "",
         isPublic: values.is_public,
         userId: user.id
       };
 
-      const response = await collectionService.createCollection(
-        collectionData as any,
-      );
+      await collectionService.createCollection(collectionData as Collection);
 
       toast.success("Collection créée avec succès !");
 
@@ -93,7 +92,7 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
       if (onCollectionCreated) {
         onCollectionCreated();
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la création de la collection");
     } finally {
       setIsSubmitting(false);
