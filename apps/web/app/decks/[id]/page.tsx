@@ -14,17 +14,11 @@ export default function DeckPage() {
   useEffect(() => {
     const loadDeck = async () => {
       setDeckLoading(true);
-      try {
-        const response = await decksService.getDeckById(id as string);
-        if (response) {
-          setDeck(response);
-        }
-      } catch {
-        // Error handled silently
-      } finally {
-        setDeckLoading(false);
+      const response = await decksService.getDeckById(id as string);
+      if (response) {
+        setDeck(response as Deck);
       }
-    };
+    }
     loadDeck();
   }, [id]);
 

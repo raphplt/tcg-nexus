@@ -31,6 +31,7 @@ import { FormSchema } from "./utils";
 import { DeckFormProps } from "@/types/formDeck";
 import CardType from "@/types/card";
 import {Badge} from "@components/ui/badge";
+import { PokemonCardType } from "@/types/cardPokemon";
 
 type DeckFormValues = z.input<typeof FormSchema>;
 
@@ -71,9 +72,9 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     }
     return returnVal;
   };
-  const addCard = (card: CardType, qty: number, role: string) => {
+  const addCard = (card: PokemonCardType, qty: number, role: string) => {
     const currentCards = form.getValues("cards") || [];
-    const cardId = card.cardId ?? String(card.id ?? "");
+    const cardId = card.id;
     const existing = form
       .getValues("cards")
       .find((c) => c.cardId === cardId && c.role === role);
@@ -308,7 +309,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
           </div>
           {showCardModal && (
             <CardSelector
-              onSelect={(card: CardType, qty: number, role: string) => {
+              onSelect={(card: PokemonCardType, qty: number, role: string) => {
                 addCard(card, qty, role);
                 setShowCardModal(false);
               }}
