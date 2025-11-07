@@ -28,7 +28,6 @@ interface PokemonCardDetailProps {
 }
 
 const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
-  // Fix URL typo: tcgdx.net -> tcgdex.net
   const fixImageUrl = (url: string) => {
     return url.replace("tcgdx.net", "tcgdex.net");
   };
@@ -44,18 +43,6 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
       return JSON.stringify(value);
     }
     return "";
-  };
-
-  const getRarityColor = (rarity: string) => {
-    const colors: Record<string, string> = {
-      Commun: "bg-gray-500",
-      Peu: "bg-green-500",
-      Rare: "bg-blue-500",
-      "Rare Holo": "bg-purple-500",
-      "Rare Ultra": "bg-yellow-500",
-      "Rare Secret": "bg-red-500",
-    };
-    return colors[rarity] || "bg-gray-500";
   };
 
   return (
@@ -84,16 +71,6 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
             <div className="space-y-6">
               <div>
                 <h1 className="text-4xl font-bold mb-2 flex items-center gap-2">
-                  {Array.isArray(card.types) &&
-                    card.types.map((type) => (
-                      <Image
-                        key={type}
-                        src={typeToImage[slugify(type.toLowerCase())] || ""}
-                        alt={type}
-                        width={32}
-                        height={32}
-                      />
-                    ))}
                   {safeRender(card.name)}
                 </h1>
                 <div className="flex flex-wrap gap-2 mb-4">

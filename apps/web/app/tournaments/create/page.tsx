@@ -123,7 +123,6 @@ export default function CreateTournamentPage() {
         minPlayers: values.minPlayers,
       };
 
-      console.log("Payload envoyé au service:", payload);
       await tournamentService.create(payload);
       setSuccess("Tournoi créé avec succès !");
       setTimeout(() => {

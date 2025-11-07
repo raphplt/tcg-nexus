@@ -13,9 +13,9 @@ import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
 import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { UserRole } from 'src/user/entities/user.entity';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('pokemon-card')
 @Controller('pokemon-card')

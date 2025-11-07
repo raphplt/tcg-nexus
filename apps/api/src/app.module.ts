@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -27,10 +28,12 @@ import { CollectionModule } from './collection/collection.module';
 import { CollectionItemModule } from './collection-item/collection-item.module';
 import { CardStateModule } from './card-state/card-state.module';
 import { AiModule } from './ai/ai.module';
+import { UserCartModule } from './user_cart/user_cart.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -70,7 +73,8 @@ import { AiModule } from './ai/ai.module';
     CollectionModule,
     CollectionItemModule,
     CardStateModule,
-    AiModule
+    AiModule,
+    UserCartModule
   ],
   controllers: [AppController],
   providers: [

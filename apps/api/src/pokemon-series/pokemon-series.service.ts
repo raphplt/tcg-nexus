@@ -19,9 +19,18 @@ export class PokemonSeriesService {
   }
 
   async findAll(): Promise<PokemonSerie[]> {
-    return this.pokemonSeriesRepository.find({
-      select: ['id', 'name', 'logo']
-    });
+    return this.pokemonSeriesRepository
+      .createQueryBuilder('serie')
+      .select(['serie.id', 'serie.name', 'serie.logo'])
+      .leftJoin('serie.sets', 'set')
+      .groupBy('serie.id')
+      .addGroupBy('serie.name')
+      .addGroupBy('serie.logo')
+      .addSelect('MAX(set.releaseDate)', 'maxReleaseDate')
+      .orderBy('MAX(set.releaseDate)', 'DESC')
+      .addOrderBy('serie.name', 'ASC')
+      .getRawAndEntities()
+      .then((result) => result.entities);
   }
 
   async findOne(id: number): Promise<PokemonSerie | null> {

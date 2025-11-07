@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsEnum
 } from 'class-validator';
-import { UserRole } from '../entities/user.entity';
+import { UserRole } from 'src/common/enums/user';
 
 export class CreateUserDto {
   @IsEmail()

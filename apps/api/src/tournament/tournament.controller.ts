@@ -23,7 +23,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../user/entities/user.entity';
 import {
   TournamentOrganizerGuard,
   TournamentParticipantGuard,
@@ -34,6 +33,7 @@ import { OrganizerRole } from './entities/tournament-organizer.entity';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
 import { TournamentStatus } from './entities';
+import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('tournaments')
 @ApiBearerAuth()

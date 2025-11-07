@@ -10,10 +10,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deck } from './entities/deck.entity';
 import { DeckCard } from '../deck-card/entities/deck-card.entity';
-import { User, UserRole } from '../user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { DeckCardRole } from '../common/enums/deckCardRole';
+import { UserRole } from 'src/common/enums/user';
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;

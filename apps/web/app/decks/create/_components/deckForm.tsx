@@ -31,15 +31,9 @@ import { FormSchema } from "./utils";
 import { DeckFormProps } from "@/types/formDeck";
 import CardType from "@/types/card";
 import {Badge} from "@components/ui/badge";
-import { error } from "console";
 
-// Use the schema's input type so optional/defaulted fields (like isPublic) match
-// the resolver's expected shape. z.input reflects the pre-default input type
-// which keeps react-hook-form resolver generics compatible.
 type DeckFormValues = z.input<typeof FormSchema>;
 
-// Local type for cards added in the form UI. We don't need the full
-// server-side DeckCard shape here (which includes a `deck` reference).
 type AddedCard = {
   id?: number;
   cardId?: string;
@@ -79,7 +73,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
   };
   const addCard = (card: CardType, qty: number, role: string) => {
     const currentCards = form.getValues("cards") || [];
-    // CardType uses `cardId` for the UUID string, ensure we use that
     const cardId = card.cardId ?? String(card.id ?? "");
     const existing = form
       .getValues("cards")
@@ -134,7 +127,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
       "cards",
       form.getValues("cards").filter((c) => c.cardId !== cardId),
     );
-    // Update local map as well
     setCardsMap((prev) => prev.filter((c) => c.cardId !== cardId));
   };
 
@@ -143,8 +135,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     setLoading(true);
 
     try {
-      // Prefer the submitted form values, but if for some reason the form
-      // `cards` array is empty (we keep a local `cardsMap`), fall back to it.
       const sourceCards =
         data.cards && data.cards.length > 0
           ? data.cards
@@ -157,7 +147,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
       const cardsPayload = sourceCards
         .filter((c) => !!c.cardId)
         .map((c) => ({
-          // Backend DTO expects only { cardId, qty, role }
           cardId: String(c.cardId),
           qty: c.qty,
           role: c.role,
@@ -172,16 +161,12 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
           "Form submitted with empty data.cards — falling back to local cardsMap",
         );
       }
-      console.log("cardsPayload", cardsPayload);
       const creationData = {
         deckName: data.name,
         formatId: data.formatId,
-        // Coerce to boolean to satisfy service param (default is false)
         isPublic: !!data.isPublic,
         cards: cardsPayload,
       };
-      console.log("creationData", creationData);
-      console.log();
       const response = await decksService.create(creationData);
       if (response) {
         toast.success("Deck créé avec succès !");
@@ -193,13 +178,11 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
         });
       }
     } catch (err: any) {
-      // Log full axios response body if present (NestJS validation errors show here)
       console.error("Deck creation error:", err);
       if (err?.response?.data) {
         console.error("Backend response:", err.response.data);
       }
 
-      // Try to display a human-friendly message extracted from backend response
       const backendMessage = err?.response?.data?.message;
       let toastMsg = "Erreur lors de la création du deck";
       if (backendMessage) {
@@ -222,7 +205,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-4"
         >
-          {/* Nom */}
           <FormField
             control={form.control}
             name="name"
@@ -240,7 +222,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
             )}
           />
 
-          {/* Format */}
           <FormField
             control={form.control}
             name="formatId"
@@ -274,7 +255,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
             )}
           />
 
-          {/* Checkbox isPublic */}
           <FormField
             control={form.control}
             name="isPublic"
@@ -291,7 +271,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
             )}
           />
 
-          {/* Liste des cartes */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <FormLabel>Cartes ajoutées</FormLabel>
@@ -327,7 +306,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
               ))}
             </ul>
           </div>
-          {/* Modal pour ajouter les cartes */}
           {showCardModal && (
             <CardSelector
               onSelect={(card: CardType, qty: number, role: string) => {

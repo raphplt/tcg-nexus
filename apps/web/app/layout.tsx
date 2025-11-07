@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
+import { Lato } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import ClientProviders from "@/components/ClientProviders";
 import LayoutContent from "@/components/Layout/LayoutContent";
+
+const lato = Lato({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-lato",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "TCG Nexus",
@@ -19,7 +27,7 @@ export default function RootLayout({
       lang="fr"
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className={`${lato.variable} antialiased`}>
         <ThemeProvider>
           <ClientProviders>
             <LayoutContent>{children}</LayoutContent>

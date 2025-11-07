@@ -65,7 +65,6 @@ export class CollectionController {
   })
   @ApiResponse({ status: 404, description: 'Collection non trouvée' })
   async findOneById(@Param('id') id: string): Promise<Collection> {
-    console.log('Fetching collection with ID:', id);
     return this.collectionService.findOneById(id);
   }
 

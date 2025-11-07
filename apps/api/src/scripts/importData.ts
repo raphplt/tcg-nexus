@@ -70,6 +70,14 @@ async function bootstrap() {
     await seedService.seedListings();
     logSuccess('Listings créés !');
 
+    logStep('Création des événements de cartes...');
+    await seedService.seedCardEvents();
+    logSuccess('Événements de cartes créés !');
+
+    logStep('Création des métriques de popularité...');
+    await seedService.seedCardPopularityMetrics();
+    logSuccess('Métriques de popularité créées !');
+
     logStep('Création des decks de test...');
     await seedService.seedDecks();
     logSuccess('Decks créés !');
@@ -77,9 +85,7 @@ async function bootstrap() {
     logStep("Création d'un tournoi complet avec seeding...");
     const completeTournament = await seedService.seedCompleteTournament(
       'Tournoi de Démonstration avec Seeding',
-      8 // 8 joueurs
-      // TournamentType.SINGLE_ELIMINATION, // Type par défaut
-      // SeedingMethod.RANKING // Méthode par défaut
+      8
     );
     logSuccess(
       `Tournoi complet créé: ${completeTournament.name} (ID: ${completeTournament.id})`

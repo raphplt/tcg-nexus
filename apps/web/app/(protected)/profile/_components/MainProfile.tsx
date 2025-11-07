@@ -113,7 +113,6 @@ const MainProfile = () => {
 
   const handleSave = () => {
     // TODO: Implémenter la sauvegarde des modifications
-    console.log("Sauvegarde des modifications:", editForm);
     setIsEditing(false);
   };
 

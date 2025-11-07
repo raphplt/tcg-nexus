@@ -1,15 +1,21 @@
+import { Player } from "./tournament";
+
 export interface User {
   avatarUrl: string;
   id: number;
   email: string;
   firstName: string;
   lastName: string;
-  role: "admin" | "moderator" | "user";
+  role: UserRole;
   isPro: boolean;
-  player?: {
-    id: number;
-    name: string;
-  };
+  player?: Player;
+  createdAt: Date;
+}
+
+export enum UserRole {
+  ADMIN = "admin",
+  USER = "user",
+  MODERATOR = "moderator",
 }
 
 export interface AuthTokens {

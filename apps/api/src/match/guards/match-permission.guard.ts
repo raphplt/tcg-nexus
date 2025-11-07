@@ -9,8 +9,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Match } from '../entities/match.entity';
 import { TournamentOrganizer } from '../../tournament/entities/tournament-organizer.entity';
-import { User, UserRole } from '../../user/entities/user.entity';
+import { User } from '../../user/entities/user.entity';
 import { Request } from 'express';
+import { UserRole } from 'src/common/enums/user';
 
 @Injectable()
 export class MatchPermissionGuard implements CanActivate {
@@ -24,7 +25,7 @@ export class MatchPermissionGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const user: User = request.user as User;
-    const matchId = parseInt(request.params?.id as string);
+    const matchId = parseInt(request.params?.id);
 
     if (!user || !matchId) {
       throw new ForbiddenException('Accès non autorisé');

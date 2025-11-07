@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "./SearchBar";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -15,14 +15,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, ShoppingCart } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { usePathname } from "next/navigation";
 import { FULLSCREEN_PATHS } from "@/utils/constants";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
+import CartDropdown from "../Marketplace/CartDropdown";
 
 const Header = () => {
+  const [mounted, setMounted] = useState(false);
   const { isAuthenticated, user, logout, isLoading } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const currentPath = usePathname();
 
@@ -32,12 +38,12 @@ const Header = () => {
     return null;
   }
 
-  let linkStyle;
+  const isAuthLoading = !mounted || isLoading;
+  const showAuthButtons = !isAuthLoading && !isAuthenticated;
+  const showUserMenu = !isAuthLoading && isAuthenticated && user;
+
   return (
-    <header
-      className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b
-    border-border shadow-sm flex items-center px-4 sm:px-8 z-50"
-    >
+    <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center px-4 sm:px-8 z-50">
       <Link
         href="/"
         className="flex-shrink-0 mr-4"
@@ -87,12 +93,11 @@ const Header = () => {
           <li className="hidden lg:block">
             <Link
               href="/decks"
-              className={linkStyle}
+              className="link-style"
             >
               Decks
             </Link>
           </li>
-
           <li>
             <Link
               href="/strategy"
@@ -102,92 +107,26 @@ const Header = () => {
             </Link>
           </li>
 
-          {!isAuthenticated && (
+          {showUserMenu && (
             <li>
-              <ThemeToggle />
+              <Link
+                href="/collection"
+                className="link-style"
+              >
+                Collection
+              </Link>
             </li>
           )}
-          {isLoading ? (
+
+          <li>
+            <ThemeToggle />
+          </li>
+
+          {isAuthLoading ? (
             <li>
               <Skeleton className="h-8 w-8 rounded-full" />
             </li>
-          ) : isAuthenticated && user ? (
-            <>
-              <li>
-                <Link
-                  href="/collection"
-                  className="link-style"
-                >
-                  Collection
-                </Link>
-              </li>
-
-              {/* <li>
-                <Link
-                  href="/dashboard"
-                  className="link-style"
-                >
-                  Tableau de bord
-                </Link>
-              </li> */}
-              <li>
-                <ThemeToggle />
-              </li>
-              <li>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-8 w-8 rounded-full p-0"
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage
-                          src={user.avatarUrl || ""}
-                          alt={`${user.firstName} ${user.lastName}`}
-                        />
-                        <AvatarFallback>
-                          {getUserInitials(user.firstName, user.lastName)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent
-                    className="w-56"
-                    align="end"
-                    forceMount
-                  >
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium">
-                          {getUserDisplayName(user.firstName, user.lastName)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/profile"
-                        className="flex items-center"
-                      >
-                        <User className="mr-2 h-4 w-4" /> Profil
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={logout}
-                      className="flex items-center cursor-pointer"
-                    >
-                      <LogOut className="mr-2 h-4 w-4" /> Se déconnecter
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            </>
-          ) : (
+          ) : showAuthButtons ? (
             <>
               <li>
                 <Button asChild>
@@ -199,11 +138,66 @@ const Header = () => {
                   asChild
                   variant="secondary"
                 >
-                  <Link href="/auth/register">S’inscrire</Link>
+                  <Link href="/auth/register">S'inscrire</Link>
                 </Button>
               </li>
             </>
-          )}
+          ) : showUserMenu ? (
+            <li className="flex items-center space-x-2">
+              <CartDropdown />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 rounded-full p-0"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={user.avatarUrl || ""}
+                        alt={`${user.firstName} ${user.lastName}`}
+                      />
+                      <AvatarFallback>
+                        {getUserInitials(user.firstName, user.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56"
+                  align="end"
+                  forceMount
+                >
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">
+                        {getUserDisplayName(user.firstName, user.lastName)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/profile"
+                      className="flex items-center"
+                    >
+                      <User className="mr-2 h-4 w-4" /> Profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="flex items-center cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" /> Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </li>
+          ) : null}
         </ul>
       </nav>
     </header>
