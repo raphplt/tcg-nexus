@@ -14,9 +14,10 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { H1 } from "@/components/Shared/Titles";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Heart, Eye, Calendar, Users } from "lucide-react";
+import { Search, Plus, Heart, Eye, Users, Lock } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import CreateCollection from "./_components/CreateCollection";
+import Image from "next/image";
 
 const Page = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -70,7 +71,7 @@ const Page = () => {
     }
   };
 
-  const onCreateCollection = () => {};
+  console.log("filteredCollections", filteredCollections);
 
   if (loading) {
     return (
@@ -96,7 +97,6 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="text-center mb-12">
           <H1
             className="mb-4"
@@ -154,24 +154,20 @@ const Page = () => {
                   ? "Essayez avec d'autres mots-clés"
                   : "Créez votre première collection pour commencer"}
               </p>
-              {!searchQuery && (
-                <Button
-                  variant="default"
-                  onClick={onCreateCollection}
-                  className="font-semibold"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Créer ma première collection
-                </Button>
-              )}
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCollections.map((collection) => {
-              const createdDate = new Date(collection.createdAt);
-              const updatedDate = new Date(collection.updatedAt);
-              const isValidCreatedDate = !isNaN(createdDate.getTime());
+              const image1 = collection.items[0]?.pokemonCard?.image
+                ? collection.items[0]?.pokemonCard?.image + "/high.png"
+                : "/images/carte-pokemon-dos.jpg";
+              const image2 = collection.items[1]?.pokemonCard?.image
+                ? collection.items[1]?.pokemonCard?.image + "/high.png"
+                : "/images/carte-pokemon-dos.jpg";
+              const image3 = collection.items[2]?.pokemonCard?.image
+                ? collection.items[2]?.pokemonCard?.image + "/high.png"
+                : "/images/carte-pokemon-dos.jpg";
 
               return (
                 <Card
@@ -180,17 +176,52 @@ const Page = () => {
                   onClick={() => router.push(`/collection/${collection.id}`)}
                 >
                   <div className="collection-card-preview relative h-32 bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
-                    <div className="flex gap-2 justify-center items-center h-full">
-                      <div className="card-preview-placeholder w-12 h-16 bg-primary/20 rounded border-2 border-dashed border-primary/40 flex items-center justify-center">
-                        <Heart className="h-4 w-4 text-primary/60" />
+                    {collection.items.length > 0 ? (
+                      <div className="flex gap-2 justify-center items-center h-full">
+                        <Image
+                          src={image1}
+                          alt={
+                            collection.items[0]?.pokemonCard?.name ||
+                            "Carte Pokémon"
+                          }
+                          width={100}
+                          height={100}
+                          className="object-contain rounded-lg shadow-lg w-16 h-20"
+                        />
+                        <Image
+                          src={image2}
+                          alt={
+                            collection.items[1]?.pokemonCard?.name ||
+                            "Carte Pokémon"
+                          }
+                          width={100}
+                          height={100}
+                          className="object-contain rounded-lg shadow-lg w-16 h-20"
+                        />
+                        <Image
+                          src={image3}
+                          alt={
+                            collection.items[2]?.pokemonCard?.name ||
+                            "Carte Pokémon"
+                          }
+                          width={100}
+                          height={100}
+                          className="object-contain rounded-lg shadow-lg w-16 h-20"
+                        />
                       </div>
-                      <div className="card-preview-placeholder w-12 h-16 bg-secondary/20 rounded border-2 border-dashed border-secondary/40 flex items-center justify-center">
-                        <Heart className="h-4 w-4 text-secondary/60" />
+                    ) : (
+                      <div className="flex gap-2 justify-center items-center h-full">
+                        <div className="card-preview-placeholder w-12 h-16 bg-primary/20 rounded border-2 border-dashed border-primary/40 flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-primary/60" />
+                        </div>
+                        <div className="card-preview-placeholder w-12 h-16 bg-secondary/20 rounded border-2 border-dashed border-secondary/40 flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-secondary/60" />
+                        </div>
+                        <div className="card-preview-placeholder w-12 h-16 bg-accent/20 rounded border-2 border-dashed border-accent/40 flex items-center justify-center">
+                          <Heart className="h-4 w-4 text-accent/60" />
+                        </div>
                       </div>
-                      <div className="card-preview-placeholder w-12 h-16 bg-accent/20 rounded border-2 border-dashed border-accent/40 flex items-center justify-center">
-                        <Heart className="h-4 w-4 text-accent/60" />
-                      </div>
-                    </div>
+                    )}
                     <div className="absolute top-2 right-2">
                       <Badge
                         variant={collection.isPublic ? "default" : "secondary"}
@@ -215,17 +246,12 @@ const Page = () => {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>
-                          Créé le{" "}
-                          {isValidCreatedDate
-                            ? createdDate.toLocaleDateString("fr-FR")
-                            : "N/A"}
-                        </span>
+                        <Lock className="h-3 w-3 mr-1" />
+                        <span>{collection.isPublic ? "Public" : "Privé"}</span>
                       </div>
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Users className="h-3 w-3 mr-1" />
-                        <span>~0 cartes</span>
+                        <span>~{collection.items.length} cartes</span>
                       </div>
                     </div>
 

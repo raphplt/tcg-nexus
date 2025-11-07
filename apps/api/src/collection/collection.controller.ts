@@ -43,6 +43,17 @@ export class CollectionController {
     return this.collectionService.findAll();
   }
 
+  @Get('paginated')
+  @Public()
+  @ApiOperation({ summary: 'Récupérer les collections avec pagination' })
+  @ApiResponse({ status: 200, description: 'Collections paginées' })
+  async findAllPaginated(
+    @Query('page') page: number,
+    @Query('limit') limit: number
+  ) {
+    return this.collectionService.findAllPaginated(page, limit);
+  }
+
   @Get('user/:userId')
   @Public()
   @ApiOperation({ summary: "Récupérer les collections d'un utilisateur" })
@@ -53,6 +64,36 @@ export class CollectionController {
   })
   async findByUserId(@Param('userId') userId: string) {
     return this.collectionService.findByUserId(userId);
+  }
+
+  @Get(':id/items')
+  @Public()
+  @ApiOperation({
+    summary: "Récupérer les items d'une collection avec pagination et recherche"
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Items de la collection paginés'
+  })
+  @ApiResponse({ status: 404, description: 'Collection non trouvée' })
+  async findCollectionItems(
+    @Param('id') id: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: 'ASC' | 'DESC'
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    return this.collectionService.findCollectionItemsPaginated(
+      id,
+      pageNumber,
+      limitNumber,
+      search,
+      sortBy,
+      sortOrder
+    );
   }
 
   @Get(':id')
@@ -66,17 +107,6 @@ export class CollectionController {
   @ApiResponse({ status: 404, description: 'Collection non trouvée' })
   async findOneById(@Param('id') id: string): Promise<Collection> {
     return this.collectionService.findOneById(id);
-  }
-
-  @Get('paginated')
-  @Public()
-  @ApiOperation({ summary: 'Récupérer les collections avec pagination' })
-  @ApiResponse({ status: 200, description: 'Collections paginées' })
-  async findAllPaginated(
-    @Query('page') page: number,
-    @Query('limit') limit: number
-  ) {
-    return this.collectionService.findAllPaginated(page, limit);
   }
 
   @Post()

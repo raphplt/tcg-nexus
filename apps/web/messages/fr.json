@@ -7,6 +7,46 @@
     "sellers": "Vendeurs",
     "sellerDetail": "Profil vendeur",
     "create": "Créer une vente"
+  },
+  "collection": {
+    "detail": {
+      "loading": "Chargement...",
+      "notFound": "Collection introuvable.",
+      "noDescription": "Aucune description",
+      "public": "Public",
+      "private": "Privé",
+      "cards": "carte",
+      "cardsPlural": "cartes",
+      "createdAt": "Créée le",
+      "owner": "Propriétaire",
+      "searchPlaceholder": "Rechercher une carte (nom, rareté, set)...",
+      "sortBy": "Trier par",
+      "sortByAddedAt": "Date d'ajout",
+      "sortByName": "Nom",
+      "sortByRarity": "Rareté",
+      "sortByQuantity": "Quantité",
+      "order": "Ordre",
+      "orderAscending": "Croissant",
+      "orderDescending": "Décroissant",
+      "loadingCards": "Chargement des cartes...",
+      "noCards": "Aucune carte dans cette collection",
+      "noCardsFound": "Aucune carte trouvée",
+      "tryOtherKeywords": "Essayez avec d'autres mots-clés",
+      "startAddingCards": "Commencez par ajouter des cartes à votre collection",
+      "image": "Image",
+      "name": "Nom",
+      "set": "Set",
+      "quantity": "Quantité",
+      "state": "État",
+      "rarity": "Rareté",
+      "hp": "PV",
+      "types": "Types",
+      "actions": "Actions",
+      "viewDetails": "Voir les détails",
+      "page": "Page",
+      "of": "sur",
+      "unknown": "?"
+    }
   }
 }
 
