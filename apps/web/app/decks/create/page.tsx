@@ -55,7 +55,7 @@ export default function page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-      <Card className="mx-auto max-w-3xl">
+      <Card className="mx-auto max-w-8xl">
         <CardHeader>
           <CardTitle>Créer un deck</CardTitle>
           <CardDescription>

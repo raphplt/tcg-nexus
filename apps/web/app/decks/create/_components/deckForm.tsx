@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,8 +31,7 @@ import { decksService } from "@/services/decks.service";
 import { FormSchema } from "./utils";
 import { DeckFormProps } from "@/types/formDeck";
 import CardType from "@/types/card";
-import {Badge} from "@components/ui/badge";
-import { error } from "console";
+import { Badge } from "@components/ui/badge";
 
 // Use the schema's input type so optional/defaulted fields (like isPublic) match
 // the resolver's expected shape. z.input reflects the pre-default input type
@@ -47,6 +47,7 @@ type AddedCard = {
   qty: number;
   role: string;
   card?: CardType;
+  image?: string;
 };
 
 export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
@@ -111,6 +112,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
               name: card.name,
               qty: qty,
               role: role,
+              image: card.image,
             },
           ];
         }
@@ -124,10 +126,13 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
           name: card.name,
           qty: qty,
           role: role,
+          image: card.image,
         },
       ]);
     }
   };
+
+  console.log("cardsMap", cardsMap);
 
   const removeCard = (cardId?: string) => {
     form.setValue(
@@ -302,30 +307,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
                 Ajouter des cartes
               </Button>
             </div>
-            <ul className="space-y-1">
-              {cardsMap.map((c) => (
-                <li
-                  key={`${c.cardId}-${c.role}`}
-                  className="flex justify-between items-center border p-2 rounded"
-                >
-                  <div>
-                    <span>
-                      {c.name} x{c.qty}
-                    </span>
-                    <Badge variant="outline">{roleReplacer(c.role)}</Badge>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => removeCard(c.cardId)}
-                    type="button"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </li>
-              ))}
-            </ul>
           </div>
           {/* Modal pour ajouter les cartes */}
           {showCardModal && (
@@ -352,6 +333,42 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
             >
               {loading ? <Loader2 className="animate-spin" /> : "Créer le deck"}
             </Button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            {cardsMap.map((c) => (
+              <div
+                key={`${c.cardId}-${c.role}`}
+                className="flex flex-col items-center"
+              >
+                {c.image ? (
+                  <Image
+                    src={c.image + "/low.png"}
+                    alt={c.name || "Card"}
+                    width={160}
+                    height={220}
+                    className="rounded-lg shadow-md hover:scale-105 transition-transform duration-200"
+                  />
+                ) : (
+                  <div className="w-[160px] h-[220px] bg-gray-200 rounded-lg flex items-center justify-center">
+                    <span className="text-xs text-gray-500">No image</span>
+                  </div>
+                )}
+
+                <p className="mt-1 text-sm font-semibold text-gray-800">
+                  x{c.qty}
+                </p>
+
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  className="mt-2"
+                  onClick={() => removeCard(c.cardId)}
+                  type="button"
+                >
+                  <Trash2 size={18} />
+                </Button>
+              </div>
+            ))}
           </div>
         </form>
       </Form>
