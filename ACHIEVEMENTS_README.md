@@ -190,7 +190,6 @@ Les notifications apparaissent automatiquement en haut à droite de l'écran qua
 Vous pouvez créer un hook pour faciliter l'utilisation des achievements :
 
 ```tsx
-// apps/web/hooks/useAchievements.ts
 import { useQuery } from '@tanstack/react-query';
 import { getUserAchievements, getUserAchievementStats } from '@/services/achievement.service';
 
