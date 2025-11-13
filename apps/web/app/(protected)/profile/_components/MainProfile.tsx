@@ -1,7 +1,7 @@
 "use client";
 import Loader from "@/components/Layout/Loader";
 import { useAuth } from "@/contexts/AuthContext";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,8 @@ import { marketplaceService } from "@/services/marketplace.service";
 import { Listing } from "@/types/listing";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import {Tournament} from "@/types/tournament";
+import {tournamentService} from "@/services/tournament.service";
 
 const MainProfile = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -48,13 +50,16 @@ const MainProfile = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [salesLoading, setSalesLoading] = useState(true);
+  const [tournamentsLoading, setTournamentsLoading] = useState(true);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       setEditForm({
         firstName: user.firstName,
@@ -62,10 +67,11 @@ const MainProfile = () => {
         email: user.email,
       });
       loadMyListings();
+      loadMyTournaments();
     }
   }, [user]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     filterListings();
   }, [listings, searchTerm, statusFilter]);
 
@@ -162,6 +168,43 @@ const MainProfile = () => {
 
     setFilteredListings(filtered);
   };
+
+  const loadMyTournaments = async () => {
+    try {
+      setTournamentsLoading(true);
+      const data = await tournamentService.getMyTournaments();
+      setTournaments(data);
+    } catch (error){
+      console.error("Erreur lors du chargement des tournois:", error);
+      toast.error("Erreur lors du chargement de vos tournois");
+    } finally {
+      setTournamentsLoading(false);
+    }
+  }
+
+   const formatTournamentDates = (startDate: string, endDate?: string): string => {
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const monthFormatter = new Intl.DateTimeFormat('fr-FR', { month: 'long' });
+
+    const sameMonth = end && start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+    const sameYear = end && start.getFullYear() === end.getFullYear();
+
+    if (end) {
+      if (sameMonth) {
+        return `${start.getDate()}–${end.getDate()} ${monthFormatter.format(start)} ${start.getFullYear()}`;
+      } else if (sameYear) {
+        return `${start.getDate()} ${monthFormatter.format(start)} – ${end.getDate()} ${monthFormatter.format(end)} ${start.getFullYear()}`;
+      } else {
+        return `${start.getDate()} ${monthFormatter.format(start)} ${start.getFullYear()} – ${end.getDate()} ${monthFormatter.format(end)} ${end.getFullYear()}`;
+      }
+    } else {
+      return `${start.getDate()} ${monthFormatter.format(start)} ${start.getFullYear()} - en cours`;
+    }
+  }
+
 
   const getCurrencyIcon = (currency: string) => {
     switch (currency) {
@@ -502,29 +545,47 @@ const MainProfile = () => {
           <Trophy className="w-5 h-5" />
           <h2 className="text-xl font-semibold">Mes tournois</h2>
         </div>
-
         <div className="space-y-4">
-          <div className="flex items-center justify-between py-3 border-b">
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="font-medium">Spring Championship 2024</span>
-                <Badge className="bg-green-500 text-white text-xs">
-                  Terminé
-                </Badge>
-                <Badge className="bg-purple-500 text-white text-xs">
-                  Elimination simple
-                </Badge>
+          {tournamentsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                <p className="mt-2 text-muted-foreground">
+                  Chargement de vos tournois...
+                </p>
               </div>
-              <div className="text-sm text-muted-foreground">
-                Paris, France • 15-17 mars 2024
+          ): tournaments.length > 0 ? (
+              tournaments.map((tournament) => (
+                <div className="flex items-center justify-between py-3 border-b">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium">{tournament.name}</span>
+                      <Badge className="bg-green-500 text-white text-xs">
+                        Terminé
+                      </Badge>
+                      <Badge className="bg-purple-500 text-white text-xs">
+                        Elimination simple
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {tournament.location} • {formatTournamentDates(tournament.startDate, tournament?.endDate)}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-green-600">Champion</div>
+                    <div className="text-sm text-muted-foreground">1er place</div>
+                    <div className="text-sm font-medium text-green-600">+100 pts</div>
+                  </div>
+                </div>
+              ))
+          ):(
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                <p className="mt-2 text-muted-foreground">
+                  Vous n'avez aucun tournoi.
+                </p>
               </div>
-            </div>
-            <div className="text-right">
-              <div className="font-semibold text-green-600">Champion</div>
-              <div className="text-sm text-muted-foreground">1er place</div>
-              <div className="text-sm font-medium text-green-600">+100 pts</div>
-            </div>
-          </div>
+          )}
+
 
           <div className="flex items-center justify-between py-3 border-b">
             <div className="flex-1">

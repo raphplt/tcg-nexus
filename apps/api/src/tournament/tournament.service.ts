@@ -687,4 +687,12 @@ export class TournamentService {
 
     return this.registrationRepository.save(registration);
   }
+  async findAllByUser(userId: number): Promise<Tournament[]> {
+    return this.tournamentRepository
+        .createQueryBuilder('tournament')
+        .leftJoin('tournament.players', 'player')
+        .leftJoin('player.user', 'user')
+        .where('user.id = :userId', { userId })
+        .getMany();
+  }
 }

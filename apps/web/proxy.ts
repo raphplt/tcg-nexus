@@ -16,7 +16,6 @@ async function checkAuth(request: NextRequest): Promise<boolean> {
     if (!cookies || !cookies.includes("accessToken")) {
       return false;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: "POST",

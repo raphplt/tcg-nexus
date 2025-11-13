@@ -59,6 +59,9 @@ export const tournamentService = {
   async getById(id: string): Promise<Tournament> {
     return fetcher<Tournament>(`/tournaments/${id}`);
   },
+  async getMyTournaments(): Promise<Tournament[]> {
+    return await authedFetch("GET", "/tournaments/my-tournaments")
+  },
 
   // ============= TOURNAMENT STATE MANAGEMENT =============
 

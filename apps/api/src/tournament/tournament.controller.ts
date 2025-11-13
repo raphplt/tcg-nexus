@@ -57,6 +57,13 @@ export class TournamentController {
     return this.tournamentService.findAll(query);
   }
 
+  @Get("/my-tournaments")
+  getMyTournaments(
+      @CurrentUser() user: User
+  ){
+    return this.tournamentService.findAllByUser(user.id);
+  }
+
   @Public()
   @Get('upcoming')
   async getUpcomingTournaments(@Query('limit') limit?: number) {
