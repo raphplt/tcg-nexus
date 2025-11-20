@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/utils/price";
+import { useCurrencyStore } from "@/store/currency.store";
 import {
   useCartStore,
   useCartTotal,
@@ -38,6 +38,7 @@ export default function CartPage() {
   const router = useRouter();
   const { cart, isLoading, fetchCart, updateItem, removeItem, clearCart } =
     useCartStore();
+  const { formatPrice, currency } = useCurrencyStore();
   const total = useCartTotal();
   const itemsCount = useCartItemsCount();
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
@@ -130,7 +131,6 @@ export default function CartPage() {
   }
 
   const cartItems = cart?.cartItems || [];
-  const currency = cartItems[0]?.listing.currency || "EUR";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">

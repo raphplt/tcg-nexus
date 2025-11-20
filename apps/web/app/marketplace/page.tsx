@@ -11,6 +11,7 @@ import Link from "next/link";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import SetCard from "@/components/Marketplace/SetCard";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
+import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 
 export default function MarketplaceHomePage() {
   const {
@@ -39,6 +40,9 @@ export default function MarketplaceHomePage() {
             Découvrez, achetez et vendez vos cartes Pokémon. Trouvez les
             meilleures offres et les meilleurs vendeurs de la communauté.
           </p>
+          <div className="flex justify-center mt-4">
+             <CurrencySelector />
+          </div>
           <div className="flex flex-wrap gap-4 justify-center mt-6">
             <Button
               asChild

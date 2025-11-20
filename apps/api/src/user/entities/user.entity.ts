@@ -12,6 +12,7 @@ import { Player } from 'src/player/entities/player.entity';
 import { Deck } from 'src/deck/entities/deck.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
 import { UserRole } from 'src/common/enums/user';
+import { Currency } from 'src/common/enums/currency';
 import { UserCart } from 'src/user_cart/entities/user_cart.entity';
 import { TournamentOrganizer } from 'src/tournament/entities';
 
@@ -42,6 +43,13 @@ export class User {
     default: UserRole.USER
   })
   role: UserRole;
+
+  @Column({
+    type: 'enum',
+    enum: Currency,
+    default: Currency.EUR
+  })
+  preferredCurrency: Currency;
 
   @Column({ default: false })
   isPro: boolean;

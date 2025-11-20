@@ -27,7 +27,7 @@ import {
 import { ShoppingCart, Star, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/utils/price";
+import { useCurrencyStore } from "@/store/currency.store";
 import { rarityToImage, typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
 import { cardStates } from "@/utils/variables";
@@ -50,6 +50,7 @@ export default function CardDetailPage() {
   );
 
   const { addItem, isLoading: isCartLoading } = useCartStore();
+  const { formatPrice } = useCurrencyStore();
 
   const {
     card,

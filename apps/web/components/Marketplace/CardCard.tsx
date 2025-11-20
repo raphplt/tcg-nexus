@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/utils/price";
+import { useCurrencyStore } from "@/store/currency.store";
 import { TrendingUp, TrendingDown, Minus, Star, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PokemonCardType } from "@/types/cardPokemon";
@@ -34,6 +34,7 @@ export function CardCard({
   isPopular = false,
   isTrending = false,
 }: CardCardProps) {
+  const { formatPrice } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
 
 
