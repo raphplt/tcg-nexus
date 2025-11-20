@@ -136,14 +136,14 @@ export const useCartItems = () =>
   useCartStore((state) => state.cart?.cartItems || []);
 export const useCartTotal = () =>
   useCartStore((state) => {
-    if (!state.cart?.cartItems.length) return 0;
+    if (!state.cart?.cartItems?.length) return 0;
     return state.cart.cartItems.reduce((total, item) => {
       return total + item.listing.price * item.quantity;
     }, 0);
   });
 export const useCartItemsCount = () =>
   useCartStore((state) => {
-    if (!state.cart?.cartItems.length) return 0;
+    if (!state.cart?.cartItems?.length) return 0;
     return state.cart.cartItems.reduce(
       (count, item) => count + item.quantity,
       0,
