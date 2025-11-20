@@ -389,6 +389,7 @@ export class SeedService {
         isPro: false,
         isActive: true,
         emailVerified: true,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
         tournamentOrganizers: []
@@ -403,6 +404,7 @@ export class SeedService {
         isPro: true,
         isActive: true,
         emailVerified: true,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
         tournamentOrganizers: []
@@ -417,6 +419,7 @@ export class SeedService {
         isPro: true,
         isActive: true,
         emailVerified: false,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
         tournamentOrganizers: []
@@ -434,6 +437,7 @@ export class SeedService {
         isPro: i % 3 === 0,
         isActive: true,
         emailVerified: true,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
         tournamentOrganizers: []
@@ -498,6 +502,7 @@ export class SeedService {
         isPro: false,
         isActive: true,
         emailVerified: true,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: []
       });
@@ -757,6 +762,7 @@ export class SeedService {
         isPro: false,
         isActive: true,
         emailVerified: true,
+        preferredCurrency: Currency.EUR,
         decks: [],
         collections: []
       });
