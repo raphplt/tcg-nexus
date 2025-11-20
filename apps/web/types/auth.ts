@@ -9,6 +9,7 @@ export interface User {
   role: UserRole;
   isPro: boolean;
   player?: Player;
+  preferredCurrency?: string;
   createdAt: Date;
 }
 

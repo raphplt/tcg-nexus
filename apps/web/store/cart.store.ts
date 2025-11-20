@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { UserCart, CreateCartItemDto, UpdateCartItemDto } from "@/types/cart";
 import { cartService } from "@/services/cart.service";
+import { useCurrencyStore } from "./currency.store";
 
 interface CartState {
   cart: UserCart | null;
@@ -137,8 +138,11 @@ export const useCartItems = () =>
 export const useCartTotal = () =>
   useCartStore((state) => {
     if (!state.cart?.cartItems?.length) return 0;
+    const { convertPrice, currency } = useCurrencyStore.getState();
+    
     return state.cart.cartItems.reduce((total, item) => {
-      return total + item.listing.price * item.quantity;
+      const priceInSelectedCurrency = convertPrice(item.listing.price, item.listing.currency);
+      return total + priceInSelectedCurrency * item.quantity;
     }, 0);
   });
 export const useCartItemsCount = () =>

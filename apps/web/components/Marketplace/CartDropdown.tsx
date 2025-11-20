@@ -18,11 +18,12 @@ import {
   useCartItemsCount,
   useCartTotal,
 } from "@/store/cart.store";
-import { formatPrice } from "@/utils/price";
+import { useCurrencyStore } from "@/store/currency.store";
 import Image from "next/image";
 
 const CartDropdown = () => {
   const { cart, isLoading, fetchCart, removeItem } = useCartStore();
+  const { formatPrice, currency } = useCurrencyStore();
   const itemsCount = useCartItemsCount();
   const total = useCartTotal();
 
@@ -123,9 +124,7 @@ const CartDropdown = () => {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold">Total:</span>
                 <span className="text-lg font-bold text-primary">
-                  {cartItems.length > 0 && cartItems[0]?.listing.currency
-                    ? formatPrice(total, cartItems[0].listing.currency)
-                    : formatPrice(total, "EUR")}
+                  {formatPrice(total, currency)}
                 </span>
               </div>
               <Link href="/cart">

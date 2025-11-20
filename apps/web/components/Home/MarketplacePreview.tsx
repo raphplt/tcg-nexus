@@ -9,11 +9,12 @@ import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { PaginatedResult } from "@/types/pagination";
 import { Listing } from "@/types/listing";
 import { marketplaceService } from "@/services/marketplace.service";
-import { formatPrice } from "@/utils/price";
+import { useCurrencyStore } from "@/store/currency.store";
 import { useRouter } from "next/navigation";
 
 const MarketplacePreview = () => {
   const router = useRouter();
+  const { formatPrice } = useCurrencyStore();
   const { data, isLoading, error } = usePaginatedQuery<
     PaginatedResult<Listing>
   >(["listings", 3], marketplaceService.getPaginated, {

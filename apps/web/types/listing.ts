@@ -1,4 +1,5 @@
 import { CardState } from "@/utils/enums";
+import { Currency } from "@/store/currency.store";
 import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
 
@@ -7,7 +8,7 @@ export interface Listing {
   seller: User;
   pokemonCard: PokemonCardType;
   price: number;
-  currency: string;
+  currency: Currency;
   quantityAvailable: number;
   cardState: CardState;
   createdAt: Date;
