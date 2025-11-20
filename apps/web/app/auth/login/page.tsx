@@ -29,7 +29,6 @@ import {
 import { CircleAlert, Eye, EyeOff, ArrowLeft, Home } from "lucide-react";
 import { loginSchema } from "./utils";
 
-// Dev accounts for quick login (only in development)
 const DEV_ACCOUNTS = [
   {
     email: "test1@test.com",
