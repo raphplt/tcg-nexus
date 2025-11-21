@@ -178,7 +178,7 @@ export class AuthService {
       { ...payload },
       {
         secret: jwtSecret,
-        expiresIn: accessTokenExpiry
+        expiresIn: accessTokenExpiry as any
       }
     );
 
@@ -186,7 +186,7 @@ export class AuthService {
       { ...payload },
       {
         secret: jwtRefreshSecret,
-        expiresIn: refreshTokenExpiry
+        expiresIn: refreshTokenExpiry as any
       }
     );
 
