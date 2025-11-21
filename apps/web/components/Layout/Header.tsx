@@ -98,14 +98,14 @@ const Header = () => {
               Decks
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link
               href="/strategy"
               className="link-style"
             >
               Stratégie
             </Link>
-          </li>
+          </li> */}
 
           {showUserMenu && (
             <li>
