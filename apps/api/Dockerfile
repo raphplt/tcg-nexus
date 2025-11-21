@@ -30,5 +30,8 @@ RUN adduser -S nestjs -u 1001
 RUN chown -R nestjs:nodejs /app
 USER nestjs
 
+# Seed la base de données
+RUN npm run seed
+
 # Démarrer l'application
 CMD ["npm", "run", "start:prod"]
