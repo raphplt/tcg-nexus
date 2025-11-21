@@ -4,7 +4,7 @@ import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/http-exception.filter';
 
 dotenv.config();
