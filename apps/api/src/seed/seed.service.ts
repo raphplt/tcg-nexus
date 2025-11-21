@@ -375,7 +375,10 @@ export class SeedService {
    * Seed test users
    */
   async seedUsers() {
-    const { faker } = await import('@faker-js/faker');
+    // Bypass TypeScript transpilation of dynamic import to require()
+    const { faker } = await (eval('import("@faker-js/faker")') as Promise<
+      typeof import('@faker-js/faker')
+    >);
     const usersData: Array<
       Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'refreshToken'>
     > = [
