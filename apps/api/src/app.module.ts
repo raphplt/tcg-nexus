@@ -50,7 +50,14 @@ import { UserCartModule } from './user_cart/user_cart.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production'
+      synchronize: process.env.NODE_ENV !== 'production',
+      ssl: process.env.NODE_ENV === 'production',
+      extra: {
+        ssl:
+          process.env.NODE_ENV === 'production'
+            ? { rejectUnauthorized: false }
+            : null
+      }
     }),
     UserModule,
     PokemonCardModule,
