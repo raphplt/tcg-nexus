@@ -51,13 +51,10 @@ import { UserCartModule } from './user_cart/user_cart.module';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: process.env.NODE_ENV !== 'production',
-      ssl: process.env.NODE_ENV === 'production',
-      extra: {
-        ssl:
-          process.env.NODE_ENV === 'production'
-            ? { rejectUnauthorized: false }
-            : null
-      }
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false
     }),
     UserModule,
     PokemonCardModule,
