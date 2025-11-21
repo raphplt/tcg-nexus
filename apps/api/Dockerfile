@@ -8,13 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Installer les dépendances
-RUN npm install --only=production
+RUN npm install
 
 # Copier le reste du code source
 COPY . .
 
 # Construire l'application
 RUN npm run build
+
+# Supprimer les dépendances de développement
+RUN npm prune --production
 
 # Exposer le port
 EXPOSE 3001
