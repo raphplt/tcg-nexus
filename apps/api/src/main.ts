@@ -60,7 +60,7 @@ async function bootstrap() {
     app.enableCors({
       origin:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL || 'https://tcg-nexus-web.vercel.app'
           : 'http://localhost:3000',
       credentials: true
     });
