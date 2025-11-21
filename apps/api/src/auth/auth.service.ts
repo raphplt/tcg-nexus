@@ -174,15 +174,21 @@ export class AuthService {
       );
     }
 
-    const accessToken = await this.jwtService.signAsync(payload, {
-      secret: jwtSecret,
-      expiresIn: accessTokenExpiry
-    });
+    const accessToken = await this.jwtService.signAsync(
+      { ...payload },
+      {
+        secret: jwtSecret,
+        expiresIn: accessTokenExpiry
+      }
+    );
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
-      secret: jwtRefreshSecret,
-      expiresIn: refreshTokenExpiry
-    });
+    const refreshToken = await this.jwtService.signAsync(
+      { ...payload },
+      {
+        secret: jwtRefreshSecret,
+        expiresIn: refreshTokenExpiry
+      }
+    );
 
     return {
       accessToken,
