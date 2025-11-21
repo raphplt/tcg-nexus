@@ -67,7 +67,7 @@ import {
 } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
-import { faker } from '@faker-js/faker';
+
 import { CardState } from 'src/common/enums/pokemonCardsType';
 import { UserRole } from 'src/common/enums/user';
 @Injectable()
@@ -375,7 +375,7 @@ export class SeedService {
    * Seed test users
    */
   async seedUsers() {
-    // Si erreur: installer bcryptjs avec npm install bcryptjs @types/bcryptjs
+    const { faker } = await import('@faker-js/faker');
     const usersData: Array<
       Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'refreshToken'>
     > = [
