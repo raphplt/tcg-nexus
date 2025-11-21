@@ -12,6 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
+    "seed:prod": "SEED_AUTO_CONFIRM=true node dist/scripts/importData.js",
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
     "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",
