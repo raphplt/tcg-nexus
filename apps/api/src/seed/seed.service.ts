@@ -5,7 +5,7 @@ import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 import pokemonSeriesData from 'src/common/data/pokemon_series.json';
 import pokemonSetsData from 'src/common/data/pokemon_sets.json';
-import * as AdmZip from 'adm-zip';
+import AdmZip from 'adm-zip';
 import * as path from 'path';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { User } from 'src/user/entities/user.entity';
