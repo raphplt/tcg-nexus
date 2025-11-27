@@ -20,6 +20,7 @@ import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { ConfigModule } from '@nestjs/config';
 import { StripeService } from './stripe.service';
 import { PaymentController } from './payment.controller';
+import { WebhookController } from './webhook.controller';
 import { UserCartModule } from '../user_cart/user_cart.module';
 
 @Module({
@@ -42,7 +43,8 @@ import { UserCartModule } from '../user_cart/user_cart.module';
     MarketplaceController,
     ListingsController,
     CardPopularityController,
-    PaymentController
+    PaymentController,
+    WebhookController
   ],
   providers: [
     MarketplaceService,

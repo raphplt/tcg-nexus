@@ -11,7 +11,7 @@ dotenv.config();
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, { rawBody: true });
     app.use(cookieParser());
 
     if (process.env.NODE_ENV !== 'production') {
