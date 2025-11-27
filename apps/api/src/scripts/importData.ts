@@ -24,7 +24,15 @@ async function bootstrap() {
 
   try {
     logStep('Voulez-vous détruire toutes les données existantes ? (oui/non)');
-    const answer = (await rl.question('> ')).trim().toLowerCase();
+
+    let answer = '';
+    if (process.env.SEED_AUTO_CONFIRM === 'true') {
+      console.log('SEED_AUTO_CONFIRM est activé. Suppression automatique.');
+      answer = 'oui';
+    } else {
+      answer = (await rl.question('> ')).trim().toLowerCase();
+    }
+
     if (
       answer === 'oui' ||
       answer === 'o' ||

@@ -27,6 +27,7 @@ export default function CardDetailPage() {
   );
 
   const { addItem, isLoading: isCartLoading } = useCartStore();
+  const { formatPrice } = useCurrencyStore();
 
   const {
     card,

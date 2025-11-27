@@ -4,7 +4,7 @@ import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import { AllExceptionsFilter } from './common/http-exception.filter';
 
 dotenv.config();
@@ -60,15 +60,18 @@ async function bootstrap() {
     app.enableCors({
       origin:
         process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL || 'https://tcg-nexus-web.vercel.app'
           : 'http://localhost:3000',
       credentials: true
     });
 
     const port = process.env.PORT ?? 3001;
 
-    await app.listen(port).then(() => {
-      console.log(`🚀 Server is running on http://localhost:${port}`);
+    await app.listen(port, '0.0.0.0').then(() => {
+      // console.log(`🚀 Server is running on http://localhost:${port}`);
+      console.log(
+        `🚀 VERSION CORRIGÉE - Server running on http://0.0.0.0:${port}`
+      );
       console.log(`📚 API Documentation: http://localhost:${port}/api`);
     });
   } catch (error) {

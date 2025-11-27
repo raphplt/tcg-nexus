@@ -30,7 +30,7 @@ import { CollectionModule } from 'src/collection/collection.module';
 
         return {
           secret,
-          signOptions: { expiresIn }
+          signOptions: { expiresIn: expiresIn as any }
         };
       },
       inject: [ConfigService]

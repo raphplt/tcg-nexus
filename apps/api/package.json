@@ -12,6 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
+    "seed:prod": "SEED_AUTO_CONFIRM=true node -r tsconfig-paths/register dist/scripts/importData.js",
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
     "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",
@@ -65,6 +66,7 @@
     "pg": "^8.13.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tsconfig-paths": "^4.2.0",
     "stripe": "^20.0.0",
     "typeorm": "^0.3.20"
   },
@@ -92,7 +94,6 @@
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
