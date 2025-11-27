@@ -11,7 +11,9 @@ import { Loader2 } from "lucide-react";
 
 // Make sure to call loadStripe outside of a component’s render to avoid
 // recreating the Stripe object on every render.
-const stripePromise = loadStripe("pk_test_51SY3BPASks2opmb7zCNJtxUq3nh679QHevWpOebSLtP9BwZGB3Fdz11YpvoeAwKUbj6MSfl3c201nayKuU0o8qxL00Ax4dBv5m");
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+);
 
 export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState("");
