@@ -9,9 +9,10 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { tournamentService, Tournament } from "@/services/tournament.service";
+import { tournamentService } from "@/services/tournament.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
+import { Tournament } from "@/types/tournament";
 
 export const ProfileTournaments = () => {
   const { user } = useAuth();
@@ -19,12 +20,6 @@ export const ProfileTournaments = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
-  useEffect(() => {
-    if (user?.player?.id) {
-      loadTournaments();
-    }
-  }, [user, page]);
 
   const loadTournaments = React.useCallback(async () => {
     if (!user?.player?.id) return;
@@ -49,6 +44,12 @@ export const ProfileTournaments = () => {
       setLoading(false);
     }
   }, [user, page]);
+
+  useEffect(() => {
+    if (user?.player?.id) {
+      loadTournaments();
+    }
+  }, [user, page, loadTournaments]);
 
   useEffect(() => {
     if (user?.player?.id) {

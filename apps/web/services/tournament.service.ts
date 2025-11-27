@@ -1,27 +1,6 @@
 import { authedFetch } from "@/utils/fetch";
 import { PaginationParams, PaginatedResult } from "@/types/pagination";
-
-export interface Tournament {
-  id: number;
-  name: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  type: string;
-  location: string;
-  maxPlayers: number;
-  currentPlayers: number;
-  image?: string;
-  pricing?: {
-    entryFee: number;
-    currency: string;
-  };
-  rewards?: {
-    type: string;
-    value: string;
-  }[];
-}
+import { Tournament, TournamentRegistration } from "@/types/tournament";
 
 export interface TournamentQueryParams extends PaginationParams {
   search?: string;
@@ -43,6 +22,59 @@ export const tournamentService = {
       "GET",
       `/tournaments/player/${playerId}`,
       { params: params as any },
+    );
+  },
+
+  /**
+   * Récupère les inscriptions d'un tournoi
+   */
+  async getRegistrations(
+    tournamentId: number,
+  ): Promise<TournamentRegistration[]> {
+    return authedFetch<TournamentRegistration[]>(
+      "GET",
+      `/tournaments/${tournamentId}/registrations`,
+    );
+  },
+
+  /**
+   * Confirme une inscription
+   */
+  async confirmRegistration(
+    tournamentId: number,
+    registrationId: number,
+  ): Promise<TournamentRegistration> {
+    return authedFetch<TournamentRegistration>(
+      "PATCH",
+      `/tournaments/${tournamentId}/registrations/${registrationId}/confirm`,
+    );
+  },
+
+  /**
+   * Annule une inscription
+   */
+  async cancelRegistration(
+    tournamentId: number,
+    registrationId: number,
+    reason?: string,
+  ): Promise<TournamentRegistration> {
+    return authedFetch<TournamentRegistration>(
+      "PATCH",
+      `/tournaments/${tournamentId}/registrations/${registrationId}/cancel`,
+      { body: { reason } },
+    );
+  },
+
+  /**
+   * Effectue le check-in d'un joueur
+   */
+  async checkIn(
+    tournamentId: number,
+    registrationId: number,
+  ): Promise<TournamentRegistration> {
+    return authedFetch<TournamentRegistration>(
+      "PATCH",
+      `/tournaments/${tournamentId}/registrations/${registrationId}/checkin`,
     );
   },
 };
