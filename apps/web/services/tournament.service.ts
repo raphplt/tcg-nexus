@@ -12,6 +12,13 @@ export interface TournamentQueryParams extends PaginationParams {
 
 export const tournamentService = {
   /**
+   * Récupère un tournoi par son ID
+   */
+  async getById(tournamentId: string | number): Promise<Tournament> {
+    return authedFetch<Tournament>("GET", `/tournaments/${tournamentId}`);
+  },
+
+  /**
    * Récupère les tournois d'un joueur
    */
   async getPlayerTournaments(
@@ -47,6 +54,21 @@ export const tournamentService = {
     return authedFetch<TournamentRegistration[]>(
       "GET",
       `/tournaments/${tournamentId}/registrations`,
+    );
+  },
+
+  /**
+   * Inscription à un tournoi
+   */
+  async register(
+    tournamentId: number,
+    playerId: number,
+    notes?: string,
+  ): Promise<TournamentRegistration> {
+    return authedFetch<TournamentRegistration>(
+      "POST",
+      `/tournaments/${tournamentId}/register`,
+      { body: { playerId, notes } },
     );
   },
 
