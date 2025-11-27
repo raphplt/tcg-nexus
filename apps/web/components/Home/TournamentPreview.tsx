@@ -11,7 +11,7 @@ import { ArrowRight } from "lucide-react";
 const TournamentPreview = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["tournaments", "upcoming"],
-    queryFn: () => tournamentService.getUpcomingTournaments(5),
+    queryFn: () => tournamentService.getUpcomingTournaments({ limit: 5 }),
   });
 
   return (
@@ -28,8 +28,8 @@ const TournamentPreview = () => {
         </div>
       )}
       <div className="flex flex-col gap-3">
-        {data && data.length > 0 ? (
-          data.map((tournament, i) => (
+        {data && data.data && data.data.length > 0 ? (
+          data.data.map((tournament, i) => (
             <div
               key={tournament.id}
               className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:shadow-md transition group"

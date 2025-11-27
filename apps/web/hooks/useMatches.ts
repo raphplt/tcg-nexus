@@ -7,7 +7,6 @@ import {
   StartMatchDto,
   ResetMatchDto,
 } from "@/types/tournament";
-import { PaginatedResult } from "@/types/pagination";
 import toast from "react-hot-toast";
 
 export function useMatches(tournamentId: string) {
@@ -19,7 +18,7 @@ export function useMatches(tournamentId: string) {
     data: matchesData,
     isLoading,
     error,
-  } = useQuery<PaginatedResult<Match>>({
+  } = useQuery<Match[]>({
     queryKey: ["tournament", tournamentId, "matches"],
     queryFn: () => tournamentService.getTournamentMatches(id),
     enabled: !!id,
@@ -79,20 +78,16 @@ export function useMatches(tournamentId: string) {
 
   // Helper functions
   const getMatchesByRound = (round: number) => {
-    return (
-      matchesData?.data?.filter((match: Match) => match.round === round) || []
-    );
+    return matchesData?.filter((match: Match) => match.round === round) || [];
   };
 
   const getMatchesByStatus = (status: string) => {
-    return (
-      matchesData?.data?.filter((match: Match) => match.status === status) || []
-    );
+    return matchesData?.filter((match: Match) => match.status === status) || [];
   };
 
   const getPlayerMatches = (playerId: number) => {
     return (
-      matchesData?.data?.filter(
+      matchesData?.filter(
         (match: Match) =>
           match.playerA?.id === playerId || match.playerB?.id === playerId,
       ) || []
@@ -100,7 +95,7 @@ export function useMatches(tournamentId: string) {
   };
 
   const getMatchStats = () => {
-    const matches = matchesData?.data || [];
+    const matches = matchesData || [];
     return {
       total: matches.length,
       scheduled: matches.filter((m: Match) => m.status === "scheduled").length,
@@ -113,8 +108,8 @@ export function useMatches(tournamentId: string) {
 
   return {
     // Données
-    matches: matchesData?.data || [],
-    total: matchesData?.meta?.totalItems || 0,
+    matches: matchesData || [],
+    total: matchesData?.length || 0,
     isLoading,
     error,
 
