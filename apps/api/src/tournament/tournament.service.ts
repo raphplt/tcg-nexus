@@ -384,12 +384,27 @@ export class TournamentService {
   }
 
   // Récupérer les tournois d'un joueur
-  async getPlayerTournaments(playerId: number): Promise<Tournament[]> {
-    return this.tournamentRepository
+  async getPlayerTournaments(playerId: number, query: TournamentQueryDto) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = 'startDate',
+      sortOrder = 'DESC'
+    } = query;
+
+    const queryBuilder = this.tournamentRepository
       .createQueryBuilder('tournament')
       .leftJoin('tournament.players', 'player')
-      .where('player.id = :playerId', { playerId })
-      .getMany();
+      .leftJoinAndSelect('tournament.pricing', 'pricing')
+      .leftJoinAndSelect('tournament.rewards', 'rewards')
+      .where('player.id = :playerId', { playerId });
+
+    return PaginationHelper.paginateQueryBuilder(
+      queryBuilder,
+      { page, limit },
+      sortBy ? `tournament.${sortBy}` : undefined,
+      sortOrder
+    );
   }
 
   // Récupérer les tournois à venir

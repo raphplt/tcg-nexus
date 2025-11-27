@@ -92,8 +92,16 @@ export const marketplaceService = {
   /**
    * Récupère les listings de l'utilisateur connecté
    */
-  async getMyListings(): Promise<Listing[]> {
-    return authedFetch<Listing[]>("GET", "/listings/my-listings");
+  async getMyListings(
+    params: MarketplaceQueryParams = {},
+  ): Promise<PaginatedResult<Listing>> {
+    return authedFetch<PaginatedResult<Listing>>(
+      "GET",
+      "/listings/my-listings",
+      {
+        params: params as any,
+      },
+    );
   },
 
   /**

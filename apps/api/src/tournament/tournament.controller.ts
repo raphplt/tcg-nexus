@@ -123,9 +123,10 @@ export class TournamentController {
 
   @Get('player/:playerId')
   async getPlayerTournaments(
-    @Param('playerId', ParseIntPipe) playerId: number
+    @Param('playerId', ParseIntPipe) playerId: number,
+    @Query() query: TournamentQueryDto
   ) {
-    return this.tournamentService.getPlayerTournaments(playerId);
+    return this.tournamentService.getPlayerTournaments(playerId, query);
   }
 
   @Delete(':id')

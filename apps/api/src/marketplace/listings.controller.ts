@@ -50,8 +50,11 @@ export class ListingsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('my-listings')
-  getMyListings(@CurrentUser() user: User) {
-    return this.marketplaceService.findBySellerId(user.id);
+  getMyListings(
+    @CurrentUser() user: User,
+    @Query() query: FindAllListingsQuery
+  ) {
+    return this.marketplaceService.findBySellerId(user.id, query);
   }
 
   @Get(':id')

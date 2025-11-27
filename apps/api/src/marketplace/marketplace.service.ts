@@ -257,17 +257,49 @@ export class MarketplaceService {
     await this.listingRepository.delete(id);
   }
 
-  async findBySellerId(sellerId: number): Promise<Listing[]> {
-    return this.listingRepository.find({
-      where: { seller: { id: sellerId } },
-      relations: [
-        'seller',
-        'pokemonCard',
-        'pokemonCard.set',
-        'pokemonCard.set.serie'
-      ],
-      order: { createdAt: 'DESC' }
-    });
+  async findBySellerId(
+    sellerId: number,
+    params: FindAllListingsParams = {}
+  ): Promise<PaginatedResult<Listing>> {
+    const {
+      page = 1,
+      limit = 20,
+      sortBy = 'createdAt',
+      sortOrder = 'DESC',
+      search,
+      cardState,
+      currency
+    } = params;
+
+    const qb = this.listingRepository
+      .createQueryBuilder('listing')
+      .leftJoinAndSelect('listing.seller', 'seller')
+      .leftJoinAndSelect('listing.pokemonCard', 'pokemonCard')
+      .leftJoinAndSelect('pokemonCard.set', 'set')
+      .leftJoinAndSelect('set.serie', 'serie')
+      .where('seller.id = :sellerId', { sellerId });
+
+    if (search) {
+      qb.andWhere(
+        '(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search)',
+        { search: `%${search.toLowerCase()}%` }
+      );
+    }
+
+    if (cardState) {
+      qb.andWhere('listing.cardState = :cardState', { cardState });
+    }
+
+    if (currency) {
+      qb.andWhere('listing.currency = :currency', { currency });
+    }
+
+    return PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      sortBy ? `listing.${sortBy}` : undefined,
+      sortOrder
+    );
   }
 
   /**
@@ -557,7 +589,16 @@ export class MarketplaceService {
    * Get seller statistics
    */
   async getSellerStatistics(sellerId: number) {
-    const listings = await this.findBySellerId(sellerId);
+    const listings = await this.listingRepository.find({
+      where: { seller: { id: sellerId } },
+      relations: [
+        'seller',
+        'pokemonCard',
+        'pokemonCard.set',
+        'pokemonCard.set.serie'
+      ],
+      order: { createdAt: 'DESC' }
+    });
 
     const orders = await this.orderRepository
       .createQueryBuilder('order')
