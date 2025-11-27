@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lato } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import ClientProviders from "@/components/ClientProviders";
 import LayoutContent from "@/components/Layout/LayoutContent";
@@ -33,6 +34,10 @@ export default function RootLayout({
             <LayoutContent>{children}</LayoutContent>
           </ClientProviders>
         </ThemeProvider>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );
