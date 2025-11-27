@@ -1,6 +1,6 @@
 import { authedFetch } from "@/utils/fetch";
 import { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { Tournament, TournamentRegistration } from "@/types/tournament";
+import { Match, Tournament, TournamentRegistration } from "@/types/tournament";
 
 export interface TournamentQueryParams extends PaginationParams {
   search?: string;
@@ -22,6 +22,19 @@ export const tournamentService = {
       "GET",
       `/tournaments/player/${playerId}`,
       { params: params as any },
+    );
+  },
+
+  /**
+   * Récupère un match d'un tournoi
+   */
+  async getTournamentMatch(
+    tournamentId: number,
+    matchId: number,
+  ): Promise<Match> {
+    return authedFetch<Match>(
+      "GET",
+      `/tournaments/${tournamentId}/matches/${matchId}`,
     );
   },
 
