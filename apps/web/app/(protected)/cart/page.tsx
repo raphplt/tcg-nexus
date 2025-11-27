@@ -363,11 +363,7 @@ export default function CartPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    onClick={() => {
-                      toast("Fonctionnalité de commande à venir", {
-                        icon: "ℹ️",
-                      });
-                    }}
+                    onClick={() => router.push("/marketplace/checkout")}
                   >
                     Passer la commande
                   </Button>
