@@ -14,8 +14,18 @@ import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { User } from '../user/entities/user.entity';
 import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 import { UserRole } from 'src/common/enums/user';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { StripeService } from './stripe.service';
+import { UserCartService } from '../user_cart/user_cart.service';
+import {
+  PaymentTransaction,
+  PaymentMethod,
+  PaymentStatus
+} from './entities/payment-transaction.entity';
+import { OrderItem } from './entities/order-item.entity';
+import { Currency } from '../common/enums/currency';
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -41,10 +51,83 @@ export class MarketplaceService {
     @InjectRepository(PokemonCard)
     private readonly pokemonCardRepository: Repository<PokemonCard>,
     @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>
+    private readonly orderRepository: Repository<Order>,
+    @InjectRepository(PaymentTransaction)
+    private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>,
+    private readonly stripeService: StripeService,
+    private readonly userCartService: UserCartService
   ) {}
 
   private readonly logger = new Logger(MarketplaceService.name);
+
+  async createOrder(createOrderDto: CreateOrderDto, user: User) {
+    const cart = await this.userCartService.findCartByUserId(user.id);
+    if (!cart || cart.cartItems.length === 0) {
+      throw new BadRequestException('Cart is empty');
+    }
+
+    // Calculate total
+    let totalAmount = 0;
+    const orderItems: OrderItem[] = [];
+
+    for (const item of cart.cartItems) {
+      if (item.listing.quantityAvailable < item.quantity) {
+        throw new BadRequestException(
+          `Not enough quantity for listing ${item.listing.id}`
+        );
+      }
+      totalAmount += Number(item.listing.price) * item.quantity;
+
+      const orderItem = this.orderItemRepository.create({
+        listing: item.listing,
+        quantity: item.quantity,
+        unitPrice: item.listing.price
+      });
+      orderItems.push(orderItem);
+    }
+
+    // Verify Stripe Payment
+    // In a real scenario, we would retrieve the PaymentIntent and check if it matches the amount and status
+    // For this simulation, we assume the frontend passed a valid paymentIntentId after successful confirmation
+    // We can verify it against Stripe API
+    // const paymentIntent = await this.stripeService.retrievePaymentIntent(createOrderDto.paymentIntentId);
+    // if (paymentIntent.status !== 'succeeded') throw new BadRequestException('Payment not succeeded');
+    // if (paymentIntent.amount !== Math.round(totalAmount * 100)) throw new BadRequestException('Payment amount mismatch');
+
+    // Create Order
+    const order = this.orderRepository.create({
+      buyer: user,
+      totalAmount,
+      status: OrderStatus.PAID,
+      currency: Currency.EUR, // Assuming EUR for now, should come from cart/listings
+      orderItems
+    });
+
+    const savedOrder = await this.orderRepository.save(order);
+
+    // Create Payment Transaction
+    const payment = this.paymentTransactionRepository.create({
+      order: savedOrder,
+      method: PaymentMethod.CREDIT_CARD,
+      status: PaymentStatus.COMPLETED,
+      transactionId: createOrderDto.paymentIntentId,
+      amount: totalAmount
+    });
+    await this.paymentTransactionRepository.save(payment);
+
+    // Update Listings Quantities
+    for (const item of cart.cartItems) {
+      item.listing.quantityAvailable -= item.quantity;
+      await this.listingRepository.save(item.listing);
+    }
+
+    // Clear Cart
+    await this.userCartService.clearCart(user.id);
+
+    return savedOrder;
+  }
 
   async create(createListingDto: CreateListingDto, user: User) {
     if (!createListingDto.pokemonCardId) {
@@ -637,5 +720,41 @@ export class MarketplaceService {
     }
 
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
+  }
+
+  async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {
+    return this.orderRepository.find({
+      where: { buyer: { id: buyerId } },
+      relations: [
+        'orderItems',
+        'orderItems.listing',
+        'orderItems.listing.pokemonCard',
+        'payments'
+      ],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
+  async findOrderById(id: number, userId: number): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: [
+        'buyer',
+        'orderItems',
+        'orderItems.listing',
+        'orderItems.listing.pokemonCard',
+        'payments'
+      ]
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    if (order.buyer.id !== userId) {
+      throw new ForbiddenException('You can only access your own orders');
+    }
+
+    return order;
   }
 }

@@ -17,6 +17,10 @@ import {
 } from './entities';
 import { Player } from 'src/player/entities/player.entity';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { ConfigModule } from '@nestjs/config';
+import { StripeService } from './stripe.service';
+import { PaymentController } from './payment.controller';
+import { UserCartModule } from '../user_cart/user_cart.module';
 
 @Module({
   imports: [
@@ -30,17 +34,22 @@ import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
       CardPopularityMetrics,
       Player,
       PokemonCard
-    ])
+    ]),
+    ConfigModule,
+    UserCartModule
   ],
   controllers: [
     MarketplaceController,
     ListingsController,
-    CardPopularityController
+    CardPopularityController,
+    PaymentController
   ],
   providers: [
     MarketplaceService,
     CardPopularityService,
-    CardPopularityScheduler
-  ]
+    CardPopularityScheduler,
+    StripeService
+  ],
+  exports: [MarketplaceService]
 })
 export class MarketplaceModule {}
