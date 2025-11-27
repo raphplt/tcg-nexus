@@ -3,43 +3,22 @@ import React, { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { tournamentService } from "@/services/tournament.service";
-import { H1, H2 } from "@/components/Shared/Titles";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { H2 } from "@/components/Shared/Titles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Calendar,
-  MapPin,
-  Users,
-  Trophy,
-  Info,
-  BadgeCheck,
-  Lock,
-  Settings2,
-  Bell,
-  ListChecks,
-  BarChart3,
-} from "lucide-react";
-import {
-  tournamentStatusTranslation,
-  tournamentTypeTranslation,
-} from "@/utils/tournaments";
-import { statusColor, typeColor } from "../utils";
+import { Users, Info, Bell, ListChecks } from "lucide-react";
 import { formatPricing } from "@/utils/price";
 import { Tournament } from "@/types/tournament";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import Link from "next/link";
+import { TournamentHeader } from "./_components/TournamentHeader";
+import { TournamentStats } from "./_components/TournamentStats";
+import { TournamentOverview } from "./_components/TournamentOverview";
+import { ParticipantsTable } from "./_components/ParticipantsTable";
+import { MatchesTable } from "./_components/MatchesTable";
+import { RankingsTable } from "./_components/RankingsTable";
+import { Badge } from "@/components/ui/badge";
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -123,14 +102,10 @@ export default function TournamentDetailsPage() {
 
   const permissions = usePermissions(user, tournament);
 
-  const register = async (tournamentId?: number) => {
-    if (!tournamentId) return;
+  const register = async () => {
+    if (!tournament?.id || !user?.player?.id) return;
     try {
-      if (user) {
-        await tournamentService.register(tournamentId, user.id, "");
-      } else {
-        console.error("User non authentifié.");
-      }
+      await tournamentService.register(tournament.id, user.player.id, "");
     } catch (error) {
       console.error("Erreur lors de l'inscription au tournoi :", error);
     }
@@ -138,12 +113,6 @@ export default function TournamentDetailsPage() {
 
   const participantCount = tournament?.players?.length || 0;
   const matchesCount = tournament?.matches?.length || 0;
-
-  const statusBadgeVariant =
-    statusColor[tournament?.status || ""] ?? "secondary";
-  const typeBadgeVariant = typeColor[tournament?.type || ""] ?? "outline";
-
-  const registrationOpen = tournament?.status === "registration_open";
 
   const headerSubtitle = useMemo(() => {
     const dateRange = `${formatDate(tournament?.startDate)} → ${formatDate(tournament?.endDate)}`;
@@ -157,224 +126,34 @@ export default function TournamentDetailsPage() {
       <ErrorView message={error instanceof Error ? error.message : undefined} />
     );
 
+  if (!tournament) return <ErrorView />;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10">
       <div className="max-w-6xl mx-auto py-10 px-4 space-y-8">
         {/* Header */}
-        <header className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge
-              variant={statusBadgeVariant}
-              className="capitalize"
-            >
-              {tournamentStatusTranslation[
-                tournament!.status as keyof typeof tournamentStatusTranslation
-              ] || tournament!.status}
-            </Badge>
-            <Badge
-              variant={typeBadgeVariant}
-              className="capitalize"
-            >
-              {tournamentTypeTranslation[
-                tournament!.type as keyof typeof tournamentTypeTranslation
-              ] || tournament!.type}
-            </Badge>
-            {tournament?.isPublic === false ? (
-              <Badge
-                variant="secondary"
-                className="gap-1"
-              >
-                <Lock className="size-3" /> Privé
-              </Badge>
-            ) : (
-              <Badge variant="outline">Public</Badge>
-            )}
-            {tournament?.requiresApproval && (
-              <Badge
-                variant="secondary"
-                className="gap-1"
-              >
-                <BadgeCheck className="size-3" /> Validation requise
-              </Badge>
-            )}
-          </div>
-          <H1 className="text-balance">{tournament?.name}</H1>
-          <p className="text-muted-foreground flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="size-4" />{" "}
-              {formatDate(tournament?.startDate)} –{" "}
-              {formatDate(tournament?.endDate)}
-            </span>
-            {tournament?.location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-4" /> {tournament.location}
-              </span>
-            )}
-          </p>
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button
-              disabled={!registrationOpen || !user}
-              className="shadow-md"
-              onClick={() => register(tournament?.id)}
-            >
-              {registrationOpen ? "S'inscrire" : "Inscriptions fermées"}
-            </Button>
-
-            {/* Boutons d'administration */}
-            {permissions.canViewAdmin && (
-              <Button
-                variant="outline"
-                className="shadow-md"
-                asChild
-              >
-                <Link href={`/tournaments/${id}/admin`}>
-                  <Settings2 className="size-4 mr-2" /> Administration
-                </Link>
-              </Button>
-            )}
-
-            {/* Bouton Bracket */}
-            {tournament?.status === "in_progress" && (
-              <Button
-                variant="secondary"
-                className="shadow-md"
-                asChild
-              >
-                <Link href={`/tournaments/${id}/bracket`}>
-                  <Trophy className="size-4 mr-2" /> Voir le bracket
-                </Link>
-              </Button>
-            )}
-
-            {/* Bouton Dashboard Joueur */}
-            {user?.player &&
-              (tournament?.status === "in_progress" ||
-                tournament?.status === "finished") && (
-                <Button
-                  variant="outline"
-                  className="shadow-md"
-                  asChild
-                >
-                  <Link href={`/tournaments/${id}/player`}>
-                    <BarChart3 className="size-4 mr-2" /> Mon dashboard
-                  </Link>
-                </Button>
-              )}
-
-            <Button
-              variant="secondary"
-              className="shadow-md"
-              aria-label="Règlement"
-            >
-              <ListChecks className="size-4 mr-2" /> Règlement
-            </Button>
-          </div>
-        </header>
+        <TournamentHeader
+          tournament={tournament}
+          permissions={permissions}
+          user={user}
+          onRegister={register}
+          formatDate={formatDate}
+        />
 
         {/* Key stats */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={<Users className="size-5" />}
-            label="Participants"
-            value={participantCount}
-          />
-          <StatCard
-            icon={<Trophy className="size-5" />}
-            label="Matches"
-            value={matchesCount}
-          />
-          <StatCard
-            icon={<Settings2 className="size-5" />}
-            label="Format"
-            value={
-              tournamentTypeTranslation[
-                tournament!.type as keyof typeof tournamentTypeTranslation
-              ] || tournament!.type
-            }
-          />
-          <StatCard
-            icon={<Info className="size-5" />}
-            label="Statut"
-            value={
-              tournamentStatusTranslation[
-                tournament!.status as keyof typeof tournamentStatusTranslation
-              ] || tournament!.status
-            }
-          />
-        </section>
+        <TournamentStats
+          participantCount={participantCount}
+          matchesCount={matchesCount}
+          tournamentType={tournament.type}
+          tournamentStatus={tournament.status}
+        />
 
         {/* Overview */}
-        <section
-          id="aperçu"
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-        >
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Info className="size-5" /> Aperçu
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {tournament?.description ? (
-                <p className="leading-relaxed text-sm md:text-base">
-                  {tournament.description}
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Aucune description fournie.
-                </p>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <InfoRow
-                  label="Période"
-                  value={headerSubtitle}
-                />
-                <InfoRow
-                  label="Lieu"
-                  value={tournament?.location || "-"}
-                />
-                <InfoRow
-                  label="Tour actuel"
-                  value={`${tournament?.currentRound ?? 0}/${tournament?.totalRounds ?? 0}`}
-                />
-                <InfoRow
-                  label="Date limite d'inscription"
-                  value={formatDate(tournament?.registrationDeadline ?? null)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="size-5" /> Récompenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {tournament?.rewards && tournament.rewards.length > 0 ? (
-                <ul className="space-y-2">
-                  {tournament.rewards.map((r) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <span className="text-muted-foreground">
-                        #{r.position}
-                      </span>
-                      <span className="font-medium">{r.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Pas de récompenses définies.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+        <TournamentOverview
+          tournament={tournament}
+          headerSubtitle={headerSubtitle}
+          formatDate={formatDate}
+        />
 
         {/* Participants */}
         <section
@@ -384,49 +163,7 @@ export default function TournamentDetailsPage() {
           <H2>Participants</H2>
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Joueur</TableHead>
-                    <TableHead className="hidden sm:table-cell">ID</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tournament?.players?.length ? (
-                    tournament.players.map((p) => (
-                      <TableRow key={p.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar>
-                              <AvatarFallback>
-                                {p.name?.slice(0, 2)?.toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{p.name}</span>
-                              <span className="text-xs text-muted-foreground sm:hidden">
-                                #{p.id}
-                              </span>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          #{p.id}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={2}
-                        className="text-center text-muted-foreground"
-                      >
-                        Aucun participant pour le moment.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <ParticipantsTable participants={tournament.players || []} />
             </CardContent>
           </Card>
         </section>
@@ -439,55 +176,10 @@ export default function TournamentDetailsPage() {
           <H2>Matches</H2>
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Round</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Phase
-                    </TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Planifié
-                    </TableHead>
-                    <TableHead className="hidden sm:table-cell">
-                      Score
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tournament?.matches?.length ? (
-                    tournament.matches.map((m) => (
-                      <TableRow key={m.id}>
-                        <TableCell>#{m.id}</TableCell>
-                        <TableCell>{m.round}</TableCell>
-                        <TableCell className="hidden md:table-cell capitalize">
-                          {m.phase || "-"}
-                        </TableCell>
-                        <TableCell className="capitalize">{m.status}</TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {formatDate(m.scheduledDate ?? null)}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {(m.playerAScore ?? 0) +
-                            " - " +
-                            (m.playerBScore ?? 0)}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="text-center text-muted-foreground"
-                      >
-                        Aucun match planifié pour le moment.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <MatchesTable
+                matches={tournament.matches || []}
+                formatDate={formatDate}
+              />
             </CardContent>
           </Card>
         </section>
@@ -500,53 +192,7 @@ export default function TournamentDetailsPage() {
           <H2>Classement</H2>
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rang</TableHead>
-                    <TableHead>Points</TableHead>
-                    <TableHead className="hidden sm:table-cell">V</TableHead>
-                    <TableHead className="hidden sm:table-cell">D</TableHead>
-                    <TableHead className="hidden sm:table-cell">N</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      % Victoires
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tournament?.rankings?.length ? (
-                    tournament.rankings.map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell>#{r.rank}</TableCell>
-                        <TableCell className="font-medium">
-                          {r.points}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {r.wins}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {r.losses}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          {r.draws}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {r.winRate ?? "0.00"}%
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={6}
-                        className="text-center text-muted-foreground"
-                      >
-                        Le classement n&apos;est pas encore disponible.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <RankingsTable rankings={tournament.rankings || []} />
             </CardContent>
           </Card>
         </section>
@@ -565,7 +211,7 @@ export default function TournamentDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {tournament?.rules ? (
+                {tournament.rules ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-sm">
                     {tournament.rules}
                   </div>
@@ -585,19 +231,19 @@ export default function TournamentDetailsPage() {
               <CardContent className="space-y-2 text-sm">
                 <InfoRow
                   label="Public"
-                  value={tournament?.isPublic ? "Oui" : "Non"}
+                  value={tournament.isPublic ? "Oui" : "Non"}
                 />
                 <InfoRow
                   label="Validation"
-                  value={tournament?.requiresApproval ? "Requise" : "Non"}
+                  value={tournament.requiresApproval ? "Requise" : "Non"}
                 />
                 <InfoRow
                   label="Retard autorisé"
-                  value={tournament?.allowLateRegistration ? "Oui" : "Non"}
+                  value={tournament.allowLateRegistration ? "Oui" : "Non"}
                 />
                 <InfoRow
                   label="Tarif"
-                  value={formatPricing(tournament?.pricing)}
+                  value={formatPricing(tournament.pricing)}
                 />
               </CardContent>
             </Card>
@@ -613,7 +259,7 @@ export default function TournamentDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {tournament?.organizers?.length ? (
+              {tournament.organizers?.length ? (
                 <ul className="space-y-3">
                   {tournament.organizers.map((o) => (
                     <li
@@ -656,7 +302,7 @@ export default function TournamentDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {tournament?.notifications?.length ? (
+              {tournament.notifications?.length ? (
                 <ul className="space-y-3">
                   {tournament.notifications.map((n) => (
                     <li
@@ -692,32 +338,6 @@ export default function TournamentDetailsPage() {
         </section>
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">{label}</div>
-            <div className="text-2xl font-bold">{value}</div>
-          </div>
-          <div className="bg-primary/10 text-primary rounded-md p-2 shadow-sm">
-            {icon}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

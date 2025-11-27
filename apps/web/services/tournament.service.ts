@@ -1,6 +1,11 @@
 import { authedFetch } from "@/utils/fetch";
 import { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { Match, Tournament, TournamentRegistration } from "@/types/tournament";
+import {
+  CreateTournamentDto,
+  Match,
+  Tournament,
+  TournamentRegistration,
+} from "@/types/tournament";
 
 export interface TournamentQueryParams extends PaginationParams {
   search?: string;
@@ -111,5 +116,23 @@ export const tournamentService = {
       "PATCH",
       `/tournaments/${tournamentId}/registrations/${registrationId}/checkin`,
     );
+  },
+
+  /**
+   * Crée un tournoi
+   */
+  async create(payload: CreateTournamentDto): Promise<Tournament> {
+    return authedFetch<Tournament>("POST", `/tournaments`, { body: payload });
+  },
+
+  /**
+   * Récupère les tournois paginés
+   */
+  async getPaginated(
+    params: TournamentQueryParams,
+  ): Promise<PaginatedResult<Tournament>> {
+    return authedFetch<PaginatedResult<Tournament>>("GET", `/tournaments`, {
+      params: params as any,
+    });
   },
 };
