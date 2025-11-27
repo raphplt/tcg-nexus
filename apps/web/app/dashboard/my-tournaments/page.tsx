@@ -3,44 +3,47 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Trophy,
-  Calendar,
-  MapPin,
-  Users,
-  BarChart3,
-  Eye,
-  Clock,
-  CheckCircle,
-  X,
-  Target,
-} from "lucide-react";
+import { Trophy, Clock, CheckCircle, X } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { useAuth } from "@/contexts/AuthContext";
 import { tournamentService } from "@/services/tournament.service";
 import { Tournament } from "@/types/tournament";
+import { PaginatedResult } from "@/types/pagination";
 import Link from "next/link";
+import { TournamentStats } from "./components/TournamentStats";
+import { TournamentList } from "./components/TournamentList";
 
 export default function MyTournamentsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("active");
 
   // Récupérer les tournois du joueur
-  const {
-    data: playerTournaments = [],
-    isLoading,
-  } = useQuery<Tournament[]>({
+  const { data: paginatedTournaments, isLoading } = useQuery<
+    PaginatedResult<Tournament>
+  >({
     queryKey: ["player", user?.player?.id, "tournaments"],
     queryFn: () => {
-      if (!user?.player?.id) return [];
-      // Note: Cette méthode doit être ajoutée au backend
+      if (!user?.player?.id) {
+        return Promise.resolve({
+          data: [],
+          meta: {
+            totalItems: 0,
+            itemCount: 0,
+            itemsPerPage: 10,
+            totalPages: 0,
+            currentPage: 1,
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+        });
+      }
       return tournamentService.getPlayerTournaments(user.player.id);
     },
     enabled: !!user?.player?.id,
   });
+
+  const playerTournaments = paginatedTournaments?.data || [];
 
   // Séparer les tournois par statut
   const activeTournaments = playerTournaments.filter(
@@ -119,48 +122,7 @@ export default function MyTournamentsPage() {
         </div>
 
         {/* Statistiques globales */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {stats.total}
-              </div>
-              <div className="text-sm text-muted-foreground">Total</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {stats.active}
-              </div>
-              <div className="text-sm text-muted-foreground">Actifs</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-purple-600">
-                {stats.finished}
-              </div>
-              <div className="text-sm text-muted-foreground">Terminés</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                {stats.wins}
-              </div>
-              <div className="text-sm text-muted-foreground">Victoires</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">
-                {stats.avgRank > 0 ? stats.avgRank.toFixed(1) : "-"}
-              </div>
-              <div className="text-sm text-muted-foreground">Rang moyen</div>
-            </CardContent>
-          </Card>
-        </div>
+        <TournamentStats stats={stats} />
 
         {/* Onglets par statut */}
         <Tabs
@@ -195,7 +157,7 @@ export default function MyTournamentsPage() {
             value="active"
             className="mt-6"
           >
-            <TournamentsList
+            <TournamentList
               tournaments={activeTournaments}
               isLoading={isLoading}
               showRanking={false}
@@ -206,7 +168,7 @@ export default function MyTournamentsPage() {
             value="finished"
             className="mt-6"
           >
-            <TournamentsList
+            <TournamentList
               tournaments={finishedTournaments}
               isLoading={isLoading}
               showRanking={true}
@@ -218,7 +180,7 @@ export default function MyTournamentsPage() {
             value="cancelled"
             className="mt-6"
           >
-            <TournamentsList
+            <TournamentList
               tournaments={cancelledTournaments}
               isLoading={isLoading}
               showRanking={false}
@@ -226,205 +188,6 @@ export default function MyTournamentsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
-}
-
-interface TournamentsListProps {
-  tournaments: Tournament[];
-  isLoading: boolean;
-  showRanking?: boolean;
-  userId?: number;
-}
-
-function TournamentsList({
-  tournaments,
-  isLoading,
-  showRanking = false,
-  userId,
-}: TournamentsListProps) {
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-24 bg-gray-200 rounded"
-          ></div>
-        ))}
-      </div>
-    );
-  }
-
-  if (tournaments.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Aucun tournoi dans cette catégorie
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "single_elimination":
-        return <Target className="w-4 h-4" />;
-      case "double_elimination":
-        return <Trophy className="w-4 h-4" />;
-      case "swiss_system":
-        return <BarChart3 className="w-4 h-4" />;
-      case "round_robin":
-        return <Users className="w-4 h-4" />;
-      default:
-        return <Trophy className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      draft: { variant: "outline" as const, label: "Brouillon" },
-      registration_open: {
-        variant: "secondary" as const,
-        label: "Inscriptions ouvertes",
-      },
-      registration_closed: {
-        variant: "outline" as const,
-        label: "Inscriptions fermées",
-      },
-      in_progress: { variant: "default" as const, label: "En cours" },
-      finished: { variant: "secondary" as const, label: "Terminé" },
-      cancelled: { variant: "destructive" as const, label: "Annulé" },
-    };
-
-    const config =
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
-  };
-
-  return (
-    <div className="space-y-4">
-      {tournaments.map((tournament) => {
-        const playerRanking =
-          showRanking && userId
-            ? tournament.rankings?.find((r) => r.player.id === userId)
-            : null;
-
-        return (
-          <Card
-            key={tournament.id}
-            className="hover:shadow-md transition-shadow"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {getTypeIcon(tournament.type)}
-                    <h3 className="text-xl font-bold">{tournament.name}</h3>
-                    {getStatusBadge(tournament.status)}
-                  </div>
-
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      {formatDate(tournament.startDate)}
-                    </span>
-                    {tournament.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {tournament.location}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      {tournament.players?.length || 0} joueurs
-                    </span>
-                  </div>
-
-                  {/* Résultat du joueur */}
-                  {showRanking && playerRanking && (
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4 text-yellow-500" />
-                        <span className="font-medium">
-                          Rang #{playerRanking.rank}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-blue-500" />
-                        <span>{playerRanking.points} points</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-green-500" />
-                        <span>
-                          {playerRanking.winRate.toFixed(1)}% victoires
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {tournament.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {tournament.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
-                    <Link href={`/tournaments/${tournament.id}`}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Voir
-                    </Link>
-                  </Button>
-
-                  {tournament.status === "in_progress" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
-                      <Link href={`/tournaments/${tournament.id}/player`}>
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Dashboard
-                      </Link>
-                    </Button>
-                  )}
-
-                  {(tournament.status === "in_progress" ||
-                    tournament.status === "finished") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
-                      <Link href={`/tournaments/${tournament.id}/bracket`}>
-                        <Trophy className="w-4 h-4 mr-2" />
-                        Bracket
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
     </div>
   );
 }

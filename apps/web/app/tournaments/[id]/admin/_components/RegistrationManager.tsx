@@ -67,11 +67,9 @@ export function RegistrationManager({
   const [bulkAction, setBulkAction] = useState<string | null>(null);
 
   // Données des inscriptions
-  const {
-    data: registrations = [],
-    isLoading,
-    error,
-  } = useQuery<TournamentRegistration[]>({
+  const { data: registrations = [], isLoading } = useQuery<
+    TournamentRegistration[]
+  >({
     queryKey: ["tournament", tournamentId, "registrations"],
     queryFn: () => tournamentService.getRegistrations(tournamentId),
     enabled: !!tournamentId,

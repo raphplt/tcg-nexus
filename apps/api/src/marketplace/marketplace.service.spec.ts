@@ -9,6 +9,10 @@ import { Order } from './entities/order.entity';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { UserRole } from '../common/enums/user';
+import { PaymentTransaction } from './entities/payment-transaction.entity';
+import { OrderItem } from './entities/order-item.entity';
+import { StripeService } from './stripe.service';
+import { UserCartService } from '../user_cart/user_cart.service';
 
 describe('MarketplaceService', () => {
   let service: MarketplaceService;
@@ -38,6 +42,27 @@ describe('MarketplaceService', () => {
       create: jest.fn()
     };
 
+    const paymentTransactionRepoMock: Partial<
+      jest.Mocked<Repository<PaymentTransaction>>
+    > = {
+      create: jest.fn(),
+      save: jest.fn()
+    };
+
+    const orderItemRepoMock: Partial<jest.Mocked<Repository<OrderItem>>> = {
+      create: jest.fn(),
+      save: jest.fn()
+    };
+
+    const stripeServiceMock = {
+      retrievePaymentIntent: jest.fn()
+    };
+
+    const userCartServiceMock = {
+      findCartByUserId: jest.fn(),
+      clearCart: jest.fn()
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarketplaceService,
@@ -50,7 +75,17 @@ describe('MarketplaceService', () => {
           provide: getRepositoryToken(PokemonCard),
           useValue: pokemonCardRepoMock
         },
-        { provide: getRepositoryToken(Order), useValue: orderRepoMock }
+        { provide: getRepositoryToken(Order), useValue: orderRepoMock },
+        {
+          provide: getRepositoryToken(PaymentTransaction),
+          useValue: paymentTransactionRepoMock
+        },
+        {
+          provide: getRepositoryToken(OrderItem),
+          useValue: orderItemRepoMock
+        },
+        { provide: StripeService, useValue: stripeServiceMock },
+        { provide: UserCartService, useValue: userCartServiceMock }
       ]
     }).compile();
 

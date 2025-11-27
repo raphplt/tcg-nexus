@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { MarketplaceService } from './marketplace.service';
 import { CreateListingDto } from './dto/create-marketplace.dto';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { FindAllListingsQuery } from './dto/ind-all-listings-query.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -36,6 +37,30 @@ export class MarketplaceController {
     @CurrentUser() user: User
   ) {
     return this.marketplaceService.create(createListingDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('orders')
+  createOrder(
+    @Body() createOrderDto: CreateOrderDto,
+    @CurrentUser() user: User
+  ) {
+    return this.marketplaceService.createOrder(createOrderDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('orders')
+  getMyOrders(@CurrentUser() user: User) {
+    return this.marketplaceService.findOrdersByBuyerId(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('orders/:id')
+  getOrderById(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.marketplaceService.findOrderById(+id, user.id);
   }
 
   @Get('listings')

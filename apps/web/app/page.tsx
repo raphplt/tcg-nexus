@@ -3,7 +3,6 @@
 import React from "react";
 import TournamentPreview from "@/components/Home/TournamentPreview";
 import MarketplacePreview from "@/components/Home/MarketplacePreview";
-import StrategicToolsPreview from "@/components/Home/StrategicToolsPreview";
 import LatestArticles from "@/components/Home/LatestArticles";
 import RandomCard from "@/components/Home/RandomCard";
 import TrendingDecks from "@/components/Home/TrendingDecks";
@@ -42,9 +41,9 @@ const HomePage = () => {
               <div className="card-hover">
                 <MarketplacePreview />
               </div>
-              <div className="card-hover">
+              {/* <div className="card-hover">
                 <StrategicToolsPreview />
-              </div>
+              </div> */}
             </div>
           </div>
         </section>

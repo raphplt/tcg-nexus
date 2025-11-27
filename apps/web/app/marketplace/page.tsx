@@ -41,7 +41,7 @@ export default function MarketplaceHomePage() {
             meilleures offres et les meilleurs vendeurs de la communauté.
           </p>
           <div className="flex justify-center mt-4">
-             <CurrencySelector />
+            <CurrencySelector />
           </div>
           <div className="flex flex-wrap gap-4 justify-center mt-6">
             <Button
@@ -63,12 +63,12 @@ export default function MarketplaceHomePage() {
           </div>
         </div>
 
-        {/* Section des cartes en tendance */}
+        {/* Cartes tendances */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Flame className="w-6 h-6 text-primary" />
-              <H2>Cartes en tendance</H2>
+              <H2>Cartes tendances</H2>
             </div>
             <Button
               variant="ghost"
@@ -111,7 +111,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Section des cartes populaires */}
+        {/* Cartes populaires */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Section des meilleurs vendeurs */}
+        {/* Meilleurs vendeurs */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Section des sets */}
+        {/* Sets */}
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
