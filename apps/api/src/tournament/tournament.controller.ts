@@ -64,6 +64,12 @@ export class TournamentController {
   }
 
   @Public()
+  @Get('past')
+  async getPastTournaments(@Query('limit') limit?: number) {
+    return this.tournamentService.getPastTournaments(limit);
+  }
+
+  @Public()
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.tournamentService.findOne(id);

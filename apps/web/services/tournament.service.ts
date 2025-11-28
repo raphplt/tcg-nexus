@@ -155,6 +155,17 @@ export const tournamentService = {
   },
 
   /**
+   * Récupère les tournois passés
+   */
+  async getPastTournaments(
+    params: TournamentQueryParams,
+  ): Promise<Tournament[]> {
+    return authedFetch<Tournament[]>("GET", `/tournaments/past`, {
+      params: params as any,
+    });
+  },
+
+  /**
    * Récupère le bracket d'un tournoi
    */
   async getBracket(tournamentId: number): Promise<BracketStructure> {

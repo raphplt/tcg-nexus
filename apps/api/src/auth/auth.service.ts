@@ -130,10 +130,19 @@ export class AuthService {
         user.refreshToken
       );
 
+      console.log(
+        `[AuthService] Refresh token match for user ${userId}: ${refreshTokenMatches}`
+      );
+
       if (!refreshTokenMatches) {
+        console.warn(`[AuthService] Refresh token mismatch for user ${userId}`);
         throw new UnauthorizedException('Access denied');
       }
-    } catch {
+    } catch (error) {
+      console.error(
+        `[AuthService] Error verifying refresh token for user ${userId}:`,
+        error
+      );
       throw new UnauthorizedException('Access denied');
     }
 

@@ -52,7 +52,9 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    const result: User & { refreshToken?: string } = { ...user };
+    const result: User & { refreshToken?: string } = { ...user } as User & {
+      refreshToken?: string;
+    };
     if (refreshToken) {
       result.refreshToken = refreshToken;
     }

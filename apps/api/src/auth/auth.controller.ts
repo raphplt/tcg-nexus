@@ -6,7 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Res,
-  Request
+  Request,
+  UnauthorizedException
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -95,6 +96,9 @@ export class AuthController {
     @Request() req: ExpressRequest
   ) {
     const rememberMe = req.headers['x-remember-me'] === 'true';
+    if (!user.refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
     const tokens = await this.authService.refreshTokens(
       user.id,
       user.refreshToken

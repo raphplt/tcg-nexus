@@ -111,12 +111,14 @@ export class UserService {
     userId: number,
     refreshToken: string | null
   ): Promise<void> {
-    const updateData: { refreshToken?: string } = {};
+    const updateData: { refreshToken?: string | null } = {};
 
     if (refreshToken) {
       updateData.refreshToken = await bcrypt.hash(refreshToken, 10);
-    } else if (refreshToken === null) {
-      updateData.refreshToken = undefined;
+      console.log(`[UserService] Hashed refresh token for user ${userId}`);
+    } else {
+      updateData.refreshToken = null;
+      console.log(`[UserService] Clearing refresh token for user ${userId}`);
     }
 
     await this.userRepository.update(userId, updateData);
