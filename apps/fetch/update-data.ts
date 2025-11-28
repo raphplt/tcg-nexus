@@ -35,29 +35,34 @@ async function updateData() {
 	}
 
 	// 3. Identify new items
-	// 3. Identify new items
 	const newSeries = remoteSeries.filter(
 		(s: any) =>
 			!localSeriesIds.has(s.id) && !s.name.toLowerCase().includes("pocket")
 	);
-	const newSets = remoteSets.filter(
-		(s: any) =>
-			!localSetsIds.has(s.id) &&
-			!s.name.toLowerCase().includes("pocket") &&
-			// Also filter out sets that belong to a Pocket series if possible,
-			// though the series ID check might be enough if the set object has it.
-			// Let's check if set object has series name or ID that indicates Pocket.
-			// Based on logs, "Puissance Génétique (A1)" is a Pocket set.
-			// Its ID is likely related to Pocket series.
-			// For now, filtering by name "Pocket" on the set might not catch "Puissance Génétique".
-			// However, usually Pocket sets are in the Pocket series.
-			// If we filter series, we should also ensure we don't add sets from those series.
-			// But here we are filtering sets directly from remoteSets.
-			// Let's assume for now that checking "pocket" in name is a good start,
-			// but "Puissance Génétique" doesn't have "Pocket" in the name.
-			// We might need to check the series ID of            // The remoteSets objects have 'serie' property which is an object with 'id' and 'name'.
-			!(s.serie && s.serie.name && s.serie.name.toLowerCase().includes("pocket"))
-	);
+	console.log(`Local sets count: ${localSetsIds.size}`);
+	console.log(`Remote sets count: ${remoteSets.length}`);
+	console.log(`Has sv09 locally? ${localSetsIds.has("sv09")}`);
+	const remoteSv09 = remoteSets.find((s: any) => s.id === "sv09");
+	console.log(`Found sv09 remotely? ${!!remoteSv09}`);
+
+	const newSets = remoteSets.filter((s: any) => {
+		const isNew = !localSetsIds.has(s.id);
+		const isPocketName = s.name.toLowerCase().includes("pocket");
+		const isPocketSerie =
+			s.serie && s.serie.name && s.serie.name.toLowerCase().includes("pocket");
+
+		if (s.id === "sv09") {
+			console.log(
+				`Checking sv09: isNew=${isNew}, isPocketName=${isPocketName}, isPocketSerie=${isPocketSerie}`
+			);
+		}
+
+		if (isNew && (isPocketName || isPocketSerie)) {
+			console.log(`Filtering out Pocket set: ${s.name} (${s.id})`);
+		}
+
+		return isNew && !isPocketName && !isPocketSerie;
+	});
 
 	console.log(
 		`Found ${newSeries.length} new series and ${newSets.length} new sets.`
