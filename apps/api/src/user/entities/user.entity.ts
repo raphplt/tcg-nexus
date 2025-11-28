@@ -60,9 +60,9 @@ export class User {
   @Column({ default: false })
   emailVerified: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   @Exclude()
-  refreshToken: string;
+  refreshToken: string | null;
 
   // Relations
   @OneToOne(() => Player, (player) => player.user, { nullable: true })

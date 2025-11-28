@@ -46,13 +46,19 @@ export class JwtRefreshStrategy extends PassportStrategy(
     const refreshToken: string | undefined = req.cookies?.refreshToken as
       | string
       | undefined;
+    console.log('JwtRefreshStrategy validate', {
+      hasCookie: !!refreshToken,
+      sub: payload.sub
+    });
     const user = await this.userService.findById(payload.sub);
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    const result: User & { refreshToken?: string } = { ...user };
+    const result: User & { refreshToken?: string } = { ...user } as User & {
+      refreshToken?: string;
+    };
     if (refreshToken) {
       result.refreshToken = refreshToken;
     }

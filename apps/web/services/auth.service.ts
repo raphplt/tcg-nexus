@@ -98,6 +98,7 @@ api.interceptors.response.use(
 
       try {
         await api.post("/auth/refresh");
+        scheduleRefresh(Date.now() + 14 * 60 * 1000);
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {

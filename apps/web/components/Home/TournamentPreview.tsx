@@ -14,8 +14,6 @@ const TournamentPreview = () => {
     queryFn: () => tournamentService.getPastTournaments({ limit: 5 }),
   });
 
-  console.log("tournois", data);
-
   return (
     <Card className="bg-card rounded-xl shadow p-6">
       <H2 className="mb-4">Derniers tournois</H2>
