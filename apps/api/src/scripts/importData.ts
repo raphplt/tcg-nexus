@@ -19,7 +19,28 @@ function logError(msg: string) {
 
 async function bootstrap() {
   const rl = readline.createInterface({ input, output });
-  const app = await NestFactory.createApplicationContext(AppModule);
+
+  console.log('Starting Nest application context creation...');
+  const timeoutHandle = setTimeout(() => {
+    console.error(
+      '❌ Timeout: Application context creation took too long (> 60s). Exiting.'
+    );
+    process.exit(1);
+  }, 60000);
+
+  let app;
+  try {
+    app = await NestFactory.createApplicationContext(AppModule, {
+      logger: ['error', 'warn', 'log', 'debug', 'verbose']
+    });
+    clearTimeout(timeoutHandle);
+    console.log('✅ Nest application context created successfully.');
+  } catch (err) {
+    clearTimeout(timeoutHandle);
+    console.error('❌ Error creating application context:', err);
+    process.exit(1);
+  }
+
   const seedService = app.get(SeedService);
 
   try {
@@ -108,4 +129,7 @@ async function bootstrap() {
   }
 }
 
-bootstrap().catch((error) => logError('Bootstrap error: ' + error));
+bootstrap().catch((error) => {
+  logError('Bootstrap error: ' + error);
+  process.exit(1);
+});
