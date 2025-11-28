@@ -3859,5 +3859,493 @@
         },
         "serieId": "sv",
         "symbol": "/images/icons/evolutions-prismatiques-icon.webp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 12,
+            "reverse": 0,
+            "total": 12
+        },
+        "id": "tk-ex-m",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "EX Kit dresseur (Négapi)",
+        "releaseDate": "2006-03-01",
+        "abbreviation": {
+            "official": "TK2M",
+            "localized": "NEG"
+        },
+        "serieId": "tk"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 226,
+            "reverse": 0,
+            "total": 286
+        },
+        "id": "A1",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Puissance Génétique",
+        "releaseDate": "2024-10-30",
+        "symbol": "https://assets.tcgdex.net/univ/tcgp/A1/symbol",
+        "boosters": [
+            {
+                "id": "boo_A1-mewtwo",
+                "name": "Mewtwo"
+            },
+            {
+                "id": "boo_A1-charizard",
+                "name": "Dracaufeu"
+            },
+            {
+                "id": "boo_A1-pikachu",
+                "name": "Pikachu"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 0,
+            "reverse": 0,
+            "total": 73
+        },
+        "id": "P-A",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Promo-A",
+        "releaseDate": "2024-10-30",
+        "boosters": [
+            {
+                "id": "boo_P-A-vol1"
+            },
+            {
+                "id": "boo_P-A-vol2"
+            },
+            {
+                "id": "boo_P-A-vol3"
+            },
+            {
+                "id": "boo_P-A-vol4"
+            },
+            {
+                "id": "boo_P-A-vol5"
+            },
+            {
+                "id": "boo_P-A-vol6"
+            },
+            {
+                "id": "boo_P-A-vol7"
+            },
+            {
+                "id": "boo_P-A-vol8"
+            },
+            {
+                "id": "boo_P-A-vol9"
+            },
+            {
+                "id": "boo_P-A-vol10"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 68,
+            "reverse": 0,
+            "total": 86
+        },
+        "id": "A1a",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "L’Île Fabuleuse",
+        "releaseDate": "2024-12-17",
+        "boosters": [
+            {
+                "id": "boo_A1a-mew"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 140,
+            "reverse": 0,
+            "total": 207
+        },
+        "id": "A2",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Choc Spatio-Temporel",
+        "releaseDate": "2025-01-30",
+        "boosters": [
+            {
+                "id": "boo_A2-palkia",
+                "name": "Palkia"
+            },
+            {
+                "id": "boo_A2-dialga",
+                "name": "Dialga"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 75,
+            "reverse": 0,
+            "total": 96
+        },
+        "id": "A2a",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Lumière Triomphale",
+        "releaseDate": "2025-02-28",
+        "symbol": "https://assets.tcgdex.net/univ/tcgp/A2a/symbol",
+        "boosters": [
+            {
+                "id": "boo_A2a-arceus"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 72,
+            "reverse": 0,
+            "total": 111
+        },
+        "id": "A2b",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Réjouissances Rayonnantes",
+        "releaseDate": "2025-03-27",
+        "symbol": "https://assets.tcgdex.net/univ/tcgp/A2b/symbol",
+        "boosters": [
+            {
+                "id": "boo_A2b-shining"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 79,
+            "normal": 129,
+            "official": 159,
+            "reverse": 143,
+            "total": 190
+        },
+        "id": "sv09",
+        "legal": {
+            "expanded": true,
+            "standard": false
+        },
+        "logo": "https://assets.tcgdex.net/fr/sv/sv09/logo",
+        "name": "Aventures Ensemble",
+        "releaseDate": "2025-03-28",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv09/symbol",
+        "abbreviation": {
+            "official": "JTG"
+        },
+        "serieId": "sv"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 155,
+            "reverse": 0,
+            "total": 239
+        },
+        "id": "A3",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Gardiens Astraux",
+        "releaseDate": "2025-04-30",
+        "boosters": [
+            {
+                "id": "boo_A3-solgaleo",
+                "name": "Solgaleo"
+            },
+            {
+                "id": "boo_A3-lunala",
+                "name": "Lunala"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 69,
+            "reverse": 0,
+            "total": 103
+        },
+        "id": "A3a",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Crise Interdimensionnelle",
+        "releaseDate": "2025-05-29",
+        "boosters": [
+            {
+                "id": "boo_A3a-extradimensional"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 104,
+            "normal": 149,
+            "official": 182,
+            "reverse": 169,
+            "total": 244
+        },
+        "id": "sv10",
+        "legal": {
+            "expanded": true,
+            "standard": false
+        },
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10/logo",
+        "name": "Rivalités Destinées",
+        "releaseDate": "2025-05-30",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10/symbol",
+        "abbreviation": {
+            "official": "DRI",
+            "localized": "RVD"
+        },
+        "serieId": "sv"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 69,
+            "reverse": 0,
+            "total": 107
+        },
+        "id": "A3b",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "La Clairière d'Évoli",
+        "releaseDate": "2025-06-26",
+        "boosters": [
+            {
+                "id": "boo_A3b-eevee"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 86,
+            "reverse": 0,
+            "total": 172
+        },
+        "id": "sv10.5b",
+        "legal": {
+            "expanded": true,
+            "standard": false
+        },
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5b/logo",
+        "name": "Foudre Noire",
+        "releaseDate": "2025-07-17",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5b/symbol",
+        "abbreviation": {
+            "official": "BLK"
+        },
+        "serieId": "sv"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 86,
+            "reverse": 0,
+            "total": 173
+        },
+        "id": "sv10.5w",
+        "legal": {
+            "expanded": true,
+            "standard": false
+        },
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5w/logo",
+        "name": "Flamme Blanche",
+        "releaseDate": "2025-07-17",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5w/symbol",
+        "abbreviation": {
+            "official": "WHT"
+        },
+        "serieId": "sv"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 161,
+            "reverse": 0,
+            "total": 241
+        },
+        "id": "A4",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Sagesse Entre Ciel et Mer",
+        "releaseDate": "2025-07-30",
+        "boosters": [
+            {
+                "id": "boo_A4-lugia",
+                "name": "Lugia"
+            },
+            {
+                "id": "boo_A4-ho-oh",
+                "name": "Ho-Oh"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 71,
+            "reverse": 0,
+            "total": 105
+        },
+        "id": "A4a",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Source Secrète",
+        "releaseDate": "2025-08-28",
+        "symbol": "https://assets.tcgdex.net/univ/tcgp/A4a/symbol",
+        "boosters": [
+            {
+                "id": "boo_A4a-suicune"
+            }
+        ],
+        "serieId": "tcgp"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 132,
+            "reverse": 0,
+            "total": 188
+        },
+        "id": "me01",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "logo": "https://assets.tcgdex.net/fr/me/me01/logo",
+        "name": "Méga-Évolution",
+        "releaseDate": "2025-09-26",
+        "symbol": "https://assets.tcgdex.net/univ/me/me01/symbol",
+        "abbreviation": {
+            "official": "MEG"
+        },
+        "serieId": "me"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 16,
+            "normal": 0,
+            "official": 0,
+            "reverse": 0,
+            "total": 10
+        },
+        "id": "mep",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "MEP Black Star Promos",
+        "releaseDate": "2025-09-26",
+        "abbreviation": {
+            "official": "MEP"
+        },
+        "serieId": "me"
+    },
+    {
+        "cardCount": {
+            "firstEd": 0,
+            "holo": 0,
+            "normal": 0,
+            "official": 94,
+            "reverse": 0,
+            "total": 130
+        },
+        "id": "me02",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Flammes Fantasmagoriques",
+        "releaseDate": "2025-11-14",
+        "abbreviation": {
+            "official": "PFL"
+        },
+        "serieId": "me"
     }
 ]
