@@ -12,7 +12,6 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@esbuild/darwin-arm64": "^0.27.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
     "esbuild": "^0.25.9",
@@ -24,5 +23,8 @@
   "dependencies": {
     "@types/adm-zip": "^0.5.7",
     "adm-zip": "^0.5.16"
+  },
+  "optionalDependencies": {
+    "@esbuild/darwin-arm64": "^0.27.0"
   }
 }
