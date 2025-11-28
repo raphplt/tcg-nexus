@@ -10,13 +10,15 @@ import { ArrowRight } from "lucide-react";
 
 const TournamentPreview = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["tournaments", "upcoming"],
-    queryFn: () => tournamentService.getUpcomingTournaments({ limit: 5 }),
+    queryKey: ["tournaments", "past"],
+    queryFn: () => tournamentService.getPastTournaments({ limit: 5 }),
   });
+
+  console.log("tournois", data);
 
   return (
     <Card className="bg-card rounded-xl shadow p-6">
-      <H2 className="mb-4">Tournois en cours</H2>
+      <H2 className="mb-4">Derniers tournois</H2>
       {isLoading && (
         <div className="flex items-center justify-center py-8 text-muted-foreground">
           Chargement...
@@ -28,8 +30,8 @@ const TournamentPreview = () => {
         </div>
       )}
       <div className="flex flex-col gap-3">
-        {data && data.data && data.data.length > 0 ? (
-          data.data.map((tournament, i) => (
+        {data && Array.isArray(data) && data.length > 0 ? (
+          data.map((tournament, i) => (
             <div
               key={tournament.id}
               className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:shadow-md transition group"
@@ -50,7 +52,7 @@ const TournamentPreview = () => {
           ))
         ) : !isLoading && !error ? (
           <div className="text-muted-foreground text-center">
-            Aucun tournoi à venir
+            Aucun tournoi passés
           </div>
         ) : null}
       </div>

@@ -50,8 +50,8 @@ export const decksService = {
     return fetcher<PaginatedResult<Deck>>("/deck/me", { params });
   },
 
-  async getDeckById(id: string) {
-    return fetcher(`/deck/${id}`);
+  async getDeckById(id: string): Promise<Deck> {
+    return fetcher<Deck>(`/deck/${id}`);
   },
 
   async create(data: createDeckParams) {

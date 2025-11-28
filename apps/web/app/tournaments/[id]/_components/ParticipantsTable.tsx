@@ -31,11 +31,20 @@ export function ParticipantsTable({ participants }: ParticipantsTableProps) {
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarFallback>
-                      {p.name?.slice(0, 2)?.toUpperCase()}
+                      {(p.user
+                        ? `${p.user.firstName} ${p.user.lastName}`
+                        : p.name
+                      )
+                        ?.slice(0, 2)
+                        ?.toUpperCase() || "??"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium">{p.name}</span>
+                    <span className="font-medium">
+                      {p.user
+                        ? `${p.user.firstName} ${p.user.lastName}`
+                        : p.name || `Joueur #${p.id}`}
+                    </span>
                     <span className="text-xs text-muted-foreground sm:hidden">
                       #{p.id}
                     </span>
@@ -47,7 +56,10 @@ export function ParticipantsTable({ participants }: ParticipantsTableProps) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={2} className="text-center text-muted-foreground">
+            <TableCell
+              colSpan={2}
+              className="text-center text-muted-foreground"
+            >
               Aucun participant pour le moment.
             </TableCell>
           </TableRow>

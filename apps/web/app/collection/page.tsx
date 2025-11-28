@@ -71,8 +71,6 @@ const Page = () => {
     }
   };
 
-  console.log("filteredCollections", filteredCollections);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">

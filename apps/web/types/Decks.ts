@@ -7,6 +7,7 @@ export interface Deck {
   name: string;
   user: User;
   format: DeckFormat;
+  isPublic: boolean;
   cards?: DeckCard[];
   createdAt?: Date;
   updatedAt?: Date;

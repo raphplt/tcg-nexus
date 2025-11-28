@@ -5,7 +5,7 @@ import {
   ConflictException
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, LessThan } from 'typeorm';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { TournamentQueryDto } from './dto/tournament-query.dto';
@@ -188,9 +188,18 @@ export class TournamentService {
       where: { id },
       relations: [
         'players',
+        'players.user',
         'matches',
+        'matches.playerA',
+        'matches.playerA.user',
+        'matches.playerB',
+        'matches.playerB.user',
         'rankings',
+        'rankings.player',
+        'rankings.player.user',
         'registrations',
+        'registrations.player',
+        'registrations.player.user',
         'rewards',
         'pricing',
         'organizers',
@@ -419,6 +428,19 @@ export class TournamentService {
         ])
       },
       order: { startDate: 'ASC' },
+      take: limit,
+      relations: ['pricing', 'rewards']
+    });
+  }
+
+  // Récupérer les tournois passés
+  async getPastTournaments(limit: number = 10): Promise<Tournament[]> {
+    return this.tournamentRepository.find({
+      where: {
+        startDate: LessThan(new Date()),
+        isPublic: true
+      },
+      order: { startDate: 'DESC' },
       take: limit,
       relations: ['pricing', 'rewards']
     });
