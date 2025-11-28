@@ -299,70 +299,79 @@ export class SeedService {
     const cards: PokemonCard[] = [];
 
     if (zipEntries && zipEntries.length > 0) {
-      const content = zipEntries[0];
-      const firstEntryContent = content.getData().toString('utf8');
-
-      try {
-        if (typeof firstEntryContent !== 'string') {
-          throw new Error('Invalid content type, expected a string');
+      for (const entry of zipEntries) {
+        if (entry.isDirectory || !entry.name.endsWith('.json')) {
+          continue;
         }
-        const pokemonCards: any[] = JSON.parse(firstEntryContent);
 
-        for (const cardData of pokemonCards) {
-          const setId = cardData.set?.id;
-          if (!setId) {
-            continue;
-          }
-          const set = await this.pokemonSetRepository.findOne({
-            where: { id: setId }
-          });
-          if (!set) {
-            console.warn(
-              `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`
+        const entryContent = entry.getData().toString('utf8');
+
+        try {
+          const parsedContent = JSON.parse(entryContent);
+          // Handle both single card object and array of cards
+          const cardsData = Array.isArray(parsedContent)
+            ? parsedContent
+            : [parsedContent];
+
+          for (const cardData of cardsData) {
+            const setId = cardData.set?.id;
+            if (!setId) {
+              continue;
+            }
+            const set = await this.pokemonSetRepository.findOne({
+              where: { id: setId }
+            });
+            if (!set) {
+              // console.warn(
+              //   `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`
+              // );
+              continue;
+            }
+            delete cardData.set;
+            cardData.set = set;
+
+            cardData.tcgDexId = cardData.id;
+            delete cardData.id;
+
+            cardData.name = cardData.name
+              ? this.cleanString(cardData.name as string)
+              : '';
+            cardData.illustrator = cardData.illustrator
+              ? this.cleanString(cardData.illustrator as string)
+              : null;
+            cardData.description = cardData.description
+              ? this.cleanString(cardData.description as string)
+              : null;
+            cardData.evolveFrom = cardData.evolveFrom
+              ? this.cleanString(cardData.evolveFrom as string)
+              : null;
+            cardData.effect = cardData.effect
+              ? this.cleanString(cardData.effect as string)
+              : null;
+
+            if (cardData.variants && cardData.variants.wPromo !== undefined) {
+              const { ...validVariants } = cardData.variants;
+              cardData.variants = validVariants;
+            }
+            const card = this.pokemonCardRepository.create(
+              cardData as DeepPartial<PokemonCard>
             );
-            continue;
+            cards.push(card);
           }
-          delete cardData.set;
-          cardData.set = set;
-
-          cardData.tcgDexId = cardData.id;
-          delete cardData.id;
-
-          cardData.name = cardData.name
-            ? this.cleanString(cardData.name as string)
-            : '';
-          cardData.illustrator = cardData.illustrator
-            ? this.cleanString(cardData.illustrator as string)
-            : null;
-          cardData.description = cardData.description
-            ? this.cleanString(cardData.description as string)
-            : null;
-          cardData.evolveFrom = cardData.evolveFrom
-            ? this.cleanString(cardData.evolveFrom as string)
-            : null;
-          cardData.effect = cardData.effect
-            ? this.cleanString(cardData.effect as string)
-            : null;
-
-          if (cardData.variants && cardData.variants.wPromo !== undefined) {
-            const { ...validVariants } = cardData.variants;
-            cardData.variants = validVariants;
-          }
-          const card = this.pokemonCardRepository.create(
-            cardData as DeepPartial<PokemonCard>
+        } catch (jsonError) {
+          console.error(
+            `Failed to parse JSON content for ${entry.name}:`,
+            jsonError
           );
-          cards.push(card);
         }
+      }
 
-        if (cards.length > 0) {
-          const batchSize = 500;
-          for (let i = 0; i < cards.length; i += batchSize) {
-            const batch = cards.slice(i, i + batchSize);
-            await this.pokemonCardRepository.save(batch);
-          }
+      if (cards.length > 0) {
+        const batchSize = 500;
+        for (let i = 0; i < cards.length; i += batchSize) {
+          const batch = cards.slice(i, i + batchSize);
+          await this.pokemonCardRepository.save(batch);
         }
-      } catch (jsonError) {
-        console.error('Failed to parse JSON content:', jsonError);
       }
     } else {
       console.log('No entries found in the zip file.');

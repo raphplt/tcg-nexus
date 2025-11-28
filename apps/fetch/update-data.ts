@@ -35,33 +35,31 @@ async function updateData() {
 	}
 
 	// 3. Identify new items
+    const pocketSeriesIds = new Set(
+					remoteSeries
+						.filter((s: any) => s.name.toLowerCase().includes("pocket"))
+						.map((s: any) => s.id)
+				);
+
 	const newSeries = remoteSeries.filter(
-		(s: any) =>
-			!localSeriesIds.has(s.id) && !s.name.toLowerCase().includes("pocket")
+		(s: any) => !localSeriesIds.has(s.id) && !pocketSeriesIds.has(s.id)
 	);
-	console.log(`Local sets count: ${localSetsIds.size}`);
-	console.log(`Remote sets count: ${remoteSets.length}`);
-	console.log(`Has sv09 locally? ${localSetsIds.has("sv09")}`);
-	const remoteSv09 = remoteSets.find((s: any) => s.id === "sv09");
-	console.log(`Found sv09 remotely? ${!!remoteSv09}`);
 
 	const newSets = remoteSets.filter((s: any) => {
 		const isNew = !localSetsIds.has(s.id);
 		const isPocketName = s.name.toLowerCase().includes("pocket");
-		const isPocketSerie =
-			s.serie && s.serie.name && s.serie.name.toLowerCase().includes("pocket");
 
-		if (s.id === "sv09") {
-			console.log(
-				`Checking sv09: isNew=${isNew}, isPocketName=${isPocketName}, isPocketSerie=${isPocketSerie}`
-			);
-		}
+		// Check if set belongs to a Pocket series
+		// s.serie might be an object with id, or just the id, or undefined
+		const serieId = s.serie?.id || s.serie;
+		const isPocketSerie = pocketSeriesIds.has(serieId);
 
-		if (isNew && (isPocketName || isPocketSerie)) {
-			console.log(`Filtering out Pocket set: ${s.name} (${s.id})`);
-		}
+		// Also filter by specific Pocket set IDs if known and not caught by above
+		// "Puissance Génétique" (A1) seems to be the main one slipping through
+		const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A"];
+		const isKnownPocketId = knownPocketSetIds.includes(s.id);
 
-		return isNew && !isPocketName && !isPocketSerie;
+		return isNew && !isPocketName && !isPocketSerie && !isKnownPocketId;
 	});
 
 	console.log(
