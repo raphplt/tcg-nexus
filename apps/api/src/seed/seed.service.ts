@@ -1296,7 +1296,7 @@ export class SeedService {
       const events = await this.cardEventRepository
         .createQueryBuilder('event')
         .leftJoinAndSelect('event.card', 'card')
-        .where('event.cardId IN (:...cardIds)', { cardIds })
+        .where('card.id IN (:...cardIds)', { cardIds })
         .getMany();
 
       if (events.length === 0) continue;
