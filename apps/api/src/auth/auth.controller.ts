@@ -22,6 +22,41 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { UseGuards as UseGuardsDecorator } from '@nestjs/common';
+import type { CookieOptions } from 'express';
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const buildCookieOptions = (
+  req: ExpressRequest,
+  maxAge?: number
+): CookieOptions => {
+  const explicitDomain = process.env.COOKIE_DOMAIN?.trim();
+
+  let derivedDomain: string | undefined;
+
+  if (!explicitDomain && process.env.FRONTEND_URL) {
+    try {
+      const parsedUrl = new URL(process.env.FRONTEND_URL);
+      const frontendHost = parsedUrl.hostname.replace(/^www\./, '');
+      const requestHost = (req.hostname || req.headers.host || '').toString();
+
+      if (requestHost.endsWith(frontendHost)) {
+        derivedDomain = frontendHost;
+      }
+    } catch (error) {
+      console.error('Unable to derive cookie domain from FRONTEND_URL', error);
+    }
+  }
+
+  const baseCookie: CookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+    domain: explicitDomain || derivedDomain
+  };
+
+  return maxAge ? { ...baseCookie, maxAge } : baseCookie;
+};
 
 @ApiTags('auth')
 @Controller('auth')
@@ -41,18 +76,22 @@ export class AuthController {
   ) {
     const rememberMe = req.headers['x-remember-me'] === 'true';
     const result = await this.authService.login(loginDto);
-    res.cookie('accessToken', result.tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
-    });
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie(
+      'accessToken',
+      result.tokens.accessToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
+      )
+    );
+    res.cookie(
+      'refreshToken',
+      result.tokens.refreshToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+      )
+    );
     res.json({ user: result.user });
     return;
   }
@@ -68,18 +107,22 @@ export class AuthController {
   ) {
     const rememberMe = req.headers['x-remember-me'] === 'true';
     const result = await this.authService.register(registerDto);
-    res.cookie('accessToken', result.tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
-    });
-    res.cookie('refreshToken', result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie(
+      'accessToken',
+      result.tokens.accessToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
+      )
+    );
+    res.cookie(
+      'refreshToken',
+      result.tokens.refreshToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+      )
+    );
     res.json({ user: result.user });
     return;
   }
@@ -103,18 +146,22 @@ export class AuthController {
       user.id,
       user.refreshToken
     );
-    res.cookie('accessToken', tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
-    });
-    res.cookie('refreshToken', tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
-    });
+    res.cookie(
+      'accessToken',
+      tokens.accessToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000
+      )
+    );
+    res.cookie(
+      'refreshToken',
+      tokens.refreshToken,
+      buildCookieOptions(
+        req,
+        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
+      )
+    );
     res.json({ success: true });
     return;
   }
@@ -123,18 +170,16 @@ export class AuthController {
   @ApiBearerAuth()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@CurrentUser() user: User, @Res() res: Response) {
+  async logout(
+    @CurrentUser() user: User,
+    @Res() res: Response,
+    @Request() req: ExpressRequest
+  ) {
     await this.authService.logout(user.id);
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    });
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-    });
+    const baseCookieOptions = buildCookieOptions(req);
+
+    res.clearCookie('accessToken', baseCookieOptions);
+    res.clearCookie('refreshToken', baseCookieOptions);
     res.json({ message: 'Logged out successfully' });
     return;
   }

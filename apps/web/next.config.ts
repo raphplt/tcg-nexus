@@ -2,10 +2,10 @@ import type { NextConfig } from "next";
 import { remotePatterns } from "./utils/images";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
   images: {
     remotePatterns: remotePatterns,
   },
+  serverExternalPackages: ["@tailwindcss/oxide", "lightningcss"],
 };
 
 export default nextConfig;

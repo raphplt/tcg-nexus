@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://tcg-nexus-494105993690.europe-west1.run.app/$1"
+    }
+  ]
+}

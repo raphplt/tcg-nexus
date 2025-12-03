@@ -15,7 +15,12 @@ interface Article {
 
 const fetchArticles = async (): Promise<Article[]> => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/articles`,
+    `${
+      process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.NODE_ENV === "production"
+        ? "/api"
+        : "http://localhost:3001")
+    }/articles`,
   );
   if (!res.ok) throw new Error("Erreur lors du chargement des articles");
   return res.json();

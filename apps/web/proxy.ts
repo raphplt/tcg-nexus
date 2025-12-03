@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PROTECTED_ROUTES, AUTH_ROUTES } from "@/utils/constants";
 
+function resolveApiBaseUrl(request: NextRequest): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (envUrl) {
+    if (envUrl.startsWith("http")) {
+      return envUrl;
+    }
+
+    if (envUrl.startsWith("/")) {
+      return `${request.nextUrl.origin}${envUrl}`;
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return `${request.nextUrl.origin}/api`;
+  }
+
+  return "http://localhost:3001";
+}
+
 function buildCookieHeader(request: NextRequest): string {
   const parts = request.cookies.getAll().map((c) => `${c.name}=${c.value}`);
   return parts.join("; ");
@@ -8,8 +28,7 @@ function buildCookieHeader(request: NextRequest): string {
 
 async function checkAuth(request: NextRequest): Promise<boolean> {
   try {
-    const API_BASE_URL =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const API_BASE_URL = resolveApiBaseUrl(request);
 
     const cookies = buildCookieHeader(request);
 

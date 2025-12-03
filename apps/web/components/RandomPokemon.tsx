@@ -4,7 +4,9 @@ import Image from "next/image";
 import { PokemonCardType } from "@/types/cardPokemon";
 import { Card, CardContent, CardHeader } from "./ui/card";
 
-const url = process.env.NEXT_PUBLIC_API_URL;
+const url =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001");
 const RandomPokemon = () => {
   const [pokemon, setPokemon] = useState<PokemonCardType | null>(null);
   useEffect(() => {
