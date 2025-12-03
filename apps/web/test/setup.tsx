@@ -4,7 +4,7 @@ import { cleanup } from "@testing-library/react";
 import React from "react";
 
 const storage = (() => {
-  let store = new Map<string, string>();
+  const store = new Map<string, string>();
   return {
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => {
@@ -43,17 +43,21 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/link", () => ({
   __esModule: true,
-  default: React.forwardRef<HTMLAnchorElement, any>(
-    ({ href, children, ...rest }, ref) => (
-      <a
-        href={typeof href === "string" ? href : ""}
-        ref={ref}
-        {...rest}
-      >
-        {children}
-      </a>
-    ),
-  ),
+  default: (() => {
+    const LinkMock = React.forwardRef<HTMLAnchorElement, any>(
+      ({ href, children, ...rest }, ref) => (
+        <a
+          href={typeof href === "string" ? href : ""}
+          ref={ref}
+          {...rest}
+        >
+          {children}
+        </a>
+      ),
+    );
+    LinkMock.displayName = "NextLinkMock";
+    return LinkMock;
+  })(),
 }));
 
 vi.mock("next/image", () => ({

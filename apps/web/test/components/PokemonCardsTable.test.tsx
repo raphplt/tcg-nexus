@@ -106,9 +106,14 @@ describe("PokemonCardsTable", () => {
   });
 
   it("permet de rechercher puis de réinitialiser les résultats", async () => {
-    mockSearch.mockResolvedValue([
-      { ...sampleCards[0], id: "card-3", name: "Mew" },
-    ]);
+    const mewCard: PokemonCardType = {
+      ...sampleCards[0]!,
+      id: "card-3",
+      name: "Mew",
+      set: sampleCards[0]!.set,
+    };
+
+    mockSearch.mockResolvedValue([mewCard]);
 
     render(<PokemonCardsTable itemsPerPage={5} />);
     await screen.findByText("Pikachu");

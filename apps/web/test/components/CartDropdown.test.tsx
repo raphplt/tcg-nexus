@@ -8,6 +8,8 @@ import { useCurrencyStore, Currency } from "@/store/currency.store";
 import type { Listing } from "@/types/listing";
 import type { UserCart } from "@/types/cart";
 import { CardState } from "@/utils/enums";
+import { UserRole } from "@/types/auth";
+import { Rarity } from "@/types/listing";
 
 vi.mock("@/services/cart.service", () => ({
   cartService: {
@@ -31,7 +33,7 @@ const baseListing = (overrides?: Partial<Listing>): Listing => ({
     firstName: "Seller",
     lastName: "Test",
     avatarUrl: "",
-    role: "user" as const,
+    role: UserRole.USER,
     isPro: false,
     createdAt: new Date(),
   },
@@ -39,7 +41,7 @@ const baseListing = (overrides?: Partial<Listing>): Listing => ({
     id: "card-1",
     name: "Pikachu",
     set: { id: "base", name: "Base" },
-    rarity: "Rare",
+    rarity: Rarity.RARE,
   },
   price: 10,
   currency: Currency.USD,
