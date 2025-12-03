@@ -44,7 +44,12 @@ export class DeckService {
       name: dto.deckName,
       isPublic: dto.isPublic,
       user,
-      format
+      format,
+      coverCard:
+        dto.cards.length > 0
+          ? (await this.cardRepo.findOneBy({ id: dto.cards[0].cardId })) ||
+            undefined
+          : undefined
     });
 
     await this.decksRepository.save(deck);
@@ -84,6 +89,9 @@ export class DeckService {
       .createQueryBuilder('deck')
       .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
+      .leftJoinAndSelect('deck.coverCard', 'coverCard')
+      .leftJoinAndSelect('deck.cards', 'cards')
+      .leftJoinAndSelect('cards.card', 'card')
       .andWhere('deck.isPublic = true');
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
@@ -116,6 +124,9 @@ export class DeckService {
       .createQueryBuilder('deck')
       .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
+      .leftJoinAndSelect('deck.coverCard', 'coverCard')
+      .leftJoinAndSelect('deck.cards', 'cards')
+      .leftJoinAndSelect('cards.card', 'card')
       .andWhere('user.id = :userId', { userId: user.id });
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
@@ -250,5 +261,10 @@ export class DeckService {
       await this.deckCardRepo.save(clonedCards);
     }
     return this.findOneWithCards(saved.id);
+  }
+
+  async incrementViews(id: number) {
+    await this.decksRepository.increment({ id }, 'views', 1);
+    return { message: 'View incremented' };
   }
 }

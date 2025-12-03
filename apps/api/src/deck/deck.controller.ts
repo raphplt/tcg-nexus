@@ -72,4 +72,10 @@ export class DeckController {
   clone(@Param('id') id: string, @CurrentUser() user: User) {
     return this.deckService.cloneDeck(+id, user);
   }
+
+  @Public()
+  @Post(':id/view')
+  incrementView(@Param('id') id: string) {
+    return this.deckService.incrementViews(+id);
+  }
 }

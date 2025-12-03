@@ -69,16 +69,6 @@ const shimmerVariants = {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function InfoTile({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2 shadow-sm backdrop-blur-sm">
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="text-sm font-semibold text-foreground">{value ?? "—"}</p>
-    </div>
-  );
-}
 
 function FilterSelect({
   label,
@@ -545,10 +535,10 @@ export default function PokemonMatchPage() {
             </div>
           </div>
 
-          <p className="text-center text-sm text-muted-foreground">
+          {/* <p className="text-center text-sm text-muted-foreground">
             Glisse la carte à droite pour l’ajouter à ta wishlist, à gauche pour
             passer.
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

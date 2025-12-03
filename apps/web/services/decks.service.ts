@@ -66,6 +66,10 @@ export const decksService = {
     return authedFetch("PATCH", `/deck/${id}`, { data: data });
   },
 
+  async incrementView(id: number) {
+    return authedFetch("POST", `/deck/${id}/view`);
+  },
+
   useUserDecksPaginated(page: number, filters: any) {
     return usePaginatedQuery<PaginatedResult<Deck>>(
       ["decks", page, filters.search, filters.sortBy, filters.sortOrder],
