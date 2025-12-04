@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input";
 import {
   ShoppingBag,
   Search,
-  Euro,
-  DollarSign,
-  PoundSterling,
   ChevronLeft,
   ChevronRight,
   Edit,
@@ -95,19 +92,6 @@ export const ProfileSales = () => {
       toast.success("Vente supprimée");
     } catch (error) {
       toast.error("Erreur lors de la suppression");
-    }
-  };
-
-  const getCurrencyIcon = (currency: string) => {
-    switch (currency) {
-      case "EUR":
-        return <Euro className="w-4 h-4" />;
-      case "USD":
-        return <DollarSign className="w-4 h-4" />;
-      case "GBP":
-        return <PoundSterling className="w-4 h-4" />;
-      default:
-        return <Euro className="w-4 h-4" />;
     }
   };
 

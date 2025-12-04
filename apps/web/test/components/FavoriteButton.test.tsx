@@ -52,6 +52,7 @@ const authenticatedUser = {
     avatarUrl: "",
     role: UserRole.USER as const,
     isPro: false,
+    isActive: true,
     createdAt: new Date(),
   },
   isLoading: false,

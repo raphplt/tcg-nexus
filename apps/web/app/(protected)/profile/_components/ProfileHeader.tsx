@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shield, Mail, Calendar, Edit3, Save, X } from "lucide-react";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 
 interface ProfileHeaderProps {
   user: User;
@@ -37,12 +37,13 @@ export const ProfileHeader = ({
     }
   };
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role: UserRole) => {
     switch (role) {
-      case "admin":
+      case UserRole.ADMIN:
         return "Administrateur";
-      case "moderator":
+      case UserRole.MODERATOR:
         return "Modérateur";
+        
       default:
         return "Utilisateur";
     }

@@ -6,7 +6,8 @@ import { adminService } from "@/services/admin.service";
 import { OrderStatus, type Order } from "@/types/order";
 import type { PaginatedResult } from "@/types/pagination";
 import { UserRole } from "@/types/auth";
-import { CardState } from "@/utils/enums";
+import { CardState, Currency } from "@/utils/enums";
+import { Rarity } from "@/types/listing";
 
 vi.mock("@/services/admin.service", () => ({
   adminService: {
@@ -57,15 +58,15 @@ const sampleOrder: Order = {
           id: "card-1",
           name: "Pikachu",
           image: "/pikachu",
-          rarity: "rare",
+          rarity: Rarity.RARE,
           set: { id: "set1", name: "Base" },
           hp: 60,
           types: ["electric"],
         },
         price: 60,
-        currency: "EUR",
+        currency: Currency.EUR,
         quantityAvailable: 5,
-        cardState: CardState.NEUVE,
+        cardState: CardState.NM,
         createdAt: new Date(),
         expiresAt: new Date(),
       },

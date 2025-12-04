@@ -35,6 +35,7 @@ const baseListing = (overrides?: Partial<Listing>): Listing => ({
     avatarUrl: "",
     role: UserRole.USER,
     isPro: false,
+    isActive: true,
     createdAt: new Date(),
   },
   pokemonCard: {

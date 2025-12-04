@@ -25,6 +25,7 @@ const mockUser: User = {
   avatarUrl: "/avatar.png",
   role: UserRole.USER as const,
   isPro: false,
+  isActive: true,
   createdAt: new Date(),
 };
 
