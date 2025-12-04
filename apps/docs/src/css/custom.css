@@ -1,0 +1,90 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #d16b2f;
+  --ifm-color-primary-dark: #b85f2a;
+  --ifm-color-primary-darker: #a95726;
+  --ifm-color-primary-darkest: #8a481f;
+  --ifm-color-primary-light: #db804c;
+  --ifm-color-primary-lighter: #e28c5c;
+  --ifm-color-primary-lightest: #e89b72;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: 'Lato', system-ui, -apple-system, sans-serif;
+  --ifm-heading-font-family: 'Lato', system-ui, -apple-system, sans-serif;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
+  --ifm-navbar-background-color: #f7f7ff;
+  --ifm-background-color: #ffffff;
+  --ifm-footer-background-color: #0a0a0a;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #f28f41;
+  --ifm-color-primary-dark: #e37f31;
+  --ifm-color-primary-darker: #c66f2a;
+  --ifm-color-primary-darkest: #a55c23;
+  --ifm-color-primary-light: #f59d59;
+  --ifm-color-primary-lighter: #f7ad76;
+  --ifm-color-primary-lightest: #f8b889;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+  --ifm-navbar-background-color: #0e0e0e;
+  --ifm-background-color: #0a0a0a;
+  --ifm-footer-background-color: #050505;
+}
+
+/* Hero + brutalist accents inspired by apps/web theme */
+.hero--primary {
+  background: linear-gradient(120deg, rgba(209, 107, 47, 0.85), rgba(94, 112, 227, 0.85)), radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1), transparent 25%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.08), transparent 25%);
+  color: #0a0a0a;
+  border-bottom: 4px solid #0a0a0a;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.button.button--secondary {
+  border: 2px solid #0a0a0a;
+  box-shadow: 4px 4px 0 #0a0a0a;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.button.button--secondary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 #0a0a0a;
+}
+
+.navbar {
+  box-shadow: 0 2px 0 #0a0a0a;
+}
+
+.navbar__logo img {
+  height: 36px;
+}
+
+.footer {
+  border-top: 4px solid #d16b2f;
+}
+
+.card {
+  border: 2px solid #0a0a0a;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.75);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.75);
+}
