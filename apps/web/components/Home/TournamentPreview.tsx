@@ -30,7 +30,8 @@ const TournamentPreview = () => {
       <div className="flex flex-col gap-3">
         {data && Array.isArray(data) && data.length > 0 ? (
           data.map((tournament, i) => (
-            <div
+            <Link
+              href={`/tournaments/${tournament.id}`}
               key={tournament.id}
               className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:shadow-md transition group"
             >
@@ -40,13 +41,9 @@ const TournamentPreview = () => {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{tournament.name}</div>
               </div>
-              <Link
-                href={`/tournaments/${tournament.id}`}
-                className="text-primary hover:underline ml-2"
-              >
-                &rarr;
-              </Link>
-            </div>
+
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           ))
         ) : !isLoading && !error ? (
           <div className="text-muted-foreground text-center">

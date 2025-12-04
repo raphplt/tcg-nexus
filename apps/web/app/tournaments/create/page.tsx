@@ -343,7 +343,6 @@ export default function CreateTournamentPage() {
                 )}
               />
 
-              {/* Champs booléens sous forme de Switch */}
               <FormField
                 control={form.control}
                 name="isPublic"

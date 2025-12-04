@@ -76,7 +76,7 @@ export const tournamentService = {
     return authedFetch<TournamentRegistration>(
       "POST",
       `/tournaments/${tournamentId}/register`,
-      { body: { playerId, notes } },
+      { data: { playerId, notes } },
     );
   },
 
@@ -104,7 +104,7 @@ export const tournamentService = {
     return authedFetch<TournamentRegistration>(
       "PATCH",
       `/tournaments/${tournamentId}/registrations/${registrationId}/cancel`,
-      { body: { reason } },
+      { data: { reason } },
     );
   },
 
@@ -125,7 +125,7 @@ export const tournamentService = {
    * Crée un tournoi
    */
   async create(payload: CreateTournamentDto): Promise<Tournament> {
-    return authedFetch<Tournament>("POST", `/tournaments`, { body: payload });
+    return authedFetch<Tournament>("POST", `/tournaments`, { data: payload });
   },
 
   /**
@@ -227,7 +227,7 @@ export const tournamentService = {
     return authedFetch<Tournament>(
       "POST",
       `/tournaments/${tournamentId}/start`,
-      { body: options },
+      { data: options },
     );
   },
 
@@ -251,7 +251,7 @@ export const tournamentService = {
     return authedFetch<Tournament>(
       "POST",
       `/tournaments/${tournamentId}/cancel`,
-      { body: { reason } },
+      { data: { reason } },
     );
   },
 
@@ -277,7 +277,7 @@ export const tournamentService = {
     return authedFetch<Tournament>(
       "PATCH",
       `/tournaments/${tournamentId}/status`,
-      { body: { status } },
+      { data: { status } },
     );
   },
 };

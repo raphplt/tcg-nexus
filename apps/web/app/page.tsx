@@ -11,8 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const HomePage = () => {
   const { user } = useAuth();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted via-background to-accent/20">
-      <section className="relative overflow-hidden border-b-4 border-black bg-gradient-to-r from-primary/10 via-background to-secondary/10">
+    <div className="min-h-screen bg-linear-to-br from-muted via-background to-accent/20">
+      <section className="relative overflow-hidden border-b-4 border-black bg-linear-to-r from-primary/10 via-background to-secondary/10">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
