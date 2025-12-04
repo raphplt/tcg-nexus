@@ -59,7 +59,7 @@ describe("RandomCard", () => {
   it("affiche une carte aléatoire après le chargement", async () => {
     mockGetRandom.mockResolvedValueOnce(makeCard({ name: "Lugia" }));
 
-    renderWithQueryClient(<RandomCard userId={1} />);
+    renderWithQueryClient(<RandomCard />);
 
     expect(screen.getByText(/Chargement/)).toBeInTheDocument();
     expect(await screen.findByText("Lugia")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("RandomCard", () => {
       .mockResolvedValueOnce(makeCard({ id: "card-1", name: "Arcanin" }))
       .mockResolvedValueOnce(makeCard({ id: "card-2", name: "Mewtwo" }));
 
-    renderWithQueryClient(<RandomCard userId={1} />);
+    renderWithQueryClient(<RandomCard />);
     await screen.findByText("Arcanin");
 
     await userEvent.click(
@@ -85,7 +85,7 @@ describe("RandomCard", () => {
   it("affiche un message d'erreur si la requête échoue", async () => {
     mockGetRandom.mockRejectedValueOnce(new Error("fetch failed"));
 
-    renderWithQueryClient(<RandomCard userId={1} />);
+    renderWithQueryClient(<RandomCard />);
 
     await screen.findByText("Erreur lors du chargement de la carte");
   });
