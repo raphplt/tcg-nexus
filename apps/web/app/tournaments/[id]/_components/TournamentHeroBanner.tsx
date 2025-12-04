@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,6 +12,9 @@ import {
   Trophy,
   Swords,
   Settings2,
+  UserPlus,
+  Loader2,
+  UserCheck,
 } from "lucide-react";
 import { Tournament } from "@/types/tournament";
 import {
@@ -20,6 +23,10 @@ import {
 } from "@/utils/tournaments";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { UserRole } from "@/types/auth";
+import { tournamentService } from "@/services/tournament.service";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface TournamentHeroBannerProps {
   tournament: Tournament;
@@ -47,13 +54,54 @@ export function TournamentHeroBanner({
   onRegister,
   formatDate,
 }: TournamentHeroBannerProps) {
+  const [isFillingPlayers, setIsFillingPlayers] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const queryClient = useQueryClient();
   const registrationOpen = tournament.status === "registration_open";
+  const registrationClosed = tournament.status === "registration_closed";
   const statusColor =
     statusColorMap[tournament.status || ""] ?? "bg-muted text-muted-foreground";
 
-  const participantCount = tournament.players?.length || 0;
+  const participantCount =
+    tournament.registrations?.length || tournament.players?.length || 0;
   const maxPlayers = tournament.maxPlayers || "∞";
   const matchesCount = tournament.matches?.length || 0;
+
+  const isAdmin = user?.role === UserRole.ADMIN;
+
+  const handleFillWithPlayers = async () => {
+    if (!tournament?.id) return;
+    setIsFillingPlayers(true);
+    try {
+      await tournamentService.fillWithPlayers(tournament.id, 8);
+      toast.success("8 joueurs inscrits avec succès !");
+      queryClient.invalidateQueries({
+        queryKey: ["tournament", tournament.id.toString()],
+      });
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur lors de l'inscription des joueurs");
+    } finally {
+      setIsFillingPlayers(false);
+    }
+  };
+
+  const handleCheckInAll = async () => {
+    if (!tournament?.id) return;
+    setIsCheckingIn(true);
+    try {
+      const result = await tournamentService.checkInAllPlayers(tournament.id);
+      toast.success(
+        `${result.checkedInCount} joueurs ont fait leur check-in !`,
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["tournament", tournament.id.toString()],
+      });
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur lors du check-in");
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary/10 via-background to-secondary/10 border">
@@ -122,6 +170,43 @@ export function TournamentHeroBanner({
                 </Link>
               </Button>
             )}
+
+            {/* Bouton admin pour remplir avec 8 joueurs */}
+            {isAdmin && registrationOpen && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleFillWithPlayers}
+                disabled={isFillingPlayers}
+                className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+              >
+                {isFillingPlayers ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : (
+                  <UserPlus className="size-4 mr-2" />
+                )}
+                Remplir (8 joueurs)
+              </Button>
+            )}
+
+            {isAdmin &&
+              (registrationOpen || registrationClosed) &&
+              participantCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleCheckInAll}
+                  disabled={isCheckingIn}
+                  className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                >
+                  {isCheckingIn ? (
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserCheck className="size-4 mr-2" />
+                  )}
+                  Check-in global
+                </Button>
+              )}
           </div>
         </div>
 

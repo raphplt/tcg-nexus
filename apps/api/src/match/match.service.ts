@@ -63,7 +63,8 @@ export class MatchService {
       round,
       phase,
       scheduledDate,
-      notes
+      notes,
+      skipStatusCheck
     } = createMatchDto;
 
     const tournament: Tournament | null =
@@ -73,7 +74,11 @@ export class MatchService {
     if (!tournament) {
       throw new NotFoundException('Tournoi non trouvé');
     }
-    if (tournament.status !== TournamentStatus.IN_PROGRESS) {
+    // Skip status check when creating matches during bracket generation
+    if (
+      !skipStatusCheck &&
+      tournament.status !== TournamentStatus.IN_PROGRESS
+    ) {
       throw new BadRequestException(
         'Le tournoi doit être en cours pour créer des matches'
       );

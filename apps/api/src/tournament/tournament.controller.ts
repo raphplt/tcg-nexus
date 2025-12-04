@@ -300,4 +300,22 @@ export class TournamentController {
   ) {
     return this.tournamentService.checkInPlayer(id, registrationId, user.id);
   }
+
+  @Post(':id/fill-with-players')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  async fillWithPlayers(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body?: { count?: number }
+  ) {
+    const count = body?.count || 8;
+    return this.tournamentService.fillWithRandomPlayers(id, count);
+  }
+
+  @Post(':id/check-in-all')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.ADMIN)
+  async checkInAllPlayers(@Param('id', ParseIntPipe) id: number) {
+    return this.tournamentService.checkInAllPlayers(id);
+  }
 }

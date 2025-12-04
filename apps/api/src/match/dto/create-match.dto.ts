@@ -4,7 +4,8 @@ import {
   IsEnum,
   IsDateString,
   IsString,
-  Min
+  Min,
+  IsBoolean
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MatchPhase } from '../entities/match.entity';
@@ -36,4 +37,8 @@ export class CreateMatchDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  skipStatusCheck?: boolean;
 }

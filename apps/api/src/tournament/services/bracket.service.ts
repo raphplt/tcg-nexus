@@ -409,7 +409,8 @@ export class BracketService {
             round: node.round,
             phase: node.phase,
             scheduledDate: new Date(tournament.startDate),
-            notes: `Match généré automatiquement`
+            notes: `Match généré automatiquement`,
+            skipStatusCheck: true
           });
         }
       }

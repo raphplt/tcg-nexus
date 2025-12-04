@@ -13,40 +13,64 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Search, UserCheck } from "lucide-react";
-import { Player } from "@/types/tournament";
+import { Users, Search, CheckCircle } from "lucide-react";
+import { TournamentRegistration } from "@/types/tournament";
 
 interface TabParticipantsProps {
-  participants: Player[];
+  registrations: TournamentRegistration[];
 }
 
-export function TabParticipants({ participants }: TabParticipantsProps) {
+const statusLabels: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
+  confirmed: { label: "Confirmé", variant: "default" },
+  pending: { label: "En attente", variant: "secondary" },
+  cancelled: { label: "Annulé", variant: "destructive" },
+  waitlisted: { label: "Liste d'attente", variant: "outline" },
+  eliminated: { label: "Éliminé", variant: "destructive" },
+};
+
+export function TabParticipants({ registrations }: TabParticipantsProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredParticipants = participants.filter((p) => {
-    const name = p.user
-      ? `${p.user.firstName} ${p.user.lastName}`
-      : p.name || "";
-    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredRegistrations = registrations.filter((r) => {
+    const player = r.player;
+    const name = player?.user
+      ? `${player.user.firstName} ${player.user.lastName}`
+      : player?.name || "";
+    const email = player?.user?.email || "";
+    const query = searchQuery.toLowerCase();
+    return (
+      name.toLowerCase().includes(query) || email.toLowerCase().includes(query)
+    );
   });
 
-  const getInitials = (player: Player) => {
-    if (player.user) {
+  const confirmedCount = registrations.filter(
+    (r) => r.status === "confirmed",
+  ).length;
+
+  const getInitials = (registration: TournamentRegistration) => {
+    const player = registration.player;
+    if (player?.user) {
       return `${player.user.firstName?.[0] || ""}${player.user.lastName?.[0] || ""}`.toUpperCase();
     }
-    return player.name?.slice(0, 2)?.toUpperCase() || "??";
+    return player?.name?.slice(0, 2)?.toUpperCase() || "??";
   };
 
-  const getDisplayName = (player: Player) => {
-    if (player.user) {
+  const getDisplayName = (registration: TournamentRegistration) => {
+    const player = registration.player;
+    if (player?.user) {
       return `${player.user.firstName} ${player.user.lastName}`;
     }
-    return player.name || `Joueur #${player.id}`;
+    return player?.name || `Joueur #${player?.id || "?"}`;
   };
 
   return (
     <div className="space-y-6">
-      {/* En-tête avec statistiques */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -55,7 +79,7 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
                 <Users className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{participants.length}</p>
+                <p className="text-2xl font-bold">{registrations.length}</p>
                 <p className="text-xs text-muted-foreground">
                   Participants inscrits
                 </p>
@@ -67,15 +91,11 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500/10 rounded-lg">
-                <UserCheck className="size-5 text-green-500" />
+                <CheckCircle className="size-5 text-green-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {participants.filter((p) => p.user).length}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Comptes vérifiés
-                </p>
+                <p className="text-2xl font-bold">{confirmedCount}</p>
+                <p className="text-xs text-muted-foreground">Confirmés</p>
               </div>
             </div>
           </CardContent>
@@ -88,7 +108,7 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {filteredParticipants.length}
+                  {filteredRegistrations.length}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Résultats affichés
@@ -130,10 +150,10 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredParticipants.length > 0 ? (
-                  filteredParticipants.map((player, index) => (
+                {filteredRegistrations.length > 0 ? (
+                  filteredRegistrations.map((registration, index) => (
                     <TableRow
-                      key={player.id}
+                      key={registration.id}
                       className="hover:bg-muted/30"
                     >
                       <TableCell className="font-medium text-muted-foreground">
@@ -143,28 +163,32 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
                         <div className="flex items-center gap-3">
                           <Avatar className="size-8">
                             <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                              {getInitials(player)}
+                              {getInitials(registration)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="font-medium">
-                              {getDisplayName(player)}
+                              {getDisplayName(registration)}
                             </p>
                             <p className="text-xs text-muted-foreground sm:hidden">
-                              {player.user?.email || "-"}
+                              {registration.player?.user?.email || "-"}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell text-muted-foreground">
-                        {player.user?.email || "-"}
+                        {registration.player?.user?.email || "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Badge
-                          variant={player.user ? "default" : "secondary"}
+                          variant={
+                            statusLabels[registration.status]?.variant ||
+                            "secondary"
+                          }
                           className="text-xs"
                         >
-                          {player.user ? "Vérifié" : "Invité"}
+                          {statusLabels[registration.status]?.label ||
+                            registration.status}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -175,7 +199,7 @@ export function TabParticipants({ participants }: TabParticipantsProps) {
                       colSpan={4}
                       className="h-32 text-center text-muted-foreground"
                     >
-                      {participants.length === 0
+                      {registrations.length === 0
                         ? "Aucun participant inscrit pour le moment."
                         : "Aucun résultat trouvé pour cette recherche."}
                     </TableCell>

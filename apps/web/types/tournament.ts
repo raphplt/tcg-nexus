@@ -39,6 +39,7 @@ export type Tournament = {
   players?: Player[];
   matches?: Match[];
   rankings?: Ranking[];
+  registrations?: TournamentRegistration[];
   rewards?: Reward[];
   pricing?: Pricing | null;
   organizers?: Organizer[];

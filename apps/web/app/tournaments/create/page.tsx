@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import * as z from "zod";
+import usePlacesAutocomplete from "use-places-autocomplete";
 
 import {
   Form,
@@ -13,6 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,28 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
-import { CircleAlert, CheckCircle, ArrowLeft, ShieldAlert } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  CircleAlert,
+  CheckCircle,
+  ArrowLeft,
+  ShieldAlert,
+  ChevronsUpDown,
+  Check,
+  Users,
+} from "lucide-react";
 import {
   TournamentStatus,
   TournamentType,
@@ -36,6 +59,8 @@ import {
 import { tournamentService } from "@/services/tournament.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { CreateTournamentDto } from "@/types/tournament";
+import { UserRole } from "@/types/auth";
+import { cn } from "@/lib/utils";
 
 const formSchema = z
   .object({
@@ -61,6 +86,7 @@ const formSchema = z
     ageRestrictionMin: z.number().min(0).optional(),
     ageRestrictionMax: z.number().min(0).optional(),
     allowedFormats: z.array(z.string()).optional(),
+    fillWithPlayers: z.boolean().optional(),
   })
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
     message: "La date de fin doit être postérieure à la date de début",
@@ -74,6 +100,20 @@ export default function CreateTournamentPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  const {
+    ready: placesReady,
+    value: placesValue,
+    setValue: setPlacesValue,
+    suggestions: { status: placesStatus, data: placesData },
+    clearSuggestions,
+  } = usePlacesAutocomplete({
+    requestOptions: {},
+    debounce: 300,
+  });
+
+  const isAdmin = user?.role === UserRole.ADMIN;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -92,14 +132,45 @@ export default function CreateTournamentPage() {
       allowedFormats: [],
       currentRound: 0,
       totalRounds: 0,
+      fillWithPlayers: false,
     },
   });
+
+  const handleLocationSelect = (
+    address: string,
+    field: { onChange: (value: string) => void },
+  ) => {
+    setPlacesValue(address, false);
+    field.onChange(address);
+    clearSuggestions();
+    setLocationOpen(false);
+  };
 
   const onSubmit = async (values: FormValues) => {
     setError(null);
     setSuccess(null);
 
     try {
+      // Si l'admin veut remplir avec des joueurs, on s'assure que les conditions sont remplies
+      const shouldFillWithPlayers = isAdmin && values.fillWithPlayers;
+
+      // Calculer une date limite d'inscription si non fournie et option admin activée
+      let registrationDeadline = values.registrationDeadline
+        ? new Date(values.registrationDeadline)
+        : undefined;
+
+      if (shouldFillWithPlayers && !registrationDeadline) {
+        // Définir une date limite dans le futur (1 jour avant le début)
+        const startDate = new Date(values.startDate);
+        registrationDeadline = new Date(
+          startDate.getTime() - 24 * 60 * 60 * 1000,
+        );
+        // Si cette date est déjà passée, mettre dans 1 semaine
+        if (registrationDeadline <= new Date()) {
+          registrationDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        }
+      }
+
       const payload: CreateTournamentDto = {
         name: values.name,
         description: values.description,
@@ -107,9 +178,7 @@ export default function CreateTournamentPage() {
         startDate: new Date(values.startDate),
         endDate: new Date(values.endDate),
         type: values.type,
-        registrationDeadline: values.registrationDeadline
-          ? new Date(values.registrationDeadline)
-          : undefined,
+        registrationDeadline,
         allowLateRegistration: values.allowLateRegistration,
         requiresApproval: values.requiresApproval,
         rules: values.rules,
@@ -118,14 +187,30 @@ export default function CreateTournamentPage() {
         ageRestrictionMax: values.ageRestrictionMax,
         allowedFormats: values.allowedFormats,
         isPublic: values.isPublic,
-        maxPlayers: values.maxPlayers,
-        minPlayers: values.minPlayers,
+        maxPlayers: shouldFillWithPlayers
+          ? Math.max(values.maxPlayers || 8, 8)
+          : values.maxPlayers,
+        minPlayers: shouldFillWithPlayers
+          ? Math.max(values.minPlayers || 2, 2)
+          : values.minPlayers,
       };
 
-      await tournamentService.create(payload);
+      const tournament = await tournamentService.create(payload);
+
+      // Si l'admin veut remplir le tournoi avec 8 joueurs
+      if (shouldFillWithPlayers) {
+        // D'abord ouvrir les inscriptions
+        await tournamentService.updateStatus(
+          tournament.id,
+          "registration_open",
+        );
+        // Puis remplir avec 8 joueurs
+        await tournamentService.fillWithPlayers(tournament.id, 8);
+      }
+
       setSuccess("Tournoi créé avec succès !");
       setTimeout(() => {
-        router.push("/tournaments");
+        router.push(`/tournaments/${tournament.id}`);
       }, 1500);
     } catch (err: any) {
       const message =
@@ -151,7 +236,7 @@ export default function CreateTournamentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+    <div className="min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 py-16 px-4">
       <div className="flex mb-6 max-w-xl">
         <Button
           variant="outline"
@@ -224,12 +309,61 @@ export default function CreateTournamentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lieu</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Lieu"
-                        {...field}
-                      />
-                    </FormControl>
+                    <Popover
+                      open={locationOpen}
+                      onOpenChange={setLocationOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={locationOpen}
+                            className="w-full justify-between font-normal"
+                            disabled={!placesReady}
+                          >
+                            {field.value ||
+                              placesValue ||
+                              "Rechercher une adresse..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[400px] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Rechercher une adresse..."
+                            value={placesValue}
+                            onValueChange={setPlacesValue}
+                          />
+                          <CommandList>
+                            <CommandEmpty>Aucune adresse trouvée.</CommandEmpty>
+                            <CommandGroup>
+                              {placesStatus === "OK" &&
+                                placesData.map(({ place_id, description }) => (
+                                  <CommandItem
+                                    key={place_id}
+                                    value={description}
+                                    onSelect={() =>
+                                      handleLocationSelect(description, field)
+                                    }
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === description
+                                          ? "opacity-100"
+                                          : "opacity-0",
+                                      )}
+                                    />
+                                    {description}
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </FormItem>
                 )}
               />
@@ -401,6 +535,37 @@ export default function CreateTournamentPage() {
                   )}
                 />
               </div>
+
+              {/* Option admin pour remplir le tournoi avec 8 joueurs */}
+              {isAdmin && (
+                <div className="col-span-2 p-4 border border-amber-500/30 rounded-lg bg-amber-500/5">
+                  <FormField
+                    control={form.control}
+                    name="fillWithPlayers"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-2 text-amber-600">
+                            <Users className="h-4 w-4" />
+                            Remplir avec 8 joueurs (Admin)
+                          </FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            Ouvre automatiquement les inscriptions et inscrit 8
+                            joueurs aléatoires
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="shadow-none focus:ring-0"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
             <Button

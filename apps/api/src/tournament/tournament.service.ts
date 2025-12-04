@@ -729,4 +729,103 @@ export class TournamentService {
 
     return this.registrationRepository.save(registration);
   }
+
+  // Remplir un tournoi avec des joueurs aléatoires (admin only)
+  async fillWithRandomPlayers(
+    tournamentId: number,
+    count: number = 8
+  ): Promise<{
+    registeredCount: number;
+    registrations: TournamentRegistration[];
+  }> {
+    const tournament = await this.findOne(tournamentId);
+
+    // Vérifier que les inscriptions sont ouvertes
+    if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
+      throw new BadRequestException(
+        'Les inscriptions doivent être ouvertes pour remplir le tournoi'
+      );
+    }
+
+    // Récupérer les joueurs déjà inscrits
+    const existingRegistrations = await this.registrationRepository.find({
+      where: { tournament: { id: tournamentId } },
+      relations: ['player']
+    });
+    const existingPlayerIds = existingRegistrations.map((r) => r.player.id);
+
+    // Récupérer des joueurs disponibles (qui ne sont pas déjà inscrits)
+    const queryBuilder = this.playerRepository
+      .createQueryBuilder('player')
+      .leftJoinAndSelect('player.user', 'user')
+      .where('user.isActive = :isActive', { isActive: true });
+
+    if (existingPlayerIds.length > 0) {
+      queryBuilder.andWhere('player.id NOT IN (:...existingPlayerIds)', {
+        existingPlayerIds
+      });
+    }
+
+    const availablePlayers = await queryBuilder.take(count).getMany();
+
+    if (availablePlayers.length === 0) {
+      throw new BadRequestException('Aucun joueur disponible pour inscription');
+    }
+
+    // Calculer combien de places sont disponibles
+    const availableSlots = tournament.maxPlayers
+      ? tournament.maxPlayers - existingRegistrations.length
+      : count;
+
+    const playersToRegister = availablePlayers.slice(
+      0,
+      Math.min(count, availableSlots)
+    );
+
+    // Créer les inscriptions avec check-in automatique
+    const registrations: TournamentRegistration[] = [];
+    for (const player of playersToRegister) {
+      const registration = this.registrationRepository.create({
+        tournament,
+        player,
+        notes: 'Inscription automatique (admin)',
+        registeredAt: new Date(),
+        status: RegistrationStatus.CONFIRMED,
+        checkedIn: true,
+        checkedInAt: new Date()
+      });
+      const savedRegistration =
+        await this.registrationRepository.save(registration);
+      registrations.push(savedRegistration);
+    }
+
+    return {
+      registeredCount: registrations.length,
+      registrations
+    };
+  }
+
+  // Check-in tous les joueurs confirmés (admin only)
+  async checkInAllPlayers(tournamentId: number): Promise<{
+    checkedInCount: number;
+  }> {
+    const registrations = await this.registrationRepository.find({
+      where: {
+        tournament: { id: tournamentId },
+        status: RegistrationStatus.CONFIRMED,
+        checkedIn: false
+      }
+    });
+
+    const now = new Date();
+    for (const registration of registrations) {
+      registration.checkedIn = true;
+      registration.checkedInAt = now;
+      await this.registrationRepository.save(registration);
+    }
+
+    return {
+      checkedInCount: registrations.length
+    };
+  }
 }

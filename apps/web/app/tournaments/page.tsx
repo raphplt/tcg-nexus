@@ -151,13 +151,16 @@ export default function TournamentsPage() {
   const finishedCount = pastItems.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/5 to-secondary/20 py-10 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="min-h-screen bg-linear-to-br from-primary/10 via-secondary/5 to-secondary/20 py-10 px-4 md:px-8">
+      <div className="max-w-3/4 mx-auto space-y-12">
         <header className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <div className="space-y-3">
-              <BadgeCheck className="text-primary w-8 h-8" />
-              <H1 className="text-4xl md:text-5xl font-bold" variant="primary">
+              <Trophy className="size-10 text-primary" />
+              <H1
+                className="text-4xl md:text-5xl font-bold"
+                variant="primary"
+              >
                 Tournois Pokémon
               </H1>
               <p className="text-lg text-muted-foreground max-w-2xl">
@@ -167,7 +170,10 @@ export default function TournamentsPage() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg">
+              <Button
+                asChild
+                size="lg"
+              >
                 <Link href="/tournaments/create">
                   Créer un tournoi
                   <Sparkles className="ml-2 w-4 h-4" />
@@ -186,9 +192,18 @@ export default function TournamentsPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <StatPill label="Tournois référencés" value={totalTournaments} />
-              <StatPill label="Prochains événements" value={upcomingCount} />
-              <StatPill label="Derniers résultats" value={finishedCount} />
+              <StatPill
+                label="Tournois référencés"
+                value={totalTournaments}
+              />
+              <StatPill
+                label="Prochains événements"
+                value={upcomingCount}
+              />
+              <StatPill
+                label="Derniers résultats"
+                value={finishedCount}
+              />
             </div>
           </div>
 
@@ -310,7 +325,10 @@ export default function TournamentsPage() {
                 {loadingPast ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-14 w-full" />
+                      <Skeleton
+                        key={i}
+                        className="h-14 w-full"
+                      />
                     ))}
                   </div>
                 ) : highlightedWinners.length ? (
@@ -341,7 +359,10 @@ export default function TournamentsPage() {
           </div>
         </section>
 
-        <section id="listing" className="space-y-6">
+        <section
+          id="listing"
+          className="space-y-6"
+        >
           <div className="flex items-center justify-between flex-wrap gap-3">
             <H2 className="flex items-center gap-2">
               <BadgeCheck className="w-5 h-5 text-primary" />

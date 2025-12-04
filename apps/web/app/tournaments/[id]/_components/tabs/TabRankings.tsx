@@ -122,7 +122,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-muted-foreground">
-                          {ranking.winRate?.toFixed(0) || 0}%
+                          {Number(ranking.winRate || 0).toFixed(0)}%
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Win Rate
@@ -217,11 +217,13 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-primary rounded-full"
-                            style={{ width: `${ranking.winRate || 0}%` }}
+                            style={{
+                              width: `${Number(ranking.winRate || 0)}%`,
+                            }}
                           />
                         </div>
                         <span className="text-sm text-muted-foreground">
-                          {ranking.winRate?.toFixed(0) || 0}%
+                          {Number(ranking.winRate || 0).toFixed(0)}%
                         </span>
                       </div>
                     </TableCell>

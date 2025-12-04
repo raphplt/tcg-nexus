@@ -280,4 +280,30 @@ export const tournamentService = {
       { data: { status } },
     );
   },
+
+  /**
+   * Remplit le tournoi avec des joueurs aléatoires (admin only)
+   */
+  async fillWithPlayers(
+    tournamentId: number,
+    count: number = 8,
+  ): Promise<{ registeredCount: number }> {
+    return authedFetch<{ registeredCount: number }>(
+      "POST",
+      `/tournaments/${tournamentId}/fill-with-players`,
+      { data: { count } },
+    );
+  },
+
+  /**
+   * Check-in tous les joueurs confirmés (admin only)
+   */
+  async checkInAllPlayers(
+    tournamentId: number,
+  ): Promise<{ checkedInCount: number }> {
+    return authedFetch<{ checkedInCount: number }>(
+      "POST",
+      `/tournaments/${tournamentId}/check-in-all`,
+    );
+  },
 };

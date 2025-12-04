@@ -120,7 +120,7 @@ export default function TournamentDetailsPage() {
     }
   };
 
-  const participantCount = tournament?.players?.length || 0;
+  const participantCount = tournament?.registrations?.length || 0;
   const matchesCount = tournament?.matches?.length || 0;
 
   const renderTabContent = useMemo(() => {
@@ -135,7 +135,9 @@ export default function TournamentDetailsPage() {
           />
         );
       case "participants":
-        return <TabParticipants participants={tournament.players || []} />;
+        return (
+          <TabParticipants registrations={tournament.registrations || []} />
+        );
       case "matches":
         return (
           <TabMatches

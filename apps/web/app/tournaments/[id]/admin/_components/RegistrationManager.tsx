@@ -48,6 +48,23 @@ import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
 import toast from "react-hot-toast";
 
+// Helper function to get player display name
+const getPlayerName = (registration: TournamentRegistration): string => {
+  const player = registration.player;
+  if (player?.user) {
+    return `${player.user.firstName || ''} ${player.user.lastName || ''}`.trim();
+  }
+  return player?.name || `Joueur #${player?.id || '?'}`;
+};
+
+const getPlayerInitials = (registration: TournamentRegistration): string => {
+  const player = registration.player;
+  if (player?.user) {
+    return `${player.user.firstName?.[0] || ''}${player.user.lastName?.[0] || ''}`.toUpperCase();
+  }
+  return player?.name?.slice(0, 2)?.toUpperCase() || '??';
+};
+
 interface RegistrationManagerProps {
   tournamentId: number;
 }
@@ -127,7 +144,8 @@ export function RegistrationManager({
     if (filters.status && reg.status !== filters.status) return false;
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      if (!reg.player.name.toLowerCase().includes(searchLower)) return false;
+      const playerName = getPlayerName(reg);
+      if (!playerName.toLowerCase().includes(searchLower)) return false;
     }
     if (filters.checkedIn) {
       if (filters.checkedIn === "true" && !reg.checkedIn) return false;
@@ -202,7 +220,7 @@ export function RegistrationManager({
       ["Joueur", "Statut", "Check-in", "Inscription", "Notes"].join(","),
       ...filteredRegistrations.map((reg) =>
         [
-          reg.player.name,
+          getPlayerName(reg),
           reg.status,
           reg.checkedIn ? "Oui" : "Non",
           new Date(reg.registeredAt).toLocaleDateString(),
@@ -466,15 +484,15 @@ export function RegistrationManager({
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             <AvatarFallback>
-                              {registration.player.name[0]}
+                              {getPlayerInitials(registration)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="font-medium">
-                              {registration.player.name}
+                              {getPlayerName(registration)}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              ID: {registration.player.id}
+                              ID: {registration.player?.id}
                             </p>
                           </div>
                         </div>

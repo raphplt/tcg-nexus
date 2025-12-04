@@ -25,12 +25,12 @@ interface TabOverviewProps {
 }
 
 export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
-  const participantCount = tournament.players?.length || 0;
+  const participantCount =
+    tournament.registrations?.length || tournament.players?.length || 0;
   const maxPlayers = tournament.maxPlayers || "∞";
 
   return (
     <div className="space-y-6">
-      {/* Description */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -50,7 +50,6 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
         </CardContent>
       </Card>
 
-      {/* Informations clés */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-3">
@@ -169,7 +168,6 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
         </Card>
       </div>
 
-      {/* Tarification */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -192,7 +190,6 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
         </CardContent>
       </Card>
 
-      {/* Récompenses */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
