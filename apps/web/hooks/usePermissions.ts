@@ -19,11 +19,11 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
 
     // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = tournament.organizers?.some(
-      (org) => org.user.id === user.id,
+      (org) => org.user?.id === user.id,
     );
 
     const organizerRole = tournament.organizers?.find(
-      (org) => org.user.id === user.id,
+      (org) => org.user?.id === user.id,
     )?.role;
 
     // Permissions système
@@ -69,8 +69,8 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
       canReportMatchScore: (match: Match) => {
         // Un joueur peut reporter le score de son propre match
         const isPlayerInMatch =
-          match.playerA?.user?.id === user.id ||
-          match.playerB?.user?.id === user.id;
+          (match.playerA?.user?.id && match.playerA.user.id === user.id) ||
+          (match.playerB?.user?.id && match.playerB.user.id === user.id);
         return canModerate || isPlayerInMatch;
       },
     };
@@ -89,13 +89,17 @@ export function useMatchPermissions(user: User | null, match?: Match) {
     }
 
     // Vérifier si l'utilisateur est un des joueurs du match
-    const isPlayerA = match.playerA?.user?.id === user.id;
-    const isPlayerB = match.playerB?.user?.id === user.id;
+    const isPlayerA = match.playerA?.user?.id
+      ? match.playerA.user.id === user.id
+      : false;
+    const isPlayerB = match.playerB?.user?.id
+      ? match.playerB.user.id === user.id
+      : false;
     const isPlayerInMatch = isPlayerA || isPlayerB;
 
     // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = match.tournament?.organizers?.some(
-      (org) => org.user.id === user.id,
+      (org) => org.user?.id === user.id,
     );
 
     const isAdmin = user.role === UserRole.ADMIN;
