@@ -28,7 +28,16 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Backend',
-      items: ['backend/api'],
+      items: [
+        'backend/api',
+        'backend/auth',
+        'backend/users',
+        'backend/tournaments',
+        'backend/marketplace',
+        'backend/cards',
+        'backend/decks',
+        'backend/collections',
+      ],
     },
     {
       type: 'category',
