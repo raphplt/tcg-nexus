@@ -125,17 +125,27 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
 
       case "in_progress":
         if (permissions.canManageTournament) {
-          // Swiss/Round Robin peuvent avancer manuellement
-          if (
-            tournament.type === "swiss_system" ||
-            tournament.type === "round_robin"
-          ) {
+          // Vérifier si on peut passer au round suivant
+          const currentRound = tournament.currentRound || 1;
+          const totalRounds = tournament.totalRounds || 1;
+          const currentRoundMatches =
+            tournament.matches?.filter((m) => m.round === currentRound) || [];
+          const allCurrentRoundFinished =
+            currentRoundMatches.length > 0 &&
+            currentRoundMatches.every(
+              (m) => m.status === "finished" || m.status === "forfeit",
+            );
+
+          // Afficher le bouton "Passer au round suivant" si :
+          // - Tous les matches du round actuel sont terminés
+          // - Ce n'est pas le dernier round
+          if (allCurrentRoundFinished && currentRound < totalRounds) {
             actions.push({
               action: "advance-round",
-              label: "Passer au round suivant",
+              label: `Passer au Round ${currentRound + 1}`,
               icon: <SkipForward className="w-4 h-4" />,
               variant: "default",
-              description: "Générer les paires du prochain round",
+              description: `Générer les matches du round ${currentRound + 1}/${totalRounds}`,
               requiresConfirmation: true,
             });
           }

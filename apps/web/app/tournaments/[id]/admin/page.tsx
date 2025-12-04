@@ -165,14 +165,60 @@ export default function TournamentAdminPage() {
                     </div>
 
                     {tournament.status === "in_progress" && (
-                      <div className="text-center p-2 bg-blue-50 rounded border">
-                        <div className="font-bold text-blue-800">
-                          Round {progress.currentRound}
+                      <>
+                        <div className="text-center p-2 bg-blue-50 dark:bg-blue-950 rounded border">
+                          <div className="font-bold text-blue-800 dark:text-blue-200">
+                            Round {progress.currentRound}
+                          </div>
+                          <div className="text-blue-600 dark:text-blue-400 text-sm">
+                            sur {progress.totalRounds}
+                          </div>
                         </div>
-                        <div className="text-blue-600 text-sm">
-                          sur {progress.totalRounds}
-                        </div>
-                      </div>
+
+                        {/* Statut du round actuel */}
+                        {(() => {
+                          const currentRoundMatches =
+                            tournament.matches?.filter(
+                              (m) => m.round === progress.currentRound,
+                            ) || [];
+                          const finishedMatches = currentRoundMatches.filter(
+                            (m) =>
+                              m.status === "finished" || m.status === "forfeit",
+                          ).length;
+                          const totalMatches = currentRoundMatches.length;
+                          const allFinished =
+                            totalMatches > 0 &&
+                            finishedMatches === totalMatches;
+
+                          return (
+                            <div
+                              className={`text-center p-2 rounded border ${
+                                allFinished
+                                  ? "bg-green-50 dark:bg-green-950 border-green-300"
+                                  : "bg-yellow-50 dark:bg-yellow-950 border-yellow-300"
+                              }`}
+                            >
+                              <div
+                                className={`font-medium text-sm ${
+                                  allFinished
+                                    ? "text-green-700 dark:text-green-300"
+                                    : "text-yellow-700 dark:text-yellow-300"
+                                }`}
+                              >
+                                {finishedMatches}/{totalMatches} matches
+                                terminés
+                              </div>
+                              {allFinished &&
+                                progress.currentRound <
+                                  progress.totalRounds && (
+                                  <div className="text-green-600 dark:text-green-400 text-xs mt-1">
+                                    ✓ Prêt pour le round suivant
+                                  </div>
+                                )}
+                            </div>
+                          );
+                        })()}
+                      </>
                     )}
                   </>
                 )}

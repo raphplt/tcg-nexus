@@ -62,7 +62,7 @@ export function useMarketplaceHome() {
 /**
  * Hook pour récupérer les données de la page de catalogue de cartes du marketplace
  */
-export function useMarketplaceCards(filters: FilterState, page: number) {
+export function useMarketplaceCards(filters: FilterState, page: number, limit: number = 24) {
   // Récupère les sets pour les filtres
   const { data: sets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets"],
@@ -91,11 +91,12 @@ export function useMarketplaceCards(filters: FilterState, page: number) {
       filters.priceMax,
       filters.sortBy,
       filters.sortOrder,
+      limit,
     ],
     marketplaceService.getCardsWithMarketplaceData,
     {
       page,
-      limit: 24,
+      limit,
       ...filters,
     },
   );

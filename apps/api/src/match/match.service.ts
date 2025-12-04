@@ -225,13 +225,49 @@ export class MatchService {
     return match;
   }
 
-  // Mettre à jour un match
+  // Mettre à jour un match (score, statut, etc.)
   async update(id: number, updateMatchDto: UpdateMatchDto): Promise<Match> {
     const match = await this.findOne(id);
-    if (match.status === MatchStatus.FINISHED) {
-      throw new BadRequestException('Impossible de modifier un match terminé');
+
+    // Si on met à jour les scores
+    if (
+      updateMatchDto.playerAScore !== undefined ||
+      updateMatchDto.playerBScore !== undefined
+    ) {
+      match.playerAScore =
+        updateMatchDto.playerAScore ?? match.playerAScore ?? 0;
+      match.playerBScore =
+        updateMatchDto.playerBScore ?? match.playerBScore ?? 0;
+
+      // Si un statut est fourni (finished), déterminer le winner
+      const statusValue = updateMatchDto.status as string | undefined;
+      if (statusValue === 'finished' || statusValue === MatchStatus.FINISHED) {
+        match.status = MatchStatus.FINISHED;
+        match.finishedAt = new Date();
+
+        // Déterminer le winner basé sur les scores
+        if (match.playerAScore > match.playerBScore) {
+          match.winner = match.playerA ?? null;
+        } else if (match.playerBScore > match.playerAScore) {
+          match.winner = match.playerB ?? null;
+        } else {
+          match.winner = undefined; // Match nul
+        }
+      }
     }
-    Object.assign(match, updateMatchDto);
+
+    // Autres mises à jour si pas de score
+    const statusForOther = updateMatchDto.status as string | undefined;
+    if (statusForOther && statusForOther !== 'finished' && statusForOther !== MatchStatus.FINISHED) {
+      match.status = statusForOther as MatchStatus;
+    }
+    if (updateMatchDto.notes) {
+      match.notes = updateMatchDto.notes;
+    }
+    if (updateMatchDto.scheduledDate) {
+      match.scheduledDate = updateMatchDto.scheduledDate;
+    }
+
     return this.matchRepository.save(match);
   }
 

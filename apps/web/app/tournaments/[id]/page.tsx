@@ -203,7 +203,6 @@ export default function TournamentDetailsPage() {
             </div>
           </aside>
 
-          {/* Tab Content */}
           <main className="flex-1 min-w-0">{renderTabContent}</main>
         </div>
       </div>

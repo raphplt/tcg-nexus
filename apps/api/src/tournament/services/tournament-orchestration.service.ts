@@ -94,7 +94,14 @@ export class TournamentOrchestrationService {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
-        relations: ['matches', 'registrations', 'registrations.player']
+        relations: [
+          'matches',
+          'matches.playerA',
+          'matches.playerB',
+          'matches.winner',
+          'registrations',
+          'registrations.player'
+        ]
       });
 
       if (!tournament) {
@@ -389,14 +396,24 @@ export class TournamentOrchestrationService {
     const winners: any[] = [];
 
     for (const match of previousRoundMatches) {
-      if (match.winner) {
-        winners.push(match.winner);
+      // Déterminer le gagnant basé sur les scores si winner n'est pas défini
+      let winner = match.winner;
+      if (!winner && match.status === MatchStatus.FINISHED) {
+        if ((match.playerAScore ?? 0) > (match.playerBScore ?? 0)) {
+          winner = match.playerA;
+        } else if ((match.playerBScore ?? 0) > (match.playerAScore ?? 0)) {
+          winner = match.playerB;
+        }
+      }
+
+      if (winner) {
+        winners.push(winner);
         playersAdvanced++;
       }
 
       // Marquer les perdants comme éliminés
       const loser =
-        match.playerA?.id === match.winner?.id ? match.playerB : match.playerA;
+        match.playerA?.id === winner?.id ? match.playerB : match.playerA;
       if (loser) {
         const registration = await manager.findOne(TournamentRegistration, {
           where: { tournament: { id: tournament.id }, player: { id: loser.id } }
@@ -411,9 +428,10 @@ export class TournamentOrchestrationService {
       }
     }
 
+    // Créer les matches du prochain round avec await
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
-        void this.matchService.create({
+        await this.matchService.create({
           tournamentId: tournament.id,
           playerAId: winners[i].id,
           playerBId: winners[i + 1].id,
