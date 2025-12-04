@@ -57,7 +57,6 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8 text-center">Paiement</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {/* Order Summary */}
         <div className="order-2 lg:order-1">
           <Card>
             <CardHeader>
@@ -70,19 +69,16 @@ export default function CheckoutPage() {
                     key={item.id}
                     className="flex gap-4"
                   >
-                    <div className="relative w-16 h-24 flex-shrink-0">
-                      {item.listing.pokemonCard.image ? (
-                        <Image
-                          src={item.listing.pokemonCard.image + "/high.png"}
-                          alt={item.listing.pokemonCard.name || "Carte"}
-                          fill
-                          className="object-contain rounded"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted rounded flex items-center justify-center text-xs">
-                          No Image
-                        </div>
-                      )}
+                    <div className="relative w-16 h-24 shrink-0">
+                      <Image
+                        src={
+                          item.listing.pokemonCard.image + "/high.png" ||
+                          "/images/carte-pokemon-dos.jpg"
+                        }
+                        alt={item.listing.pokemonCard.name || "Carte"}
+                        fill
+                        className="object-contain rounded"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">
@@ -128,7 +124,6 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
-        {/* Checkout Form */}
         <div className="order-1 lg:order-2">
           <Card>
             <CardContent className="pt-6">

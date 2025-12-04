@@ -47,7 +47,7 @@ export function CardCard({
         )}
       >
         <CardHeader className="pb-3">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-muted mb-3">
+          <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-muted mb-3">
             <Image
               src={
                 card.image

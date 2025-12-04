@@ -52,9 +52,7 @@ export default function CheckoutForm() {
     suggestions: { status, data },
     clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: {
-      /* Define search scope here */
-    },
+    requestOptions: {},
     debounce: 300,
   });
 
