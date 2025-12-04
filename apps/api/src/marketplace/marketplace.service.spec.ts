@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MarketplaceService } from './marketplace.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Listing } from './entities/listing.entity';
+import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { PriceHistory } from './entities/price-history.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { Order, OrderStatus } from './entities/order.entity';
@@ -232,21 +233,25 @@ describe('MarketplaceService', () => {
     it('throws NotFound if listing missing', async () => {
       listingRepo.findOne.mockResolvedValue(null);
       await expect(
-        service.update(10, { price: 100 } as any, owner)
+        service.update(10, { price: 100 } as UpdateListingDto, owner)
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('forbids non-owner non-admin', async () => {
       listingRepo.findOne.mockResolvedValue(listing);
       await expect(
-        service.update(10, { price: 100 } as any, other)
+        service.update(10, { price: 100 } as UpdateListingDto, other)
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
     it('allows owner', async () => {
       listingRepo.findOne.mockResolvedValue({ ...listing });
       listingRepo.save.mockImplementation(async (l: Listing) => l);
-      const res = await service.update(10, { price: 200 } as any, owner);
+      const res = await service.update(
+        10,
+        { price: 200 } as UpdateListingDto,
+        owner
+      );
       expect(res).toBeDefined();
       expect(listingRepo.save).toHaveBeenCalled();
     });
@@ -254,7 +259,11 @@ describe('MarketplaceService', () => {
     it('allows admin', async () => {
       listingRepo.findOne.mockResolvedValue({ ...listing });
       listingRepo.save.mockImplementation(async (l: Listing) => l);
-      const res = await service.update(10, { price: 300 } as any, admin);
+      const res = await service.update(
+        10,
+        { price: 300 } as UpdateListingDto,
+        admin
+      );
       expect(res).toBeDefined();
       expect(listingRepo.save).toHaveBeenCalled();
     });

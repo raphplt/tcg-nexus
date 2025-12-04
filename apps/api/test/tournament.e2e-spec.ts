@@ -4,9 +4,11 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { CreateTournamentDto } from '../src/tournament/dto/create-tournament.dto';
 import { TournamentType } from '../src/tournament/entities/tournament.entity';
+import type { Server } from 'http';
 
 describe('TournamentController (e2e)', () => {
   let app: INestApplication;
+  let httpServer: Server;
   let organizerToken: string;
   let playerToken: string;
   let tournamentId: number;
@@ -19,10 +21,11 @@ describe('TournamentController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    httpServer = app.getHttpServer() as Server;
 
     // Create Organizer
     const organizerEmail = `organizer_${Date.now()}@test.com`;
-    await request(app.getHttpServer())
+    await request(httpServer)
       .post('/auth/register')
       .send({
         email: organizerEmail,
@@ -32,7 +35,7 @@ describe('TournamentController (e2e)', () => {
       })
       .expect(201);
 
-    const organizerLogin = await request(app.getHttpServer())
+    const organizerLogin = await request(httpServer)
       .post('/auth/login')
       .send({
         email: organizerEmail,
@@ -44,7 +47,7 @@ describe('TournamentController (e2e)', () => {
 
     // Create Player
     const playerEmail = `player_${Date.now()}@test.com`;
-    await request(app.getHttpServer())
+    await request(httpServer)
       .post('/auth/register')
       .send({
         email: playerEmail,
@@ -54,7 +57,7 @@ describe('TournamentController (e2e)', () => {
       })
       .expect(201);
 
-    const playerLogin = await request(app.getHttpServer())
+    const playerLogin = await request(httpServer)
       .post('/auth/login')
       .send({
         email: playerEmail,
@@ -80,7 +83,7 @@ describe('TournamentController (e2e)', () => {
       maxPlayers: 8
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await request(httpServer)
       .post('/tournaments')
       .set('Authorization', `Bearer ${organizerToken}`)
       .send(dto)
@@ -91,7 +94,7 @@ describe('TournamentController (e2e)', () => {
   });
 
   it('/tournaments/:id/register (POST) - Register Player', async () => {
-    await request(app.getHttpServer())
+    await request(httpServer)
       .post(`/tournaments/${tournamentId}/register`)
       .set('Authorization', `Bearer ${playerToken}`)
       .send({ playerId })
@@ -99,7 +102,7 @@ describe('TournamentController (e2e)', () => {
   });
 
   it('/tournaments/:id (GET) - Verify Registration', async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(httpServer)
       .get(`/tournaments/${tournamentId}`)
       .expect(200);
 

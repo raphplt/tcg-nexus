@@ -257,9 +257,11 @@ export class MatchService {
     }
 
     // Autres mises à jour si pas de score
-    const statusForOther = updateMatchDto.status as string | undefined;
-    if (statusForOther && statusForOther !== 'finished' && statusForOther !== MatchStatus.FINISHED) {
-      match.status = statusForOther as MatchStatus;
+    if (
+      updateMatchDto.status &&
+      updateMatchDto.status !== MatchStatus.FINISHED
+    ) {
+      match.status = updateMatchDto.status;
     }
     if (updateMatchDto.notes) {
       match.notes = updateMatchDto.notes;

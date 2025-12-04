@@ -18,7 +18,7 @@ import { UserRole } from 'src/common/enums/user';
 interface AuthenticatedRequest {
   user: {
     id: number;
-    role: string;
+    role: UserRole;
   };
   params: {
     id?: string;
@@ -61,10 +61,7 @@ export class TournamentOrganizerGuard implements CanActivate {
       throw new ForbiddenException('Utilisateur ou ID de tournoi manquant');
     }
 
-    if (
-      user.role === UserRole.ADMIN ||
-      user.role === UserRole.MODERATOR
-    ) {
+    if (user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR) {
       return true;
     }
 

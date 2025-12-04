@@ -1,6 +1,6 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
 import { Collection, CollectionItemType } from "@/types/collection";
-import { fetcher } from "@/utils/fetch";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface CollectionQueryParams extends PaginationParams {
   search?: string;
@@ -51,9 +51,8 @@ export const collectionService = {
   },
 
   async createCollection(collection: Collection): Promise<Collection> {
-    return fetcher<Collection>("/collection", {
-      method: "POST",
-      body: collection,
+    return authedFetch<Collection>("POST", "/collection", {
+      data: collection,
     });
   },
 };

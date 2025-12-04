@@ -28,6 +28,7 @@ import { Player } from '../player/entities/player.entity';
 import { User } from '../user/entities/user.entity';
 import { PaginationHelper } from '../helpers/pagination';
 import { BracketService } from './services/bracket.service';
+import { UpdateMatchDto } from '../match/dto/update-match.dto';
 import { SeedingService, SeedingMethod } from './services/seeding.service';
 import { TournamentOrchestrationService } from './services/tournament-orchestration.service';
 import { TournamentStateService } from './services/tournament-state.service';
@@ -630,7 +631,7 @@ export class TournamentService {
     await this.getTournamentMatch(tournamentId, matchId);
 
     // Mettre à jour le match via le service de match
-    return this.matchService.update(matchId, updateData as any);
+    return this.matchService.update(matchId, updateData as UpdateMatchDto);
   }
 
   /**

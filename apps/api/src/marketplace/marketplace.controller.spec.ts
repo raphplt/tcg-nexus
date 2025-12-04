@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MarketplaceController } from './marketplace.controller';
 import { MarketplaceService } from './marketplace.service';
 import { CreateListingDto } from './dto/create-marketplace.dto';
+import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { User } from '../user/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -120,11 +121,11 @@ describe('MarketplaceController', () => {
 
   describe('updateListing', () => {
     it('should update listing', async () => {
-      const dto = { price: 20 };
+      const dto: UpdateListingDto = { price: 20 };
       const user = { id: 1 } as User;
       mockMarketplaceService.update.mockResolvedValue({ id: 1, ...dto });
 
-      const result = await controller.updateListing('1', dto as any, user);
+      const result = await controller.updateListing('1', dto, user);
 
       expect(result).toEqual({ id: 1, ...dto });
       expect(service.update).toHaveBeenCalledWith(1, dto, user);
