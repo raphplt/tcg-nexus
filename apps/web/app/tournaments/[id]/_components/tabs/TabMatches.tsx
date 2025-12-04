@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -25,13 +26,15 @@ import {
   XCircle,
   PlayCircle,
   Filter,
+  LayoutGrid,
+  List,
 } from "lucide-react";
-import { Match } from "@/types/tournament";
-
-interface TabMatchesProps {
-  matches: Match[];
-  formatDate: (date?: string | null) => string;
-}
+import { TournamentBracket } from "../TournamentBracket";
+import { useAuth } from "@/contexts/AuthContext";
+import { tournamentService } from "@/services/tournament.service";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { getPlayerName, TabMatchesProps } from "@/app/tournaments/utils";
 
 const statusConfig: Record<
   string,
@@ -64,16 +67,18 @@ const statusConfig: Record<
   },
 };
 
-const phaseTranslation: Record<string, string> = {
-  qualification: "Qualification",
-  quarter_final: "Quart de finale",
-  semi_final: "Demi-finale",
-  final: "Finale",
-};
-
-export function TabMatches({ matches, formatDate }: TabMatchesProps) {
+export function TabMatches({
+  matches,
+  formatDate,
+  tournamentId,
+}: TabMatchesProps) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState<"bracket" | "list">("bracket");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [roundFilter, setRoundFilter] = useState<string>("all");
+
+  const isAdmin = user?.role === "admin" || user?.role === "moderator";
 
   const rounds = useMemo(() => {
     const uniqueRounds = [...new Set(matches.map((m) => m.round))];
@@ -98,9 +103,30 @@ export function TabMatches({ matches, formatDate }: TabMatchesProps) {
     };
   }, [matches]);
 
+  const handleUpdateScore = async (
+    matchId: number,
+    scoreA: number,
+    scoreB: number,
+  ) => {
+    if (!tournamentId) return;
+
+    try {
+      await tournamentService.updateMatch(tournamentId, matchId, {
+        playerAScore: scoreA,
+        playerBScore: scoreB,
+        status: scoreA !== scoreB ? "finished" : "in_progress",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tournament"] });
+      toast.success("Score enregistré !");
+    } catch (error) {
+      console.error("Failed to update match:", error);
+      toast.error("Erreur lors de l'enregistrement du score");
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Statistiques */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           label="Total"
@@ -132,147 +158,195 @@ export function TabMatches({ matches, formatDate }: TabMatchesProps) {
         />
       </div>
 
-      {/* Liste des matches */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Swords className="size-5 text-primary" />
-              Liste des matches
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Filter className="size-4 text-muted-foreground" />
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="scheduled">Planifié</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="finished">Terminé</SelectItem>
-                  <SelectItem value="forfeit">Forfait</SelectItem>
-                  <SelectItem value="cancelled">Annulé</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={roundFilter}
-                onValueChange={setRoundFilter}
-              >
-                <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Round" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les rounds</SelectItem>
-                  {rounds.map((round) => (
-                    <SelectItem
-                      key={round}
-                      value={round.toString()}
-                    >
-                      Round {round}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-16">Match</TableHead>
-                  <TableHead>Round</TableHead>
-                  <TableHead className="hidden md:table-cell">Phase</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="hidden lg:table-cell">Date</TableHead>
-                  <TableHead className="text-center">Score</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMatches.length > 0 ? (
-                  filteredMatches.map((match) => {
-                    const matchStatus =
-                      statusConfig[match.status] ?? statusConfig.scheduled;
-                    return (
-                      <TableRow
-                        key={match.id}
-                        className="hover:bg-muted/30"
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <Swords className="size-5 text-primary" />
+          {viewMode === "bracket" ? "Arbre du tournoi" : "Liste des matches"}
+        </h3>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === "bracket" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("bracket")}
+          >
+            <LayoutGrid className="size-4 mr-1" />
+            Bracket
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="size-4 mr-1" />
+            Liste
+          </Button>
+        </div>
+      </div>
+
+      {viewMode === "bracket" && (
+        <TournamentBracket
+          matches={matches}
+          isAdmin={isAdmin}
+          onUpdateScore={handleUpdateScore}
+        />
+      )}
+
+      {viewMode === "list" && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                Liste des matches
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Filter className="size-4 text-muted-foreground" />
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="scheduled">Planifié</SelectItem>
+                    <SelectItem value="in_progress">En cours</SelectItem>
+                    <SelectItem value="finished">Terminé</SelectItem>
+                    <SelectItem value="forfeit">Forfait</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={roundFilter}
+                  onValueChange={setRoundFilter}
+                >
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="Round" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les rounds</SelectItem>
+                    {rounds.map((round) => (
+                      <SelectItem
+                        key={round}
+                        value={round.toString()}
                       >
-                        <TableCell className="font-medium">
-                          #{match.id}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Round {match.round}</Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <span className="text-muted-foreground">
-                            {phaseTranslation[match.phase] ||
-                              match.phase ||
-                              "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {matchStatus && (
-                            <Badge
-                              variant="outline"
-                              className={`gap-1 ${matchStatus.color}`}
-                            >
-                              {matchStatus.icon}
-                              {matchStatus.label}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell text-muted-foreground">
-                          {formatDate(match.scheduledDate)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center gap-2">
-                            <span
-                              className={`font-bold ${
-                                match.playerAScore > match.playerBScore
-                                  ? "text-green-500"
-                                  : ""
-                              }`}
-                            >
-                              {match.playerAScore ?? 0}
-                            </span>
-                            <span className="text-muted-foreground">-</span>
-                            <span
-                              className={`font-bold ${
-                                match.playerBScore > match.playerAScore
-                                  ? "text-green-500"
-                                  : ""
-                              }`}
-                            >
-                              {match.playerBScore ?? 0}
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="h-32 text-center text-muted-foreground"
-                    >
-                      {matches.length === 0
-                        ? "Aucun match planifié pour le moment."
-                        : "Aucun match ne correspond aux filtres sélectionnés."}
-                    </TableCell>
+                        Round {round}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="w-16">Match</TableHead>
+                    <TableHead>Joueur A</TableHead>
+                    <TableHead className="text-center">Score</TableHead>
+                    <TableHead>Joueur B</TableHead>
+                    <TableHead>Round</TableHead>
+                    <TableHead>Statut</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {filteredMatches.length > 0 ? (
+                    filteredMatches.map((match) => {
+                      const matchStatus =
+                        statusConfig[match.status] ?? statusConfig.scheduled;
+                      const playerAWins =
+                        match.status === "finished" &&
+                        (match.playerAScore ?? 0) > (match.playerBScore ?? 0);
+                      const playerBWins =
+                        match.status === "finished" &&
+                        (match.playerBScore ?? 0) > (match.playerAScore ?? 0);
+
+                      return (
+                        <TableRow
+                          key={match.id}
+                          className="hover:bg-muted/30"
+                        >
+                          <TableCell className="font-medium">
+                            #{match.id}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                playerAWins
+                                  ? "font-semibold text-green-600"
+                                  : ""
+                              }
+                            >
+                              {getPlayerName(match.playerA)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center gap-2 font-mono">
+                              <span
+                                className={`font-bold ${
+                                  playerAWins ? "text-green-500" : ""
+                                }`}
+                              >
+                                {match.playerAScore ?? 0}
+                              </span>
+                              <span className="text-muted-foreground">-</span>
+                              <span
+                                className={`font-bold ${
+                                  playerBWins ? "text-green-500" : ""
+                                }`}
+                              >
+                                {match.playerBScore ?? 0}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                playerBWins
+                                  ? "font-semibold text-green-600"
+                                  : ""
+                              }
+                            >
+                              {getPlayerName(match.playerB)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Round {match.round}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {matchStatus && (
+                              <Badge
+                                variant="outline"
+                                className={`gap-1 ${matchStatus.color}`}
+                              >
+                                {matchStatus.icon}
+                                {matchStatus.label}
+                              </Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        className="h-32 text-center text-muted-foreground"
+                      >
+                        {matches.length === 0
+                          ? "Aucun match planifié pour le moment."
+                          : "Aucun match ne correspond aux filtres sélectionnés."}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

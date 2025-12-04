@@ -615,6 +615,25 @@ export class TournamentService {
   }
 
   /**
+   * Met à jour un match d'un tournoi (score, statut)
+   */
+  async updateTournamentMatch(
+    tournamentId: number,
+    matchId: number,
+    updateData: {
+      playerAScore?: number;
+      playerBScore?: number;
+      status?: string;
+    }
+  ) {
+    // Vérifier que le match appartient bien au tournoi
+    await this.getTournamentMatch(tournamentId, matchId);
+
+    // Mettre à jour le match via le service de match
+    return this.matchService.update(matchId, updateData as any);
+  }
+
+  /**
    * Récupère les inscriptions d'un tournoi
    */
   async getTournamentRegistrations(tournamentId: number, status?: string) {

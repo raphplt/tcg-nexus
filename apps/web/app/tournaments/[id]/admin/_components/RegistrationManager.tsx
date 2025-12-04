@@ -323,16 +323,19 @@ export function RegistrationManager({
               <div className="space-y-2">
                 <Label>Statut</Label>
                 <Select
-                  value={filters.status}
+                  value={filters.status || "all"}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, status: value })
+                    setFilters({
+                      ...filters,
+                      status: value === "all" ? "" : value,
+                    })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="confirmed">Confirmées</SelectItem>
                     <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="cancelled">Annulées</SelectItem>
@@ -343,16 +346,19 @@ export function RegistrationManager({
               <div className="space-y-2">
                 <Label>Check-in</Label>
                 <Select
-                  value={filters.checkedIn}
+                  value={filters.checkedIn || "all"}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, checkedIn: value })
+                    setFilters({
+                      ...filters,
+                      checkedIn: value === "all" ? "" : value,
+                    })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous</SelectItem>
+                    <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="true">Check-in fait</SelectItem>
                     <SelectItem value="false">Check-in manquant</SelectItem>
                   </SelectContent>

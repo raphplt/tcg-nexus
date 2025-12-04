@@ -1,3 +1,4 @@
+import { Match } from "@/types/tournament";
 import { TournamentStatus, TournamentType } from "@/utils/tournaments";
 
 export const statusColor: Record<
@@ -44,3 +45,17 @@ export const sortOptions = [
   { label: "Type", value: "type" },
   { label: "Statut", value: "status" },
 ];
+
+export interface TabMatchesProps {
+  matches: Match[];
+  formatDate: (date?: string | null) => string;
+  tournamentId?: number;
+}
+
+export const getPlayerName = (player: any): string => {
+  if (!player) return "TBD";
+  if (player.user) {
+    return `${player.user.firstName} ${player.user.lastName}`;
+  }
+  return player.name || `Joueur #${player.id}`;
+};

@@ -143,6 +143,7 @@ export default function TournamentDetailsPage() {
           <TabMatches
             matches={tournament.matches || []}
             formatDate={formatDate}
+            tournamentId={tournament.id}
           />
         );
       case "rankings":
@@ -179,7 +180,6 @@ export default function TournamentDetailsPage() {
           formatDate={formatDate}
         />
 
-        {/* Mobile Tab Bar */}
         <div className="lg:hidden">
           <MobileTabBar
             activeTab={activeTab}

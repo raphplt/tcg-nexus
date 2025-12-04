@@ -306,4 +306,19 @@ export const tournamentService = {
       `/tournaments/${tournamentId}/check-in-all`,
     );
   },
+
+  /**
+   * Met à jour un match (score, statut)
+   */
+  async updateMatch(
+    tournamentId: number,
+    matchId: number,
+    data: { playerAScore?: number; playerBScore?: number; status?: string },
+  ): Promise<Match> {
+    return authedFetch<Match>(
+      "PATCH",
+      `/tournaments/${tournamentId}/matches/${matchId}`,
+      { data },
+    );
+  },
 };

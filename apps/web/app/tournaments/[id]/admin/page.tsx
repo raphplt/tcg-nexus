@@ -20,6 +20,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { TournamentControls } from "../_components/TournamentControls";
 import { RegistrationManager } from "./_components/RegistrationManager";
+import { MatchManager } from "./_components/MatchManager";
+import { RankingsManager } from "./_components/RankingsManager";
 import Link from "next/link";
 
 export default function TournamentAdminPage() {
@@ -310,34 +312,14 @@ export default function TournamentAdminPage() {
                 value="matches"
                 className="mt-6"
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Gestion des matches</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      Interface de gestion des matches à implémenter
-                    </p>
-                    {/* TODO: Implémenter MatchManager */}
-                  </CardContent>
-                </Card>
+                <MatchManager tournamentId={tournament.id} />
               </TabsContent>
 
               <TabsContent
                 value="rankings"
                 className="mt-6"
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Classements</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      Interface des classements à implémenter
-                    </p>
-                    {/* TODO: Implémenter RankingsManager */}
-                  </CardContent>
-                </Card>
+                <RankingsManager tournamentId={tournament.id} />
               </TabsContent>
             </Tabs>
           </div>

@@ -245,6 +245,30 @@ export class TournamentController {
     return this.tournamentService.getTournamentMatch(id, matchId);
   }
 
+  @Patch(':id/matches/:matchId')
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR
+  )
+  updateTournamentMatch(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('matchId', ParseIntPipe) matchId: number,
+    @Body()
+    updateData: {
+      playerAScore?: number;
+      playerBScore?: number;
+      status?: string;
+    }
+  ) {
+    return this.tournamentService.updateTournamentMatch(
+      id,
+      matchId,
+      updateData
+    );
+  }
+
   @Get(':id/registrations')
   @UseGuards(TournamentOrganizerGuard)
   @TournamentOrganizerRoles(

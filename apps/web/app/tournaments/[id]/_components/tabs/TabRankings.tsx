@@ -18,6 +18,14 @@ interface TabRankingsProps {
   rankings: Ranking[];
 }
 
+const getPlayerName = (player: any): string => {
+  if (!player) return "Inconnu";
+  if (player.user) {
+    return `${player.user.firstName} ${player.user.lastName}`;
+  }
+  return player.name || `Joueur #${player.id}`;
+};
+
 export function TabRankings({ rankings }: TabRankingsProps) {
   const sortedRankings = [...rankings].sort((a, b) => a.rank - b.rank);
   const topThree = sortedRankings.slice(0, 3);
@@ -103,7 +111,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       #{actualRank}
                     </Badge>
                     <h3 className="font-semibold text-lg mt-2">
-                      Joueur #{ranking.player?.id || ranking.id}
+                      {getPlayerName(ranking.player)}
                     </h3>
                     <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
                       <div>
@@ -193,7 +201,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      Joueur #{ranking.player?.id || ranking.id}
+                      {getPlayerName(ranking.player)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge

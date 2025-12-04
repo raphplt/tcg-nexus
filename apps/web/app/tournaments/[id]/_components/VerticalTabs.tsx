@@ -81,7 +81,7 @@ export function VerticalTabs({
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200",
+            "w-full flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer text-left transition-all duration-200",
             "hover:bg-muted/80",
             activeTab === tab.id
               ? "bg-primary text-primary-foreground shadow-md"
