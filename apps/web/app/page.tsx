@@ -6,10 +6,8 @@ import MarketplacePreview from "@/components/Home/MarketplacePreview";
 import LatestArticles from "@/components/Home/LatestArticles";
 import RandomCard from "@/components/Home/RandomCard";
 import TrendingDecks from "@/components/Home/TrendingDecks";
-import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
-  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-linear-to-br from-muted via-background to-accent/20">
       <section className="relative overflow-hidden border-b-4 border-black bg-linear-to-r from-primary/10 via-background to-secondary/10">
@@ -34,7 +32,7 @@ const HomePage = () => {
                 <TournamentPreview />
               </div>
               <div className="card-hover">
-                <RandomCard userId={user?.id ?? 0} />
+                <RandomCard />
               </div>
             </div>
             <div className="space-y-8">

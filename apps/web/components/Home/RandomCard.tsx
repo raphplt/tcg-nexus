@@ -8,7 +8,8 @@ import { Button } from "../ui/button";
 import { RefreshCw, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { FavoriteButton } from "./FavoritesButton";
-const RandomCard = ({ userId }: { userId: number }) => {
+
+const RandomCard = () => {
   const [isFlippingOut, setIsFlippingOut] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const [previousCardId, setPreviousCardId] = useState<string | null>(null);
