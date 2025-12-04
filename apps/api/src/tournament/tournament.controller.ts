@@ -138,8 +138,11 @@ export class TournamentController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(TournamentOwnerGuard)
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.tournamentService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User
+  ) {
+    return this.tournamentService.remove(id, user);
   }
 
   @Post(':id/start')

@@ -34,6 +34,7 @@ import { TournamentStateService } from './services/tournament-state.service';
 import { RankingService } from '../ranking/ranking.service';
 import { MatchService } from '../match/match.service';
 import { MatchStatus } from '../match/entities/match.entity';
+import { UserRole } from '../common/enums/user';
 
 @Injectable()
 export class TournamentService {
@@ -245,10 +246,14 @@ export class TournamentService {
   }
 
   // Supprimer un tournoi
-  async remove(id: number): Promise<void> {
+  async remove(id: number, requestingUser?: User): Promise<void> {
     const tournament = await this.findOne(id);
 
-    if (tournament.status !== TournamentStatus.DRAFT) {
+    const isAdminOrModerator =
+      requestingUser?.role === UserRole.ADMIN ||
+      requestingUser?.role === UserRole.MODERATOR;
+
+    if (!isAdminOrModerator && tournament.status !== TournamentStatus.DRAFT) {
       throw new BadRequestException(
         'Seuls les tournois en brouillon peuvent être supprimés'
       );

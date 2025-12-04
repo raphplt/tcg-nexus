@@ -135,11 +135,19 @@ export function AdminTournamentsTable() {
   };
 
   const saveTournament = async () => {
+    const start = new Date(form.startDate);
+    let end = new Date(form.endDate);
+
+    // Garantir une fin après le début pour satisfaire la validation API
+    if (end <= start) {
+      end = new Date(start.getTime() + 60 * 60 * 1000);
+    }
+
     const payload: CreateTournamentDto = {
       name: form.name,
       location: form.location,
-      startDate: new Date(form.startDate),
-      endDate: new Date(form.endDate),
+      startDate: start,
+      endDate: end,
       type: form.type,
       maxPlayers: form.maxPlayers,
       isPublic: true,

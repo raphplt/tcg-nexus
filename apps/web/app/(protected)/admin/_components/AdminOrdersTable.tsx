@@ -262,7 +262,7 @@ export function AdminOrdersTable() {
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold">
-                        {order.totalAmount.toFixed(2)} {order.currency}
+                        {formatAmount(order.totalAmount)} {order.currency}
                       </span>
                     </TableCell>
                     <TableCell>{statusBadge(order.status)}</TableCell>
@@ -317,7 +317,7 @@ export function AdminOrdersTable() {
                                         <TableCell>{item.listing.cardState}</TableCell>
                                         <TableCell>{item.quantity}</TableCell>
                                         <TableCell>
-                                          {item.unitPrice.toFixed(2)} {selectedOrder.currency}
+                                          {formatAmount(item.unitPrice)} {selectedOrder.currency}
                                         </TableCell>
                                       </TableRow>
                                     ))}
@@ -325,7 +325,7 @@ export function AdminOrdersTable() {
                                 </Table>
                               </div>
                               <div className="flex justify-end text-sm font-semibold">
-                                Total : {selectedOrder.totalAmount.toFixed(2)}{" "}
+                                Total : {formatAmount(selectedOrder.totalAmount)}{" "}
                                 {selectedOrder.currency}
                               </div>
                             </div>
@@ -445,3 +445,7 @@ export function AdminOrdersTable() {
     </Card>
   );
 }
+const formatAmount = (amount: number | string | undefined) => {
+  const numeric = typeof amount === "number" ? amount : Number(amount ?? 0);
+  return numeric.toFixed(2);
+};
