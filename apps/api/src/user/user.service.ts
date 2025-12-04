@@ -45,6 +45,8 @@ export class UserService {
         'lastName',
         'role',
         'isActive',
+        'isPro',
+        'preferredCurrency',
         'emailVerified',
         'createdAt',
         'updatedAt'
@@ -62,6 +64,8 @@ export class UserService {
         'lastName',
         'role',
         'isActive',
+        'isPro',
+        'preferredCurrency',
         'emailVerified',
         'createdAt',
         'updatedAt'

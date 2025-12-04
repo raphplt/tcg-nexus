@@ -13,6 +13,7 @@ import {
   OrganizerRole
 } from '../entities/tournament-organizer.entity';
 import { Tournament } from '../entities/tournament.entity';
+import { UserRole } from 'src/common/enums/user';
 
 interface AuthenticatedRequest {
   user: {
@@ -58,6 +59,13 @@ export class TournamentOrganizerGuard implements CanActivate {
 
     if (!user || !tournamentId) {
       throw new ForbiddenException('Utilisateur ou ID de tournoi manquant');
+    }
+
+    if (
+      user.role === UserRole.ADMIN ||
+      user.role === UserRole.MODERATOR
+    ) {
+      return true;
     }
 
     // Vérifier que le tournoi existe

@@ -26,6 +26,7 @@ import {
 } from './entities/payment-transaction.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Currency } from '../common/enums/currency';
+import { AdminOrderQueryDto } from './dto/admin-order-query.dto';
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -127,6 +128,35 @@ export class MarketplaceService {
     await this.userCartService.clearCart(user.id);
 
     return savedOrder;
+  }
+
+  async findAllOrders(params: AdminOrderQueryDto) {
+    const { page = 1, limit = 20, status, buyerId, sellerId } = params;
+    const qb = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.buyer', 'buyer')
+      .leftJoinAndSelect('order.orderItems', 'orderItem')
+      .leftJoinAndSelect('orderItem.listing', 'listing')
+      .leftJoinAndSelect('listing.seller', 'seller')
+      .leftJoinAndSelect('listing.pokemonCard', 'pokemonCard')
+      .leftJoinAndSelect('order.payments', 'payment');
+
+    if (status) {
+      qb.andWhere('order.status = :status', { status });
+    }
+    if (buyerId) {
+      qb.andWhere('buyer.id = :buyerId', { buyerId });
+    }
+    if (sellerId) {
+      qb.andWhere('seller.id = :sellerId', { sellerId });
+    }
+
+    return PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      'order.createdAt',
+      'DESC'
+    );
   }
 
   async create(createListingDto: CreateListingDto, user: User) {
@@ -797,5 +827,31 @@ export class MarketplaceService {
     }
 
     return order;
+  }
+
+  async findOrderByIdAsAdmin(id: number): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: [
+        'buyer',
+        'orderItems',
+        'orderItems.listing',
+        'orderItems.listing.seller',
+        'orderItems.listing.pokemonCard',
+        'payments'
+      ]
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    return order;
+  }
+
+  async updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
+    const order = await this.findOrderByIdAsAdmin(id);
+    order.status = status;
+    return this.orderRepository.save(order);
   }
 }

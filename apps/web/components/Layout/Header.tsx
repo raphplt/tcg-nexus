@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, ShoppingCart } from "lucide-react";
+import { User, LogOut, ShoppingCart, Shield } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { usePathname } from "next/navigation";
 import { FULLSCREEN_PATHS } from "@/utils/constants";
@@ -196,6 +196,19 @@ const Header = () => {
                       <ShoppingCart className="mr-2 h-4 w-4" /> Mes Commandes
                     </Link>
                   </DropdownMenuItem>
+                  {user.role === "admin" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/admin"
+                          className="flex items-center"
+                        >
+                          <Shield className="mr-2 h-4 w-4" /> Admin
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={logout}

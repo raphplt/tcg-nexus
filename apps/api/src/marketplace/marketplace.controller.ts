@@ -15,6 +15,8 @@ import { CreateListingDto } from './dto/create-marketplace.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FindAllListingsQuery } from './dto/ind-all-listings-query.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
+import { AdminOrderQueryDto } from './dto/admin-order-query.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -22,6 +24,7 @@ import { User } from 'src/user/entities/user.entity';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
@@ -61,6 +64,33 @@ export class MarketplaceController {
   @Get('orders/:id')
   getOrderById(@Param('id') id: string, @CurrentUser() user: User) {
     return this.marketplaceService.findOrderById(+id, user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @Get('admin/orders')
+  getAllOrders(@Query() query: AdminOrderQueryDto) {
+    return this.marketplaceService.findAllOrders(query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @Get('admin/orders/:id')
+  getOrderAsAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.marketplaceService.findOrderByIdAsAdmin(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @Patch('admin/orders/:id/status')
+  updateOrderStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateOrderStatusDto
+  ) {
+    return this.marketplaceService.updateOrderStatus(id, dto.status);
   }
 
   @Get('listings')

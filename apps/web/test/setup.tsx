@@ -3,6 +3,22 @@ import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import React from "react";
 
+// Polyfill for pointer capture (required by Radix UI Select in jsdom)
+if (typeof Element !== "undefined") {
+  Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture || (() => false);
+  Element.prototype.setPointerCapture = Element.prototype.setPointerCapture || (() => {});
+  Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture || (() => {});
+  Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
+}
+
+// Mock ResizeObserver for Radix UI components
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+
 const storage = (() => {
   const store = new Map<string, string>();
   return {

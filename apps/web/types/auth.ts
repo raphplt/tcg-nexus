@@ -8,6 +8,8 @@ export interface User {
   lastName: string;
   role: UserRole;
   isPro: boolean;
+  isActive: boolean;
+  emailVerified?: boolean;
   player?: Player;
   preferredCurrency?: string;
   createdAt: Date;

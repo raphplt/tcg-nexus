@@ -129,12 +129,10 @@ describe("CartDropdown", () => {
     const totalValue =
       currencyStore.convertPrice(10, Currency.USD) * 2 +
       currencyStore.convertPrice(5, Currency.EUR) * 1;
-    const expectedTotal = currencyStore.formatPrice(
-      totalValue,
-      currencyStore.currency,
-    );
-
-    expect(screen.getByText(expectedTotal)).toBeInTheDocument();
+    
+    // Use regex matcher for cross-platform locale differences (comma vs dot)
+    const totalPattern = new RegExp(totalValue.toFixed(2).replace(".", "[.,]") + "\\s*€");
+    expect(screen.getByText(totalPattern)).toBeInTheDocument();
   });
 
   it("supprime un item et met à jour l'affichage", async () => {

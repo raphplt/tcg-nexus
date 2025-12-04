@@ -1,5 +1,21 @@
 import { User } from "./auth";
 
+export enum TournamentType {
+  SINGLE_ELIMINATION = "single_elimination",
+  DOUBLE_ELIMINATION = "double_elimination",
+  SWISS_SYSTEM = "swiss_system",
+  ROUND_ROBIN = "round_robin",
+}
+
+export enum TournamentStatus {
+  DRAFT = "draft",
+  REGISTRATION_OPEN = "registration_open",
+  REGISTRATION_CLOSED = "registration_closed",
+  IN_PROGRESS = "in_progress",
+  FINISHED = "finished",
+  CANCELLED = "cancelled",
+}
+
 export type Tournament = {
   id: number;
   name: string;
@@ -7,8 +23,8 @@ export type Tournament = {
   location?: string | null;
   startDate: string;
   endDate: string;
-  type: string;
-  status: string;
+  type: TournamentType | string;
+  status: TournamentStatus | string;
   isPublic?: boolean;
   isFinished?: boolean;
   currentRound?: number;
@@ -180,7 +196,7 @@ export interface CreateTournamentDto {
   startDate: Date;
   endDate: Date;
   registrationDeadline?: Date;
-  type: string;
+  type: TournamentType | string;
   isPublic?: boolean;
   allowLateRegistration?: boolean;
   requiresApproval?: boolean;

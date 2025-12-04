@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Listing } from './entities/listing.entity';
 import { PriceHistory } from './entities/price-history.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
-import { Order } from './entities/order.entity';
+import { Order, OrderStatus } from './entities/order.entity';
 import {
   ForbiddenException,
   NotFoundException,
@@ -73,25 +73,30 @@ describe('MarketplaceService', () => {
     }))
   };
 
+  const mockOrderQb = {
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    addGroupBy: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    getRawMany: jest.fn().mockResolvedValue([]),
+    getMany: jest.fn().mockResolvedValue([]),
+    getManyAndCount: jest.fn().mockResolvedValue([[], 0])
+  };
+
   const mockOrderRepo = {
     create: jest.fn(),
     save: jest.fn(),
     findOne: jest.fn(),
     find: jest.fn(),
-    createQueryBuilder: jest.fn(() => ({
-      leftJoinAndSelect: jest.fn().mockReturnThis(),
-      leftJoin: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      addSelect: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      groupBy: jest.fn().mockReturnThis(),
-      addGroupBy: jest.fn().mockReturnThis(),
-      orderBy: jest.fn().mockReturnThis(),
-      limit: jest.fn().mockReturnThis(),
-      getRawMany: jest.fn().mockResolvedValue([]),
-      getMany: jest.fn().mockResolvedValue([])
-    }))
+    createQueryBuilder: jest.fn(() => mockOrderQb)
   };
 
   const mockPaymentTransactionRepo = {
@@ -141,6 +146,27 @@ describe('MarketplaceService', () => {
     listingRepo = module.get(getRepositoryToken(Listing));
     orderRepo = module.get(getRepositoryToken(Order));
     userCartService = module.get(UserCartService);
+
+    // Reset mocks but re-establish chainable behavior for mockOrderQb
+    jest.clearAllMocks();
+
+    // Re-configure mockOrderQb chainable methods after clearAllMocks
+    mockOrderQb.leftJoinAndSelect.mockReturnThis();
+    mockOrderQb.leftJoin.mockReturnThis();
+    mockOrderQb.select.mockReturnThis();
+    mockOrderQb.addSelect.mockReturnThis();
+    mockOrderQb.where.mockReturnThis();
+    mockOrderQb.andWhere.mockReturnThis();
+    mockOrderQb.groupBy.mockReturnThis();
+    mockOrderQb.addGroupBy.mockReturnThis();
+    mockOrderQb.orderBy.mockReturnThis();
+    mockOrderQb.skip.mockReturnThis();
+    mockOrderQb.take.mockReturnThis();
+    mockOrderQb.limit.mockReturnThis();
+    mockOrderQb.getRawMany.mockResolvedValue([]);
+    mockOrderQb.getMany.mockResolvedValue([]);
+    mockOrderQb.getManyAndCount.mockResolvedValue([[], 0]);
+    mockOrderRepo.createQueryBuilder.mockReturnValue(mockOrderQb);
   });
 
   it('should be defined', () => {
@@ -264,6 +290,70 @@ describe('MarketplaceService', () => {
       listingRepo.findOne.mockResolvedValue({ ...listing });
       await service.delete(10, admin);
       expect(listingRepo.delete).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('admin orders', () => {
+    it('paginates and filters orders for admin dashboard', async () => {
+      const qb = orderRepo.createQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[{ id: 1 }], 1]);
+
+      const result = await service.findAllOrders({
+        page: 2,
+        limit: 5,
+        status: OrderStatus.PAID,
+        buyerId: 12,
+        sellerId: 9
+      });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('order.status = :status', {
+        status: OrderStatus.PAID
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('buyer.id = :buyerId', {
+        buyerId: 12
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('seller.id = :sellerId', {
+        sellerId: 9
+      });
+      expect(result.meta.currentPage).toBe(2);
+      expect(result.data).toHaveLength(1);
+    });
+
+    it('returns detailed order for admins', async () => {
+      const order = { id: 7, status: OrderStatus.PAID };
+      orderRepo.findOne.mockResolvedValue(order);
+
+      const result = await service.findOrderByIdAsAdmin(7);
+
+      expect(result).toBe(order);
+      expect(orderRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 7 },
+        relations: [
+          'buyer',
+          'orderItems',
+          'orderItems.listing',
+          'orderItems.listing.seller',
+          'orderItems.listing.pokemonCard',
+          'payments'
+        ]
+      });
+    });
+
+    it('updates order status via admin path', async () => {
+      const order = { id: 5, status: OrderStatus.PENDING };
+      orderRepo.findOne.mockResolvedValue(order);
+      orderRepo.save.mockResolvedValue({
+        ...order,
+        status: OrderStatus.SHIPPED
+      });
+
+      const result = await service.updateOrderStatus(5, OrderStatus.SHIPPED);
+
+      expect(result.status).toBe(OrderStatus.SHIPPED);
+      expect(orderRepo.save).toHaveBeenCalledWith({
+        ...order,
+        status: OrderStatus.SHIPPED
+      });
     });
   });
 });
