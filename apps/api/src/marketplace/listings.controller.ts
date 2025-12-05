@@ -14,8 +14,6 @@ import { CreateListingDto } from './dto/create-marketplace.dto';
 import { FindAllListingsQuery } from './dto/ind-all-listings-query.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
