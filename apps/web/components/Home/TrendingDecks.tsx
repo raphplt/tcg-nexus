@@ -70,7 +70,7 @@ const TrendingDecks = () => {
                 deck.cards.length > 0 &&
                 deck.cards[0]?.card?.image ? (
                   <Image
-                    src={deck.cards[0].card.image}
+                    src={`${deck.cards[0].card.image}/low.png`}
                     alt={deck.name}
                     width={48}
                     height={66}

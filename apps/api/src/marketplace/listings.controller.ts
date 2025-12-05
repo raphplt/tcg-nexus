@@ -30,10 +30,9 @@ import { Public } from 'src/auth/decorators/public.decorator';
 export class ListingsController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post()
-  @Roles('pro')
   createListing(
     @Body() createListingDto: CreateListingDto,
     @CurrentUser() user: User
