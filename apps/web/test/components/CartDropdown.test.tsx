@@ -131,9 +131,10 @@ describe("CartDropdown", () => {
       currencyStore.convertPrice(10, Currency.USD) * 2 +
       currencyStore.convertPrice(5, Currency.EUR) * 1;
     
-    // Use regex matcher for cross-platform locale differences (comma vs dot)
-    const totalPattern = new RegExp(totalValue.toFixed(2).replace(".", "[.,]") + "\\s*€");
-    expect(screen.getByText(totalPattern)).toBeInTheDocument();
+    // Use formatPrice from the store to get the exact formatted value
+    const expectedTotal = currencyStore.formatPrice(totalValue, Currency.EUR);
+    // Find the total in the price display span (text-lg font-bold)
+    expect(screen.getByText(expectedTotal)).toBeInTheDocument();
   });
 
   it("supprime un item et met à jour l'affichage", async () => {

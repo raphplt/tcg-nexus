@@ -3,7 +3,8 @@ import {
   IsNotEmpty,
   IsString,
   IsOptional,
-  IsEnum
+  IsEnum,
+  IsBoolean
 } from 'class-validator';
 import { UserRole } from 'src/common/enums/user';
 
@@ -27,4 +28,12 @@ export class CreateUserDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  @IsBoolean()
+  @IsOptional()
+  isPro?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
