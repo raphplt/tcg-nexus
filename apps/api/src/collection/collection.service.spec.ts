@@ -97,7 +97,11 @@ describe('CollectionService', () => {
       user: { id: 1 },
       name: 'Old'
     });
-    mockCollectionRepo.save.mockResolvedValue({ id: 'c', name: 'New', user: { id: 1 } });
+    mockCollectionRepo.save.mockResolvedValue({
+      id: 'c',
+      name: 'New',
+      user: { id: 1 }
+    });
 
     const result = await service.update('c', { name: 'New' } as any, 1);
     expect(result.name).toBe('New');
@@ -169,6 +173,22 @@ describe('CollectionService', () => {
     expect(qb.andWhere).toHaveBeenCalled();
     expect(qb.orderBy).toHaveBeenCalledWith('item.added_at', 'ASC');
     expect(result.meta.totalItems).toBe(2);
+  });
+
+  it('should order by pokemonCard name when requested', async () => {
+    mockCollectionRepo.findOne.mockResolvedValue({ id: 'c' });
+    const qb = createQueryBuilder();
+    mockCollectionItemRepo.createQueryBuilder.mockReturnValue(qb);
+
+    await service.findCollectionItemsPaginated(
+      'c',
+      1,
+      2,
+      undefined,
+      'pokemonCard.name',
+      'DESC'
+    );
+    expect(qb.orderBy).toHaveBeenCalledWith('pokemonCard.name', 'DESC');
   });
 
   it('should throw when collection missing on pagination', async () => {

@@ -128,6 +128,17 @@ describe('CollectionItemService', () => {
     );
   });
 
+  it('should throw when default card state missing for wishlist', async () => {
+    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: 'card1' });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: 'w', items: [] });
+    mockCardStateRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.addToWishlist(1, 'card1')).rejects.toThrow(
+      "CardState NM non trouvé. Veuillez d'abord seed les CardState."
+    );
+  });
+
   it('should throw when card not found', async () => {
     mockUserRepo.findOne.mockResolvedValue({ id: 1 });
     mockPokemonCardRepo.findOne.mockResolvedValue(null);

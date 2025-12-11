@@ -18,6 +18,9 @@ describe('MarketplaceController', () => {
     createOrder: jest.fn(),
     findOrdersByBuyerId: jest.fn(),
     findOrderById: jest.fn(),
+    findAllOrders: jest.fn(),
+    findOrderByIdAsAdmin: jest.fn(),
+    updateOrderStatus: jest.fn(),
     findAll: jest.fn(),
     findBySellerId: jest.fn(),
     findOne: jest.fn(),
@@ -104,6 +107,37 @@ describe('MarketplaceController', () => {
     });
   });
 
+  it('should get order by id', async () => {
+    mockMarketplaceService.findOrderById.mockResolvedValue({ id: 2 });
+    await expect(
+      controller.getOrderById('2', { id: 1 } as any)
+    ).resolves.toEqual({
+      id: 2
+    });
+  });
+
+  it('should get all orders as admin', async () => {
+    mockMarketplaceService.findAllOrders.mockResolvedValue({ data: [] });
+    await expect(controller.getAllOrders({} as any)).resolves.toEqual({
+      data: []
+    });
+  });
+
+  it('should get order as admin by id', async () => {
+    mockMarketplaceService.findOrderByIdAsAdmin.mockResolvedValue({ id: 5 });
+    await expect(controller.getOrderAsAdmin(5)).resolves.toEqual({ id: 5 });
+  });
+
+  it('should update order status', async () => {
+    mockMarketplaceService.updateOrderStatus.mockResolvedValue({
+      id: 7,
+      status: 'PAID'
+    });
+    await expect(
+      controller.updateOrderStatus(7, { status: 'PAID' } as any)
+    ).resolves.toEqual({ id: 7, status: 'PAID' });
+  });
+
   describe('getAllListings', () => {
     it('should return all listings', async () => {
       const query = { page: 1, limit: 10 };
@@ -117,6 +151,18 @@ describe('MarketplaceController', () => {
       expect(result).toEqual({ data: [], meta: { total: 0 } });
       expect(service.findAll).toHaveBeenCalledWith(query);
     });
+  });
+
+  it('should get my listings', async () => {
+    mockMarketplaceService.findBySellerId.mockResolvedValue([{ id: 1 }]);
+    await expect(controller.getMyListings({ id: 4 } as any)).resolves.toEqual([
+      { id: 1 }
+    ]);
+  });
+
+  it('should get listing by id', async () => {
+    mockMarketplaceService.findOne.mockResolvedValue({ id: 3 });
+    await expect(controller.getListingById('3')).resolves.toEqual({ id: 3 });
   });
 
   describe('updateListing', () => {
@@ -141,5 +187,31 @@ describe('MarketplaceController', () => {
 
       expect(service.delete).toHaveBeenCalledWith(1, user);
     });
+  });
+
+  it('should get cards with marketplace data', async () => {
+    mockMarketplaceService.getCardsWithMarketplaceData.mockResolvedValue([]);
+    await expect(
+      controller.getCardsWithMarketplaceData({ search: 'pikachu' })
+    ).resolves.toEqual([]);
+  });
+
+  it('should get card statistics', async () => {
+    mockMarketplaceService.getCardStatistics.mockResolvedValue({ id: 'card' });
+    await expect(
+      controller.getCardStatistics('card', 'EUR', 'NM')
+    ).resolves.toEqual({
+      id: 'card'
+    });
+  });
+
+  it('should get best sellers and seller stats', async () => {
+    mockMarketplaceService.getBestSellers.mockResolvedValue([{ id: 1 }]);
+    mockMarketplaceService.getSellerStatistics.mockResolvedValue({ id: 2 });
+    mockMarketplaceService.findBySellerId.mockResolvedValue([{ id: 3 }]);
+
+    await expect(controller.getBestSellers(5)).resolves.toEqual([{ id: 1 }]);
+    await expect(controller.getSellerStatistics(2)).resolves.toEqual({ id: 2 });
+    await expect(controller.getSellerListings(9)).resolves.toEqual([{ id: 3 }]);
   });
 });
