@@ -7,6 +7,18 @@ describe('JwtAuthGuard', () => {
   let reflector: Reflector;
   let guard: JwtAuthGuard;
 
+  const createMockContext = (): ExecutionContext =>
+    ({
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: jest.fn(),
+      getArgs: jest.fn(),
+      getArgByIndex: jest.fn(),
+      switchToRpc: jest.fn(),
+      switchToWs: jest.fn(),
+      getType: jest.fn()
+    }) as unknown as ExecutionContext;
+
   beforeEach(() => {
     reflector = {
       getAllAndOverride: jest.fn()
@@ -16,7 +28,8 @@ describe('JwtAuthGuard', () => {
 
   it('should allow public routes without calling super', () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(true);
-    const result = guard.canActivate({} as ExecutionContext);
+    const ctx = createMockContext();
+    const result = guard.canActivate(ctx);
     expect(result).toBe(true);
   });
 
@@ -26,7 +39,7 @@ describe('JwtAuthGuard', () => {
       .spyOn(AuthGuard('jwt').prototype, 'canActivate')
       .mockReturnValue(true as any);
 
-    const ctx = {} as ExecutionContext;
+    const ctx = createMockContext();
     const result = guard.canActivate(ctx);
 
     expect(spy).toHaveBeenCalledWith(ctx);

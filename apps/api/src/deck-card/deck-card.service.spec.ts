@@ -18,7 +18,7 @@ describe('DeckCardService', () => {
 
   it('should create a deck card with message', () => {
     expect(
-      service.create({ cardId: '123', deckId: 1, quantity: 2 })
+      service.create({ cardId: '123', deckId: 1, qty: 2 })
     ).toContain('adds a new deckCard');
   });
 
@@ -31,7 +31,7 @@ describe('DeckCardService', () => {
   });
 
   it('should update and remove deck cards with proper ids', () => {
-    expect(service.update(7, { quantity: 3 })).toBe(
+    expect(service.update(7, { qty: 3 })).toBe(
       'This action updates a #7 deckCard'
     );
     expect(service.remove(8)).toBe('This action removes a #8 deckCard');
