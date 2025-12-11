@@ -32,4 +32,48 @@ describe('PokemonSetService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should create pokemon set', async () => {
+    const dto = { id: 'base', name: 'Base' } as any;
+    mockRepository.create.mockReturnValue(dto);
+    mockRepository.save.mockResolvedValue({ id: 'base' });
+
+    await expect(service.create(dto)).resolves.toEqual({ id: 'base' });
+    expect(mockRepository.create).toHaveBeenCalledWith(dto);
+  });
+
+  it('should find all ordered by releaseDate desc', async () => {
+    mockRepository.find.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
+    await expect(service.findAll()).resolves.toHaveLength(2);
+    expect(mockRepository.find).toHaveBeenCalledWith({
+      order: { releaseDate: 'DESC' }
+    });
+  });
+
+  it('should find one by id', async () => {
+    mockRepository.findOne.mockResolvedValue({ id: '123' });
+    await expect(service.findOne('123')).resolves.toEqual({ id: '123' });
+  });
+
+  it('should throw when pokemon set missing', async () => {
+    mockRepository.findOne.mockResolvedValue(null);
+    await expect(service.findOne('missing')).rejects.toThrow(
+      'PokemonSet with id missing not found'
+    );
+  });
+
+  it('should update and return updated set', async () => {
+    mockRepository.update.mockResolvedValue({ affected: 1 });
+    mockRepository.findOne.mockResolvedValue({ id: '123', name: 'Updated' });
+
+    await expect(
+      service.update('123', { name: 'Updated' } as any)
+    ).resolves.toEqual({ id: '123', name: 'Updated' });
+  });
+
+  it('should remove pokemon set', async () => {
+    mockRepository.delete.mockResolvedValue({ affected: 1 });
+    await expect(service.remove(7)).resolves.toBeUndefined();
+    expect(mockRepository.delete).toHaveBeenCalledWith(7);
+  });
 });
