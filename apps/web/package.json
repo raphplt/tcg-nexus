@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --fix",
     "format": "eslint . --fix",
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -78,6 +79,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.32.0",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^26.0.0",
