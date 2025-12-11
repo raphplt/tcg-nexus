@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Download, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Search } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,10 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { decksService } from "@/services/decks.service";
 import { useAuth } from "@/contexts/AuthContext";
-import { Deck } from "@/types/Decks";
 import { toast } from "react-hot-toast";
-import Link from "next/link";
-import Image from "next/image";
 
 export default function DeckImportPage() {
   const router = useRouter();
@@ -26,7 +23,7 @@ export default function DeckImportPage() {
   const [code, setCode] = useState(codeFromUrl);
   const [previewCode, setPreviewCode] = useState(codeFromUrl);
 
-  const { data: deck, isLoading, error, refetch } = useQuery({
+  const { data: deck, isLoading, error } = useQuery({
     queryKey: ["deck-import", previewCode],
     queryFn: () => decksService.getDeckForImport(previewCode),
     enabled: previewCode.length >= 6,
