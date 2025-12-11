@@ -272,4 +272,124 @@ describe('MatchService', () => {
       expect(mockDataSource.transaction).toHaveBeenCalled();
     });
   });
+
+  describe('findAll', () => {
+    it('should return matches with pagination and filters', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[mockMatch], 1])
+      };
+
+      mockMatchRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const result = await service.findAll({
+        page: 1,
+        limit: 10,
+        tournamentId: 1
+      });
+
+      expect(result.matches).toEqual([mockMatch]);
+      expect(result.total).toBe(1);
+      expect(mockMatchRepository.createQueryBuilder).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return a match by id', async () => {
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+
+      const result = await service.findOne(1);
+      expect(result).toEqual(mockMatch);
+    });
+
+    it('should throw NotFoundException if match not found', async () => {
+      mockMatchRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove a scheduled match', async () => {
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+      mockMatchRepository.remove.mockResolvedValue(mockMatch);
+
+      await service.remove(1);
+      expect(mockMatchRepository.remove).toHaveBeenCalledWith(mockMatch);
+    });
+
+    it('should throw BadRequestException if match is in progress', async () => {
+      mockMatchRepository.findOne.mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.IN_PROGRESS
+      });
+
+      await expect(service.remove(1)).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('startMatch', () => {
+    it('should start a scheduled match', async () => {
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
+
+      const result = await service.startMatch(1, { notes: 'Starting' });
+
+      expect(result.status).toBe(MatchStatus.IN_PROGRESS);
+      expect(result.startedAt).toBeDefined();
+    });
+
+    it('should throw BadRequestException if match not scheduled', async () => {
+      mockMatchRepository.findOne.mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.FINISHED
+      });
+
+      await expect(service.startMatch(1, {})).rejects.toThrow(
+        BadRequestException
+      );
+    });
+  });
+
+  describe('resetMatch', () => {
+    it('should reset a finished match transactionally', async () => {
+      mockMatchRepository.findOne.mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.FINISHED
+      });
+
+      mockDataSource.transaction.mockImplementation(
+        async (cb: (manager: any) => Promise<unknown>) => {
+          const manager = {
+            save: jest
+              .fn()
+              .mockImplementation((entity, data) =>
+                Promise.resolve(data || entity)
+              ),
+            delete: jest.fn().mockResolvedValue({})
+          };
+          return cb(manager);
+        }
+      );
+
+      await service.resetMatch(1, { reason: 'Mistake' });
+      expect(mockDataSource.transaction).toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException if match is not finished', async () => {
+      mockMatchRepository.findOne.mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.SCHEDULED
+      });
+
+      await expect(service.resetMatch(1, {})).rejects.toThrow(
+        BadRequestException
+      );
+    });
+  });
 });
