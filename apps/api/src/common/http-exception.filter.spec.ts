@@ -47,4 +47,61 @@ describe('AllExceptionsFilter', () => {
       })
     );
   });
+
+  it('should handle object response and default messages', () => {
+    const filter = new AllExceptionsFilter();
+    const exception = new HttpException(
+      { message: undefined, error: 'Forbidden' },
+      HttpStatus.FORBIDDEN
+    );
+
+    filter.catch(exception, createMockHost());
+
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'Accès interdit.',
+        error: 'Forbidden'
+      })
+    );
+  });
+
+  it('should handle unauthorized with default message', () => {
+    const filter = new AllExceptionsFilter();
+    const exception = new HttpException(
+      { message: undefined, error: 'Unauthorized' },
+      HttpStatus.UNAUTHORIZED
+    );
+
+    filter.catch(exception, createMockHost());
+
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: 'Non autorisé.'
+      })
+    );
+  });
+
+  it('should handle not found and conflict messages', () => {
+    const filter = new AllExceptionsFilter();
+    const notFound = new HttpException(
+      { message: undefined },
+      HttpStatus.NOT_FOUND
+    );
+    filter.catch(notFound, createMockHost());
+
+    const conflict = new HttpException(
+      { message: undefined },
+      HttpStatus.CONFLICT
+    );
+    filter.catch(conflict, createMockHost());
+
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Ressource non trouvée.' })
+    );
+    expect(mockResponse.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Conflit de données.' })
+    );
+  });
 });

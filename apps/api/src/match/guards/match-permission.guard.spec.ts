@@ -90,6 +90,41 @@ describe('MatchPermissionGuard', () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(false);
   });
 
+  it('should block unauthorized users', async () => {
+    matchRepo.findOne.mockResolvedValue({
+      id: 10,
+      tournament: { id: 5 },
+      playerA: { user: { id: 2 } },
+      playerB: { user: { id: 3 } }
+    });
+    orgRepo.findOne.mockResolvedValue(null);
+
+    const ctx = createContext({
+      user: { id: 99, role: UserRole.USER },
+      params: { id: '10' },
+      route: { path: '/start' }
+    });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('should parse start action', async () => {
+    matchRepo.findOne.mockResolvedValue({
+      id: 10,
+      tournament: { id: 5 },
+      playerA: { user: { id: 1 } },
+      playerB: { user: { id: 3 } }
+    });
+    orgRepo.findOne.mockResolvedValue(null);
+    const ctx = createContext({
+      user: { id: 1, role: UserRole.USER },
+      params: { id: '10' },
+      route: { path: '/start' }
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(false);
+  });
+
   it('should throw when match not found', async () => {
     matchRepo.findOne.mockResolvedValue(null);
     const ctx = createContext({

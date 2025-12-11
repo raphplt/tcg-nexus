@@ -22,6 +22,16 @@ describe('JwtStrategy', () => {
     );
   });
 
+  it('should extract token from cookies', () => {
+    const strategy = new JwtStrategy(mockConfig, mockUserService);
+    const token = (strategy as any)._jwtFromRequest({
+      cookies: { accessToken: 'abc' }
+    });
+    expect(token).toBe('abc');
+    const empty = (strategy as any)._jwtFromRequest({});
+    expect(empty).toBeNull();
+  });
+
   it('should validate active user', async () => {
     const strategy = new JwtStrategy(mockConfig, mockUserService);
     mockUserService.findById = jest.fn().mockResolvedValue({ id: 1, isActive: true });

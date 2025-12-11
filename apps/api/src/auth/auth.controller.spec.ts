@@ -57,13 +57,17 @@ describe('AuthController', () => {
   });
 
   it('should login and set cookies', async () => {
+    const cookies: any[] = [];
     const res = {
-      cookie: jest.fn(),
+      cookie: jest.fn((...args) => cookies.push(args)),
       json: jest.fn()
     } as any;
     const req = {
-      headers: { 'x-remember-me': 'true' }
+      headers: { 'x-remember-me': 'true' },
+      hostname: 'api.example.com'
     } as any;
+    const prevFrontend = process.env.FRONTEND_URL;
+    process.env.FRONTEND_URL = 'https://example.com';
     mockAuthService.login.mockResolvedValue({
       user: { id: 1, email: 'a' },
       tokens: { accessToken: 'a', refreshToken: 'b' }
@@ -72,6 +76,8 @@ describe('AuthController', () => {
     await controller.login({} as any, res, req);
 
     expect(res.cookie).toHaveBeenCalledTimes(2);
+    expect(cookies[0][2].domain).toBe('example.com');
+    process.env.FRONTEND_URL = prevFrontend;
     expect(res.json).toHaveBeenCalledWith({ user: { id: 1, email: 'a' } });
   });
 

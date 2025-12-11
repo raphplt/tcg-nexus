@@ -22,6 +22,16 @@ describe('JwtRefreshStrategy', () => {
     );
   });
 
+  it('should extract refresh token from cookies', () => {
+    const strategy = new JwtRefreshStrategy(mockConfig, mockUserService);
+    const token = (strategy as any)._jwtFromRequest({
+      cookies: { refreshToken: 'refresh' }
+    });
+    expect(token).toBe('refresh');
+    const empty = (strategy as any)._jwtFromRequest({});
+    expect(empty).toBeNull();
+  });
+
   it('should validate and attach refresh token', async () => {
     const strategy = new JwtRefreshStrategy(mockConfig, mockUserService);
     mockUserService.findById = jest
