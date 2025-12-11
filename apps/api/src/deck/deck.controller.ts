@@ -12,6 +12,7 @@ import {
 import { DeckService, FindAllDecksParams } from './deck.service';
 import { CreateDeckDto } from './dto/create-deck.dto';
 import { UpdateDeckDto } from './dto/update-deck.dto';
+import { ShareDeckDto } from './dto/share-deck.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -77,5 +78,29 @@ export class DeckController {
   @Post(':id/view')
   incrementView(@Param('id') id: string) {
     return this.deckService.incrementViews(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/share')
+  @ApiBearerAuth()
+  share(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Body() dto?: ShareDeckDto
+  ) {
+    return this.deckService.shareDeck(+id, user, dto);
+  }
+
+  @Public()
+  @Get('import/:code')
+  getDeckForImport(@Param('code') code: string) {
+    return this.deckService.getDeckForImport(code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('import/:code')
+  @ApiBearerAuth()
+  importDeck(@Param('code') code: string, @CurrentUser() user: User) {
+    return this.deckService.importDeck(code, user);
   }
 }

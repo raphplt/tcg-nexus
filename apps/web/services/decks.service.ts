@@ -84,4 +84,16 @@ export const decksService = {
       },
     );
   },
+
+  async shareDeck(id: number): Promise<{ code: string }> {
+    return authedFetch("POST", `/deck/${id}/share`);
+  },
+
+  async getDeckForImport(code: string): Promise<Deck> {
+    return fetcher<Deck>(`/deck/import/${code}`);
+  },
+
+  async importDeck(code: string): Promise<Deck> {
+    return authedFetch("POST", `/deck/import/${code}`);
+  },
 };

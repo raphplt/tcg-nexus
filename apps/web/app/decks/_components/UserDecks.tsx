@@ -4,7 +4,7 @@ import DeckCard from "./DeckCard";
 import { Skeleton } from "@components/ui/skeleton";
 import { H2 } from "@components/Shared/Titles";
 import { Button } from "@components/ui/button";
-import { Plus, User as UserIcon } from "lucide-react";
+import { Plus, User as UserIcon, Download } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -40,12 +40,20 @@ export default function UserDecks() {
         <H2 className="flex items-center gap-2">
           <UserIcon className="w-6 h-6 text-primary" /> Mes Decks
         </H2>
-        <Link href="/decks/create">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau Deck
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/decks/import">
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Importer un deck
+            </Button>
+          </Link>
+          <Link href="/decks/create">
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau Deck
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {data?.data?.length ? (
