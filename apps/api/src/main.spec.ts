@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { bootstrap } from './main';
 
 jest.mock('@nestjs/core', () => {
   const actual = jest.requireActual('@nestjs/core');
@@ -72,17 +73,14 @@ describe('main bootstrap', () => {
   });
 
   it('should bootstrap application and listen on port', async () => {
-    await jest.isolateModulesAsync(async () => {
-      require('./main');
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    });
+    await bootstrap();
 
     expect(NestFactory.create).toHaveBeenCalled();
     const createdApp = await (NestFactory.create as jest.Mock).mock.results[0]
       ?.value;
     expect(createdApp.useGlobalPipes).toHaveBeenCalled();
     expect(createdApp.listen).toHaveBeenCalled();
-  }, 10000);
+  });
 });
 
 describe('main bootstrap error', () => {
@@ -101,10 +99,7 @@ describe('main bootstrap error', () => {
     (NestFactory.create as jest.Mock).mockRejectedValueOnce(new Error('fail'));
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    await jest.isolateModulesAsync(async () => {
-      require('./main');
-      await new Promise((resolve) => setImmediate(resolve));
-    });
+    await bootstrap();
 
     expect(errorSpy).toHaveBeenCalledWith('fail');
     errorSpy.mockRestore();

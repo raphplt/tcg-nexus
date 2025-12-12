@@ -80,6 +80,16 @@ describe('UserService', () => {
     await expect(service.findOne(3)).rejects.toThrow(NotFoundException);
   });
 
+  it('should findById and findByEmail', async () => {
+    repo.findOne.mockResolvedValueOnce({ id: 7 });
+    const byId = await service.findById(7);
+    expect(byId?.id).toBe(7);
+
+    repo.findOne.mockResolvedValueOnce({ id: 8, email: 'x@example.com' });
+    const byEmail = await service.findByEmail('x@example.com');
+    expect(byEmail?.email).toBe('x@example.com');
+  });
+
   it('should update user and hash password', async () => {
     repo.findOne.mockResolvedValueOnce({ id: 1, email: 'old@example.com' });
     repo.findOne.mockResolvedValueOnce(null); // for email uniqueness check

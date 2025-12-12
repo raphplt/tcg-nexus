@@ -155,7 +155,8 @@ describe('MatchService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -206,6 +207,71 @@ describe('MatchService', () => {
         BadRequestException
       );
     });
+
+    it('should throw NotFoundException when player A is missing', async () => {
+      mockTournamentRepository.findOne.mockResolvedValue(mockTournament);
+      mockPlayerRepository.findOne.mockResolvedValueOnce(null);
+
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw BadRequestException when player A is not registered', async () => {
+      mockTournamentRepository.findOne.mockResolvedValue(mockTournament);
+      mockPlayerRepository.findOne.mockResolvedValueOnce(mockPlayerA);
+      mockRegistrationRepository.findOne.mockResolvedValueOnce(null);
+
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should throw BadRequestException when player B is not registered', async () => {
+      mockTournamentRepository.findOne.mockResolvedValue(mockTournament);
+      mockPlayerRepository.findOne
+        .mockResolvedValueOnce(mockPlayerA)
+        .mockResolvedValueOnce(mockPlayerB);
+      mockRegistrationRepository.findOne
+        .mockResolvedValueOnce({ status: RegistrationStatus.CONFIRMED })
+        .mockResolvedValueOnce(null);
+
+      await expect(service.create(createDto)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should throw BadRequestException when players are missing', async () => {
+      mockTournamentRepository.findOne.mockResolvedValue(mockTournament);
+      mockPlayerRepository.findOne.mockResolvedValue(mockPlayerA);
+      mockRegistrationRepository.findOne.mockResolvedValue({
+        status: RegistrationStatus.CONFIRMED
+      });
+
+      await expect(
+        service.create({
+          ...createDto,
+          playerBId: undefined as any
+        })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException when required fields are missing', async () => {
+      mockTournamentRepository.findOne.mockResolvedValue(mockTournament);
+      mockPlayerRepository.findOne
+        .mockResolvedValueOnce(mockPlayerA)
+        .mockResolvedValueOnce(mockPlayerB);
+      mockRegistrationRepository.findOne.mockResolvedValue({
+        status: RegistrationStatus.CONFIRMED
+      });
+
+      await expect(
+        service.create({
+          ...createDto,
+          notes: undefined as any
+        })
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('update', () => {
@@ -240,6 +306,35 @@ describe('MatchService', () => {
       expect(result.status).toBe(MatchStatus.FINISHED);
       expect(result.winner).toEqual(mockPlayerA);
     });
+
+    it('should set winner to undefined on draw', async () => {
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
+
+      const result = await service.update(1, {
+        status: MatchStatus.FINISHED,
+        playerAScore: 1,
+        playerBScore: 1
+      });
+
+      expect(result.winner).toBeUndefined();
+    });
+
+    it('should update non-score fields when status is not finished', async () => {
+      const scheduledDate = new Date();
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
+
+      const result = await service.update(1, {
+        status: MatchStatus.CANCELLED,
+        notes: 'Rescheduled',
+        scheduledDate
+      });
+
+      expect(result.status).toBe(MatchStatus.CANCELLED);
+      expect(result.notes).toBe('Rescheduled');
+      expect(result.scheduledDate).toBe(scheduledDate);
+    });
   });
 
   describe('reportScore', () => {
@@ -271,6 +366,85 @@ describe('MatchService', () => {
 
       expect(mockDataSource.transaction).toHaveBeenCalled();
     });
+
+    it('should throw when match is not in progress', async () => {
+      mockMatchRepository.findOne.mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.SCHEDULED
+      });
+
+      await expect(
+        service.reportScore(1, { playerAScore: 1, playerBScore: 0 } as any)
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should handle forfeit logic and set winner', async () => {
+      const forfeitMatch = { ...mockMatch, status: MatchStatus.IN_PROGRESS };
+      mockMatchRepository.findOne.mockResolvedValue(forfeitMatch);
+
+      const manager = {
+        save: jest.fn().mockImplementation(() => Promise.resolve(forfeitMatch)),
+        findOne: jest.fn(),
+        create: jest.fn()
+      };
+
+      mockDataSource.transaction.mockImplementation((cb) => cb(manager));
+      const updateRankingsSpy = jest
+        .spyOn<any, any>(service as any, 'updateRankings')
+        .mockResolvedValue(undefined);
+      const createStatsSpy = jest
+        .spyOn<any, any>(service as any, 'createMatchStatistics')
+        .mockResolvedValue(undefined);
+      const checkProgressSpy = jest
+        .spyOn<any, any>(service as any, 'checkTournamentProgression')
+        .mockResolvedValue(undefined);
+
+      const result = await service.reportScore(1, {
+        playerAScore: 0,
+        playerBScore: 2,
+        isForfeit: true,
+        notes: 'Forfeit'
+      });
+
+      expect(result.status).toBe(MatchStatus.FORFEIT);
+      expect(result.winner).toEqual(mockPlayerB);
+      expect(updateRankingsSpy).toHaveBeenCalled();
+      expect(createStatsSpy).toHaveBeenCalled();
+      expect(checkProgressSpy).toHaveBeenCalled();
+    });
+
+    it('should set winner based on higher score', async () => {
+      const finishedMatch = { ...mockMatch, status: MatchStatus.IN_PROGRESS };
+      mockMatchRepository.findOne.mockResolvedValue(finishedMatch);
+
+      const manager = {
+        save: jest.fn().mockImplementation(() => Promise.resolve(finishedMatch)),
+        findOne: jest.fn(),
+        create: jest.fn()
+      };
+
+      mockDataSource.transaction.mockImplementation((cb) => cb(manager));
+      jest
+        .spyOn<any, any>(service as any, 'updateRankings')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn<any, any>(service as any, 'createMatchStatistics')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn<any, any>(service as any, 'checkTournamentProgression')
+        .mockResolvedValue(undefined);
+
+      const result = await service.reportScore(1, {
+        playerAScore: 1,
+        playerBScore: 3,
+        isForfeit: false,
+        notes: 'Played'
+      });
+
+      expect(result.status).toBe(MatchStatus.FINISHED);
+      expect(result.winner).toEqual(mockPlayerB);
+      expect(result.notes).toBe('Played');
+    });
   });
 
   describe('findAll', () => {
@@ -296,6 +470,34 @@ describe('MatchService', () => {
       expect(result.matches).toEqual([mockMatch]);
       expect(result.total).toBe(1);
       expect(mockMatchRepository.createQueryBuilder).toHaveBeenCalled();
+    });
+
+    it('should apply every provided filter', async () => {
+      const qb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[], 0])
+      };
+
+      mockMatchRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAll({
+        page: 2,
+        limit: 5,
+        tournamentId: 1,
+        round: 2,
+        phase: MatchPhase.SEMI_FINAL,
+        status: MatchStatus.FINISHED,
+        playerId: 10
+      });
+
+      expect(qb.andWhere).toHaveBeenCalledTimes(5);
+      expect(qb.skip).toHaveBeenCalledWith(5);
+      expect(qb.take).toHaveBeenCalledWith(5);
     });
   });
 
@@ -335,7 +537,10 @@ describe('MatchService', () => {
 
   describe('startMatch', () => {
     it('should start a scheduled match', async () => {
-      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+      jest.spyOn(service, 'findOne').mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.SCHEDULED
+      } as any);
       mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
 
       const result = await service.startMatch(1, { notes: 'Starting' });
@@ -345,12 +550,23 @@ describe('MatchService', () => {
     });
 
     it('should throw BadRequestException if match not scheduled', async () => {
-      mockMatchRepository.findOne.mockResolvedValue({
+      jest.spyOn(service, 'findOne').mockResolvedValue({
         ...mockMatch,
         status: MatchStatus.FINISHED
-      });
+      } as any);
 
       await expect(service.startMatch(1, {})).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should throw BadRequestException if a player is missing', async () => {
+      jest.spyOn(service, 'findOne').mockResolvedValue({
+        ...mockMatch,
+        playerB: null as any
+      } as any);
+
+      await expect(service.startMatch(1, {} as any)).rejects.toThrow(
         BadRequestException
       );
     });
@@ -390,6 +606,150 @@ describe('MatchService', () => {
       await expect(service.resetMatch(1, {})).rejects.toThrow(
         BadRequestException
       );
+    });
+  });
+
+  describe('getMatchesByRound and getPlayerMatches', () => {
+    it('should retrieve matches by round', async () => {
+      mockMatchRepository.find.mockResolvedValue([mockMatch]);
+
+      const result = await service.getMatchesByRound(1, 2);
+
+      expect(result).toEqual([mockMatch]);
+      expect(mockMatchRepository.find).toHaveBeenCalledWith({
+        where: { tournament: { id: 1 }, round: 2 },
+        relations: ['playerA', 'playerB', 'winner'],
+        order: { phase: 'ASC' }
+      });
+    });
+
+    it('should retrieve matches for a player in tournament', async () => {
+      mockMatchRepository.find.mockResolvedValue([mockMatch]);
+
+      const result = await service.getPlayerMatches(3, 4);
+
+      expect(result).toEqual([mockMatch]);
+      expect(mockMatchRepository.find).toHaveBeenCalledWith({
+        where: [
+          { tournament: { id: 3 }, playerA: { id: 4 } },
+          { tournament: { id: 3 }, playerB: { id: 4 } }
+        ],
+        relations: ['playerA', 'playerB', 'winner'],
+        order: { round: 'ASC', phase: 'ASC' }
+      });
+    });
+  });
+
+  describe('private helpers', () => {
+    it('should update rankings when none exist', async () => {
+      const manager = {
+        findOne: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(null),
+        create: jest
+          .fn()
+          .mockImplementation((_entity, data) => ({ ...data, wins: data.wins ?? 0 })),
+        save: jest.fn().mockResolvedValue(undefined)
+      };
+
+      await (service as any).updateRankings(
+        { ...mockMatch, winner: mockPlayerA },
+        manager
+      );
+
+      expect(manager.create).toHaveBeenCalledTimes(2);
+      expect(manager.save).toHaveBeenCalled();
+    });
+
+    it('should update existing rankings', async () => {
+      const winnerRanking = {
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        points: 0,
+        player: { id: mockPlayerA.id },
+        tournament: { id: mockTournament.id }
+      };
+      const loserRanking = {
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        points: 0,
+        player: { id: mockPlayerB.id },
+        tournament: { id: mockTournament.id }
+      };
+
+      const manager = {
+        findOne: jest
+          .fn()
+          .mockResolvedValueOnce(winnerRanking)
+          .mockResolvedValueOnce(loserRanking),
+        save: jest.fn().mockResolvedValue(undefined)
+      };
+
+      await (service as any).updateRankings(
+        { ...mockMatch, winner: mockPlayerA },
+        manager
+      );
+
+      expect(winnerRanking.wins).toBe(1);
+      expect(winnerRanking.points).toBe(3);
+      expect(loserRanking.losses).toBe(1);
+      expect(manager.save).toHaveBeenCalledWith([winnerRanking, loserRanking]);
+    });
+
+    it('should create statistics for both players', async () => {
+      const manager = {
+        create: jest.fn().mockImplementation((_entity, data) => data),
+        save: jest.fn().mockResolvedValue(undefined)
+      };
+
+      await (service as any).createMatchStatistics(
+        { ...mockMatch, winner: mockPlayerA, playerAScore: 3, playerBScore: 1 },
+        manager
+      );
+
+      expect(manager.create).toHaveBeenCalledTimes(2);
+      expect(manager.save).toHaveBeenCalledTimes(2);
+    });
+
+    it('should advance tournament when round finished', async () => {
+      const finishedMatch: Match = {
+        ...mockMatch,
+        status: MatchStatus.FINISHED,
+        tournament: {
+          ...mockTournament,
+          currentRound: 1,
+          totalRounds: 2,
+          type: TournamentType.SINGLE_ELIMINATION,
+          matches: [
+            { ...mockMatch, winner: mockPlayerA, status: MatchStatus.FINISHED },
+            { ...mockMatch, id: 2, winner: mockPlayerB, status: MatchStatus.FINISHED }
+          ]
+        }
+      };
+
+      const manager = {
+        findOne: jest.fn().mockResolvedValue(finishedMatch.tournament),
+        save: jest.fn().mockResolvedValue(undefined)
+      };
+
+      mockMatchRepository.create.mockImplementation((data) => data);
+      mockMatchRepository.save.mockResolvedValue({} as any);
+
+      await (service as any).checkTournamentProgression(finishedMatch, manager);
+
+      expect(mockMatchRepository.create).toHaveBeenCalled();
+      expect(mockMatchRepository.save).toHaveBeenCalled();
+      expect(manager.save).toHaveBeenCalledWith({
+        ...finishedMatch.tournament,
+        currentRound: 2
+      });
+    });
+
+    it('should calculate phases for rounds', () => {
+      expect((service as any).getPhaseForRound(3, 3)).toBe(MatchPhase.FINAL);
+      expect((service as any).getPhaseForRound(2, 3)).toBe(MatchPhase.SEMI_FINAL);
+      expect((service as any).getPhaseForRound(1, 3)).toBe(MatchPhase.QUARTER_FINAL);
+      expect((service as any).getPhaseForRound(1, 5)).toBe(MatchPhase.QUALIFICATION);
     });
   });
 });
