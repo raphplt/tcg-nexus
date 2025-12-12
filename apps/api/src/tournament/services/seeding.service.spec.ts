@@ -51,6 +51,14 @@ describe('SeedingService', () => {
     expect(seeded.map((p) => p.seed)).toEqual([1, 2, 3]);
   });
 
+  it('routes through ranking method in seedPlayers switch', async () => {
+    const spy = jest
+      .spyOn<any, any>(service as any, 'rankingBasedSeeding')
+      .mockResolvedValue([]);
+    await service.seedPlayers([player(1)], {} as any, SeedingMethod.RANKING);
+    expect(spy).toHaveBeenCalled();
+  });
+
   it('randomSeeding shuffles using Fisher-Yates (swap path)', () => {
     const players = [player(1), player(2)];
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.01);

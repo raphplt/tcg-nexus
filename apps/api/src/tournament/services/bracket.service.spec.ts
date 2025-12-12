@@ -288,6 +288,29 @@ describe('BracketService', () => {
       expect(pairings.pairings[0].playerA.id).toBe(1);
     });
 
+    it('uses winRate tie-breaker when points equal', async () => {
+      const players = [basePlayer(1), basePlayer(2)];
+      const tournament: Tournament = {
+        id: 5,
+        type: TournamentType.SWISS_SYSTEM,
+        registrations: players.map((p) => ({
+          player: p,
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true
+        })) as any,
+        rankings: [
+          { player: { id: 1 }, points: 3, winRate: 40 } as any,
+          { player: { id: 2 }, points: 3, winRate: 60 } as any
+        ]
+      } as any;
+
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+      mockMatchRepository.find.mockResolvedValue([]);
+
+      const pairings = await service.generateSwissPairings(5, 2);
+      expect(pairings.pairings[0].playerA.id).toBe(2); // higher winRate first
+    });
+
     it('creates bye when odd player count', async () => {
       const players = [basePlayer(1), basePlayer(2), basePlayer(3)];
       const tournament: Tournament = {

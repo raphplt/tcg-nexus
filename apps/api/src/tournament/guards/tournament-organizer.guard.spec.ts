@@ -93,4 +93,12 @@ describe('TournamentOrganizerGuard', () => {
     expect(req.tournamentOrganizer.role).toBe('JUDGE');
     expect(req.tournament.id).toBe(2);
   });
+
+  it('should throw when user or tournament id missing', async () => {
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['OWNER']);
+    const ctx = createContext({ user: null, params: {} });
+    await expect(guard.canActivate(ctx)).rejects.toThrow(
+      'Utilisateur ou ID de tournoi manquant'
+    );
+  });
 });

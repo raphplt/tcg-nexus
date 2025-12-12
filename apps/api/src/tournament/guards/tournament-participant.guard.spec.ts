@@ -24,6 +24,12 @@ describe('TournamentParticipantGuard', () => {
     );
   });
 
+  it('should throw when user or tournament id missing', async () => {
+    await expect(
+      guard.canActivate(ctx({ user: null, params: {} }))
+    ).rejects.toThrow('Utilisateur ou ID de tournoi manquant');
+  });
+
   it('should throw when tournament missing', async () => {
     tournamentRepo.findOne.mockResolvedValue(null);
     await expect(

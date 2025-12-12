@@ -20,6 +20,13 @@ describe('TournamentOwnerGuard', () => {
     guard = new TournamentOwnerGuard(organizerRepo as any, tournamentRepo as any);
   });
 
+  it('should throw when user or id missing', async () => {
+    const req = { user: null, params: {} };
+    await expect(guard.canActivate(ctx(req))).rejects.toThrow(
+      'Utilisateur ou ID de tournoi manquant'
+    );
+  });
+
   it('should allow admin', async () => {
     const req = { user: { id: 1, role: UserRole.ADMIN }, params: { id: '2' } };
     await expect(guard.canActivate(ctx(req))).resolves.toBe(true);

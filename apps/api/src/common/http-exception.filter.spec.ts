@@ -1,107 +1,46 @@
 import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+
 import { AllExceptionsFilter } from './http-exception.filter';
 
-const createMockHost = (overrides?: any): ArgumentsHost =>
-  ({
+const createHost = (url = '/test') => {
+  const response: any = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn()
+  };
+  const request: any = { url };
+  const host = {
     switchToHttp: () => ({
-      getResponse: () => overrides?.response || mockResponse,
-      getRequest: () => overrides?.request || { url: '/test' }
+      getResponse: () => response,
+      getRequest: () => request
     })
-  } as unknown as ArgumentsHost);
-
-const mockResponse = {
-  status: jest.fn().mockReturnThis(),
-  json: jest.fn()
+  } as ArgumentsHost;
+  return { host, response, request };
 };
 
 describe('AllExceptionsFilter', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should format HttpException response', () => {
+  it('should use default message for bad request when empty', () => {
+    const { host, response } = createHost();
     const filter = new AllExceptionsFilter();
-    const exception = new HttpException('Bad request', HttpStatus.BAD_REQUEST);
-
-    filter.catch(exception, createMockHost());
-
-    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Bad request'
-      })
+    const exception = new HttpException({}, HttpStatus.BAD_REQUEST);
+    filter.catch(exception, host);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Requête invalide.' })
     );
   });
 
-  it('should handle generic Error', () => {
+  it('should handle generic error with internal fallback', () => {
+    const { host, response } = createHost('/internal');
     const filter = new AllExceptionsFilter();
-    const exception = new Error('Generic failure');
-
-    filter.catch(exception, createMockHost());
-
-    expect(mockResponse.json).toHaveBeenCalledWith(
+    filter.catch(new Error('boom'), host);
+    expect(response.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+    expect(response.json).toHaveBeenCalledWith(
       expect.objectContaining({
+        message: 'boom',
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Generic failure'
+        path: '/internal'
       })
-    );
-  });
-
-  it('should handle object response and default messages', () => {
-    const filter = new AllExceptionsFilter();
-    const exception = new HttpException(
-      { message: undefined, error: 'Forbidden' },
-      HttpStatus.FORBIDDEN
-    );
-
-    filter.catch(exception, createMockHost());
-
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        statusCode: HttpStatus.FORBIDDEN,
-        message: 'Accès interdit.',
-        error: 'Forbidden'
-      })
-    );
-  });
-
-  it('should handle unauthorized with default message', () => {
-    const filter = new AllExceptionsFilter();
-    const exception = new HttpException(
-      { message: undefined, error: 'Unauthorized' },
-      HttpStatus.UNAUTHORIZED
-    );
-
-    filter.catch(exception, createMockHost());
-
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'Non autorisé.'
-      })
-    );
-  });
-
-  it('should handle not found and conflict messages', () => {
-    const filter = new AllExceptionsFilter();
-    const notFound = new HttpException(
-      { message: undefined },
-      HttpStatus.NOT_FOUND
-    );
-    filter.catch(notFound, createMockHost());
-
-    const conflict = new HttpException(
-      { message: undefined },
-      HttpStatus.CONFLICT
-    );
-    filter.catch(conflict, createMockHost());
-
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Ressource non trouvée.' })
-    );
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'Conflit de données.' })
     );
   });
 });

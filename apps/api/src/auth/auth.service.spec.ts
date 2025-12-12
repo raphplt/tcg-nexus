@@ -294,4 +294,45 @@ describe('AuthService', () => {
       expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, null);
     });
   });
+
+  describe('generateTokens guards', () => {
+    it('should throw when JWT_SECRET missing', async () => {
+      const config = { ...mockConfigService, get: jest.fn().mockReturnValue(null) };
+      const module = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: UserService, useValue: mockUserService },
+          { provide: JwtService, useValue: mockJwtService },
+          { provide: ConfigService, useValue: config },
+          { provide: CollectionService, useValue: mockCollectionService }
+        ]
+      }).compile();
+      const svc = module.get<AuthService>(AuthService);
+      await expect((svc as any).generateTokens(mockUser as User)).rejects.toThrow(
+        'JWT_SECRET must be defined in environment variables'
+      );
+    });
+
+    it('should throw when refresh secret missing', async () => {
+      const config = {
+        ...mockConfigService,
+        get: jest.fn((key: string) =>
+          key === 'JWT_REFRESH_SECRET' ? undefined : mockConfigService.get(key)
+        )
+      };
+      const module = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: UserService, useValue: mockUserService },
+          { provide: JwtService, useValue: mockJwtService },
+          { provide: ConfigService, useValue: config },
+          { provide: CollectionService, useValue: mockCollectionService }
+        ]
+      }).compile();
+      const svc = module.get<AuthService>(AuthService);
+      await expect((svc as any).generateTokens(mockUser as User)).rejects.toThrow(
+        'JWT_REFRESH_SECRET must be defined in environment variables'
+      );
+    });
+  });
 });

@@ -176,6 +176,17 @@ describe('CollectionItemService', () => {
     );
   });
 
+  it('should throw when default card state missing for favorites', async () => {
+    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: 'c' });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: 'f', items: [] });
+    mockCardStateRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.addToFavorites(1, 'c')).rejects.toThrow(
+      "CardState NM non trouvé. Veuillez d'abord seed les CardState."
+    );
+  });
+
   it('should increment favorites quantity when item exists', async () => {
     const user = { id: 1 };
     const card = { id: 'card1' };

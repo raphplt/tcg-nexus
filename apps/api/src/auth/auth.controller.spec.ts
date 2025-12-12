@@ -100,6 +100,47 @@ describe('AuthController', () => {
     expect(res.json).toHaveBeenCalledWith({ user: { id: 2, email: 'b' } });
   });
 
+  it('should honor explicit cookie domain', async () => {
+    const res = { cookie: jest.fn(), json: jest.fn() } as any;
+    const req = { headers: {}, hostname: 'api.other.com' } as any;
+    const originalDomain = process.env.COOKIE_DOMAIN;
+    process.env.COOKIE_DOMAIN = 'example.org';
+    mockAuthService.register.mockResolvedValue({
+      user: { id: 3 },
+      tokens: { accessToken: 'aa', refreshToken: 'bb' }
+    });
+
+    await controller.register({} as any, res, req);
+
+    expect(res.cookie).toHaveBeenCalledWith(
+      'accessToken',
+      'aa',
+      expect.objectContaining({ domain: 'example.org' })
+    );
+    process.env.COOKIE_DOMAIN = originalDomain;
+  });
+
+  it('should fall back when FRONTEND_URL invalid', async () => {
+    const res = { cookie: jest.fn(), json: jest.fn() } as any;
+    const req = { headers: {}, hostname: 'api.example.com' } as any;
+    const prevFrontend = process.env.FRONTEND_URL;
+    process.env.FRONTEND_URL = '::not-a-url';
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockAuthService.login.mockResolvedValue({
+      user: { id: 4 },
+      tokens: { accessToken: 'aa', refreshToken: 'bb' }
+    });
+
+    await controller.login({} as any, res, req);
+
+    const firstCallOptions = res.cookie.mock.calls[0][2];
+    expect(firstCallOptions.domain === undefined || firstCallOptions.domain === 'undefined').toBe(
+      true
+    );
+    process.env.FRONTEND_URL = prevFrontend;
+    errorSpy.mockRestore();
+  });
+
   it('should refresh tokens and set cookies', async () => {
     const res = { cookie: jest.fn(), json: jest.fn() } as any;
     const req = { headers: { 'x-remember-me': 'true' } } as any;
