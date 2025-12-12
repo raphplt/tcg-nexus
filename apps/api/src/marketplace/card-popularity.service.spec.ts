@@ -15,6 +15,7 @@ const mockRepo = () => ({
   find: jest.fn(),
   createQueryBuilder: jest.fn(() => ({
     select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
@@ -123,5 +124,73 @@ describe('CardPopularityService', () => {
 
     const result = await service.getTrendingCards(1, true);
     expect(result.length).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return early when aggregating metrics for missing card', async () => {
+    pokemonRepo.findOne.mockResolvedValue(null);
+    await (service as any).aggregateMetricsForCard('missing', new Date(), new Date());
+    expect(cardEventRepo.createQueryBuilder).not.toHaveBeenCalled();
+  });
+
+  it('should aggregate metrics for a card and save', async () => {
+    const start = new Date();
+    const end = new Date();
+    pokemonRepo.findOne.mockResolvedValue({ id: 'card1' });
+
+    const eventQb = cardEventRepo.createQueryBuilder();
+    eventQb.getRawMany.mockResolvedValue([
+      { type: CardEventType.VIEW, count: '2' },
+      { type: CardEventType.SALE, count: '1' }
+    ]);
+    cardEventRepo.createQueryBuilder.mockReturnValue(eventQb);
+
+    listingRepo.find.mockResolvedValue([
+      { price: 10, expiresAt: null },
+      { price: 20, expiresAt: new Date(end.getTime() + 1000) }
+    ]);
+
+    jest
+      .spyOn(service as any, 'calculatePopularityScore')
+      .mockResolvedValue(5);
+    jest.spyOn(service as any, 'calculateTrendScore').mockResolvedValue(10);
+
+    metricsRepo.findOne.mockResolvedValue(null);
+    metricsRepo.create.mockReturnValue({});
+
+    await (service as any).aggregateMetricsForCard('card1', start, end);
+
+    expect(metricsRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        views: 2,
+        sales: 1,
+        listingCount: 2,
+        minPrice: 10,
+        avgPrice: 15,
+        popularityScore: 5,
+        trendScore: 10
+      })
+    );
+  });
+
+  it('should compute trend score with zero base', async () => {
+    cardEventRepo.find.mockResolvedValueOnce([
+      { eventType: CardEventType.VIEW }
+    ]);
+    cardEventRepo.find.mockResolvedValueOnce([]);
+    listingRepo.count.mockResolvedValue(10);
+
+    const score = await (service as any).calculateTrendScore('card1');
+    expect(score).toBe(100);
+  });
+
+  it('should compute trend score with listing penalty', async () => {
+    cardEventRepo.find
+      .mockResolvedValueOnce([{ eventType: CardEventType.VIEW }]) // recent
+      .mockResolvedValueOnce([{ eventType: CardEventType.VIEW }]); // base
+    listingRepo.count.mockResolvedValue(200);
+
+    const score = await (service as any).calculateTrendScore('card1');
+    const unpenalizedGrowthRatio = ((1 / 7 - 1 / 23) / (1 / 23)) * 100;
+    expect(score).toBeCloseTo(unpenalizedGrowthRatio * 0.5, 5);
   });
 });

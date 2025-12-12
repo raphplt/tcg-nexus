@@ -336,6 +336,16 @@ describe('MarketplaceService', () => {
         { cardState: 'NM' }
       );
     });
+
+    it('applies currency filter', async () => {
+      const qb = createMockQb();
+      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findBySellerId(2, { currency: 'EUR' });
+      expect(qb.andWhere).toHaveBeenCalledWith('listing.currency = :currency', {
+        currency: 'EUR'
+      });
+    });
   });
 
   describe('create listing', () => {
@@ -404,6 +414,31 @@ describe('MarketplaceService', () => {
       expect(stats.totalListings).toBe(0);
       expect(stats.minPrice).toBeNull();
     });
+
+    it('applies currency and cardState filters', async () => {
+      const qb = createMockQb();
+      qb.getMany.mockResolvedValue([{ price: 5, currency: 'EUR' }]);
+      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
+      mockPriceHistoryRepo.find.mockResolvedValue([]);
+
+      await service.getCardStatistics('card', 'EUR', 'NM');
+
+      expect(qb.andWhere).toHaveBeenCalledWith('listing.currency = :currency', {
+        currency: 'EUR'
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'listing.cardState = :cardState',
+        { cardState: 'NM' }
+      );
+      expect(mockPriceHistoryRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            currency: 'EUR',
+            cardState: 'NM'
+          })
+        })
+      );
+    });
   });
 
   describe('getPopularCards', () => {
@@ -462,6 +497,25 @@ describe('MarketplaceService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].seller.firstName).toBe('John');
       expect(result[0].totalSales).toBe(100);
+    });
+
+    it('returns early when enough sellers from orders', async () => {
+      const orderQb = createMockQb();
+      orderQb.getRawMany.mockResolvedValue([
+        {
+          seller_id: 1,
+          seller_firstName: 'John',
+          seller_lastName: 'D',
+          seller_avatarUrl: 'a',
+          seller_isPro: false,
+          total_sales: '2',
+          total_revenue: '10'
+        }
+      ]);
+      mockOrderRepo.createQueryBuilder.mockReturnValue(orderQb);
+
+      await service.getBestSellers(1);
+      expect(mockListingRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
 
     it('falls back to active listings if orders not enough', async () => {
@@ -530,6 +584,44 @@ describe('MarketplaceService', () => {
       );
       expect(qb.orderBy).toHaveBeenCalledWith('min_price', 'ASC');
     });
+
+    it('applies filters and fallback sorting', async () => {
+      const qb = createMockQb();
+      mockPokemonCardRepo.createQueryBuilder.mockReturnValue(qb);
+
+      await service.getCardsWithMarketplaceData({
+        setId: 'set1',
+        serieId: 'serie1',
+        rarity: 'rare',
+        currency: 'USD',
+        cardState: 'NM',
+        priceMax: 50,
+        sortBy: 'unknown' as any
+      });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('set.id = :setId', {
+        setId: 'set1'
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('serie.id = :serieId', {
+        serieId: 'serie1'
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('card.rarity = :rarity', {
+        rarity: 'rare'
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        '(listing.currency = :currency OR listing.id IS NULL)',
+        { currency: 'USD' }
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        '(listing.cardState = :cardState OR listing.id IS NULL)',
+        { cardState: 'NM' }
+      );
+      expect(qb.having).toHaveBeenCalledWith(
+        expect.stringContaining('<= :priceMax'),
+        expect.objectContaining({ priceMax: 50 })
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('card.name', 'ASC');
+    });
   });
 
   describe('findAllOrders', () => {
@@ -545,6 +637,72 @@ describe('MarketplaceService', () => {
       expect(qb.andWhere).toHaveBeenCalledWith('buyer.id = :buyerId', {
         buyerId: 1
       });
+    });
+
+    it('applies seller filter', async () => {
+      const qb = createMockQb();
+      mockOrderRepo.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAllOrders({ sellerId: 2 } as any);
+
+      expect(qb.andWhere).toHaveBeenCalledWith('seller.id = :sellerId', {
+        sellerId: 2
+      });
+    });
+  });
+
+  describe('orders retrieval', () => {
+    it('findOrdersByBuyerId delegates to repository', async () => {
+      mockOrderRepo.find.mockResolvedValue([{ id: 1 }]);
+      const res = await service.findOrdersByBuyerId(3);
+      expect(res).toHaveLength(1);
+      expect(mockOrderRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { buyer: { id: 3 } } })
+      );
+    });
+
+    it('findOrderById throws not found', async () => {
+      mockOrderRepo.findOne.mockResolvedValue(null);
+      await expect(service.findOrderById(1, 1)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('findOrderById forbids other users', async () => {
+      mockOrderRepo.findOne.mockResolvedValue({
+        id: 1,
+        buyer: { id: 99 }
+      });
+      await expect(service.findOrderById(1, 1)).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('findOrderById returns order for owner', async () => {
+      mockOrderRepo.findOne.mockResolvedValue({
+        id: 1,
+        buyer: { id: 5 }
+      });
+      await expect(service.findOrderById(1, 5)).resolves.toEqual(
+        expect.objectContaining({ id: 1 })
+      );
+    });
+
+    it('findOrderByIdAsAdmin throws when missing', async () => {
+      mockOrderRepo.findOne.mockResolvedValue(null);
+      await expect(service.findOrderByIdAsAdmin(10)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('updateOrderStatus uses admin lookup', async () => {
+      const order = { id: 1, status: OrderStatus.PENDING };
+      jest.spyOn(service, 'findOrderByIdAsAdmin').mockResolvedValue(order as any);
+      mockOrderRepo.save.mockResolvedValue({ ...order, status: OrderStatus.PAID });
+
+      const res = await service.updateOrderStatus(1, OrderStatus.PAID);
+      expect(service.findOrderByIdAsAdmin).toHaveBeenCalledWith(1);
+      expect(res.status).toBe(OrderStatus.PAID);
     });
   });
 });
