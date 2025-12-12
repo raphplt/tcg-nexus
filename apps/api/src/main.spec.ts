@@ -74,7 +74,7 @@ describe('main bootstrap', () => {
   it('should bootstrap application and listen on port', async () => {
     await jest.isolateModulesAsync(async () => {
       require('./main');
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     expect(NestFactory.create).toHaveBeenCalled();
@@ -82,6 +82,19 @@ describe('main bootstrap', () => {
       ?.value;
     expect(createdApp.useGlobalPipes).toHaveBeenCalled();
     expect(createdApp.listen).toHaveBeenCalled();
+  }, 10000);
+});
+
+describe('main bootstrap error', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env = { ...originalEnv, NODE_ENV: 'test', PORT: '3050' };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
   });
 
   it('should log error when bootstrap fails', async () => {

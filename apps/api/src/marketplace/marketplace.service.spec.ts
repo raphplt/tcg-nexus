@@ -547,4 +547,4 @@ describe('MarketplaceService', () => {
       });
     });
   });
-};);
+});
