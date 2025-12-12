@@ -92,6 +92,75 @@ describe('TournamentOrchestrationService', () => {
       await service.startTournament(1, { checkInRequired: true });
       expect(mockBracketService.generateBracket).toHaveBeenCalledWith(1);
     });
+
+    it('rejects start when status is not REGISTRATION_CLOSED', async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.DRAFT;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 1 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 2 }
+        } as any
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      await expect(service.startTournament(1, {})).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('rejects start when check-in required and not enough checked-in players', async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.REGISTRATION_CLOSED;
+      tournament.minPlayers = 2;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: false,
+          player: { id: 1 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 2 }
+        } as any
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      await expect(
+        service.startTournament(1, { checkInRequired: true })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('rejects start when too many players for maxPlayers', async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.REGISTRATION_CLOSED;
+      tournament.minPlayers = 2;
+      tournament.maxPlayers = 1;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 1 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 2 }
+        } as any
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      await expect(service.startTournament(1, {})).rejects.toThrow(
+        BadRequestException
+      );
+    });
   });
 
   describe('advanceToNextRound', () => {
@@ -128,6 +197,125 @@ describe('TournamentOrchestrationService', () => {
       expect(mockMatchService.create).toHaveBeenCalledWith(
         expect.objectContaining({ round: 2, playerAId: 1, playerBId: 2 })
       );
+    });
+
+    it('throws if tournament is not in progress', async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.REGISTRATION_CLOSED;
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+      await expect(service.advanceToNextRound(1)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('advances round robin and finishes when beyond totalRounds', async () => {
+      const tournament = baseTournament();
+      tournament.type = TournamentType.ROUND_ROBIN;
+      tournament.status = TournamentStatus.IN_PROGRESS;
+      tournament.currentRound = 1;
+      tournament.totalRounds = 1;
+      tournament.matches = [{ round: 1, status: MatchStatus.FINISHED } as any];
+      tournament.registrations = [
+        { status: RegistrationStatus.CONFIRMED, eliminatedAt: null } as any,
+        { status: RegistrationStatus.CONFIRMED, eliminatedAt: null } as any
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      const result = await service.advanceToNextRound(1);
+      expect(result.newRound).toBe(2);
+      expect(result.playersAdvanced).toBe(2);
+    });
+
+    it('advances elimination round based on scores and eliminates losers', async () => {
+      const tournament = baseTournament();
+      tournament.type = TournamentType.SINGLE_ELIMINATION;
+      tournament.status = TournamentStatus.IN_PROGRESS;
+      tournament.currentRound = 1;
+      tournament.totalRounds = 2;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          eliminatedAt: null,
+          player: { id: 1 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          eliminatedAt: null,
+          player: { id: 2 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          eliminatedAt: null,
+          player: { id: 3 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          eliminatedAt: null,
+          player: { id: 4 }
+        } as any
+      ];
+      tournament.matches = [
+        {
+          round: 1,
+          status: MatchStatus.FINISHED,
+          playerA: { id: 1 },
+          playerB: { id: 2 },
+          playerAScore: 2,
+          playerBScore: 1,
+          winner: undefined
+        } as any,
+        {
+          round: 1,
+          status: MatchStatus.FINISHED,
+          playerA: { id: 3 },
+          playerB: { id: 4 },
+          playerAScore: 0,
+          playerBScore: 3,
+          winner: undefined
+        } as any
+      ];
+
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      const reg1 = { eliminatedAt: null } as any;
+      const reg2 = { eliminatedAt: null } as any;
+      const manager = {
+        findOne: jest.fn().mockImplementation(async (entity: any) => {
+          if (entity && entity.name === 'Tournament') {
+            return tournament;
+          }
+          // TournamentRegistration lookups (losers)
+          if (entity && entity.name === 'TournamentRegistration') {
+            if (!reg1.__used) {
+              reg1.__used = true;
+              return reg1;
+            }
+            return reg2;
+          }
+          return null;
+        }),
+        save: jest.fn(),
+        find: jest.fn(),
+        update: jest.fn()
+      };
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb(manager)
+      );
+
+      const result = await service.advanceToNextRound(1);
+      expect(result.newRound).toBe(2);
+      expect(result.matchesCreated).toBe(1);
+      expect(result.playersAdvanced).toBe(2);
+      expect(result.playersEliminated).toBe(2);
+      expect(mockMatchService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          round: 2,
+          tournamentId: 1,
+          playerAId: 1,
+          playerBId: 4
+        })
+      );
+      expect(manager.save).toHaveBeenCalled();
     });
   });
 
@@ -172,6 +360,24 @@ describe('TournamentOrchestrationService', () => {
       );
 
       await service.cancelTournament(1, 'bad weather');
+    });
+
+    it('throws when trying to cancel a finished tournament', async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.FINISHED;
+      mockTournamentRepository.findOne.mockResolvedValueOnce(tournament);
+
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: mockTournamentRepository.findOne,
+          update: jest.fn(),
+          save: jest.fn()
+        })
+      );
+
+      await expect(service.cancelTournament(1)).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 

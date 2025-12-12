@@ -44,6 +44,33 @@ describe('SeedingService', () => {
     expect(seeded[0].seed).toBe(1);
   });
 
+  it('uses random seeding by default and assigns sequential seeds', async () => {
+    const players = [player(1), player(2), player(3)];
+    const seeded = await service.seedPlayers(players, {} as any);
+    expect(seeded).toHaveLength(3);
+    expect(seeded.map((p) => p.seed)).toEqual([1, 2, 3]);
+  });
+
+  it('randomSeeding shuffles using Fisher-Yates (swap path)', () => {
+    const players = [player(1), player(2)];
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.01);
+    const seeded = (service as any).randomSeeding(players) as SeededPlayer[];
+    expect(seeded).toHaveLength(2);
+    // With Math.random returning ~0, the 2-player shuffle swaps positions.
+    expect(seeded[0].id).toBe(2);
+    expect(seeded[0].seed).toBe(1);
+    expect(seeded[1].id).toBe(1);
+    expect(seeded[1].seed).toBe(2);
+    randomSpy.mockRestore();
+  });
+
+  it('falls back to random seeding for unknown method', async () => {
+    const players = [player(1), player(2)];
+    const spy = jest.spyOn<any, any>(service as any, 'randomSeeding');
+    await service.seedPlayers(players, {} as any, 'unknown' as any);
+    expect(spy).toHaveBeenCalled();
+  });
+
   it('uses ranking based seeding and sorts by score', async () => {
     const players = [player(1), player(2)];
     const chain = qb();
