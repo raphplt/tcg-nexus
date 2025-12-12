@@ -25,7 +25,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = res;
       } else if (typeof res === 'object' && res !== null) {
         const responseObj = res as { message?: string; error?: string };
-        message = responseObj.message || message;
+        // Use explicit message when provided, otherwise let switch set defaults
+        message = responseObj.message ?? '';
         error = responseObj.error || null;
       }
     } else if (exception instanceof Error) {

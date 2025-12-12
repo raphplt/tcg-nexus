@@ -36,4 +36,34 @@ describe('CardStateController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  it('should create card state', async () => {
+    mockCardStateService.create.mockResolvedValue({ id: 1 });
+    await expect(controller.create({ name: 'NM' } as any)).resolves.toEqual({
+      id: 1
+    });
+    expect(mockCardStateService.create).toHaveBeenCalled();
+  });
+
+  it('should list all card states', async () => {
+    mockCardStateService.findAll.mockResolvedValue([{ id: 1 }]);
+    await expect(controller.findAll()).resolves.toEqual([{ id: 1 }]);
+  });
+
+  it('should get one card state', async () => {
+    mockCardStateService.findOne.mockResolvedValue({ id: 2 });
+    await expect(controller.findOne('2')).resolves.toEqual({ id: 2 });
+  });
+
+  it('should update card state', async () => {
+    mockCardStateService.update.mockResolvedValue({ id: 3, name: 'OK' });
+    await expect(
+      controller.update('3', { name: 'OK' } as any)
+    ).resolves.toEqual({ id: 3, name: 'OK' });
+  });
+
+  it('should remove card state', async () => {
+    mockCardStateService.remove.mockResolvedValue(undefined);
+    await expect(controller.remove('4')).resolves.toBeUndefined();
+  });
 });

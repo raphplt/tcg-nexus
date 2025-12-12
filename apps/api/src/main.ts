@@ -9,7 +9,7 @@ import { AllExceptionsFilter } from './common/http-exception.filter';
 
 dotenv.config();
 
-async function bootstrap() {
+export async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, { rawBody: true });
     app.use(cookieParser());
@@ -78,6 +78,10 @@ async function bootstrap() {
     }
   }
 }
-bootstrap().catch((err) => {
-  console.error(err);
-});
+
+// Only auto-start when executed as an entrypoint (not when imported by tests).
+if (require.main === module) {
+  bootstrap().catch((err) => {
+    console.error(err);
+  });
+}

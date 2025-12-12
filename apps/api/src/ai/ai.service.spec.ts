@@ -184,6 +184,30 @@ describe('AiService', () => {
       expect(result.warnings).toContain('Deck incomplet: 10/60 cartes');
     });
 
+    it('should warn when deck has more than 60 cards', async () => {
+      const mockPokemonCard = {
+        id: 'card1',
+        name: 'Pidgey',
+        category: PokemonCardsType.Pokemon,
+        types: ['Colorless'],
+        attacks: [{ cost: [], name: 'Call', damage: 0 }]
+      };
+
+      const mockDeck = {
+        id: 1,
+        cards: [{ card: mockPokemonCard, qty: 61 }]
+      };
+
+      mockDeckRepo.findOne.mockResolvedValue(mockDeck);
+
+      const result = await service.analyzeDeck({ deckId: 1 });
+
+      expect(result.warnings).toContain('Deck trop grand: 61/60 cartes');
+      expect(result.energyCostDistribution).toEqual([
+        { cost: 0, count: 61, percentage: 100 }
+      ]);
+    });
+
     it('should provide recommendations for energy distribution', async () => {
       const mockPokemonCards = [
         {
