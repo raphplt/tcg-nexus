@@ -5,6 +5,7 @@ import { DeckCard } from '../deck-card/entities/deck-card.entity';
 import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { Deck } from './entities/deck.entity';
+import { DeckShare } from './entities/deck-share.entity';
 
 describe('DeckService', () => {
   let service: DeckService;
@@ -37,6 +38,14 @@ describe('DeckService', () => {
     }))
   };
 
+  const mockDeckShareRepo = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+    findOneBy: jest.fn(),
+    remove: jest.fn()
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -56,6 +65,10 @@ describe('DeckService', () => {
         {
           provide: getRepositoryToken(Deck),
           useValue: mockDeckRepo
+        },
+        {
+          provide: getRepositoryToken(DeckShare),
+          useValue: mockDeckShareRepo
         }
       ]
     }).compile();

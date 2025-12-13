@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -10,6 +10,9 @@ import {
   Edit3,
   Layers,
   User as UserIcon,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +22,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { decksService } from "@/services/decks.service";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "react-hot-toast";
 import { DeckCard } from "@/types/deck-cards";
 import { Deck } from "@/types/Decks";
 
@@ -29,11 +41,38 @@ export default function DeckDetailsPage() {
   const router = useRouter();
   const { user } = useAuth();
   const deckId = id as string;
+  
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareCode, setShareCode] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["deck", deckId],
     queryFn: () => decksService.getDeckById(deckId),
   });
+
+  const shareMutation = useMutation({
+    mutationFn: () => decksService.shareDeck(Number(deckId)),
+    onSuccess: (data) => {
+      setShareCode(data.code);
+      setShareDialogOpen(true);
+      toast.success("Code de partage généré");
+    },
+    onError: () => {
+      toast.error("Impossible de générer le code de partage");
+    },
+  });
+
+  const handleShare = () => {
+    shareMutation.mutate();
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Code copié dans le presse-papier");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const deck = data as Deck;
   const coverCard =
@@ -164,12 +203,22 @@ export default function DeckDetailsPage() {
                   Retour
                 </Button>
                 {isOwner && (
-                  <Button
-                    onClick={() => router.push(`/decks/${deck.id}/update`)}
-                  >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Éditer le deck
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={handleShare}
+                      disabled={shareMutation.isPending}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Partager
+                    </Button>
+                    <Button
+                      onClick={() => router.push(`/decks/${deck.id}/update`)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      Éditer le deck
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -304,6 +353,64 @@ export default function DeckDetailsPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Partager le deck</DialogTitle>
+            <DialogDescription>
+              Partagez ce code avec d'autres joueurs pour qu'ils puissent importer votre deck
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={shareCode}
+                readOnly
+                className="font-mono text-lg"
+              />
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => copyToClipboard(shareCode)}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Ou partagez ce lien direct :
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={`${window.location.origin}/decks/import?code=${shareCode}`}
+                  readOnly
+                  className="text-sm"
+                />
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() =>
+                    copyToClipboard(
+                      `${window.location.origin}/decks/import?code=${shareCode}`
+                    )
+                  }
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
