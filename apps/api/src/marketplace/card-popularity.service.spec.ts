@@ -128,7 +128,11 @@ describe('CardPopularityService', () => {
 
   it('should return early when aggregating metrics for missing card', async () => {
     pokemonRepo.findOne.mockResolvedValue(null);
-    await (service as any).aggregateMetricsForCard('missing', new Date(), new Date());
+    await (service as any).aggregateMetricsForCard(
+      'missing',
+      new Date(),
+      new Date()
+    );
     expect(cardEventRepo.createQueryBuilder).not.toHaveBeenCalled();
   });
 
@@ -149,9 +153,7 @@ describe('CardPopularityService', () => {
       { price: 20, expiresAt: new Date(end.getTime() + 1000) }
     ]);
 
-    jest
-      .spyOn(service as any, 'calculatePopularityScore')
-      .mockResolvedValue(5);
+    jest.spyOn(service as any, 'calculatePopularityScore').mockResolvedValue(5);
     jest.spyOn(service as any, 'calculateTrendScore').mockResolvedValue(10);
 
     metricsRepo.findOne.mockResolvedValue(null);

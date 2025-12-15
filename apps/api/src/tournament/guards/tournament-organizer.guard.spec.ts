@@ -1,6 +1,9 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { TournamentOrganizerGuard, TournamentOrganizerRoles } from './tournament-organizer.guard';
+import {
+  TournamentOrganizerGuard,
+  TournamentOrganizerRoles
+} from './tournament-organizer.guard';
 import { UserRole } from 'src/common/enums/user';
 
 const createContext = (req: any): ExecutionContext =>
@@ -8,9 +11,9 @@ const createContext = (req: any): ExecutionContext =>
     switchToHttp: () => ({
       getRequest: () => req
     }),
-    getHandler: () => ({} as any),
-    getClass: () => ({} as any)
-  } as unknown as ExecutionContext);
+    getHandler: () => ({}) as any,
+    getClass: () => ({}) as any
+  }) as unknown as ExecutionContext;
 
 describe('TournamentOrganizerGuard', () => {
   const reflector = {
@@ -71,7 +74,11 @@ describe('TournamentOrganizerGuard', () => {
   it('should throw when role mismatches', async () => {
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue(['OWNER']);
     tournamentRepo.findOne.mockResolvedValue({ id: 2 });
-    organizerRepo.findOne.mockResolvedValue({ id: 3, role: 'JUDGE', user: { id: 1 } });
+    organizerRepo.findOne.mockResolvedValue({
+      id: 3,
+      role: 'JUDGE',
+      user: { id: 1 }
+    });
     const ctx = createContext({
       user: { id: 1, role: UserRole.USER },
       params: { id: '2' }
@@ -87,7 +94,10 @@ describe('TournamentOrganizerGuard', () => {
       role: 'JUDGE',
       user: { id: 1 }
     });
-    const req: any = { user: { id: 1, role: UserRole.USER }, params: { id: '2' } };
+    const req: any = {
+      user: { id: 1, role: UserRole.USER },
+      params: { id: '2' }
+    };
     const ctx = createContext(req);
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
     expect(req.tournamentOrganizer.role).toBe('JUDGE');

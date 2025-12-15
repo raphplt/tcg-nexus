@@ -1,8 +1,19 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { TournamentOrchestrationService } from './tournament-orchestration.service';
-import { Tournament, TournamentStatus, TournamentType } from '../entities/tournament.entity';
-import { Match, MatchStatus, MatchPhase } from '../../match/entities/match.entity';
-import { TournamentRegistration, RegistrationStatus } from '../entities/tournament-registration.entity';
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentType
+} from '../entities/tournament.entity';
+import {
+  Match,
+  MatchStatus,
+  MatchPhase
+} from '../../match/entities/match.entity';
+import {
+  TournamentRegistration,
+  RegistrationStatus
+} from '../entities/tournament-registration.entity';
 
 const mockTournamentRepository = {
   findOne: jest.fn()
@@ -43,19 +54,21 @@ const baseTournament = (): Tournament =>
     pricing: {} as any,
     organizers: [],
     rankings: []
-  } as unknown as Tournament);
+  }) as unknown as Tournament;
 
 describe('TournamentOrchestrationService', () => {
   let service: TournamentOrchestrationService;
 
   beforeEach(() => {
     jest.resetAllMocks();
-    mockDataSource.transaction.mockImplementation(async (cb: any) => cb({
-      findOne: mockTournamentRepository.findOne,
-      save: jest.fn(),
-      find: jest.fn(),
-      update: jest.fn()
-    }));
+    mockDataSource.transaction.mockImplementation(async (cb: any) =>
+      cb({
+        findOne: mockTournamentRepository.findOne,
+        save: jest.fn(),
+        find: jest.fn(),
+        update: jest.fn()
+      })
+    );
 
     service = new TournamentOrchestrationService(
       mockTournamentRepository as any,
@@ -72,7 +85,9 @@ describe('TournamentOrchestrationService', () => {
   describe('startTournament', () => {
     it('throws when tournament missing', async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
-      await expect(service.startTournament(1, {})).rejects.toThrow(NotFoundException);
+      await expect(service.startTournament(1, {})).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('starts tournament and generates bracket', async () => {
@@ -81,8 +96,16 @@ describe('TournamentOrchestrationService', () => {
       tournament.minPlayers = 2;
       tournament.maxPlayers = 4;
       tournament.registrations = [
-        { status: RegistrationStatus.CONFIRMED, checkedIn: true, player: { id: 1 } } as any,
-        { status: RegistrationStatus.CONFIRMED, checkedIn: true, player: { id: 2 } } as any
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 1 }
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 2 }
+        } as any
       ];
       mockTournamentRepository.findOne.mockResolvedValue(tournament);
       mockBracketService.generateBracket.mockResolvedValue({
@@ -166,15 +189,21 @@ describe('TournamentOrchestrationService', () => {
   describe('advanceToNextRound', () => {
     it('throws if tournament not found', async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
-      await expect(service.advanceToNextRound(1)).rejects.toThrow(NotFoundException);
+      await expect(service.advanceToNextRound(1)).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('throws if matches unfinished', async () => {
       const tournament = baseTournament();
       tournament.status = TournamentStatus.IN_PROGRESS;
-      tournament.matches = [{ round: 1, status: MatchStatus.IN_PROGRESS } as Match];
+      tournament.matches = [
+        { round: 1, status: MatchStatus.IN_PROGRESS } as Match
+      ];
       mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      await expect(service.advanceToNextRound(1)).rejects.toThrow(BadRequestException);
+      await expect(service.advanceToNextRound(1)).rejects.toThrow(
+        BadRequestException
+      );
     });
 
     it('creates swiss pairings for next round', async () => {
@@ -336,14 +365,18 @@ describe('TournamentOrchestrationService', () => {
       );
 
       await service.finishTournament(1);
-      expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(1);
+      expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(
+        1
+      );
     });
   });
 
   describe('cancelTournament', () => {
     it('throws if tournament missing', async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
-      await expect(service.cancelTournament(1)).rejects.toThrow(NotFoundException);
+      await expect(service.cancelTournament(1)).rejects.toThrow(
+        NotFoundException
+      );
     });
 
     it('cancels when not finished', async () => {

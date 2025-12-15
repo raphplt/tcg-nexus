@@ -16,7 +16,9 @@ describe('StatisticsService', () => {
     expect(service.create({} as any)).toBe('This action adds a new statistic');
     expect(service.findAll()).toBe('This action returns all statistics');
     expect(service.findOne(1)).toBe('This action returns a #1 statistic');
-    expect(service.update(2, {} as any)).toBe('This action updates a #2 statistic');
+    expect(service.update(2, {} as any)).toBe(
+      'This action updates a #2 statistic'
+    );
     expect(service.remove(3)).toBe('This action removes a #3 statistic');
   });
 });

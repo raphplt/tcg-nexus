@@ -20,7 +20,7 @@ const ctxFactory = (req: any): ExecutionContext =>
     switchToHttp: () => ({
       getRequest: () => req
     })
-  } as unknown as ExecutionContext);
+  }) as unknown as ExecutionContext;
 
 describe('Tournament decorators', () => {
   it('should return organizer from request', () => {

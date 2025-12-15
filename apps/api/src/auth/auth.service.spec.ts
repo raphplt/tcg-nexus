@@ -297,7 +297,10 @@ describe('AuthService', () => {
 
   describe('generateTokens guards', () => {
     it('should throw when JWT_SECRET missing', async () => {
-      const config = { ...mockConfigService, get: jest.fn().mockReturnValue(null) };
+      const config = {
+        ...mockConfigService,
+        get: jest.fn().mockReturnValue(null)
+      };
       const module = await Test.createTestingModule({
         providers: [
           AuthService,
@@ -308,9 +311,9 @@ describe('AuthService', () => {
         ]
       }).compile();
       const svc = module.get<AuthService>(AuthService);
-      await expect((svc as any).generateTokens(mockUser as User)).rejects.toThrow(
-        'JWT_SECRET must be defined in environment variables'
-      );
+      await expect(
+        (svc as any).generateTokens(mockUser as User)
+      ).rejects.toThrow('JWT_SECRET must be defined in environment variables');
     });
 
     it('should throw when refresh secret missing', async () => {
@@ -330,7 +333,9 @@ describe('AuthService', () => {
         ]
       }).compile();
       const svc = module.get<AuthService>(AuthService);
-      await expect((svc as any).generateTokens(mockUser as User)).rejects.toThrow(
+      await expect(
+        (svc as any).generateTokens(mockUser as User)
+      ).rejects.toThrow(
         'JWT_REFRESH_SECRET must be defined in environment variables'
       );
     });

@@ -7,7 +7,7 @@ const ctx = (req: any): ExecutionContext =>
     switchToHttp: () => ({
       getRequest: () => req
     })
-  } as unknown as ExecutionContext);
+  }) as unknown as ExecutionContext;
 
 describe('TournamentParticipantGuard', () => {
   const registrationRepo = { findOne: jest.fn() };
@@ -54,7 +54,9 @@ describe('TournamentParticipantGuard', () => {
     tournamentRepo.findOne.mockResolvedValue({ id: 2 });
     playerRepo.findOne.mockResolvedValueOnce(null);
     await expect(
-      guard.canActivate(ctx({ user: { id: 1 }, params: { id: '2', playerId: '5' } }))
+      guard.canActivate(
+        ctx({ user: { id: 1 }, params: { id: '2', playerId: '5' } })
+      )
     ).rejects.toThrow('Ce joueur ne vous appartient pas');
   });
 
@@ -64,7 +66,9 @@ describe('TournamentParticipantGuard', () => {
     registrationRepo.findOne.mockResolvedValueOnce(null);
 
     await expect(
-      guard.canActivate(ctx({ user: { id: 1 }, params: { id: '2', playerId: '5' } }))
+      guard.canActivate(
+        ctx({ user: { id: 1 }, params: { id: '2', playerId: '5' } })
+      )
     ).rejects.toThrow("Ce joueur n'est pas inscrit à ce tournoi");
   });
 

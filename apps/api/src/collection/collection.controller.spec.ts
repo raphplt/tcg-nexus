@@ -47,7 +47,9 @@ describe('CollectionController', () => {
 
   it('should return paginated collections', async () => {
     mockCollectionService.findAllPaginated.mockResolvedValue({ total: 1 });
-    await expect(controller.findAllPaginated(1 as any, 10 as any)).resolves.toEqual({
+    await expect(
+      controller.findAllPaginated(1 as any, 10 as any)
+    ).resolves.toEqual({
       total: 1
     });
   });
@@ -62,16 +64,18 @@ describe('CollectionController', () => {
       data: []
     });
     await expect(
-      controller.findCollectionItems('col', undefined, undefined, 's', 'name', 'ASC')
+      controller.findCollectionItems(
+        'col',
+        undefined,
+        undefined,
+        's',
+        'name',
+        'ASC'
+      )
     ).resolves.toEqual({ data: [] });
-    expect(mockCollectionService.findCollectionItemsPaginated).toHaveBeenCalledWith(
-      'col',
-      1,
-      10,
-      's',
-      'name',
-      'ASC'
-    );
+    expect(
+      mockCollectionService.findCollectionItemsPaginated
+    ).toHaveBeenCalledWith('col', 1, 10, 's', 'name', 'ASC');
   });
 
   it('should find one collection by id', async () => {
@@ -87,7 +91,10 @@ describe('CollectionController', () => {
   });
 
   it('should update collection', async () => {
-    mockCollectionService.update.mockResolvedValue({ id: '1', name: 'Updated' });
+    mockCollectionService.update.mockResolvedValue({
+      id: '1',
+      name: 'Updated'
+    });
     await expect(
       controller.update('1', { name: 'Updated' } as any, { id: 3 } as any)
     ).resolves.toEqual({ id: '1', name: 'Updated' });
@@ -102,8 +109,8 @@ describe('CollectionController', () => {
 
   it('should get collections for current user', async () => {
     mockCollectionService.findByUserId.mockResolvedValue([{ id: 'mine' }]);
-    await expect(controller.getMyCollections({ id: 5 } as any)).resolves.toEqual([
-      { id: 'mine' }
-    ]);
+    await expect(
+      controller.getMyCollections({ id: 5 } as any)
+    ).resolves.toEqual([{ id: 'mine' }]);
   });
 });

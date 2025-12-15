@@ -8,7 +8,8 @@ const mockRankingRepository = {
   createQueryBuilder: jest.fn()
 };
 
-const player = (id: number): Player => ({ id, user: { firstName: `P${id}`, lastName: '' } } as any);
+const player = (id: number): Player =>
+  ({ id, user: { firstName: `P${id}`, lastName: '' } }) as any;
 
 const qb = () => {
   const chain: any = {
@@ -40,7 +41,11 @@ describe('SeedingService', () => {
 
   it('uses manual seeding when method is manual', async () => {
     const players = [player(1), player(2)];
-    const seeded = await service.seedPlayers(players, {} as any, SeedingMethod.MANUAL);
+    const seeded = await service.seedPlayers(
+      players,
+      {} as any,
+      SeedingMethod.MANUAL
+    );
     expect(seeded[0].seed).toBe(1);
   });
 
@@ -83,8 +88,18 @@ describe('SeedingService', () => {
     const players = [player(1), player(2)];
     const chain = qb();
     chain.getRawMany.mockResolvedValue([
-      { ranking_playerId: '1', avgPoints: '10', avgWinRate: '50', tournamentCount: '2' },
-      { ranking_playerId: '2', avgPoints: '5', avgWinRate: '60', tournamentCount: '1' }
+      {
+        ranking_playerId: '1',
+        avgPoints: '10',
+        avgWinRate: '50',
+        tournamentCount: '2'
+      },
+      {
+        ranking_playerId: '2',
+        avgPoints: '5',
+        avgWinRate: '60',
+        tournamentCount: '1'
+      }
     ]);
     mockRankingRepository.createQueryBuilder.mockReturnValue(chain);
 
@@ -94,7 +109,9 @@ describe('SeedingService', () => {
   });
 
   it('delegates ELO seeding to ranking-based', async () => {
-    const spy = jest.spyOn<any, any>(service as any, 'rankingBasedSeeding').mockResolvedValue([]);
+    const spy = jest
+      .spyOn<any, any>(service as any, 'rankingBasedSeeding')
+      .mockResolvedValue([]);
     await service.seedPlayers([player(1)], {} as any, SeedingMethod.ELO);
     expect(spy).toHaveBeenCalled();
   });
@@ -105,7 +122,9 @@ describe('SeedingService', () => {
       { ...player(2), seed: 2 } as any
     ];
     expect(service.validateSeeding(seeded)).toBe(true);
-    expect(service.validateSeeding([{ ...player(1), seed: 2 } as any])).toBe(false);
+    expect(service.validateSeeding([{ ...player(1), seed: 2 } as any])).toBe(
+      false
+    );
   });
 
   it('generates balanced seeding order', () => {

@@ -134,9 +134,10 @@ describe('AuthController', () => {
     await controller.login({} as any, res, req);
 
     const firstCallOptions = res.cookie.mock.calls[0][2];
-    expect(firstCallOptions.domain === undefined || firstCallOptions.domain === 'undefined').toBe(
-      true
-    );
+    expect(
+      firstCallOptions.domain === undefined ||
+        firstCallOptions.domain === 'undefined'
+    ).toBe(true);
     process.env.FRONTEND_URL = prevFrontend;
     errorSpy.mockRestore();
   });

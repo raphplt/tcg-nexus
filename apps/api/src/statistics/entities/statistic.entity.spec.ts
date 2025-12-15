@@ -8,9 +8,7 @@ describe('Statistics entity', () => {
   it('should register relations and resolve relation types', () => {
     // Import side-effects register decorators into TypeORM metadata storage.
     const storage = getMetadataArgsStorage();
-    const relations = storage.relations.filter(
-      (r) => r.target === Statistics
-    );
+    const relations = storage.relations.filter((r) => r.target === Statistics);
 
     const playerRel = relations.find((r) => r.propertyName === 'player');
     expect(playerRel).toBeDefined();

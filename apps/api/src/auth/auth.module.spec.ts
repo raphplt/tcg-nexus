@@ -6,9 +6,14 @@ import { AuthModule } from './auth.module';
 
 describe('AuthModule', () => {
   const getJwtFactory = () => {
-    const imports = Reflect.getMetadata(MODULE_METADATA.IMPORTS, AuthModule) as any[];
+    const imports = Reflect.getMetadata(
+      MODULE_METADATA.IMPORTS,
+      AuthModule
+    ) as any[];
     const jwtAsync = imports.find((i) => typeof i === 'object' && i?.providers);
-    const optionsProvider = jwtAsync?.providers?.find((p: any) => p?.useFactory);
+    const optionsProvider = jwtAsync?.providers?.find(
+      (p: any) => p?.useFactory
+    );
     return optionsProvider?.useFactory as (config: ConfigService) => any;
   };
 
@@ -18,7 +23,9 @@ describe('AuthModule', () => {
 
   it('jwt factory should throw when secret missing', () => {
     const factory = getJwtFactory();
-    const config = { get: jest.fn().mockReturnValue(undefined) } as any as ConfigService;
+    const config = {
+      get: jest.fn().mockReturnValue(undefined)
+    } as any as ConfigService;
     expect(() => factory(config)).toThrow(
       'JWT_SECRET must be defined in environment variables'
     );

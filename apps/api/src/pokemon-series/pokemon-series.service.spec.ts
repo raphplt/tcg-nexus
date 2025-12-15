@@ -64,9 +64,9 @@ describe('PokemonSeriesService', () => {
     mockRepository.update.mockResolvedValue({ affected: 1 });
     mockRepository.findOne.mockResolvedValue({ id: '3', name: 'Updated' });
 
-    await expect(service.update(3, { name: 'Updated' } as any)).resolves.toEqual(
-      { id: '3', name: 'Updated' }
-    );
+    await expect(
+      service.update(3, { name: 'Updated' } as any)
+    ).resolves.toEqual({ id: '3', name: 'Updated' });
   });
 
   it('should delete series', async () => {

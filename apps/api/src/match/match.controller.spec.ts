@@ -54,7 +54,10 @@ describe('MatchController', () => {
 
   it('should update a match', async () => {
     const dto = { status: MatchStatus.CANCELLED };
-    service.update.mockResolvedValue({ id: 1, status: MatchStatus.CANCELLED } as any);
+    service.update.mockResolvedValue({
+      id: 1,
+      status: MatchStatus.CANCELLED
+    } as any);
 
     const result = await controller.update(1, dto as any);
 
@@ -72,7 +75,10 @@ describe('MatchController', () => {
 
   it('should start a match', async () => {
     const dto = { notes: 'start' };
-    service.startMatch.mockResolvedValue({ id: 1, status: MatchStatus.IN_PROGRESS } as any);
+    service.startMatch.mockResolvedValue({
+      id: 1,
+      status: MatchStatus.IN_PROGRESS
+    } as any);
 
     const result = await controller.startMatch(1, dto as any);
 
@@ -82,7 +88,10 @@ describe('MatchController', () => {
 
   it('should report a score', async () => {
     const dto = { playerAScore: 1, playerBScore: 0 };
-    service.reportScore.mockResolvedValue({ id: 3, status: MatchStatus.FINISHED } as any);
+    service.reportScore.mockResolvedValue({
+      id: 3,
+      status: MatchStatus.FINISHED
+    } as any);
 
     const result = await controller.reportScore(3, dto as any);
 
@@ -92,7 +101,10 @@ describe('MatchController', () => {
 
   it('should reset a match', async () => {
     const dto = { reason: 'error' };
-    service.resetMatch.mockResolvedValue({ id: 4, status: MatchStatus.SCHEDULED } as any);
+    service.resetMatch.mockResolvedValue({
+      id: 4,
+      status: MatchStatus.SCHEDULED
+    } as any);
 
     const result = await controller.resetMatch(4, dto as any);
 

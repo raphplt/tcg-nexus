@@ -190,7 +190,6 @@ describe('TournamentController', () => {
         name: 'updated'
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const result = await controller.update(1, { name: 'updated' } as any);
 
       expect(result).toEqual({ id: 1, name: 'updated' });
@@ -223,7 +222,6 @@ describe('TournamentController', () => {
         status: 'CONFIRMED'
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await controller.registerPlayer(1, dto as any, user);
 
       expect(service.registerPlayer).toHaveBeenCalledWith({
@@ -239,7 +237,6 @@ describe('TournamentController', () => {
         status: 'CONFIRMED'
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       await controller.registerPlayer(99, dto as any, user);
 
       expect(service.registerPlayer).toHaveBeenCalledWith({

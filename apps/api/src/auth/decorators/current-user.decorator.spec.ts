@@ -17,7 +17,11 @@ describe('CurrentUser decorator', () => {
         return user;
       }
     }
-    const metadata = Reflect.getMetadata(ROUTE_ARGS_METADATA, TestClass, 'test');
+    const metadata = Reflect.getMetadata(
+      ROUTE_ARGS_METADATA,
+      TestClass,
+      'test'
+    );
     const key = Object.keys(metadata)[0];
     const factory = metadata[key].factory;
 

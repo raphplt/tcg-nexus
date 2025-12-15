@@ -71,9 +71,9 @@ describe('CardStateService', () => {
     mockRepository.update.mockResolvedValue({ affected: 1 });
     mockRepository.findOne.mockResolvedValue({ id: 4, name: 'Updated' });
 
-    await expect(service.update(4, { name: 'Updated' } as any)).resolves.toEqual(
-      { id: 4, name: 'Updated' }
-    );
+    await expect(
+      service.update(4, { name: 'Updated' } as any)
+    ).resolves.toEqual({ id: 4, name: 'Updated' });
     expect(mockRepository.update).toHaveBeenCalledWith(4, { name: 'Updated' });
   });
 

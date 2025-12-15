@@ -8,7 +8,7 @@ const ctx = (req: any): ExecutionContext =>
     switchToHttp: () => ({
       getRequest: () => req
     })
-  } as unknown as ExecutionContext);
+  }) as unknown as ExecutionContext;
 
 describe('TournamentOwnerGuard', () => {
   const organizerRepo = { findOne: jest.fn() };
@@ -17,7 +17,10 @@ describe('TournamentOwnerGuard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    guard = new TournamentOwnerGuard(organizerRepo as any, tournamentRepo as any);
+    guard = new TournamentOwnerGuard(
+      organizerRepo as any,
+      tournamentRepo as any
+    );
   });
 
   it('should throw when user or id missing', async () => {
@@ -35,7 +38,9 @@ describe('TournamentOwnerGuard', () => {
   it('should throw when tournament not found', async () => {
     tournamentRepo.findOne.mockResolvedValue(null);
     const req = { user: { id: 1, role: UserRole.USER }, params: { id: '2' } };
-    await expect(guard.canActivate(ctx(req))).rejects.toThrow('Tournoi non trouvé');
+    await expect(guard.canActivate(ctx(req))).rejects.toThrow(
+      'Tournoi non trouvé'
+    );
   });
 
   it('should throw when not owner', async () => {
@@ -54,7 +59,10 @@ describe('TournamentOwnerGuard', () => {
       role: OrganizerRole.OWNER,
       user: { id: 1 }
     });
-    const req: any = { user: { id: 1, role: UserRole.USER }, params: { id: '2' } };
+    const req: any = {
+      user: { id: 1, role: UserRole.USER },
+      params: { id: '2' }
+    };
     await expect(guard.canActivate(ctx(req))).resolves.toBe(true);
     expect(req.tournamentOrganizer.role).toBe(OrganizerRole.OWNER);
     expect(req.tournament.id).toBe(2);

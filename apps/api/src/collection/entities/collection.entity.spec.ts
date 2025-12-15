@@ -14,13 +14,17 @@ describe('Collection entity', () => {
 
     const userRel = relations.find((r) => r.propertyName === 'user');
     const userType =
-      typeof userRel?.type === 'function' ? (userRel.type as () => unknown)() : userRel?.type;
+      typeof userRel?.type === 'function'
+        ? (userRel.type as () => unknown)()
+        : userRel?.type;
     expect(userType).toBe(User);
     expect(userRel?.options?.onDelete).toBe('CASCADE');
 
     const itemsRel = relations.find((r) => r.propertyName === 'items');
     const itemsType =
-      typeof itemsRel?.type === 'function' ? (itemsRel.type as () => unknown)() : itemsRel?.type;
+      typeof itemsRel?.type === 'function'
+        ? (itemsRel.type as () => unknown)()
+        : itemsRel?.type;
     expect(itemsType).toBe(CollectionItem);
     expect(itemsRel?.options?.cascade).toBe(true);
 

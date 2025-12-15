@@ -697,8 +697,13 @@ describe('MarketplaceService', () => {
 
     it('updateOrderStatus uses admin lookup', async () => {
       const order = { id: 1, status: OrderStatus.PENDING };
-      jest.spyOn(service, 'findOrderByIdAsAdmin').mockResolvedValue(order as any);
-      mockOrderRepo.save.mockResolvedValue({ ...order, status: OrderStatus.PAID });
+      jest
+        .spyOn(service, 'findOrderByIdAsAdmin')
+        .mockResolvedValue(order as any);
+      mockOrderRepo.save.mockResolvedValue({
+        ...order,
+        status: OrderStatus.PAID
+      });
 
       const res = await service.updateOrderStatus(1, OrderStatus.PAID);
       expect(service.findOrderByIdAsAdmin).toHaveBeenCalledWith(1);

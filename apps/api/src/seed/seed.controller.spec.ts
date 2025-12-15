@@ -52,7 +52,12 @@ describe('SeedController', () => {
   it('should seed complete tournament with params', async () => {
     mockService.seedCompleteTournament.mockResolvedValue({ id: 10 });
     await expect(
-      controller.seedCompleteTournament('Cup', '8', 'SWISS' as any, 'RANDOM' as any)
+      controller.seedCompleteTournament(
+        'Cup',
+        '8',
+        'SWISS' as any,
+        'RANDOM' as any
+      )
     ).resolves.toEqual({ id: 10 });
     expect(mockService.seedCompleteTournament).toHaveBeenCalledWith(
       'Cup',

@@ -1,7 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 import { TournamentStateService } from './tournament-state.service';
-import { Tournament, TournamentStatus, TournamentType } from '../entities/tournament.entity';
-import { TournamentRegistration, RegistrationStatus } from '../entities/tournament-registration.entity';
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentType
+} from '../entities/tournament.entity';
+import {
+  TournamentRegistration,
+  RegistrationStatus
+} from '../entities/tournament-registration.entity';
 import { Match, MatchStatus } from '../../match/entities/match.entity';
 
 const mockTournamentRepository = {
@@ -36,7 +43,7 @@ const tournamentBase = (): Tournament =>
     pricing: {} as any,
     organizers: [],
     rankings: []
-  } as unknown as Tournament);
+  }) as unknown as Tournament;
 
 describe('TournamentStateService', () => {
   let service: TournamentStateService;
@@ -53,7 +60,10 @@ describe('TournamentStateService', () => {
   describe('validateStateTransition', () => {
     it('returns not found when tournament missing', async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
-      const result = await service.validateStateTransition(1, TournamentStatus.IN_PROGRESS);
+      const result = await service.validateStateTransition(
+        1,
+        TournamentStatus.IN_PROGRESS
+      );
       expect(result.canTransition).toBe(false);
     });
 
@@ -64,12 +74,20 @@ describe('TournamentStateService', () => {
       t.currentRound = 1;
       t.totalRounds = 1;
       t.type = TournamentType.SINGLE_ELIMINATION;
-      t.registrations = [{ status: RegistrationStatus.CONFIRMED, checkedIn: true } as TournamentRegistration];
+      t.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true
+        } as TournamentRegistration
+      ];
       t.matches = [{ round: 1, status: MatchStatus.FINISHED } as Match];
       mockTournamentRepository.findOne.mockResolvedValue(t);
       mockRegistrationRepository.count.mockResolvedValue(1);
       mockMatchRepository.count.mockResolvedValue(0);
-      const result = await service.validateStateTransition(1, TournamentStatus.IN_PROGRESS);
+      const result = await service.validateStateTransition(
+        1,
+        TournamentStatus.IN_PROGRESS
+      );
       expect(result.canTransition).toBe(true);
     });
 
@@ -113,7 +131,10 @@ describe('TournamentStateService', () => {
       const t = tournamentBase();
       t.status = TournamentStatus.DRAFT;
       mockTournamentRepository.findOne.mockResolvedValue(t);
-      const result = await service.validateStateTransition(1, TournamentStatus.FINISHED);
+      const result = await service.validateStateTransition(
+        1,
+        TournamentStatus.FINISHED
+      );
       expect(result.canTransition).toBe(false);
     });
   });
@@ -125,9 +146,9 @@ describe('TournamentStateService', () => {
         errors: ['bad'],
         warnings: []
       });
-      await expect(service.transitionState(1, TournamentStatus.FINISHED)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(
+        service.transitionState(1, TournamentStatus.FINISHED)
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('changes state and executes actions', async () => {
@@ -140,9 +161,15 @@ describe('TournamentStateService', () => {
       });
       mockTournamentRepository.findOne.mockResolvedValueOnce(t);
       const saved = { ...t, status: TournamentStatus.FINISHED };
-      (mockTournamentRepository as any).save = jest.fn().mockResolvedValue(saved);
+      (mockTournamentRepository as any).save = jest
+        .fn()
+        .mockResolvedValue(saved);
 
-      const result = await service.transitionState(1, TournamentStatus.FINISHED, 'end');
+      const result = await service.transitionState(
+        1,
+        TournamentStatus.FINISHED,
+        'end'
+      );
       expect(result.status).toBe(TournamentStatus.FINISHED);
     });
 
@@ -192,12 +219,16 @@ describe('TournamentStateService', () => {
       mockTournamentRepository.findOne.mockResolvedValue(t);
       const history = await service.getStateHistory(1);
       expect(history.availableTransitions.length).toBeGreaterThan(0);
-      expect(history.transitionDescriptions[history.availableTransitions[0]]).toBeDefined();
+      expect(
+        history.transitionDescriptions[history.availableTransitions[0]]
+      ).toBeDefined();
     });
 
     it('throws when tournament not found', async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
-      await expect(service.getStateHistory(2)).rejects.toThrow(BadRequestException);
+      await expect(service.getStateHistory(2)).rejects.toThrow(
+        BadRequestException
+      );
     });
   });
 

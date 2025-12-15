@@ -418,7 +418,9 @@ describe('MatchService', () => {
       mockMatchRepository.findOne.mockResolvedValue(finishedMatch);
 
       const manager = {
-        save: jest.fn().mockImplementation(() => Promise.resolve(finishedMatch)),
+        save: jest
+          .fn()
+          .mockImplementation(() => Promise.resolve(finishedMatch)),
         findOne: jest.fn(),
         create: jest.fn()
       };
@@ -643,10 +645,14 @@ describe('MatchService', () => {
   describe('private helpers', () => {
     it('should update rankings when none exist', async () => {
       const manager = {
-        findOne: jest.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(null),
-        create: jest
+        findOne: jest
           .fn()
-          .mockImplementation((_entity, data) => ({ ...data, wins: data.wins ?? 0 })),
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null),
+        create: jest.fn().mockImplementation((_entity, data) => ({
+          ...data,
+          wins: data.wins ?? 0
+        })),
         save: jest.fn().mockResolvedValue(undefined)
       };
 
@@ -722,7 +728,12 @@ describe('MatchService', () => {
           type: TournamentType.SINGLE_ELIMINATION,
           matches: [
             { ...mockMatch, winner: mockPlayerA, status: MatchStatus.FINISHED },
-            { ...mockMatch, id: 2, winner: mockPlayerB, status: MatchStatus.FINISHED }
+            {
+              ...mockMatch,
+              id: 2,
+              winner: mockPlayerB,
+              status: MatchStatus.FINISHED
+            }
           ]
         }
       };
@@ -747,9 +758,15 @@ describe('MatchService', () => {
 
     it('should calculate phases for rounds', () => {
       expect((service as any).getPhaseForRound(3, 3)).toBe(MatchPhase.FINAL);
-      expect((service as any).getPhaseForRound(2, 3)).toBe(MatchPhase.SEMI_FINAL);
-      expect((service as any).getPhaseForRound(1, 3)).toBe(MatchPhase.QUARTER_FINAL);
-      expect((service as any).getPhaseForRound(1, 5)).toBe(MatchPhase.QUALIFICATION);
+      expect((service as any).getPhaseForRound(2, 3)).toBe(
+        MatchPhase.SEMI_FINAL
+      );
+      expect((service as any).getPhaseForRound(1, 3)).toBe(
+        MatchPhase.QUARTER_FINAL
+      );
+      expect((service as any).getPhaseForRound(1, 5)).toBe(
+        MatchPhase.QUALIFICATION
+      );
     });
   });
 });

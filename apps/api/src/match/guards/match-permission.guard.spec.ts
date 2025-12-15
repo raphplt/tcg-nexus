@@ -11,7 +11,7 @@ const createContext = (req: any): ExecutionContext =>
     switchToHttp: () => ({
       getRequest: () => req
     })
-  } as unknown as ExecutionContext);
+  }) as unknown as ExecutionContext;
 
 describe('MatchPermissionGuard', () => {
   let guard: MatchPermissionGuard;
@@ -19,10 +19,7 @@ describe('MatchPermissionGuard', () => {
   const orgRepo = { findOne: jest.fn() };
 
   beforeEach(() => {
-    guard = new MatchPermissionGuard(
-      matchRepo as any,
-      orgRepo as any
-    );
+    guard = new MatchPermissionGuard(matchRepo as any, orgRepo as any);
     jest.clearAllMocks();
   });
 

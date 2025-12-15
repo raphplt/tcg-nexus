@@ -17,9 +17,9 @@ describe('DeckCardService', () => {
   });
 
   it('should create a deck card with message', () => {
-    expect(
-      service.create({ cardId: '123', deckId: 1, qty: 2 })
-    ).toContain('adds a new deckCard');
+    expect(service.create({ cardId: '123', deckId: 1, qty: 2 })).toContain(
+      'adds a new deckCard'
+    );
   });
 
   it('should return all deck cards message', () => {

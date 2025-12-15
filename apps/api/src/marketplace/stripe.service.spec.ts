@@ -31,9 +31,14 @@ describe('StripeService', () => {
     (configService.get as jest.Mock).mockReturnValueOnce('sk_test');
     const service = new StripeService(configService);
     const result = await service.createPaymentIntent(10.5, 'usd', { order: 1 });
-    const stripeInstance = (Stripe as unknown as jest.Mock).mock.results[0].value;
+    const stripeInstance = (Stripe as unknown as jest.Mock).mock.results[0]
+      .value;
     expect(stripeInstance.paymentIntents.create).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 1050, currency: 'usd', metadata: { order: 1 } })
+      expect.objectContaining({
+        amount: 1050,
+        currency: 'usd',
+        metadata: { order: 1 }
+      })
     );
     expect(result).toEqual({ id: 'pi' });
   });
@@ -42,9 +47,13 @@ describe('StripeService', () => {
     (configService.get as jest.Mock).mockReturnValueOnce('sk_test'); // for constructor
     (configService.get as jest.Mock).mockReturnValueOnce('whsec'); // for webhook
     const service = new StripeService(configService);
-    const result = await service.constructEventFromPayload('sig', Buffer.from('payload'));
-    const stripeInstance =
-      (Stripe as unknown as jest.Mock).mock.results.slice(-1)[0].value;
+    const result = await service.constructEventFromPayload(
+      'sig',
+      Buffer.from('payload')
+    );
+    const stripeInstance = (Stripe as unknown as jest.Mock).mock.results.slice(
+      -1
+    )[0].value;
     expect(stripeInstance.webhooks.constructEvent).toHaveBeenCalledWith(
       Buffer.from('payload'),
       'sig',
