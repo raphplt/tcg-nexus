@@ -15,6 +15,8 @@ import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { DeckCardRole } from '../common/enums/deckCardRole';
 import { UserRole } from 'src/common/enums/user';
+import { DeckShare } from './entities/deck-share.entity';
+import { ShareDeckDto } from './dto/share-deck.dto';
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -34,7 +36,9 @@ export class DeckService {
     @InjectRepository(DeckFormat)
     private readonly formatRepo: Repository<DeckFormat>,
     @InjectRepository(Deck)
-    private readonly decksRepository: Repository<Deck>
+    private readonly decksRepository: Repository<Deck>,
+    @InjectRepository(DeckShare)
+    private readonly deckShareRepo: Repository<DeckShare>
   ) {}
   async createDeck(user: User, dto: CreateDeckDto) {
     const format = await this.formatRepo.findOneBy({ id: dto.formatId });
@@ -266,5 +270,96 @@ export class DeckService {
   async incrementViews(id: number) {
     await this.decksRepository.increment({ id }, 'views', 1);
     return { message: 'View incremented' };
+  }
+
+  private generateShareCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  async shareDeck(id: number, user: User, dto?: ShareDeckDto): Promise<{ code: string }> {
+    const deck = await this.decksRepository.findOne({
+      where: { id, user: { id: user.id } }
+    });
+
+    if (!deck) throw new NotFoundException('Deck not found');
+
+    let code = this.generateShareCode();
+    let exists = true;
+    while (exists) {
+      const existing = await this.deckShareRepo.findOneBy({ code });
+      if (!existing) {
+        exists = false;
+      } else {
+        code = this.generateShareCode();
+      }
+    }
+
+    const deckShare = this.deckShareRepo.create({
+      deck,
+      code,
+      expiresAt: dto?.expiresAt ? new Date(dto.expiresAt) : null
+    });
+
+    await this.deckShareRepo.save(deckShare);
+    return { code };
+  }
+
+  async importDeck(code: string, user: User): Promise<Deck> {
+    const deckShare = await this.deckShareRepo.findOne({
+      where: { code },
+      relations: ['deck', 'deck.format', 'deck.cards', 'deck.cards.card']
+    });
+
+    if (!deckShare) throw new NotFoundException('Code de partage invalide');
+
+    const now = new Date();
+    if (deckShare.expiresAt && deckShare.expiresAt < now) {
+      throw new NotFoundException('Ce code de partage a expiré');
+    }
+
+    const sourceDeck = deckShare.deck;
+    
+    const cloned = this.decksRepository.create({
+      name: sourceDeck.name,
+      isPublic: false,
+      user,
+      format: sourceDeck.format
+    });
+    const saved = await this.decksRepository.save(cloned);
+
+    if (sourceDeck.cards?.length) {
+      const clonedCards = sourceDeck.cards.map((dc) =>
+        this.deckCardRepo.create({
+          deck: { id: saved.id },
+          card: { id: dc.card.id },
+          qty: dc.qty,
+          role: dc.role
+        })
+      );
+      await this.deckCardRepo.save(clonedCards);
+    }
+
+    return this.findOneWithCards(saved.id);
+  }
+
+  async getDeckForImport(code: string): Promise<Deck> {
+    const deckShare = await this.deckShareRepo.findOne({
+      where: { code },
+      relations: ['deck', 'deck.format', 'deck.cards', 'deck.cards.card', 'deck.user']
+    });
+
+    if (!deckShare) throw new NotFoundException('Code de partage invalide');
+
+    const now = new Date();
+    if (deckShare.expiresAt && deckShare.expiresAt < now) {
+      throw new NotFoundException('Ce code de partage a expiré');
+    }
+
+    return deckShare.deck;
   }
 }
