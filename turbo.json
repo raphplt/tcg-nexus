@@ -20,6 +20,12 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
+    "test:cov": {
+      "outputs": [
+        "coverage/**"
+      ],
+      "dependsOn": []
+    },
     "dev": {
       "cache": false,
       "persistent": true,

@@ -54,4 +54,29 @@ describe('CollectionItemController', () => {
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
+
+  it('should add to wishlist', async () => {
+    mockCollectionItemService.addToWishlist.mockResolvedValue({ id: 1 });
+    await expect(controller.addToWishlist('1', 'card')).resolves.toEqual({
+      id: 1
+    });
+    expect(mockCollectionItemService.addToWishlist).toHaveBeenCalledWith(
+      '1',
+      'card'
+    );
+  });
+
+  it('should add to favorites', async () => {
+    mockCollectionItemService.addToFavorites.mockResolvedValue({ id: 2 });
+    await expect(controller.addToFavorites('2', 'card2')).resolves.toEqual({
+      id: 2
+    });
+  });
+
+  it('should add to collection', async () => {
+    mockCollectionItemService.addToCollection.mockResolvedValue({ id: 3 });
+    await expect(controller.addToCollection('col', 'card3')).resolves.toEqual({
+      id: 3
+    });
+  });
 });

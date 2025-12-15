@@ -41,4 +41,36 @@ describe('PokemonSeriesService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should create a pokemon series', async () => {
+    const dto = { name: 'Series' } as any;
+    mockRepository.create.mockReturnValue(dto);
+    mockRepository.save.mockResolvedValue({ id: 1, ...dto });
+
+    await expect(service.create(dto)).resolves.toEqual({ id: 1, ...dto });
+  });
+
+  it('should find all with custom query builder', async () => {
+    await expect(service.findAll()).resolves.toEqual([]);
+    expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('serie');
+  });
+
+  it('should find one series by id', async () => {
+    mockRepository.findOne.mockResolvedValue({ id: '2', name: 'Neo' });
+    await expect(service.findOne(2)).resolves.toEqual({ id: '2', name: 'Neo' });
+  });
+
+  it('should update and return entity', async () => {
+    mockRepository.update.mockResolvedValue({ affected: 1 });
+    mockRepository.findOne.mockResolvedValue({ id: '3', name: 'Updated' });
+
+    await expect(
+      service.update(3, { name: 'Updated' } as any)
+    ).resolves.toEqual({ id: '3', name: 'Updated' });
+  });
+
+  it('should delete series', async () => {
+    mockRepository.delete.mockResolvedValue({ affected: 1 });
+    await expect(service.remove(4)).resolves.toEqual({ deleted: true });
+  });
 });
