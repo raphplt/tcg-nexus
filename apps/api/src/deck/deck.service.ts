@@ -17,6 +17,11 @@ import { DeckCardRole } from '../common/enums/deckCardRole';
 import { UserRole } from 'src/common/enums/user';
 import { DeckShare } from './entities/deck-share.entity';
 import { ShareDeckDto } from './dto/share-deck.dto';
+import {
+  AnalyzeDeckResultDto,
+  MissingCardSuggestionDto
+} from './dto/analyze-deck-result.dto';
+import { PokemonCardsType } from '../common/enums/pokemonCardsType';
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -156,6 +161,150 @@ export class DeckService {
     });
     if (!deck) throw new NotFoundException('Deck not found');
     return deck;
+  }
+
+  async analyzeDeck(id: number): Promise<AnalyzeDeckResultDto> {
+    const deck = await this.decksRepository.findOne({
+      where: { id },
+      relations: ['cards', 'cards.card']
+    });
+
+    if (!deck) throw new NotFoundException('Deck not found');
+
+    const cards = deck.cards || [];
+    const totalCards = cards.reduce((sum, card) => sum + (card.qty || 0), 0);
+
+    const typeMap = new Map<string, number>();
+    const categoryMap = new Map<string, number>();
+    const attackCostMap = new Map<number, number>();
+    let totalAttackCost = 0;
+    let totalAttackCount = 0;
+
+    cards.forEach((deckCard) => {
+      const { card, qty } = deckCard;
+      const quantity = qty || 0;
+      if (!card) return;
+
+      card.types?.forEach((type) =>
+        typeMap.set(type, (typeMap.get(type) || 0) + quantity)
+      );
+
+      const categoryLabel = card.category || 'Unknown';
+      categoryMap.set(
+        categoryLabel,
+        (categoryMap.get(categoryLabel) || 0) + quantity
+      );
+
+      card.attacks?.forEach((attack) => {
+        const cost = attack.cost?.length || 0;
+        attackCostMap.set(cost, (attackCostMap.get(cost) || 0) + quantity);
+        totalAttackCost += cost * quantity;
+        totalAttackCount += quantity;
+      });
+    });
+
+    const typeDistribution = this.mapToDistribution(typeMap, totalCards);
+    const categoryDistribution = this.mapToDistribution(
+      categoryMap,
+      totalCards
+    );
+    const attackCostDistribution = this.mapCostDistribution(
+      attackCostMap,
+      totalAttackCount
+    );
+
+    const pokemonCount = categoryMap.get(PokemonCardsType.Pokemon) || 0;
+    const energyCount = categoryMap.get(PokemonCardsType.Energy) || 0;
+    const trainerCount = categoryMap.get(PokemonCardsType.Trainer) || 0;
+
+    const averageEnergyCost = totalAttackCount
+      ? parseFloat((totalAttackCost / totalAttackCount).toFixed(2))
+      : 0;
+
+    const energyToPokemonRatio = pokemonCount
+      ? parseFloat((energyCount / pokemonCount).toFixed(2))
+      : 0;
+
+    const duplicates = cards
+      .filter(
+        (deckCard) =>
+          deckCard.qty > 4 &&
+          deckCard.card?.category !== PokemonCardsType.Energy
+      )
+      .map((deckCard) => ({
+        cardId: deckCard.card.id,
+        cardName: deckCard.card.name || 'Carte inconnue',
+        qty: deckCard.qty
+      }));
+
+    const warnings: string[] = [];
+    const suggestions: string[] = [];
+
+    if (totalCards < 60) {
+      warnings.push(`Deck incomplet: ${totalCards}/60 cartes`);
+    } else if (totalCards > 60) {
+      warnings.push(`Deck trop grand: ${totalCards}/60 cartes`);
+    }
+
+    if (duplicates.length) {
+      warnings.push(
+        'Certaines cartes dépassent la limite autorisée (maximum 4 exemplaires hors énergies).'
+      );
+    }
+
+    this.evaluateEnergyBalance(
+      energyCount,
+      pokemonCount,
+      totalCards,
+      averageEnergyCost,
+      warnings,
+      suggestions
+    );
+
+    if (trainerCount < 10) {
+      suggestions.push(
+        'Ajoutez des cartes Dresseur pour stabiliser le deck (recommandé: 10+).'
+      );
+    }
+
+    if (typeDistribution.length > 2) {
+      suggestions.push(
+        `Deck multi-type détecté (${typeDistribution
+          .slice(0, 3)
+          .map((d) => d.label)
+          .join(', ')}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`
+      );
+    } else if (typeDistribution.length === 1 && energyCount > 0) {
+      suggestions.push(
+        `Renforcez le type ${typeDistribution[0].label} avec des cartes de support compatibles.`
+      );
+    }
+
+    const missingCards = this.buildMissingCardsSuggestions({
+      energyCount,
+      pokemonCount,
+      trainerCount,
+      totalCards,
+      typeDistribution,
+      averageEnergyCost
+    });
+
+    return {
+      deckId: deck.id,
+      totalCards,
+      pokemonCount,
+      energyCount,
+      trainerCount,
+      energyToPokemonRatio,
+      averageEnergyCost,
+      typeDistribution,
+      categoryDistribution,
+      attackCostDistribution,
+      duplicates,
+      warnings,
+      suggestions,
+      missingCards
+    };
   }
 
   async updateDeck(deckId: number, user: User, dto: UpdateDeckDto) {
@@ -361,5 +510,135 @@ export class DeckService {
     }
 
     return deckShare.deck;
+  }
+
+  private mapToDistribution(
+    map: Map<string, number>,
+    total: number
+  ): { label: string; count: number; percentage: number }[] {
+    return Array.from(map.entries())
+      .map(([label, count]) => ({
+        label,
+        count,
+        percentage: total ? Math.round((count / total) * 100) : 0
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  private mapCostDistribution(
+    map: Map<number, number>,
+    total: number
+  ): { cost: number; count: number; percentage: number }[] {
+    return Array.from(map.entries())
+      .map(([cost, count]) => ({
+        cost,
+        count,
+        percentage: total ? Math.round((count / total) * 100) : 0
+      }))
+      .sort((a, b) => a.cost - b.cost);
+  }
+
+  private evaluateEnergyBalance(
+    energyCount: number,
+    pokemonCount: number,
+    totalCards: number,
+    averageEnergyCost: number,
+    warnings: string[],
+    suggestions: string[]
+  ) {
+    if (!totalCards) return;
+
+    const energyRatio = energyCount / totalCards;
+
+    if (energyRatio < 0.25) {
+      warnings.push(
+        "Pas assez d'énergies pour alimenter les attaques (vise 25-35% du deck)."
+      );
+      suggestions.push(
+        'Ajoutez plusieurs cartes énergie pour sécuriser vos sorties.'
+      );
+    } else if (energyRatio > 0.45) {
+      warnings.push("Beaucoup d'energies detectees, risque de mains mortes.");
+      suggestions.push(
+        'Réduisez légèrement les énergies au profit de Dresseurs ou Pokémon clés.'
+      );
+    }
+
+    if (pokemonCount > 0 && energyCount === 0) {
+      warnings.push('Aucune énergie détectée alors que des Pokémon sont présents.');
+    }
+
+    if (averageEnergyCost > 3 && energyRatio < 0.35) {
+      suggestions.push(
+        "Les attaques coûtent cher ; ajoutez de l'accélération d'énergie ou augmentez légèrement le nombre d'énergies."
+      );
+    }
+  }
+
+  private buildMissingCardsSuggestions({
+    energyCount,
+    pokemonCount,
+    trainerCount,
+    totalCards,
+    typeDistribution,
+    averageEnergyCost
+  }: {
+    energyCount: number;
+    pokemonCount: number;
+    trainerCount: number;
+    totalCards: number;
+    typeDistribution: { label: string; count: number; percentage: number }[];
+    averageEnergyCost: number;
+  }): MissingCardSuggestionDto[] {
+    const suggestions: MissingCardSuggestionDto[] = [];
+
+    const targetEnergy = Math.max(
+      10,
+      Math.round(Math.max(totalCards * 0.25, pokemonCount * 0.4))
+    );
+    if (energyCount < targetEnergy) {
+      suggestions.push({
+        label: 'Énergies',
+        reason:
+          "Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.",
+        recommendedQty: targetEnergy - energyCount
+      });
+    }
+
+    if (trainerCount < 12) {
+      suggestions.push({
+        label: 'Dresseurs de pioche',
+        reason:
+          'Renforcez la consistance avec davantage de supporters / dresseurs utilitaires.',
+        recommendedQty: 12 - trainerCount
+      });
+    }
+
+    if (typeDistribution.length) {
+      const mainType = typeDistribution[0];
+      suggestions.push({
+        label: `Support ${mainType.label}`,
+        reason: `Ajoutez 1-2 cartes qui profitent spécifiquement au type ${mainType.label}.`,
+        recommendedQty: 2
+      });
+    }
+
+    if (averageEnergyCost >= 3 && energyCount < totalCards * 0.35) {
+      suggestions.push({
+        label: "Accélération d'énergie",
+        reason:
+          'Vos coûts moyens sont élevés : prévoyez des cartes qui mettent des énergies en jeu ou réduisent ces coûts.',
+        recommendedQty: 2
+      });
+    }
+
+    const uniqueSuggestions = new Map<string, MissingCardSuggestionDto>();
+    suggestions.forEach((entry) => {
+      if (!uniqueSuggestions.has(entry.label)) {
+        uniqueSuggestions.set(entry.label, entry);
+      }
+    });
+
+    return Array.from(uniqueSuggestions.values());
   }
 }

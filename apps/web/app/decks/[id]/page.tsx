@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Image from "next/image";
@@ -13,6 +13,10 @@ import {
   Share2,
   Copy,
   Check,
+  Loader2,
+  AlertTriangle,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,21 +34,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { decksService } from "@/services/decks.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { DeckCard } from "@/types/deck-cards";
 import { Deck } from "@/types/Decks";
+import { DeckAnalysis } from "@/types/deck-analysis";
 
 export default function DeckDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const deckId = id as string;
-  
+
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareCode, setShareCode] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [analysis, setAnalysis] = useState<DeckAnalysis | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAnalysis(null);
+    setAnalysisError(null);
+  }, [deckId]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["deck", deckId],
@@ -63,8 +76,26 @@ export default function DeckDetailsPage() {
     },
   });
 
+  const analyzeMutation = useMutation({
+    mutationFn: () => decksService.analyzeDeck(Number(deckId)),
+    onSuccess: (result) => {
+      setAnalysis(result);
+      setAnalysisError(null);
+      toast.success("Analyse terminée");
+    },
+    onError: () => {
+      setAnalysisError("Impossible d'analyser le deck pour le moment.");
+      toast.error("Impossible d'analyser le deck");
+    },
+  });
+
   const handleShare = () => {
     shareMutation.mutate();
+  };
+
+  const handleAnalyze = () => {
+    setAnalysisError(null);
+    analyzeMutation.mutate();
   };
 
   const copyToClipboard = (text: string) => {
@@ -295,6 +326,13 @@ export default function DeckDetailsPage() {
           </div>
 
           <div className="space-y-6">
+            <AnalysisCard
+              analysis={analysis}
+              isLoading={analyzeMutation.isPending}
+              error={analysisError}
+              onAnalyze={handleAnalyze}
+            />
+
             <Card>
               <CardHeader>
                 <CardTitle>Informations</CardTitle>
@@ -414,6 +452,240 @@ export default function DeckDetailsPage() {
     </div>
   );
 }
+
+function AnalysisCard({
+  analysis,
+  isLoading,
+  error,
+  onAnalyze,
+}: {
+  analysis: DeckAnalysis | null;
+  isLoading: boolean;
+  error: string | null;
+  onAnalyze: () => void;
+}) {
+  return (
+    <Card className="border-primary/20 shadow-sm">
+      <CardHeader className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analyse du deck
+          </CardTitle>
+          <Button
+            onClick={onAnalyze}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4 mr-2" />
+            )}
+            Analyser mon deck
+          </Button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Obtenez des recommandations rapides sur l'équilibre de ce deck.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Analyse impossible</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {isLoading && <AnalysisSkeleton />}
+
+        {!isLoading && analysis && <AnalysisResult analysis={analysis} />}
+
+        {!isLoading && !analysis && !error && (
+          <p className="text-sm text-muted-foreground">
+            Lancez une analyse pour afficher les recommandations automatiques.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const AnalysisResult = ({ analysis }: { analysis: DeckAnalysis }) => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-3">
+      <PillStat
+        label="Pokémon"
+        value={analysis.pokemonCount}
+      />
+      <PillStat
+        label="Énergies"
+        value={analysis.energyCount}
+      />
+      <PillStat
+        label="Dresseurs"
+        value={analysis.trainerCount}
+      />
+      <PillStat
+        label="Coût moyen"
+        value={analysis.averageEnergyCost.toFixed(2)}
+      />
+    </div>
+
+    {analysis.warnings.length > 0 && (
+      <Alert variant="destructive" className="border-destructive/60">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>À surveiller</AlertTitle>
+        <AlertDescription>
+          <BulletList items={analysis.warnings} />
+        </AlertDescription>
+      </Alert>
+    )}
+
+    {analysis.duplicates.length > 0 && (
+      <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Doublons détectés</AlertTitle>
+        <AlertDescription>
+          <ul className="space-y-1 text-sm">
+            {analysis.duplicates.map((dup) => (
+              <li
+                key={dup.cardId}
+                className="flex justify-between"
+              >
+                <span>{dup.cardName}</span>
+                <span className="text-xs text-muted-foreground">x{dup.qty}</span>
+              </li>
+            ))}
+          </ul>
+        </AlertDescription>
+      </Alert>
+    )}
+
+    {analysis.suggestions.length > 0 && (
+      <SuggestionList
+        title="Recommandations"
+        items={analysis.suggestions}
+      />
+    )}
+
+    {analysis.missingCards.length > 0 && (
+      <div className="space-y-2">
+        <div className="text-sm font-semibold">Cartes manquantes suggérées</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {analysis.missingCards.map((missing, index) => (
+            <div
+              key={`${missing.label}-${index}`}
+              className="rounded-lg border bg-accent/40 p-3"
+            >
+              <div className="flex items-center justify-between text-sm font-medium">
+                <span>{missing.label}</span>
+                <Badge variant="secondary">+{missing.recommendedQty}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {missing.reason}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <DistributionBadges
+      title="Répartition des types"
+      data={analysis.typeDistribution}
+    />
+    <DistributionBadges
+      title="Courbe de coûts"
+      data={analysis.attackCostDistribution.map((item) => ({
+        label: `Coût ${item.cost}`,
+        count: item.count,
+        percentage: item.percentage,
+      }))}
+    />
+  </div>
+);
+
+const DistributionBadges = ({
+  title,
+  data,
+}: {
+  title: string;
+  data: { label: string; count: number; percentage: number }[];
+}) => {
+  if (!data.length) return null;
+  return (
+    <div className="space-y-2">
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="flex flex-wrap gap-2">
+        {data.map((item) => (
+          <Badge
+            key={`${title}-${item.label}`}
+            variant="outline"
+            className="gap-2"
+          >
+            <span className="font-medium">{item.label}</span>
+            <span className="text-xs text-muted-foreground">
+              {item.count} · {item.percentage}%
+            </span>
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const SuggestionList = ({
+  title,
+  items,
+}: {
+  title: string;
+  items: string[];
+}) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-2 text-sm font-semibold">
+      <Sparkles className="h-4 w-4" />
+      <span>{title}</span>
+    </div>
+    <BulletList items={items} />
+  </div>
+);
+
+const BulletList = ({ items }: { items: string[] }) => (
+  <ul className="space-y-1 text-sm text-muted-foreground">
+    {items.map((item, index) => (
+      <li
+        key={`${item}-${index}`}
+        className="flex gap-2"
+      >
+        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+        <span>{item}</span>
+      </li>
+    ))}
+  </ul>
+);
+
+const PillStat = ({ label, value }: { label: string; value: string | number }) => (
+  <div className="rounded-lg border bg-card/60 p-3">
+    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+      {label}
+    </p>
+    <p className="text-lg font-semibold">{value}</p>
+  </div>
+);
+
+const AnalysisSkeleton = () => (
+  <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-2">
+      <Skeleton className="h-14" />
+      <Skeleton className="h-14" />
+      <Skeleton className="h-14" />
+      <Skeleton className="h-14" />
+    </div>
+    <Skeleton className="h-16" />
+    <Skeleton className="h-24" />
+  </div>
+);
 
 function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
   if (cards.length === 0) return null;
