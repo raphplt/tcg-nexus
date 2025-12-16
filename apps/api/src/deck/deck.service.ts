@@ -190,9 +190,19 @@ export class DeckService {
       );
 
       const categoryLabel = card.category || 'Unknown';
+      const normalizedCategory = categoryLabel.toLowerCase().replace('é', 'e');
+
+      let mappedCategory = categoryLabel;
+      if (normalizedCategory === 'pokemon')
+        mappedCategory = PokemonCardsType.Pokemon;
+      if (normalizedCategory === 'energy' || normalizedCategory === 'energie')
+        mappedCategory = PokemonCardsType.Energy;
+      if (normalizedCategory === 'trainer' || normalizedCategory === 'dresseur')
+        mappedCategory = PokemonCardsType.Trainer;
+
       categoryMap.set(
-        categoryLabel,
-        (categoryMap.get(categoryLabel) || 0) + quantity
+        mappedCategory,
+        (categoryMap.get(mappedCategory) || 0) + quantity
       );
 
       card.attacks?.forEach((attack) => {
@@ -229,7 +239,10 @@ export class DeckService {
       .filter(
         (deckCard) =>
           deckCard.qty > 4 &&
-          deckCard.card?.category !== PokemonCardsType.Energy
+          deckCard.card?.category !== PokemonCardsType.Energy &&
+          !deckCard.card?.name?.toLowerCase().includes('energy') &&
+          !deckCard.card?.name?.toLowerCase().includes('energie') &&
+          !deckCard.card?.name?.toLowerCase().includes('énergie')
       )
       .map((deckCard) => ({
         cardId: deckCard.card.id,
@@ -272,7 +285,9 @@ export class DeckService {
         `Deck multi-type détecté (${typeDistribution
           .slice(0, 3)
           .map((d) => d.label)
-          .join(', ')}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`
+          .join(
+            ', '
+          )}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`
       );
     } else if (typeDistribution.length === 1 && energyCount > 0) {
       suggestions.push(
@@ -430,7 +445,11 @@ export class DeckService {
     return code;
   }
 
-  async shareDeck(id: number, user: User, dto?: ShareDeckDto): Promise<{ code: string }> {
+  async shareDeck(
+    id: number,
+    user: User,
+    dto?: ShareDeckDto
+  ): Promise<{ code: string }> {
     const deck = await this.decksRepository.findOne({
       where: { id, user: { id: user.id } }
     });
@@ -472,7 +491,7 @@ export class DeckService {
     }
 
     const sourceDeck = deckShare.deck;
-    
+
     const cloned = this.decksRepository.create({
       name: sourceDeck.name,
       isPublic: false,
@@ -499,7 +518,13 @@ export class DeckService {
   async getDeckForImport(code: string): Promise<Deck> {
     const deckShare = await this.deckShareRepo.findOne({
       where: { code },
-      relations: ['deck', 'deck.format', 'deck.cards', 'deck.cards.card', 'deck.user']
+      relations: [
+        'deck',
+        'deck.format',
+        'deck.cards',
+        'deck.cards.card',
+        'deck.user'
+      ]
     });
 
     if (!deckShare) throw new NotFoundException('Code de partage invalide');
@@ -565,7 +590,9 @@ export class DeckService {
     }
 
     if (pokemonCount > 0 && energyCount === 0) {
-      warnings.push('Aucune énergie détectée alors que des Pokémon sont présents.');
+      warnings.push(
+        'Aucune énergie détectée alors que des Pokémon sont présents.'
+      );
     }
 
     if (averageEnergyCost > 3 && energyRatio < 0.35) {
@@ -600,7 +627,7 @@ export class DeckService {
       suggestions.push({
         label: 'Énergies',
         reason:
-          "Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.",
+          'Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.',
         recommendedQty: targetEnergy - energyCount
       });
     }
