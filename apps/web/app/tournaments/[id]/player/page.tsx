@@ -34,19 +34,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { matchService } from "@/services/match.service";
 import { Match } from "@/types/tournament";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function PlayerDashboardPage() {
   const { id } = useParams();
-  const router = useRouter();
   const { user } = useAuth();
   const { tournament } = useTournament(id as string);
-  const { rankings, getPlayerRanking } = useRankings(id as string);
+  const { getPlayerRanking } = useRankings(id as string);
 
   // Récupérer les matches du joueur
-  const { data: playerMatches = [], isLoading: matchesLoading } = useQuery<
-    Match[]
-  >({
+  const { data: playerMatches = [] } = useQuery<Match[]>({
     queryKey: ["player", user?.player?.id, "tournament", id, "matches"],
     queryFn: () =>
       matchService.getPlayerMatches(user!.player!.id, parseInt(id as string)),

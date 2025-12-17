@@ -60,7 +60,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
     cancelTournament,
     advanceRound,
     updateStatus,
-    transitions,
     isStarting,
     isFinishing,
     isCancelling,

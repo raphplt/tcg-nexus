@@ -142,7 +142,6 @@ export default function TournamentDetailsPage() {
         return (
           <TabMatches
             matches={tournament.matches || []}
-            formatDate={formatDate}
             tournamentId={tournament.id}
           />
         );

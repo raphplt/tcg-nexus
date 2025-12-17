@@ -3,6 +3,7 @@ import { authedFetch, fetcher } from "@/utils/fetch";
 import { Deck } from "@/types/Decks";
 import { DeckCard } from "@/types/deck-cards";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
+import { DeckAnalysis } from "@/types/deck-analysis";
 
 export interface DecksQueryParams extends PaginationParams {
   search?: string;
@@ -68,6 +69,10 @@ export const decksService = {
 
   async incrementView(id: number) {
     return authedFetch("POST", `/deck/${id}/view`);
+  },
+
+  async analyzeDeck(id: number): Promise<DeckAnalysis> {
+    return authedFetch("POST", `/deck/${id}/analyze`);
   },
 
   useUserDecksPaginated(page: number, filters: any) {

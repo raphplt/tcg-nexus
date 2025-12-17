@@ -69,7 +69,6 @@ const statusConfig: Record<
 
 export function TabMatches({
   matches,
-  formatDate,
   tournamentId,
 }: TabMatchesProps) {
   const { user } = useAuth();

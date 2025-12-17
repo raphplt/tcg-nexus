@@ -13,7 +13,7 @@ const RandomPokemon = () => {
     fetch(url + "/pokemon-card/random")
       .then((response) => response.json())
       .then((data) => setPokemon(data));
-  }, [url]);
+  }, []);
 
   return (
     <div className="flex justify-center items-center py-10">

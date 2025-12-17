@@ -9,6 +9,7 @@ export interface FilterState {
   search: string;
   setId?: string;
   serieId?: string;
+  energyType?: string;
   rarity?: string;
   currency?: string;
   cardState?: string;
@@ -24,19 +25,25 @@ export interface FilterState {
  */
 export function useMarketplaceHome() {
   // Récupère les cartes populaires
-  const { data: popularCards, isLoading: loadingPopular } = useQuery<PopularCard[]>({
+  const { data: popularCards, isLoading: loadingPopular } = useQuery<
+    PopularCard[]
+  >({
     queryKey: ["marketplace", "popular"],
     queryFn: () => marketplaceService.getPopularCards(8),
   });
 
   // Récupère les cartes en tendance
-  const { data: trendingCards, isLoading: loadingTrending } = useQuery<TrendingCard[]>({
+  const { data: trendingCards, isLoading: loadingTrending } = useQuery<
+    TrendingCard[]
+  >({
     queryKey: ["marketplace", "trending"],
     queryFn: () => marketplaceService.getTrendingCards(8, true),
   });
 
   // Récupère les meilleurs vendeurs
-  const { data: bestSellers, isLoading: loadingSellers } = useQuery<BestSeller[]>({
+  const { data: bestSellers, isLoading: loadingSellers } = useQuery<
+    BestSeller[]
+  >({
     queryKey: ["marketplace", "best-sellers"],
     queryFn: () => marketplaceService.getBestSellers(6),
   });
@@ -62,7 +69,11 @@ export function useMarketplaceHome() {
 /**
  * Hook pour récupérer les données de la page de catalogue de cartes du marketplace
  */
-export function useMarketplaceCards(filters: FilterState, page: number, limit: number = 24) {
+export function useMarketplaceCards(
+  filters: FilterState,
+  page: number,
+  limit: number = 24,
+) {
   // Récupère les sets pour les filtres
   const { data: sets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets"],
@@ -83,6 +94,7 @@ export function useMarketplaceCards(filters: FilterState, page: number, limit: n
       filters.search,
       filters.setId,
       filters.serieId,
+      filters.energyType,
       filters.rarity,
       filters.currency,
       filters.cardState,
@@ -109,4 +121,3 @@ export function useMarketplaceCards(filters: FilterState, page: number, limit: n
     error,
   };
 }
-

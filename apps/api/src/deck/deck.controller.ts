@@ -16,8 +16,9 @@ import { ShareDeckDto } from './dto/share-deck.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
+import { AnalyzeDeckResultDto } from './dto/analyze-deck-result.dto';
 
 @ApiTags('decks')
 @Controller('deck')
@@ -49,6 +50,14 @@ export class DeckController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.deckService.findOneWithCards(+id);
+  }
+
+  @Public()
+  @Post(':id/analyze')
+  @ApiOperation({ summary: 'Analyser un deck et fournir des recommandations' })
+  @ApiOkResponse({ type: AnalyzeDeckResultDto })
+  analyze(@Param('id') id: string): Promise<AnalyzeDeckResultDto> {
+    return this.deckService.analyzeDeck(+id);
   }
 
   @UseGuards(JwtAuthGuard)

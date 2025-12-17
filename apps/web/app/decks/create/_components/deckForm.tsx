@@ -61,6 +61,7 @@ import { FormSchema } from "./utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
 import MarketplacePagination from "@/app/marketplace/_components/MarketplacePagination";
+import { DeckCard } from "@/types/deck-cards";
 
 type DeckFormValues = z.input<typeof FormSchema>;
 
@@ -72,7 +73,7 @@ type AddedCard = {
   card?: PokemonCardType;
 };
 
-export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
+export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -99,6 +100,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     series,
     isLoading: cardsLoading,
   } = useMarketplaceCards(filtersWithSearch, page, 12);
+
   const form = useForm<DeckFormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -108,6 +110,48 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
       cards: [],
     },
   });
+
+  const errors = form.formState.errors;
+
+  const syncFormCards = React.useCallback(
+    (cards: AddedCard[]) => {
+      form.setValue(
+        "cards",
+        cards.map((c) => ({
+          cardId: c.cardId ?? "",
+          qty: c.qty,
+          role: c.role,
+        })),
+      );
+    },
+    [form],
+  );
+
+  useEffect(() => {
+    if (deck) {
+      form.reset({
+        name: deck.name,
+        formatId: deck.format?.id || (formats.length > 0 ? formats[0]?.id : 0),
+        isPublic: deck.isPublic,
+        cards: [],
+      });
+
+      if (deck.cards) {
+        const mappedCards: AddedCard[] = deck.cards.map((c: DeckCard) => ({
+          id: c.id,
+          cardId: c.card?.id,
+          qty: c.qty,
+          role: c.role,
+          card: c.card,
+        }));
+        setCardsMap(mappedCards);
+        syncFormCards(mappedCards);
+      }
+    } else if (formats.length > 0 && form.getValues("formatId") === 0) {
+      form.setValue("formatId", formats[0]?.id || 0);
+    }
+  }, [deck, formats, form, syncFormCards]);
+
   const allCards = data?.data || [];
   const meta = data?.meta;
 
@@ -115,6 +159,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     (filters.search ? 1 : 0) +
     (filters.setId ? 1 : 0) +
     (filters.serieId ? 1 : 0) +
+    (filters.energyType ? 1 : 0) +
     (filters.rarity ? 1 : 0) +
     (filters.priceMin !== undefined ? 1 : 0) +
     (filters.priceMax !== undefined ? 1 : 0);
@@ -134,29 +179,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     setPage(1);
   }, [filtersWithSearch]);
 
-  const syncFormCards = (cards: AddedCard[]) => {
-    form.setValue(
-      "cards",
-      cards.map((c) => ({
-        cardId: c.cardId ?? "",
-        qty: c.qty,
-        role: c.role,
-      })),
-    );
-  };
-
-  const roleReplacer = (role: string) => {
-    let returnVal = "";
-    switch (role) {
-      case "main":
-        returnVal = "Principal";
-        break;
-      case "side":
-        returnVal = "Secondaire";
-        break;
-    }
-    return returnVal;
-  };
   const addCard = (card: PokemonCardType, qty: number, role: string) => {
     if (!card.id) return;
     const targetQty = Math.max(1, qty || 1);
@@ -216,57 +238,101 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     setLoading(true);
 
     try {
-      const sourceCards =
-        data.cards && data.cards.length > 0
-          ? data.cards
-          : cardsMap.map((cm) => ({
-              cardId: cm.cardId,
-              qty: cm.qty,
-              role: cm.role,
-            }));
+      if (deck) {
+        // Update logic
+        const currentCards = cardsMap;
+        const initialCards = deck.cards || [];
 
-      const cardsPayload = sourceCards
-        .filter((c) => !!c.cardId)
-        .map((c) => ({
-          cardId: String(c.cardId),
-          qty: c.qty,
-          role: c.role,
-        }));
-      if (cardsPayload.length !== sourceCards.length) {
-        console.warn(
-          "Some cards had missing cardId and were skipped in payload",
-        );
-      }
-      if ((!data.cards || data.cards.length === 0) && cardsMap.length > 0) {
-        console.warn(
-          "Form submitted with empty data.cards — falling back to local cardsMap",
-        );
-      }
-      const creationData = {
-        deckName: data.name,
-        formatId: data.formatId,
-        isPublic: !!data.isPublic,
-        cards: cardsPayload,
-      };
-      const response = await decksService.create(creationData);
-      if (response) {
-        toast.success("Deck créé avec succès !");
-        form.reset({
-          name: "",
-          formatId: 0,
-          isPublic: false,
-          cards: [],
-        });
-        router.push(`/decks/${(response as any).id}`);
+        // Cards to remove: IDs in initialCards not present in currentCards (by ID)
+        const cardsToRemove = initialCards
+          .filter(
+            (initial) => !currentCards.some((curr) => curr.id === initial.id),
+          )
+          .filter((c) => c.id !== undefined)
+          .map((c) => ({ id: c.id as number }));
+
+        // Cards to update: IDs present in both, check if changed
+        const cardsToUpdate = currentCards
+          .filter((c) => c.id !== undefined)
+          .map((c) => {
+            const initial = initialCards.find((init) => init.id === c.id);
+            if (initial && (initial.qty !== c.qty || initial.role !== c.role)) {
+              return {
+                id: c.id!,
+                qty: c.qty,
+                role: c.role,
+              } as unknown as DeckCard;
+            }
+            return null;
+          })
+          .filter((c) => c !== null) as DeckCard[];
+
+        // Cards to add: Items in currentCards without ID
+        const cardsToAdd = currentCards
+          .filter((c) => c.id === undefined)
+          .map((c) => ({
+            cardId: c.cardId!,
+            qty: c.qty,
+            role: c.role,
+          }));
+
+        const updatePayload = {
+          deckName: data.name,
+          formatId: String(data.formatId),
+          isPublic: !!data.isPublic,
+          cardsToAdd,
+          cardsToRemove,
+          cardsToUpdate,
+        };
+
+        const response = await decksService.update(deck.id, updatePayload);
+        if (response) {
+          toast.success("Deck modifié avec succès !");
+          router.push(`/decks/${deck.id}`);
+        }
+      } else {
+        // Create logic
+        const sourceCards =
+          data.cards && data.cards.length > 0
+            ? data.cards
+            : cardsMap.map((cm) => ({
+                cardId: cm.cardId,
+                qty: cm.qty,
+                role: cm.role,
+              }));
+
+        const cardsPayload = sourceCards
+          .filter((c) => !!c.cardId)
+          .map((c) => ({
+            cardId: String(c.cardId),
+            qty: c.qty,
+            role: c.role,
+          }));
+
+        const creationData = {
+          deckName: data.name,
+          formatId: data.formatId,
+          isPublic: !!data.isPublic,
+          cards: cardsPayload,
+        };
+        const response = await decksService.create(creationData);
+        if (response) {
+          toast.success("Deck créé avec succès !");
+          form.reset({
+            name: "",
+            formatId: 0,
+            isPublic: false,
+            cards: [],
+          });
+          router.push(`/decks/${(response as any).id}`);
+        }
       }
     } catch (err: any) {
-      console.error("Deck creation error:", err);
-      if (err?.response?.data) {
-        console.error("Backend response:", err.response.data);
-      }
-
+      console.error("Deck operation error:", err);
       const backendMessage = err?.response?.data?.message;
-      let toastMsg = "Erreur lors de la création du deck";
+      let toastMsg = deck
+        ? "Erreur lors de la modification du deck"
+        : "Erreur lors de la création du deck";
       if (backendMessage) {
         if (Array.isArray(backendMessage)) {
           toastMsg = backendMessage.join(". ");
@@ -278,6 +344,132 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  console.log("errors", errors);
+  // Helper components
+  const FilterSelect = ({
+    label,
+    placeholder,
+    value,
+    onChange,
+    options,
+  }: {
+    label: string;
+    placeholder: string;
+    value: string;
+    onChange: (val: string) => void;
+    options?: { value: string; label: string }[];
+  }) => (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Select
+        value={value}
+        onValueChange={onChange}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tout afficher</SelectItem>
+          {options?.map((opt) => (
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+            >
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const StatBlock = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string | number;
+  }) => (
+    <div className="rounded-lg border bg-card/60 p-3 text-center">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="text-xl font-semibold">{value}</p>
+    </div>
+  );
+
+  const PreviewGrid = ({
+    cards,
+    onQtyChange,
+    onRemove,
+    roleLabel,
+  }: {
+    cards: AddedCard[];
+    onQtyChange: (cardId: string, role: string, qty: number) => void;
+    onRemove: (cardId?: string, role?: string) => void;
+    roleLabel: string;
+  }) => {
+    if (cards.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground py-4">
+          Aucune carte {roleLabel === "main" ? "principale" : "side"}.
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+        {cards.map((c, index) => (
+          <div
+            key={`${c.cardId}-${c.role}-${index}`}
+            className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+          >
+            <div className="relative w-10 h-14 shrink-0 bg-muted rounded overflow-hidden">
+              {c.card?.image ? (
+                <Image
+                  src={`${c.card.image}/low.png`}
+                  alt={c.card.name || "Carte"}
+                  fill
+                  className="object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Layers className="w-4 h-4 text-muted-foreground/50" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate text-sm">
+                {c.card?.name || "Carte"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {c.card?.set?.name}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={1}
+                value={c.qty}
+                onChange={(e) =>
+                  onQtyChange(c.cardId!, c.role, parseInt(e.target.value) || 1)
+                }
+                className="w-16 h-8 text-sm"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={() => onRemove(c.cardId, c.role)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -292,11 +484,12 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
               <CardHeader className="space-y-1">
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" />
-                  Informations du deck
+                  {deck ? "Modifier le deck" : "Informations du deck"}
                 </CardTitle>
                 <CardDescription>
-                  Donnez une identité claire à votre liste avant de composer
-                  votre sélection de cartes.
+                  {deck
+                    ? "Modifiez les informations et la composition de votre deck."
+                    : "Donnez une identité claire à votre liste avant de composer votre sélection de cartes."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid md:grid-cols-2 gap-4">
@@ -537,6 +730,30 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
                     )}
                   />
 
+                  <FilterSelect
+                    label="Type d'énergie"
+                    placeholder="Tous les types"
+                    value={filters.energyType || "all"}
+                    onChange={(value) =>
+                      updateFilters({
+                        energyType: value === "all" ? undefined : value,
+                      })
+                    }
+                    options={[
+                      { value: "Grass", label: "Plante" },
+                      { value: "Fire", label: "Feu" },
+                      { value: "Water", label: "Eau" },
+                      { value: "Lightning", label: "Électrique" },
+                      { value: "Psychic", label: "Psy" },
+                      { value: "Fighting", label: "Combat" },
+                      { value: "Darkness", label: "Ténèbres" },
+                      { value: "Metal", label: "Métal" },
+                      { value: "Fairy", label: "Fée" },
+                      { value: "Dragon", label: "Dragon" },
+                      { value: "Colorless", label: "Incolore" },
+                    ]}
+                  />
+
                   <div className="space-y-1.5">
                     <Label>Rareté</Label>
                     <Input
@@ -753,7 +970,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
                       onQtyChange={updateCardQty}
                       onRemove={removeCard}
                       roleLabel="main"
-                      roleReplacer={roleReplacer}
                     />
                   </TabsContent>
                   <TabsContent value="side">
@@ -762,7 +978,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
                       onQtyChange={updateCardQty}
                       onRemove={removeCard}
                       roleLabel="side"
-                      roleReplacer={roleReplacer}
                     />
                   </TabsContent>
                 </Tabs>
@@ -782,7 +997,13 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
               type="submit"
               disabled={loading}
             >
-              {loading ? <Loader2 className="animate-spin" /> : "Créer le deck"}
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : deck ? (
+                "Modifier le deck"
+              ) : (
+                "Créer le deck"
+              )}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
@@ -790,141 +1011,4 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats }) => {
       </Form>
     </>
   );
-};
-
-type PreviewGridProps = {
-  cards: AddedCard[];
-  onQtyChange: (cardId: string, role: string, qty: number) => void;
-  onRemove: (cardId?: string, role?: string) => void;
-  roleLabel: string;
-  roleReplacer: (role: string) => string;
-};
-
-const PreviewGrid = ({
-  cards,
-  onQtyChange,
-  onRemove,
-  roleLabel,
-  roleReplacer,
-}: PreviewGridProps) => {
-  if (cards.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground border border-dashed rounded-lg p-4">
-        Aucune carte dans le {roleReplacer(roleLabel)} pour le moment.
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {cards.map((c) => (
-        <div
-          key={`${c.cardId}-${c.role}`}
-          className="flex gap-3 rounded-lg border p-2 bg-muted/40"
-        >
-          <div className="relative w-16 h-24 shrink-0 rounded overflow-hidden border bg-card">
-            {c.card?.image ? (
-              <Image
-                src={`${c.card.image}/low.png`}
-                alt={c.card.name || "Carte"}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <Layers className="w-5 h-5" />
-              </div>
-            )}
-            <Badge className="absolute top-1 left-1 text-[10px]">
-              {roleReplacer(c.role)}
-            </Badge>
-          </div>
-          <div className="flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-medium leading-tight">
-                  {c.card?.name || "Carte"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {c.card?.set?.name}
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => onRemove(c.cardId, c.role)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={1}
-                value={c.qty}
-                onChange={(e) =>
-                  onQtyChange(c.cardId || "", c.role, Number(e.target.value))
-                }
-                className="w-20 h-9"
-              />
-              <Badge variant="outline">x{c.qty}</Badge>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const StatBlock = ({ label, value }: { label: string; value: number }) => {
-  return (
-    <div className="rounded-lg border bg-card/70 p-3">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="text-2xl font-semibold">{value}</p>
-    </div>
-  );
-};
-
-type FilterSelectProps = {
-  label: string;
-  placeholder: string;
-  value: string;
-  onChange: (value: string) => void;
-  options?: { value: string; label: string }[];
-};
-
-const FilterSelect = ({
-  label,
-  placeholder,
-  value,
-  onChange,
-  options = [],
-}: FilterSelectProps) => {
-  return (
-    <div className="space-y-1.5">
-      <Label>{label}</Label>
-      <Select
-        value={value}
-        onValueChange={onChange}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tous</SelectItem>
-          {options.map((opt) => (
-            <SelectItem
-              key={opt.value}
-              value={opt.value}
-            >
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-};
+};;;;;

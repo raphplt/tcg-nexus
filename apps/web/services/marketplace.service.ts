@@ -17,6 +17,7 @@ export interface CardMarketplaceQueryParams extends PaginationParams {
   search?: string;
   setId?: string;
   serieId?: string;
+  energyType?: string;
   rarity?: string;
   currency?: string;
   cardState?: string;

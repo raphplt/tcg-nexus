@@ -46,6 +46,7 @@ jest.mock('@nestjs/swagger', () => {
     ApiTags: () => () => {},
     ApiBearerAuth: () => () => {},
     ApiOperation: () => () => {},
+    ApiOkResponse: () => () => {},
     ApiResponse: () => () => {},
     ApiBody: () => () => {},
     ApiParam: () => () => {},

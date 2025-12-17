@@ -10,6 +10,7 @@ describe('DeckController', () => {
     findAll: jest.fn(),
     findAllFromUser: jest.fn(),
     findOneWithCards: jest.fn(),
+    analyzeDeck: jest.fn(),
     updateDeck: jest.fn(),
     remove: jest.fn(),
     cloneDeck: jest.fn()

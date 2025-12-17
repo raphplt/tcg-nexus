@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,8 +121,6 @@ export function RankingsDisplay({
   tournament,
   isLoading,
 }: RankingsDisplayProps) {
-  const [selectedPlayer, setSelectedPlayer] = useState<Ranking | null>(null);
-
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -215,7 +213,7 @@ export function RankingsDisplay({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rankings.map((ranking, index) => {
+              {rankings.map((ranking) => {
                 const isTop3 = ranking.rank <= 3;
                 const rowClass = isTop3
                   ? "bg-gradient-to-r from-yellow-50 to-transparent"
@@ -291,7 +289,6 @@ export function RankingsDisplay({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSelectedPlayer(ranking)}
                           >
                             <Eye className="w-3 h-3 mr-1" />
                             Détails

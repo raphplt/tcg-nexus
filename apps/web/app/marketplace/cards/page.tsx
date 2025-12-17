@@ -130,10 +130,6 @@ export default function MarketplaceCardsPage() {
     router.push("/marketplace/cards");
   };
 
-  const handleSetFilters = (newFilters: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-  };
-
   const activeFiltersCount =
     (filters.search ? 1 : 0) +
     (filters.setId ? 1 : 0) +
@@ -165,7 +161,6 @@ export default function MarketplaceCardsPage() {
 
         <MarketplaceSearch
           filters={filters}
-          setFilters={handleSetFilters}
           activeFiltersCount={activeFiltersCount}
           showFilters={showFilters}
           setShowFilters={setShowFilters}
