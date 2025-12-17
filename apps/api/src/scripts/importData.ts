@@ -87,6 +87,10 @@ async function bootstrap() {
     await seedService.importPokemonSets();
     logSuccess('Sets Pokémon importés !');
 
+    logStep('Création de la FAQ...');
+    await seedService.seedFaq();
+    logSuccess('FAQ créée !');
+
     logStep('Import des articles...');
     await seedService.seedArticles();
     logSuccess('Articles importés !');
