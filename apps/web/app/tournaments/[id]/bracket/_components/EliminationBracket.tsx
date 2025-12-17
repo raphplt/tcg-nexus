@@ -190,9 +190,8 @@ export function EliminationBracket({
         {bracket.rounds.map((round, roundIndex) => (
           <div
             key={round.index}
-            className="bracket-round flex-shrink-0"
+            className="bracket-round shrink-0"
           >
-            {/* Header du round */}
             <div className="text-center mb-4">
               <h3 className="font-semibold text-lg">
                 {round.index === bracket.totalRounds
@@ -212,9 +211,8 @@ export function EliminationBracket({
               </Badge>
             </div>
 
-            {/* Matches du round */}
             <div className="space-y-6">
-              {round.matches.map((match, matchIndex) => (
+              {round.matches.map((match) => (
                 <div
                   key={`${round.index}-${match.position}`}
                   className="relative"
@@ -225,7 +223,6 @@ export function EliminationBracket({
                     interactive={interactive}
                   />
 
-                  {/* Connexions vers le match suivant */}
                   {roundIndex < bracket.rounds.length - 1 && (
                     <div className="absolute top-1/2 -right-4 w-8 h-px bg-gray-300 transform -translate-y-1/2">
                       <div className="absolute right-0 top-1/2 w-2 h-2 bg-gray-300 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>

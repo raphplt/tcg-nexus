@@ -1,6 +1,4 @@
 import { Deck } from "@/types/Decks";
-import { Card } from "@/components/ui/card";
-
 interface DeckStatsProps {
   deck: Deck;
 }

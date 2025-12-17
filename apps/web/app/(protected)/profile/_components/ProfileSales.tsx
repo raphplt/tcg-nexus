@@ -78,7 +78,7 @@ export const ProfileSales = () => {
       );
 
       toast.success(newQuantity > 0 ? "Vente réactivée" : "Vente désactivée");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la modification");
     }
   };
@@ -90,7 +90,7 @@ export const ProfileSales = () => {
       await marketplaceService.deleteListing(listing.id.toString());
       setListings((prev) => prev.filter((l) => l.id !== listing.id));
       toast.success("Vente supprimée");
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors de la suppression");
     }
   };

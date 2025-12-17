@@ -48,7 +48,6 @@ export const sortOptions = [
 
 export interface TabMatchesProps {
   matches: Match[];
-  formatDate: (date?: string | null) => string;
   tournamentId?: number;
 }
 

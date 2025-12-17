@@ -138,8 +138,8 @@ export const useCartItems = () =>
 export const useCartTotal = () =>
   useCartStore((state) => {
     if (!state.cart?.cartItems?.length) return 0;
-    const { convertPrice, currency } = useCurrencyStore.getState();
-    
+    const { convertPrice } = useCurrencyStore.getState();
+
     return state.cart.cartItems.reduce((total, item) => {
       const priceInSelectedCurrency = convertPrice(item.listing.price, item.listing.currency);
       return total + priceInSelectedCurrency * item.quantity;

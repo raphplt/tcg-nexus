@@ -38,7 +38,9 @@ const RatingChart: React.FC<RatingChartProps> = ({ cardName }) => {
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <Star className="w-5 h-5 text-yellow-500" />
-          <span className="font-semibold">Cote de la carte</span>
+          <span className="font-semibold">
+            Cote de la carte {cardName}
+          </span>
         </div>
 
         <div className="h-32">
