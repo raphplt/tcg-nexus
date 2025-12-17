@@ -15,6 +15,7 @@ import { TournamentPricing } from '../tournament/entities/tournament-pricing.ent
 import { TournamentOrganizer } from '../tournament/entities/tournament-organizer.entity';
 import { TournamentNotification } from '../tournament/entities/tournament-notification.entity';
 import { Article } from '../article/entities/article.entity';
+import { Faq } from '../faq/entities/faq.entity';
 import { Listing } from '../marketplace/entities/listing.entity';
 import { PriceHistory } from '../marketplace/entities/price-history.entity';
 import { CardEvent } from '../marketplace/entities/card-event.entity';
@@ -117,6 +118,10 @@ describe('SeedService', () => {
         },
         {
           provide: getRepositoryToken(Article),
+          useValue: createMockRepository()
+        },
+        {
+          provide: getRepositoryToken(Faq),
           useValue: createMockRepository()
         },
         {

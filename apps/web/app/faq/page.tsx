@@ -44,13 +44,11 @@ const FaqPage = () => {
   });
 
   const groupedFaqs = useMemo(() => {
-    const groups: Record<string, FaqItem[]> = {};
-    FAQ_CATEGORIES.forEach((cat) => (groups[cat] = []));
+    const groups = Object.fromEntries(
+      FAQ_CATEGORIES.map((cat) => [cat, [] as FaqItem[]]),
+    ) as Record<FaqCategory, FaqItem[]>;
 
-    (faqs || []).forEach((faq) => {
-      if (!groups[faq.category]) {
-        groups[faq.category] = [];
-      }
+    (faqs ?? []).forEach((faq) => {
       groups[faq.category].push(faq);
     });
 

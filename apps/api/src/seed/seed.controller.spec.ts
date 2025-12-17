@@ -8,6 +8,7 @@ describe('SeedController', () => {
     importPokemonSeries: jest.fn(),
     seedUsers: jest.fn(),
     seedTournaments: jest.fn(),
+    seedFaq: jest.fn(),
     importPokemon: jest.fn(),
     seedListings: jest.fn(),
     seedCardEvents: jest.fn(),
@@ -38,6 +39,7 @@ describe('SeedController', () => {
   it('should seed all', async () => {
     mockService.seedUsers.mockResolvedValue(1);
     mockService.seedTournaments.mockResolvedValue(2);
+    mockService.seedFaq.mockResolvedValue([]);
     mockService.importPokemon.mockResolvedValue(undefined);
     mockService.seedListings.mockResolvedValue(undefined);
     mockService.seedCardEvents.mockResolvedValue(undefined);
@@ -45,7 +47,8 @@ describe('SeedController', () => {
 
     await expect(controller.seedAll()).resolves.toEqual({
       users: 1,
-      tournaments: 2
+      tournaments: 2,
+      faqs: []
     });
   });
 
