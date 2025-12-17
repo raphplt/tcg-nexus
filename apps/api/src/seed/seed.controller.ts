@@ -18,11 +18,12 @@ export class SeedController {
   async seedAll() {
     const users = await this.seedService.seedUsers();
     const tournaments = await this.seedService.seedTournaments();
+    const faqs = await this.seedService.seedFaq();
     await this.seedService.importPokemon();
     await this.seedService.seedListings();
     await this.seedService.seedCardEvents();
     await this.seedService.seedCardPopularityMetrics();
-    return { users, tournaments };
+    return { users, tournaments, faqs };
   }
 
   @Post('complete-tournament')

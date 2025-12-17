@@ -31,6 +31,7 @@ import { Statistics } from 'src/statistics/entities/statistic.entity';
 import { SeedingService } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
+import { Faq } from 'src/faq/entities/faq.entity';
 
 @Module({
   imports: [
@@ -58,7 +59,8 @@ import { MatchService } from 'src/match/match.service';
       DeckCard,
       Collection,
       CardState,
-      Statistics
+      Statistics,
+      Faq
     ])
   ],
   controllers: [SeedController],

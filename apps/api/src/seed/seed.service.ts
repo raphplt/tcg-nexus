@@ -44,6 +44,7 @@ import {
 } from 'src/tournament/entities/tournament-notification.entity';
 import * as bcrypt from 'bcryptjs';
 import { Article } from 'src/article/entities/article.entity';
+import { Faq, FaqCategory } from 'src/faq/entities/faq.entity';
 import { Listing } from 'src/marketplace/entities/listing.entity';
 import { PriceHistory } from 'src/marketplace/entities/price-history.entity';
 import {
@@ -101,6 +102,8 @@ export class SeedService {
     private readonly tournamentNotificationRepository: Repository<TournamentNotification>,
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
+    @InjectRepository(Faq)
+    private readonly faqRepository: Repository<Faq>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(PriceHistory)
@@ -940,6 +943,116 @@ export class SeedService {
   }
 
   /**
+   * Seed FAQ entries with realistic data
+   */
+  async seedFaq() {
+    const faqs: Array<Partial<Faq>> = [
+      {
+        question: "Comment m'inscrire à un tournoi TCG Nexus ?",
+        answer:
+          "Depuis l'onglet Tournois, sélectionnez l'événement qui vous intéresse puis cliquez sur \"S'inscrire\". Vous pouvez confirmer votre participation en quelques clics et suivre votre statut d'inscription en temps réel.",
+        category: FaqCategory.TOURNAMENTS,
+        order: 1
+      },
+      {
+        question: 'Quelles sont les différences entre les formats de tournoi ?',
+        answer:
+          'Chaque tournoi précise s’il est en élimination directe, double élimination ou format suisse. Le format est indiqué sur la fiche du tournoi, avec les règles principales et le nombre de rondes prévues.',
+        category: FaqCategory.TOURNAMENTS,
+        order: 2
+      },
+      {
+        question: 'Comment suivre mes résultats et mon classement ?',
+        answer:
+          'Votre tableau de bord affiche vos matchs, votre classement en direct et vos statistiques par tournoi. Vous pouvez également consulter les rounds à venir et recevoir des notifications de mise à jour.',
+        category: FaqCategory.TOURNAMENTS,
+        order: 3
+      },
+      {
+        question: 'Comment ajouter des cartes à ma collection ?',
+        answer:
+          'Depuis la fiche d’une carte ou vos achats marketplace, utilisez le bouton “Ajouter à ma collection”. Vous pouvez aussi créer des collections privées ou publiques pour organiser vos cartes par thème.',
+        category: FaqCategory.COLLECTION,
+        order: 4
+      },
+      {
+        question: 'Puis-je importer une collection existante ?',
+        answer:
+          "Oui, vous pouvez importer un fichier CSV ou ajouter en masse des cartes via l'identifiant de la carte. Vérifiez que les colonnes respectent le modèle indiqué dans l'outil d'import pour éviter les erreurs.",
+        category: FaqCategory.COLLECTION,
+        order: 5
+      },
+      {
+        question: 'Comment est estimée la valeur de ma collection ?',
+        answer:
+          'Nous agrégeons les prix récents du marketplace et des historiques pour donner une estimation moyenne par carte. Les fluctuations sont mises à jour régulièrement pour refléter le marché actuel.',
+        category: FaqCategory.COLLECTION,
+        order: 6
+      },
+      {
+        question: 'Comment mettre une carte en vente sur le marketplace ?',
+        answer:
+          'Rendez-vous dans “Vendre une carte”, sélectionnez la carte, l’état, la quantité et le prix. Les frais applicables et la devise choisie sont affichés avant validation afin que vous gardiez la main sur le prix final.',
+        category: FaqCategory.MARKETPLACE,
+        order: 7
+      },
+      {
+        question: 'Quels moyens de paiement sont proposés ?',
+        answer:
+          'Les paiements sécurisés sont traités via Stripe. Les cartes bancaires les plus courantes sont acceptées et le paiement est capturé uniquement lorsque la commande est validée.',
+        category: FaqCategory.MARKETPLACE,
+        order: 8
+      },
+      {
+        question: "Que se passe-t-il si je ne reçois pas ma commande ?",
+        answer:
+          'Le service support peut suspendre la transaction le temps de l’enquête. Fournissez vos preuves d’expédition/réception ; un remboursement ou une re-livraison peut être proposé selon la situation.',
+        category: FaqCategory.MARKETPLACE,
+        order: 9
+      },
+      {
+        question: 'Comment créer ou tester un deck ?',
+        answer:
+          'Dans l’onglet Decks, cliquez sur “Créer un deck”, choisissez un format puis ajoutez vos cartes. Le builder vérifie les limitations principales du format et calcule vos statistiques en direct.',
+        category: FaqCategory.DECKS,
+        order: 10
+      },
+      {
+        question: 'Puis-je partager mon deck avec la communauté ?',
+        answer:
+          'Oui, vous pouvez publier un deck en mode public ou le partager via un lien direct. Les autres joueurs pourront l’ajouter à leurs favoris ou l’utiliser comme base pour leurs propres decks.',
+        category: FaqCategory.DECKS,
+        order: 11
+      },
+      {
+        question: 'Comment sécuriser mon compte ?',
+        answer:
+          'Activez l’authentification sécurisée, utilisez un mot de passe unique et surveillez vos sessions actives dans les paramètres du profil. En cas d’activité suspecte, changez immédiatement votre mot de passe.',
+        category: FaqCategory.ACCOUNT,
+        order: 12
+      },
+      {
+        question: 'Je n’arrive plus à me connecter, que faire ?',
+        answer:
+          'Utilisez le lien “Mot de passe oublié” pour réinitialiser votre accès. Si le problème persiste, contactez le support avec l’e-mail de votre compte et, si possible, une capture de l’erreur rencontrée.',
+        category: FaqCategory.ACCOUNT,
+        order: 13
+      }
+    ];
+
+    for (const faq of faqs) {
+      const exists = await this.faqRepository.findOne({
+        where: { question: faq.question }
+      });
+      if (!exists) {
+        await this.faqRepository.save(this.faqRepository.create(faq));
+      }
+    }
+
+    return this.faqRepository.find({ order: { order: 'ASC' } });
+  }
+
+  /**
    * Seed test listings
    * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
@@ -1523,6 +1636,7 @@ export class SeedService {
         tournament,
         player,
         article,
+        faq,
         pokemon_card,
         pokemon_set,
         pokemon_serie,
