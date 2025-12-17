@@ -289,7 +289,6 @@ export function RankingsDisplay({
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSelectedPlayer(ranking)}
                           >
                             <Eye className="w-3 h-3 mr-1" />
                             Détails
