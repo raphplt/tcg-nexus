@@ -33,19 +33,19 @@ export class PokemonSeriesService {
       .then((result) => result.entities);
   }
 
-  async findOne(id: number): Promise<PokemonSerie | null> {
+  async findOne(id: string): Promise<PokemonSerie | null> {
     return this.pokemonSeriesRepository.findOne({
-      where: { id: id.toString() },
+      where: { id },
       select: ['id', 'name', 'logo']
     });
   }
 
-  async update(id: number, updatePokemonSeryDto: UpdatePokemonSeryDto) {
+  async update(id: string, updatePokemonSeryDto: UpdatePokemonSeryDto) {
     await this.pokemonSeriesRepository.update(id, updatePokemonSeryDto);
     return this.findOne(id);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.pokemonSeriesRepository.delete(id);
     return { deleted: true };
   }

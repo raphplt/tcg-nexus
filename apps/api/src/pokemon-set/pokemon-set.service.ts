@@ -19,6 +19,7 @@ export class PokemonSetService {
 
   async findAll(): Promise<PokemonSet[]> {
     return this.pokemonSetRepository.find({
+      relations: ['serie'],
       order: {
         releaseDate: 'DESC'
       }
@@ -27,7 +28,8 @@ export class PokemonSetService {
 
   async findOne(id: string): Promise<PokemonSet> {
     const pokemonSet = await this.pokemonSetRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['serie']
     });
     if (!pokemonSet) {
       throw new Error(`PokemonSet with id ${id} not found`);
@@ -39,11 +41,12 @@ export class PokemonSetService {
     id: string,
     updatePokemonSetDto: UpdatePokemonSetDto
   ): Promise<PokemonSet> {
-    await this.pokemonSetRepository.update(id, updatePokemonSetDto);
-    return this.findOne(id);
+    const existing = await this.findOne(id);
+    this.pokemonSetRepository.merge(existing, updatePokemonSetDto);
+    return this.pokemonSetRepository.save(existing);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.pokemonSetRepository.delete(id);
   }
 }

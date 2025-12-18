@@ -44,6 +44,6 @@ export class PokemonSetController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.pokemonSetService.remove(+id);
+    return this.pokemonSetService.remove(id);
   }
 }
