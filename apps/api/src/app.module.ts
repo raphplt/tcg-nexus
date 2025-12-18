@@ -30,6 +30,7 @@ import { CardStateModule } from './card-state/card-state.module';
 import { AiModule } from './ai/ai.module';
 import { UserCartModule } from './user_cart/user_cart.module';
 import { FaqModule } from './faq/faq.module';
+import { SupportTicketModule } from './support-ticket/support-ticket.module';
 
 @Module({
   imports: [
@@ -80,7 +81,8 @@ import { FaqModule } from './faq/faq.module';
     CardStateModule,
     AiModule,
     UserCartModule,
-    FaqModule
+    FaqModule,
+    SupportTicketModule
   ],
   controllers: [AppController],
   providers: [

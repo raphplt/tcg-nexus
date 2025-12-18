@@ -15,6 +15,8 @@ import { UserRole } from 'src/common/enums/user';
 import { Currency } from 'src/common/enums/currency';
 import { UserCart } from 'src/user_cart/entities/user_cart.entity';
 import { TournamentOrganizer } from 'src/tournament/entities';
+import {SupportTicket} from "../../support-ticket/entities/support-ticket.entity";
+import {SupportMessage} from "../../support-message/entities/support-message.entity";
 
 @Entity()
 export class User {
@@ -79,6 +81,12 @@ export class User {
 
   @OneToMany(() => TournamentOrganizer, (organizer) => organizer.user)
   tournamentOrganizers: TournamentOrganizer[];
+
+  @OneToMany(() => SupportTicket, (supportTicket) => supportTicket.user)
+  supportTickets?: SupportTicket[];
+
+  @OneToMany(() => SupportMessage, (supportMessage) => supportMessage.user)
+  supportMessages?: SupportMessage[];
 
   // Dates
   @CreateDateColumn()
