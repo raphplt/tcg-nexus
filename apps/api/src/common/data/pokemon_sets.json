@@ -3896,65 +3896,14 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv09/logo",
+        "logo": "/images/icons/aventures-ensemble.webp",
         "name": "Aventures Ensemble",
         "releaseDate": "2025-03-28",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv09/symbol",
+        "symbol": "/images/icons/aventures-ensemble-icon.webp",
         "abbreviation": {
             "official": "JTG"
         },
         "serieId": "sv"
-    },
-    {
-        "cardCount": {
-            "firstEd": 0,
-            "holo": 0,
-            "normal": 0,
-            "official": 155,
-            "reverse": 0,
-            "total": 239
-        },
-        "id": "A3",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "Gardiens Astraux",
-        "releaseDate": "2025-04-30",
-        "boosters": [
-            {
-                "id": "boo_A3-solgaleo",
-                "name": "Solgaleo"
-            },
-            {
-                "id": "boo_A3-lunala",
-                "name": "Lunala"
-            }
-        ],
-        "serieId": "tcgp"
-    },
-    {
-        "cardCount": {
-            "firstEd": 0,
-            "holo": 0,
-            "normal": 0,
-            "official": 69,
-            "reverse": 0,
-            "total": 103
-        },
-        "id": "A3a",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "Crise Interdimensionnelle",
-        "releaseDate": "2025-05-29",
-        "boosters": [
-            {
-                "id": "boo_A3a-extradimensional"
-            }
-        ],
-        "serieId": "tcgp"
     },
     {
         "cardCount": {
@@ -3970,38 +3919,15 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv10/logo",
+        "logo": "/images/icons/rivalites-destinees.webp",
         "name": "Rivalités Destinées",
         "releaseDate": "2025-05-30",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv10/symbol",
+        "symbol": "/images/icons/rivalites-destinees-icon.webp",
         "abbreviation": {
             "official": "DRI",
             "localized": "RVD"
         },
         "serieId": "sv"
-    },
-    {
-        "cardCount": {
-            "firstEd": 0,
-            "holo": 0,
-            "normal": 0,
-            "official": 69,
-            "reverse": 0,
-            "total": 107
-        },
-        "id": "A3b",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "La Clairière d'Évoli",
-        "releaseDate": "2025-06-26",
-        "boosters": [
-            {
-                "id": "boo_A3b-eevee"
-            }
-        ],
-        "serieId": "tcgp"
     },
     {
         "cardCount": {
@@ -4017,10 +3943,10 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5b/logo",
+        "logo": "/images/icons/foudre-noire.webp",
         "name": "Foudre Noire",
         "releaseDate": "2025-07-17",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5b/symbol",
+        "symbol": "/images/icons/foudre-noire-icon.webp",
         "abbreviation": {
             "official": "BLK"
         },
@@ -4040,67 +3966,16 @@
             "expanded": true,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5w/logo",
+        "logo": "/images/icons/flamme-blanche.webp",
         "name": "Flamme Blanche",
         "releaseDate": "2025-07-17",
-        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5w/symbol",
+        "symbol": "/images/icons/flamme-blanche-icon.webp",
         "abbreviation": {
             "official": "WHT"
         },
         "serieId": "sv"
     },
-    {
-        "cardCount": {
-            "firstEd": 0,
-            "holo": 0,
-            "normal": 0,
-            "official": 161,
-            "reverse": 0,
-            "total": 241
-        },
-        "id": "A4",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "Sagesse Entre Ciel et Mer",
-        "releaseDate": "2025-07-30",
-        "boosters": [
-            {
-                "id": "boo_A4-lugia",
-                "name": "Lugia"
-            },
-            {
-                "id": "boo_A4-ho-oh",
-                "name": "Ho-Oh"
-            }
-        ],
-        "serieId": "tcgp"
-    },
-    {
-        "cardCount": {
-            "firstEd": 0,
-            "holo": 0,
-            "normal": 0,
-            "official": 71,
-            "reverse": 0,
-            "total": 105
-        },
-        "id": "A4a",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "Source Secrète",
-        "releaseDate": "2025-08-28",
-        "symbol": "https://assets.tcgdex.net/univ/tcgp/A4a/symbol",
-        "boosters": [
-            {
-                "id": "boo_A4a-suicune"
-            }
-        ],
-        "serieId": "tcgp"
-    },
+  
     {
         "cardCount": {
             "firstEd": 0,
@@ -4115,10 +3990,10 @@
             "expanded": false,
             "standard": false
         },
-        "logo": "https://assets.tcgdex.net/fr/me/me01/logo",
+        "logo": "/images/icons/mega-evolution.webp",
         "name": "Méga-Évolution",
         "releaseDate": "2025-09-26",
-        "symbol": "https://assets.tcgdex.net/univ/me/me01/symbol",
+        "symbol": "/images/icons/mega-evolution-icon.webp",
         "abbreviation": {
             "official": "MEG"
         },
@@ -4160,6 +4035,8 @@
             "standard": false
         },
         "name": "Flammes Fantasmagoriques",
+        "logo": "/images/icons/flammes-fantasmagoriques.webp",
+        "symbol": "/images/icons/flammes-fantasmagoriques-icon.webp",
         "releaseDate": "2025-11-14",
         "abbreviation": {
             "official": "PFL"
