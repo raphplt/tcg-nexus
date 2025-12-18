@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import * as z from "zod";
 import usePlacesAutocomplete from "use-places-autocomplete";
 
 import {
@@ -61,39 +60,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CreateTournamentDto } from "@/types/tournament";
 import { UserRole } from "@/types/auth";
 import { cn } from "@/lib/utils";
-
-const formSchema = z
-  .object({
-    name: z.string().min(3, "Le nom est requis"),
-    description: z.string().optional(),
-    location: z.string().optional(),
-    startDate: z.string().min(1, "Date de début requise"),
-    endDate: z.string().min(1, "Date de fin requise"),
-    registrationDeadline: z.string().optional(),
-    format: z.nativeEnum(TournamentFormat),
-    type: z.nativeEnum(TournamentType),
-    status: z.nativeEnum(TournamentStatus).optional(),
-    isFinished: z.boolean().optional(),
-    isPublic: z.boolean().optional(),
-    allowLateRegistration: z.boolean().optional(),
-    requiresApproval: z.boolean().optional(),
-    maxPlayers: z.number().int().positive().optional(),
-    minPlayers: z.number().int().positive().optional(),
-    currentRound: z.number().int().min(0).optional(),
-    totalRounds: z.number().int().min(0).optional(),
-    rules: z.string().optional(),
-    additionalInfo: z.string().optional(),
-    ageRestrictionMin: z.number().min(0).optional(),
-    ageRestrictionMax: z.number().min(0).optional(),
-    allowedFormats: z.array(z.string()).optional(),
-    fillWithPlayers: z.boolean().optional(),
-  })
-  .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
-    message: "La date de fin doit être postérieure à la date de début",
-    path: ["endDate"],
-  });
-
-type FormValues = z.infer<typeof formSchema>;
+import { formSchema, FormValues } from "../utils";
 
 export default function CreateTournamentPage() {
   const { user } = useAuth();
@@ -101,6 +68,7 @@ export default function CreateTournamentPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     ready: placesReady,
@@ -149,23 +117,20 @@ export default function CreateTournamentPage() {
   const onSubmit = async (values: FormValues) => {
     setError(null);
     setSuccess(null);
+    setIsLoading(true);
 
     try {
-      // Si l'admin veut remplir avec des joueurs, on s'assure que les conditions sont remplies
       const shouldFillWithPlayers = isAdmin && values.fillWithPlayers;
 
-      // Calculer une date limite d'inscription si non fournie et option admin activée
       let registrationDeadline = values.registrationDeadline
         ? new Date(values.registrationDeadline)
         : undefined;
 
       if (shouldFillWithPlayers && !registrationDeadline) {
-        // Définir une date limite dans le futur (1 jour avant le début)
         const startDate = new Date(values.startDate);
         registrationDeadline = new Date(
           startDate.getTime() - 24 * 60 * 60 * 1000,
         );
-        // Si cette date est déjà passée, mettre dans 1 semaine
         if (registrationDeadline <= new Date()) {
           registrationDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         }
@@ -197,14 +162,11 @@ export default function CreateTournamentPage() {
 
       const tournament = await tournamentService.create(payload);
 
-      // Si l'admin veut remplir le tournoi avec 8 joueurs
       if (shouldFillWithPlayers) {
-        // D'abord ouvrir les inscriptions
         await tournamentService.updateStatus(
           tournament.id,
           "registration_open",
         );
-        // Puis remplir avec 8 joueurs
         await tournamentService.fillWithPlayers(tournament.id, 8);
       }
 
@@ -220,7 +182,10 @@ export default function CreateTournamentPage() {
     }
   };
 
-  if (!user?.isPro) {
+  if (
+    !user?.isPro ||
+    (user.role !== UserRole.ADMIN && user.role !== UserRole.MODERATOR)
+  ) {
     return (
       <div className="max-w-xl mx-auto mt-20">
         <Alert variant="destructive">
@@ -329,7 +294,7 @@ export default function CreateTournamentPage() {
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0">
+                      <PopoverContent className="w-100 p-0">
                         <Command>
                           <CommandInput
                             placeholder="Rechercher une adresse..."
@@ -571,8 +536,9 @@ export default function CreateTournamentPage() {
             <Button
               type="submit"
               className="w-full"
+              disabled={isLoading}
             >
-              Créer le tournoi
+              {isLoading ? "Création en cours..." : "Créer le tournoi"}
             </Button>
           </form>
         </Form>

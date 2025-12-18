@@ -4002,27 +4002,6 @@
     {
         "cardCount": {
             "firstEd": 0,
-            "holo": 16,
-            "normal": 0,
-            "official": 0,
-            "reverse": 0,
-            "total": 10
-        },
-        "id": "mep",
-        "legal": {
-            "expanded": false,
-            "standard": false
-        },
-        "name": "MEP Black Star Promos",
-        "releaseDate": "2025-09-26",
-        "abbreviation": {
-            "official": "MEP"
-        },
-        "serieId": "me"
-    },
-    {
-        "cardCount": {
-            "firstEd": 0,
             "holo": 0,
             "normal": 0,
             "official": 94,

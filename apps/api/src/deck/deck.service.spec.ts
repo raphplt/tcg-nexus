@@ -105,7 +105,9 @@ describe('DeckService', () => {
         c1: { id: 'c1', name: 'First' },
         c2: { id: 'c2', name: 'Second' }
       };
-      pokemonCardRepo.findOneBy.mockImplementation(async ({ id }) => cardMap[id]);
+      pokemonCardRepo.findOneBy.mockImplementation(
+        async ({ id }) => cardMap[id]
+      );
       const createdDeck = { id: 1, name: 'Deck' };
       deckRepo.create.mockReturnValue(createdDeck);
       const expectedDeck = { ...createdDeck, cards: [] };
@@ -142,10 +144,13 @@ describe('DeckService', () => {
     it('throws when format is missing', async () => {
       deckFormatRepo.findOneBy.mockResolvedValue(null);
       await expect(
-        service.createDeck({} as any, {
-          formatId: 'missing',
-          cards: []
-        } as any)
+        service.createDeck(
+          {} as any,
+          {
+            formatId: 'missing',
+            cards: []
+          } as any
+        )
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -154,10 +159,13 @@ describe('DeckService', () => {
       pokemonCardRepo.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.createDeck({} as any, {
-          formatId: 'fmt',
-          cards: [{ cardId: 'missing', qty: 1, role: DeckCardRole.main }]
-        } as any)
+        service.createDeck(
+          {} as any,
+          {
+            formatId: 'fmt',
+            cards: [{ cardId: 'missing', qty: 1, role: DeckCardRole.main }]
+          } as any
+        )
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(deckCardRepo.save).not.toHaveBeenCalled();
     });
@@ -172,7 +180,7 @@ describe('DeckService', () => {
         .mockResolvedValue('paginated' as any);
 
       const result = await service.findAll({
-        formatId: 3,
+        formatId: '3',
         search: 'fire',
         sortBy: 'format.type',
         sortOrder: 'ASC',
@@ -308,16 +316,19 @@ describe('DeckService', () => {
 
       expect(result.totalCards).toBe(21);
       expect(result.energyCount).toBe(8);
-      expect(result.attackCostDistribution.find((d) => d.cost === 2)?.count).toBe(4);
+      expect(
+        result.attackCostDistribution.find((d) => d.cost === 2)?.count
+      ).toBe(4);
       expect(result.duplicates).toContainEqual(
         expect.objectContaining({ cardId: 'p3', qty: 5 })
       );
       expect(result.warnings.some((w) => w.includes('limite'))).toBeTruthy();
       expect(result.suggestions.length).toBeGreaterThan(0);
       expect(
-        result.missingCards.find((s) =>
-          s.label.toLowerCase().includes('énergie') ||
-          s.label.toLowerCase().includes('energie')
+        result.missingCards.find(
+          (s) =>
+            s.label.toLowerCase().includes('énergie') ||
+            s.label.toLowerCase().includes('energie')
         )
       ).toBeDefined();
     });
@@ -343,7 +354,9 @@ describe('DeckService', () => {
               name: 'Dragonite',
               category: PokemonCardsType.Pokemon,
               types: ['Dragon'],
-              attacks: [{ cost: ['Colorless', 'Colorless', 'Colorless', 'Colorless'] }]
+              attacks: [
+                { cost: ['Colorless', 'Colorless', 'Colorless', 'Colorless'] }
+              ]
             }
           },
           {
@@ -381,8 +394,12 @@ describe('DeckService', () => {
       const result = await service.analyzeDeck(2);
 
       expect(result.totalCards).toBe(85);
-      expect(result.warnings.find((w) => w.includes('trop grand'))).toBeDefined();
-      expect(result.suggestions.find((s) => s.includes('Deck multi-type'))).toBeDefined();
+      expect(
+        result.warnings.find((w) => w.includes('trop grand'))
+      ).toBeDefined();
+      expect(
+        result.suggestions.find((s) => s.includes('Deck multi-type'))
+      ).toBeDefined();
     });
   });
 
@@ -395,9 +412,9 @@ describe('DeckService', () => {
 
     it('throws when deck is missing', async () => {
       deckRepo.findOne.mockResolvedValue(null);
-      await expect(service.updateDeck(1, { id: 1 } as any, baseDto)).rejects.toBeInstanceOf(
-        NotFoundException
-      );
+      await expect(
+        service.updateDeck(1, { id: 1 } as any, baseDto)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('throws when format is missing', async () => {
@@ -405,11 +422,10 @@ describe('DeckService', () => {
       deckFormatRepo.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.updateDeck(
-          1,
-          { id: 1 } as any,
-          { ...baseDto, formatId: 'missing' }
-        )
+        service.updateDeck(1, { id: 1 } as any, {
+          ...baseDto,
+          formatId: 'missing'
+        })
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -419,15 +435,11 @@ describe('DeckService', () => {
       pokemonCardRepo.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.updateDeck(
-          1,
-          { id: 1 } as any,
-          {
-            ...baseDto,
-            formatId: 'fmt',
-            cardsToAdd: [{ cardId: 'missing', qty: 1, role: DeckCardRole.main }]
-          }
-        )
+        service.updateDeck(1, { id: 1 } as any, {
+          ...baseDto,
+          formatId: 'fmt',
+          cardsToAdd: [{ cardId: 'missing', qty: 1, role: DeckCardRole.main }]
+        })
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -438,27 +450,35 @@ describe('DeckService', () => {
       deckCardRepo.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.updateDeck(
-          1,
-          { id: 1 } as any,
-          {
-            ...baseDto,
-            formatId: 'fmt',
-            cardsToAdd: [{ cardId: 'c1', qty: 1, role: DeckCardRole.main }],
-            cardsToUpdate: [{ id: 99, qty: 3 }]
-          }
-        )
+        service.updateDeck(1, { id: 1 } as any, {
+          ...baseDto,
+          formatId: 'fmt',
+          cardsToAdd: [{ cardId: 'c1', qty: 1, role: DeckCardRole.main }],
+          cardsToUpdate: [{ id: 99, qty: 3 }]
+        })
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('updates fields and cards', async () => {
-      const deck = { id: 1, name: 'Old', isPublic: false, cards: [], user: { id: 1 } };
+      const deck = {
+        id: 1,
+        name: 'Old',
+        isPublic: false,
+        cards: [],
+        user: { id: 1 }
+      };
       deckRepo.findOne.mockResolvedValue(deck);
       deckFormatRepo.findOneBy.mockResolvedValue({ id: 'fmt2' });
       pokemonCardRepo.findOneBy.mockResolvedValue({ id: 'card-add' });
-      deckCardRepo.findOneBy.mockResolvedValue({ id: 5, qty: 1, role: DeckCardRole.main });
+      deckCardRepo.findOneBy.mockResolvedValue({
+        id: 5,
+        qty: 1,
+        role: DeckCardRole.main
+      });
       const updatedDeck = { ...deck, name: 'New', isPublic: true };
-      deckRepo.findOne.mockResolvedValueOnce(deck).mockResolvedValueOnce(updatedDeck);
+      deckRepo.findOne
+        .mockResolvedValueOnce(deck)
+        .mockResolvedValueOnce(updatedDeck);
 
       const result = await service.updateDeck(
         1,
@@ -481,15 +501,20 @@ describe('DeckService', () => {
     });
 
     it('keeps deck when no card changes are provided', async () => {
-      const deck = { id: 2, name: 'Name', isPublic: false, cards: [], user: { id: 1 } };
+      const deck = {
+        id: 2,
+        name: 'Name',
+        isPublic: false,
+        cards: [],
+        user: { id: 1 }
+      };
       deckRepo.findOne.mockResolvedValue(deck);
       deckRepo.findOne.mockResolvedValueOnce(deck).mockResolvedValueOnce(deck);
 
-      const result = await service.updateDeck(
-        2,
-        { id: 1 } as any,
-        { ...baseDto, deckName: 'Updated' } as any
-      );
+      const result = await service.updateDeck(2, { id: 1 } as any, {
+        ...baseDto,
+        deckName: 'Updated'
+      });
 
       expect(deck.name).toBe('Updated');
       expect(deckCardRepo.delete).not.toHaveBeenCalled();
@@ -517,9 +542,9 @@ describe('DeckService', () => {
   describe('cloneDeck', () => {
     it('throws when deck is not found', async () => {
       deckRepo.findOne.mockResolvedValue(null);
-      await expect(service.cloneDeck(1, { id: 1 } as any)).rejects.toBeInstanceOf(
-        NotFoundException
-      );
+      await expect(
+        service.cloneDeck(1, { id: 1 } as any)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('throws when user is not allowed', async () => {
@@ -529,9 +554,9 @@ describe('DeckService', () => {
         cards: []
       });
 
-      await expect(service.cloneDeck(1, { id: 1, role: UserRole.USER } as any)).rejects.toBeInstanceOf(
-        ForbiddenException
-      );
+      await expect(
+        service.cloneDeck(1, { id: 1, role: UserRole.USER } as any)
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
     it('clones deck for authorized user', async () => {
@@ -549,7 +574,9 @@ describe('DeckService', () => {
       deckRepo.findOne.mockResolvedValue(deck);
       deckRepo.create.mockReturnValue({ id: 2, name: 'Base (copy)' });
       deckRepo.save.mockResolvedValue({ id: 2 });
-      deckRepo.findOne.mockResolvedValueOnce(deck).mockResolvedValueOnce({ ...deck, id: 2 });
+      deckRepo.findOne
+        .mockResolvedValueOnce(deck)
+        .mockResolvedValueOnce({ ...deck, id: 2 });
 
       const result = await service.cloneDeck(1, { id: 1 } as any);
 
@@ -572,9 +599,9 @@ describe('DeckService', () => {
   describe('shareDeck', () => {
     it('throws when deck is missing', async () => {
       deckRepo.findOne.mockResolvedValue(null);
-      await expect(service.shareDeck(1, { id: 1 } as any)).rejects.toBeInstanceOf(
-        NotFoundException
-      );
+      await expect(
+        service.shareDeck(1, { id: 1 } as any)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('generates a unique share code', async () => {
@@ -600,9 +627,9 @@ describe('DeckService', () => {
   describe('importDeck', () => {
     it('throws when code is invalid', async () => {
       deckShareRepo.findOne.mockResolvedValue(null);
-      await expect(service.importDeck('invalid', {} as any)).rejects.toBeInstanceOf(
-        NotFoundException
-      );
+      await expect(
+        service.importDeck('invalid', {} as any)
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('throws when code is expired', async () => {
@@ -674,13 +701,22 @@ describe('DeckService', () => {
   describe('utility helpers', () => {
     it('builds distributions and cost distributions', () => {
       const typeDist = (service as any).mapToDistribution(
-        new Map([['A', 2], ['B', 1]]),
+        new Map([
+          ['A', 2],
+          ['B', 1]
+        ]),
         3
       );
       expect(typeDist[0]).toEqual({ label: 'A', count: 2, percentage: 67 });
       expect(typeDist[1]).toEqual({ label: 'B', count: 1, percentage: 33 });
 
-      const costDist = (service as any).mapCostDistribution(new Map([[1, 1], [3, 2]]), 3);
+      const costDist = (service as any).mapCostDistribution(
+        new Map([
+          [1, 1],
+          [3, 2]
+        ]),
+        3
+      );
       expect(costDist[0]).toEqual({ cost: 1, count: 1, percentage: 33 });
       expect(costDist[1]).toEqual({ cost: 3, count: 2, percentage: 67 });
     });
@@ -688,8 +724,17 @@ describe('DeckService', () => {
     it('evaluates energy balance for low and high ratios', () => {
       const warnings: string[] = [];
       const suggestions: string[] = [];
-      (service as any).evaluateEnergyBalance(0, 20, 40, 4, warnings, suggestions);
-      expect(warnings.find((w) => w.includes("Pas assez d'énergies"))).toBeDefined();
+      (service as any).evaluateEnergyBalance(
+        0,
+        20,
+        40,
+        4,
+        warnings,
+        suggestions
+      );
+      expect(
+        warnings.find((w) => w.includes("Pas assez d'énergies"))
+      ).toBeDefined();
       expect(warnings.find((w) => w.includes('Aucune énergie'))).toBeDefined();
       expect(
         suggestions.find((s) => s.toLowerCase().includes('accélération'))
@@ -697,7 +742,14 @@ describe('DeckService', () => {
 
       const highWarnings: string[] = [];
       const highSuggestions: string[] = [];
-      (service as any).evaluateEnergyBalance(30, 10, 40, 1, highWarnings, highSuggestions);
+      (service as any).evaluateEnergyBalance(
+        30,
+        10,
+        40,
+        1,
+        highWarnings,
+        highSuggestions
+      );
       expect(highWarnings.find((w) => w.includes('Beaucoup d'))).toBeDefined();
       expect(highSuggestions.find((s) => s.includes('Réduisez'))).toBeDefined();
     });

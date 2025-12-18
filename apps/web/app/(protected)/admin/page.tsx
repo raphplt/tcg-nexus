@@ -25,14 +25,17 @@ export default function AdminPage() {
           </div>
           <h1 className="text-3xl font-bold">Console d'administration</h1>
           <p className="text-muted-foreground">
-            Gérez les utilisateurs, les ventes et les tournois depuis un même endroit.
+            Gérez les utilisateurs, les ventes et les tournois depuis un même
+            endroit.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Utilisateurs</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Utilisateurs
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -72,7 +75,7 @@ export default function AdminPage() {
           defaultValue="orders"
           className="space-y-4"
         >
-          <TabsList className="grid grid-cols-3 w-full md:w-[520px]">
+          <TabsList className="grid grid-cols-3 w-full md:w-130">
             <TabsTrigger value="orders">Ventes</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>
             <TabsTrigger value="tournaments">Tournois</TabsTrigger>
