@@ -139,7 +139,7 @@ const RandomCard = () => {
                 aria-label="Voir les détails"
                 asChild
               >
-                <Link href={`/pokemon/${card.id}`}>
+                <Link href={`/marketplace/cards/${card.id}`}>
                   <Info className="w-5 h-5" />
                 </Link>
               </Button>
