@@ -110,7 +110,7 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-12 w-64" />
           <Card>
@@ -133,7 +133,7 @@ export default function CartPage() {
   const cartItems = cart?.cartItems || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+    <div className="bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
