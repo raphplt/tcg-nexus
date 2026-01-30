@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { SeedService } from './seed.service';
 import { SeedController } from './seed.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -61,7 +62,8 @@ import { Faq } from 'src/faq/entities/faq.entity';
       CardState,
       Statistics,
       Faq
-    ])
+    ]),
+    ConfigModule
   ],
   controllers: [SeedController],
   providers: [SeedService, SeedingService, BracketService, MatchService]

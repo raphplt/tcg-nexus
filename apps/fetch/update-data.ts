@@ -2,23 +2,34 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import TCGdex from "@tcgdex/sdk";
-import AdmZip from "adm-zip";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const tcgdex = new TCGdex("fr");
 
-const DATA_DIR = path.resolve(__dirname, "../api/src/common/data");
+const DATA_DIR = path.resolve(__dirname, "../../data");
 const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
 const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
-const CARDS_ZIP = path.join(DATA_DIR, "pokemon.zip");
 
+// 12: const DATA_DIR = path.resolve(__dirname, "../../data");
+// 13: const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
+// 14: const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
+// ...
 async function updateData() {
 	console.log("Starting data update...");
 
-	// 1. Load local data
+	// Ensure data directory exists
+	if (!fs.existsSync(DATA_DIR)) {
+		fs.mkdirSync(DATA_DIR, { recursive: true });
+	}
+
+	// 1. Load local data (create empty files if not exist)
 	console.log("Loading local data...");
+	if (!fs.existsSync(SERIES_FILE)) fs.writeFileSync(SERIES_FILE, "[]");
+	if (!fs.existsSync(SETS_FILE)) fs.writeFileSync(SETS_FILE, "[]");
+
 	const localSeries = JSON.parse(fs.readFileSync(SERIES_FILE, "utf-8"));
 	const localSets = JSON.parse(fs.readFileSync(SETS_FILE, "utf-8"));
 	const localSeriesIds = new Set(localSeries.map((s: any) => s.id));
@@ -50,12 +61,10 @@ async function updateData() {
 		const isPocketName = s.name.toLowerCase().includes("pocket");
 
 		// Check if set belongs to a Pocket series
-		// s.serie might be an object with id, or just the id, or undefined
 		const serieId = s.serie?.id || s.serie;
 		const isPocketSerie = pocketSeriesIds.has(serieId);
 
-		// Also filter by specific Pocket set IDs if known and not caught by above
-		// "Puissance Génétique" (A1) seems to be the main one slipping through
+		// Also filter by specific Pocket set IDs
 		const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A"];
 		const isKnownPocketId = knownPocketSetIds.includes(s.id);
 
@@ -88,13 +97,6 @@ async function updateData() {
 	// 5. Fetch details for new sets and their cards
 	if (newSets.length > 0) {
 		console.log("Fetching details for new sets...");
-		const zip = new AdmZip(CARDS_ZIP);
-
-		// Helper function to add card to zip
-		const addCardToZip = (card: any) => {
-			const content = JSON.stringify(card, null, 4);
-			zip.addFile(`${card.id}.json`, Buffer.from(content, "utf8"));
-		};
 
 		for (const set of newSets) {
 			console.log(`Processing set: ${set.name} (${set.id})...`);
@@ -102,33 +104,37 @@ async function updateData() {
 
 			if (!setDetails) continue;
 
-			// Prepare set data for pokemon_sets.json (removing cards list to match existing structure if needed,
-			// but based on server.ts it seems we might want some details.
-			// Let's look at existing pokemon_sets.json structure again.
-			// It seems to contain cardCount, id, legal, name, releaseDate, etc.
-			// The fetch('sets', id) returns details including cards.
-			// We should probably strip 'cards' from the set object before saving to pokemon_sets.json
-			// to keep it lightweight, as cards are in the zip.
-
+			// Prepare set metadata
 			const { cards, serie, ...setMetadata } = setDetails;
-			// We need to ensure the structure matches. The existing file has 'serieId'.
-			// The SDK might return 'serie' object.
+			const serieId = serie.id || serie; // Handle if it's an object or ID
+			
 			const setToSave = {
 				...setMetadata,
-				serieId: serie.id || serie, // Handle if it's an object or ID
+				serieId: serieId, 
 			};
 
 			localSets.push(setToSave);
 
-			// Fetch cards for this set
+			// Fetch and Save cards for this set
 			if (cards) {
 				console.log(`  Fetching ${cards.length} cards for set ${set.name}...`);
+				
+				// Create directory structure: apps/data/[serieId]/[setId]
+                // We use serieId from the set details
+				const serieDir = path.join(DATA_DIR, String(serieId));
+				const setDir = path.join(serieDir, set.id);
+
+				if (!fs.existsSync(serieDir)) fs.mkdirSync(serieDir, { recursive: true });
+				if (!fs.existsSync(setDir)) fs.mkdirSync(setDir, { recursive: true });
+
 				for (const cardRef of cards) {
 					const cardDetails = await tcgdex.fetch("cards", cardRef.id);
 					if (cardDetails) {
-						addCardToZip(cardDetails);
+						// Save card to JSON file
+						const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
+						fs.writeFileSync(cardFilePath, JSON.stringify(cardDetails, null, 4));
 					}
-					// Add a small delay to avoid rate limiting if necessary
+					// Add a small delay to avoid rate limiting
 					await new Promise((r) => setTimeout(r, 100));
 				}
 			}
@@ -136,9 +142,6 @@ async function updateData() {
 
 		fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
 		console.log("Updated pokemon_sets.json");
-
-		zip.writeZip(CARDS_ZIP);
-		console.log("Updated pokemon.zip with new cards");
 	}
 
 	console.log("Update complete!");

@@ -2,10 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
-import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import pokemonSeriesData from 'src/common/data/pokemon_series.json';
-import pokemonSetsData from 'src/common/data/pokemon_sets.json';
-import AdmZip from 'adm-zip';
+import * as fs from 'fs';
 import * as path from 'path';
 import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -71,6 +68,9 @@ import { MatchService } from 'src/match/match.service';
 
 import { CardState } from 'src/common/enums/pokemonCardsType';
 import { UserRole } from 'src/common/enums/user';
+import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class SeedService {
   constructor(
@@ -124,7 +124,8 @@ export class SeedService {
     private readonly cardStateRepository: Repository<CardStateEntity>,
     private readonly seedingService: SeedingService,
     private readonly bracketService: BracketService,
-    private readonly matchService: MatchService
+    private readonly matchService: MatchService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -136,6 +137,22 @@ export class SeedService {
     // Convert special characters to their ASCII equivalents or remove them
     // eslint-disable-next-line no-control-regex
     return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+  }
+
+  /**
+   * Slugify a string for file paths/urls
+   * @param {string} str - The string to slugify
+   * @returns {string} - The slugified string
+   */
+  slugify(str: string): string {
+    return str
+      .toLowerCase()
+      .trim()
+      .normalize('NFD') // Decompose combined characters
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^a-z0-9\s-]/g, '') // Remove invalid chars
+      .replace(/[\s_-]+/g, '-') // Replace spaces/underscores with -
+      .replace(/^-+|-+$/g, ''); // Trim leading/trailing -
   }
 
   /**
@@ -194,10 +211,25 @@ export class SeedService {
    * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
    * @throws {Error} If a Serie is not found
    */
+  /**
+   * Seed the database with the Pokemon Series data
+   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
+   * @throws {Error} If a Serie is not found
+   */
   async importPokemonSeries() {
+    const dataPath = path.resolve(
+      __dirname,
+      '../../../../data/pokemon_series.json'
+    );
+    if (!fs.existsSync(dataPath)) {
+      console.warn(`Series file not found at ${dataPath}`);
+      return [];
+    }
+
+    const seriesData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     const series: PokemonSerie[] = [];
 
-    for (const serieData of pokemonSeriesData as DeepPartial<PokemonSerie>[]) {
+    for (const serieData of seriesData as DeepPartial<PokemonSerie>[]) {
       const existingSerie = await this.pokemonSerieRepository.findOne({
         where: { name: serieData.name }
       });
@@ -220,10 +252,24 @@ export class SeedService {
    * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
    * @throws {Error} If a Serie is not found
    */
+  /**
+   * Seed the database with the Pokemon Sets data
+   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
+   * @throws {Error} If a Serie is not found
+   */
   async importPokemonSets() {
+    const dataPath = path.resolve(
+      __dirname,
+      '../../../../data/pokemon_sets.json'
+    );
+    if (!fs.existsSync(dataPath)) {
+      console.warn(`Sets file not found at ${dataPath}`);
+      return [];
+    }
+    const setsData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     const sets: PokemonSet[] = [];
 
-    for (const setData of pokemonSetsData as DeepPartial<PokemonSet>[]) {
+    for (const setData of setsData as DeepPartial<PokemonSet>[]) {
       const existingSet = await this.pokemonSetRepository.findOne({
         where: { name: setData.name }
       });
@@ -255,6 +301,13 @@ export class SeedService {
         delete (setProps as any).serieId;
         delete (setProps as any).serie;
 
+        // Generate logo and symbol paths
+        const slug = this.slugify(setData.name as string);
+        const R2_BASE_URL = this.configService.get<string>('R2_PUBLIC_URL');
+
+        setProps.logo = `${R2_BASE_URL}/sets/${slug}/logo.webp`;
+        setProps.symbol = `${R2_BASE_URL}/sets/${slug}/symbol.png`;
+
         const newSet = this.pokemonSetRepository.create({
           ...(setProps as DeepPartial<PokemonSet>),
           serie
@@ -276,6 +329,12 @@ export class SeedService {
    * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
    * @throws {Error} If a Serie is not found
    */
+  /**
+   * Seed the database with the Pokemon Series and Sets data
+   *
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
+   * @throws {Error} If a Serie is not found
+   */
   async importPokemon(): Promise<{
     series: PokemonSerie[];
     sets: PokemonSet[];
@@ -284,100 +343,100 @@ export class SeedService {
     const series = await this.importPokemonSeries();
     const sets = await this.importPokemonSets();
 
-    const zipPath = path.resolve(__dirname, '../common/data/pokemon.zip');
-    let zip: AdmZip;
-    try {
-      zip = new AdmZip(zipPath);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to read zip file at ${zipPath}: ${error.message}`
+    const dataPath = path.resolve(__dirname, '../../../../data');
+    const cards: PokemonCard[] = [];
+
+    // Recursively find all JSON files in dataPath that are NOT the series/sets files
+    const getAllFiles = (dir: string, fileList: string[] = []) => {
+      const files = fs.readdirSync(dir);
+      files.forEach((file) => {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          getAllFiles(filePath, fileList);
+        } else {
+          if (
+            file.endsWith('.json') &&
+            !file.endsWith('pokemon_series.json') &&
+            !file.endsWith('pokemon_sets.json')
+          ) {
+            fileList.push(filePath);
+          }
+        }
+      });
+      return fileList;
+    };
+
+    const cardFiles = getAllFiles(dataPath);
+
+    console.log(`Found ${cardFiles.length} card files to process.`);
+
+    for (const filePath of cardFiles) {
+      try {
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const parsedContent = JSON.parse(fileContent);
+
+        const cardsData = Array.isArray(parsedContent)
+          ? parsedContent
+          : [parsedContent];
+
+        for (const cardData of cardsData) {
+          const setId = cardData.set?.id;
+          if (!setId) {
+            continue;
+          }
+          const set = await this.pokemonSetRepository.findOne({
+            where: { id: setId }
+          });
+          if (!set) {
+            continue;
+          }
+          delete cardData.set;
+          cardData.set = set;
+
+          cardData.tcgDexId = cardData.id;
+          delete cardData.id;
+
+          cardData.name = cardData.name
+            ? this.cleanString(cardData.name as string)
+            : '';
+          cardData.illustrator = cardData.illustrator
+            ? this.cleanString(cardData.illustrator as string)
+            : null;
+          cardData.description = cardData.description
+            ? this.cleanString(cardData.description as string)
+            : null;
+          cardData.evolveFrom = cardData.evolveFrom
+            ? this.cleanString(cardData.evolveFrom as string)
+            : null;
+          cardData.effect = cardData.effect
+            ? this.cleanString(cardData.effect as string)
+            : null;
+
+          if (cardData.variants && cardData.variants.wPromo !== undefined) {
+            const { ...validVariants } = cardData.variants;
+            cardData.variants = validVariants;
+          }
+          const card = this.pokemonCardRepository.create(
+            cardData as DeepPartial<PokemonCard>
+          );
+          cards.push(card);
+        }
+      } catch (jsonError) {
+        console.error(
+          `Failed to parse JSON content for ${filePath}:`,
+          jsonError
         );
-      } else {
-        throw new Error(`Failed to read zip file at ${zipPath}`);
       }
     }
 
-    const zipEntries = zip.getEntries();
-    const cards: PokemonCard[] = [];
-
-    if (zipEntries && zipEntries.length > 0) {
-      for (const entry of zipEntries) {
-        if (entry.isDirectory || !entry.name.endsWith('.json')) {
-          continue;
-        }
-
-        const entryContent = entry.getData().toString('utf8');
-
-        try {
-          const parsedContent = JSON.parse(entryContent);
-          // Handle both single card object and array of cards
-          const cardsData = Array.isArray(parsedContent)
-            ? parsedContent
-            : [parsedContent];
-
-          for (const cardData of cardsData) {
-            const setId = cardData.set?.id;
-            if (!setId) {
-              continue;
-            }
-            const set = await this.pokemonSetRepository.findOne({
-              where: { id: setId }
-            });
-            if (!set) {
-              // console.warn(
-              //   `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`
-              // );
-              continue;
-            }
-            delete cardData.set;
-            cardData.set = set;
-
-            cardData.tcgDexId = cardData.id;
-            delete cardData.id;
-
-            cardData.name = cardData.name
-              ? this.cleanString(cardData.name as string)
-              : '';
-            cardData.illustrator = cardData.illustrator
-              ? this.cleanString(cardData.illustrator as string)
-              : null;
-            cardData.description = cardData.description
-              ? this.cleanString(cardData.description as string)
-              : null;
-            cardData.evolveFrom = cardData.evolveFrom
-              ? this.cleanString(cardData.evolveFrom as string)
-              : null;
-            cardData.effect = cardData.effect
-              ? this.cleanString(cardData.effect as string)
-              : null;
-
-            if (cardData.variants && cardData.variants.wPromo !== undefined) {
-              const { ...validVariants } = cardData.variants;
-              cardData.variants = validVariants;
-            }
-            const card = this.pokemonCardRepository.create(
-              cardData as DeepPartial<PokemonCard>
-            );
-            cards.push(card);
-          }
-        } catch (jsonError) {
-          console.error(
-            `Failed to parse JSON content for ${entry.name}:`,
-            jsonError
-          );
-        }
+    if (cards.length > 0) {
+      console.log(`Saving ${cards.length} cards...`);
+      const batchSize = 500;
+      for (let i = 0; i < cards.length; i += batchSize) {
+        const batch = cards.slice(i, i + batchSize);
+        await this.pokemonCardRepository.save(batch);
+        console.log(`Saved batch ${i / batchSize + 1}`);
       }
-
-      if (cards.length > 0) {
-        const batchSize = 500;
-        for (let i = 0; i < cards.length; i += batchSize) {
-          const batch = cards.slice(i, i + batchSize);
-          await this.pokemonCardRepository.save(batch);
-        }
-      }
-    } else {
-      console.log('No entries found in the zip file.');
     }
 
     return { series, sets, cards };
@@ -1004,7 +1063,7 @@ export class SeedService {
         order: 8
       },
       {
-        question: "Que se passe-t-il si je ne reçois pas ma commande ?",
+        question: 'Que se passe-t-il si je ne reçois pas ma commande ?',
         answer:
           'Le service support peut suspendre la transaction le temps de l’enquête. Fournissez vos preuves d’expédition/réception ; un remboursement ou une re-livraison peut être proposé selon la situation.',
         category: FaqCategory.MARKETPLACE,
