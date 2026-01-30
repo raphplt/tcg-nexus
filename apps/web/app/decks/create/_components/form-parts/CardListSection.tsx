@@ -14,6 +14,7 @@ import { Separator } from "@components/ui/separator";
 import { AlertCircle, Plus } from "lucide-react";
 import MarketplacePagination from "@/app/marketplace/_components/MarketplacePagination";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { getCardImage } from "@/utils/images";
 
 interface CardListSectionProps {
   cardsLoading: boolean;
@@ -67,11 +68,7 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
                 >
                   <div className="relative aspect-3/4 bg-muted/40">
                     <Image
-                      src={
-                        card.image
-                          ? `${card.image}/low.png`
-                          : "/images/carte-pokemon-dos.jpg"
-                      }
+                      src={getCardImage(card, "low")}
                       alt={card.name || "Carte"}
                       fill
                       className="object-cover"

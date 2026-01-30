@@ -11,6 +11,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
@@ -37,30 +38,22 @@ export function DeckHeader({
     <>
       <div className="relative">
         <div className=" w-full bg-linear-to-r from-primary/20 via-background to-secondary/20" />
-        {coverCard?.image && (
-          <Image
-            src={`${coverCard.image}/low.png`}
-            alt={coverCard.name || "Cover"}
-            fill
-            className="object-cover opacity-20 blur-sm"
-          />
-        )}
+        <Image
+          src={getCardImage(coverCard, "low")}
+          alt={coverCard?.name || "Cover"}
+          fill
+          className="object-cover opacity-20 blur-sm"
+        />
         <div className="absolute inset-0 bg-linear-to-r from-background/90 via-background/85 to-background/90" />
         <div className="relative px-6 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-border bg-card shadow-lg">
-              {coverCard?.image ? (
-                <Image
-                  src={`${coverCard.image}/high.png`}
-                  alt={coverCard.name || "Carte"}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  <Layers className="w-8 h-8" />
-                </div>
-              )}
+              <Image
+                src={getCardImage(coverCard)}
+                alt={coverCard?.name || "Carte"}
+                fill
+                className="object-cover"
+              />
             </div>
             <div className="space-y-2">
               <H1 className="leading-tight">{deck.name}</H1>

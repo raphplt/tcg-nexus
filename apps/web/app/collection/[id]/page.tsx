@@ -44,6 +44,7 @@ import {
 import { PokemonCardType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/types/pagination";
+import { getCardImage } from "@/utils/images";
 
 const CollectionDetailPage = () => {
   const { id } = useParams();
@@ -357,11 +358,7 @@ const CollectionDetailPage = () => {
                           <TableCell>
                             <div className="w-20 h-28 relative">
                               <Image
-                                src={
-                                  pokemon.image
-                                    ? pokemon.image + "/high.png"
-                                    : "/images/carte-pokemon-dos.jpg"
-                                }
+                                src={getCardImage(pokemon)}
                                 alt={pokemon.name || "Carte Pokémon"}
                                 fill
                                 className="object-contain rounded-lg border bg-white"

@@ -20,6 +20,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 
 const CartDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,18 +81,12 @@ const CartDropdown = () => {
                   onSelect={(e) => e.preventDefault()}
                 >
                   <div className="relative w-12 h-16 shrink-0">
-                    {item.listing.pokemonCard.image ? (
                       <Image
-                        src={item.listing.pokemonCard.image + "/high.png"}
+                        src={getCardImage(item.listing.pokemonCard)}
                         alt={item.listing.pokemonCard.name || "Carte"}
                         fill
                         className="object-contain rounded"
                       />
-                    ) : (
-                      <div className="w-full h-full bg-muted rounded flex items-center justify-center text-xs">
-                        No Image
-                      </div>
-                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">

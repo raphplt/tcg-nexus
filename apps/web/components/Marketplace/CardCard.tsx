@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCurrencyStore } from "@/store/currency.store";
 import { TrendingUp, TrendingDown, Minus, Star, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getCardImage } from "@/utils/images";
 import { PokemonCardType } from "@/types/cardPokemon";
 
 interface CardCardProps {
@@ -47,13 +48,10 @@ export function CardCard({
       >
         <CardHeader className="pb-3">
           <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg mb-3">
+
             <Image
-              src={
-                card.image
-                  ? card.image + "/high.png"
-                  : "/images/carte-pokemon-dos.jpg"
-              }
-              alt={""}
+              src={getCardImage(card)}
+              alt={card.name || "Pokemon Card"}
               fill
               className="object-contain group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

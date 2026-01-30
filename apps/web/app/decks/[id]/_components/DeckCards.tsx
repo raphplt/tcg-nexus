@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
-import { Layers } from "lucide-react";
+
+import { getCardImage } from "@/utils/images";
 
 interface DeckCardsProps {
   deck: Deck;
@@ -33,18 +34,12 @@ const CardGrid = ({
           className="rounded-lg border bg-card hover:shadow-md transition-shadow overflow-hidden"
         >
           <div className="relative h-40 bg-muted/40">
-            {deckCard.card?.image ? (
-              <Image
-                src={`${deckCard.card.image}/low.png`}
-                alt={deckCard.card.name || "Carte"}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <Layers className="w-6 h-6" />
-              </div>
-            )}
+            <Image
+              src={getCardImage(deckCard.card, "low")}
+              alt={deckCard.card?.name || "Carte"}
+              fill
+              className="object-cover"
+            />
             <Badge className="absolute top-2 left-2">x{deckCard.qty}</Badge>
             <Badge
               variant="secondary"
@@ -88,18 +83,12 @@ function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
               className="flex items-center gap-3 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
             >
               <div className="relative w-12 h-16 shrink-0 bg-muted rounded overflow-hidden">
-                {deckCard.card?.image ? (
                   <Image
-                    src={deckCard.card.image + "/low.png"}
-                    alt={deckCard.card.name || "Carte"}
+                    src={getCardImage(deckCard.card, "low")}
+                    alt={deckCard.card?.name || "Carte"}
                     fill
                     className="object-contain"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Layers className="w-6 h-6 text-muted-foreground/50" />
-                  </div>
-                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">

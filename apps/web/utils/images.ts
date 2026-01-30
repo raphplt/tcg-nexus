@@ -43,7 +43,29 @@ export function getRarityImage(rarity: Rarity): string | undefined {
   return rarityToImage[rarity] || undefined;
 }
 
+import { PokemonCardType } from "../types/cardPokemon";
+
+export const R2_BASE_URL = "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
+
+export function getCardImage(
+  card: PokemonCardType | null | undefined,
+  quality: "high" | "low" = "high",
+): string {
+  if (!card || !card.image) {
+    return "/images/carte-pokemon-dos.jpg";
+  }
+
+  const suffix = quality === "low" ? "/low" : "/high";
+  return `${card.image}${suffix}.png`;
+}
+
 export const remotePatterns: RemotePattern[] = [
+  {
+    protocol: "https",
+    hostname: "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev",
+    port: "",
+    pathname: "/**",
+  },
   {
     protocol: "https",
     hostname: "assets.tcgdex.net",

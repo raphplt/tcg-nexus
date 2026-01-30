@@ -9,19 +9,75 @@ const __dirname = path.dirname(__filename);
 
 const tcgdex = new TCGdex("fr");
 
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import dotenv from "dotenv";
+
+dotenv.config();
+
 const DATA_DIR = path.resolve(__dirname, "../../data");
 const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
 const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
 
-// 12: const DATA_DIR = path.resolve(__dirname, "../../data");
-// 13: const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
-// 14: const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
-// ...
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
+
+if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_URL) {
+    console.error("Missing R2 credentials in .env file");
+    process.exit(1);
+}
+
+const s3Client = new S3Client({
+    region: "auto",
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+});
+
+async function uploadToR2(url: string, key: string): Promise<string | null> {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        await s3Client.send(
+            new PutObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: key,
+                Body: buffer,
+                ContentType: response.headers.get("content-type") || "image/png",
+            })
+        );
+        return `${R2_PUBLIC_URL}/${key}`;
+    } catch (error) {
+        console.error(`Failed to upload ${url} to R2:`, error);
+        return null;
+    }
+}
+
+function slugify(str: string): string {
+    return str
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 async function updateData() {
 	console.log("Starting data update...");
 
 	// Ensure data directory exists
+	console.log(`Using Data Directory: ${DATA_DIR}`);
 	if (!fs.existsSync(DATA_DIR)) {
+		console.log(`Creating directory: ${DATA_DIR}`);
 		fs.mkdirSync(DATA_DIR, { recursive: true });
 	}
 
@@ -86,7 +142,9 @@ async function updateData() {
 		for (const serie of newSeries) {
 			const details = await tcgdex.fetch("series", serie.id);
 			if (details) {
-				localSeries.push(details);
+                // Strip 'sets' to avoid bloating the file
+                const { sets, ...seriesData } = details;
+				localSeries.push(seriesData);
 				console.log(`Added series: ${serie.name}`);
 			}
 		}
@@ -107,13 +165,24 @@ async function updateData() {
 			// Prepare set metadata
 			const { cards, serie, ...setMetadata } = setDetails;
 			const serieId = serie.id || serie; // Handle if it's an object or ID
+
+            // Upload Set Images to R2
+            const slug = slugify(set.name);
+            if (setDetails.logo) {
+                const logoKey = `sets/${slug}/logo.webp`;
+                const logoUrl = await uploadToR2(setDetails.logo + ".webp", logoKey);
+                if (logoUrl) setMetadata.logo = logoUrl;
+            }
+            if (setDetails.symbol) {
+                const symbolKey = `sets/${slug}/symbol.png`;
+                const symbolUrl = await uploadToR2(setDetails.symbol + ".png", symbolKey);
+                if (symbolUrl) setMetadata.symbol = symbolUrl;
+            }
 			
 			const setToSave = {
 				...setMetadata,
 				serieId: serieId, 
 			};
-
-			localSets.push(setToSave);
 
 			// Fetch and Save cards for this set
 			if (cards) {
@@ -127,20 +196,40 @@ async function updateData() {
 				if (!fs.existsSync(serieDir)) fs.mkdirSync(serieDir, { recursive: true });
 				if (!fs.existsSync(setDir)) fs.mkdirSync(setDir, { recursive: true });
 
+				let currentCard = 0;
 				for (const cardRef of cards) {
-					const cardDetails = await tcgdex.fetch("cards", cardRef.id);
-					if (cardDetails) {
-						// Save card to JSON file
-						const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
-						fs.writeFileSync(cardFilePath, JSON.stringify(cardDetails, null, 4));
+					currentCard++;
+					try {
+						const cardDetails = await tcgdex.fetch("cards", cardRef.id);
+						if (cardDetails) {
+							// Save card to JSON file (no R2 upload for card images)
+							const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
+							fs.writeFileSync(cardFilePath, JSON.stringify(cardDetails, null, 4));
+						}
+					} catch (err) {
+						console.error(`\nError fetching card ${cardRef.id}:`, err);
 					}
+
+					// Progress bar
+					const total = cards.length;
+					const percentage = Math.round((currentCard / total) * 100);
+					const width = 40;
+					const filled = Math.round((width * currentCard) / total);
+					const empty = width - filled;
+					const bar = '█'.repeat(filled) + '░'.repeat(empty);
+					process.stdout.write(`\r  [${bar}] ${percentage}% (${currentCard}/${total})`);
+
 					// Add a small delay to avoid rate limiting
 					await new Promise((r) => setTimeout(r, 100));
 				}
+				process.stdout.write('\n'); // New line after progress bar completes
 			}
-		}
 
-		fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
+            // Save set to local list ONLY after successfully processing all cards
+            // This ensures that if the script crashes, we retry this set next time
+			localSets.push(setToSave);
+            fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
+		}
 		console.log("Updated pokemon_sets.json");
 	}
 

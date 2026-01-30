@@ -17,13 +17,17 @@ export class PokemonSetService {
     return this.pokemonSetRepository.save(pokemonSet);
   }
 
-  async findAll(): Promise<PokemonSet[]> {
-    return this.pokemonSetRepository.find({
-      relations: ['serie'],
-      order: {
-        releaseDate: 'DESC'
-      }
-    });
+  async findAll(limit?: number): Promise<PokemonSet[]> {
+    const query = this.pokemonSetRepository
+      .createQueryBuilder('set')
+      .leftJoinAndSelect('set.serie', 'serie')
+      .orderBy('set.releaseDate', 'DESC');
+
+    if (limit) {
+      query.take(limit);
+    }
+
+    return query.getMany();
   }
 
   async findOne(id: string): Promise<PokemonSet> {

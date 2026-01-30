@@ -19,6 +19,8 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatPrice } from "@/utils/price";
+import { getCardImage } from "@/utils/images";
+import Image from "next/image";
 
 export const ProfileSales = () => {
   const router = useRouter();
@@ -166,17 +168,13 @@ export const ProfileSales = () => {
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-4"
             >
               <div className="flex items-start gap-4">
-                {listing.pokemonCard?.image && (
-                  <img
-                    src={
-                      listing.pokemonCard.image
-                        ? listing.pokemonCard.image + "/low.png"
-                        : "/images/carte-pokemon-dos.jpg"
-                    }
-                    alt={listing.pokemonCard.name}
-                    className="w-16 h-24 object-contain rounded-sm bg-muted"
-                  />
-                )}
+                <Image
+                  src={getCardImage(listing.pokemonCard, "low")}
+                  alt={listing.pokemonCard?.name || "Carte"}
+                  width={64}
+                  height={96}
+                  className="object-contain rounded-sm bg-muted"
+                />
                 <div className="space-y-1">
                   <h3 className="font-semibold text-lg">
                     {listing.pokemonCard?.name}

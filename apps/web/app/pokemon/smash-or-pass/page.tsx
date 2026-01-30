@@ -44,6 +44,7 @@ import type {
   PokemonSetType,
 } from "@/types/cardPokemon";
 import { PokemonRarity } from "../../../types/enums/pokemonCardsType";
+import { getCardImage } from "@/utils/images";
 
 function usePokemonSeries() {
   return useQuery({
@@ -118,8 +119,7 @@ function PokemonCardView({
   isFetching: boolean;
 }) {
   const cardImage = useMemo(
-    () =>
-      card?.image ? `${card.image}/high.png` : "/images/carte-pokemon-dos.jpg",
+    () => getCardImage(card),
     [card],
   );
 

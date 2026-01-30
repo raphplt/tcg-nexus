@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useCurrencyStore } from "@/store/currency.store";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 import Link from "next/link";
 import {
   Accordion,
@@ -122,18 +123,12 @@ export default function OrderList({ orders }: OrderListProps) {
                         className="p-4 flex items-center gap-4"
                       >
                         <div className="relative w-16 h-24 flex-shrink-0">
-                          {item.listing.pokemonCard.image ? (
-                            <Image
-                              src={item.listing.pokemonCard.image + "/high.png"}
-                              alt={item.listing.pokemonCard.name || "Carte"}
-                              fill
-                              className="object-contain rounded"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-muted rounded flex items-center justify-center text-xs">
-                              No Image
-                            </div>
-                          )}
+                          <Image
+                            src={getCardImage(item.listing.pokemonCard)}
+                            alt={item.listing.pokemonCard.name || "Carte"}
+                            fill
+                            className="object-contain rounded"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <Link

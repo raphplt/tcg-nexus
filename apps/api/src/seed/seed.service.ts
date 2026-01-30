@@ -140,22 +140,6 @@ export class SeedService {
   }
 
   /**
-   * Slugify a string for file paths/urls
-   * @param {string} str - The string to slugify
-   * @returns {string} - The slugified string
-   */
-  slugify(str: string): string {
-    return str
-      .toLowerCase()
-      .trim()
-      .normalize('NFD') // Decompose combined characters
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-      .replace(/[^a-z0-9\s-]/g, '') // Remove invalid chars
-      .replace(/[\s_-]+/g, '-') // Replace spaces/underscores with -
-      .replace(/^-+|-+$/g, ''); // Trim leading/trailing -
-  }
-
-  /**
    * Create default collections for a user
    * @param {number} userId - The user ID
    */
@@ -219,7 +203,7 @@ export class SeedService {
   async importPokemonSeries() {
     const dataPath = path.resolve(
       __dirname,
-      '../../../../data/pokemon_series.json'
+      '../../../data/pokemon_series.json'
     );
     if (!fs.existsSync(dataPath)) {
       console.warn(`Series file not found at ${dataPath}`);
@@ -301,12 +285,8 @@ export class SeedService {
         delete (setProps as any).serieId;
         delete (setProps as any).serie;
 
-        // Generate logo and symbol paths
-        const slug = this.slugify(setData.name as string);
-        const R2_BASE_URL = this.configService.get<string>('R2_PUBLIC_URL');
-
-        setProps.logo = `${R2_BASE_URL}/sets/${slug}/logo.webp`;
-        setProps.symbol = `${R2_BASE_URL}/sets/${slug}/symbol.png`;
+        // Logo and symbol URLs are now provided by update-data.ts
+        // No need to construct them here
 
         const newSet = this.pokemonSetRepository.create({
           ...(setProps as DeepPartial<PokemonSet>),
@@ -338,13 +318,12 @@ export class SeedService {
   async importPokemon(): Promise<{
     series: PokemonSerie[];
     sets: PokemonSet[];
-    cards: PokemonCard[];
   }> {
     const series = await this.importPokemonSeries();
     const sets = await this.importPokemonSets();
 
     const dataPath = path.resolve(__dirname, '../../../../data');
-    const cards: PokemonCard[] = [];
+    // Removed the large 'cards' array to save memory
 
     // Recursively find all JSON files in dataPath that are NOT the series/sets files
     const getAllFiles = (dir: string, fileList: string[] = []) => {
@@ -369,6 +348,11 @@ export class SeedService {
     const cardFiles = getAllFiles(dataPath);
 
     console.log(`Found ${cardFiles.length} card files to process.`);
+
+    let processedFiles = 0;
+    const batchSize = 100; // Process cards in batches of 100
+    let cardBatch: PokemonCard[] = [];
+    let metricsSavedCards = 0;
 
     for (const filePath of cardFiles) {
       try {
@@ -419,7 +403,7 @@ export class SeedService {
           const card = this.pokemonCardRepository.create(
             cardData as DeepPartial<PokemonCard>
           );
-          cards.push(card);
+          cardBatch.push(card);
         }
       } catch (jsonError) {
         console.error(
@@ -427,19 +411,38 @@ export class SeedService {
           jsonError
         );
       }
-    }
 
-    if (cards.length > 0) {
-      console.log(`Saving ${cards.length} cards...`);
-      const batchSize = 500;
-      for (let i = 0; i < cards.length; i += batchSize) {
-        const batch = cards.slice(i, i + batchSize);
-        await this.pokemonCardRepository.save(batch);
-        console.log(`Saved batch ${i / batchSize + 1}`);
+      // Check if batch is full and save
+      if (cardBatch.length >= batchSize) {
+        await this.pokemonCardRepository.save(cardBatch);
+        metricsSavedCards += cardBatch.length;
+        cardBatch = []; // Clear memory
       }
+
+      // Update progress bar
+      processedFiles++;
+      const total = cardFiles.length;
+      const percentage = Math.round((processedFiles / total) * 100);
+      const width = 40;
+      const filled = Math.round((width * processedFiles) / total);
+      const empty = width - filled;
+      const bar = '█'.repeat(filled) + '░'.repeat(empty);
+      process.stdout.write(
+        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`
+      );
     }
 
-    return { series, sets, cards };
+    // Save remaining cards in batch
+    if (cardBatch.length > 0) {
+      await this.pokemonCardRepository.save(cardBatch);
+      metricsSavedCards += cardBatch.length;
+    }
+
+    process.stdout.write('\n'); // New line after progress bar
+    console.log(`Successfully saved a total of ${metricsSavedCards} cards.`);
+
+    // Return empty cards array as we don't want to load them all back into memory
+    return { series, sets };
   }
 
   /**

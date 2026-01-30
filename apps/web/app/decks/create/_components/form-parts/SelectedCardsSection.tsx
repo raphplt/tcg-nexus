@@ -9,8 +9,9 @@ import {
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
-import { Eye, Layers, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { AddedCard } from "../deckForm.schema";
+import { getCardImage } from "@/utils/images";
 
 interface SelectedCardsSectionProps {
   cards: AddedCard[];
@@ -46,18 +47,12 @@ const PreviewGrid = ({
           className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
         >
           <div className="relative w-10 h-14 shrink-0 bg-muted rounded overflow-hidden">
-            {c.card?.image ? (
               <Image
-                src={`${c.card.image}/low.png`}
-                alt={c.card.name || "Carte"}
+                src={getCardImage(c.card, "low")}
+                alt={c.card?.name || "Carte"}
                 fill
                 className="object-contain"
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Layers className="w-4 h-4 text-muted-foreground/50" />
-              </div>
-            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-medium truncate text-sm">

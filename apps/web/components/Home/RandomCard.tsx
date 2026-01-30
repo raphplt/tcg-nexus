@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { RefreshCw, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { FavoriteButton } from "./FavoritesButton";
+import { getCardImage } from "@/utils/images";
 
 const RandomCard = () => {
   const [isFlippingOut, setIsFlippingOut] = useState(false);
@@ -95,11 +96,7 @@ const RandomCard = () => {
                   </div>
                 )}
                 <Image
-                  src={
-                    card.image
-                      ? card.image + "/high.png"
-                      : "/images/carte-pokemon-dos.jpg"
-                  }
+                  src={getCardImage(card)}
                   alt={card.name || "Carte Pokémon"}
                   fill
                   className="object-contain rounded-lg"

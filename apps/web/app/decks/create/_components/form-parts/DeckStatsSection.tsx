@@ -11,6 +11,7 @@ import { Badge } from "@components/ui/badge";
 import { Separator } from "@components/ui/separator";
 import { Layers } from "lucide-react";
 import { AddedCard } from "../deckForm.schema";
+import { getCardImage } from "@/utils/images";
 
 const StatBlock = ({
   label,
@@ -75,18 +76,12 @@ export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
               key={`${c.cardId}-${index}`}
               className="relative w-16 h-24 rounded-lg overflow-hidden border border-border/60 shadow-sm bg-card"
             >
-              {c.card?.image ? (
-                <Image
-                  src={`${c.card.image}/low.png`}
-                  alt={c.card.name || "Carte"}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  <Layers className="w-5 h-5" />
-                </div>
-              )}
+              <Image
+                src={getCardImage(c.card, "low")}
+                alt={c.card?.name || "Carte"}
+                fill
+                className="object-cover"
+              />
               <Badge className="absolute bottom-1 right-1 text-[10px]">
                 x{c.qty}
               </Badge>
