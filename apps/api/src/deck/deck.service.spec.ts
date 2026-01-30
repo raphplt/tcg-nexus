@@ -189,7 +189,7 @@ describe('DeckService', () => {
       });
 
       expect(qb.andWhere).toHaveBeenCalledWith('format.id = :formatId', {
-        formatId: 3
+        formatId: '3'
       });
       expect(qb.andWhere).toHaveBeenCalledWith(
         'LOWER(deck.name) LIKE LOWER(:search)',

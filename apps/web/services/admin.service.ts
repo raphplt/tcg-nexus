@@ -263,7 +263,7 @@ export const adminService = {
       "GET",
       "/pokemon-card/paginated",
       {
-        params,
+        params: params as any,
       },
     );
   },

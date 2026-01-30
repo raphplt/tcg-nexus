@@ -73,7 +73,7 @@ describe('PokemonSetService', () => {
 
   it('should remove pokemon set', async () => {
     mockRepository.delete.mockResolvedValue({ affected: 1 });
-    await expect(service.remove(7)).resolves.toBeUndefined();
-    expect(mockRepository.delete).toHaveBeenCalledWith(7);
+    await expect(service.remove('7')).resolves.toBeUndefined();
+    expect(mockRepository.delete).toHaveBeenCalledWith('7');
   });
 });

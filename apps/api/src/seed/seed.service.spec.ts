@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SeedService } from './seed.service';
+import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PokemonSerie } from '../pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from '../pokemon-set/entities/pokemon-set.entity';
@@ -176,6 +177,12 @@ describe('SeedService', () => {
           provide: MatchService,
           useValue: {
             create: jest.fn()
+          }
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn()
           }
         }
       ]
