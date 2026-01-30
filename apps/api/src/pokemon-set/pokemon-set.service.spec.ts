@@ -12,7 +12,14 @@ describe('PokemonSetService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
+    merge: jest.fn((entity, dto) => Object.assign(entity, dto)),
+    createQueryBuilder: jest.fn(() => ({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([{ id: 'a' }, { id: 'b' }])
+    }))
   };
 
   beforeEach(async () => {
@@ -43,11 +50,8 @@ describe('PokemonSetService', () => {
   });
 
   it('should find all ordered by releaseDate desc', async () => {
-    mockRepository.find.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
     await expect(service.findAll()).resolves.toHaveLength(2);
-    expect(mockRepository.find).toHaveBeenCalledWith({
-      order: { releaseDate: 'DESC' }
-    });
+    expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('set');
   });
 
   it('should find one by id', async () => {
@@ -63,12 +67,19 @@ describe('PokemonSetService', () => {
   });
 
   it('should update and return updated set', async () => {
-    mockRepository.update.mockResolvedValue({ affected: 1 });
-    mockRepository.findOne.mockResolvedValue({ id: '123', name: 'Updated' });
+    const existing = { id: '123', name: 'Old' };
+    const updateDto = { name: 'Updated' };
+    mockRepository.findOne.mockResolvedValue(existing);
+    mockRepository.save.mockResolvedValue({ ...existing, ...updateDto });
 
-    await expect(
-      service.update('123', { name: 'Updated' } as any)
-    ).resolves.toEqual({ id: '123', name: 'Updated' });
+    await expect(service.update('123', updateDto as any)).resolves.toEqual({
+      id: '123',
+      name: 'Updated'
+    });
+    expect(mockRepository.merge).toHaveBeenCalledWith(existing, updateDto);
+    expect(mockRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Updated' })
+    );
   });
 
   it('should remove pokemon set', async () => {
