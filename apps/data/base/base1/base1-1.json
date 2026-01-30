@@ -1,0 +1,120 @@
+{
+    "category": "Pokémon",
+    "id": "base1-1",
+    "illustrator": "Ken Sugimori",
+    "image": "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev/cards/base1/base1-1/low.png",
+    "localId": "1",
+    "name": "Alakazam",
+    "rarity": "Rare",
+    "set": {
+        "cardCount": {
+            "official": 102,
+            "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+    },
+    "variants": {
+        "firstEdition": true,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+    },
+    "variants_detailed": [
+        {
+            "type": "Holo",
+            "subtype": "illimité",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard",
+            "stamp": [
+                "1re Édition"
+            ]
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "Copyright 1999-2000",
+            "size": "Standard"
+        }
+    ],
+    "dexId": [
+        65
+    ],
+    "hp": 80,
+    "types": [
+        "Psy"
+    ],
+    "description": "Son super cerveau peut effectuer des opérations plus rapidement qu'un super ordinateur. Il a un Q.I. de 5000.",
+    "stage": "Niveau 2",
+    "abilities": [
+        {
+            "type": "Pouvoir Pokémon",
+            "name": "Transfert de dégâts",
+            "effect": "Aussi souvent que vous le souhaitez pendant votre tour (avant votre attaque), vous pouvez déplacer 1 marqueur de dégâts depuis 1 de vos Pokémon vers un autre sous réserve de ne pas mettre ce Pokémon K.O. Ce pouvoir ne peut être utilisé si Alakazam est Endormi, Confus ou Paralysé."
+        }
+    ],
+    "attacks": [
+        {
+            "cost": [
+                "Psy",
+                "Psy",
+                "Psy"
+            ],
+            "name": "Onde Folie",
+            "effect": "Lancez une pièce. Si c'est face, le Pokémon défenseur est maintenant Confus.",
+            "damage": 30
+        }
+    ],
+    "weaknesses": [
+        {
+            "type": "Psy",
+            "value": "×2"
+        }
+    ],
+    "retreat": 3,
+    "legal": {
+        "standard": false,
+        "expanded": false
+    },
+    "updated": "2026-01-07T13:21:43+01:00",
+    "pricing": {
+        "cardmarket": {
+            "updated": "2026-01-30T01:44:11.000Z",
+            "unit": "EUR",
+            "idProduct": 273696,
+            "avg": 51.49,
+            "low": 9,
+            "trend": 49.98,
+            "avg1": 57.5,
+            "avg7": 41.75,
+            "avg30": 48.24,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 19.66,
+            "avg1-holo": 7.99,
+            "avg7-holo": 14.29,
+            "avg30-holo": 25.6
+        },
+        "tcgplayer": {
+            "updated": "2026-01-29T20:04:55.000Z",
+            "unit": "USD",
+            "holofoil": {
+                "productId": 42346,
+                "lowPrice": 40,
+                "midPrice": 55.26,
+                "highPrice": 102.99,
+                "marketPrice": 58.01,
+                "directLowPrice": null
+            }
+        }
+    }
+}

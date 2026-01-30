@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -71,10 +72,7 @@ export default function CheckoutPage() {
                   >
                     <div className="relative w-16 h-24 shrink-0">
                       <Image
-                        src={
-                          item.listing.pokemonCard.image + "/high.png" ||
-                          "/images/carte-pokemon-dos.jpg"
-                        }
+                        src={getCardImage(item.listing.pokemonCard)}
                         alt={item.listing.pokemonCard.name || "Carte"}
                         fill
                         className="object-contain rounded"

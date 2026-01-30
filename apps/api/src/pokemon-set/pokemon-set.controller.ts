@@ -5,7 +5,8 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  Query
 } from '@nestjs/common';
 import { PokemonSetService } from './pokemon-set.service';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
@@ -25,8 +26,8 @@ export class PokemonSetController {
 
   @Get()
   @Public()
-  findAll() {
-    return this.pokemonSetService.findAll();
+  findAll(@Query('limit') limit?: number) {
+    return this.pokemonSetService.findAll(limit);
   }
 
   @Get(':id')
@@ -44,6 +45,6 @@ export class PokemonSetController {
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.pokemonSetService.remove(+id);
+    return this.pokemonSetService.remove(id);
   }
 }

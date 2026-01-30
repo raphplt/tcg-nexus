@@ -5,6 +5,7 @@ import { PokemonCard } from './entities/pokemon-card.entity';
 import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
 import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
 import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
+import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 
 @Injectable()
 export class PokemonCardService {
@@ -55,8 +56,16 @@ export class PokemonCardService {
     id: string,
     updatePokemonCardDto: UpdatePokemonCardDto
   ): Promise<PokemonCard> {
-    await this.pokemonCardRepository.update(id, updatePokemonCardDto);
-    return this.findOne(id);
+    const card = await this.findOne(id);
+    // Associer un set via son id si fourni
+    if (updatePokemonCardDto.set?.id) {
+      card.set = { id: updatePokemonCardDto.set.id } as PokemonSet;
+    }
+    this.pokemonCardRepository.merge(card, {
+      ...updatePokemonCardDto,
+      set: card.set
+    });
+    return this.pokemonCardRepository.save(card);
   }
 
   async remove(id: string): Promise<void> {

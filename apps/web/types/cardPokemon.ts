@@ -8,8 +8,9 @@ export type PokemonSetType = {
   name: string;
   logo?: string;
   symbol?: string;
-  tcgOnline?: boolean;
+  tcgOnline?: string;
   releaseDate?: string;
+  serie?: PokemonSerieType;
   cardCount?: {
     total: number;
     official: number;
@@ -24,7 +25,7 @@ export type PokemonSetType = {
 };
 
 export type PokemonSerieType = {
-  id: number;
+  id: string;
   name: string;
   logo?: string;
 };

@@ -32,6 +32,7 @@ import {
   useCartItemsCount,
 } from "@/store/cart.store";
 import { getCardStateColor } from "@/app/marketplace/utils";
+import { getCardImage } from "@/utils/images";
 import toast from "react-hot-toast";
 
 export default function CartPage() {
@@ -110,7 +111,7 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-12 w-64" />
           <Card>
@@ -133,7 +134,7 @@ export default function CartPage() {
   const cartItems = cart?.cartItems || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+    <div className="bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -210,23 +211,16 @@ export default function CartPage() {
                                 className="block"
                               >
                                 <div className="relative w-16 h-24">
-                                  {item.listing.pokemonCard.image ? (
                                     <Image
-                                      src={
-                                        item.listing.pokemonCard.image +
-                                        "/high.png"
-                                      }
+                                      src={getCardImage(
+                                        item.listing.pokemonCard,
+                                      )}
                                       alt={
                                         item.listing.pokemonCard.name || "Carte"
                                       }
                                       fill
                                       className="object-contain rounded hover:opacity-80 transition-opacity"
                                     />
-                                  ) : (
-                                    <div className="w-full h-full bg-muted rounded flex items-center justify-center text-xs">
-                                      No Image
-                                    </div>
-                                  )}
                                 </div>
                               </Link>
                             </TableCell>

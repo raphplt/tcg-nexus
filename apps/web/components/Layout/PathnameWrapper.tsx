@@ -19,7 +19,7 @@ export default function PathnameWrapper({ children }: PathnameWrapperProps) {
   }, [pathname]);
 
   return (
-    <div className={isFullscreenPath ? "min-h-screen" : "mt-16 min-h-screen"}>
+    <div className={isFullscreenPath ? "" : "mt-16"}>
       {children}
     </div>
   );

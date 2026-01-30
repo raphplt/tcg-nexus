@@ -1,0 +1,25 @@
+[
+    {
+        "cardCount": {
+            "firstEd": 102,
+            "holo": 64,
+            "normal": 344,
+            "official": 102,
+            "reverse": 0,
+            "total": 102
+        },
+        "id": "base1",
+        "legal": {
+            "expanded": false,
+            "standard": false
+        },
+        "name": "Set de Base",
+        "releaseDate": "1999-01-09",
+        "tcgOnline": "BS",
+        "abbreviation": {
+            "official": "BS",
+            "localized": "BAS"
+        },
+        "serieId": "base"
+    }
+]

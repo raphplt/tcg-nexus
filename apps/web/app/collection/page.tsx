@@ -18,6 +18,7 @@ import { Search, Plus, Heart, Eye, Users, Lock } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import CreateCollection from "./_components/CreateCollection";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 
 const Page = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -157,15 +158,9 @@ const Page = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredCollections.map((collection) => {
-              const image1 = collection.items[0]?.pokemonCard?.image
-                ? collection.items[0]?.pokemonCard?.image + "/high.png"
-                : "/images/carte-pokemon-dos.jpg";
-              const image2 = collection.items[1]?.pokemonCard?.image
-                ? collection.items[1]?.pokemonCard?.image + "/high.png"
-                : "/images/carte-pokemon-dos.jpg";
-              const image3 = collection.items[2]?.pokemonCard?.image
-                ? collection.items[2]?.pokemonCard?.image + "/high.png"
-                : "/images/carte-pokemon-dos.jpg";
+              const image1 = getCardImage(collection.items[0]?.pokemonCard);
+              const image2 = getCardImage(collection.items[1]?.pokemonCard);
+              const image3 = getCardImage(collection.items[2]?.pokemonCard);
 
               return (
                 <Card

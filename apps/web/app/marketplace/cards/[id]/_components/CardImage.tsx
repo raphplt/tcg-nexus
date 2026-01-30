@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { rarityToImage } from "@/utils/images";
+import { rarityToImage, getCardImage } from "@/utils/images";
 import Image from "next/image";
 
 interface CardImageProps {
@@ -12,10 +12,10 @@ export function CardImage({ card }: CardImageProps) {
   return (
     <Card>
       <CardContent className="p-6">
-        <div className="relative aspect-[3/4] w-full max-w-md mx-auto">
-          {card.image ? (
+        <div className="relative aspect-3/4 w-full max-w-md mx-auto">
+          {card ? (
             <Image
-              src={card.image + "/high.png"}
+              src={getCardImage(card)}
               alt={card.name || "Carte inconnue"}
               fill
               className="object-contain rounded-lg"

@@ -14,6 +14,7 @@ import type { PaginatedResult } from "@/types/pagination";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getCardStateColor } from "../utils";
+import { getCardImage } from "@/utils/images";
 
 export interface MarketplaceFilters {
   search: string;
@@ -103,7 +104,7 @@ const MarketplaceTable = ({
             >
               <TableCell className="font-semibold text-lg text-primary flex items-center gap-2">
                 <Image
-                  src={listing.pokemonCard?.image + "/low.png" || ""}
+                  src={getCardImage(listing.pokemonCard, "low")}
                   alt={listing.pokemonCard?.name || "Carte inconnue"}
                   width={40}
                   height={40}

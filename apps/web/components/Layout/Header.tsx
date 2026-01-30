@@ -46,7 +46,7 @@ const Header = () => {
     <header className="fixed inset-x-0 top-0 h-16 bg-background/90 backdrop-blur-md border-b border-border shadow-sm flex items-center px-4 sm:px-8 z-50">
       <Link
         href="/"
-        className="flex-shrink-0 mr-4"
+        className="shrink-0 mr-4"
       >
         <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20">
           <Image
@@ -64,7 +64,7 @@ const Header = () => {
         <SearchBar />
       </div>
 
-      <nav className="flex-shrink-0">
+      <nav className="shrink-0">
         <ul className="flex items-center space-x-2 sm:space-x-4 text-sm">
           <li className="hidden sm:block">
             <Link
@@ -151,7 +151,7 @@ const Header = () => {
               </li>
             </>
           ) : showUserMenu ? (
-            <li className="flex items-center space-x-2">
+            <li className="flex items-center space-x-4">
               <CartDropdown />
 
               <DropdownMenu>

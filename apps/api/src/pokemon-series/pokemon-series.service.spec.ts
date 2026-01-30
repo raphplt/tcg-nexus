@@ -57,7 +57,10 @@ describe('PokemonSeriesService', () => {
 
   it('should find one series by id', async () => {
     mockRepository.findOne.mockResolvedValue({ id: '2', name: 'Neo' });
-    await expect(service.findOne(2)).resolves.toEqual({ id: '2', name: 'Neo' });
+    await expect(service.findOne('2')).resolves.toEqual({
+      id: '2',
+      name: 'Neo'
+    });
   });
 
   it('should update and return entity', async () => {
@@ -65,12 +68,12 @@ describe('PokemonSeriesService', () => {
     mockRepository.findOne.mockResolvedValue({ id: '3', name: 'Updated' });
 
     await expect(
-      service.update(3, { name: 'Updated' } as any)
+      service.update('3', { name: 'Updated' } as any)
     ).resolves.toEqual({ id: '3', name: 'Updated' });
   });
 
   it('should delete series', async () => {
     mockRepository.delete.mockResolvedValue({ affected: 1 });
-    await expect(service.remove(4)).resolves.toEqual({ deleted: true });
+    await expect(service.remove('4')).resolves.toEqual({ deleted: true });
   });
 });

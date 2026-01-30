@@ -8,5 +8,12 @@
 		"swiss",
 		"tcgdex",
 		"waitlisted"
-	]
+	],
+	"search.exclude": {
+		"**/data": true
+	},
+	"files.watcherExclude": {
+		"**/data": true
+	}
+	
 }
