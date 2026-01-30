@@ -344,6 +344,7 @@ export class CardPopularityService {
         id: metric.card.id,
         name: metric.card.name,
         image: metric.card.image,
+        localId: metric.card.localId,
         rarity: metric.card.rarity,
         set: metric.card.set
           ? {
@@ -406,6 +407,7 @@ export class CardPopularityService {
         id: metric.card.id,
         name: metric.card.name,
         image: metric.card.image,
+        localId: metric.card.localId,
         rarity: metric.card.rarity,
         set: metric.card.set
           ? {

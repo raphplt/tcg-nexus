@@ -141,8 +141,10 @@ export default function MarketplaceCardsPage() {
     (filters.priceMin !== undefined ? 1 : 0) +
     (filters.priceMax !== undefined ? 1 : 0);
 
+    console.log('cards', data?.data);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+    <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <MarketplaceBreadcrumb />

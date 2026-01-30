@@ -37,7 +37,6 @@ export function CardCard({
   const { formatPrice } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
 
-
   return (
     <Link href={`/marketplace/cards/${card.id}`}>
       <Card
@@ -47,7 +46,7 @@ export function CardCard({
         )}
       >
         <CardHeader className="pb-3">
-          <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-muted mb-3">
+          <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg mb-3">
             <Image
               src={
                 card.image

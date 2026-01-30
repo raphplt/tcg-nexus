@@ -419,6 +419,7 @@ export class MarketplaceService {
         'pokemonCard.id',
         'pokemonCard.name',
         'pokemonCard.image',
+        'pokemonCard.localId',
         'pokemonCard.rarity',
         'set.name',
         'set.logo',
@@ -431,6 +432,7 @@ export class MarketplaceService {
       .addGroupBy('pokemonCard.name')
       .addGroupBy('pokemonCard.image')
       .addGroupBy('pokemonCard.rarity')
+      .addGroupBy('pokemonCard.localId')
       .addGroupBy('set.name')
       .addGroupBy('set.logo')
       .addGroupBy('serie.name')
@@ -443,6 +445,7 @@ export class MarketplaceService {
         id: card.pokemonCard_id,
         name: card.pokemonCard_name,
         image: card.pokemonCard_image,
+        localId: card.pokemonCard_localId || card.pokemonCard_localid,
         rarity: card.pokemonCard_rarity,
         set: {
           name: card.set_name,
@@ -473,6 +476,7 @@ export class MarketplaceService {
         'pokemonCard.id',
         'pokemonCard.name',
         'pokemonCard.image',
+        'pokemonCard.localId',
         'pokemonCard.rarity',
         'set.name',
         'set.logo',
@@ -484,6 +488,7 @@ export class MarketplaceService {
       .addGroupBy('pokemonCard.name')
       .addGroupBy('pokemonCard.image')
       .addGroupBy('pokemonCard.rarity')
+      .addGroupBy('pokemonCard.localId')
       .addGroupBy('set.name')
       .addGroupBy('set.logo')
       .addGroupBy('serie.name')
@@ -496,6 +501,7 @@ export class MarketplaceService {
         id: card.pokemonCard_id,
         name: card.pokemonCard_name,
         image: card.pokemonCard_image,
+        localId: card.pokemonCard_localId || card.pokemonCard_localid,
         rarity: card.pokemonCard_rarity,
         set: {
           name: card.set_name,
