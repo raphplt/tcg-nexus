@@ -67,7 +67,7 @@ export function CardCard({
                     className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-1"
                     title="Popularité calculée sur 90 jours"
                   >
-                    <Star className="w-3 h-3 fill-current" />⭐
+                    <Star className="w-3 h-3 fill-current" />
                   </Badge>
                 )}
                 {isTrending && (
@@ -77,7 +77,6 @@ export function CardCard({
                     title="Momentum récent (7 jours vs 30 jours)"
                   >
                     <Flame className="w-3 h-3 fill-current" />
-                    🔥
                   </Badge>
                 )}
               </div>

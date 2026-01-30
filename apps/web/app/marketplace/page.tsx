@@ -26,7 +26,7 @@ export default function MarketplaceHomePage() {
   } = useMarketplaceHome();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+    <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-12">
         <MarketplaceBreadcrumb />
         <div className="text-center space-y-4">
