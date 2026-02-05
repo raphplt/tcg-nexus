@@ -9,11 +9,14 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { CollectionModule } from 'src/collection/collection.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Player } from 'src/player/entities/player.entity';
 
 @Module({
   imports: [
     ConfigModule,
     UserModule,
+    TypeOrmModule.forFeature([Player]),
     PassportModule,
     CollectionModule,
     JwtModule.registerAsync({

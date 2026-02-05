@@ -81,13 +81,15 @@ export class UserService {
 
   async findById(id: number): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { id }
+      where: { id },
+      relations: ['player']
     });
   }
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
-      where: { email }
+      where: { email },
+      relations: ['player']
     });
   }
 

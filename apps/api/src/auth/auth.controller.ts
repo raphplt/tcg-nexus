@@ -195,7 +195,8 @@ export class AuthController {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
-      isPro: user.isPro
+      isPro: user.isPro,
+      player: user.player ? { id: user.player.id } : null
     };
   }
 }
