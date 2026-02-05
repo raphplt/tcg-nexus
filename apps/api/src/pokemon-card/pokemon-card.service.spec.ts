@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonCardService } from './pokemon-card.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PokemonCard } from './entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
+import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
 
 describe('PokemonCardService', () => {
   let service: PokemonCardService;
@@ -26,14 +27,22 @@ describe('PokemonCardService', () => {
       getMany: jest.fn()
     }))
   };
+  const mockDetailsRepository = {
+    create: jest.fn(),
+    save: jest.fn()
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PokemonCardService,
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: mockRepository
+        },
+        {
+          provide: getRepositoryToken(PokemonCardDetails),
+          useValue: mockDetailsRepository
         }
       ]
     }).compile();

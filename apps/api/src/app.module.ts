@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PokemonCardModule } from './pokemon-card/pokemon-card.module';
+import { CardModule } from './card/card.module';
 import { PokemonSetModule } from './pokemon-set/pokemon-set.module';
 import { PokemonSeriesModule } from './pokemon-series/pokemon-series.module';
 import { SeedModule } from './seed/seed.module';
@@ -58,6 +59,7 @@ import { FaqModule } from './faq/faq.module';
           : false
     }),
     UserModule,
+    CardModule,
     PokemonCardModule,
     PokemonSetModule,
     PokemonSeriesModule,

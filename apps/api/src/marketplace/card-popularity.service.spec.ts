@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { CardPopularityService } from './card-popularity.service';
 import { CardEvent, CardEventType } from './entities/card-event.entity';
 import { CardPopularityMetrics } from './entities/card-popularity-metrics.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { Listing } from './entities/listing.entity';
 import { Order } from './entities/order.entity';
 
@@ -46,7 +46,7 @@ describe('CardPopularityService', () => {
           provide: getRepositoryToken(CardPopularityMetrics),
           useValue: metricsRepo
         },
-        { provide: getRepositoryToken(PokemonCard), useValue: pokemonRepo },
+        { provide: getRepositoryToken(Card), useValue: pokemonRepo },
         { provide: getRepositoryToken(Listing), useValue: listingRepo },
         { provide: getRepositoryToken(Order), useValue: orderRepo }
       ]

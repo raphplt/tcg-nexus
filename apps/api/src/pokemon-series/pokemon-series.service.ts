@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreatePokemonSeryDto } from './dto/create-pokemon-sery.dto';
 import { UpdatePokemonSeryDto } from './dto/update-pokemon-sery.dto';
 import { PokemonSerie } from './entities/pokemon-serie.entity';
+import { CardGame } from 'src/common/enums/cardGame';
 
 @Injectable()
 export class PokemonSeriesService {
@@ -14,7 +15,10 @@ export class PokemonSeriesService {
 
   create(createPokemonSeryDto: CreatePokemonSeryDto) {
     return this.pokemonSeriesRepository.save(
-      this.pokemonSeriesRepository.create(createPokemonSeryDto)
+      this.pokemonSeriesRepository.create({
+        ...createPokemonSeryDto,
+        game: CardGame.Pokemon
+      })
     );
   }
 
@@ -23,6 +27,7 @@ export class PokemonSeriesService {
       .createQueryBuilder('serie')
       .select(['serie.id', 'serie.name', 'serie.logo'])
       .leftJoin('serie.sets', 'set')
+      .where('serie.game = :game', { game: CardGame.Pokemon })
       .groupBy('serie.id')
       .addGroupBy('serie.name')
       .addGroupBy('serie.logo')
@@ -35,7 +40,7 @@ export class PokemonSeriesService {
 
   async findOne(id: string): Promise<PokemonSerie | null> {
     return this.pokemonSeriesRepository.findOne({
-      where: { id },
+      where: { id, game: CardGame.Pokemon },
       select: ['id', 'name', 'logo']
     });
   }

@@ -16,7 +16,7 @@ import {
   CardPopularityMetrics
 } from './entities';
 import { Player } from 'src/player/entities/player.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { ConfigModule } from '@nestjs/config';
 import { StripeService } from './stripe.service';
 import { PaymentController } from './payment.controller';
@@ -34,7 +34,7 @@ import { UserCartModule } from '../user_cart/user_cart.module';
       CardEvent,
       CardPopularityMetrics,
       Player,
-      PokemonCard
+      Card
     ]),
     ConfigModule,
     UserCartModule

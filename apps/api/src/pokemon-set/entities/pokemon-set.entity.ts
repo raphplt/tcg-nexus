@@ -1,6 +1,7 @@
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { Entity, Column, PrimaryColumn, ManyToOne, OneToMany } from 'typeorm';
+import { CardGame } from 'src/common/enums/cardGame';
 
 /**
  * Objet embarqué pour le nombre de cartes dans le set
@@ -48,6 +49,9 @@ export class PokemonSet {
   @PrimaryColumn()
   id: string;
 
+  @Column({ type: 'enum', enum: CardGame, default: CardGame.Pokemon })
+  game: CardGame;
+
   @Column()
   name: string;
 
@@ -72,9 +76,9 @@ export class PokemonSet {
   @ManyToOne(() => PokemonSerie, (pokemonSerie) => pokemonSerie.sets)
   serie: PokemonSerie;
 
-  @OneToMany(() => PokemonCard, (pokemonCard) => pokemonCard.set, {
+  @OneToMany(() => Card, (card) => card.set, {
     cascade: true,
     onDelete: 'CASCADE'
   })
-  cards: PokemonCard[];
+  cards: Card[];
 }

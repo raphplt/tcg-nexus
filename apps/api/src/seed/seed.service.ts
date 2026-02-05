@@ -4,7 +4,8 @@ import { DeepPartial, Repository } from 'typeorm';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
+import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Tournament,
@@ -66,10 +67,13 @@ import {
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
 
-import { CardState } from 'src/common/enums/pokemonCardsType';
+import { CardState, PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { UserRole } from 'src/common/enums/user';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
 import { ConfigService } from '@nestjs/config';
+import { CardGame } from 'src/common/enums/cardGame';
+import { TrainerType } from 'src/common/enums/trainerType';
+import { EnergyType } from 'src/common/enums/energyType';
 
 @Injectable()
 export class SeedService {
@@ -78,8 +82,10 @@ export class SeedService {
     private readonly pokemonSerieRepository: Repository<PokemonSerie>,
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
+    @InjectRepository(PokemonCardDetails)
+    private readonly pokemonCardDetailsRepository: Repository<PokemonCardDetails>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Tournament)
@@ -137,6 +143,74 @@ export class SeedService {
     // Convert special characters to their ASCII equivalents or remove them
     // eslint-disable-next-line no-control-regex
     return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+  }
+
+  private normalizeForMapping(value?: string): string {
+    if (!value) return '';
+    return (
+      value
+        .normalize('NFKD')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[^\x00-\x7F]/g, '')
+        .toLowerCase()
+        .trim()
+    );
+  }
+
+  private mapPokemonCategory(value?: string): PokemonCardsType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'pokemon':
+        return PokemonCardsType.Pokemon;
+      case 'energie':
+      case 'energy':
+        return PokemonCardsType.Energy;
+      case 'dresseur':
+      case 'trainer':
+        return PokemonCardsType.Trainer;
+      default:
+        return undefined;
+    }
+  }
+
+  private mapTrainerType(value?: string): TrainerType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'supporter':
+        return TrainerType.Supporter;
+      case 'objet':
+      case 'item':
+        return TrainerType.Item;
+      case 'stade':
+      case 'stadium':
+        return TrainerType.Stadium;
+      case 'outil':
+      case 'tool':
+        return TrainerType.Tool;
+      case 'machine technique':
+      case 'technical machine':
+        return TrainerType.TechnicalMachine;
+      default:
+        return undefined;
+    }
+  }
+
+  private mapEnergyType(value?: string): EnergyType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'de base':
+      case 'basic':
+        return EnergyType.Basic;
+      case 'special':
+      case 'speciale':
+      case 'speciales':
+      case 'special energy':
+      case 'speciale energie':
+      case 'specialeenergie':
+        return EnergyType.Special;
+      default:
+        return undefined;
+    }
   }
 
   /**
@@ -219,7 +293,10 @@ export class SeedService {
       });
 
       if (!existingSerie) {
-        const newSerie = this.pokemonSerieRepository.create(serieData);
+        const newSerie = this.pokemonSerieRepository.create({
+          ...serieData,
+          game: CardGame.Pokemon
+        });
         series.push(newSerie);
       }
     }
@@ -290,6 +367,7 @@ export class SeedService {
 
         const newSet = this.pokemonSetRepository.create({
           ...(setProps as DeepPartial<PokemonSet>),
+          game: CardGame.Pokemon,
           serie
         });
         sets.push(newSet);
@@ -306,13 +384,13 @@ export class SeedService {
   /**
    * Seed the database with the Pokemon Series and Sets data
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
    * @throws {Error} If a Serie is not found
    */
   /**
    * Seed the database with the Pokemon Series and Sets data
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
    * @throws {Error} If a Serie is not found
    */
   async importPokemon(): Promise<{
@@ -351,7 +429,7 @@ export class SeedService {
 
     let processedFiles = 0;
     const batchSize = 100; // Process cards in batches of 100
-    let cardBatch: PokemonCard[] = [];
+    let cardBatch: Card[] = [];
     let metricsSavedCards = 0;
 
     for (const filePath of cardFiles) {
@@ -374,35 +452,66 @@ export class SeedService {
           if (!set) {
             continue;
           }
-          delete cardData.set;
-          cardData.set = set;
 
-          cardData.tcgDexId = cardData.id;
-          delete cardData.id;
-
-          cardData.name = cardData.name
+          const name = cardData.name
             ? this.cleanString(cardData.name as string)
             : '';
-          cardData.illustrator = cardData.illustrator
+          const illustrator = cardData.illustrator
             ? this.cleanString(cardData.illustrator as string)
             : null;
-          cardData.description = cardData.description
+          const description = cardData.description
             ? this.cleanString(cardData.description as string)
             : null;
-          cardData.evolveFrom = cardData.evolveFrom
+          const evolveFrom = cardData.evolveFrom
             ? this.cleanString(cardData.evolveFrom as string)
             : null;
-          cardData.effect = cardData.effect
+          const effect = cardData.effect
             ? this.cleanString(cardData.effect as string)
             : null;
 
-          if (cardData.variants && cardData.variants.wPromo !== undefined) {
-            const { ...validVariants } = cardData.variants;
-            cardData.variants = validVariants;
-          }
-          const card = this.pokemonCardRepository.create(
-            cardData as DeepPartial<PokemonCard>
-          );
+          const card = this.pokemonCardRepository.create({
+            game: CardGame.Pokemon,
+            tcgDexId: cardData.id,
+            localId: cardData.localId,
+            name,
+            image: cardData.image,
+            category: cardData.category,
+            illustrator,
+            rarity: cardData.rarity,
+            variants: cardData.variants,
+            variantsDetailed: cardData.variants_detailed,
+            legal: cardData.legal,
+            updated: cardData.updated,
+            pricing: cardData.pricing,
+            set
+          } as DeepPartial<Card>);
+
+          const details = this.pokemonCardDetailsRepository.create({
+            category: this.mapPokemonCategory(cardData.category),
+            dexId: cardData.dexId,
+            hp: cardData.hp,
+            types: cardData.types,
+            evolveFrom,
+            description,
+            effect,
+            level: cardData.level,
+            stage: cardData.stage,
+            suffix: cardData.suffix,
+            item: cardData.item,
+            abilities: cardData.abilities,
+            attacks: cardData.attacks,
+            weaknesses: cardData.weaknesses,
+            resistances: cardData.resistances,
+            retreat: cardData.retreat,
+            regulationMark: cardData.regulationMark,
+            trainerType: this.mapTrainerType(cardData.trainerType),
+            energyType: this.mapEnergyType(cardData.energyType),
+            boosters: cardData.boosters
+          } as DeepPartial<PokemonCardDetails>);
+
+          details.card = card;
+          card.pokemonDetails = details;
+
           cardBatch.push(card);
         }
       } catch (jsonError) {
@@ -1699,7 +1808,7 @@ export class SeedService {
         player,
         article,
         faq,
-        pokemon_card,
+        card,
         pokemon_set,
         pokemon_serie,
         "user"

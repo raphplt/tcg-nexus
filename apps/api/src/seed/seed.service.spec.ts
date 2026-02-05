@@ -4,7 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PokemonSerie } from '../pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from '../pokemon-set/entities/pokemon-set.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
+import { PokemonCardDetails } from '../card/entities/pokemon-card-details.entity';
 import { User } from '../user/entities/user.entity';
 import { Tournament } from '../tournament/entities/tournament.entity';
 import { Player } from '../player/entities/player.entity';
@@ -74,7 +75,11 @@ describe('SeedService', () => {
           useValue: createMockRepository()
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
+          useValue: createMockRepository()
+        },
+        {
+          provide: getRepositoryToken(PokemonCardDetails),
           useValue: createMockRepository()
         },
         {

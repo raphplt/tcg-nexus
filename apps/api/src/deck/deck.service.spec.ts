@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DeckService } from './deck.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DeckCard } from '../deck-card/entities/deck-card.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { Deck } from './entities/deck.entity';
 import { DeckShare } from './entities/deck-share.entity';
@@ -19,6 +19,15 @@ describe('DeckService', () => {
   let deckFormatRepo: any;
   let deckRepo: any;
   let deckShareRepo: any;
+
+  const withPokemonDetails = <T extends Record<string, any>>(card: T) => ({
+    ...card,
+    pokemonDetails: {
+      category: card.category,
+      types: card.types,
+      attacks: card.attacks
+    }
+  });
 
   const createQueryBuilderMock = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -69,7 +78,7 @@ describe('DeckService', () => {
           useValue: deckCardRepo
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: pokemonCardRepo
         },
         {
@@ -259,51 +268,51 @@ describe('DeckService', () => {
         cards: [
           {
             qty: 4,
-            card: {
+            card: withPokemonDetails({
               id: 'p1',
               name: 'Salameche',
               category: PokemonCardsType.Pokemon,
               types: ['Fire'],
               attacks: [{ cost: ['Fire', 'Colorless'] }]
-            }
+            })
           },
           {
             qty: 2,
-            card: {
+            card: withPokemonDetails({
               id: 'p2',
               name: 'Carapuce',
               category: PokemonCardsType.Pokemon,
               types: ['Water'],
               attacks: [{ cost: ['Water'] }]
-            }
+            })
           },
           {
             qty: 8,
-            card: {
+            card: withPokemonDetails({
               id: 'e1',
               name: 'Energie Feu',
               category: PokemonCardsType.Energy,
               attacks: []
-            }
+            })
           },
           {
             qty: 1,
-            card: {
+            card: withPokemonDetails({
               id: 't1',
               name: 'Dresseur',
               category: PokemonCardsType.Trainer,
               attacks: []
-            }
+            })
           },
           {
             qty: 5,
-            card: {
+            card: withPokemonDetails({
               id: 'p3',
               name: 'Pikachu',
               category: PokemonCardsType.Pokemon,
               types: ['Lightning'],
               attacks: [{ cost: ['Lightning'] }]
-            }
+            })
           },
           {
             qty: 1,
@@ -339,17 +348,17 @@ describe('DeckService', () => {
         cards: [
           {
             qty: 40,
-            card: {
+            card: withPokemonDetails({
               id: 'e',
               name: 'Energy',
               category: PokemonCardsType.Energy,
               types: ['Fire'],
               attacks: []
-            }
+            })
           },
           {
             qty: 20,
-            card: {
+            card: withPokemonDetails({
               id: 'p',
               name: 'Dragonite',
               category: PokemonCardsType.Pokemon,
@@ -357,36 +366,36 @@ describe('DeckService', () => {
               attacks: [
                 { cost: ['Colorless', 'Colorless', 'Colorless', 'Colorless'] }
               ]
-            }
+            })
           },
           {
             qty: 10,
-            card: {
+            card: withPokemonDetails({
               id: 'p2',
               name: 'Blastoise',
               category: PokemonCardsType.Pokemon,
               types: ['Water'],
               attacks: [{ cost: ['Water'] }]
-            }
+            })
           },
           {
             qty: 10,
-            card: {
+            card: withPokemonDetails({
               id: 'p3',
               name: 'Venusaur',
               category: PokemonCardsType.Pokemon,
               types: ['Grass'],
               attacks: [{ cost: ['Grass', 'Colorless'] }]
-            }
+            })
           },
           {
             qty: 5,
-            card: {
+            card: withPokemonDetails({
               id: 't',
               name: 'Supporter',
               category: PokemonCardsType.Trainer,
               attacks: []
-            }
+            })
           }
         ]
       });

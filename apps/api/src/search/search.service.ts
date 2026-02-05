@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
+import { CardGame } from '../common/enums/cardGame';
 import { Tournament } from '../tournament/entities/tournament.entity';
 import { Player } from '../player/entities/player.entity';
 import { Listing } from '../marketplace/entities/listing.entity';
@@ -21,8 +22,8 @@ import {
 @Injectable()
 export class SearchService {
   constructor(
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Tournament)
     private readonly tournamentRepository: Repository<Tournament>,
     @InjectRepository(Player)
@@ -113,11 +114,12 @@ export class SearchService {
     const cards = await this.pokemonCardRepository
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.rarity ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.description ILIKE :query', { query: `%${query}%` })
-      .orWhere('set.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.illustrator ILIKE :query', { query: `%${query}%` })
+      .leftJoinAndSelect('card.pokemonDetails', 'pokemonDetails')
+      .where('card.game = :game', { game: CardGame.Pokemon })
+      .andWhere(
+        '(card.name ILIKE :query OR card.rarity ILIKE :query OR pokemonDetails.description ILIKE :query OR set.name ILIKE :query OR card.illustrator ILIKE :query)',
+        { query: `%${query}%` }
+      )
       .limit(limit)
       .getMany();
 
@@ -132,9 +134,9 @@ export class SearchService {
         rarity: card.rarity,
         set: card.set?.name,
         illustrator: card.illustrator,
-        category: card.category,
-        hp: card.hp,
-        types: card.types
+        category: card.pokemonDetails?.category ?? card.category,
+        hp: card.pokemonDetails?.hp,
+        types: card.pokemonDetails?.types
       }
     }));
   }
@@ -327,12 +329,17 @@ export class SearchService {
     // Suggestions basées sur les noms de cartes populaires
     const popularCards = await this.pokemonCardRepository
       .createQueryBuilder('card')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
+      .where('card.game = :game', { game: CardGame.Pokemon })
+      .andWhere('card.name ILIKE :query', { query: `%${searchTerm}%` })
       .orderBy('card.name', 'ASC')
       .limit(limit)
       .getMany();
 
-    suggestions.push(...popularCards.map((card) => card.name));
+    suggestions.push(
+      ...popularCards
+        .map((card) => card.name)
+        .filter((name): name is string => Boolean(name))
+    );
 
     // Suggestions basées sur les tournois récents
     const recentTournaments = await this.tournamentRepository
@@ -368,7 +375,9 @@ export class SearchService {
     const cards = await this.pokemonCardRepository
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
+      .leftJoinAndSelect('card.pokemonDetails', 'pokemonDetails')
+      .where('card.game = :game', { game: CardGame.Pokemon })
+      .andWhere('card.name ILIKE :query', { query: `%${searchTerm}%` })
       .orderBy('card.name', 'ASC')
       .limit(Math.ceil(limit / 2))
       .getMany();
@@ -456,7 +465,9 @@ export class SearchService {
     const cards = await this.pokemonCardRepository
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
+      .leftJoinAndSelect('card.pokemonDetails', 'pokemonDetails')
+      .where('card.game = :game', { game: CardGame.Pokemon })
+      .andWhere('card.name ILIKE :query', { query: `%${searchTerm}%` })
       .orderBy('card.name', 'ASC')
       .limit(Math.ceil(limit / 2))
       .getMany();
@@ -473,9 +484,9 @@ export class SearchService {
           rarity: card.rarity,
           set: card.set?.name,
           illustrator: card.illustrator,
-          category: card.category,
-          hp: card.hp,
-          types: card.types
+          category: card.pokemonDetails?.category ?? card.category,
+          hp: card.pokemonDetails?.hp,
+          types: card.pokemonDetails?.types
         }
       }))
     );

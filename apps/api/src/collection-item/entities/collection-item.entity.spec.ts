@@ -2,7 +2,7 @@ import { getMetadataArgsStorage } from 'typeorm';
 
 import { CollectionItem } from './collection-item.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { CardState } from 'src/card-state/entities/card-state.entity';
 
 describe('CollectionItem entity', () => {
@@ -28,7 +28,7 @@ describe('CollectionItem entity', () => {
       typeof cardRel?.type === 'function'
         ? (cardRel.type as () => unknown)()
         : cardRel?.type;
-    expect(cardType).toBe(PokemonCard);
+    expect(cardType).toBe(Card);
     expect(cardRel?.options?.eager).toBe(true);
 
     const stateRel = relations.find((r) => r.propertyName === 'cardState');
