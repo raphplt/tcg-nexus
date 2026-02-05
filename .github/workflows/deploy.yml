@@ -44,3 +44,4 @@ jobs:
             docker compose pull
             docker compose up -d
             docker compose exec -T api npx prisma migrate deploy
+#test
