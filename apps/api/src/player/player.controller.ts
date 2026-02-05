@@ -5,7 +5,9 @@ import {
   Body,
   Patch,
   Param,
-  Delete
+  Delete,
+  Query,
+  ParseIntPipe
 } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { CreatePlayerDto } from './dto/create-player.dto';
@@ -13,7 +15,7 @@ import { UpdatePlayerDto } from './dto/update-player.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('player')
-@Controller('player')
+@Controller(['player', 'players'])
 export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
@@ -28,17 +30,28 @@ export class PlayerController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.playerService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.playerService.findOne(id);
+  }
+
+  @Get(':id/tournament-history')
+  getTournamentHistory(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('period') period?: string
+  ) {
+    return this.playerService.getTournamentHistory(id, period);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlayerDto: UpdatePlayerDto) {
-    return this.playerService.update(+id, updatePlayerDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePlayerDto: UpdatePlayerDto
+  ) {
+    return this.playerService.update(id, updatePlayerDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.playerService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.playerService.remove(id);
   }
 }

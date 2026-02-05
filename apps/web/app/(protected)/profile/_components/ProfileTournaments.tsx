@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,13 @@ export const ProfileTournaments = () => {
           <Trophy className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Mes tournois</h2>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          asChild
+        >
+          <Link href="/profile/tournament-history">Historique ELO</Link>
+        </Button>
       </div>
 
       {loading ? (

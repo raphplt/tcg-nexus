@@ -12,6 +12,8 @@ import {
 import { User } from '../user/entities/user.entity';
 import { UserRole } from 'src/common/enums/user';
 import * as bcrypt from 'bcrypt';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Player } from 'src/player/entities/player.entity';
 
 jest.mock('bcrypt');
 
@@ -20,6 +22,7 @@ describe('AuthService', () => {
   let userService: any;
   let jwtService: any;
   let collectionService: any;
+  let playerRepo: any;
 
   const mockUser: any = {
     id: 1,
@@ -71,6 +74,11 @@ describe('AuthService', () => {
     create: jest.fn()
   };
 
+  const mockPlayerRepository = {
+    create: jest.fn(),
+    save: jest.fn()
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -90,6 +98,10 @@ describe('AuthService', () => {
         {
           provide: CollectionService,
           useValue: mockCollectionService
+        },
+        {
+          provide: getRepositoryToken(Player),
+          useValue: mockPlayerRepository
         }
       ]
     }).compile();
@@ -98,6 +110,7 @@ describe('AuthService', () => {
     userService = module.get<UserService>(UserService);
     jwtService = module.get<JwtService>(JwtService);
     collectionService = module.get<CollectionService>(CollectionService);
+    playerRepo = module.get(getRepositoryToken(Player));
   });
 
   afterEach(() => {
@@ -192,11 +205,14 @@ describe('AuthService', () => {
 
       mockUserService.create.mockResolvedValue(newUser);
       mockJwtService.signAsync.mockResolvedValue('token');
+      mockPlayerRepository.create.mockReturnValue({ user: newUser });
+      mockPlayerRepository.save.mockResolvedValue({ id: 10, user: newUser });
 
       const result = await service.register(registerDto);
 
       expect(mockUserService.create).toHaveBeenCalled();
       expect(mockCollectionService.create).toHaveBeenCalledTimes(2); // Wishlist & Favorites
+      expect(mockPlayerRepository.save).toHaveBeenCalledTimes(1);
       expect(result.user.email).toBe(newUser.email);
     });
 

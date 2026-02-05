@@ -9,6 +9,9 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Player } from 'src/player/entities/player.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponse, JwtPayload } from './interfaces/auth.interface';
@@ -20,7 +23,9 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
-    private collectionService: CollectionService
+    private collectionService: CollectionService,
+    @InjectRepository(Player)
+    private readonly playerRepository: Repository<Player>
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -60,7 +65,8 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role
+        role: user.role,
+        player: user.player ? { id: user.player.id } : null
       },
       tokens
     };
@@ -78,6 +84,10 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password
       });
+
+      const player = this.playerRepository.create({ user });
+      const savedPlayer = await this.playerRepository.save(player);
+      user.player = savedPlayer;
 
       await this.collectionService.create({
         name: 'Wishlist',
@@ -102,7 +112,8 @@ export class AuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          role: user.role
+          role: user.role,
+          player: user.player ? { id: user.player.id } : null
         },
         tokens
       };

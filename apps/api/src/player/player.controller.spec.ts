@@ -9,7 +9,8 @@ describe('PlayerController', () => {
     findAll: jest.fn(),
     findOne: jest.fn(),
     update: jest.fn(),
-    remove: jest.fn()
+    remove: jest.fn(),
+    getTournamentHistory: jest.fn()
   };
 
   beforeEach(async () => {
@@ -28,11 +29,15 @@ describe('PlayerController', () => {
     service.findOne.mockReturnValue('one');
     service.update.mockReturnValue('updated');
     service.remove.mockReturnValue('removed');
+    service.getTournamentHistory.mockReturnValue('history');
 
     expect(await controller.create({} as any)).toBe('created');
     expect(await controller.findAll()).toBe('all');
-    expect(await controller.findOne('1')).toBe('one');
-    expect(await controller.update('2', {} as any)).toBe('updated');
-    expect(await controller.remove('3')).toBe('removed');
+    expect(await controller.findOne(1 as any)).toBe('one');
+    expect(await controller.getTournamentHistory(1 as any, 'all')).toBe(
+      'history'
+    );
+    expect(await controller.update(1 as any, {} as any)).toBe('updated');
+    expect(await controller.remove(1 as any)).toBe('removed');
   });
 });
