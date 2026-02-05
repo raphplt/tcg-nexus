@@ -44,7 +44,15 @@ export type PokemonCardType = {
     reverse: boolean;
     holo: boolean;
     firstEdition: boolean;
+    wPromo?: boolean;
   };
+  variantsDetailed?: {
+    type?: string;
+    size?: string;
+    foil?: string;
+    stamp?: string;
+    subtype?: string;
+  }[];
   set: PokemonSetType;
   dexId?: number[];
   hp?: number;
@@ -58,13 +66,22 @@ export type PokemonCardType = {
     name: string;
     effect: string;
   };
+  abilities?: {
+    type?: string;
+    name?: string;
+    effect?: string;
+  }[];
   attacks?: {
     cost: string[];
     name: string;
     effect: string;
-    damage?: number;
+    damage?: number | string;
   }[];
   weaknesses?: {
+    type: string;
+    value: string;
+  }[];
+  resistances?: {
     type: string;
     value: string;
   }[];
@@ -78,4 +95,12 @@ export type PokemonCardType = {
   effect?: string;
   trainerType?: TrainerType;
   energyType?: EnergyType;
+  boosters?: {
+    id?: string;
+    name?: string;
+  }[];
+  pricing?: {
+    cardmarket?: Record<string, any> | null;
+    tcgplayer?: Record<string, any> | null;
+  };
 };

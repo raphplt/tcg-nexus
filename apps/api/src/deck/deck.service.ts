@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { Deck } from './entities/deck.entity';
 import { DeckCard } from '../deck-card/entities/deck-card.entity';
 import { User } from '../user/entities/user.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { DeckFormat } from '../deck-format/entities/deck-format.entity';
 import { DeckCardRole } from '../common/enums/deckCardRole';
 import { UserRole } from 'src/common/enums/user';
@@ -36,8 +36,8 @@ export class DeckService {
   constructor(
     @InjectRepository(DeckCard)
     private readonly deckCardRepo: Repository<DeckCard>,
-    @InjectRepository(PokemonCard)
-    private readonly cardRepo: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly cardRepo: Repository<Card>,
     @InjectRepository(DeckFormat)
     private readonly formatRepo: Repository<DeckFormat>,
     @InjectRepository(Deck)
@@ -81,7 +81,7 @@ export class DeckService {
     await this.deckCardRepo.save(cards);
     return await this.decksRepository.findOne({
       where: { id: deck.id },
-      relations: ['cards', 'cards.card']
+      relations: ['cards', 'cards.card', 'cards.card.pokemonDetails']
     });
   }
 
@@ -99,8 +99,10 @@ export class DeckService {
       .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
       .leftJoinAndSelect('deck.coverCard', 'coverCard')
+      .leftJoinAndSelect('coverCard.pokemonDetails', 'coverCardDetails')
       .leftJoinAndSelect('deck.cards', 'cards')
       .leftJoinAndSelect('cards.card', 'card')
+      .leftJoinAndSelect('card.pokemonDetails', 'cardDetails')
       .andWhere('deck.isPublic = true');
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
@@ -134,8 +136,10 @@ export class DeckService {
       .leftJoinAndSelect('deck.user', 'user')
       .leftJoinAndSelect('deck.format', 'format')
       .leftJoinAndSelect('deck.coverCard', 'coverCard')
+      .leftJoinAndSelect('coverCard.pokemonDetails', 'coverCardDetails')
       .leftJoinAndSelect('deck.cards', 'cards')
       .leftJoinAndSelect('cards.card', 'card')
+      .leftJoinAndSelect('card.pokemonDetails', 'cardDetails')
       .andWhere('user.id = :userId', { userId: user.id });
     if (formatId !== 0) {
       qb.andWhere('format.id = :formatId', { formatId });
@@ -157,7 +161,15 @@ export class DeckService {
   async findOneWithCards(id: number): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: ['user', 'format', 'cards', 'cards.card']
+      relations: [
+        'user',
+        'format',
+        'cards',
+        'cards.card',
+        'cards.card.pokemonDetails',
+        'coverCard',
+        'coverCard.pokemonDetails'
+      ]
     });
     if (!deck) throw new NotFoundException('Deck not found');
     return deck;
@@ -166,7 +178,7 @@ export class DeckService {
   async analyzeDeck(id: number): Promise<AnalyzeDeckResultDto> {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: ['cards', 'cards.card']
+      relations: ['cards', 'cards.card', 'cards.card.pokemonDetails']
     });
 
     if (!deck) throw new NotFoundException('Deck not found');
@@ -185,11 +197,12 @@ export class DeckService {
       const quantity = qty || 0;
       if (!card) return;
 
-      card.types?.forEach((type) =>
+      card.pokemonDetails?.types?.forEach((type) =>
         typeMap.set(type, (typeMap.get(type) || 0) + quantity)
       );
 
-      const categoryLabel = card.category || 'Unknown';
+      const categoryLabel =
+        card.pokemonDetails?.category || card.category || 'Unknown';
       const normalizedCategory = categoryLabel.toLowerCase().replace('é', 'e');
 
       let mappedCategory = categoryLabel;
@@ -205,7 +218,7 @@ export class DeckService {
         (categoryMap.get(mappedCategory) || 0) + quantity
       );
 
-      card.attacks?.forEach((attack) => {
+      card.pokemonDetails?.attacks?.forEach((attack) => {
         const cost = attack.cost?.length || 0;
         attackCostMap.set(cost, (attackCostMap.get(cost) || 0) + quantity);
         totalAttackCost += cost * quantity;
@@ -239,7 +252,7 @@ export class DeckService {
       .filter(
         (deckCard) =>
           deckCard.qty > 4 &&
-          deckCard.card?.category !== PokemonCardsType.Energy &&
+          deckCard.card?.pokemonDetails?.category !== PokemonCardsType.Energy &&
           !deckCard.card?.name?.toLowerCase().includes('energy') &&
           !deckCard.card?.name?.toLowerCase().includes('energie') &&
           !deckCard.card?.name?.toLowerCase().includes('énergie')

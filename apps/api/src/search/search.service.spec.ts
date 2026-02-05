@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SearchService } from './search.service';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { Tournament } from '../tournament/entities/tournament.entity';
 import { Player } from '../player/entities/player.entity';
 import { Listing } from '../marketplace/entities/listing.entity';
@@ -43,7 +43,7 @@ describe('SearchService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SearchService,
-        { provide: getRepositoryToken(PokemonCard), useValue: cardMock.repo },
+        { provide: getRepositoryToken(Card), useValue: cardMock.repo },
         {
           provide: getRepositoryToken(Tournament),
           useValue: tournamentMock.repo

@@ -13,7 +13,7 @@ import { CreateListingDto } from './dto/create-marketplace.dto';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { User } from '../user/entities/user.entity';
 import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { Order, OrderStatus } from './entities/order.entity';
 import { UserRole } from 'src/common/enums/user';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -49,8 +49,8 @@ export class MarketplaceService {
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(PriceHistory)
     private readonly priceHistoryRepository: Repository<PriceHistory>,
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(PaymentTransaction)

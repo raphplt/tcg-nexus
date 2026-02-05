@@ -5,7 +5,8 @@ import { SeedController } from './seed.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
 import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
+import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Tournament } from 'src/tournament/entities/tournament.entity';
 import { Player } from 'src/player/entities/player.entity';
@@ -39,7 +40,8 @@ import { Faq } from 'src/faq/entities/faq.entity';
     TypeOrmModule.forFeature([
       PokemonSerie,
       PokemonSet,
-      PokemonCard,
+      Card,
+      PokemonCardDetails,
       User,
       Tournament,
       Player,

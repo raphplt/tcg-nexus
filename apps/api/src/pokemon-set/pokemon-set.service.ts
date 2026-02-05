@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
 import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
 import { PokemonSet } from './entities/pokemon-set.entity';
+import { CardGame } from 'src/common/enums/cardGame';
 
 @Injectable()
 export class PokemonSetService {
@@ -13,7 +14,10 @@ export class PokemonSetService {
   ) {}
 
   async create(createPokemonSetDto: CreatePokemonSetDto): Promise<PokemonSet> {
-    const pokemonSet = this.pokemonSetRepository.create(createPokemonSetDto);
+    const pokemonSet = this.pokemonSetRepository.create({
+      ...createPokemonSetDto,
+      game: CardGame.Pokemon
+    });
     return this.pokemonSetRepository.save(pokemonSet);
   }
 
@@ -21,6 +25,7 @@ export class PokemonSetService {
     const query = this.pokemonSetRepository
       .createQueryBuilder('set')
       .leftJoinAndSelect('set.serie', 'serie')
+      .where('set.game = :game', { game: CardGame.Pokemon })
       .orderBy('set.releaseDate', 'DESC');
 
     if (limit) {
@@ -32,7 +37,7 @@ export class PokemonSetService {
 
   async findOne(id: string): Promise<PokemonSet> {
     const pokemonSet = await this.pokemonSetRepository.findOne({
-      where: { id },
+      where: { id, game: CardGame.Pokemon },
       relations: ['serie']
     });
     if (!pokemonSet) {

@@ -8,7 +8,7 @@ import {
   JoinColumn
 } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { OrderItem } from './order-item.entity';
 import { CartItem } from 'src/user_cart/entities/cart-item.entity';
 import { Currency } from '../../common/enums/currency';
@@ -23,9 +23,9 @@ export class Listing {
   @JoinColumn({ name: 'seller_id' })
   seller: User;
 
-  @ManyToOne(() => PokemonCard, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'pokemon_card_id' })
-  pokemonCard: PokemonCard;
+  @ManyToOne(() => Card, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'card_id' })
+  pokemonCard: Card;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;

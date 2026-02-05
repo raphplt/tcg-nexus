@@ -13,6 +13,7 @@
     "start:dev": "nest start --watch",
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
     "seed:prod": "SEED_AUTO_CONFIRM=true node -r tsconfig-paths/register dist/scripts/importData.js",
+    "migrate:rename-card": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-rename-card-table.ts",
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
     "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",

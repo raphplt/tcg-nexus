@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Deck } from 'src/deck/entities/deck.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { DeckCardRole } from '../../common/enums/deckCardRole';
 
 @Entity()
@@ -11,11 +11,11 @@ export class DeckCard {
   @ManyToOne(() => Deck, (deck) => deck.cards, { onDelete: 'CASCADE' })
   deck: Deck;
 
-  @ManyToOne(() => PokemonCard, (card) => card.deckCards, {
+  @ManyToOne(() => Card, (card) => card.deckCards, {
     eager: true,
     onDelete: 'CASCADE'
   })
-  card: PokemonCard;
+  card: Card;
 
   @Column({ type: 'int', default: 1 })
   qty: number;

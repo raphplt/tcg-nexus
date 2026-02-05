@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual } from 'typeorm';
 import { CardEvent, CardEventType } from './entities/card-event.entity';
 import { CardPopularityMetrics } from './entities/card-popularity-metrics.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { Listing } from './entities/listing.entity';
 import { Order } from './entities/order.entity';
 import { CreateCardEventDto } from './dto/card-popularity.dto';
@@ -40,8 +40,8 @@ export class CardPopularityService {
     private readonly cardEventRepository: Repository<CardEvent>,
     @InjectRepository(CardPopularityMetrics)
     private readonly metricsRepository: Repository<CardPopularityMetrics>,
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(Order)
