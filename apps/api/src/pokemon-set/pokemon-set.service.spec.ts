@@ -16,6 +16,7 @@ describe('PokemonSetService', () => {
     merge: jest.fn((entity, dto) => Object.assign(entity, dto)),
     createQueryBuilder: jest.fn(() => ({
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       getMany: jest.fn().mockResolvedValue([{ id: 'a' }, { id: 'b' }])
@@ -46,7 +47,9 @@ describe('PokemonSetService', () => {
     mockRepository.save.mockResolvedValue({ id: 'base' });
 
     await expect(service.create(dto)).resolves.toEqual({ id: 'base' });
-    expect(mockRepository.create).toHaveBeenCalledWith(dto);
+    expect(mockRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ ...dto, game: 'POKEMON' })
+    );
   });
 
   it('should find all ordered by releaseDate desc', async () => {
