@@ -12,16 +12,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ghcr.io/raphplt/tcg-nexus-api
+      IMAGE_NAME: ${{ secrets.GL_IMAGE_NAME }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Log in to GHCR
+      - name: Log in to GitLab Registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ secrets.GL_REGISTRY }}
+          username: ${{ secrets.GL_REGISTRY_USER }}
+          password: ${{ secrets.GL_REGISTRY_PASSWORD }}
 
       - name: Build and push API image
         uses: docker/build-push-action@v6
@@ -43,5 +43,5 @@ jobs:
             cd /srv/tcg-nexus
             docker compose pull
             docker compose up -d
-            docker compose exec -T api npx prisma migrate deploy
+            docker compose exec -T api npm run migration:run
 #test
