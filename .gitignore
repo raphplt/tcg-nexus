@@ -37,3 +37,5 @@ yarn-error.log*
 .idea
 
 data/*
+
+data.zip/*

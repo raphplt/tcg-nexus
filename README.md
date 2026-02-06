@@ -231,15 +231,7 @@ Remplace `<org>/<repo>` par ton registry (GitHub Container Registry, GitLab Regi
 
 ## 6) Migrations automatiques
 
-### Option A — Prisma
-
-Dans le pipeline, lancer :
-
-```bash
-npx prisma migrate deploy
-```
-
-### Option B — TypeORM
+### — TypeORM
 
 ```bash
 npm run migration:run
