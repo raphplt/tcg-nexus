@@ -32,30 +32,66 @@ cd /srv/tcg-nexus
 
 ---
 
-## 3. Variables d'environnement
+## 3. Variables d'environnement (sans renommer tes fichiers)
 
-### 3.1 `.env` racine (utilise par Docker Compose)
+Tu peux garder exactement:
+- `apps/api/.env`
+- `apps/web/.env`
+- `.env` racine
 
-Creer `/srv/tcg-nexus/.env`:
+### 3.1 `apps/api/.env`
+
+Garde tes variables API, avec ces points:
+- `DATABASE_HOST=127.0.0.1` peut rester tel quel: Compose l'ecrase en `postgres` dans le container API.
+- `FRONTEND_URL` doit pointer vers ton domaine VM (pas Vercel).
+
+Exemple:
+
+```env
+DATABASE_HOST=127.0.0.1
+DATABASE_PORT=5432
+DATABASE_NAME=tcg_nexus
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+
+JWT_SECRET=...
+JWT_REFRESH_SECRET=...
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=https://tcg-nexus.org
+
+R2_PUBLIC_URL=...
+STRIPE_SECRET_KEY=...
+STRIPE_WEBHOOK_SECRET=...
+```
+
+### 3.2 `apps/web/.env`
+
+Pour la prod VM:
+
+```env
+NEXT_PUBLIC_API_URL=/api
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...
+```
+
+Important:
+- mets bien `NEXT_PUBLIC_API_URL=/api` (et pas `http://localhost:3001`).
+
+### 3.3 `.env` racine
+
+La racine sert a `postgres` dans Compose. Mets au minimum:
 
 ```env
 DATABASE_NAME=tcg_nexus
 DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
-
-JWT_SECRET=remplace_par_une_valeur_longue_et_aleatoire
-JWT_REFRESH_SECRET=remplace_par_une_valeur_longue_et_aleatoire
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
 ```
 
-Notes:
-- Dans ce mode Docker, l'API parle a la DB via `DATABASE_HOST=postgres` (injecte par Compose).
-- `NODE_ENV` de l'API reste en `development` dans Compose pour eviter SSL Postgres force dans ce repo.
-
-### 3.2 Front env (optionnel)
-
-Pas obligatoire ici: `NEXT_PUBLIC_API_URL=/api` est deja injecte au runtime du container `web`.
+Les variables JWT dans `.env` racine ne sont pas necessaires si elles sont deja dans `apps/api/.env`.
 
 ---
 
@@ -214,4 +250,3 @@ docker compose -f docker-compose.deploy.yml restart web
 - `docker/api.Dockerfile`
 - `docker/web.Dockerfile`
 - `.dockerignore`
-

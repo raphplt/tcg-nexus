@@ -3,13 +3,14 @@ FROM node:20-bookworm-slim
 WORKDIR /app
 
 COPY apps/api/package*.json /app/apps/api/
-WORKDIR /app/apps/api
-RUN npm ci
+RUN npm ci --workspace=api
 
 COPY apps/api /app/apps/api
+COPY apps/data /app/apps/data
+COPY data /app/data
 
+WORKDIR /app/apps/api
 RUN npm run build
-RUN npm prune --omit=dev
 
 EXPOSE 3001
 
