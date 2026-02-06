@@ -2,6 +2,7 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
+COPY package*.json /app/
 COPY apps/api/package*.json /app/apps/api/
 RUN npm ci --workspace=api
 
