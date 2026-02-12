@@ -209,7 +209,44 @@ Checklist:
 
 ---
 
-## 8. Mise a jour applicative
+## 8. CI/CD - Deploiement automatique
+
+Le deploiement est automatise via GitHub Actions. A chaque push sur `main`, le workflow :
+1. Lance la CI (lint, tests, build)
+2. Si tout passe, se connecte en SSH a la VM
+3. Pull le code et rebuild les containers Docker
+
+### 8.1 Secrets GitHub a configurer
+
+Dans le repo GitHub > Settings > Secrets and variables > Actions, ajouter :
+
+| Secret | Description | Exemple |
+|--------|-------------|---------|
+| `VM_HOST` | IP ou hostname de la VM | `192.168.1.100` |
+| `VM_USER` | Utilisateur SSH sur la VM | `debian` |
+| `VM_SSH_KEY` | Cle privee SSH (contenu complet) | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+
+### 8.2 Preparer la VM pour le deploiement SSH
+
+Generer une paire de cles dediee au deploiement (sur ton poste ou dans GitHub) :
+
+```bash
+ssh-keygen -t ed25519 -C "github-deploy" -f deploy_key -N ""
+```
+
+Ajouter la cle publique sur la VM :
+
+```bash
+cat deploy_key.pub >> ~/.ssh/authorized_keys
+```
+
+Copier le contenu de `deploy_key` (cle privee) dans le secret `VM_SSH_KEY` sur GitHub.
+
+### 8.3 Environment GitHub (optionnel)
+
+Le workflow utilise l'environment `production`. Tu peux le configurer dans GitHub > Settings > Environments pour ajouter des regles de protection (approbation manuelle, etc.).
+
+### 8.4 Mise a jour manuelle (fallback)
 
 ```bash
 cd /srv/tcg-nexus
@@ -217,7 +254,7 @@ git pull
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-Si reseed necessaire:
+Si reseed necessaire :
 ```bash
 docker compose -f docker-compose.deploy.yml exec api npm run seed
 ```
