@@ -8,6 +8,7 @@ jest.mock('@nestjs/core', () => {
     NestFactory: {
       create: jest.fn().mockResolvedValue({
         use: jest.fn(),
+        setGlobalPrefix: jest.fn(),
         useGlobalPipes: jest.fn(),
         useGlobalFilters: jest.fn(),
         useGlobalInterceptors: jest.fn(),
