@@ -33,7 +33,8 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0 0 0);
   --sidebar-ring: oklch(0.5117 0.1800 28.58);
-  --font-sans: var(--font-lato, 'Lato', sans-serif);
+  --font-sans: var(--font-inter, 'Inter', sans-serif);
+  --font-heading: var(--font-space-grotesk, 'Space Grotesk', sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
   --radius: 0px;
@@ -80,7 +81,8 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(1 0 0);
   --sidebar-ring: oklch(0.5117 0.1800 28.58);
-  --font-sans: var(--font-lato, 'Lato', sans-serif);
+  --font-sans: var(--font-inter, 'Inter', sans-serif);
+  --font-heading: var(--font-space-grotesk, 'Space Grotesk', sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
   --radius: 0px;
@@ -129,6 +131,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
@@ -166,6 +169,11 @@ body {
     color: var(--color-foreground);
     font-family: var(--font-sans);
     line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 
   /* Smooth transitions for theme changes */

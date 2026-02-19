@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
-import { Lato } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import ClientProviders from "@/components/ClientProviders";
 import LayoutContent from "@/components/Layout/LayoutContent";
 
-const lato = Lato({
-  weight: ["400", "700"],
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-lato",
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
@@ -28,7 +33,7 @@ export default function RootLayout({
       lang="fr"
       suppressHydrationWarning
     >
-      <body className={`${lato.variable} antialiased`}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <ThemeProvider>
           <ClientProviders>
             <LayoutContent>{children}</LayoutContent>

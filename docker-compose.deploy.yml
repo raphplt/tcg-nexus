@@ -31,8 +31,9 @@ services:
       - ./apps/api/.env
     environment:
       DATABASE_HOST: postgres
-      NODE_ENV: development
+      NODE_ENV: production
       FRONTEND_URL: https://tcg-nexus.org
+      COOKIE_DOMAIN: tcg-nexus.org
     ports:
       - "3001:3001"
     networks:
@@ -52,6 +53,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      NEXT_PUBLIC_API_URL: https://tcg-nexus.org:3001/api
     ports:
       - "3000:3000"
     networks:
