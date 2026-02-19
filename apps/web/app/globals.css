@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0 0 0);
@@ -15,8 +17,12 @@
   --muted-foreground: oklch(0.3211 0 0);
   --accent: oklch(0.6500 0.1200 240.37);
   --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.5117 0.1800 28.58);
+  --destructive: oklch(0.5772 0.2104 27.33);
   --destructive-foreground: oklch(1 0 0);
+  --warning: oklch(0.7500 0.1500 75.00);
+  --warning-foreground: oklch(0.2000 0.0500 30.00);
+  --success: oklch(0.6000 0.1500 145.00);
+  --success-foreground: oklch(1 0 0);
   --border: oklch(0 0 0);
   --input: oklch(0 0 0);
   --ring: oklch(0.5117 0.1800 28.58);
@@ -45,7 +51,7 @@
   --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 2px 4px -1px hsl(0 0% 0% / 1.00);
   --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 4px 6px -1px hsl(0 0% 0% / 1.00);
   --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 8px 10px -1px hsl(0 0% 0% / 1.00);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.50);
+  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00);
 }
 
 .dark {
@@ -63,8 +69,12 @@
   --muted-foreground: oklch(0.9 0 0);
   --accent: oklch(0.6500 0.1200 240.37);
   --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(1 0 0);
-  --destructive-foreground: oklch(0 0 0);
+  --destructive: oklch(0.6500 0.2000 25.00);
+  --destructive-foreground: oklch(1 0 0);
+  --warning: oklch(0.8000 0.1300 80.00);
+  --warning-foreground: oklch(0.2000 0.0500 30.00);
+  --success: oklch(0.7000 0.1300 150.00);
+  --success-foreground: oklch(0 0 0);
   --border: oklch(1 0 0);
   --input: oklch(1 0 0);
   --ring: oklch(0.5117 0.1800 28.58);
@@ -93,7 +103,7 @@
   --shadow-md: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 2px 4px -1px hsl(0 0% 0% / 1.00);
   --shadow-lg: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 4px 6px -1px hsl(0 0% 0% / 1.00);
   --shadow-xl: 4px 4px 0px 0px hsl(0 0% 0% / 1.00), 4px 8px 10px -1px hsl(0 0% 0% / 1.00);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 2.50);
+  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 100% / 1.00);
 }
 
 @theme inline {
@@ -113,6 +123,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -508,7 +522,7 @@ body {
     .pokemon-card-image:hover {
       transform: none;
     }
-    
+
     .marketplace-card:hover {
       transform: none;
     }
@@ -523,9 +537,17 @@ body {
   }
 }
 
-
 @layer components {
   .link-style {
     @apply text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline underline-offset-4;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

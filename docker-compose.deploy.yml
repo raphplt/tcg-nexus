@@ -31,6 +31,7 @@ services:
       - ./apps/api/.env
     environment:
       DATABASE_HOST: postgres
+      DATABASE_SSL: "false"
       NODE_ENV: production
       FRONTEND_URL: https://tcg-nexus.org
       COOKIE_DOMAIN: tcg-nexus.org

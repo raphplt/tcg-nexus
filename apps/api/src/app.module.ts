@@ -54,7 +54,7 @@ import { FaqModule } from './faq/faq.module';
       autoLoadEntities: true,
       synchronize: true,
       ssl:
-        process.env.NODE_ENV === 'production'
+        process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL !== 'false'
           ? { rejectUnauthorized: false }
           : false
     }),
