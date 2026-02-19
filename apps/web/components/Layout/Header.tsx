@@ -98,23 +98,6 @@ const Header = () => {
               Decks
             </Link>
           </li>
-          <li className="hidden md:block">
-            <Link
-              href="/faq"
-              className="link-style"
-            >
-              FAQ
-            </Link>
-          </li>
-          {/* <li>
-            <Link
-              href="/strategy"
-              className="link-style"
-            >
-              Stratégie
-            </Link>
-          </li> */}
-
           {showUserMenu && (
             <li>
               <Link

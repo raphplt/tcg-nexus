@@ -119,10 +119,8 @@ export class UserService {
 
     if (refreshToken) {
       updateData.refreshToken = await bcrypt.hash(refreshToken, 10);
-      console.log(`[UserService] Hashed refresh token for user ${userId}`);
     } else {
       updateData.refreshToken = null;
-      console.log(`[UserService] Clearing refresh token for user ${userId}`);
     }
 
     await this.userRepository.update(userId, updateData);
