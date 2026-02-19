@@ -97,12 +97,18 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r-2 border-border">
-      <SidebarHeader className="border-b-2 border-border p-4">
-        <Link href="/" className="flex items-center gap-3">
+    <Sidebar
+      collapsible="icon"
+      className="border-r-2 border-border"
+    >
+      <SidebarHeader className="border-b-2 border-border p-4 group-data-[collapsible=icon]:p-2">
+        <Link
+          href="/"
+          className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
+        >
           <div className="relative w-8 h-8 shrink-0">
             <Image
-              src="/images/Logo_Large.png"
+              src="/images/Logo.png"
               alt="TCG Nexus"
               fill
               sizes="32px"
@@ -145,8 +151,14 @@ export function AppSidebar() {
         {isAuthenticated && user ? (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={user.email}>
-                <Link href="/profile" className="flex items-center gap-3">
+              <SidebarMenuButton
+                asChild
+                tooltip={user.email}
+              >
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-3"
+                >
                   <User className="h-5 w-5" />
                   <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                     <span className="text-sm font-medium truncate">
@@ -163,7 +175,10 @@ export function AppSidebar() {
         ) : (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Se connecter">
+              <SidebarMenuButton
+                asChild
+                tooltip="Se connecter"
+              >
                 <Link href="/auth/login">
                   <LogIn className="h-5 w-5" />
                   <span>Se connecter</span>
