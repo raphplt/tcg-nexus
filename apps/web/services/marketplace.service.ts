@@ -1,4 +1,5 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
+import type { CardPricing } from "@/types/cardPokemon";
 import { Listing } from "@/types/listing";
 import { fetcher, authedFetch } from "@/utils/fetch";
 import { PokemonCardType } from "@/types/cardPokemon";
@@ -39,6 +40,7 @@ export interface CardStatistics {
     currency: string;
     recordedAt: Date;
   }>;
+  marketPricing: CardPricing | null;
 }
 
 export interface PopularCard {

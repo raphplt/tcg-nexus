@@ -340,6 +340,12 @@ export class MarketplaceService {
     currency?: string,
     cardState?: string
   ) {
+    // Fetch card market pricing
+    const card = await this.pokemonCardRepository.findOne({
+      where: { id: cardId },
+      select: ['id', 'pricing']
+    });
+
     const qb = this.listingRepository
       .createQueryBuilder('listing')
       .where('listing.pokemonCard.id = :cardId', { cardId });
@@ -361,7 +367,8 @@ export class MarketplaceService {
         maxPrice: null,
         avgPrice: null,
         currency: currency || null,
-        priceHistory: []
+        priceHistory: [],
+        marketPricing: card?.pricing || null
       };
     }
 
@@ -402,7 +409,8 @@ export class MarketplaceService {
         price: parseFloat(h.price.toString()),
         currency: h.currency,
         recordedAt: h.recordedAt
-      }))
+      })),
+      marketPricing: card?.pricing || null
     };
   }
 
@@ -722,6 +730,7 @@ export class MarketplaceService {
         'card.image',
         'card.rarity',
         'card.localId',
+        'card.pricing',
         'set.id',
         'set.name',
         'set.logo',
@@ -737,6 +746,7 @@ export class MarketplaceService {
       .addGroupBy('card.image')
       .addGroupBy('card.rarity')
       .addGroupBy('card.localId')
+      .addGroupBy('card.pricing')
       .addGroupBy('set.id')
       .addGroupBy('set.name')
       .addGroupBy('set.logo')

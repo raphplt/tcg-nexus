@@ -29,6 +29,48 @@ export type CardVariantDetail = {
   subtype?: string;
 };
 
+export type TcgPlayerVariantPricing = {
+  productId: number;
+  lowPrice: number | null;
+  midPrice: number | null;
+  highPrice: number | null;
+  marketPrice: number | null;
+  directLowPrice: number | null;
+};
+
+export type TcgPlayerPricing = {
+  unit: string;
+  updated: string;
+  normal?: TcgPlayerVariantPricing;
+  holofoil?: TcgPlayerVariantPricing;
+  reverseHolofoil?: TcgPlayerVariantPricing;
+  '1stEditionHolofoil'?: TcgPlayerVariantPricing;
+  '1stEditionNormal'?: TcgPlayerVariantPricing;
+};
+
+export type CardMarketPricing = {
+  unit: string;
+  updated: string;
+  idProduct: number;
+  avg: number | null;
+  avg1: number | null;
+  avg7: number | null;
+  avg30: number | null;
+  low: number | null;
+  trend: number | null;
+  'avg-holo': number | null;
+  'avg1-holo': number | null;
+  'avg7-holo': number | null;
+  'avg30-holo': number | null;
+  'low-holo': number | null;
+  'trend-holo': number | null;
+};
+
+export type CardPricingData = {
+  tcgplayer?: TcgPlayerPricing | null;
+  cardmarket?: CardMarketPricing | null;
+};
+
 @Entity('card')
 export class Card {
   @PrimaryGeneratedColumn('uuid')
@@ -77,7 +119,7 @@ export class Card {
   updated?: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  pricing?: Record<string, any>;
+  pricing?: CardPricingData;
 
   @OneToOne(() => PokemonCardDetails, (details) => details.card, {
     cascade: true

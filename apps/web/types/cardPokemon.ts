@@ -3,6 +3,52 @@ import { PokemonCardsType } from "./enums/pokemonCardsType";
 import { TrainerType } from "./enums/trainerType";
 import { Rarity } from "./listing";
 
+// TCGPlayer pricing for a single variant (normal, holofoil, reverseHolofoil, etc.)
+export interface TcgPlayerVariantPricing {
+  productId: number;
+  lowPrice: number | null;
+  midPrice: number | null;
+  highPrice: number | null;
+  marketPrice: number | null;
+  directLowPrice: number | null;
+}
+
+// TCGPlayer pricing container
+export interface TcgPlayerPricing {
+  unit: string;
+  updated: string;
+  normal?: TcgPlayerVariantPricing;
+  holofoil?: TcgPlayerVariantPricing;
+  reverseHolofoil?: TcgPlayerVariantPricing;
+  "1stEditionHolofoil"?: TcgPlayerVariantPricing;
+  "1stEditionNormal"?: TcgPlayerVariantPricing;
+}
+
+// CardMarket pricing container
+export interface CardMarketPricing {
+  unit: string;
+  updated: string;
+  idProduct: number;
+  avg: number | null;
+  avg1: number | null;
+  avg7: number | null;
+  avg30: number | null;
+  low: number | null;
+  trend: number | null;
+  "avg-holo": number | null;
+  "avg1-holo": number | null;
+  "avg7-holo": number | null;
+  "avg30-holo": number | null;
+  "low-holo": number | null;
+  "trend-holo": number | null;
+}
+
+// Combined pricing from both sources
+export interface CardPricing {
+  tcgplayer?: TcgPlayerPricing | null;
+  cardmarket?: CardMarketPricing | null;
+}
+
 export type PokemonSetType = {
   id: string;
   name: string;
@@ -99,8 +145,5 @@ export type PokemonCardType = {
     id?: string;
     name?: string;
   }[];
-  pricing?: {
-    cardmarket?: Record<string, any> | null;
-    tcgplayer?: Record<string, any> | null;
-  };
+  pricing?: CardPricing;
 };

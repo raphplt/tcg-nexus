@@ -11,6 +11,7 @@ import { Type } from 'class-transformer';
 import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { EnergyType } from 'src/common/enums/energyType';
 import { TrainerType } from 'src/common/enums/trainerType';
+import { CardPricingData } from 'src/card/entities/card.entity';
 
 class SetRefDto {
   @IsString()
@@ -231,7 +232,7 @@ export class CreatePokemonCardDto {
 
   @IsOptional()
   @IsObject()
-  pricing?: Record<string, any>;
+  pricing?: CardPricingData;
 
   @IsOptional()
   @IsArray()

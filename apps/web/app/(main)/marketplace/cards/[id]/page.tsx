@@ -108,6 +108,7 @@ export default function CardDetailPage() {
               <MarketStats
                 stats={stats}
                 isGoodDeal={!!isGoodDeal}
+                marketPricing={stats.marketPricing || card?.pricing}
               />
             )}
           </div>

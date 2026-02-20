@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useCurrencyStore } from "@/store/currency.store";
 import { PokemonCardType } from "@/types/cardPokemon";
 import { getCardImage } from "@/utils/images";
+import { getMarketReferencePrice } from "@/utils/price";
 
 interface CardCardProps {
   card: PokemonCardType;
@@ -35,10 +36,11 @@ export function CardCard({
   isPopular = false,
   isTrending = false,
 }: CardCardProps) {
-  const { formatPrice } = useCurrencyStore();
+  const { formatPrice, currency: userCurrency } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
-
-  // console.log("card", card);
+  const marketRef = !hasListings
+    ? getMarketReferencePrice(card.pricing, userCurrency)
+    : null;
 
   return (
     <Link href={`/marketplace/cards/${card.id}`}>
@@ -150,6 +152,15 @@ export function CardCard({
                       Moyenne: {formatPrice(avgPrice, currency)}
                     </p>
                   )}
+                </div>
+              ) : marketRef ? (
+                <div className="space-y-1">
+                  <span className="text-lg font-bold text-muted-foreground">
+                    ~{formatPrice(marketRef.price, marketRef.currency)}
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Prix de référence
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Aucune offre</p>

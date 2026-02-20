@@ -1,17 +1,74 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrencyStore } from "@/store/currency.store";
+import type { CardPricing } from "@/types/cardPokemon";
+import { getCardMarketPrice, getTcgPlayerPrice } from "@/utils/price";
 import { Star } from "lucide-react";
 
 interface MarketStatsProps {
-  stats: any; // Replace with proper type
+  stats: {
+    totalListings: number;
+    minPrice: number | null;
+    avgPrice: number | null;
+    maxPrice: number | null;
+    currency: string | null;
+  };
   isGoodDeal: boolean;
+  marketPricing?: CardPricing | null;
 }
 
-export function MarketStats({ stats, isGoodDeal }: MarketStatsProps) {
+function MarketReferencePrices({
+  marketPricing,
+}: { marketPricing: CardPricing }) {
+  const { formatPrice } = useCurrencyStore();
+
+  const cmPrice = getCardMarketPrice(marketPricing.cardmarket);
+  const tcgPrice = getTcgPlayerPrice(marketPricing.tcgplayer);
+
+  if (cmPrice == null && tcgPrice == null) return null;
+
+  return (
+    <div className="border-t pt-4 space-y-2">
+      <h4 className="text-sm font-semibold text-muted-foreground">
+        Prix de référence
+      </h4>
+      {cmPrice != null && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-sm">
+            CardMarket (tendance)
+          </span>
+          <span className="font-semibold">
+            {formatPrice(cmPrice, "EUR")}
+          </span>
+        </div>
+      )}
+      {tcgPrice != null && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-sm">
+            TCGPlayer (marché)
+          </span>
+          <span className="font-semibold">
+            {formatPrice(tcgPrice, "USD")}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MarketStats({
+  stats,
+  isGoodDeal,
+  marketPricing,
+}: MarketStatsProps) {
   const { formatPrice } = useCurrencyStore();
 
   if (!stats) return null;
+
+  const hasMarketPricing =
+    marketPricing &&
+    (getCardMarketPrice(marketPricing.cardmarket) != null ||
+      getTcgPlayerPrice(marketPricing.tcgplayer) != null);
 
   return (
     <Card>
@@ -57,6 +114,16 @@ export function MarketStats({ stats, isGoodDeal }: MarketStatsProps) {
                 </div>
               </div>
             )}
+            {hasMarketPricing && (
+              <MarketReferencePrices marketPricing={marketPricing!} />
+            )}
+          </>
+        ) : hasMarketPricing ? (
+          <>
+            <MarketReferencePrices marketPricing={marketPricing!} />
+            <p className="text-muted-foreground text-center text-sm pt-2">
+              Aucune offre en vente pour le moment
+            </p>
           </>
         ) : (
           <p className="text-muted-foreground text-center py-4">
