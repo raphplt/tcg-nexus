@@ -45,7 +45,7 @@ export function getRarityImage(rarity: Rarity): string | undefined {
 
 import { PokemonCardType } from "../types/cardPokemon";
 
-export const R2_BASE_URL = "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
+export const R2_BASE_URL = "https://cdn.tcg-nexus.org";
 
 export function getCardImage(
   card: PokemonCardType | null | undefined,
@@ -62,7 +62,7 @@ export function getCardImage(
 export const remotePatterns: RemotePattern[] = [
   {
     protocol: "https",
-    hostname: "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev",
+    hostname: "cdn.tcg-nexus.org",
     port: "",
     pathname: "/**",
   },

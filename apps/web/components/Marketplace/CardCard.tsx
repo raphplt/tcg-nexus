@@ -1,14 +1,14 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Flame, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCurrencyStore } from "@/store/currency.store";
-import { TrendingUp, TrendingDown, Minus, Star, Flame } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getCardImage } from "@/utils/images";
+import { useCurrencyStore } from "@/store/currency.store";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { getCardImage } from "@/utils/images";
 
 interface CardCardProps {
   card: PokemonCardType;
@@ -38,6 +38,8 @@ export function CardCard({
   const { formatPrice } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
 
+  // console.log("card", card);
+
   return (
     <Link href={`/marketplace/cards/${card.id}`}>
       <Card
@@ -48,7 +50,6 @@ export function CardCard({
       >
         <CardHeader className="pb-3">
           <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg mb-3">
-
             <Image
               src={getCardImage(card)}
               alt={card.name || "Pokemon Card"}
@@ -104,18 +105,12 @@ export function CardCard({
         <CardContent className="pt-0 mt-auto">
           <div className="flex flex-wrap gap-2 mb-3">
             {card.rarity && (
-              <Badge
-                variant="outline"
-                className="text-xs"
-              >
+              <Badge variant="outline" className="text-xs">
                 {card.rarity}
               </Badge>
             )}
             {hasListings && (
-              <Badge
-                variant="secondary"
-                className="text-xs"
-              >
+              <Badge variant="secondary" className="text-xs">
                 {listingCount} offre{listingCount > 1 ? "s" : ""}
               </Badge>
             )}

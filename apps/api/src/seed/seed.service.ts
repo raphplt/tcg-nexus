@@ -555,9 +555,15 @@ export class SeedService {
   }
 
   /**
-   * Seed test users
+   * Seed test users (dev only)
    */
   async seedUsers() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test users seed in production environment.');
+      return [];
+    }
+
     // Bypass TypeScript transpilation of dynamic import to require()
     const { faker } = await (eval('import("@faker-js/faker")') as Promise<
       typeof import('@faker-js/faker')
@@ -655,9 +661,50 @@ export class SeedService {
   }
 
   /**
-   * Seed test tournaments with related entities
+   * Create a single user (for production use)
+   */
+  async createUser(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: UserRole = UserRole.USER
+  ): Promise<User> {
+    const existing = await this.userRepository.findOne({ where: { email } });
+    if (existing) {
+      throw new Error(`User with email ${email} already exists`);
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const user = this.userRepository.create({
+      email,
+      password: hash,
+      firstName,
+      lastName,
+      role,
+      isPro: false,
+      isActive: true,
+      emailVerified: true,
+      preferredCurrency: Currency.EUR,
+      decks: [],
+      collections: []
+    });
+
+    await this.userRepository.save(user);
+    await this.createDefaultCollections(user.id);
+    console.log(`✅ User created: ${email} (${role})`);
+    return user;
+  }
+
+  /**
+   * Seed test tournaments with related entities (dev only)
    */
   async seedTournaments() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test tournaments seed in production environment.');
+      return [];
+    }
     // Crée quelques joueurs (réutilise si déjà existants)
     const players: Player[] = [];
 
@@ -1224,10 +1271,15 @@ export class SeedService {
   }
 
   /**
-   * Seed test listings
+   * Seed test listings (dev only)
    * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
   async seedListings() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test listings seed in production environment.');
+      return;
+    }
     // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
     const sellers = await this.userRepository.find();
     // Limiter à 1500 cartes pour éviter les performances trop longues
@@ -1420,10 +1472,15 @@ export class SeedService {
   }
 
   /**
-   * Seed card events to simulate user interactions
+   * Seed card events to simulate user interactions (dev only)
    * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
    */
   async seedCardEvents() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test card events seed in production environment.');
+      return;
+    }
     console.log('🌱 Starting card events seed...');
     const users = await this.userRepository.find();
     const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limiter à 200 cartes
@@ -1540,11 +1597,16 @@ export class SeedService {
   }
 
   /**
-   * Seed card popularity metrics by aggregating events
+   * Seed card popularity metrics by aggregating events (dev only)
    * Agrège les événements existants pour créer des métriques de popularité
    * Note: Cette méthode nécessite que seedCardEvents() ait été appelé avant
    */
   async seedCardPopularityMetrics() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test card popularity metrics seed in production environment.');
+      return;
+    }
     console.log('🌱 Starting card popularity metrics seed...');
 
     // Réduire le nombre de cartes traitées pour éviter la surcharge mémoire
