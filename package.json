@@ -6,13 +6,13 @@
         "dev": "turbo dev",
         "seed": "cd apps/api && npm run seed",
         "lint": "turbo lint",
-        "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+        "format": "biome format --write .",
         "check-types": "turbo check-types",
         "test:cov": "turbo run test:cov"
     },
     "devDependencies": {
+        "@biomejs/biome": "^2.4.3",
         "npm-check-updates": "^18.0.2",
-        "prettier": "^3.5.0",
         "turbo": "^2.6.0",
         "typescript": "5.8.3"
     },
@@ -20,8 +20,5 @@
         "node": ">=18"
     },
     "packageManager": "npm@10.9.0",
-    "workspaces": [
-        "apps/*",
-        "packages/*"
-    ]
+    "workspaces": ["apps/*", "packages/typescript-config", "packages/ui"]
 }
