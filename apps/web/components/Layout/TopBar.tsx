@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, LogOut, ShoppingCart, Shield } from "lucide-react";
+import { User, LogOut, ShoppingCart, Shield, Settings } from "lucide-react";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
 
 export function TopBar() {
@@ -98,6 +98,11 @@ export function TopBar() {
               <DropdownMenuItem asChild>
                 <Link href="/profile" className="flex items-center">
                   <User className="mr-2 h-4 w-4" /> Profil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="flex items-center">
+                  <Settings className="mr-2 h-4 w-4" /> Paramètres
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

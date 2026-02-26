@@ -1,8 +1,27 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Activity, Trophy, ShoppingBag, Plus } from "lucide-react";
+import { Activity, BarChart3 } from "lucide-react";
+import type { DashboardActivityDay } from "@/types/dashboard";
 
-export const ProfileActivity = () => {
+interface ProfileActivityProps {
+  activity?: DashboardActivityDay[];
+}
+
+export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
+  const hasActivity = activity && activity.some((day) => day.events > 0);
+  const maxEvents = hasActivity
+    ? Math.max(...activity!.map((d) => d.events))
+    : 0;
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  };
+
   return (
     <Card className="p-6">
       <div className="flex items-center space-x-2 mb-6">
@@ -10,74 +29,40 @@ export const ProfileActivity = () => {
         <h2 className="text-xl font-semibold">Activité récente</h2>
       </div>
 
-      <div className="space-y-6">
-        <div className="relative pl-6 border-l-2 border-muted pb-6 last:pb-0">
-          <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-background border-2 border-primary" />
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">
-                Participation au tournoi &ldquo;Spring Championship&rdquo;
+      {hasActivity ? (
+        <div className="space-y-3">
+          {activity!.map((day) => (
+            <div key={day.date} className="flex items-center gap-4">
+              <span className="text-xs text-muted-foreground w-28 shrink-0">
+                {formatDate(day.date)}
               </span>
-              <span className="text-xs text-muted-foreground">
-                Il y a 2 jours
+              <div className="flex-1 h-6 bg-muted/30 rounded-md overflow-hidden">
+                {day.events > 0 && (
+                  <div
+                    className="h-full bg-primary/70 rounded-md transition-all"
+                    style={{
+                      width: `${(day.events / maxEvents) * 100}%`,
+                    }}
+                  />
+                )}
+              </div>
+              <span className="text-sm font-medium w-8 text-right">
+                {day.events}
               </span>
             </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Trophy className="w-3 h-3 mr-1" />
-              <span>Terminé 1er</span>
-            </div>
-          </div>
+          ))}
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Nombre d&apos;actions sur les 7 derniers jours
+          </p>
         </div>
-
-        <div className="relative pl-6 border-l-2 border-muted pb-6 last:pb-0">
-          <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-background border-2 border-green-500" />
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Victoire contre Jean Dupont</span>
-              <span className="text-xs text-muted-foreground">
-                Il y a 1 semaine
-              </span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Match classé - Score 2-0
-            </p>
-          </div>
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-8 text-center">
+          <BarChart3 className="h-8 w-8 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground">
+            Aucune activité récente
+          </p>
         </div>
-
-        <div className="relative pl-6 border-l-2 border-muted pb-6 last:pb-0">
-          <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-background border-2 border-blue-500" />
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">
-                Nouveau deck créé : &ldquo;Dragon Rush&rdquo;
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Il y a 2 semaines
-              </span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Plus className="w-3 h-3 mr-1" />
-              <span>60 cartes ajoutées</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative pl-6 border-l-2 border-muted last:pb-0">
-          <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-background border-2 border-orange-500" />
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Vente réussie : Charizard VMAX</span>
-              <span className="text-xs text-muted-foreground">
-                Il y a 3 semaines
-              </span>
-            </div>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <ShoppingBag className="w-3 h-3 mr-1" />
-              <span>Vendu pour 150€</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </Card>
   );
 };
