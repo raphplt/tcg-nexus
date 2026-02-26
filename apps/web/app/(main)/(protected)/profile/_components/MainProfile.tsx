@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDashboard } from "@/hooks/useDashboard";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Loader from "@/components/Layout/Loader";
@@ -9,23 +10,12 @@ import { ProfileStats } from "./ProfileStats";
 import { ProfileActivity } from "./ProfileActivity";
 import { ProfileTournaments } from "./ProfileTournaments";
 import { ProfileSales } from "./ProfileSales";
-import { toast } from "react-hot-toast";
 
 const MainProfile = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const { data: dashboard, isLoading: isDashboardLoading } = useDashboard();
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleSave = () => {
-    // TODO: Implémenter la sauvegarde des modifications
-    toast.success("Profil mis à jour avec succès");
-    setIsEditing(false);
-  };
-
-  if (isLoading) {
+  if (isLoading || isDashboardLoading) {
     return <Loader />;
   }
 
@@ -43,12 +33,7 @@ const MainProfile = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
-      <ProfileHeader
-        user={user}
-        isEditing={isEditing}
-        onEditToggle={handleEditToggle}
-        onSave={handleSave}
-      />
+      <ProfileHeader user={user} />
 
       <Tabs
         defaultValue="overview"
@@ -66,10 +51,13 @@ const MainProfile = () => {
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <ProfileActivity />
+              <ProfileActivity activity={dashboard?.activity} />
             </div>
             <div className="space-y-6">
-              <ProfileStats />
+              <ProfileStats
+                tournaments={dashboard?.tournaments}
+                badges={dashboard?.badges}
+              />
             </div>
           </div>
         </TabsContent>

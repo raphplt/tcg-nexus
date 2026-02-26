@@ -1,24 +1,17 @@
 import React from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Shield, Mail, Calendar, Edit3, Save, X } from "lucide-react";
+import { Shield, Mail, Calendar, Settings } from "lucide-react";
 import { User, UserRole } from "@/types/auth";
 
 interface ProfileHeaderProps {
   user: User;
-  isEditing: boolean;
-  onEditToggle: () => void;
-  onSave: () => void;
 }
 
-export const ProfileHeader = ({
-  user,
-  isEditing,
-  onEditToggle,
-  onSave,
-}: ProfileHeaderProps) => {
+export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
   const getUserInitials = (firstName: string, lastName: string) => {
     return (
       `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
@@ -43,10 +36,16 @@ export const ProfileHeader = ({
         return "Administrateur";
       case UserRole.MODERATOR:
         return "Modérateur";
-        
       default:
         return "Utilisateur";
     }
+  };
+
+  const formatMemberSince = (date: Date) => {
+    return new Date(date).toLocaleDateString("fr-FR", {
+      month: "long",
+      year: "numeric",
+    });
   };
 
   return (
@@ -54,7 +53,10 @@ export const ProfileHeader = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 w-full">
           <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-            <AvatarImage src="" alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarImage
+              src={user.avatarUrl || ""}
+              alt={`${user.firstName} ${user.lastName}`}
+            />
             <AvatarFallback className="text-2xl bg-primary/10 text-primary">
               {getUserInitials(user.firstName, user.lastName)}
             </AvatarFallback>
@@ -79,36 +81,19 @@ export const ProfileHeader = ({
               <div className="hidden md:block text-muted-foreground/30">•</div>
               <div className="flex items-center space-x-1.5">
                 <Calendar className="w-4 h-4" />
-                <span>Membre depuis janvier 2024</span>
+                <span>Membre depuis {formatMemberSince(user.createdAt)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 w-full md:w-auto justify-center md:justify-end">
-          <Button
-            onClick={isEditing ? onSave : onEditToggle}
-            className="space-x-2 min-w-[140px]"
-            variant={isEditing ? "default" : "outline"}
-          >
-            {isEditing ? (
-              <>
-                <Save className="w-4 h-4" />
-                <span>Sauvegarder</span>
-              </>
-            ) : (
-              <>
-                <Edit3 className="w-4 h-4" />
-                <span>Modifier profil</span>
-              </>
-            )}
+        <div className="flex items-center w-full md:w-auto justify-center md:justify-end">
+          <Button asChild variant="outline" className="space-x-2">
+            <Link href="/settings">
+              <Settings className="w-4 h-4" />
+              <span>Paramètres</span>
+            </Link>
           </Button>
-
-          {isEditing && (
-            <Button variant="ghost" size="icon" onClick={onEditToggle}>
-              <X className="w-4 h-4" />
-            </Button>
-          )}
         </div>
       </div>
     </Card>

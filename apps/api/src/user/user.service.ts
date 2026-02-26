@@ -62,6 +62,7 @@ export class UserService {
         'email',
         'firstName',
         'lastName',
+        'avatarUrl',
         'role',
         'isActive',
         'isPro',
@@ -69,7 +70,8 @@ export class UserService {
         'emailVerified',
         'createdAt',
         'updatedAt'
-      ]
+      ],
+      relations: ['player']
     });
 
     if (!user) {
