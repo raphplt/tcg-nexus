@@ -15,6 +15,7 @@ import { UserRole } from 'src/common/enums/user';
 import { Currency } from 'src/common/enums/currency';
 import { UserCart } from 'src/user_cart/entities/user_cart.entity';
 import { TournamentOrganizer } from 'src/tournament/entities';
+import { UserBadge } from 'src/badge/entities/user-badge.entity';
 
 @Entity()
 export class User {
@@ -79,6 +80,9 @@ export class User {
 
   @OneToMany(() => TournamentOrganizer, (organizer) => organizer.user)
   tournamentOrganizers: TournamentOrganizer[];
+
+  @OneToMany(() => UserBadge, (userBadge) => userBadge.user)
+  userBadges?: UserBadge[];
 
   // Dates
   @CreateDateColumn()

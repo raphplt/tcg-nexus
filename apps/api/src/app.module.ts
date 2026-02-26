@@ -31,6 +31,8 @@ import { CardStateModule } from './card-state/card-state.module';
 import { AiModule } from './ai/ai.module';
 import { UserCartModule } from './user_cart/user_cart.module';
 import { FaqModule } from './faq/faq.module';
+import { BadgeModule } from './badge/badge.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -82,7 +84,9 @@ import { FaqModule } from './faq/faq.module';
     CardStateModule,
     AiModule,
     UserCartModule,
-    FaqModule
+    FaqModule,
+    BadgeModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [
