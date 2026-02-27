@@ -4,11 +4,14 @@ import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { H1 } from "@/components/Shared/Titles";
 import { CardCard } from "@/components/Marketplace/CardCard";
+import { CardListItem } from "@/components/Marketplace/CardListItem";
+import { ViewToggle } from "@/components/Marketplace/ViewToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useViewMode } from "@/hooks/useViewMode";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { useMarketplaceCards, FilterState } from "@/hooks/useMarketplace";
 import MarketplaceSearch from "../_components/MarketplaceSearch";
@@ -41,6 +44,7 @@ function MarketplaceCardsContent() {
     parseInt(searchParams.get("page") || "1", 10),
   );
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useViewMode("grid");
 
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get("search") || "",
@@ -210,26 +214,50 @@ function MarketplaceCardsContent() {
           </Card>
         ) : data && data.data.length > 0 ? (
           <>
-            <div className="mb-4 text-sm text-muted-foreground">
-              {data.meta.totalItems} carte{data.meta.totalItems > 1 ? "s" : ""}{" "}
-              trouvée
-              {data.meta.totalItems > 1 ? "s" : ""}
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {data.meta.totalItems} carte
+                {data.meta.totalItems > 1 ? "s" : ""} trouvée
+                {data.meta.totalItems > 1 ? "s" : ""}
+              </span>
+              <ViewToggle
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-              {data.data.map((item: any) => {
-                const card = item.card || item;
-                return (
-                  <CardCard
-                    key={card.id}
-                    card={card}
-                    minPrice={item.minPrice}
-                    avgPrice={item.avgPrice}
-                    listingCount={item.listingCount}
-                    currency={filters.currency}
-                  />
-                );
-              })}
-            </div>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+                {data.data.map((item: any) => {
+                  const card = item.card || item;
+                  return (
+                    <CardCard
+                      key={card.id}
+                      card={card}
+                      minPrice={item.minPrice}
+                      avgPrice={item.avgPrice}
+                      listingCount={item.listingCount}
+                      currency={filters.currency}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 mb-8">
+                {data.data.map((item: any) => {
+                  const card = item.card || item;
+                  return (
+                    <CardListItem
+                      key={card.id}
+                      card={card}
+                      minPrice={item.minPrice}
+                      avgPrice={item.avgPrice}
+                      listingCount={item.listingCount}
+                      currency={filters.currency}
+                    />
+                  );
+                })}
+              </div>
+            )}
             {data.meta && (
               <PaginatedNav
                 meta={data.meta}

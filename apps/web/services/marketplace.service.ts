@@ -65,6 +65,15 @@ export interface BestSeller {
 
 export interface SellerStatistics {
   sellerId: number;
+  seller: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatarUrl: string;
+    isPro: boolean;
+    createdAt: string;
+  };
   totalListings: number;
   activeListings: number;
   totalSales: number;

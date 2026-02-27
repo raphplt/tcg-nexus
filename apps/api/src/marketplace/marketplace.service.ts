@@ -59,6 +59,8 @@ export class MarketplaceService {
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
@@ -724,6 +726,23 @@ export class MarketplaceService {
    * Get seller statistics
    */
   async getSellerStatistics(sellerId: number) {
+    const seller = await this.userRepository.findOne({
+      where: { id: sellerId },
+      select: [
+        'id',
+        'firstName',
+        'lastName',
+        'email',
+        'avatarUrl',
+        'isPro',
+        'createdAt'
+      ]
+    });
+
+    if (!seller) {
+      throw new NotFoundException(`Seller with id ${sellerId} not found`);
+    }
+
     const listings = await this.listingRepository.find({
       where: { seller: { id: sellerId } },
       relations: [
@@ -753,6 +772,7 @@ export class MarketplaceService {
 
     return {
       sellerId,
+      seller,
       totalListings: listings.length,
       activeListings: listings.filter(
         (l) => !l.expiresAt || new Date(l.expiresAt) > new Date()
