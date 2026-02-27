@@ -4,7 +4,6 @@ import { MarketplaceService } from './marketplace.service';
 import { CardPopularityService } from './card-popularity.service';
 import { CardPopularityScheduler } from './card-popularity.scheduler';
 import { MarketplaceController } from './marketplace.controller';
-import { ListingsController } from './listings.controller';
 import { CardPopularityController } from './card-popularity.controller';
 import {
   Listing,
@@ -17,6 +16,7 @@ import {
 } from './entities';
 import { Player } from 'src/player/entities/player.entity';
 import { Card } from 'src/card/entities/card.entity';
+import { User } from 'src/user/entities/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { StripeService } from './stripe.service';
 import { PaymentController } from './payment.controller';
@@ -34,14 +34,14 @@ import { UserCartModule } from '../user_cart/user_cart.module';
       CardEvent,
       CardPopularityMetrics,
       Player,
-      Card
+      Card,
+      User
     ]),
     ConfigModule,
     UserCartModule
   ],
   controllers: [
     MarketplaceController,
-    ListingsController,
     CardPopularityController,
     PaymentController,
     WebhookController

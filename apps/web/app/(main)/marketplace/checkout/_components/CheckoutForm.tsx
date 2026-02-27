@@ -11,6 +11,16 @@ import { paymentService } from "@/services/payment.service";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
 import { useCurrencyStore } from "@/store/currency.store";
 import usePlacesAutocomplete, {
@@ -38,10 +48,11 @@ export default function CheckoutForm() {
   const elements = useElements();
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [shippingAddress, setShippingAddress] = useState("");
   const { clearCart } = useCartStore();
   const total = useCartTotal();
-  const { currency } = useCurrencyStore();
+  const { currency, formatPrice } = useCurrencyStore();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -71,8 +82,23 @@ export default function CheckoutForm() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
+    }
+
+    if (!shippingAddress) {
+      setMessage("Veuillez sélectionner une adresse de livraison.");
+      return;
+    }
+
+    setShowConfirm(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    setShowConfirm(false);
 
     if (!stripe || !elements) {
       return;
@@ -179,8 +205,29 @@ export default function CheckoutForm() {
         disabled={isLoading || !stripe || !elements}
         className="w-full"
       >
-        {isLoading ? "Traitement..." : `Payer ${total.toFixed(2)} ${currency}`}
+        {isLoading ? "Traitement..." : `Payer ${formatPrice(total, currency)}`}
       </Button>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer le paiement</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous êtes sur le point de payer{" "}
+              <span className="font-semibold text-foreground">
+                {formatPrice(total, currency)}
+              </span>{" "}
+              pour votre commande. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmPayment}>
+              Confirmer le paiement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

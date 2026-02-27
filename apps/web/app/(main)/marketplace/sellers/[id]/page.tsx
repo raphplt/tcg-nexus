@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { marketplaceService } from "@/services/marketplace.service";
 import { CardCard } from "@/components/Marketplace/CardCard";
+import { ViewToggle } from "@/components/Marketplace/ViewToggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -29,10 +30,12 @@ import Link from "next/link";
 import { formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import { useViewMode } from "@/hooks/useViewMode";
 
 export default function SellerPage() {
   const { id } = useParams();
   const sellerId = parseInt(id as string);
+  const [viewMode, setViewMode] = useViewMode("grid");
 
   // Fetch seller statistics
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -73,7 +76,8 @@ export default function SellerPage() {
     );
   }
 
-  const seller = listings?.[0]?.seller;
+  const sellerListings = listings?.data ?? [];
+  const seller = stats.seller ?? stats.listings?.[0]?.seller ?? sellerListings?.[0]?.seller;
 
   if (!seller) {
     return (
@@ -128,15 +132,17 @@ export default function SellerPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Link href={`/marketplace/sellers/${sellerId}`}>
-                  <Badge
-                    variant="outline"
-                    className="cursor-pointer hover:bg-accent"
-                  >
-                    <MessageCircle className="w-3 h-3 mr-1" />
-                    Contacter
-                  </Badge>
-                </Link>
+                {seller.email && (
+                  <a href={`mailto:${seller.email}`}>
+                    <Badge
+                      variant="outline"
+                      className="cursor-pointer hover:bg-accent"
+                    >
+                      <MessageCircle className="w-3 h-3 mr-1" />
+                      Contacter
+                    </Badge>
+                  </a>
+                )}
               </div>
             </div>
           </CardContent>
@@ -212,10 +218,16 @@ export default function SellerPage() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <H2>Offres du vendeur</H2>
-            <Badge variant="secondary">
-              {listings?.length || 0} offre
-              {listings && listings.length > 1 ? "s" : ""}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary">
+                {sellerListings.length} offre
+                {sellerListings.length > 1 ? "s" : ""}
+              </Badge>
+              <ViewToggle
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
+            </div>
           </div>
 
           {loadingListings ? (
@@ -227,10 +239,10 @@ export default function SellerPage() {
                 />
               ))}
             </div>
-          ) : listings && listings.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-                {listings.map((listing) => (
+          ) : sellerListings.length > 0 ? (
+            viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sellerListings.map((listing) => (
                   <CardCard
                     key={listing.id}
                     card={listing.pokemonCard}
@@ -240,13 +252,9 @@ export default function SellerPage() {
                   />
                 ))}
               </div>
-
-              {/* Listings Table View */}
+            ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle>Liste détaillée</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -259,7 +267,7 @@ export default function SellerPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {listings.map((listing) => (
+                      {sellerListings.map((listing) => (
                         <TableRow key={listing.id}>
                           <TableCell>
                             <Link
@@ -307,7 +315,7 @@ export default function SellerPage() {
                   </Table>
                 </CardContent>
               </Card>
-            </>
+            )
           ) : (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">

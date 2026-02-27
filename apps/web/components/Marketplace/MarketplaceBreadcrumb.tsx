@@ -37,13 +37,13 @@ export function MarketplaceBreadcrumb() {
   });
 
   // Get seller name if on seller detail page
-  const { data: sellerListings } = useQuery({
-    queryKey: ["seller-listings", params.id],
-    queryFn: () => marketplaceService.getSellerListings(parseInt(params.id as string)),
+  const { data: sellerStats } = useQuery({
+    queryKey: ["seller-stats", params.id ? parseInt(params.id as string) : 0],
+    queryFn: () => marketplaceService.getSellerStatistics(parseInt(params.id as string)),
     enabled: !!params.id && pathname.includes("/sellers/") && !isNaN(parseInt(params.id as string)),
   });
 
-  const seller = sellerListings?.[0]?.seller;
+  const seller = sellerStats?.seller;
 
   const breadcrumbs = [];
 

@@ -65,6 +65,15 @@ export interface BestSeller {
 
 export interface SellerStatistics {
   sellerId: number;
+  seller: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatarUrl: string;
+    isPro: boolean;
+    createdAt: string;
+  };
   totalListings: number;
   activeListings: number;
   totalSales: number;
@@ -186,8 +195,12 @@ export const marketplaceService = {
   /**
    * Récupère les listings d'un vendeur
    */
-  async getSellerListings(sellerId: number): Promise<Listing[]> {
-    return fetcher<Listing[]>(`/marketplace/sellers/${sellerId}/listings`);
+  async getSellerListings(
+    sellerId: number,
+  ): Promise<PaginatedResult<Listing>> {
+    return fetcher<PaginatedResult<Listing>>(
+      `/marketplace/sellers/${sellerId}/listings`,
+    );
   },
 
   /**

@@ -5,6 +5,8 @@ import {
   ManyToOne,
   OneToMany,
   CreateDateColumn,
+  DeleteDateColumn,
+  Index,
   JoinColumn
 } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -14,7 +16,11 @@ import { CartItem } from 'src/user_cart/entities/cart-item.entity';
 import { Currency } from '../../common/enums/currency';
 import { Languages } from 'src/common/enums/languages';
 import { CardState } from 'src/common/enums/pokemonCardsType';
+
 @Entity()
+@Index(['price'])
+@Index(['expiresAt', 'quantityAvailable'])
+@Index(['pokemonCard', 'currency', 'cardState'])
 export class Listing {
   @PrimaryGeneratedColumn()
   id: number;
@@ -50,6 +56,9 @@ export class Listing {
 
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt?: Date;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.listing)
   orderItems: OrderItem[];
