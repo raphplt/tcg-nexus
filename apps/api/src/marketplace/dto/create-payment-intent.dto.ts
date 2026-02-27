@@ -1,17 +1,11 @@
-import { IsNumber, IsString, IsOptional, IsObject } from 'class-validator';
+import { IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePaymentIntentDto {
-  @ApiProperty()
-  @IsNumber()
-  amount: number;
-
-  @ApiProperty()
-  @IsString()
-  currency: string;
-
-  @ApiProperty({ required: false })
+  @ApiProperty({
+    required: false,
+    description: 'Optional metadata (string values only)'
+  })
   @IsOptional()
-  @IsObject()
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string>;
 }

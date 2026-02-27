@@ -112,6 +112,10 @@ export function MarketStats({
                   <Star className="w-4 h-4" />
                   Bon deal disponible !
                 </div>
+                <p className="text-xs text-green-600/80 mt-1">
+                  Le prix minimum est inférieur de plus de 20% par rapport au
+                  prix moyen du marché.
+                </p>
               </div>
             )}
             {hasMarketPricing && (

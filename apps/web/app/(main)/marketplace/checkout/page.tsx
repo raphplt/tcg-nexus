@@ -30,11 +30,11 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (total > 0) {
       paymentService
-        .createPaymentIntent(total, currency)
+        .createPaymentIntent()
         .then((data) => setClientSecret(data.clientSecret))
         .catch((err) => console.error("Failed to create payment intent", err));
     }
-  }, [total, currency]);
+  }, [total]);
 
   if (!cart || cart.cartItems.length === 0) {
     return (

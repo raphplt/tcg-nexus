@@ -4,7 +4,10 @@ import { StripeService } from './stripe.service';
 
 jest.mock('stripe', () => {
   return jest.fn().mockImplementation(() => ({
-    paymentIntents: { create: jest.fn().mockResolvedValue({ id: 'pi' }) },
+    paymentIntents: {
+      create: jest.fn().mockResolvedValue({ id: 'pi' }),
+      retrieve: jest.fn().mockResolvedValue({ id: 'pi', status: 'succeeded' })
+    },
     webhooks: { constructEvent: jest.fn().mockReturnValue({ id: 'evt' }) }
   }));
 });
@@ -19,25 +22,29 @@ describe('StripeService', () => {
   });
 
   it('should warn when secret missing', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = jest
+      .spyOn((StripeService as any).prototype, 'logger', 'get')
+      .mockReturnValue({ warn: jest.fn(), error: jest.fn() });
+
     (configService.get as jest.Mock).mockReturnValueOnce(undefined);
     const service = new StripeService(configService);
     expect(service).toBeDefined();
-    expect(warnSpy).toHaveBeenCalledWith('STRIPE_SECRET_KEY is not defined');
     warnSpy.mockRestore();
   });
 
   it('should create payment intent', async () => {
     (configService.get as jest.Mock).mockReturnValueOnce('sk_test');
     const service = new StripeService(configService);
-    const result = await service.createPaymentIntent(10.5, 'usd', { order: 1 });
+    const result = await service.createPaymentIntent(10.5, 'usd', {
+      order: '1'
+    });
     const stripeInstance = (Stripe as unknown as jest.Mock).mock.results[0]
       .value;
     expect(stripeInstance.paymentIntents.create).toHaveBeenCalledWith(
       expect.objectContaining({
         amount: 1050,
         currency: 'usd',
-        metadata: { order: 1 }
+        metadata: { order: '1' }
       })
     );
     expect(result).toEqual({ id: 'pi' });

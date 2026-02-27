@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseIntPipe
 } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { MarketplaceService } from './marketplace.service';
 import { CreateListingDto } from './dto/create-marketplace.dto';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -28,6 +29,7 @@ import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('marketplace')
 @Controller('marketplace')
+@UseGuards(ThrottlerGuard)
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 

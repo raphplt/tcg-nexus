@@ -4,7 +4,6 @@ import { MarketplaceService } from './marketplace.service';
 import { CardPopularityService } from './card-popularity.service';
 import { CardPopularityScheduler } from './card-popularity.scheduler';
 import { MarketplaceController } from './marketplace.controller';
-import { ListingsController } from './listings.controller';
 import { CardPopularityController } from './card-popularity.controller';
 import {
   Listing,
@@ -41,7 +40,6 @@ import { UserCartModule } from '../user_cart/user_cart.module';
   ],
   controllers: [
     MarketplaceController,
-    ListingsController,
     CardPopularityController,
     PaymentController,
     WebhookController

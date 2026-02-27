@@ -73,7 +73,8 @@ export default function SellerPage() {
     );
   }
 
-  const seller = listings?.[0]?.seller;
+  const sellerListings = listings?.data ?? [];
+  const seller = stats.listings?.[0]?.seller ?? sellerListings?.[0]?.seller;
 
   if (!seller) {
     return (
@@ -213,8 +214,8 @@ export default function SellerPage() {
           <div className="flex items-center justify-between mb-6">
             <H2>Offres du vendeur</H2>
             <Badge variant="secondary">
-              {listings?.length || 0} offre
-              {listings && listings.length > 1 ? "s" : ""}
+              {sellerListings.length} offre
+              {sellerListings.length > 1 ? "s" : ""}
             </Badge>
           </div>
 
@@ -227,10 +228,10 @@ export default function SellerPage() {
                 />
               ))}
             </div>
-          ) : listings && listings.length > 0 ? (
+          ) : sellerListings.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-                {listings.map((listing) => (
+                {sellerListings.map((listing) => (
                   <CardCard
                     key={listing.id}
                     card={listing.pokemonCard}
@@ -259,7 +260,7 @@ export default function SellerPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {listings.map((listing) => (
+                      {sellerListings.map((listing) => (
                         <TableRow key={listing.id}>
                           <TableCell>
                             <Link
