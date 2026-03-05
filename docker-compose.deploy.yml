@@ -54,7 +54,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_URL: https://tcg-nexus.org:3001/api
+      NEXT_PUBLIC_API_URL: /api
+      API_INTERNAL_URL: http://api:3001/api
     ports:
       - "3000:3000"
     networks:
