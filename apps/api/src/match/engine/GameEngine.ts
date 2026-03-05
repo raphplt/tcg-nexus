@@ -1,5 +1,13 @@
-import { PlayerAction } from "./actions/Action";
-import { GamePhase, TurnStep } from "./models/enums";
+import {
+  AttachEnergyAction,
+  AttackAction,
+  EvolvePokemonAction,
+  PlayerAction,
+  PlayPokemonAction,
+  RetreatAction,
+} from "./actions/Action";
+import { PokemonCardInGame } from "./models/Card";
+import { CardCategory, GamePhase, TurnStep } from "./models/enums";
 import { GameState } from "./models/GameState";
 // import { v4 as uuidv4 } from 'uuid'; // we would use this for IDs
 
@@ -31,6 +39,21 @@ export class GameEngine {
 
     // 2. Route the action
     switch (action.type) {
+      case "PLAY_POKEMON_TO_BENCH":
+        this.playPokemonToBench(action as PlayPokemonAction, events);
+        break;
+      case "EVOLVE_POKEMON":
+        this.evolvePokemon(action as EvolvePokemonAction, events);
+        break;
+      case "ATTACH_ENERGY":
+        this.attachEnergy(action as AttachEnergyAction, events);
+        break;
+      case "ATTACK":
+        this.attack(action as AttackAction, events);
+        break;
+      case "RETREAT":
+        this.retreat(action as RetreatAction, events);
+        break;
       case "END_TURN":
         this.endTurn(events);
         break;
@@ -86,5 +109,264 @@ export class GameEngine {
     const card = player.deck.pop()!;
     player.hand.push(card);
     events.push({ type: "CARD_DRAWN", playerId, count: 1 }); // Don't expose card instance to the other player in this event usually
+  }
+
+  private playPokemonToBench(action: PlayPokemonAction, events: any[]) {
+    const player = this.state.players[action.playerId];
+    if (player.bench.length >= 5) {
+      throw new Error("Bench is full");
+    }
+
+    const cardIndex = player.hand.findIndex(
+      (c) => c.instanceId === action.payload.cardInstanceId,
+    );
+    if (cardIndex === -1) {
+      throw new Error("Card not found in hand");
+    }
+
+    const card = player.hand[cardIndex];
+    if (card.baseCard.category !== CardCategory.Pokemon) {
+      throw new Error("Card is not a Pokemon");
+    }
+
+    const pokemonCard = card as unknown as PokemonCardInGame;
+    // Assuming it's a basic pokemon for now (needs proper check)
+    if (pokemonCard.baseCard.stage !== "De base") {
+      throw new Error("Can only play Basic Pokemon directly to bench");
+    }
+
+    // Initialize runtime state for the pokemon
+    pokemonCard.damageCounters = 0;
+    pokemonCard.specialConditions = [];
+    pokemonCard.attachedEnergies = [];
+    pokemonCard.attachedTools = [];
+    pokemonCard.attachedEvolutions = [];
+    pokemonCard.turnsInPlay = 0; // Starts at 0, becomes 1 next turn
+
+    player.hand.splice(cardIndex, 1);
+
+    // If active is empty (start of game, or last active was KO'd but turn not passed)
+    if (!player.active) {
+      player.active = pokemonCard;
+    } else {
+      player.bench.push(pokemonCard);
+    }
+
+    events.push({
+      type: "POKEMON_PLAYED",
+      playerId: action.playerId,
+      cardInstanceId: action.payload.cardInstanceId,
+    });
+  }
+
+  private attachEnergy(action: AttachEnergyAction, events: any[]) {
+    const player = this.state.players[action.playerId];
+
+    if (player.hasAttachedEnergyThisTurn) {
+      throw new Error("Already attached energy this turn");
+    }
+
+    const energyCardIndex = player.hand.findIndex(
+      (c) => c.instanceId === action.payload.energyCardInstanceId,
+    );
+    if (energyCardIndex === -1) {
+      throw new Error("Energy card not found in hand");
+    }
+
+    const energyCard = player.hand[energyCardIndex] as any;
+    if (energyCard.baseCard.category !== CardCategory.Energy) {
+      throw new Error("Selected card is not an Energy");
+    }
+
+    // Find target pokemon
+    let targetMon: PokemonCardInGame | undefined;
+    if (player.active?.instanceId === action.payload.targetPokemonInstanceId) {
+      targetMon = player.active;
+    } else {
+      targetMon = player.bench.find(
+        (p) => p.instanceId === action.payload.targetPokemonInstanceId,
+      );
+    }
+
+    if (!targetMon) {
+      throw new Error("Target pokemon not found on the board");
+    }
+
+    player.hand.splice(energyCardIndex, 1);
+    targetMon.attachedEnergies.push(energyCard);
+    player.hasAttachedEnergyThisTurn = true;
+
+    events.push({
+      type: "ENERGY_ATTACHED",
+      playerId: action.playerId,
+      targetInstanceId: action.payload.targetPokemonInstanceId,
+      energyInstanceId: action.payload.energyCardInstanceId,
+    });
+  }
+
+  private attack(action: AttackAction, events: any[]) {
+    const player = this.state.players[action.playerId];
+    const activeMon = player.active;
+
+    if (!activeMon) {
+      throw new Error("No active Pokemon to attack with");
+    }
+
+    // Check special conditions that prevent attacking
+    if (
+      activeMon.specialConditions.includes("Asleep" as any) ||
+      activeMon.specialConditions.includes("Paralyzed" as any)
+    ) {
+      throw new Error(
+        "Active Pokemon cannot attack due to a special condition",
+      );
+    }
+
+    const attack = activeMon.baseCard.attacks[action.payload.attackIndex];
+    if (!attack) {
+      throw new Error("Attack not found");
+    }
+
+    // Verify energy cost
+    // (Simplified check here: just check count, real engine checks exact colors)
+    if (activeMon.attachedEnergies.length < attack.cost.length) {
+      throw new Error("Not enough energy attached");
+    }
+
+    events.push({
+      type: "ATTACK_USED",
+      playerId: action.playerId,
+      attackerInstanceId: activeMon.instanceId,
+      attackName: attack.name,
+    });
+
+    // Pass attack resolution to EffectResolver in real implementation
+    // ...
+
+    // End turn automatically after attack!
+    this.endTurn(events);
+  }
+
+  private evolvePokemon(action: EvolvePokemonAction, events: any[]) {
+    const player = this.state.players[action.playerId];
+    const cardIndex = player.hand.findIndex(
+      (c) => c.instanceId === action.payload.evolutionCardInstanceId,
+    );
+    if (cardIndex === -1) throw new Error("Evolution card not found in hand");
+
+    const evoCard = player.hand[cardIndex] as unknown as PokemonCardInGame;
+    if (evoCard.baseCard.category !== CardCategory.Pokemon)
+      throw new Error("Card is not a Pokemon");
+    if (evoCard.baseCard.stage === "De base")
+      throw new Error("Cannot evolve into a Basic Pokemon");
+
+    let targetMon: PokemonCardInGame | undefined;
+    let targetLocation: "active" | "bench" = "active";
+
+    if (player.active?.instanceId === action.payload.targetPokemonInstanceId) {
+      targetMon = player.active;
+    } else {
+      targetMon = player.bench.find(
+        (p) => p.instanceId === action.payload.targetPokemonInstanceId,
+      );
+      targetLocation = "bench";
+    }
+
+    if (!targetMon) throw new Error("Target pokemon not found");
+    if (targetMon.turnsInPlay < 1)
+      throw new Error("Cannot evolve a Pokemon the same turn it was played");
+
+    // Verify evolution lineage (simplified name matching)
+    // e.g., Charmeleon evolves from Charmander
+    // In real engine, we'd check `evoCard.baseCard.evolvesFrom === targetMon.baseCard.name`
+
+    // Execute evolution (create new state for the mon but keep damage/energy)
+    evoCard.damageCounters = targetMon.damageCounters;
+    evoCard.attachedEnergies = targetMon.attachedEnergies;
+    evoCard.attachedTools = targetMon.attachedTools;
+    evoCard.specialConditions = []; // Evolution cures special conditions
+    evoCard.turnsInPlay = 0; // Evolved this turn
+
+    // Push the old target under the new one
+    evoCard.attachedEvolutions = [...targetMon.attachedEvolutions, targetMon];
+
+    player.hand.splice(cardIndex, 1);
+
+    if (targetLocation === "active") {
+      player.active = evoCard;
+    } else {
+      const benchIndex = player.bench.findIndex(
+        (p) => p.instanceId === targetMon!.instanceId,
+      );
+      player.bench[benchIndex] = evoCard;
+    }
+
+    events.push({
+      type: "POKEMON_EVOLVED",
+      playerId: action.playerId,
+      fromInstanceId: targetMon.instanceId,
+      toInstanceId: evoCard.instanceId,
+    });
+  }
+
+  private retreat(action: RetreatAction, events: any[]) {
+    const player = this.state.players[action.playerId];
+    const activeMon = player.active;
+
+    if (!activeMon) throw new Error("No active Pokemon to retreat");
+    if (player.hasRetreatedThisTurn)
+      throw new Error("Already retreated this turn");
+    if (
+      activeMon.specialConditions.includes("Asleep" as any) ||
+      activeMon.specialConditions.includes("Paralyzed" as any)
+    ) {
+      throw new Error(
+        "Active Pokemon cannot retreat due to a special condition",
+      );
+    }
+
+    const benchMonIndex = player.bench.findIndex(
+      (p) => p.instanceId === action.payload.benchPokemonInstanceId,
+    );
+    if (benchMonIndex === -1) throw new Error("Target bench Pokemon not found");
+
+    const retreatCost = activeMon.baseCard.retreat || 0;
+
+    // Check if enough energy provided for cost
+    if (action.payload.discardedEnergyInstanceIds.length < retreatCost) {
+      throw new Error(`Retreat requires ${retreatCost} energy to be discarded`);
+    }
+
+    // Discard the energy
+    const keptEnergies = [];
+    const discardedEnergies = [];
+    for (const energy of activeMon.attachedEnergies) {
+      if (
+        action.payload.discardedEnergyInstanceIds.includes(energy.instanceId)
+      ) {
+        discardedEnergies.push(energy as any);
+      } else {
+        keptEnergies.push(energy as any);
+      }
+    }
+
+    activeMon.attachedEnergies = keptEnergies;
+    player.discard.push(...discardedEnergies); // Move to discard pile
+
+    // Perform the switch
+    const benchMon = player.bench[benchMonIndex];
+    player.active = benchMon;
+    player.bench[benchMonIndex] = activeMon;
+
+    // Clear conditions from the retreating pokemon
+    activeMon.specialConditions = [];
+    player.hasRetreatedThisTurn = true;
+
+    events.push({
+      type: "POKEMON_RETREATED",
+      playerId: action.playerId,
+      newActiveInstanceId: benchMon.instanceId,
+      oldActiveInstanceId: activeMon.instanceId,
+    });
   }
 }

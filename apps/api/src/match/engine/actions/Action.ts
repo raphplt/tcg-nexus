@@ -22,6 +22,14 @@ export interface PlayPokemonAction extends PlayerAction {
   };
 }
 
+export interface EvolvePokemonAction extends PlayerAction {
+  type: ActionType.EVOLVE_POKEMON;
+  payload: {
+    evolutionCardInstanceId: string;
+    targetPokemonInstanceId: string;
+  };
+}
+
 export interface AttachEnergyAction extends PlayerAction {
   type: ActionType.ATTACH_ENERGY;
   payload: {
