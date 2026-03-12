@@ -1864,6 +1864,7 @@ export class SeedService {
         tournament_reward,
         tournament_pricing,
         tournament_registration,
+        online_match_session,
         match,
         ranking,
         tournament,

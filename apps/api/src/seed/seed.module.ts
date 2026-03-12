@@ -33,6 +33,7 @@ import { Statistics } from 'src/statistics/entities/statistic.entity';
 import { SeedingService } from 'src/tournament/services/seeding.service';
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
+import { OnlineMatchSession } from 'src/match/entities/online-match-session.entity';
 import { Faq } from 'src/faq/entities/faq.entity';
 
 @Module({
@@ -47,6 +48,7 @@ import { Faq } from 'src/faq/entities/faq.entity';
       Player,
       Ranking,
       Match,
+      OnlineMatchSession,
       TournamentRegistration,
       TournamentReward,
       TournamentPricing,
