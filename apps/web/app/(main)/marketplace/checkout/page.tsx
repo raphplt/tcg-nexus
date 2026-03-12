@@ -66,10 +66,7 @@ export default function CheckoutPage() {
             <CardContent>
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {cart.cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-4"
-                  >
+                  <div key={item.id} className="flex gap-4">
                     <div className="relative w-16 h-24 shrink-0">
                       <Image
                         src={getCardImage(item.listing.pokemonCard)}
@@ -126,10 +123,7 @@ export default function CheckoutPage() {
           <Card>
             <CardContent className="pt-6">
               {clientSecret ? (
-                <Elements
-                  options={options}
-                  stripe={stripePromise}
-                >
+                <Elements options={options} stripe={stripePromise}>
                   <CheckoutForm />
                 </Elements>
               ) : (

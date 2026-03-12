@@ -115,7 +115,9 @@ export function AdminOrdersTable() {
           ? {
               ...prev,
               data: prev.data.map((order) =>
-                order.id === updated.id ? { ...order, status: updated.status } : order,
+                order.id === updated.id
+                  ? { ...order, status: updated.status }
+                  : order,
               ),
             }
           : prev,
@@ -143,10 +145,7 @@ export function AdminOrdersTable() {
             Suivez les commandes et mettez à jour leur statut.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => refreshOrders()}
-        >
+        <Button variant="outline" onClick={() => refreshOrders()}>
           Recharger
         </Button>
       </CardHeader>
@@ -169,10 +168,7 @@ export function AdminOrdersTable() {
               <SelectContent>
                 <SelectItem value="ALL">Tous</SelectItem>
                 {statusOptions.map((status) => (
-                  <SelectItem
-                    key={status}
-                    value={status}
-                  >
+                  <SelectItem key={status} value={status}>
                     {status}
                   </SelectItem>
                 ))}
@@ -238,10 +234,7 @@ export function AdminOrdersTable() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center"
-                  >
+                  <TableCell colSpan={6} className="text-center">
                     <Spinner size="small" />
                   </TableCell>
                 </TableRow>
@@ -288,7 +281,9 @@ export function AdminOrdersTable() {
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl">
                           <DialogHeader>
-                            <DialogTitle>Détails commande #{order.id}</DialogTitle>
+                            <DialogTitle>
+                              Détails commande #{order.id}
+                            </DialogTitle>
                             <DialogDescription>
                               Articles, acheteur et transactions associées
                             </DialogDescription>
@@ -314,10 +309,13 @@ export function AdminOrdersTable() {
                                         <TableCell>
                                           {item.listing.pokemonCard.name}
                                         </TableCell>
-                                        <TableCell>{item.listing.cardState}</TableCell>
+                                        <TableCell>
+                                          {item.listing.cardState}
+                                        </TableCell>
                                         <TableCell>{item.quantity}</TableCell>
                                         <TableCell>
-                                          {formatAmount(item.unitPrice)} {selectedOrder.currency}
+                                          {formatAmount(item.unitPrice)}{" "}
+                                          {selectedOrder.currency}
                                         </TableCell>
                                       </TableRow>
                                     ))}
@@ -325,7 +323,8 @@ export function AdminOrdersTable() {
                                 </Table>
                               </div>
                               <div className="flex justify-end text-sm font-semibold">
-                                Total : {formatAmount(selectedOrder.totalAmount)}{" "}
+                                Total :{" "}
+                                {formatAmount(selectedOrder.totalAmount)}{" "}
                                 {selectedOrder.currency}
                               </div>
                             </div>
@@ -395,7 +394,11 @@ export function AdminOrdersTable() {
       <Dialog
         open={statusModal.open}
         onOpenChange={(open) =>
-          setStatusModal((prev) => ({ ...prev, open, order: open ? prev.order : null }))
+          setStatusModal((prev) => ({
+            ...prev,
+            open,
+            order: open ? prev.order : null,
+          }))
         }
       >
         <DialogContent>
@@ -420,10 +423,7 @@ export function AdminOrdersTable() {
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((status) => (
-                <SelectItem
-                  key={status}
-                  value={status}
-                >
+                <SelectItem key={status} value={status}>
                   {status}
                 </SelectItem>
               ))}
@@ -433,7 +433,11 @@ export function AdminOrdersTable() {
             <Button
               variant="outline"
               onClick={() =>
-                setStatusModal({ open: false, order: null, status: OrderStatus.PAID })
+                setStatusModal({
+                  open: false,
+                  order: null,
+                  status: OrderStatus.PAID,
+                })
               }
             >
               Annuler

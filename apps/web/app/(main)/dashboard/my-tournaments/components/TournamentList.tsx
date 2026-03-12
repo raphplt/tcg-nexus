@@ -31,10 +31,7 @@ export function TournamentList({
     return (
       <div className="animate-pulse space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-24 bg-gray-200 rounded"
-          ></div>
+          <div key={i} className="h-24 bg-gray-200 rounded"></div>
         ))}
       </div>
     );
@@ -166,11 +163,7 @@ export function TournamentList({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                  >
+                  <Button variant="outline" size="sm" asChild>
                     <Link href={`/tournaments/${tournament.id}`}>
                       <Eye className="w-4 h-4 mr-2" />
                       Voir
@@ -178,11 +171,7 @@ export function TournamentList({
                   </Button>
 
                   {tournament.status === "in_progress" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
+                    <Button variant="outline" size="sm" asChild>
                       <Link href={`/tournaments/${tournament.id}/player`}>
                         <BarChart3 className="w-4 h-4 mr-2" />
                         Dashboard
@@ -192,11 +181,7 @@ export function TournamentList({
 
                   {(tournament.status === "in_progress" ||
                     tournament.status === "finished") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
+                    <Button variant="outline" size="sm" asChild>
                       <Link href={`/tournaments/${tournament.id}/bracket`}>
                         <Trophy className="w-4 h-4 mr-2" />
                         Bracket

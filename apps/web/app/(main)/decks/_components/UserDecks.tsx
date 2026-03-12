@@ -24,10 +24,7 @@ export default function UserDecks() {
         <H2>Mes Decks</H2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-[300px] w-full rounded-xl"
-            />
+            <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
           ))}
         </div>
       </div>

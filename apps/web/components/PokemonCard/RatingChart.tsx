@@ -38,26 +38,14 @@ const RatingChart: React.FC<RatingChartProps> = ({ cardName }) => {
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <Star className="w-5 h-5 text-yellow-500" />
-          <span className="font-semibold">
-            Cote de la carte {cardName}
-          </span>
+          <span className="font-semibold">Cote de la carte {cardName}</span>
         </div>
 
         <div className="h-32">
-          <ResponsiveContainer
-            width="100%"
-            height="100%"
-          >
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={mockRatingData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#e5e7eb"
-              />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12 }}
-                stroke="#6b7280"
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#6b7280" />
               <YAxis
                 domain={[3.5, 5.0]}
                 tick={{ fontSize: 12 }}

@@ -104,9 +104,7 @@ describe("AdminOrdersTable", () => {
     render(<AdminOrdersTable />);
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/Ada Lovelace/i),
-      ).toBeInTheDocument(),
+      expect(screen.getByText(/Ada Lovelace/i)).toBeInTheDocument(),
     );
 
     expect(mockedGetOrders).toHaveBeenCalled();
@@ -116,9 +114,7 @@ describe("AdminOrdersTable", () => {
     );
     await screen.findByText(/Pikachu/);
     // Use getAllByText since the amount appears multiple times in the dialog
-    expect(
-      screen.getAllByText(/120\.00\s*EUR/i).length,
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/120\.00\s*EUR/i).length).toBeGreaterThan(0);
   });
 
   it("met à jour le statut d'une commande", async () => {
@@ -131,9 +127,11 @@ describe("AdminOrdersTable", () => {
     );
 
     // Verify the dialog is open and contains the update button
-    const updateButton = await screen.findByRole("button", { name: /Mettre à jour/i });
+    const updateButton = await screen.findByRole("button", {
+      name: /Mettre à jour/i,
+    });
     expect(updateButton).toBeInTheDocument();
-    
+
     // Click the update button (uses current status from modal state)
     await userEvent.click(updateButton);
 

@@ -128,10 +128,7 @@ export default function DeckDetailsPage() {
               onAnalyze={handleAnalyze}
             />
 
-            <DeckInfo
-              deck={deck}
-              isOwner={isOwner || false}
-            />
+            <DeckInfo deck={deck} isOwner={isOwner || false} />
           </div>
         </div>
       </div>

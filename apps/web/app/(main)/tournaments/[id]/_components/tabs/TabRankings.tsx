@@ -204,10 +204,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       {getPlayerName(ranking.player)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge
-                        variant="secondary"
-                        className="font-bold"
-                      >
+                      <Badge variant="secondary" className="font-bold">
                         {ranking.points}
                       </Badge>
                     </TableCell>

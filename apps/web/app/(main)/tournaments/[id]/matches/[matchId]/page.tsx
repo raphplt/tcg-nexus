@@ -126,11 +126,7 @@ export default function MatchPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-          >
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -251,22 +247,14 @@ export default function MatchPage() {
                 <CardTitle>Navigation</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  asChild
-                >
+                <Button variant="outline" className="w-full" asChild>
                   <Link href={`/tournaments/${id}/bracket`}>
                     <Trophy className="w-4 h-4 mr-2" />
                     Voir le bracket
                   </Link>
                 </Button>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  asChild
-                >
+                <Button variant="outline" className="w-full" asChild>
                   <Link href={`/tournaments/${id}/matches`}>
                     <Clock className="w-4 h-4 mr-2" />
                     Tous les matches

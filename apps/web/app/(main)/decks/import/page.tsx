@@ -34,12 +34,16 @@ function DeckImportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  
+
   const codeFromUrl = searchParams.get("code") || "";
   const [code, setCode] = useState(codeFromUrl);
   const [previewCode, setPreviewCode] = useState(codeFromUrl);
 
-  const { data: deck, isLoading, error } = useQuery({
+  const {
+    data: deck,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["deck-import", previewCode],
     queryFn: () => decksService.getDeckForImport(previewCode),
     enabled: previewCode.length >= 6,
@@ -49,7 +53,9 @@ function DeckImportContent() {
   const importMutation = useMutation({
     mutationFn: () => decksService.importDeck(previewCode),
     onSuccess: (importedDeck) => {
-      toast.success(`Le deck "${importedDeck.name}" a été ajouté à votre collection`);
+      toast.success(
+        `Le deck "${importedDeck.name}" a été ajouté à votre collection`,
+      );
       router.push(`/decks/${importedDeck.id}`);
     },
     onError: (error: any) => {
@@ -76,14 +82,14 @@ function DeckImportContent() {
       trainer: [],
       energy: [],
     };
-    
+
     cards?.forEach((dc) => {
       const role = dc.role?.toLowerCase() || "pokemon";
       if (groups[role]) {
         groups[role].push(dc);
       }
     });
-    
+
     return groups;
   };
 
@@ -92,11 +98,7 @@ function DeckImportContent() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="mb-4"
-      >
+      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Retour
       </Button>
@@ -166,25 +168,28 @@ function DeckImportContent() {
           <CardContent className="space-y-6">
             <div>
               <h3 className="font-semibold mb-3">Créé par</h3>
-            <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {deck.user?.firstName?.[0]?.toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm">{deck.user?.firstName} {deck.user?.lastName}</span>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-medium">
+                    {deck.user?.firstName?.[0]?.toUpperCase()}
+                  </span>
                 </div>
+                <span className="text-sm">
+                  {deck.user?.firstName} {deck.user?.lastName}
+                </span>
+              </div>
             </div>
 
             <Separator />
 
             <div className="space-y-4">
               <h3 className="font-semibold">Liste des cartes</h3>
-              
+
               {cardGroups?.pokemon && cardGroups.pokemon.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                    Pokémon ({cardGroups.pokemon.reduce((sum, dc) => sum + dc.qty, 0)})
+                    Pokémon (
+                    {cardGroups.pokemon.reduce((sum, dc) => sum + dc.qty, 0)})
                   </h4>
                   <div className="space-y-1">
                     {cardGroups.pokemon.map((dc) => (
@@ -203,7 +208,8 @@ function DeckImportContent() {
               {cardGroups?.trainer && cardGroups.trainer.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                    Dresseur ({cardGroups.trainer.reduce((sum, dc) => sum + dc.qty, 0)})
+                    Dresseur (
+                    {cardGroups.trainer.reduce((sum, dc) => sum + dc.qty, 0)})
                   </h4>
                   <div className="space-y-1">
                     {cardGroups.trainer.map((dc) => (
@@ -222,7 +228,8 @@ function DeckImportContent() {
               {cardGroups?.energy && cardGroups.energy.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground mb-2">
-                    Énergie ({cardGroups.energy.reduce((sum, dc) => sum + dc.qty, 0)})
+                    Énergie (
+                    {cardGroups.energy.reduce((sum, dc) => sum + dc.qty, 0)})
                   </h4>
                   <div className="space-y-1">
                     {cardGroups.energy.map((dc) => (

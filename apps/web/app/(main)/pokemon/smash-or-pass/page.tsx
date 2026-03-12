@@ -70,7 +70,6 @@ const shimmerVariants = {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-
 function FilterSelect({
   label,
   value,
@@ -92,10 +91,7 @@ function FilterSelect({
           {label}
         </span>
       </div>
-      <Select
-        value={value}
-        onValueChange={onValueChange}
-      >
+      <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm shadow-md transition-all hover:-translate-y-[1px] hover:shadow-lg">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -118,10 +114,7 @@ function PokemonCardView({
   onSwipe: (direction: "left" | "right") => void;
   isFetching: boolean;
 }) {
-  const cardImage = useMemo(
-    () => getCardImage(card),
-    [card],
-  );
+  const cardImage = useMemo(() => getCardImage(card), [card]);
 
   return (
     <AnimatePresence mode="wait">
@@ -194,10 +187,7 @@ function PokemonCardView({
                     {card.rarity}
                   </Badge>
                 ) : (
-                  <Badge
-                    variant="outline"
-                    className="rounded-full"
-                  >
+                  <Badge variant="outline" className="rounded-full">
                     Rareté inconnue
                   </Badge>
                 )}
@@ -354,10 +344,7 @@ export default function PokemonMatchPage() {
                   Filtres actifs
                 </Badge>
               ) : null}
-              <Dialog
-                open={isFiltersOpen}
-                onOpenChange={setIsFiltersOpen}
-              >
+              <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
@@ -385,10 +372,7 @@ export default function PokemonMatchPage() {
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
                       {series.map((serie: PokemonSerieType) => (
-                        <SelectItem
-                          key={serie.id}
-                          value={serie.id.toString()}
-                        >
+                        <SelectItem key={serie.id} value={serie.id.toString()}>
                           {serie.name}
                         </SelectItem>
                       ))}
@@ -402,10 +386,7 @@ export default function PokemonMatchPage() {
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
                       {Object.values(PokemonRarity).map((rarity) => (
-                        <SelectItem
-                          key={rarity}
-                          value={rarity}
-                        >
+                        <SelectItem key={rarity} value={rarity}>
                           {rarity}
                         </SelectItem>
                       ))}
@@ -419,10 +400,7 @@ export default function PokemonMatchPage() {
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
                       {sets.map((set: PokemonSetType) => (
-                        <SelectItem
-                          key={set.id}
-                          value={set.id.toString()}
-                        >
+                        <SelectItem key={set.id} value={set.id.toString()}>
                           {set.name}
                         </SelectItem>
                       ))}
@@ -441,10 +419,7 @@ export default function PokemonMatchPage() {
                       <Wand2 className="h-4 w-4" />
                       Réinitialiser
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsFiltersOpen(false)}
-                    >
+                    <Button size="sm" onClick={() => setIsFiltersOpen(false)}>
                       Appliquer
                     </Button>
                   </div>
@@ -513,10 +488,7 @@ export default function PokemonMatchPage() {
                 className="h-12 w-12 rounded-full border border-border/70 text-foreground shadow-md md:h-12 md:w-12"
                 onClick={() => refetch()}
               >
-                <Shuffle
-                  aria-hidden
-                  className="h-5 w-5 text-foreground"
-                />
+                <Shuffle aria-hidden className="h-5 w-5 text-foreground" />
               </Button>
 
               <Button

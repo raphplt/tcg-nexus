@@ -43,7 +43,7 @@ export class OnlineMatchSession {
   @Column({ type: "int", nullable: true })
   winnerPlayerId: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: "varchar", nullable: true })
   endedReason: string | null;
 
   @Column({ type: "jsonb", nullable: true })

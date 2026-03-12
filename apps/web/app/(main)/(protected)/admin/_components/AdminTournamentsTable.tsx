@@ -88,7 +88,8 @@ export function AdminTournamentsTable() {
   const [openModal, setOpenModal] = useState(false);
   const [form, setForm] = useState<TournamentFormState>(defaultForm);
   const [editing, setEditing] = useState<Tournament | null>(null);
-  const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
+  const [tournamentToDelete, setTournamentToDelete] =
+    useState<Tournament | null>(null);
 
   const loadTournaments = async (page = 1) => {
     setIsLoading(true);
@@ -127,8 +128,7 @@ export function AdminTournamentsTable() {
       startDate: tournament.startDate?.slice(0, 10) ?? "",
       endDate: tournament.endDate?.slice(0, 10) ?? "",
       type: tournament.type,
-      status:
-        (tournament.status as TournamentStatus) ?? TournamentStatus.DRAFT,
+      status: (tournament.status as TournamentStatus) ?? TournamentStatus.DRAFT,
       maxPlayers: tournament.maxPlayers,
     });
     setOpenModal(true);
@@ -172,7 +172,10 @@ export function AdminTournamentsTable() {
     }
   };
 
-  const updateStatus = async (tournament: Tournament, status: TournamentStatus) => {
+  const updateStatus = async (
+    tournament: Tournament,
+    status: TournamentStatus,
+  ) => {
     try {
       await adminService.updateTournamentStatus(tournament.id, status);
       toast.success("Statut mis à jour");
@@ -196,10 +199,7 @@ export function AdminTournamentsTable() {
     }
   };
 
-  const sortedTournaments = useMemo(
-    () => data?.data ?? [],
-    [data],
-  );
+  const sortedTournaments = useMemo(() => data?.data ?? [], [data]);
 
   return (
     <Card>
@@ -238,10 +238,7 @@ export function AdminTournamentsTable() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center"
-                  >
+                  <TableCell colSpan={7} className="text-center">
                     <Spinner size="small" />
                   </TableCell>
                 </TableRow>
@@ -262,10 +259,7 @@ export function AdminTournamentsTable() {
                       <Select
                         value={String(tournament.status)}
                         onValueChange={(value) =>
-                          updateStatus(
-                            tournament,
-                            value as TournamentStatus,
-                          )
+                          updateStatus(tournament, value as TournamentStatus)
                         }
                       >
                         <SelectTrigger className="w-[180px]">
@@ -273,10 +267,7 @@ export function AdminTournamentsTable() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.values(TournamentStatus).map((status) => (
-                            <SelectItem
-                              key={status}
-                              value={status}
-                            >
+                            <SelectItem key={status} value={status}>
                               {statusLabels[status]}
                             </SelectItem>
                           ))}
@@ -287,15 +278,17 @@ export function AdminTournamentsTable() {
                       <div className="flex items-center gap-2">
                         <CalendarClock className="h-4 w-4" />
                         <span>
-                          {format(new Date(tournament.startDate), "dd/MM/yyyy")} -{" "}
-                          {format(new Date(tournament.endDate), "dd/MM/yyyy")}
+                          {format(new Date(tournament.startDate), "dd/MM/yyyy")}{" "}
+                          - {format(new Date(tournament.endDate), "dd/MM/yyyy")}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
                         {tournament.players?.length ?? 0}
-                        {tournament.maxPlayers ? ` / ${tournament.maxPlayers}` : ""}
+                        {tournament.maxPlayers
+                          ? ` / ${tournament.maxPlayers}`
+                          : ""}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -331,10 +324,7 @@ export function AdminTournamentsTable() {
         </div>
       </CardContent>
 
-      <Dialog
-        open={openModal}
-        onOpenChange={setOpenModal}
-      >
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
@@ -372,7 +362,10 @@ export function AdminTournamentsTable() {
                 type="date"
                 value={form.startDate}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, startDate: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    startDate: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -392,7 +385,10 @@ export function AdminTournamentsTable() {
               <Select
                 value={String(form.type)}
                 onValueChange={(value) =>
-                  setForm((prev) => ({ ...prev, type: value as TournamentType }))
+                  setForm((prev) => ({
+                    ...prev,
+                    type: value as TournamentType,
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -400,10 +396,7 @@ export function AdminTournamentsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(TournamentType).map((type) => (
-                    <SelectItem
-                      key={type}
-                      value={type}
-                    >
+                    <SelectItem key={type} value={type}>
                       {type.replace("_", " ")}
                     </SelectItem>
                   ))}
@@ -426,10 +419,7 @@ export function AdminTournamentsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(TournamentStatus).map((status) => (
-                    <SelectItem
-                      key={status}
-                      value={status}
-                    >
+                    <SelectItem key={status} value={status}>
                       {statusLabels[status]}
                     </SelectItem>
                   ))}
@@ -454,10 +444,7 @@ export function AdminTournamentsTable() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenModal(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenModal(false)}>
               Annuler
             </Button>
             <Button onClick={saveTournament}>

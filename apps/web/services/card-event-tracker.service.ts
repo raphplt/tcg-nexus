@@ -1,11 +1,11 @@
-import { api } from '@/utils/fetch';
+import { api } from "@/utils/fetch";
 
 export enum CardEventType {
-  VIEW = 'view',
-  SEARCH = 'search',
-  FAVORITE = 'favorite',
-  ADD_TO_CART = 'add_to_cart',
-  SALE = 'sale'
+  VIEW = "view",
+  SEARCH = "search",
+  FAVORITE = "favorite",
+  ADD_TO_CART = "add_to_cart",
+  SALE = "sale",
 }
 
 export interface CardEventContext {
@@ -35,18 +35,18 @@ class CardEventTracker {
   private async recordEvent(
     cardId: string,
     eventType: CardEventType,
-    context?: CardEventContext
+    context?: CardEventContext,
   ): Promise<void> {
     try {
-      await api.post('/marketplace/events', {
+      await api.post("/marketplace/events", {
         cardId,
         eventType,
         sessionId: this.sessionId,
-        context
+        context,
       });
     } catch (error) {
       // Échec silencieux pour ne pas perturber l'UX
-      console.debug('Failed to record card event:', error);
+      console.debug("Failed to record card event:", error);
     }
   }
 
@@ -67,9 +67,12 @@ class CardEventTracker {
     if (this.viewTimeout) {
       clearTimeout(this.viewTimeout);
     }
-    this.viewTimeout = setTimeout(() => {
-      this.viewCache.clear();
-    }, 24 * 60 * 60 * 1000);
+    this.viewTimeout = setTimeout(
+      () => {
+        this.viewCache.clear();
+      },
+      24 * 60 * 60 * 1000,
+    );
 
     await this.recordEvent(cardId, CardEventType.VIEW, context);
   }
@@ -80,11 +83,11 @@ class CardEventTracker {
   async trackSearch(
     cardId: string,
     searchQuery: string,
-    context?: CardEventContext
+    context?: CardEventContext,
   ): Promise<void> {
     await this.recordEvent(cardId, CardEventType.SEARCH, {
       ...context,
-      searchQuery
+      searchQuery,
     });
   }
 
@@ -93,7 +96,7 @@ class CardEventTracker {
    */
   async trackFavorite(
     cardId: string,
-    context?: CardEventContext
+    context?: CardEventContext,
   ): Promise<void> {
     await this.recordEvent(cardId, CardEventType.FAVORITE, context);
   }
@@ -104,11 +107,11 @@ class CardEventTracker {
   async trackAddToCart(
     cardId: string,
     listingId?: number,
-    context?: CardEventContext
+    context?: CardEventContext,
   ): Promise<void> {
     await this.recordEvent(cardId, CardEventType.ADD_TO_CART, {
       ...context,
-      listingId
+      listingId,
     });
   }
 
@@ -122,4 +125,3 @@ class CardEventTracker {
 
 // Singleton instance
 export const cardEventTracker = new CardEventTracker();
-

@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { marketplaceService, PopularCard, TrendingCard, BestSeller } from "@/services/marketplace.service";
+import {
+  marketplaceService,
+  PopularCard,
+  TrendingCard,
+  BestSeller,
+} from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { PokemonSetType, PokemonSerieType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";

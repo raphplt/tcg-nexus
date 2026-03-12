@@ -20,13 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Trophy,
-  Crown,
-  Medal,
-  Eye,
-  BarChart3,
-} from "lucide-react";
+import { Trophy, Crown, Medal, Eye, BarChart3 } from "lucide-react";
 import { Ranking, Tournament } from "@/types/tournament";
 
 interface RankingsDisplayProps {
@@ -53,10 +47,7 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
           </AvatarFallback>
         </Avatar>
         <h3 className="text-xl font-bold">{ranking.player.name}</h3>
-        <Badge
-          variant="outline"
-          className="mt-1"
-        >
+        <Badge variant="outline" className="mt-1">
           Rang #{ranking.rank}
         </Badge>
       </div>
@@ -159,10 +150,7 @@ export function RankingsDisplay({
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-12 bg-gray-200 rounded"
-              ></div>
+              <div key={i} className="h-12 bg-gray-200 rounded"></div>
             ))}
           </div>
         </CardContent>
@@ -191,10 +179,7 @@ export function RankingsDisplay({
             <Trophy className="w-5 h-5" />
             Classement général
             {tournament?.status === "in_progress" && (
-              <Badge
-                variant="secondary"
-                className="ml-auto"
-              >
+              <Badge variant="secondary" className="ml-auto">
                 Round {tournament.currentRound}/{tournament.totalRounds}
               </Badge>
             )}
@@ -220,10 +205,7 @@ export function RankingsDisplay({
                   : "";
 
                 return (
-                  <TableRow
-                    key={ranking.id}
-                    className={rowClass}
-                  >
+                  <TableRow key={ranking.id} className={rowClass}>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getRankIcon(ranking.rank)}
@@ -286,10 +268,7 @@ export function RankingsDisplay({
                     <TableCell className="text-center">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                          >
+                          <Button variant="outline" size="sm">
                             <Eye className="w-3 h-3 mr-1" />
                             Détails
                           </Button>

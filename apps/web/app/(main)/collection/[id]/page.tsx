@@ -270,10 +270,7 @@ const CollectionDetailPage = () => {
                   className="pl-10"
                 />
               </div>
-              <Select
-                value={sortBy}
-                onValueChange={setSortBy}
-              >
+              <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Trier par" />
                 </SelectTrigger>

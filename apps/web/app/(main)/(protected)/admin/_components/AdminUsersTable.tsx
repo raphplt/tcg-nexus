@@ -192,10 +192,7 @@ export function AdminUsersTable() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="text-center"
-                  >
+                  <TableCell colSpan={8} className="text-center">
                     <Spinner size="small" />
                   </TableCell>
                 </TableRow>
@@ -219,7 +216,9 @@ export function AdminUsersTable() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.isActive ? "secondary" : "destructive"}>
+                      <Badge
+                        variant={user.isActive ? "secondary" : "destructive"}
+                      >
                         {user.isActive ? "Actif" : "Suspendu"}
                       </Badge>
                     </TableCell>
@@ -261,14 +260,13 @@ export function AdminUsersTable() {
         </div>
       </CardContent>
 
-      <Dialog
-        open={openModal}
-        onOpenChange={setOpenModal}
-      >
+      <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingUser ? "Mettre à jour l'utilisateur" : "Créer un utilisateur"}
+              {editingUser
+                ? "Mettre à jour l'utilisateur"
+                : "Créer un utilisateur"}
             </DialogTitle>
             <DialogDescription>
               Définissez le rôle, les informations et l'état du compte.
@@ -281,7 +279,10 @@ export function AdminUsersTable() {
                 id="firstName"
                 value={form.firstName}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, firstName: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    firstName: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -370,10 +371,7 @@ export function AdminUsersTable() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpenModal(false)}
-            >
+            <Button variant="outline" onClick={() => setOpenModal(false)}>
               Annuler
             </Button>
             <Button onClick={saveUser}>

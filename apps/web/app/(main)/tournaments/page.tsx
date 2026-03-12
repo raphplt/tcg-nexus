@@ -1,42 +1,46 @@
 "use client";
-import React, { useMemo, useState } from "react";
-import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
-import { tournamentService } from "@/services/tournament.service";
-import type { PaginatedResult } from "@/types/pagination";
-import {
-  tournamentStatusTranslation,
-  tournamentTypeTranslation,
-} from "@/utils/tournaments";
-import { Tournament } from "@/types/tournament";
-import { TournamentsFilters } from "./_components/TournamentsFilters";
-import { TournamentsTable } from "./_components/TournamentsTable";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
-import {
-  typeOptions,
-  statusOptions,
-  sortOptions,
-  statusColor,
-  typeColor,
-} from "./utils";
-import { PageWrapper } from "@/components/Layout/PageWrapper";
-import { H1, H2 } from "@/components/Shared/Titles";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight,
   BadgeCheck,
   CalendarClock,
-  Trophy,
-  Users,
   MapPin,
   Sparkles,
+  Trophy,
+  Users,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useMemo, useState } from "react";
+import { PageWrapper } from "@/components/Layout/PageWrapper";
+import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { H1, H2 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { tournamentService } from "@/services/tournament.service";
+import type { PaginatedResult } from "@/types/pagination";
+import { Tournament } from "@/types/tournament";
+import {
+  tournamentStatusTranslation,
+  tournamentTypeTranslation,
+} from "@/utils/tournaments";
+import { TournamentsFilters } from "./_components/TournamentsFilters";
+import { TournamentsTable } from "./_components/TournamentsTable";
+import {
+  sortOptions,
+  statusColor,
+  statusOptions,
+  typeColor,
+  typeOptions,
+} from "./utils";
 
 export default function TournamentsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     search: "",
@@ -125,10 +129,7 @@ export default function TournamentsPage() {
     { label: "Statut", key: "status" },
   ];
 
-  const upcomingItems = useMemo(
-    () => upcoming?.data ?? [],
-    [upcoming?.data],
-  );
+  const upcomingItems = useMemo(() => upcoming?.data ?? [], [upcoming?.data]);
 
   const pastItems = useMemo(() => past ?? [], [past]);
 
@@ -158,10 +159,7 @@ export default function TournamentsPage() {
           <div className="space-y-6">
             <div className="space-y-3">
               <Trophy className="size-10 text-primary" />
-              <H1
-                className="text-4xl md:text-5xl font-bold"
-                variant="primary"
-              >
+              <H1 className="text-4xl md:text-5xl font-bold" variant="primary">
                 Tournois Pokémon
               </H1>
               <p className="text-lg text-muted-foreground max-w-2xl">
@@ -172,19 +170,15 @@ export default function TournamentsPage() {
 
             <div className="flex flex-wrap gap-4">
               <Button
-                asChild
+                onClick={() => router.push("/tournaments/create")}
                 size="lg"
+                disabled={!user?.isPro}
+                className="flex flex-row "
               >
-                <Link href="/tournaments/create">
-                  Créer un tournoi
-                  <Sparkles className="ml-2 w-4 h-4" />
-                </Link>
+                Créer un tournoi
+                <Sparkles className="ml-2 w-4 h-4" />
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-              >
+              <Button asChild variant="outline" size="lg">
                 <Link href="#listing">
                   Parcourir les tournois
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -193,18 +187,9 @@ export default function TournamentsPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <StatPill
-                label="Tournois référencés"
-                value={totalTournaments}
-              />
-              <StatPill
-                label="Prochains événements"
-                value={upcomingCount}
-              />
-              <StatPill
-                label="Derniers résultats"
-                value={finishedCount}
-              />
+              <StatPill label="Tournois référencés" value={totalTournaments} />
+              <StatPill label="Prochains événements" value={upcomingCount} />
+              <StatPill label="Derniers résultats" value={finishedCount} />
             </div>
           </div>
 
@@ -326,10 +311,7 @@ export default function TournamentsPage() {
                 {loadingPast ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton
-                        key={i}
-                        className="h-14 w-full"
-                      />
+                      <Skeleton key={i} className="h-14 w-full" />
                     ))}
                   </div>
                 ) : highlightedWinners.length ? (
@@ -360,10 +342,7 @@ export default function TournamentsPage() {
           </div>
         </section>
 
-        <section
-          id="listing"
-          className="space-y-6"
-        >
+        <section id="listing" className="space-y-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <H2 className="flex items-center gap-2">
               <BadgeCheck className="w-5 h-5 text-primary" />
@@ -402,11 +381,7 @@ export default function TournamentsPage() {
             />
           </div>
           {data && (
-            <PaginatedNav
-              meta={data.meta}
-              page={page}
-              onPageChange={setPage}
-            />
+            <PaginatedNav meta={data.meta} page={page} onPageChange={setPage} />
           )}
         </section>
       </div>
@@ -510,12 +485,7 @@ function TournamentCard({
             {tournament.description}
           </p>
         )}
-        <Button
-          asChild
-          size="sm"
-          variant="secondary"
-          className="w-full"
-        >
+        <Button asChild size="sm" variant="secondary" className="w-full">
           <Link href={`/tournaments/${tournament.id}`}>Voir les détails</Link>
         </Button>
       </CardContent>
@@ -568,12 +538,7 @@ function ResultCard({
             Classement en attente de publication.
           </p>
         )}
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="w-full"
-        >
+        <Button asChild variant="outline" size="sm" className="w-full">
           <Link href={`/tournaments/${tournament.id}`}>
             Consulter le récapitulatif
           </Link>
@@ -587,10 +552,7 @@ function SkeletonGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {[...Array(6)].map((_, i) => (
-        <Skeleton
-          key={i}
-          className="h-40 w-full rounded-xl"
-        />
+        <Skeleton key={i} className="h-40 w-full rounded-xl" />
       ))}
     </div>
   );

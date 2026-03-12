@@ -184,10 +184,7 @@ const DecksTable = ({
           )}
         </TableBody>
       </Table>
-      <AlertDialog
-        open={open}
-        onOpenChange={setOpen}
-      >
+      <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>

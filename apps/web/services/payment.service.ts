@@ -13,9 +13,13 @@ export interface CreateOrderDto {
 
 export const paymentService = {
   async createPaymentIntent(): Promise<CreatePaymentIntentResponse> {
-    return authedFetch<CreatePaymentIntentResponse>("POST", "/payments/create-payment-intent", {
-      data: {},
-    });
+    return authedFetch<CreatePaymentIntentResponse>(
+      "POST",
+      "/payments/create-payment-intent",
+      {
+        data: {},
+      },
+    );
   },
 
   async createOrder(data: CreateOrderDto): Promise<any> {

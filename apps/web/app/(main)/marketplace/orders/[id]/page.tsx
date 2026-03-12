@@ -57,20 +57,13 @@ export default function OrderDetailsPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Orders
         </Link>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.print()}
-        >
+        <Button variant="outline" size="sm" onClick={() => window.print()}>
           <Printer className="mr-2 h-4 w-4" />
           Print Invoice
         </Button>
       </div>
 
-      <Card
-        className="mb-8"
-        id="invoice-area"
-      >
+      <Card className="mb-8" id="invoice-area">
         <CardHeader className="border-b">
           <div className="flex justify-between items-start">
             <div>
@@ -120,10 +113,7 @@ export default function OrderDetailsPage() {
             </thead>
             <tbody>
               {order.orderItems.map((item: any) => (
-                <tr
-                  key={item.id}
-                  className="border-b"
-                >
+                <tr key={item.id} className="border-b">
                   <td className="py-4">
                     <div className="flex items-center gap-4">
                       {item.listing.pokemonCard.image && (
@@ -164,10 +154,7 @@ export default function OrderDetailsPage() {
             </tbody>
             <tfoot>
               <tr>
-                <td
-                  colSpan={3}
-                  className="text-right py-4 font-semibold"
-                >
+                <td colSpan={3} className="text-right py-4 font-semibold">
                   Total
                 </td>
                 <td className="text-right py-4 font-bold text-lg">

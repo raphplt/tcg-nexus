@@ -66,7 +66,11 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       });
     },
     onError: (error: any) => {
-      setError(error?.response?.data?.message || error?.message || "Deck selection failed");
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Deck selection failed",
+      );
     },
   });
 
@@ -95,7 +99,8 @@ export default function GameBoard({ matchId }: GameBoardProps) {
 
   useEffect(() => {
     const activeSession =
-      sessionQuery.data?.status === "ACTIVE" || sessionQuery.data?.status === "FINISHED";
+      sessionQuery.data?.status === "ACTIVE" ||
+      sessionQuery.data?.status === "FINISHED";
 
     if (!activeSession || !socketBaseUrl) {
       socketRef.current?.disconnect();
@@ -156,9 +161,10 @@ export default function GameBoard({ matchId }: GameBoardProps) {
   const liveSession = sessionView || sessionQuery.data || null;
   const liveGameState = gameState || liveSession?.gameState || null;
   const enginePlayerId = liveSession?.enginePlayerId || null;
-  const viewerPlayer = enginePlayerId && liveGameState
-    ? liveGameState.players[enginePlayerId]
-    : null;
+  const viewerPlayer =
+    enginePlayerId && liveGameState
+      ? liveGameState.players[enginePlayerId]
+      : null;
   const opponentPlayer =
     enginePlayerId && liveGameState
       ? Object.values(liveGameState.players).find(
@@ -250,10 +256,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {(eligibilityQuery.data?.eligibleDecks || []).map((deck) => (
-          <div
-            key={deck.deckId}
-            className="rounded-lg border p-4 space-y-3"
-          >
+          <div key={deck.deckId} className="rounded-lg border p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-medium">{deck.deckName}</div>
@@ -301,10 +304,15 @@ export default function GameBoard({ matchId }: GameBoardProps) {
           <CardTitle>Session online en attente</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <p>Votre deck est selectionne. La partie commencera des que l’adversaire aura choisi le sien.</p>
+          <p>
+            Votre deck est selectionne. La partie commencera des que
+            l’adversaire aura choisi le sien.
+          </p>
           <div className="flex items-center gap-2">
             <Badge variant="outline">Deck #{liveSession.selectedDeckId}</Badge>
-            <Badge variant={liveSession.opponentDeckReady ? "default" : "secondary"}>
+            <Badge
+              variant={liveSession.opponentDeckReady ? "default" : "secondary"}
+            >
               {liveSession.opponentDeckReady
                 ? "Deck adverse pret"
                 : "En attente du deck adverse"}
@@ -342,7 +350,11 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       <Card>
         <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={currentSession.status === "FINISHED" ? "default" : "secondary"}>
+            <Badge
+              variant={
+                currentSession.status === "FINISHED" ? "default" : "secondary"
+              }
+            >
               {currentSession.status}
             </Badge>
             <Badge variant="outline">Tour {currentGameState.turnNumber}</Badge>
@@ -426,12 +438,16 @@ export default function GameBoard({ matchId }: GameBoardProps) {
           <BoardPlayer
             title="Adversaire"
             player={currentOpponent}
-            isCurrentTurn={currentGameState.activePlayerId === currentOpponent.playerId}
+            isCurrentTurn={
+              currentGameState.activePlayerId === currentOpponent.playerId
+            }
           />
           <BoardPlayer
             title="Vous"
             player={currentViewer}
-            isCurrentTurn={currentGameState.activePlayerId === currentViewer.playerId}
+            isCurrentTurn={
+              currentGameState.activePlayerId === currentViewer.playerId
+            }
           />
           <Card>
             <CardHeader>
@@ -488,22 +504,24 @@ export default function GameBoard({ matchId }: GameBoardProps) {
             <CardTitle>Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(currentViewer.active?.attacks || []).map((attack, attackIndex) => (
-              <Button
-                key={`${attack.name}-${attackIndex}`}
-                className="w-full justify-start"
-                variant="outline"
-                disabled={!canAct}
-                onClick={() =>
-                  emitAction({
-                    type: "ATTACK",
-                    payload: { attackIndex },
-                  })
-                }
-              >
-                Attaquer: {attack.name}
-              </Button>
-            ))}
+            {(currentViewer.active?.attacks || []).map(
+              (attack, attackIndex) => (
+                <Button
+                  key={`${attack.name}-${attackIndex}`}
+                  className="w-full justify-start"
+                  variant="outline"
+                  disabled={!canAct}
+                  onClick={() =>
+                    emitAction({
+                      type: "ATTACK",
+                      payload: { attackIndex },
+                    })
+                  }
+                >
+                  Attaquer: {attack.name}
+                </Button>
+              ),
+            )}
 
             {currentViewer.active &&
               currentViewer.bench.map((pokemon) => (
@@ -567,7 +585,9 @@ function BoardPlayer({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between gap-2">
-          <span>{title}: {player.name}</span>
+          <span>
+            {title}: {player.name}
+          </span>
           {isCurrentTurn && <Badge>Tour en cours</Badge>}
         </CardTitle>
       </CardHeader>
@@ -660,14 +680,21 @@ function HandCardActions({
       <div className="text-xs text-muted-foreground">{card.category}</div>
       <div className="flex flex-wrap gap-2">
         {card.category === "Pokémon" && card.stage === "De base" && (
-          <Button size="sm" variant="outline" disabled={disabled} onClick={onPlayBasicToBench}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={disabled}
+            onClick={onPlayBasicToBench}
+          >
             Jouer sur le banc
           </Button>
         )}
 
         {card.category === "Énergie" &&
           [activePokemon, ...bench]
-            .filter((pokemon): pokemon is SanitizedPokemonCardView => Boolean(pokemon))
+            .filter((pokemon): pokemon is SanitizedPokemonCardView =>
+              Boolean(pokemon),
+            )
             .map((pokemon) => (
               <Button
                 key={`${card.instanceId}-${pokemon.instanceId}`}
@@ -681,7 +708,12 @@ function HandCardActions({
             ))}
 
         {card.category === "Dresseur" && (
-          <Button size="sm" variant="outline" disabled={disabled} onClick={onPlayTrainer}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={disabled}
+            onClick={onPlayTrainer}
+          >
             Jouer
           </Button>
         )}

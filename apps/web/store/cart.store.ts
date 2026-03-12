@@ -141,7 +141,10 @@ export const useCartTotal = () =>
     const { convertPrice } = useCurrencyStore.getState();
 
     return state.cart.cartItems.reduce((total, item) => {
-      const priceInSelectedCurrency = convertPrice(item.listing.price, item.listing.currency);
+      const priceInSelectedCurrency = convertPrice(
+        item.listing.price,
+        item.listing.currency,
+      );
       return total + priceInSelectedCurrency * item.quantity;
     }, 0);
   });

@@ -17,10 +17,7 @@ export default function DeckCard({ deck, onClick }: DeckCardProps) {
   const previewCards = cards.slice(0, 3);
 
   return (
-    <Link
-      href={`/decks/${deck.id}`}
-      onClick={onClick}
-    >
+    <Link href={`/decks/${deck.id}`} onClick={onClick}>
       <Card className="group relative overflow-hidden h-full hover:shadow-xl transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:-translate-y-1">
         <div className="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
           {previewCards.length > 0 ? (

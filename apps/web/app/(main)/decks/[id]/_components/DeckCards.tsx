@@ -41,10 +41,7 @@ const CardGrid = ({
               className="object-cover"
             />
             <Badge className="absolute top-2 left-2">x{deckCard.qty}</Badge>
-            <Badge
-              variant="secondary"
-              className="absolute top-2 right-2"
-            >
+            <Badge variant="secondary" className="absolute top-2 right-2">
               {deckCard.role === "side" ? "Side" : "Main"}
             </Badge>
           </div>
@@ -83,12 +80,12 @@ function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
               className="flex items-center gap-3 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
             >
               <div className="relative w-12 h-16 shrink-0 bg-muted rounded overflow-hidden">
-                  <Image
-                    src={getCardImage(deckCard.card, "low")}
-                    alt={deckCard.card?.name || "Carte"}
-                    fill
-                    className="object-contain"
-                  />
+                <Image
+                  src={getCardImage(deckCard.card, "low")}
+                  alt={deckCard.card?.name || "Carte"}
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
@@ -153,31 +150,16 @@ export function DeckCards({ deck }: DeckCardsProps) {
               <CardGrid cards={mainCards} />
             </TabsContent>
             <TabsContent value="side">
-              <CardGrid
-                cards={sideCards}
-                emptyLabel="Aucune carte side"
-              />
+              <CardGrid cards={sideCards} emptyLabel="Aucune carte side" />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      <CardSection
-        title="Pokémon"
-        cards={pokemonCards}
-      />
-      <CardSection
-        title="Dresseurs"
-        cards={trainerCards}
-      />
-      <CardSection
-        title="Energies"
-        cards={energyCards}
-      />
-      <CardSection
-        title="Autres"
-        cards={otherCards}
-      />
+      <CardSection title="Pokémon" cards={pokemonCards} />
+      <CardSection title="Dresseurs" cards={trainerCards} />
+      <CardSection title="Energies" cards={energyCards} />
+      <CardSection title="Autres" cards={otherCards} />
     </div>
   );
 }

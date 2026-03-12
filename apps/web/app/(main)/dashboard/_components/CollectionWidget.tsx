@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layers, Plus, TrendingUp } from "lucide-react";
 import type { DashboardCollectionData } from "@/types/dashboard";
 
@@ -56,8 +51,8 @@ export function CollectionWidget({ data }: CollectionWidgetProps) {
             </div>
             {data.recentlyAdded > 0 && (
               <div className="flex items-center gap-1 text-xs text-green-600">
-                <TrendingUp className="h-3 w-3" />
-                +{data.recentlyAdded} ces 30 derniers jours
+                <TrendingUp className="h-3 w-3" />+{data.recentlyAdded} ces 30
+                derniers jours
               </div>
             )}
           </div>

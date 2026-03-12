@@ -132,15 +132,9 @@ const LoginPage = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {error && (
-                <Alert
-                  variant="destructive"
-                  className="border-0"
-                >
+                <Alert variant="destructive" className="border-0">
                   <CircleAlert />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
@@ -242,7 +236,8 @@ const LoginPage = () => {
                         disabled={isLoading}
                         className="text-xs"
                       >
-                        Se connecter en tant que {account.role} ({account.email})
+                        Se connecter en tant que {account.role} ({account.email}
+                        )
                       </Button>
                     ))}
                   </div>

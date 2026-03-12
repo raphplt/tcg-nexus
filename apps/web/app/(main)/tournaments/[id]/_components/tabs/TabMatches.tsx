@@ -67,10 +67,7 @@ const statusConfig: Record<
   },
 };
 
-export function TabMatches({
-  matches,
-  tournamentId,
-}: TabMatchesProps) {
+export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"bracket" | "list">("bracket");
@@ -199,10 +196,7 @@ export function TabMatches({
               </CardTitle>
               <div className="flex items-center gap-2">
                 <Filter className="size-4 text-muted-foreground" />
-                <Select
-                  value={statusFilter}
-                  onValueChange={setStatusFilter}
-                >
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="Statut" />
                   </SelectTrigger>
@@ -215,20 +209,14 @@ export function TabMatches({
                     <SelectItem value="cancelled">Annulé</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select
-                  value={roundFilter}
-                  onValueChange={setRoundFilter}
-                >
+                <Select value={roundFilter} onValueChange={setRoundFilter}>
                   <SelectTrigger className="w-[130px]">
                     <SelectValue placeholder="Round" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les rounds</SelectItem>
                     {rounds.map((round) => (
-                      <SelectItem
-                        key={round}
-                        value={round.toString()}
-                      >
+                      <SelectItem key={round} value={round.toString()}>
                         Round {round}
                       </SelectItem>
                     ))}
@@ -263,10 +251,7 @@ export function TabMatches({
                         (match.playerBScore ?? 0) > (match.playerAScore ?? 0);
 
                       return (
-                        <TableRow
-                          key={match.id}
-                          className="hover:bg-muted/30"
-                        >
+                        <TableRow key={match.id} className="hover:bg-muted/30">
                           <TableCell className="font-medium">
                             #{match.id}
                           </TableCell>

@@ -109,10 +109,7 @@ export function TournamentHeroBanner({
 
       <div className="relative p-6 md:p-8">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <Badge
-            variant="outline"
-            className={`${statusColor} font-medium`}
-          >
+          <Badge variant="outline" className={`${statusColor} font-medium`}>
             {tournamentStatusTranslation[
               tournament.status as keyof typeof tournamentStatusTranslation
             ] || tournament.status}
@@ -123,20 +120,14 @@ export function TournamentHeroBanner({
             ] || tournament.type}
           </Badge>
           {tournament.isPublic === false ? (
-            <Badge
-              variant="outline"
-              className="gap-1"
-            >
+            <Badge variant="outline" className="gap-1">
               <Lock className="size-3" /> Privé
             </Badge>
           ) : (
             <Badge variant="outline">Public</Badge>
           )}
           {tournament.requiresApproval && (
-            <Badge
-              variant="outline"
-              className="gap-1"
-            >
+            <Badge variant="outline" className="gap-1">
               <BadgeCheck className="size-3" /> Validation requise
             </Badge>
           )}
@@ -159,11 +150,7 @@ export function TournamentHeroBanner({
             </Button>
 
             {permissions.canViewAdmin && (
-              <Button
-                variant="outline"
-                size="lg"
-                asChild
-              >
+              <Button variant="outline" size="lg" asChild>
                 <Link href={`/tournaments/${tournament.id}/admin`}>
                   <Settings2 className="size-4 mr-2" />
                   Administration

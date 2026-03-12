@@ -118,10 +118,7 @@ const RandomCard = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <FavoriteButton
-                key={card.id}
-                cardId={card.id}
-              />
+              <FavoriteButton key={card.id} cardId={card.id} />
               <Button
                 variant="outline"
                 size="icon"

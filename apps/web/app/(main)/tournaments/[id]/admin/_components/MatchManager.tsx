@@ -253,10 +253,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
             </CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="size-4 text-muted-foreground" />
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -269,20 +266,14 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                   <SelectItem value="cancelled">Annulé</SelectItem>
                 </SelectContent>
               </Select>
-              <Select
-                value={roundFilter}
-                onValueChange={setRoundFilter}
-              >
+              <Select value={roundFilter} onValueChange={setRoundFilter}>
                 <SelectTrigger className="w-[130px]">
                   <SelectValue placeholder="Round" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les rounds</SelectItem>
                   {rounds.map((round) => (
-                    <SelectItem
-                      key={round}
-                      value={round.toString()}
-                    >
+                    <SelectItem key={round} value={round.toString()}>
                       Round {round}
                     </SelectItem>
                   ))}
@@ -310,10 +301,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                   const matchStatus =
                     statusConfig[match.status] ?? statusConfig.scheduled;
                   return (
-                    <TableRow
-                      key={match.id}
-                      className="hover:bg-muted/30"
-                    >
+                    <TableRow key={match.id} className="hover:bg-muted/30">
                       <TableCell className="font-medium">#{match.id}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -433,10 +421,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
       </Card>
 
       {/* Dialog édition score */}
-      <Dialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-      >
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier le score</DialogTitle>
@@ -486,10 +471,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setEditDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Annuler
             </Button>
             <Button

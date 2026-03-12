@@ -85,11 +85,7 @@ const MarketplaceFilters = ({
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
         {isAuthenticated && (
-          <Button
-            type="button"
-            className="h-10"
-            asChild
-          >
+          <Button type="button" className="h-10" asChild>
             <Link href="/marketplace/create">Créer une vente</Link>
           </Button>
         )}
@@ -110,10 +106,7 @@ const MarketplaceFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {cardStateOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
+                  <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -134,10 +127,7 @@ const MarketplaceFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {currencyOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
+                  <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -156,10 +146,7 @@ const MarketplaceFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {sortOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
+                  <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
                 ))}

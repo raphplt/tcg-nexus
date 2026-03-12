@@ -46,8 +46,18 @@ const mainNavItems: NavItem[] = [
 ];
 
 const userNavItems: NavItem[] = [
-  { label: "Collection", href: "/collection", icon: FolderHeart, requireAuth: true },
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requireAuth: true },
+  {
+    label: "Collection",
+    href: "/collection",
+    icon: FolderHeart,
+    requireAuth: true,
+  },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    requireAuth: true,
+  },
   { label: "Panier", href: "/cart", icon: ShoppingCart, requireAuth: true },
 ];
 
@@ -97,10 +107,7 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar
-      collapsible="icon"
-      className="border-r-2 border-border"
-    >
+    <Sidebar collapsible="icon" className="border-r-2 border-border">
       <SidebarHeader className="border-b-2 border-border p-4 group-data-[collapsible=icon]:p-2">
         <Link
           href="/"
@@ -151,14 +158,8 @@ export function AppSidebar() {
         {isAuthenticated && user ? (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip={user.email}
-              >
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-3"
-                >
+              <SidebarMenuButton asChild tooltip={user.email}>
+                <Link href="/profile" className="flex items-center gap-3">
                   <User className="h-5 w-5" />
                   <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                     <span className="text-sm font-medium truncate">
@@ -175,10 +176,7 @@ export function AppSidebar() {
         ) : (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                tooltip="Se connecter"
-              >
+              <SidebarMenuButton asChild tooltip="Se connecter">
                 <Link href="/auth/login">
                   <LogIn className="h-5 w-5" />
                   <span>Se connecter</span>

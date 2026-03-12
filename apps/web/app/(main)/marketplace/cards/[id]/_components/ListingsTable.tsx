@@ -55,10 +55,7 @@ export function ListingsTable({
         <div className="flex items-center justify-between">
           <CardTitle>Offres disponibles</CardTitle>
           <div className="flex gap-2">
-            <Select
-              value={currencyFilter}
-              onValueChange={setCurrencyFilter}
-            >
+            <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Devise" />
               </SelectTrigger>
@@ -68,20 +65,14 @@ export function ListingsTable({
                 <SelectItem value="USD">USD</SelectItem>
               </SelectContent>
             </Select>
-            <Select
-              value={cardStateFilter}
-              onValueChange={setCardStateFilter}
-            >
+            <Select value={cardStateFilter} onValueChange={setCardStateFilter}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="État" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous</SelectItem>
                 {cardStates.map((cs) => (
-                  <SelectItem
-                    key={cs.value}
-                    value={cs.value}
-                  >
+                  <SelectItem key={cs.value} value={cs.value}>
                     {cs.label}
                   </SelectItem>
                 ))}
@@ -94,10 +85,7 @@ export function ListingsTable({
         {loading ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <Skeleton
-                key={i}
-                className="h-16 w-full"
-              />
+              <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
         ) : listings.length > 0 ? (

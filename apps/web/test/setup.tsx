@@ -5,10 +5,14 @@ import React from "react";
 
 // Polyfill for pointer capture (required by Radix UI Select in jsdom)
 if (typeof Element !== "undefined") {
-  Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture || (() => false);
-  Element.prototype.setPointerCapture = Element.prototype.setPointerCapture || (() => {});
-  Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture || (() => {});
-  Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
+  Element.prototype.hasPointerCapture =
+    Element.prototype.hasPointerCapture || (() => false);
+  Element.prototype.setPointerCapture =
+    Element.prototype.setPointerCapture || (() => {});
+  Element.prototype.releasePointerCapture =
+    Element.prototype.releasePointerCapture || (() => {});
+  Element.prototype.scrollIntoView =
+    Element.prototype.scrollIntoView || (() => {});
 }
 
 // Mock ResizeObserver for Radix UI components
@@ -62,11 +66,7 @@ vi.mock("next/link", () => ({
   default: (() => {
     const LinkMock = React.forwardRef<HTMLAnchorElement, any>(
       ({ href, children, ...rest }, ref) => (
-        <a
-          href={typeof href === "string" ? href : ""}
-          ref={ref}
-          {...rest}
-        >
+        <a href={typeof href === "string" ? href : ""} ref={ref} {...rest}>
           {children}
         </a>
       ),
@@ -94,7 +94,7 @@ vi.mock("next/image", () => ({
 
     return (
       <img
-        src={typeof src === "string" ? src : src?.src ?? ""}
+        src={typeof src === "string" ? src : (src?.src ?? "")}
         alt={alt || ""}
         {...rest}
       />
