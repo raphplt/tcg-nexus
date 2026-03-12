@@ -45,6 +45,13 @@ export interface AttackAction extends PlayerAction {
   };
 }
 
+export interface PlayTrainerAction extends PlayerAction {
+  type: ActionType.PLAY_TRAINER;
+  payload: {
+    trainerCardInstanceId: string;
+  };
+}
+
 export interface RetreatAction extends PlayerAction {
   type: ActionType.RETREAT;
   payload: {

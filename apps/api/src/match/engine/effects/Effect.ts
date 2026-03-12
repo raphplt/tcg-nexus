@@ -2,6 +2,7 @@ export enum EffectType {
   DAMAGE = 'DAMAGE',
   HEAL = 'HEAL',
   DRAW_CARD = 'DRAW_CARD',
+  DRAW_UNTIL_HAND_SIZE = 'DRAW_UNTIL_HAND_SIZE',
   DISCARD_ENERGY = 'DISCARD_ENERGY',
   APPLY_SPECIAL_CONDITION = 'APPLY_SPECIAL_CONDITION',
   COIN_FLIP = 'COIN_FLIP',
@@ -14,6 +15,7 @@ export enum TargetType {
   PLAYER_ACTIVE = 'PLAYER_ACTIVE',
   OPPONENT_BENCH = 'OPPONENT_BENCH',
   PLAYER_BENCH = 'PLAYER_BENCH',
+  SELECTED_OWN_POKEMON = 'SELECTED_OWN_POKEMON',
   ANY = 'ANY'
 }
 
@@ -58,4 +60,16 @@ export interface DrawCardEffect extends BaseEffect {
   amount: number;
 }
 
-export type AnyEffect = DamageEffect | HealEffect | ApplySpecialConditionEffect | CoinFlipEffect | DiscardEnergyEffect | DrawCardEffect;
+export interface DrawUntilHandSizeEffect extends BaseEffect {
+  type: EffectType.DRAW_UNTIL_HAND_SIZE;
+  handSize: number;
+}
+
+export type AnyEffect =
+  | DamageEffect
+  | HealEffect
+  | ApplySpecialConditionEffect
+  | CoinFlipEffect
+  | DiscardEnergyEffect
+  | DrawCardEffect
+  | DrawUntilHandSizeEffect;

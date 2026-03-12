@@ -1,7 +1,7 @@
 import axios from "axios";
 import { NEXT_PUBLIC_API_URL } from "./variables";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   NEXT_PUBLIC_API_URL ||
   (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001");
 

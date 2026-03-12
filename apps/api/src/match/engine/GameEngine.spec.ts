@@ -1,5 +1,5 @@
 import { GameEngine } from "./GameEngine";
-import { GamePhase, PlayerId, TurnStep } from "./models/enums";
+import { GamePhase, TurnStep } from "./models/enums";
 import { GameState } from "./models/GameState";
 
 describe("GameEngine Basics", () => {
@@ -23,6 +23,7 @@ describe("GameEngine Basics", () => {
           hasRetreatedThisTurn: false,
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
+          turnsTaken: 0,
         },
         Player2: {
           playerId: "Player2",
@@ -38,15 +39,24 @@ describe("GameEngine Basics", () => {
           hasRetreatedThisTurn: false,
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
+          turnsTaken: 0,
         },
       },
       playerIds: ["Player1", "Player2"],
       activePlayerId: "Player1",
+      firstPlayerId: null,
       turnNumber: 1,
       gamePhase: GamePhase.Play,
       turnStep: TurnStep.Main,
+      rngState: 12345,
+      pendingTurnTransitionToPlayerId: null,
       stadium: null,
+      pendingPrompt: null,
+      setup: null,
+      resumeAction: null,
+      pendingTrainerPlay: null,
       winnerId: null,
+      winnerReason: null,
     };
   });
 
@@ -183,6 +193,10 @@ describe("GameEngine Basics", () => {
       ownerId: "Player1",
       specialConditions: [],
       attachedEnergies: [],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
       baseCard: {
         attacks: [{ name: "Scratch", cost: ["Incolore"], damage: 10 }],
       } as any,
@@ -196,7 +210,9 @@ describe("GameEngine Basics", () => {
       });
     }).toThrow("Not enough energy attached");
 
-    p1.active!.attachedEnergies.push({} as any); // attach 1 energy dummy
+    p1.active!.attachedEnergies.push({
+      baseCard: { provides: ["Incolore"] },
+    } as any);
     p1.active!.specialConditions.push("Asleep" as any);
 
     expect(() => {
@@ -217,7 +233,11 @@ describe("GameEngine Basics", () => {
       instanceId: "active-1",
       ownerId: "Player1",
       specialConditions: [],
-      attachedEnergies: [{} as any],
+      attachedEnergies: [{ baseCard: { provides: ["Incolore"] } } as any],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
       baseCard: {
         attacks: [{ name: "Scratch", cost: ["Incolore"], damage: 10 }],
       } as any,
@@ -237,5 +257,138 @@ describe("GameEngine Basics", () => {
     ).toBe(true);
     // Turn should have ended
     expect(state.activePlayerId).toBe("Player2");
+  });
+
+  it("should take the last prize and finish the game after a knockout", () => {
+    const engine = new GameEngine(initialState);
+    const p1 = initialState.players["Player1"];
+    const p2 = initialState.players["Player2"];
+
+    p1.turnsTaken = 1;
+    p1.prizes = [
+      {
+        instanceId: "prize-1",
+        ownerId: "Player1",
+        baseCard: { id: "prize", name: "Prize", category: "Dresseur" } as any,
+      },
+    ];
+    p1.active = {
+      instanceId: "p1-active",
+      ownerId: "Player1",
+      specialConditions: [],
+      attachedEnergies: [{ baseCard: { provides: ["Incolore"] } } as any],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
+      baseCard: {
+        attacks: [{ name: "KO Hit", cost: ["Incolore"], damage: 10 }],
+        types: ["Combat"],
+      } as any,
+    } as any;
+    p2.active = {
+      instanceId: "p2-active",
+      ownerId: "Player2",
+      specialConditions: [],
+      attachedEnergies: [],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
+      baseCard: {
+        hp: 10,
+        attacks: [],
+        weaknesses: [],
+        resistances: [],
+      } as any,
+    } as any;
+
+    const events = engine.dispatch({
+      playerId: "Player1",
+      type: "ATTACK" as any,
+      payload: { attackIndex: 0 },
+    });
+
+    expect(engine.getState().gamePhase).toBe(GamePhase.Finished);
+    expect(engine.getState().winnerId).toBe("Player1");
+    expect(engine.getState().winnerReason).toBe("PRIZE_OUT");
+    expect(events.some((event) => event.type === "PRIZE_CARDS_TAKEN")).toBe(true);
+  });
+
+  it("should require a promotion after knocking out an active pokemon with a bench", () => {
+    const engine = new GameEngine(initialState);
+    const p1 = initialState.players["Player1"];
+    const p2 = initialState.players["Player2"];
+
+    p1.turnsTaken = 1;
+    p1.prizes = new Array(6).fill(null).map((_, index) => ({
+      instanceId: `p1-prize-${index}`,
+      ownerId: "Player1",
+      baseCard: { id: `prize-${index}`, name: "Prize", category: "Dresseur" } as any,
+    }));
+    p1.active = {
+      instanceId: "p1-active",
+      ownerId: "Player1",
+      specialConditions: [],
+      attachedEnergies: [{ baseCard: { provides: ["Incolore"] } } as any],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
+      baseCard: {
+        attacks: [{ name: "KO Hit", cost: ["Incolore"], damage: 20 }],
+        types: ["Combat"],
+      } as any,
+    } as any;
+    p2.active = {
+      instanceId: "p2-active",
+      ownerId: "Player2",
+      specialConditions: [],
+      attachedEnergies: [],
+      attachedTools: [],
+      attachedEvolutions: [],
+      damageCounters: 0,
+      turnsInPlay: 1,
+      baseCard: {
+        hp: 10,
+        attacks: [],
+        weaknesses: [],
+        resistances: [],
+      } as any,
+    } as any;
+    p2.bench = [
+      {
+        instanceId: "p2-bench-1",
+        ownerId: "Player2",
+        specialConditions: [],
+        attachedEnergies: [],
+        attachedTools: [],
+        attachedEvolutions: [],
+        damageCounters: 0,
+        turnsInPlay: 1,
+        baseCard: {
+          hp: 60,
+          name: "Bench Mon",
+          attacks: [],
+          weaknesses: [],
+          resistances: [],
+        } as any,
+      } as any,
+    ];
+    p2.prizes = new Array(6).fill(null).map((_, index) => ({
+      instanceId: `p2-prize-${index}`,
+      ownerId: "Player2",
+      baseCard: { id: `prize-${index}`, name: "Prize", category: "Dresseur" } as any,
+    }));
+
+    engine.dispatch({
+      playerId: "Player1",
+      type: "ATTACK" as any,
+      payload: { attackIndex: 0 },
+    });
+
+    expect(engine.getState().pendingPrompt?.type).toBe("CHOOSE_PROMOTION");
+    expect(engine.getState().pendingPrompt?.playerId).toBe("Player2");
+    expect(engine.getState().winnerId).toBeNull();
   });
 });

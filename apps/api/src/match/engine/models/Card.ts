@@ -1,17 +1,21 @@
 import { CardCategory, SpecialCondition } from './enums';
+import { AnyEffect } from '../effects/Effect';
 
 export interface TcgDexCardBase {
   id: string;
   name: string;
   category: CardCategory;
+  image?: string;
   // Others properties exist but we only list what we strictly need for the engine typing right now
 }
 
 export interface Attack {
   name: string;
   cost: string[];
-  damage: number | string; // Sometimes damage is a string like '30+' or '10x'
+  damage?: number | string; // Sometimes damage is a string like '30+' or '10x'
   effect?: string;
+  effects?: AnyEffect[];
+  ignoreResistance?: boolean;
 }
 
 export interface TcgDexPokemon extends TcgDexCardBase {
@@ -20,22 +24,28 @@ export interface TcgDexPokemon extends TcgDexCardBase {
   hp: number;
   stage: string;
   suffix?: string;
+  evolvesFrom?: string;
   attacks: Attack[];
   weaknesses?: { type: string; value: string }[];
   resistances?: { type: string; value: string }[];
   retreat?: number;
+  prizeCards?: number;
 }
 
 export interface TcgDexTrainer extends TcgDexCardBase {
   category: CardCategory.Trainer;
   trainerType: string; // Item, Supporter, Stadium, Tool
   effect: string;
+  playEffects?: AnyEffect[];
+  targetStrategy?: "OWN_POKEMON";
 }
 
 export interface TcgDexEnergy extends TcgDexCardBase {
   category: CardCategory.Energy;
   energyType: string; // Basic, Special
   effect?: string;
+  provides: string[];
+  isSpecial?: boolean;
 }
 
 export type TcgDexCard = TcgDexPokemon | TcgDexTrainer | TcgDexEnergy;

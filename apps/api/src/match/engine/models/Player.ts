@@ -20,4 +20,6 @@ export interface PlayerState {
   hasRetreatedThisTurn: boolean;
   hasAttachedEnergyThisTurn: boolean;
   prizeCardsTaken: number;
+  mulliganCount?: number;
+  turnsTaken?: number;
 }

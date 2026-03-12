@@ -42,3 +42,19 @@ export enum PlayerId {
   Player1 = "Player1",
   Player2 = "Player2",
 }
+
+export enum PromptType {
+  ChooseFirstPlayer = "CHOOSE_FIRST_PLAYER",
+  ChooseActive = "CHOOSE_ACTIVE",
+  ChooseBench = "CHOOSE_BENCH",
+  ChooseMulliganDraw = "CHOOSE_MULLIGAN_DRAW",
+  ChoosePromotion = "CHOOSE_PROMOTION",
+  ChooseTrainerTarget = "CHOOSE_TRAINER_TARGET",
+}
+
+export enum GameFinishedReason {
+  PrizeOut = "PRIZE_OUT",
+  DeckOut = "DECK_OUT",
+  NoPokemon = "NO_POKEMON",
+  Forfeit = "FORFEIT",
+}

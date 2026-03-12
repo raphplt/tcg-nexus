@@ -1,6 +1,5 @@
 import { GameEngine } from "../GameEngine";
-import { GameState } from "../models/GameState";
-import { AnyEffect, EffectType } from "./Effect";
+import { AnyEffect, EffectType, TargetType } from "./Effect";
 
 export class EffectResolver {
   private engine: GameEngine;
@@ -16,9 +15,12 @@ export class EffectResolver {
     effects: AnyEffect[],
     sourcePlayerId: string,
     events: any[],
+    context?: {
+      selectedTargetInstanceId?: string;
+    },
   ) {
     for (const effect of effects) {
-      this.resolveSingleEffect(effect, sourcePlayerId, events);
+      this.resolveSingleEffect(effect, sourcePlayerId, events, context);
     }
   }
 
@@ -26,25 +28,23 @@ export class EffectResolver {
     effect: AnyEffect,
     sourcePlayerId: string,
     events: any[],
+    context?: {
+      selectedTargetInstanceId?: string;
+    },
   ) {
     const state = this.engine.getState();
     const opponentId = state.playerIds.find((id) => id !== sourcePlayerId)!;
 
     switch (effect.type) {
       case EffectType.DAMAGE:
-        // Identify target
-        let targetMon: any = null;
-        if (effect.target === "OPPONENT_ACTIVE") {
-          targetMon = state.players[opponentId].active;
-        } else if (
-          effect.target === "SELF" ||
-          effect.target === "PLAYER_ACTIVE"
-        ) {
-          targetMon = state.players[sourcePlayerId].active;
-        }
+        const targetMon = this.resolvePokemonTarget(
+          effect.target,
+          sourcePlayerId,
+          opponentId,
+          context?.selectedTargetInstanceId,
+        );
 
         if (targetMon) {
-          // Here we would apply weakness, resistance, tool modifiers, then apply damage
           targetMon.damageCounters += effect.amount;
           events.push({
             type: "DAMAGE_DEALT",
@@ -55,11 +55,12 @@ export class EffectResolver {
         break;
 
       case EffectType.HEAL:
-        // Handle healing Lady of the Pokemon Center: "Soignez 60 dégâts..."
-        let healTarget: any = null;
-        if (effect.target === "SELF" || effect.target === "PLAYER_ACTIVE") {
-          healTarget = state.players[sourcePlayerId].active;
-        }
+        const healTarget = this.resolvePokemonTarget(
+          effect.target,
+          sourcePlayerId,
+          opponentId,
+          context?.selectedTargetInstanceId,
+        );
 
         if (healTarget) {
           healTarget.damageCounters = Math.max(
@@ -78,8 +79,7 @@ export class EffectResolver {
         break;
 
       case EffectType.COIN_FLIP:
-        // Hardcoded math.random for now. In a real system, use a seeded RNG for replays
-        const isHeads = Math.random() > 0.5;
+        const isHeads = this.engine.nextRandom() >= 0.5;
         events.push({
           type: "COIN_FLIPPED",
           result: isHeads ? "HEADS" : "TAILS",
@@ -87,23 +87,25 @@ export class EffectResolver {
         });
 
         if (isHeads && effect.onHeads) {
-          this.resolveEffects(effect.onHeads, sourcePlayerId, events);
+          this.resolveEffects(effect.onHeads, sourcePlayerId, events, context);
         } else if (!isHeads && effect.onTails) {
-          this.resolveEffects(effect.onTails, sourcePlayerId, events);
+          this.resolveEffects(effect.onTails, sourcePlayerId, events, context);
         }
         break;
 
       case EffectType.APPLY_SPECIAL_CONDITION:
-        // Apply to target
-        let condTarget: any = null;
-        if (effect.target === "OPPONENT_ACTIVE") {
-          condTarget = state.players[opponentId].active;
-        }
+        const condTarget = this.resolvePokemonTarget(
+          effect.target,
+          sourcePlayerId,
+          opponentId,
+          context?.selectedTargetInstanceId,
+        );
 
         if (condTarget) {
-          // Add to array, removing conflicting ones if needed (like sleep replaces paralysis)
-          // Simplified for now:
-          condTarget.specialConditions.push(effect.condition as any);
+          condTarget.specialConditions = this.engine.applySpecialCondition(
+            condTarget.specialConditions,
+            effect.condition as any,
+          );
           events.push({
             type: "SPECIAL_CONDITION_APPLIED",
             condition: effect.condition,
@@ -113,20 +115,26 @@ export class EffectResolver {
         break;
 
       case EffectType.DISCARD_ENERGY:
-        // Discarding energy logic
+        this.engine.discardAttachedEnergy(
+          sourcePlayerId,
+          effect.target,
+          effect.amount,
+          events,
+        );
         break;
 
       case EffectType.DRAW_CARD:
         const player = state.players[sourcePlayerId];
         for (let i = 0; i < effect.amount; i++) {
-          if (player.deck.length > 0) {
-            const card = player.deck.pop()!;
-            player.hand.push(card);
-            events.push({
-              type: "CARD_DRAWN",
-              playerId: sourcePlayerId,
-              count: 1,
-            });
+          this.engine.drawCardForEffect(player.playerId, events);
+        }
+        break;
+
+      case EffectType.DRAW_UNTIL_HAND_SIZE:
+        while (state.players[sourcePlayerId].hand.length < effect.handSize) {
+          const drawn = this.engine.drawCardForEffect(sourcePlayerId, events);
+          if (!drawn) {
+            break;
           }
         }
         break;
@@ -134,5 +142,35 @@ export class EffectResolver {
       default:
         console.warn(`Effect type not implemented yet.`);
     }
+  }
+
+  private resolvePokemonTarget(
+    target: TargetType,
+    sourcePlayerId: string,
+    opponentId: string,
+    selectedTargetInstanceId?: string,
+  ) {
+    const state = this.engine.getState();
+    if (target === TargetType.OPPONENT_ACTIVE) {
+      return state.players[opponentId].active;
+    }
+
+    if (target === TargetType.SELF || target === TargetType.PLAYER_ACTIVE) {
+      return state.players[sourcePlayerId].active;
+    }
+
+    if (target === TargetType.SELECTED_OWN_POKEMON && selectedTargetInstanceId) {
+      const player = state.players[sourcePlayerId];
+      if (player.active?.instanceId === selectedTargetInstanceId) {
+        return player.active;
+      }
+
+      return (
+        player.bench.find((pokemon) => pokemon.instanceId === selectedTargetInstanceId) ||
+        null
+      );
+    }
+
+    return null;
   }
 }

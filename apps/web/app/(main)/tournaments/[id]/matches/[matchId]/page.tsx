@@ -24,6 +24,7 @@ import { useMatchPermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { MatchScoreForm } from "../_components/MatchScoreForm";
 import Link from "next/link";
+import GameBoard from "@/components/match/GameBoard";
 
 export default function MatchPage() {
   const { id, matchId } = useParams();
@@ -275,15 +276,38 @@ export default function MatchPage() {
             </Card>
           </div>
 
-          {/* Formulaire de score */}
+          {/* Zone de jeu / fallback admin */}
           <div className="lg:col-span-2">
-            <MatchScoreForm
-              match={match}
-              onSuccess={() => {
-                refetch();
-                router.refresh();
-              }}
-            />
+            {permissions.isPlayerInMatch ? (
+              <GameBoard matchId={match.id} />
+            ) : permissions.canResetMatch ? (
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Mode administration</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground">
+                    Le plateau online est reserve aux deux joueurs du match. Les
+                    outils ci-dessous restent disponibles comme filet de
+                    securite pour l'administration.
+                  </CardContent>
+                </Card>
+                <MatchScoreForm
+                  match={match}
+                  onSuccess={() => {
+                    refetch();
+                    router.refresh();
+                  }}
+                />
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="py-8 text-sm text-muted-foreground">
+                  Le jeu en ligne est accessible uniquement aux deux joueurs du
+                  match.
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

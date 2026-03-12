@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   Column,
   CreateDateColumn,
   UpdateDateColumn
@@ -10,6 +11,7 @@ import {
 import { Tournament } from 'src/tournament/entities/tournament.entity';
 import { Player } from 'src/player/entities/player.entity';
 import { Statistics } from 'src/statistics/entities/statistic.entity';
+import { OnlineMatchSession } from './online-match-session.entity';
 
 export enum MatchStatus {
   SCHEDULED = 'scheduled',
@@ -92,4 +94,9 @@ export class Match {
 
   @OneToMany(() => Statistics, (stats) => stats.match, { cascade: true })
   statistics: Statistics[];
+
+  @OneToOne(() => OnlineMatchSession, (session) => session.match, {
+    nullable: true
+  })
+  onlineSession?: OnlineMatchSession | null;
 }

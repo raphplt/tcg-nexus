@@ -38,6 +38,6 @@ import { CollectionModule } from 'src/collection/collection.module';
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
-  exports: [AuthService]
+  exports: [AuthService, JwtModule]
 })
 export class AuthModule {}
