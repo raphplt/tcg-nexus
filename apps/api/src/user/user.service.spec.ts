@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
+import { Player } from 'src/player/entities/player.entity';
 
 jest.mock('bcrypt', () => ({
   hash: jest.fn().mockResolvedValue('hashed')
@@ -19,6 +20,11 @@ describe('UserService', () => {
     update: jest.fn(),
     remove: jest.fn()
   };
+  const playerRepo = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn()
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +33,10 @@ describe('UserService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: repo
+        },
+        {
+          provide: getRepositoryToken(Player),
+          useValue: playerRepo
         }
       ]
     }).compile();
@@ -39,6 +49,14 @@ describe('UserService', () => {
     repo.findOne.mockResolvedValueOnce(null);
     repo.create.mockReturnValue({ email: 'a', password: 'hashed' });
     repo.save.mockResolvedValue({ id: 1, email: 'a' });
+    playerRepo.findOne.mockResolvedValueOnce(null);
+    playerRepo.create.mockReturnValue({ id: 11, user: { id: 1 } });
+    playerRepo.save.mockResolvedValue({ id: 11, user: { id: 1 } });
+    repo.findOne.mockResolvedValueOnce({
+      id: 1,
+      email: 'a',
+      player: { id: 11 }
+    });
 
     const result = await service.create({
       email: 'a',
@@ -50,6 +68,8 @@ describe('UserService', () => {
 
     expect(result.id).toBe(1);
     expect(bcrypt.hash).toHaveBeenCalledWith('pwd', 10);
+    expect(playerRepo.create).toHaveBeenCalled();
+    expect(playerRepo.save).toHaveBeenCalled();
   });
 
   it('should throw on duplicate email', async () => {
@@ -73,21 +93,45 @@ describe('UserService', () => {
   });
 
   it('should find one by id or throw', async () => {
-    repo.findOne.mockResolvedValueOnce({ id: 2 });
-    await expect(service.findOne(2)).resolves.toEqual({ id: 2 });
+    repo.findOne.mockResolvedValueOnce({ id: 2, player: { id: 22 } });
+    await expect(service.findOne(2)).resolves.toEqual({
+      id: 2,
+      player: { id: 22 }
+    });
 
     repo.findOne.mockResolvedValueOnce(null);
     await expect(service.findOne(3)).rejects.toThrow(NotFoundException);
   });
 
   it('should findById and findByEmail', async () => {
-    repo.findOne.mockResolvedValueOnce({ id: 7 });
+    repo.findOne.mockResolvedValueOnce({ id: 7, player: { id: 70 } });
     const byId = await service.findById(7);
     expect(byId?.id).toBe(7);
 
-    repo.findOne.mockResolvedValueOnce({ id: 8, email: 'x@example.com' });
+    repo.findOne.mockResolvedValueOnce({
+      id: 8,
+      email: 'x@example.com',
+      player: { id: 80 }
+    });
     const byEmail = await service.findByEmail('x@example.com');
     expect(byEmail?.email).toBe('x@example.com');
+  });
+
+  it('should auto-create a player for a legacy user without one', async () => {
+    repo.findOne.mockResolvedValueOnce({ id: 9, email: 'legacy@example.com' });
+    playerRepo.findOne.mockResolvedValueOnce(null);
+    playerRepo.create.mockReturnValue({ user: { id: 9 } });
+    playerRepo.save.mockResolvedValue({ id: 90, user: { id: 9 } });
+
+    const user = await service.findById(9);
+
+    expect(playerRepo.create).toHaveBeenCalledWith({
+      user: expect.objectContaining({
+        id: 9,
+        email: 'legacy@example.com'
+      })
+    });
+    expect(user?.player).toEqual({ id: 90, user: { id: 9 } });
   });
 
   it('should update user and hash password', async () => {

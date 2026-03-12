@@ -17,7 +17,8 @@ describe('MatchController', () => {
       reportScore: jest.fn(),
       resetMatch: jest.fn(),
       getMatchesByRound: jest.fn(),
-      getPlayerMatches: jest.fn()
+      getPlayerMatches: jest.fn(),
+      getPlayHub: jest.fn()
     } as unknown as jest.Mocked<MatchService>;
 
     controller = new MatchController(service);
@@ -128,5 +129,14 @@ describe('MatchController', () => {
 
     expect(result).toEqual([{ id: 8 }]);
     expect(service.getPlayerMatches).toHaveBeenCalledWith(6, 7);
+  });
+
+  it('should get play hub data for current user', async () => {
+    service.getPlayHub.mockResolvedValue({ playerId: 12 } as any);
+
+    const result = await controller.getPlayHub({ id: 4 } as any);
+
+    expect(result).toEqual({ playerId: 12 });
+    expect(service.getPlayHub).toHaveBeenCalledWith(4);
   });
 });

@@ -19,6 +19,7 @@ import {
 import {
   Home,
   ShoppingBag,
+  Swords,
   Trophy,
   Library,
   FolderHeart,
@@ -41,6 +42,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { label: "Accueil", href: "/", icon: Home },
   { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+  { label: "Jouer", href: "/play", icon: Swords },
   { label: "Tournois", href: "/tournaments", icon: Trophy },
   { label: "Decks", href: "/decks", icon: Library },
 ];

@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Player } from 'src/player/entities/player.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -14,7 +15,9 @@ import { User } from './entities/user.entity';
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(Player)
+    private playerRepository: Repository<Player>
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -33,7 +36,9 @@ export class UserService {
       password: hashedPassword
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    await this.ensurePlayerProfile(savedUser);
+    return this.findOne(savedUser.id);
   }
 
   async findAll(): Promise<User[]> {
@@ -78,19 +83,26 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    const hydratedUser = await this.ensurePlayerProfile(user);
+    if (!hydratedUser) {
+      throw new NotFoundException('User not found');
+    }
+    return hydratedUser;
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id }
     });
+    return this.ensurePlayerProfile(user);
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({
-      where: { email }
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['player']
     });
+    return this.ensurePlayerProfile(user);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -131,5 +143,43 @@ export class UserService {
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);
     await this.userRepository.remove(user);
+  }
+
+  private async ensurePlayerProfile(user: User | null): Promise<User | null> {
+    if (!user) {
+      return null;
+    }
+
+    if (user.player?.id) {
+      return user;
+    }
+
+    const existingPlayer = await this.playerRepository.findOne({
+      where: { user: { id: user.id } },
+      relations: ['user']
+    });
+
+    if (existingPlayer) {
+      user.player = existingPlayer;
+      return user;
+    }
+
+    try {
+      const player = this.playerRepository.create({ user });
+      user.player = await this.playerRepository.save(player);
+      return user;
+    } catch (error) {
+      const concurrentPlayer = await this.playerRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: ['user']
+      });
+
+      if (concurrentPlayer) {
+        user.player = concurrentPlayer;
+        return user;
+      }
+
+      throw error;
+    }
   }
 }

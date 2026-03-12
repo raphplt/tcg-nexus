@@ -11,13 +11,25 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
-export interface AuthResponse {
-  user: {
+export interface AuthUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  avatarUrl?: string | null;
+  isPro?: boolean;
+  isActive?: boolean;
+  emailVerified?: boolean;
+  preferredCurrency?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  player?: {
     id: number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    role: string;
-  };
+  } | null;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
   tokens: AuthTokens;
 }

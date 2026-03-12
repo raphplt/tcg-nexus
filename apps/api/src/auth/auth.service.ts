@@ -53,15 +53,10 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
     await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
+    const hydratedUser = await this.userService.findOne(user.id);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
+      user: hydratedUser,
       tokens,
     };
   }
@@ -95,15 +90,10 @@ export class AuthService {
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
+      const hydratedUser = await this.userService.findOne(user.id);
 
       return {
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-        },
+        user: hydratedUser,
         tokens,
       };
     } catch (error) {

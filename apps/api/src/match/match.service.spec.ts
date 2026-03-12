@@ -17,6 +17,11 @@ import { Statistics } from '../statistics/entities/statistic.entity';
 import { DataSource } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserRole } from 'src/common/enums/user';
+import { Deck } from '../deck/entities/deck.entity';
+import {
+  OnlineMatchSession,
+  OnlineMatchSessionStatus
+} from './entities/online-match-session.entity';
 
 describe('MatchService', () => {
   let service: MatchService;
@@ -33,6 +38,12 @@ describe('MatchService', () => {
   const mockTournamentRepository = {
     findOne: jest.fn(),
     save: jest.fn()
+  };
+
+  const mockOnlineSessionRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn()
   };
 
   const mockPlayerRepository = {
@@ -52,6 +63,10 @@ describe('MatchService', () => {
   const mockStatisticsRepository = {
     create: jest.fn(),
     save: jest.fn()
+  };
+
+  const mockDeckRepository = {
+    findAndCount: jest.fn()
   };
 
   const mockDataSource = {
@@ -121,6 +136,22 @@ describe('MatchService', () => {
     finishedAt: undefined,
     notes: 'Match 1',
     statistics: [],
+    onlineSession: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  const mockOnlineSession: OnlineMatchSession = {
+    id: 99,
+    match: mockMatch,
+    status: OnlineMatchSessionStatus.WAITING_FOR_DECKS,
+    seed: '123456',
+    playerADeckId: null,
+    playerBDeckId: null,
+    winnerPlayerId: null,
+    endedReason: null,
+    serializedState: null,
+    eventLog: [],
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -130,6 +161,10 @@ describe('MatchService', () => {
       providers: [
         MatchService,
         { provide: getRepositoryToken(Match), useValue: mockMatchRepository },
+        {
+          provide: getRepositoryToken(OnlineMatchSession),
+          useValue: mockOnlineSessionRepository
+        },
         {
           provide: getRepositoryToken(Tournament),
           useValue: mockTournamentRepository
@@ -147,6 +182,7 @@ describe('MatchService', () => {
           provide: getRepositoryToken(Statistics),
           useValue: mockStatisticsRepository
         },
+        { provide: getRepositoryToken(Deck), useValue: mockDeckRepository },
         { provide: DataSource, useValue: mockDataSource }
       ]
     }).compile();
@@ -184,11 +220,15 @@ describe('MatchService', () => {
       });
       mockMatchRepository.create.mockReturnValue(mockMatch);
       mockMatchRepository.save.mockResolvedValue(mockMatch);
+      mockOnlineSessionRepository.findOne.mockResolvedValue(null);
+      mockOnlineSessionRepository.create.mockReturnValue(mockOnlineSession);
+      mockOnlineSessionRepository.save.mockResolvedValue(mockOnlineSession);
 
       const result = await service.create(createDto);
 
-      expect(result).toEqual(mockMatch);
+      expect(result.onlineSession).toEqual(mockOnlineSession);
       expect(mockMatchRepository.save).toHaveBeenCalled();
+      expect(mockOnlineSessionRepository.save).toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if tournament not found', async () => {
@@ -500,6 +540,34 @@ describe('MatchService', () => {
       expect(qb.andWhere).toHaveBeenCalledTimes(5);
       expect(qb.skip).toHaveBeenCalledWith(5);
       expect(qb.take).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe('getPlayHub', () => {
+    it('should auto-create missing online sessions for player matches', async () => {
+      const playHubQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([{ ...mockMatch, onlineSession: null }])
+      };
+
+      mockPlayerRepository.findOne.mockResolvedValue(mockPlayerA);
+      mockDeckRepository.findAndCount.mockResolvedValue([[], 0]);
+      mockMatchRepository.createQueryBuilder.mockReturnValue(playHubQueryBuilder);
+      mockOnlineSessionRepository.findOne.mockResolvedValue(null);
+      mockOnlineSessionRepository.create.mockReturnValue(mockOnlineSession);
+      mockOnlineSessionRepository.save.mockResolvedValue(mockOnlineSession);
+
+      const result = await service.getPlayHub(mockUser.id);
+
+      expect(result.playerId).toBe(mockPlayerA.id);
+      expect(result.matches).toHaveLength(1);
+      expect(result.matches[0].onlineSessionStatus).toBe(
+        OnlineMatchSessionStatus.WAITING_FOR_DECKS
+      );
+      expect(mockOnlineSessionRepository.save).toHaveBeenCalled();
     });
   });
 

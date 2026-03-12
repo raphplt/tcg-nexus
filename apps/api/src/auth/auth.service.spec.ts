@@ -47,6 +47,7 @@ describe('AuthService', () => {
   const mockUserService = {
     findByEmail: jest.fn(),
     findById: jest.fn(),
+    findOne: jest.fn(),
     create: jest.fn(),
     updateRefreshToken: jest.fn()
   };
@@ -151,6 +152,7 @@ describe('AuthService', () => {
       const loginDto = { email: 'test@example.com', password: 'password' };
       jest.spyOn(service, 'validateUser').mockResolvedValue(mockUser);
       mockJwtService.signAsync.mockResolvedValue('token');
+      mockUserService.findOne.mockResolvedValue(mockUser);
 
       const result = await service.login(loginDto);
 
@@ -192,6 +194,7 @@ describe('AuthService', () => {
 
       mockUserService.create.mockResolvedValue(newUser);
       mockJwtService.signAsync.mockResolvedValue('token');
+      mockUserService.findOne.mockResolvedValue(newUser);
 
       const result = await service.register(registerDto);
 

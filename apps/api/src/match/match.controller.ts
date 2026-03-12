@@ -24,6 +24,8 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { MatchPermissionGuard } from './guards/match-permission.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../user/entities/user.entity';
 
 @ApiTags('matches')
 @ApiBearerAuth()
@@ -31,6 +33,11 @@ import { MatchPermissionGuard } from './guards/match-permission.guard';
 @Controller('matches')
 export class MatchController {
   constructor(private readonly matchService: MatchService) {}
+
+  @Get('play-hub')
+  getPlayHub(@CurrentUser() user: User) {
+    return this.matchService.getPlayHub(user.id);
+  }
 
   @Post()
   create(@Body() createMatchDto: CreateMatchDto) {

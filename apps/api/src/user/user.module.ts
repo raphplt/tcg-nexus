@@ -4,9 +4,10 @@ import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { User } from './entities/user.entity';
 import { UserCart } from 'src/user_cart/entities/user_cart.entity';
+import { Player } from 'src/player/entities/player.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserCart])],
+  imports: [TypeOrmModule.forFeature([User, UserCart, Player])],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService]

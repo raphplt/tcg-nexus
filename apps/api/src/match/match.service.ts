@@ -25,6 +25,11 @@ import {
 import { TournamentType } from '../tournament/entities/tournament.entity';
 import { Ranking } from '../ranking/entities/ranking.entity';
 import { Statistics } from '../statistics/entities/statistic.entity';
+import { Deck } from '../deck/entities/deck.entity';
+import {
+  OnlineMatchSession,
+  OnlineMatchSessionStatus
+} from './entities/online-match-session.entity';
 
 export interface MatchQueryDto {
   tournamentId?: number;
@@ -36,11 +41,58 @@ export interface MatchQueryDto {
   limit?: number;
 }
 
+export interface PlayHubMatchSummary {
+  id: number;
+  tournamentId: number;
+  tournamentName: string;
+  opponentName: string;
+  round: number;
+  phase: MatchPhase;
+  status: MatchStatus;
+  scheduledDate?: Date | null;
+  startedAt?: Date | null;
+  finishedAt?: Date | null;
+  playerAScore: number;
+  playerBScore: number;
+  onlineSessionStatus?: string | null;
+}
+
+export interface PlayHubDeckSummary {
+  id: number;
+  name: string;
+  format: string | null;
+  updatedAt: Date;
+  coverCard?: {
+    id: string;
+    name?: string | null;
+    image?: string | null;
+  } | null;
+}
+
+export interface PlayHubResponse {
+  playerId: number | null;
+  ranked: {
+    enabled: boolean;
+    status: 'coming_soon';
+  };
+  summary: {
+    liveMatches: number;
+    readyMatches: number;
+    completedMatches: number;
+    totalMatches: number;
+    totalDecks: number;
+  };
+  matches: PlayHubMatchSummary[];
+  recentDecks: PlayHubDeckSummary[];
+}
+
 @Injectable()
 export class MatchService {
   constructor(
     @InjectRepository(Match)
     private readonly matchRepository: Repository<Match>,
+    @InjectRepository(OnlineMatchSession)
+    private readonly onlineSessionRepository: Repository<OnlineMatchSession>,
     @InjectRepository(Tournament)
     private readonly tournamentRepository: Repository<Tournament>,
     @InjectRepository(Player)
@@ -51,6 +103,8 @@ export class MatchService {
     private readonly rankingRepository: Repository<Ranking>,
     @InjectRepository(Statistics)
     private readonly statisticsRepository: Repository<Statistics>,
+    @InjectRepository(Deck)
+    private readonly deckRepository: Repository<Deck>,
     private readonly dataSource: DataSource
   ) {}
 
@@ -156,7 +210,8 @@ export class MatchService {
 
     const match = this.matchRepository.create(matchData);
 
-    return this.matchRepository.save(match);
+    const savedMatch = await this.matchRepository.save(match);
+    return this.ensureOnlineSession(savedMatch);
   }
 
   // Récupérer tous les matches avec filtres
@@ -430,7 +485,201 @@ export class MatchService {
     });
   }
 
+  async getPlayHub(userId: number): Promise<PlayHubResponse> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user']
+    });
+
+    const [recentDecks, totalDecks] = await this.deckRepository.findAndCount({
+      where: { user: { id: userId } },
+      order: { updatedAt: 'DESC' },
+      take: 6
+    });
+
+    if (!player) {
+      return {
+        playerId: null,
+        ranked: {
+          enabled: false,
+          status: 'coming_soon'
+        },
+        summary: {
+          liveMatches: 0,
+          readyMatches: 0,
+          completedMatches: 0,
+          totalMatches: 0,
+          totalDecks
+        },
+        matches: [],
+        recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck))
+      };
+    }
+
+    const matches = await this.matchRepository
+      .createQueryBuilder('match')
+      .leftJoinAndSelect('match.tournament', 'tournament')
+      .leftJoinAndSelect('match.playerA', 'playerA')
+      .leftJoinAndSelect('playerA.user', 'playerAUser')
+      .leftJoinAndSelect('match.playerB', 'playerB')
+      .leftJoinAndSelect('playerB.user', 'playerBUser')
+      .leftJoinAndSelect('match.onlineSession', 'onlineSession')
+      .where('playerA.id = :playerId OR playerB.id = :playerId', {
+        playerId: player.id
+      })
+      .orderBy(
+        'COALESCE(match.startedAt, match.scheduledDate, tournament.startDate)',
+        'DESC'
+      )
+      .take(20)
+      .getMany();
+    const hydratedMatches = await this.ensureOnlineSessions(matches);
+
+    const liveMatches = hydratedMatches.filter(
+      (match) => match.status === MatchStatus.IN_PROGRESS
+    ).length;
+    const readyMatches = hydratedMatches.filter(
+      (match) => match.status === MatchStatus.SCHEDULED
+    ).length;
+    const completedMatches = hydratedMatches.filter((match) =>
+      [MatchStatus.FINISHED, MatchStatus.FORFEIT, MatchStatus.CANCELLED].includes(
+        match.status
+      )
+    ).length;
+
+    return {
+      playerId: player.id,
+      ranked: {
+        enabled: false,
+        status: 'coming_soon'
+      },
+      summary: {
+        liveMatches,
+        readyMatches,
+        completedMatches,
+        totalMatches: hydratedMatches.length,
+        totalDecks
+      },
+      matches: hydratedMatches.map((match) =>
+        this.mapPlayHubMatch(match, player.id)
+      ),
+      recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck))
+    };
+  }
+
   // =================== Private ===================
+
+  private async ensureOnlineSessions(matches: Match[]): Promise<Match[]> {
+    if (!matches.length) {
+      return matches;
+    }
+
+    return Promise.all(matches.map((match) => this.ensureOnlineSession(match)));
+  }
+
+  private async ensureOnlineSession(match: Match): Promise<Match> {
+    if (match.onlineSession?.id) {
+      return match;
+    }
+
+    const existingSession = await this.onlineSessionRepository.findOne({
+      where: {
+        match: {
+          id: match.id
+        }
+      }
+    });
+
+    if (existingSession) {
+      match.onlineSession = existingSession;
+      return match;
+    }
+
+    try {
+      match.onlineSession = await this.onlineSessionRepository.save(
+        this.onlineSessionRepository.create({
+          match,
+          seed: Date.now().toString(),
+          status: OnlineMatchSessionStatus.WAITING_FOR_DECKS,
+          playerADeckId: null,
+          playerBDeckId: null,
+          winnerPlayerId: null,
+          endedReason: null,
+          serializedState: null,
+          eventLog: []
+        })
+      );
+
+      return match;
+    } catch (error) {
+      const concurrentSession = await this.onlineSessionRepository.findOne({
+        where: {
+          match: {
+            id: match.id
+          }
+        }
+      });
+
+      if (concurrentSession) {
+        match.onlineSession = concurrentSession;
+        return match;
+      }
+
+      throw error;
+    }
+  }
+
+  private mapPlayHubMatch(
+    match: Match,
+    currentPlayerId: number
+  ): PlayHubMatchSummary {
+    const opponent =
+      match.playerA?.id === currentPlayerId ? match.playerB : match.playerA;
+
+    return {
+      id: match.id,
+      tournamentId: match.tournament.id,
+      tournamentName: match.tournament.name,
+      opponentName: this.getPlayerDisplayName(opponent),
+      round: match.round,
+      phase: match.phase,
+      status: match.status,
+      scheduledDate: match.scheduledDate,
+      startedAt: match.startedAt,
+      finishedAt: match.finishedAt,
+      playerAScore: match.playerAScore,
+      playerBScore: match.playerBScore,
+      onlineSessionStatus: match.onlineSession?.status || null
+    };
+  }
+
+  private mapDeckSummary(deck: Deck): PlayHubDeckSummary {
+    return {
+      id: deck.id,
+      name: deck.name,
+      format: deck.format?.type || null,
+      updatedAt: deck.updatedAt,
+      coverCard: deck.coverCard
+        ? {
+            id: deck.coverCard.id,
+            name: deck.coverCard.name || null,
+            image: deck.coverCard.image || null
+          }
+        : null
+    };
+  }
+
+  private getPlayerDisplayName(player?: Player | null): string {
+    if (!player) {
+      return 'Adversaire à confirmer';
+    }
+
+    if (player.user?.firstName || player.user?.lastName) {
+      return `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim();
+    }
+
+    return `Joueur #${player.id}`;
+  }
 
   private async updateRankings(
     match: Match,
@@ -604,7 +853,8 @@ export class MatchService {
             scheduledDate: new Date()
           });
 
-          await this.matchRepository.save(newMatch);
+          const savedMatch = await this.matchRepository.save(newMatch);
+          await this.ensureOnlineSession(savedMatch);
         }
       }
 
