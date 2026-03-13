@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
+import { MatchmakingPanel } from "@/components/match/MatchmakingPanel";
 import { TrainingLobbyPanel } from "@/components/match/TrainingLobbyPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -331,33 +332,7 @@ export default function PlayPage() {
           <div className="grid gap-4">
             <TrainingLobbyPanel />
 
-            <Card className="tcg-surface tcg-surface--dark">
-              <CardContent className="space-y-4 p-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    Ranked 1v1
-                  </p>
-                  <Badge className="border-0 bg-white/10 text-white hover:bg-white/10">
-                    Bientôt
-                  </Badge>
-                </div>
-                <h2 className="text-2xl font-bold leading-tight">
-                  Le ranked arrivera ici.
-                </h2>
-                <p className="text-sm leading-6 text-slate-300">
-                  Le matchmaking 1v1 disposera de sa propre file dans cet espace
-                  dès que la file dédiée et la cote seront prêtes.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">BO1</Badge>
-                  <Badge variant="secondary">Standard</Badge>
-                  <Badge variant="secondary">60 cartes</Badge>
-                </div>
-                <Button disabled className="w-full rounded-full">
-                  Chercher une partie ranked
-                </Button>
-              </CardContent>
-            </Card>
+            <MatchmakingPanel />
 
             <Card className="tcg-surface">
               <CardContent className="space-y-4 p-6">
@@ -495,12 +470,12 @@ export default function PlayPage() {
                   Important
                 </Badge>
                 <h3 className="text-xl font-bold leading-tight">
-                  Les tables de tournoi et l’entraînement IA cohabitent ici.
+                  Tout votre jeu en ligne est ici.
                 </h3>
                 <p className="text-sm leading-6 text-slate-600">
-                  Utilisez cette page pour reprendre vos rondes de tournoi ou
-                  tester vos decks contre l’IA. Le matchmaking libre et le
-                  ranked viendront ensuite.
+                  Reprenez vos rondes de tournoi, entraînez-vous contre l’IA
+                  ou lancez un match 1v1 contre un autre joueur depuis
+                  cette page.
                 </p>
                 <Button asChild className="rounded-full">
                   <Link href="/tournaments">

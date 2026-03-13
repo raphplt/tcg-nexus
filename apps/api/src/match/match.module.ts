@@ -10,6 +10,11 @@ import { Statistics } from "../statistics/entities/statistic.entity";
 import { Tournament } from "../tournament/entities/tournament.entity";
 import { TournamentOrganizer } from "../tournament/entities/tournament-organizer.entity";
 import { TournamentRegistration } from "../tournament/entities/tournament-registration.entity";
+import { User } from "../user/entities/user.entity";
+import { CasualMatchController } from "./casual-match.controller";
+import { CasualMatchService } from "./casual/casual-match.service";
+import { MatchmakingService } from "./casual/matchmaking.service";
+import { CasualMatchSession } from "./entities/casual-match-session.entity";
 import { Match } from "./entities/match.entity";
 import { OnlineMatchSession } from "./entities/online-match-session.entity";
 import { TrainingMatchSession } from "./entities/training-match-session.entity";
@@ -32,6 +37,7 @@ import { TrainingMatchService } from "./training/training-match.service";
       Match,
       OnlineMatchSession,
       TrainingMatchSession,
+      CasualMatchSession,
       Tournament,
       Player,
       TournamentRegistration,
@@ -40,13 +46,16 @@ import { TrainingMatchService } from "./training/training-match.service";
       Statistics,
       Deck,
       Card,
+      User,
     ]),
   ],
-  controllers: [MatchController, MatchOnlineController, TrainingMatchController],
+  controllers: [MatchController, MatchOnlineController, TrainingMatchController, CasualMatchController],
   providers: [
     MatchService,
     MatchOnlineService,
     TrainingMatchService,
+    CasualMatchService,
+    MatchmakingService,
     OnlinePlaySupportService,
     TrainingAiService,
     MatchPermissionGuard,
@@ -56,6 +65,8 @@ import { TrainingMatchService } from "./training/training-match.service";
     MatchService,
     MatchOnlineService,
     TrainingMatchService,
+    CasualMatchService,
+    MatchmakingService,
     OnlinePlaySupportService,
     MatchGateway,
   ],
