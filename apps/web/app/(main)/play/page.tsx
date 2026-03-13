@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
+import { TrainingLobbyPanel } from "@/components/match/TrainingLobbyPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -163,15 +164,21 @@ export default function PlayPage() {
                 </h1>
                 <p className="max-w-2xl text-base leading-7 text-slate-600">
                   Connectez-vous pour voir vos tables de tournoi en cours, vos
-                  matches prêts à lancer et l’espace qui accueillera le ranked.
+                  matches prêts à lancer, vos sessions d’entraînement et
+                  l’espace qui accueillera le ranked.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg" className="rounded-full px-6">
                   <Link href="/auth/login">Se connecter</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="rounded-full px-6">
-                  <Link href="/auth/register">Creer un compte</Link>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-6"
+                >
+                  <Link href="/auth/register">Créer un compte</Link>
                 </Button>
               </div>
             </CardContent>
@@ -196,8 +203,8 @@ export default function PlayPage() {
               />
               <StepRow
                 index="03"
-                title="Jouez sur le plateau"
-                text="Le match se lance quand les deux joueurs ont choisi leur deck."
+                title="Lancez aussi un entraînement"
+                text="Le mode IA permet de jouer immédiatement avec un deck compatible."
                 tone="dark"
               />
             </CardContent>
@@ -259,9 +266,8 @@ export default function PlayPage() {
                   Retrouvez vos matches et lancez vos parties.
                 </h1>
                 <p className="max-w-3xl text-base leading-7 text-slate-600 md:text-lg">
-                  Les parties en ligne disponibles aujourd'hui proviennent des
-                  tournois auxquels vous participez. Cette page les rassemble
-                  avec un accès direct à la table.
+                  Reprenez vos matches de tournoi, lancez un entraînement contre
+                  l’IA et gardez tous vos accès de jeu au même endroit.
                 </p>
               </div>
 
@@ -279,7 +285,7 @@ export default function PlayPage() {
                 <HeroMetric
                   label="Decks disponibles"
                   value={String(playHub?.summary.totalDecks || 0)}
-                  detail="Vérification au join"
+                  detail="Vérification au lancement"
                 />
               </div>
 
@@ -290,7 +296,23 @@ export default function PlayPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="rounded-full px-6">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-6"
+                >
+                  <Link href="#training-ai">
+                    S’entraîner contre l’IA
+                    <Swords className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-6"
+                >
                   <Link href="/decks/me">
                     Gérer mes decks
                     <Layers3 className="ml-2 h-4 w-4" />
@@ -307,6 +329,8 @@ export default function PlayPage() {
           </div>
 
           <div className="grid gap-4">
+            <TrainingLobbyPanel />
+
             <Card className="tcg-surface tcg-surface--dark">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-center justify-between">
@@ -322,7 +346,7 @@ export default function PlayPage() {
                 </h2>
                 <p className="text-sm leading-6 text-slate-300">
                   Le matchmaking 1v1 disposera de sa propre file dans cet espace
-                  dès que le backend sera prêt.
+                  dès que la file dédiée et la cote seront prêtes.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary">BO1</Badge>
@@ -352,8 +376,8 @@ export default function PlayPage() {
                 />
                 <StepRow
                   index="03"
-                  title="La partie démarre automatiquement"
-                  text="Dès que les deux decks sont validés, le plateau online prend le relais."
+                  title="Le plateau prend le relais"
+                  text="La partie démarre dès que les deux decks sont validés ou immédiatement contre l’IA."
                 />
               </CardContent>
             </Card>
@@ -447,7 +471,7 @@ export default function PlayPage() {
                       >
                         <p className="font-semibold text-slate-950">{deck.name}</p>
                         <p className="text-sm text-slate-500">
-                          La compatibilité online est vérifiée à l'ouverture du match.
+                          La compatibilité online est vérifiée à l’ouverture du match.
                         </p>
                       </div>
                     ))}
@@ -471,12 +495,12 @@ export default function PlayPage() {
                   Important
                 </Badge>
                 <h3 className="text-xl font-bold leading-tight">
-                  Les matches en ligne sont actuellement générés par les tournois.
+                  Les tables de tournoi et l’entraînement IA cohabitent ici.
                 </h3>
                 <p className="text-sm leading-6 text-slate-600">
-                  Cette page sert donc à retrouver vos tables, les ouvrir et
-                  lancer la partie. La création libre de match et la file ranked
-                  viendront ensuite.
+                  Utilisez cette page pour reprendre vos rondes de tournoi ou
+                  tester vos decks contre l’IA. Le matchmaking libre et le
+                  ranked viendront ensuite.
                 </p>
                 <Button asChild className="rounded-full">
                   <Link href="/tournaments">
@@ -549,7 +573,9 @@ function StepRow({
 
 function PlayerMatchCard({ record }: { record: PlayerMatchRecord }) {
   const actionLabel =
-    record.match.status === "in_progress" ? "Reprendre la partie" : "Ouvrir la table";
+    record.match.status === "in_progress"
+      ? "Reprendre la partie"
+      : "Ouvrir la table";
 
   return (
     <Card className="tcg-surface tcg-surface--hover">

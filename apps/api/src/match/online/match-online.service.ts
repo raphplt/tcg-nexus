@@ -7,20 +7,11 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
 import { Repository } from "typeorm";
-import { Card } from "../../card/entities/card.entity";
-import { DeckCardRole } from "../../common/enums/deckCardRole";
-import { DeckCard } from "../../deck-card/entities/deck-card.entity";
 import { Deck } from "../../deck/entities/deck.entity";
 import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
-import {
-  CardCategory,
-  GameFinishedReason,
-  GamePhase,
-  PromptType,
-  TurnStep,
-} from "../engine/models/enums";
+import { GameFinishedReason, GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { PromptResponse } from "../engine/models/Prompt";
 import { MatchService } from "../match.service";
@@ -30,19 +21,12 @@ import {
   OnlineMatchSessionStatus,
 } from "../entities/online-match-session.entity";
 import {
-  DeckEligibilityReason,
   DeckEligibilityResult,
-  EligibleDeckSummary,
   MatchParticipantSlot,
   OnlineMatchLogEntry,
   OnlineMatchSessionView,
 } from "./online-match.types";
-import {
-  ONLINE_SUPPORTED_BASIC_ENERGY_NAMES,
-  getOnlineSupportedCardDefinition,
-  isOnlineSupportedCard,
-  normalizeOnlineCardName,
-} from "./online-card-registry";
+import { OnlinePlaySupportService } from "./online-play-support.service";
 
 @Injectable()
 export class MatchOnlineService {
@@ -54,6 +38,7 @@ export class MatchOnlineService {
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
     private readonly matchService: MatchService,
+    private readonly onlinePlaySupportService: OnlinePlaySupportService,
   ) {}
 
   async getDeckEligibility(
@@ -64,7 +49,7 @@ export class MatchOnlineService {
     const session = await this.findOrCreateSession(match);
     const decks = await this.loadUserDecks(user.id);
     const eligibleDecks = decks.map((deck) =>
-      this.evaluateDeckEligibility(deck, user.id),
+      this.onlinePlaySupportService.evaluateDeckEligibility(deck, user.id),
     );
 
     return {
@@ -101,7 +86,10 @@ export class MatchOnlineService {
 
     if (deckId) {
       const deck = await this.loadOwnedDeck(deckId, user.id);
-      const eligibility = this.evaluateDeckEligibility(deck, user.id);
+      const eligibility = this.onlinePlaySupportService.evaluateDeckEligibility(
+        deck,
+        user.id,
+      );
       if (!eligibility.eligible) {
         throw new BadRequestException("Selected deck is not eligible for online play");
       }
@@ -440,94 +428,6 @@ export class MatchOnlineService {
     return deck;
   }
 
-  private evaluateDeckEligibility(deck: Deck, userId: number): EligibleDeckSummary {
-    const reasons: DeckEligibilityReason[] = [];
-    const mainboardCards = (deck.cards || []).filter(
-      (deckCard) => deckCard.role === DeckCardRole.main,
-    );
-    const totalCards = mainboardCards.reduce(
-      (sum, deckCard) => sum + (deckCard.qty || 0),
-      0,
-    );
-
-    if (deck.user?.id !== userId) {
-      reasons.push({
-        code: "NOT_OWNER",
-        message: "You can only use your own decks for online play",
-      });
-    }
-
-    if (totalCards !== 60) {
-      reasons.push({
-        code: "INVALID_SIZE",
-        message: "A Pokemon TCG online deck must contain exactly 60 mainboard cards",
-      });
-    }
-
-    for (const deckCard of deck.cards || []) {
-      if (deckCard.role !== DeckCardRole.main) {
-        reasons.push({
-          code: "NON_MAINBOARD_CARD",
-          message: "Sideboard cards are not supported in online matches",
-          cardId: deckCard.card?.id,
-          tcgDexId: deckCard.card?.tcgDexId,
-          cardName: deckCard.card?.name,
-        });
-      }
-    }
-
-    const hasBasicPokemon = mainboardCards.some((deckCard) =>
-      this.isBasicPokemonCardEntity(deckCard.card),
-    );
-    if (!hasBasicPokemon) {
-      reasons.push({
-        code: "MISSING_BASIC_POKEMON",
-        message: "The deck must contain at least one Basic Pokemon",
-      });
-    }
-
-    for (const deckCard of mainboardCards) {
-      const card = deckCard.card;
-      if (!card || !card.name) {
-        reasons.push({
-          code: "MISSING_CARD_DATA",
-          message: "One or more deck cards are missing card data",
-          cardId: card?.id,
-        });
-        continue;
-      }
-
-      if (!this.hasEnoughDataForOnlineMapping(card)) {
-        reasons.push({
-          code: "MISSING_CARD_DATA",
-          message: "One or more cards cannot be mapped to the online engine",
-          cardId: card.id,
-          tcgDexId: card.tcgDexId,
-          cardName: card.name,
-        });
-        continue;
-      }
-
-      if (!isOnlineSupportedCard(card.tcgDexId, card.name)) {
-        reasons.push({
-          code: "UNSUPPORTED_CARD",
-          message: "This card is not in the online whitelist yet",
-          cardId: card.id,
-          tcgDexId: card.tcgDexId,
-          cardName: card.name,
-        });
-      }
-    }
-
-    return {
-      deckId: deck.id,
-      deckName: deck.name,
-      eligible: reasons.length === 0,
-      reasons,
-      totalCards,
-    };
-  }
-
   private createInitialGameState(
     match: Match,
     playerADeck: Deck,
@@ -538,226 +438,28 @@ export class MatchOnlineService {
     const playerBId = this.getEnginePlayerId(match, "playerB");
     const playerAName = this.getDisplayName(match.playerA?.user);
     const playerBName = this.getDisplayName(match.playerB?.user);
-    const rngState = this.seedToRngState(seed);
-    const coinFlipWinnerId = rngState % 2 === 0 ? playerAId : playerBId;
-
-    return {
-      id: `match-${match.id}`,
-      players: {
-        [playerAId]: {
+    return this.onlinePlaySupportService.createInitialGameState({
+      gameId: `match-${match.id}`,
+      seed,
+      players: [
+        {
           playerId: playerAId,
           name: playerAName,
-          deck: this.mapDeckToEngineCards(playerADeck, playerAId),
-          hand: [],
-          discard: [],
-          lostZone: [],
-          prizes: [],
-          active: null,
-          bench: [],
-          hasPlayedSupporterThisTurn: false,
-          hasRetreatedThisTurn: false,
-          hasAttachedEnergyThisTurn: false,
-          prizeCardsTaken: 0,
-          turnsTaken: 0,
+          deck: this.onlinePlaySupportService.mapDeckToEngineCards(
+            playerADeck,
+            playerAId,
+          ),
         },
-        [playerBId]: {
+        {
           playerId: playerBId,
           name: playerBName,
-          deck: this.mapDeckToEngineCards(playerBDeck, playerBId),
-          hand: [],
-          discard: [],
-          lostZone: [],
-          prizes: [],
-          active: null,
-          bench: [],
-          hasPlayedSupporterThisTurn: false,
-          hasRetreatedThisTurn: false,
-          hasAttachedEnergyThisTurn: false,
-          prizeCardsTaken: 0,
-          turnsTaken: 0,
+          deck: this.onlinePlaySupportService.mapDeckToEngineCards(
+            playerBDeck,
+            playerBId,
+          ),
         },
-      },
-      playerIds: [playerAId, playerBId],
-      activePlayerId: playerAId,
-      firstPlayerId: null,
-      turnNumber: 0,
-      gamePhase: GamePhase.Setup,
-      turnStep: TurnStep.Main,
-      rngState,
-      pendingTurnTransitionToPlayerId: null,
-      stadium: null,
-      pendingPrompt: {
-        id: `setup-first-player-${match.id}`,
-        type: PromptType.ChooseFirstPlayer,
-        playerId: coinFlipWinnerId,
-        title: "Choisissez le premier joueur",
-        minSelections: 1,
-        maxSelections: 1,
-        allowPass: false,
-        options: [
-          { value: playerAId, label: playerAName },
-          { value: playerBId, label: playerBName },
-        ],
-      },
-      setup: {
-        coinFlipWinnerId,
-        mulliganCounts: {
-          [playerAId]: 0,
-          [playerBId]: 0,
-        },
-        mulliganBonusDraws: {
-          [playerAId]: 0,
-          [playerBId]: 0,
-        },
-        tasks: [],
-        openingHandsReady: false,
-      },
-      resumeAction: null,
-      pendingTrainerPlay: null,
-      winnerId: null,
-      winnerReason: null,
-    };
-  }
-
-  private mapDeckToEngineCards(deck: Deck, ownerId: string) {
-    const cards: any[] = [];
-
-    for (const deckCard of deck.cards || []) {
-      if (deckCard.role !== DeckCardRole.main || deckCard.qty <= 0) {
-        continue;
-      }
-
-      for (let index = 0; index < deckCard.qty; index += 1) {
-        cards.push({
-          instanceId: `${ownerId}-${deckCard.card.id}-${index}-${randomUUID()}`,
-          ownerId,
-          baseCard: this.mapCardEntityToBaseCard(deckCard.card),
-        });
-      }
-    }
-
-    return cards;
-  }
-
-  private mapCardEntityToBaseCard(card: Card) {
-    const details = card.pokemonDetails;
-    const supportedDefinition = getOnlineSupportedCardDefinition(card.tcgDexId);
-
-    if (this.isPokemonCardEntity(card)) {
-      const attackDefinitions =
-        supportedDefinition && supportedDefinition.kind === "pokemon"
-          ? supportedDefinition.attacks
-          : {};
-
-      return {
-        id: card.id,
-        name: card.name || "Unknown Pokemon",
-        image: card.image,
-        category: CardCategory.Pokemon,
-        types: details?.types || [],
-        hp: details?.hp || 0,
-        stage: details?.stage || "De base",
-        suffix: details?.suffix || undefined,
-        evolvesFrom: details?.evolveFrom || undefined,
-        attacks: (details?.attacks || []).map((attack) => ({
-          name: attack.name,
-          cost: attack.cost || [],
-          damage: attack.damage,
-          effect: attack.effect,
-          effects: attackDefinitions[attack.name]?.effects,
-          ignoreResistance: attackDefinitions[attack.name]?.ignoreResistance,
-        })),
-        weaknesses: details?.weaknesses || [],
-        resistances: details?.resistances || [],
-        retreat: details?.retreat || 0,
-        prizeCards:
-          supportedDefinition && supportedDefinition.kind === "pokemon"
-            ? supportedDefinition.prizeCards
-            : undefined,
-      };
-    }
-
-    if (this.isTrainerCardEntity(card)) {
-      return {
-        id: card.id,
-        name: card.name || "Unknown Trainer",
-        image: card.image,
-        category: CardCategory.Trainer,
-        trainerType: details?.trainerType || "Item",
-        effect: details?.effect || details?.item?.effect || "",
-        playEffects:
-          supportedDefinition && supportedDefinition.kind === "trainer"
-            ? supportedDefinition.playEffects
-            : undefined,
-        targetStrategy:
-          supportedDefinition && supportedDefinition.kind === "trainer"
-            ? supportedDefinition.targetStrategy
-            : undefined,
-      };
-    }
-
-    const providedEnergy =
-      ONLINE_SUPPORTED_BASIC_ENERGY_NAMES[normalizeOnlineCardName(card.name)] ||
-      ["Incolore"];
-
-    return {
-      id: card.id,
-      name: card.name || "Unknown Energy",
-      image: card.image,
-      category: CardCategory.Energy,
-      energyType: details?.energyType || "Basic",
-      effect: details?.effect || "",
-      provides: providedEnergy,
-      isSpecial: details?.energyType === "Special",
-    };
-  }
-
-  private hasEnoughDataForOnlineMapping(card: Card): boolean {
-    if (this.isEnergyCardEntity(card)) {
-      return Boolean(card.name);
-    }
-
-    if (this.isTrainerCardEntity(card)) {
-      return Boolean(card.name && card.pokemonDetails?.trainerType);
-    }
-
-    if (this.isPokemonCardEntity(card)) {
-      return Boolean(
-        card.name &&
-          card.pokemonDetails?.stage &&
-          card.pokemonDetails?.hp &&
-          card.pokemonDetails?.attacks,
-      );
-    }
-
-    return false;
-  }
-
-  private isBasicPokemonCardEntity(card?: Card | null): boolean {
-    return (
-      this.isPokemonCardEntity(card) &&
-      card?.pokemonDetails?.stage === "De base"
-    );
-  }
-
-  private isPokemonCardEntity(card?: Card | null): boolean {
-    return Boolean(
-      card &&
-        (card.pokemonDetails?.stage ||
-          (card.category || "").toLowerCase().includes("pokemon")),
-    );
-  }
-
-  private isTrainerCardEntity(card?: Card | null): boolean {
-    return Boolean(card && card.pokemonDetails?.trainerType);
-  }
-
-  private isEnergyCardEntity(card?: Card | null): boolean {
-    return Boolean(
-      card &&
-        (card.pokemonDetails?.energyType ||
-          normalizeOnlineCardName(card.name) in ONLINE_SUPPORTED_BASIC_ENERGY_NAMES),
-    );
+      ],
+    });
   }
 
   private getDisplayName(user?: User | null): string {
@@ -767,18 +469,5 @@ export class MatchOnlineService {
 
     const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
     return fullName || user.email;
-  }
-
-  private seedToRngState(seed: string): number {
-    const numericSeed = Number(seed);
-    if (Number.isFinite(numericSeed) && numericSeed > 0) {
-      return numericSeed % 4294967296;
-    }
-
-    let hash = 0;
-    for (const char of seed) {
-      hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-    }
-    return hash || 1;
   }
 }

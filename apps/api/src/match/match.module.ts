@@ -12,12 +12,17 @@ import { TournamentOrganizer } from "../tournament/entities/tournament-organizer
 import { TournamentRegistration } from "../tournament/entities/tournament-registration.entity";
 import { Match } from "./entities/match.entity";
 import { OnlineMatchSession } from "./entities/online-match-session.entity";
+import { TrainingMatchSession } from "./entities/training-match-session.entity";
 import { MatchPermissionGuard } from "./guards/match-permission.guard";
 import { MatchController } from "./match.controller";
 import { MatchGateway } from "./match.gateway";
 import { MatchOnlineController } from "./match-online.controller";
+import { TrainingMatchController } from "./training-match.controller";
 import { MatchOnlineService } from "./online/match-online.service";
+import { OnlinePlaySupportService } from "./online/online-play-support.service";
 import { MatchService } from "./match.service";
+import { TrainingAiService } from "./training/training-ai.service";
+import { TrainingMatchService } from "./training/training-match.service";
 
 @Module({
   imports: [
@@ -26,6 +31,7 @@ import { MatchService } from "./match.service";
     TypeOrmModule.forFeature([
       Match,
       OnlineMatchSession,
+      TrainingMatchSession,
       Tournament,
       Player,
       TournamentRegistration,
@@ -36,8 +42,22 @@ import { MatchService } from "./match.service";
       Card,
     ]),
   ],
-  controllers: [MatchController, MatchOnlineController],
-  providers: [MatchService, MatchOnlineService, MatchPermissionGuard, MatchGateway],
-  exports: [MatchService, MatchOnlineService, MatchGateway],
+  controllers: [MatchController, MatchOnlineController, TrainingMatchController],
+  providers: [
+    MatchService,
+    MatchOnlineService,
+    TrainingMatchService,
+    OnlinePlaySupportService,
+    TrainingAiService,
+    MatchPermissionGuard,
+    MatchGateway,
+  ],
+  exports: [
+    MatchService,
+    MatchOnlineService,
+    TrainingMatchService,
+    OnlinePlaySupportService,
+    MatchGateway,
+  ],
 })
 export class MatchModule {}
