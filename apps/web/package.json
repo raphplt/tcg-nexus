@@ -86,10 +86,6 @@
     "typescript": "5.8.3",
     "vitest": "^4.0.15"
   },
-  "overrides": {
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2"
-  },
   "optionalDependencies": {
     "lightningcss-linux-x64-gnu": "1.30.2"
   }

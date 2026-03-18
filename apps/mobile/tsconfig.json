@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/typescript-config/expo.json",
+  "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@types/react": ["./node_modules/@types/react"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "react-native-env.d.ts"]
+}

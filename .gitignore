@@ -26,6 +26,10 @@ out/
 build
 dist
 
+# Expo / React Native
+.expo/
+web-build/
+
 
 # Debug
 npm-debug.log*
