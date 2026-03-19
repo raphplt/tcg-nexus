@@ -13,6 +13,7 @@ import { DeckService, FindAllDecksParams } from "./deck.service";
 import { CreateDeckDto } from "./dto/create-deck.dto";
 import { UpdateDeckDto } from "./dto/update-deck.dto";
 import { ShareDeckDto } from "./dto/share-deck.dto";
+import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { User } from "../user/entities/user.entity";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -49,6 +50,24 @@ export class DeckController {
     @Query() query: FindAllDecksParams,
   ) {
     return this.deckService.findAllFromUser(user, query);
+  }
+
+  @Public()
+  @Get("export/:id")
+  @ApiOperation({ summary: "Exporter un deck au format JSON" })
+  exportDeck(@Param("id") id: string) {
+    return this.deckService.exportDeck(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("import-json")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Importer un deck depuis un fichier JSON" })
+  importDeckFromJson(
+    @CurrentUser() user: User,
+    @Body() dto: ImportDeckJsonDto,
+  ) {
+    return this.deckService.importDeckFromJson(user, dto);
   }
 
   @Public()

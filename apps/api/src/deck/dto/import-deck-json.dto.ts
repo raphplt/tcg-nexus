@@ -24,7 +24,7 @@ class ImportDeckCardDto {
   @Min(1)
   qty: number;
 
-  @ApiProperty({ enum: DeckCardRole, example: DeckCardRole.MAIN })
+  @ApiProperty({ enum: DeckCardRole, example: DeckCardRole.main })
   @IsEnum(DeckCardRole)
   role: DeckCardRole;
 }

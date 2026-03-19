@@ -5,6 +5,7 @@ import { H1 } from "@/components/Shared/Titles";
 import {
   ArrowLeft,
   Calendar,
+  Download,
   Edit3,
   Layers,
   Share2,
@@ -19,14 +20,18 @@ interface DeckHeaderProps {
   deck: Deck;
   isOwner: boolean;
   onShare: () => void;
+  onExport: () => void;
   isSharePending: boolean;
+  isExportPending: boolean;
 }
 
 export function DeckHeader({
   deck,
   isOwner,
   onShare,
+  onExport,
   isSharePending,
+  isExportPending,
 }: DeckHeaderProps) {
   const router = useRouter();
   const coverCard =
@@ -86,6 +91,14 @@ export function DeckHeader({
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onExport}
+              disabled={isExportPending}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exporter JSON
             </Button>
             {isOwner && (
               <>

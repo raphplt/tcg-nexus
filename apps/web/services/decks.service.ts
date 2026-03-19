@@ -38,6 +38,20 @@ type updateDeckParams = {
   isPublic: boolean;
 }>;
 
+export interface DeckExportCardJson {
+  tcgDexId: string;
+  name: string;
+  qty: number;
+  role: string;
+}
+
+export interface DeckExportJson {
+  name: string;
+  format: string;
+  isPublic?: boolean;
+  cards: DeckExportCardJson[];
+}
+
 export const decksService = {
   async getPaginated(
     params: DecksQueryParams = {},
@@ -100,5 +114,15 @@ export const decksService = {
 
   async importDeck(code: string): Promise<Deck> {
     return authedFetch("POST", `/deck/import/${code}`);
+  },
+
+  async exportDeckJson(id: number): Promise<DeckExportJson> {
+    return fetcher<DeckExportJson>(`/deck/export/${id}`);
+  },
+
+  async importDeckFromJson(
+    data: DeckExportJson,
+  ): Promise<{ deck: Deck; warnings?: string[] }> {
+    return authedFetch("POST", "/deck/import-json", { data });
   },
 };

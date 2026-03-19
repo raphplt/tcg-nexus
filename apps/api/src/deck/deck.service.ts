@@ -17,11 +17,13 @@ import { DeckCardRole } from "../common/enums/deckCardRole";
 import { UserRole } from "src/common/enums/user";
 import { DeckShare } from "./entities/deck-share.entity";
 import { ShareDeckDto } from "./dto/share-deck.dto";
+import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import {
   AnalyzeDeckResultDto,
   MissingCardSuggestionDto,
 } from "./dto/analyze-deck-result.dto";
 import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { BadRequestException } from "@nestjs/common";
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -680,5 +682,83 @@ export class DeckService {
     });
 
     return Array.from(uniqueSuggestions.values());
+  }
+
+  async exportDeck(id: number) {
+    const deck = await this.decksRepository.findOne({
+      where: { id },
+      relations: [
+        "format",
+        "cards",
+        "cards.card",
+        "cards.card.pokemonDetails",
+      ],
+    });
+    if (!deck) throw new NotFoundException("Deck introuvable");
+
+    return {
+      name: deck.name,
+      format: deck.format?.type || "Standard",
+      cards: (deck.cards || []).map((dc) => ({
+        tcgDexId: dc.card?.tcgDexId || dc.card?.id,
+        name: dc.card?.name || "Carte inconnue",
+        qty: dc.qty,
+        role: dc.role,
+      })),
+    };
+  }
+
+  async importDeckFromJson(user: User, dto: ImportDeckJsonDto) {
+    const format = await this.formatRepo.findOneBy({ type: dto.format });
+    if (!format) {
+      throw new BadRequestException(
+        `Format "${dto.format}" introuvable. Formats disponibles : vérifiez la liste des formats.`,
+      );
+    }
+
+    const resolvedCards: { card: Card; qty: number; role: DeckCardRole }[] = [];
+    const notFound: string[] = [];
+
+    for (const entry of dto.cards) {
+      const card = await this.cardRepo.findOneBy({ tcgDexId: entry.tcgDexId });
+      if (!card) {
+        notFound.push(entry.tcgDexId);
+        continue;
+      }
+      resolvedCards.push({ card, qty: entry.qty, role: entry.role });
+    }
+
+    if (resolvedCards.length === 0) {
+      throw new BadRequestException(
+        `Aucune carte trouvée dans la base. Identifiants introuvables : ${notFound.join(", ")}`,
+      );
+    }
+
+    const deck = this.decksRepository.create({
+      name: dto.name,
+      isPublic: dto.isPublic ?? false,
+      user,
+      format,
+      coverCard: resolvedCards[0]?.card || undefined,
+    });
+    await this.decksRepository.save(deck);
+
+    const deckCards = resolvedCards.map((rc) =>
+      this.deckCardRepo.create({
+        card: rc.card,
+        qty: rc.qty,
+        role: rc.role,
+        deck,
+      }),
+    );
+    await this.deckCardRepo.save(deckCards);
+
+    const result = await this.findOneWithCards(deck.id);
+    return {
+      deck: result,
+      ...(notFound.length > 0 && {
+        warnings: [`Cartes introuvables (ignorées) : ${notFound.join(", ")}`],
+      }),
+    };
   }
 }

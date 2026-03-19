@@ -64,8 +64,31 @@ export default function DeckDetailsPage() {
     },
   });
 
+  const exportMutation = useMutation({
+    mutationFn: () => decksService.exportDeckJson(Number(deckId)),
+    onSuccess: (data) => {
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${data.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Deck exporté avec succès");
+    },
+    onError: () => {
+      toast.error("Impossible d'exporter le deck");
+    },
+  });
+
   const handleShare = () => {
     shareMutation.mutate();
+  };
+
+  const handleExport = () => {
+    exportMutation.mutate();
   };
 
   const handleAnalyze = () => {
@@ -110,7 +133,9 @@ export default function DeckDetailsPage() {
             deck={deck}
             isOwner={isOwner || false}
             onShare={handleShare}
+            onExport={handleExport}
             isSharePending={shareMutation.isPending}
+            isExportPending={exportMutation.isPending}
           />
           <DeckStats deck={deck} />
         </Card>
