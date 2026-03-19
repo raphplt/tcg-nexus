@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Player } from '../../player/entities/player.entity';
-import { Tournament } from '../entities/tournament.entity';
-import { Ranking } from '../../ranking/entities/ranking.entity';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Player } from "../../player/entities/player.entity";
+import { Tournament } from "../entities/tournament.entity";
+import { Ranking } from "../../ranking/entities/ranking.entity";
 
 export enum SeedingMethod {
-  RANDOM = 'random',
-  RANKING = 'ranking',
-  ELO = 'elo',
-  MANUAL = 'manual'
+  RANDOM = "random",
+  RANKING = "ranking",
+  ELO = "elo",
+  MANUAL = "manual",
 }
 
 export interface SeededPlayer extends Player {
@@ -39,7 +39,7 @@ export class SeedingService {
     @InjectRepository(Player)
     private playerRepository: Repository<Player>,
     @InjectRepository(Ranking)
-    private rankingRepository: Repository<Ranking>
+    private rankingRepository: Repository<Ranking>,
   ) {}
 
   /**
@@ -48,7 +48,7 @@ export class SeedingService {
   async seedPlayers(
     players: Player[],
     tournament: Tournament,
-    method: SeedingMethod = SeedingMethod.RANDOM
+    method: SeedingMethod = SeedingMethod.RANDOM,
   ): Promise<SeededPlayer[]> {
     switch (method) {
       case SeedingMethod.RANDOM:
@@ -83,7 +83,7 @@ export class SeedingService {
 
     return shuffled.map((player, index) => ({
       ...player,
-      seed: index + 1
+      seed: index + 1,
     }));
   }
 
@@ -91,21 +91,21 @@ export class SeedingService {
    * Seeding basé sur le ranking global des joueurs
    */
   private async rankingBasedSeeding(
-    players: Player[]
+    players: Player[],
   ): Promise<SeededPlayer[]> {
     // Récupérer les rankings globaux des joueurs
     const playerRankings = await this.rankingRepository
-      .createQueryBuilder('ranking')
+      .createQueryBuilder("ranking")
       .select([
-        'ranking.playerId as ranking_playerId',
-        'AVG(ranking.points) as avgPoints',
-        'AVG(ranking.winRate) as avgWinRate',
-        'COUNT(ranking.id) as tournamentCount'
+        "ranking.playerId as ranking_playerId",
+        "AVG(ranking.points) as avgPoints",
+        "AVG(ranking.winRate) as avgWinRate",
+        "COUNT(ranking.id) as tournamentCount",
       ])
-      .where('ranking.playerId IN (:...playerIds)', {
-        playerIds: players.map((p) => p.id)
+      .where("ranking.playerId IN (:...playerIds)", {
+        playerIds: players.map((p) => p.id),
       })
-      .groupBy('ranking.playerId')
+      .groupBy("ranking.playerId")
       .getRawMany<PlayerRankingStats>();
 
     // Créer un map pour un accès rapide
@@ -117,7 +117,7 @@ export class SeedingService {
       rankingMap.set(parseInt(r.ranking_playerId), {
         avgPoints: parseFloat(r.avgPoints) || 0,
         avgWinRate: parseFloat(r.avgWinRate) || 0,
-        tournamentCount: parseInt(r.tournamentCount) || 0
+        tournamentCount: parseInt(r.tournamentCount) || 0,
       });
     });
 
@@ -138,7 +138,7 @@ export class SeedingService {
         ...player,
         score,
         ranking: ranking?.avgPoints || 0,
-        seed: 0 // Sera défini plus tard
+        seed: 0, // Sera défini plus tard
       } as SeededPlayer;
     });
 
@@ -147,7 +147,7 @@ export class SeedingService {
 
     return playersWithScores.map((player, index) => ({
       ...player,
-      seed: index + 1
+      seed: index + 1,
     }));
   }
 
@@ -166,7 +166,7 @@ export class SeedingService {
   private manualSeeding(players: Player[]): SeededPlayer[] {
     return players.map((player, index) => ({
       ...player,
-      seed: index + 1
+      seed: index + 1,
     }));
   }
 
@@ -194,7 +194,7 @@ export class SeedingService {
         if (seededPlayers[playerIndex]) {
           reorderedPlayers.push({
             ...seededPlayers[playerIndex],
-            seed: i + 1 // Nouveau seed basé sur la position dans le bracket
+            seed: i + 1, // Nouveau seed basé sur la position dans le bracket
           });
         }
       }
@@ -210,7 +210,7 @@ export class SeedingService {
     order: number[],
     start: number,
     end: number,
-    reverse: boolean
+    reverse: boolean,
   ): void {
     if (start === end) {
       order.push(start);
@@ -255,23 +255,23 @@ export class SeedingService {
     recentForm: number;
   }> {
     const stats = await this.rankingRepository
-      .createQueryBuilder('ranking')
-      .leftJoin('ranking.tournament', 'tournament')
-      .where('ranking.playerId = :playerId', { playerId })
+      .createQueryBuilder("ranking")
+      .leftJoin("ranking.tournament", "tournament")
+      .where("ranking.playerId = :playerId", { playerId })
       .select([
-        'AVG(ranking.points) as avgPoints',
-        'AVG(ranking.winRate) as avgWinRate',
-        'COUNT(ranking.id) as tournamentCount',
-        'MIN(ranking.rank) as bestRank'
+        "AVG(ranking.points) as avgPoints",
+        "AVG(ranking.winRate) as avgWinRate",
+        "COUNT(ranking.id) as tournamentCount",
+        "MIN(ranking.rank) as bestRank",
       ])
       .getRawOne<PlayerDetailedStats>();
 
     // Récupérer les 5 derniers tournois pour la forme récente
     const recentRankings = await this.rankingRepository
-      .createQueryBuilder('ranking')
-      .leftJoin('ranking.tournament', 'tournament')
-      .where('ranking.playerId = :playerId', { playerId })
-      .orderBy('tournament.startDate', 'DESC')
+      .createQueryBuilder("ranking")
+      .leftJoin("ranking.tournament", "tournament")
+      .where("ranking.playerId = :playerId", { playerId })
+      .orderBy("tournament.startDate", "DESC")
       .limit(5)
       .getMany();
 
@@ -282,11 +282,11 @@ export class SeedingService {
         : 0;
 
     return {
-      avgPoints: parseFloat(stats?.avgPoints || '0') || 0,
-      avgWinRate: parseFloat(stats?.avgWinRate || '0') || 0,
-      tournamentCount: parseInt(stats?.tournamentCount || '0') || 0,
-      bestRank: parseInt(stats?.bestRank || '999') || 999,
-      recentForm
+      avgPoints: parseFloat(stats?.avgPoints || "0") || 0,
+      avgWinRate: parseFloat(stats?.avgWinRate || "0") || 0,
+      tournamentCount: parseInt(stats?.tournamentCount || "0") || 0,
+      bestRank: parseInt(stats?.bestRank || "999") || 999,
+      recentForm,
     };
   }
 }

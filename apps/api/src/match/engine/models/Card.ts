@@ -1,5 +1,5 @@
-import { CardCategory, SpecialCondition } from './enums';
-import { AnyEffect } from '../effects/Effect';
+import { CardCategory, SpecialCondition } from "./enums";
+import { AnyEffect } from "../effects/Effect";
 
 export interface TcgDexCardBase {
   id: string;

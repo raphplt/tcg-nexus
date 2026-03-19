@@ -56,14 +56,35 @@
   --shadow-xl:
     4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
   --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 1);
-  --tcg-page-soft: linear-gradient(180deg, #f8fafc 0%, #ffffff 35%, #fff7ed 100%);
+  --tcg-page-soft: linear-gradient(
+    180deg,
+    #f8fafc 0%,
+    #ffffff 35%,
+    #fff7ed 100%
+  );
   --tcg-page-tournaments:
-    radial-gradient(circle at top left, rgba(234, 88, 12, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 26%),
+    radial-gradient(
+      circle at top left,
+      rgba(234, 88, 12, 0.18),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(14, 165, 233, 0.12),
+      transparent 26%
+    ),
     linear-gradient(180deg, #fff8f4 0%, #ffffff 42%, #f8fafc 100%);
   --tcg-page-play:
-    radial-gradient(circle at top left, rgba(249, 115, 22, 0.16), transparent 26%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.14), transparent 24%),
+    radial-gradient(
+      circle at top left,
+      rgba(249, 115, 22, 0.16),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(14, 165, 233, 0.14),
+      transparent 24%
+    ),
     linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #fff7ed 100%);
   --tcg-surface-radius-lg: 28px;
   --tcg-surface-radius-xl: 32px;

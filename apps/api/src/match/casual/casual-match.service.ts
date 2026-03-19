@@ -46,8 +46,20 @@ export class CasualMatchService {
       this.loadUserDecks(user.id),
       this.sessionRepository.find({
         where: [
-          { playerA: { id: user.id }, status: In([CasualMatchSessionStatus.WAITING_FOR_DECKS, CasualMatchSessionStatus.ACTIVE]) },
-          { playerB: { id: user.id }, status: In([CasualMatchSessionStatus.WAITING_FOR_DECKS, CasualMatchSessionStatus.ACTIVE]) },
+          {
+            playerA: { id: user.id },
+            status: In([
+              CasualMatchSessionStatus.WAITING_FOR_DECKS,
+              CasualMatchSessionStatus.ACTIVE,
+            ]),
+          },
+          {
+            playerB: { id: user.id },
+            status: In([
+              CasualMatchSessionStatus.WAITING_FOR_DECKS,
+              CasualMatchSessionStatus.ACTIVE,
+            ]),
+          },
         ],
         relations: ["playerA", "playerB"],
         order: { updatedAt: "DESC" },
@@ -103,7 +115,9 @@ export class CasualMatchService {
       session.status !== CasualMatchSessionStatus.WAITING_FOR_DECKS &&
       session.status !== CasualMatchSessionStatus.ACTIVE
     ) {
-      throw new BadRequestException("This session no longer accepts deck changes");
+      throw new BadRequestException(
+        "This session no longer accepts deck changes",
+      );
     }
 
     const deck = await this.loadOwnedDeck(deckId, user.id);
@@ -112,7 +126,9 @@ export class CasualMatchService {
       user.id,
     );
     if (!eligibility.eligible) {
-      throw new BadRequestException("Selected deck is not eligible for online play");
+      throw new BadRequestException(
+        "Selected deck is not eligible for online play",
+      );
     }
 
     if (slot === "playerA") {
@@ -149,9 +165,14 @@ export class CasualMatchService {
     const enginePlayerId = this.getEnginePlayerId(session, slot);
 
     // Auto-set playerId from the authenticated user's slot
-    const resolvedAction: PlayerAction = { ...action, playerId: enginePlayerId };
+    const resolvedAction: PlayerAction = {
+      ...action,
+      playerId: enginePlayerId,
+    };
 
-    const engine = new GameEngine(session.serializedState as unknown as GameState);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
     const events = engine.dispatch(resolvedAction);
 
     this.appendLog(session, "ACTION", enginePlayerId, {
@@ -177,7 +198,9 @@ export class CasualMatchService {
     this.requireActive(session);
     const enginePlayerId = this.getEnginePlayerId(session, slot);
 
-    const engine = new GameEngine(session.serializedState as unknown as GameState);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
     const events = engine.respondToPrompt(enginePlayerId, response);
 
     this.appendLog(session, "ACTION", enginePlayerId, {
@@ -209,7 +232,11 @@ export class CasualMatchService {
   }
 
   private async tryStartSession(session: CasualMatchSession): Promise<void> {
-    if (!session.playerADeckId || !session.playerBDeckId || session.serializedState) {
+    if (
+      !session.playerADeckId ||
+      !session.playerBDeckId ||
+      session.serializedState
+    ) {
       return;
     }
 
@@ -225,22 +252,29 @@ export class CasualMatchService {
     const playerAId = String(playerAPlayer.id);
     const playerBId = String(playerBPlayer.id);
 
-    session.serializedState = this.onlinePlaySupportService.createInitialGameState({
-      gameId: `casual-${session.id}-${randomUUID()}`,
-      seed: session.seed,
-      players: [
-        {
-          playerId: playerAId,
-          name: this.getDisplayName(session.playerA),
-          deck: this.onlinePlaySupportService.mapDeckToEngineCards(deckA, playerAId),
-        },
-        {
-          playerId: playerBId,
-          name: this.getDisplayName(session.playerB),
-          deck: this.onlinePlaySupportService.mapDeckToEngineCards(deckB, playerBId),
-        },
-      ],
-    }) as unknown as Record<string, unknown>;
+    session.serializedState =
+      this.onlinePlaySupportService.createInitialGameState({
+        gameId: `casual-${session.id}-${randomUUID()}`,
+        seed: session.seed,
+        players: [
+          {
+            playerId: playerAId,
+            name: this.getDisplayName(session.playerA),
+            deck: this.onlinePlaySupportService.mapDeckToEngineCards(
+              deckA,
+              playerAId,
+            ),
+          },
+          {
+            playerId: playerBId,
+            name: this.getDisplayName(session.playerB),
+            deck: this.onlinePlaySupportService.mapDeckToEngineCards(
+              deckB,
+              playerBId,
+            ),
+          },
+        ],
+      }) as unknown as Record<string, unknown>;
 
     session.status = CasualMatchSessionStatus.ACTIVE;
     this.appendLog(session, "EVENT", undefined, { type: "SESSION_STARTED" });
@@ -287,22 +321,25 @@ export class CasualMatchService {
     slot: CasualMatchSlot,
   ): CasualSessionView {
     const enginePlayerId = this.getEnginePlayerIdSafe(session, slot);
-    const opponent =
-      slot === "playerA" ? session.playerB : session.playerA;
+    const opponent = slot === "playerA" ? session.playerB : session.playerA;
 
     let gameState: CasualSessionView["gameState"] = null;
     if (session.serializedState && enginePlayerId) {
       const engine = new GameEngine(
         session.serializedState as unknown as GameState,
       );
-      gameState = engine.getSanitizedState(enginePlayerId) as CasualSessionView["gameState"];
+      gameState = engine.getSanitizedState(
+        enginePlayerId,
+      ) as CasualSessionView["gameState"];
     }
 
     return {
       sessionId: session.id,
       status: session.status,
       slot,
-      enginePlayerId: enginePlayerId || String(session[slot === "playerA" ? "playerA" : "playerB"].id),
+      enginePlayerId:
+        enginePlayerId ||
+        String(session[slot === "playerA" ? "playerA" : "playerB"].id),
       selectedDeckId:
         slot === "playerA" ? session.playerADeckId : session.playerBDeckId,
       opponentDeckReady:
@@ -313,14 +350,13 @@ export class CasualMatchService {
       winnerUserId: session.winnerUserId,
       endedReason: session.endedReason,
       gameState,
-      recentLog: (session.eventLog || []).slice(-25) as unknown as OnlineMatchLogEntry[],
+      recentLog: (session.eventLog || []).slice(
+        -25,
+      ) as unknown as OnlineMatchLogEntry[],
     };
   }
 
-  private syncSessionFromEngine(
-    session: CasualMatchSession,
-    state: GameState,
-  ) {
+  private syncSessionFromEngine(session: CasualMatchSession, state: GameState) {
     session.serializedState = state as unknown as Record<string, unknown>;
 
     if (state.gamePhase === GamePhase.Finished && state.winnerId) {
@@ -342,8 +378,7 @@ export class CasualMatchService {
     }
 
     const state = session.serializedState as unknown as GameState;
-    const userId =
-      slot === "playerA" ? session.playerA.id : session.playerB.id;
+    const userId = slot === "playerA" ? session.playerA.id : session.playerB.id;
 
     const playerId = state.playerIds.find((pid) => {
       const player = state.players[pid];

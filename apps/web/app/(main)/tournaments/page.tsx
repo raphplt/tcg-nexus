@@ -189,7 +189,10 @@ export default function TournamentsPage() {
       ]);
       router.push(`/tournaments/${tournamentId}`);
     } catch (registrationError) {
-      console.error("Erreur lors de l'inscription au tournoi :", registrationError);
+      console.error(
+        "Erreur lors de l'inscription au tournoi :",
+        registrationError,
+      );
     } finally {
       setRegisteringTournamentId(null);
     }
@@ -230,13 +233,23 @@ export default function TournamentsPage() {
                   Créer un tournoi
                   <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
-                <Button asChild size="lg" variant="outline" className="rounded-full px-6">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-6"
+                >
                   <Link href="#listing">
                     Explorer le calendrier
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="ghost" className="rounded-full px-4">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="ghost"
+                  className="rounded-full px-4"
+                >
                   <Link href="/play">
                     Aller à Jouer
                     <Swords className="ml-2 h-4 w-4" />
@@ -329,7 +342,11 @@ export default function TournamentsPage() {
                       </Badge>
                     </div>
 
-                    <Button asChild variant="secondary" className="w-full rounded-full">
+                    <Button
+                      asChild
+                      variant="secondary"
+                      className="w-full rounded-full"
+                    >
                       <Link href={`/tournaments/${spotlightTournament.id}`}>
                         Ouvrir la fiche tournoi
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -338,7 +355,9 @@ export default function TournamentsPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-lg font-semibold">Aucun tournoi à mettre en avant</p>
+                    <p className="text-lg font-semibold">
+                      Aucun tournoi à mettre en avant
+                    </p>
                     <p className="text-sm text-slate-300">
                       Crée un nouvel événement ou ouvre les inscriptions pour
                       faire remonter le prochain rendez-vous.
@@ -352,7 +371,11 @@ export default function TournamentsPage() {
               <CardContent className="grid gap-4 p-6">
                 <MiniStat
                   label="Prochaine date"
-                  value={spotlightTournament ? formatDate(spotlightTournament.startDate) : "À confirmer"}
+                  value={
+                    spotlightTournament
+                      ? formatDate(spotlightTournament.startDate)
+                      : "À confirmer"
+                  }
                   icon={CalendarClock}
                 />
                 <MiniStat
@@ -411,7 +434,10 @@ export default function TournamentsPage() {
                 {loadingPast ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton key={index} className="h-20 w-full rounded-2xl" />
+                      <Skeleton
+                        key={index}
+                        className="h-20 w-full rounded-2xl"
+                      />
                     ))}
                   </div>
                 ) : pastError ? (
@@ -457,7 +483,7 @@ export default function TournamentsPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <SectionHeading
               eyebrow="Annuaire"
-                title="Explorer les tournois"
+              title="Explorer les tournois"
               description="Recherchez par nom, statut ou lieu pour trouver rapidement le bon événement."
             />
             <Badge className="rounded-full border-0 bg-slate-900 text-white hover:bg-slate-900">
@@ -507,11 +533,18 @@ export default function TournamentsPage() {
           ) : (
             <Card className="tcg-surface">
               <CardContent className="space-y-3 p-8 text-center">
-                <p className="text-lg font-semibold">Aucun tournoi sur ce filtre.</p>
-                <p className="text-sm text-muted-foreground">
-                  Élargissez la recherche ou réinitialisez les filtres pour retrouver les événements disponibles.
+                <p className="text-lg font-semibold">
+                  Aucun tournoi sur ce filtre.
                 </p>
-                <Button variant="outline" className="rounded-full" onClick={resetFilters}>
+                <p className="text-sm text-muted-foreground">
+                  Élargissez la recherche ou réinitialisez les filtres pour
+                  retrouver les événements disponibles.
+                </p>
+                <Button
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={resetFilters}
+                >
                   Réinitialiser les filtres
                 </Button>
               </CardContent>
@@ -626,11 +659,15 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
             Date
           </p>
-          <p className="mt-1 text-sm font-semibold">{formatDate(tournament.startDate)}</p>
+          <p className="mt-1 text-sm font-semibold">
+            {formatDate(tournament.startDate)}
+          </p>
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-slate-950">{tournament.name}</h3>
+          <h3 className="text-lg font-semibold text-slate-950">
+            {tournament.name}
+          </h3>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-4 w-4 text-primary" />
@@ -645,7 +682,13 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge variant={resolveBadgeVariant(tournament.status, statusColor, "secondary")}>
+        <Badge
+          variant={resolveBadgeVariant(
+            tournament.status,
+            statusColor,
+            "secondary",
+          )}
+        >
           {getTournamentStatusLabel(tournament.status)}
         </Badge>
         <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:text-slate-950" />
@@ -668,7 +711,13 @@ function ResultRow({ tournament }: { tournament: Tournament }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge variant={resolveBadgeVariant(tournament.status, statusColor, "secondary")}>
+        <Badge
+          variant={resolveBadgeVariant(
+            tournament.status,
+            statusColor,
+            "secondary",
+          )}
+        >
           {getTournamentStatusLabel(tournament.status)}
         </Badge>
         <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:text-slate-950" />
@@ -700,7 +749,13 @@ function TournamentBrowseCard({
               {tournament.name}
             </h3>
           </div>
-          <Badge variant={resolveBadgeVariant(tournament.status, statusColor, "secondary")}>
+          <Badge
+            variant={resolveBadgeVariant(
+              tournament.status,
+              statusColor,
+              "secondary",
+            )}
+          >
             {getTournamentStatusLabel(tournament.status)}
           </Badge>
         </div>
@@ -709,7 +764,9 @@ function TournamentBrowseCard({
           <Badge variant={resolveBadgeVariant(tournament.type, typeColor)}>
             {getTournamentTypeLabel(tournament.type)}
           </Badge>
-          <Badge variant="outline">{tournament.location || "Lieu à confirmer"}</Badge>
+          <Badge variant="outline">
+            {tournament.location || "Lieu à confirmer"}
+          </Badge>
         </div>
 
         <p className="min-h-16 text-sm leading-6 text-slate-600">

@@ -49,7 +49,12 @@ import { TrainingMatchService } from "./training/training-match.service";
       User,
     ]),
   ],
-  controllers: [MatchController, MatchOnlineController, TrainingMatchController, CasualMatchController],
+  controllers: [
+    MatchController,
+    MatchOnlineController,
+    TrainingMatchController,
+    CasualMatchController,
+  ],
   providers: [
     MatchService,
     MatchOnlineService,

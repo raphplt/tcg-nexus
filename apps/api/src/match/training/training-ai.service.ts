@@ -44,7 +44,10 @@ export class TrainingAiService {
       };
     }
 
-    if (state.activePlayerId !== aiPlayerId || state.gamePhase !== GamePhase.Play) {
+    if (
+      state.activePlayerId !== aiPlayerId ||
+      state.gamePhase !== GamePhase.Play
+    ) {
       return null;
     }
 
@@ -75,14 +78,18 @@ export class TrainingAiService {
       case "CHOOSE_MULLIGAN_DRAW":
         return {
           promptId: prompt.id,
-          numericChoice: Number(prompt.options[prompt.options.length - 1]?.value || 0),
+          numericChoice: Number(
+            prompt.options[prompt.options.length - 1]?.value || 0,
+          ),
         };
       default:
         return {
           promptId: prompt.id,
           selections: prompt.allowPass
-            ? prompt.options.map((option) => option.value).slice(0, prompt.maxSelections)
-            : [prompt.options[0]?.value].filter(Boolean) as string[],
+            ? prompt.options
+                .map((option) => option.value)
+                .slice(0, prompt.maxSelections)
+            : ([prompt.options[0]?.value].filter(Boolean) as string[]),
         };
     }
   }
@@ -100,15 +107,16 @@ export class TrainingAiService {
       case "CHOOSE_FIRST_PLAYER":
         return {
           promptId: prompt.id,
-          selections: [state.playerIds.find((playerId) => playerId !== aiPlayerId)!],
+          selections: [
+            state.playerIds.find((playerId) => playerId !== aiPlayerId)!,
+          ],
         };
       case "CHOOSE_ACTIVE": {
-        const selected = [...prompt.options]
-          .sort(
-            (left, right) =>
-              this.scorePokemonCardInHand(state, aiPlayerId, right.value) -
-              this.scorePokemonCardInHand(state, aiPlayerId, left.value),
-          )[0];
+        const selected = [...prompt.options].sort(
+          (left, right) =>
+            this.scorePokemonCardInHand(state, aiPlayerId, right.value) -
+            this.scorePokemonCardInHand(state, aiPlayerId, left.value),
+        )[0];
         return {
           promptId: prompt.id,
           selections: selected ? [selected.value] : [],
@@ -131,16 +139,17 @@ export class TrainingAiService {
       case "CHOOSE_MULLIGAN_DRAW":
         return {
           promptId: prompt.id,
-          numericChoice: Number(prompt.options[prompt.options.length - 1]?.value || 0),
+          numericChoice: Number(
+            prompt.options[prompt.options.length - 1]?.value || 0,
+          ),
         };
       case "CHOOSE_PROMOTION":
       case "CHOOSE_TRAINER_TARGET": {
-        const selected = [...prompt.options]
-          .sort(
-            (left, right) =>
-              this.scorePokemonOnBoard(state, aiPlayerId, right.value) -
-              this.scorePokemonOnBoard(state, aiPlayerId, left.value),
-          )[0];
+        const selected = [...prompt.options].sort(
+          (left, right) =>
+            this.scorePokemonOnBoard(state, aiPlayerId, right.value) -
+            this.scorePokemonOnBoard(state, aiPlayerId, left.value),
+        )[0];
         return {
           promptId: prompt.id,
           selections: selected ? [selected.value] : [],
@@ -151,7 +160,10 @@ export class TrainingAiService {
     }
   }
 
-  private choosePlayActionEasy(state: GameState, aiPlayerId: string): PlayerAction {
+  private choosePlayActionEasy(
+    state: GameState,
+    aiPlayerId: string,
+  ): PlayerAction {
     const player = state.players[aiPlayerId];
     const active = player.active;
     const attackAction = this.findFirstPlayableAttack(state, aiPlayerId);
@@ -225,7 +237,10 @@ export class TrainingAiService {
     );
   }
 
-  private buildPlayCandidates(state: GameState, aiPlayerId: string): PlayerAction[] {
+  private buildPlayCandidates(
+    state: GameState,
+    aiPlayerId: string,
+  ): PlayerAction[] {
     const player = state.players[aiPlayerId];
     const candidates: PlayerAction[] = [];
     const boardTargets = [player.active, ...player.bench].filter(
@@ -282,8 +297,9 @@ export class TrainingAiService {
       }
     }
 
-    for (const attackIndex of player.active?.baseCard.attacks.map((_, index) => index) ||
-      []) {
+    for (const attackIndex of player.active?.baseCard.attacks.map(
+      (_, index) => index,
+    ) || []) {
       candidates.push({
         playerId: aiPlayerId,
         type: ActionType.ATTACK,
@@ -392,7 +408,10 @@ export class TrainingAiService {
       }
 
       const baseCard = card.baseCard as TrainerCardInGame["baseCard"];
-      if (baseCard.targetStrategy === "OWN_POKEMON" && !this.hasValuableTrainerTarget(state, aiPlayerId)) {
+      if (
+        baseCard.targetStrategy === "OWN_POKEMON" &&
+        !this.hasValuableTrainerTarget(state, aiPlayerId)
+      ) {
         continue;
       }
 
@@ -493,7 +512,10 @@ export class TrainingAiService {
     return null;
   }
 
-  private simulateAction(state: GameState, action: PlayerAction): GameState | null {
+  private simulateAction(
+    state: GameState,
+    action: PlayerAction,
+  ): GameState | null {
     try {
       const engine = new GameEngine(structuredClone(state));
       engine.dispatch(action);
@@ -509,14 +531,19 @@ export class TrainingAiService {
     aiPlayerId: string,
     action: PlayerAction,
   ): number {
-    const baseScore = this.scoreState(nextState, aiPlayerId) - this.scoreState(previousState, aiPlayerId);
+    const baseScore =
+      this.scoreState(nextState, aiPlayerId) -
+      this.scoreState(previousState, aiPlayerId);
     const aiPlayer = previousState.players[aiPlayerId];
-    const opponentId = previousState.playerIds.find((playerId) => playerId !== aiPlayerId)!;
+    const opponentId = previousState.playerIds.find(
+      (playerId) => playerId !== aiPlayerId,
+    )!;
     const opponentPlayer = previousState.players[opponentId];
 
     switch (action.type) {
       case ActionType.ATTACK: {
-        const attack = aiPlayer.active?.baseCard.attacks[action.payload?.attackIndex || 0];
+        const attack =
+          aiPlayer.active?.baseCard.attacks[action.payload?.attackIndex || 0];
         const estimatedDamage = this.parseDamageValue(attack?.damage);
         const wouldKnockOut =
           Boolean(opponentPlayer.active) &&
@@ -537,11 +564,17 @@ export class TrainingAiService {
           (this.hasPlayableAttack(nextState, aiPlayerId) ? 320 : 180)
         );
       case ActionType.PLAY_TRAINER:
-        return baseScore + this.estimateTrainerValue(previousState, aiPlayerId, action);
+        return (
+          baseScore +
+          this.estimateTrainerValue(previousState, aiPlayerId, action)
+        );
       case ActionType.PLAY_POKEMON_TO_BENCH:
         return baseScore + (aiPlayer.bench.length === 0 ? 220 : 120);
       case ActionType.RETREAT:
-        return baseScore + (this.hasPlayableAttack(nextState, aiPlayerId) ? 280 : -120);
+        return (
+          baseScore +
+          (this.hasPlayableAttack(nextState, aiPlayerId) ? 280 : -120)
+        );
       case ActionType.END_TURN:
       default:
         return baseScore;
@@ -549,7 +582,9 @@ export class TrainingAiService {
   }
 
   private scoreState(state: GameState, aiPlayerId: string): number {
-    const opponentId = state.playerIds.find((playerId) => playerId !== aiPlayerId)!;
+    const opponentId = state.playerIds.find(
+      (playerId) => playerId !== aiPlayerId,
+    )!;
     const aiPlayer = state.players[aiPlayerId];
     const opponent = state.players[opponentId];
 
@@ -569,11 +604,19 @@ export class TrainingAiService {
           ? -30
           : 0;
 
-    return aiBoardScore - opponentBoardScore + prizeDelta + activeTurnBonus + promptPressure;
+    return (
+      aiBoardScore -
+      opponentBoardScore +
+      prizeDelta +
+      activeTurnBonus +
+      promptPressure
+    );
   }
 
   private scoreBoard(player: GameState["players"][string]): number {
-    const activeScore = player.active ? this.scorePokemon(player.active) + 150 : -1000;
+    const activeScore = player.active
+      ? this.scorePokemon(player.active) + 150
+      : -1000;
     const benchScore = player.bench.reduce(
       (sum, pokemon) => sum + this.scorePokemon(pokemon),
       0,
@@ -589,10 +632,15 @@ export class TrainingAiService {
   }
 
   private scorePokemon(pokemon: PokemonCardInGame): number {
-    const hpRemaining = Math.max(0, pokemon.baseCard.hp - pokemon.damageCounters);
+    const hpRemaining = Math.max(
+      0,
+      pokemon.baseCard.hp - pokemon.damageCounters,
+    );
     const bestAttack = Math.max(
       0,
-      ...pokemon.baseCard.attacks.map((attack) => this.parseDamageValue(attack.damage)),
+      ...pokemon.baseCard.attacks.map((attack) =>
+        this.parseDamageValue(attack.damage),
+      ),
     );
 
     return (
@@ -622,7 +670,9 @@ export class TrainingAiService {
       pokemon.baseCard.hp +
       Math.max(
         0,
-        ...pokemon.baseCard.attacks.map((attack) => this.parseDamageValue(attack.damage)),
+        ...pokemon.baseCard.attacks.map((attack) =>
+          this.parseDamageValue(attack.damage),
+        ),
       ) *
         4
     );
@@ -673,12 +723,16 @@ export class TrainingAiService {
     ].filter((pokemon): pokemon is PokemonCardInGame => Boolean(pokemon));
 
     return targets.reduce((best, pokemon) => {
-      const value = pokemon.damageCounters * 4 + pokemon.specialConditions.length * 80;
+      const value =
+        pokemon.damageCounters * 4 + pokemon.specialConditions.length * 80;
       return Math.max(best, value);
     }, 0);
   }
 
-  private hasValuableTrainerTarget(state: GameState, aiPlayerId: string): boolean {
+  private hasValuableTrainerTarget(
+    state: GameState,
+    aiPlayerId: string,
+  ): boolean {
     const targets = [
       state.players[aiPlayerId].active,
       ...state.players[aiPlayerId].bench,

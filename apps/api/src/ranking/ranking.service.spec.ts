@@ -1,18 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { RankingService } from './ranking.service';
-import { Ranking } from './entities/ranking.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { RankingService } from "./ranking.service";
+import { Ranking } from "./entities/ranking.entity";
 import {
   Tournament,
-  TournamentType
-} from '../tournament/entities/tournament.entity';
-import { Player } from '../player/entities/player.entity';
-import { Match } from '../match/entities/match.entity';
-import { NotFoundException } from '@nestjs/common';
-import { CreateRankingDto } from './dto/create-ranking.dto';
-import { UpdateRankingDto } from './dto/update-ranking.dto';
+  TournamentType,
+} from "../tournament/entities/tournament.entity";
+import { Player } from "../player/entities/player.entity";
+import { Match } from "../match/entities/match.entity";
+import { NotFoundException } from "@nestjs/common";
+import { CreateRankingDto } from "./dto/create-ranking.dto";
+import { UpdateRankingDto } from "./dto/update-ranking.dto";
 
-describe('RankingService', () => {
+describe("RankingService", () => {
   let service: RankingService;
   let rankingRepo: any;
   let tournamentRepo: any;
@@ -23,7 +23,7 @@ describe('RankingService', () => {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
-    getMany: jest.fn()
+    getMany: jest.fn(),
   };
 
   const mockRankingRepo = {
@@ -32,19 +32,19 @@ describe('RankingService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
-    createQueryBuilder: jest.fn(() => mockQueryBuilder)
+    createQueryBuilder: jest.fn(() => mockQueryBuilder),
   };
 
   const mockTournamentRepo = {
-    findOne: jest.fn()
+    findOne: jest.fn(),
   };
 
   const mockPlayerRepo = {
-    findOne: jest.fn()
+    findOne: jest.fn(),
   };
 
   const mockMatchRepo = {
-    find: jest.fn()
+    find: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -54,11 +54,11 @@ describe('RankingService', () => {
         { provide: getRepositoryToken(Ranking), useValue: mockRankingRepo },
         {
           provide: getRepositoryToken(Tournament),
-          useValue: mockTournamentRepo
+          useValue: mockTournamentRepo,
         },
         { provide: getRepositoryToken(Player), useValue: mockPlayerRepo },
-        { provide: getRepositoryToken(Match), useValue: mockMatchRepo }
-      ]
+        { provide: getRepositoryToken(Match), useValue: mockMatchRepo },
+      ],
     }).compile();
 
     service = module.get<RankingService>(RankingService);
@@ -70,12 +70,12 @@ describe('RankingService', () => {
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should create a ranking successfully', async () => {
+  describe("create", () => {
+    it("should create a ranking successfully", async () => {
       const dto: CreateRankingDto = {
         tournamentId: 1,
         playerId: 2,
@@ -83,7 +83,7 @@ describe('RankingService', () => {
         points: 0,
         wins: 0,
         losses: 0,
-        draws: 0
+        draws: 0,
       };
       tournamentRepo.findOne.mockResolvedValue({ id: 1 });
       playerRepo.findOne.mockResolvedValue({ id: 2 });
@@ -95,7 +95,7 @@ describe('RankingService', () => {
       expect(rankingRepo.save).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if tournament not found', async () => {
+    it("should throw NotFoundException if tournament not found", async () => {
       tournamentRepo.findOne.mockResolvedValue(null);
       const dto: CreateRankingDto = {
         tournamentId: 99,
@@ -104,12 +104,12 @@ describe('RankingService', () => {
         points: 0,
         wins: 0,
         losses: 0,
-        draws: 0
+        draws: 0,
       };
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw NotFoundException if player not found', async () => {
+    it("should throw NotFoundException if player not found", async () => {
       tournamentRepo.findOne.mockResolvedValue({ id: 1 });
       playerRepo.findOne.mockResolvedValue(null);
       const dto: CreateRankingDto = {
@@ -119,45 +119,45 @@ describe('RankingService', () => {
         points: 0,
         wins: 0,
         losses: 0,
-        draws: 0
+        draws: 0,
       };
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('findAll', () => {
-    it('should find all rankings', async () => {
+  describe("findAll", () => {
+    it("should find all rankings", async () => {
       mockQueryBuilder.getMany.mockResolvedValue([{ id: 1 }]);
       const result = await service.findAll();
       expect(result).toHaveLength(1);
     });
 
-    it('should filter by tournamentId', async () => {
+    it("should filter by tournamentId", async () => {
       mockQueryBuilder.getMany.mockResolvedValue([{ id: 1 }]);
 
       await service.findAll(1);
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'tournament.id = :tournamentId',
-        { tournamentId: 1 }
+        "tournament.id = :tournamentId",
+        { tournamentId: 1 },
       );
     });
   });
 
-  describe('findOne', () => {
-    it('should find one ranking', async () => {
+  describe("findOne", () => {
+    it("should find one ranking", async () => {
       rankingRepo.findOne.mockResolvedValue({ id: 1 });
       const result = await service.findOne(1);
       expect(result).toEqual({ id: 1 });
     });
 
-    it('should throw NotFoundException if not found', async () => {
+    it("should throw NotFoundException if not found", async () => {
       rankingRepo.findOne.mockResolvedValue(null);
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('update', () => {
-    it('should update ranking', async () => {
+  describe("update", () => {
+    it("should update ranking", async () => {
       const existing = { id: 1, points: 0 };
       rankingRepo.findOne.mockResolvedValue(existing);
       rankingRepo.save.mockImplementation((r: any) => r);
@@ -168,83 +168,83 @@ describe('RankingService', () => {
     });
   });
 
-  describe('remove', () => {
-    it('should remove ranking', async () => {
+  describe("remove", () => {
+    it("should remove ranking", async () => {
       rankingRepo.findOne.mockResolvedValue({ id: 1 });
       await service.remove(1);
       expect(rankingRepo.remove).toHaveBeenCalled();
     });
   });
 
-  describe('getTournamentRankings', () => {
-    it('should return rankings for tournament', async () => {
+  describe("getTournamentRankings", () => {
+    it("should return rankings for tournament", async () => {
       rankingRepo.find.mockResolvedValue([{ id: 1 }]);
       const result = await service.getTournamentRankings(1);
       expect(result).toHaveLength(1);
       expect(rankingRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { tournament: { id: 1 } } })
+        expect.objectContaining({ where: { tournament: { id: 1 } } }),
       );
     });
   });
 
-  describe('getPlayerRanking', () => {
-    it('should return ranking for player and tournament', async () => {
+  describe("getPlayerRanking", () => {
+    it("should return ranking for player and tournament", async () => {
       rankingRepo.findOne.mockResolvedValue({ id: 1 });
       const result = await service.getPlayerRanking(1, 2);
       expect(result!.id).toBe(1);
     });
   });
 
-  describe('getFinalRankings', () => {
-    it('should return final rankings', async () => {
+  describe("getFinalRankings", () => {
+    it("should return final rankings", async () => {
       tournamentRepo.findOne.mockResolvedValue({ id: 1 });
       rankingRepo.find.mockResolvedValue([{ id: 1 }]);
       const result = await service.getFinalRankings(1);
       expect(result).toHaveLength(1);
     });
 
-    it('should throw NotFoundException if tournament not found', async () => {
+    it("should throw NotFoundException if tournament not found", async () => {
       tournamentRepo.findOne.mockResolvedValue(null);
       await expect(service.getFinalRankings(999)).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
   });
 
-  describe('updateTournamentRankings', () => {
+  describe("updateTournamentRankings", () => {
     const player1 = { id: 1 } as Player;
     const player2 = { id: 2 } as Player;
     const player3 = { id: 3 } as Player;
 
-    it('should calculate Swiss System points correctly', async () => {
+    it("should calculate Swiss System points correctly", async () => {
       const matches = [
         {
           id: 1,
           playerA: player1,
           playerB: player2,
           finishedAt: new Date(),
-          winner: player1
+          winner: player1,
         }, // P1 win
         {
           id: 2,
           playerA: player2,
           playerB: player3,
           finishedAt: new Date(),
-          winner: null
+          winner: null,
         }, // Draw
         {
           id: 3,
           playerA: player3,
           playerB: player1,
           finishedAt: new Date(),
-          winner: player1
-        } // P1 win
+          winner: player1,
+        }, // P1 win
       ] as Match[];
 
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         type: TournamentType.SWISS_SYSTEM,
-        matches
+        matches,
       });
 
       rankingRepo.findOne.mockResolvedValue(null);
@@ -265,21 +265,21 @@ describe('RankingService', () => {
       expect(p1!.rank).toBe(1);
     });
 
-    it('should calculate Single Elimination points correctly', async () => {
+    it("should calculate Single Elimination points correctly", async () => {
       const matches = [
         {
           id: 1,
           playerA: player1,
           playerB: player2,
           finishedAt: new Date(),
-          winner: player1
-        }
+          winner: player1,
+        },
       ] as Match[];
 
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         type: TournamentType.SINGLE_ELIMINATION,
-        matches
+        matches,
       });
 
       rankingRepo.findOne.mockResolvedValue(null);
@@ -291,16 +291,16 @@ describe('RankingService', () => {
       expect(p1!.points).toBe(1); // 1 per win in Elimination
     });
 
-    it('should throw NotFoundException if tournament not found', async () => {
+    it("should throw NotFoundException if tournament not found", async () => {
       tournamentRepo.findOne.mockResolvedValue(null);
       await expect(service.updateTournamentRankings(999)).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
   });
 
-  describe('calculateTieBreakers', () => {
-    it('should calculate opponent win rates and game win rates', async () => {
+  describe("calculateTieBreakers", () => {
+    it("should calculate opponent win rates and game win rates", async () => {
       const player1 = { id: 1 } as Player;
       const player2 = { id: 2 } as Player;
       /* 
@@ -317,8 +317,8 @@ describe('RankingService', () => {
           winner: player1,
           playerAScore: 2,
           playerBScore: 0,
-          tournament: { id: 1 }
-        }
+          tournament: { id: 1 },
+        },
       ] as Match[];
 
       matchRepo.find.mockResolvedValue(matches);
@@ -342,7 +342,7 @@ describe('RankingService', () => {
       expect(p2Stats!.opponentWinRate).toBe(1);
     });
 
-    it('should handle players with no matches', async () => {
+    it("should handle players with no matches", async () => {
       matchRepo.find.mockResolvedValue([]);
       const result = await service.calculateTieBreakers(1, [1]);
       const p1Stats = result.get(1);

@@ -4,9 +4,7 @@ export default function CollectionScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ma Collection</Text>
-      <Text style={styles.subtitle}>
-        Vos cartes apparaîtront ici
-      </Text>
+      <Text style={styles.subtitle}>Vos cartes apparaîtront ici</Text>
     </View>
   );
 }

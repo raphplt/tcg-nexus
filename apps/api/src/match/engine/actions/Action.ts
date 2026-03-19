@@ -1,12 +1,12 @@
 export enum ActionType {
-  PLAY_POKEMON_TO_BENCH = 'PLAY_POKEMON_TO_BENCH',
-  EVOLVE_POKEMON = 'EVOLVE_POKEMON',
-  ATTACH_ENERGY = 'ATTACH_ENERGY',
-  PLAY_TRAINER = 'PLAY_TRAINER',
-  ATTACK = 'ATTACK',
-  RETREAT = 'RETREAT',
-  END_TURN = 'END_TURN',
-  PASS = 'PASS', // e.g. when asked to do something optional
+  PLAY_POKEMON_TO_BENCH = "PLAY_POKEMON_TO_BENCH",
+  EVOLVE_POKEMON = "EVOLVE_POKEMON",
+  ATTACH_ENERGY = "ATTACH_ENERGY",
+  PLAY_TRAINER = "PLAY_TRAINER",
+  ATTACK = "ATTACK",
+  RETREAT = "RETREAT",
+  END_TURN = "END_TURN",
+  PASS = "PASS", // e.g. when asked to do something optional
 }
 
 export interface PlayerAction {

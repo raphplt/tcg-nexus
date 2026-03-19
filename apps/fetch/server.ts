@@ -138,36 +138,36 @@ class TcgDexService {
 
   async getAllCardsDetails(): Promise<any> {
     try {
-					const cards = await this.tcgdex.fetch("cards");
-					if (!cards) {
-						return [];
-					}
+      const cards = await this.tcgdex.fetch("cards");
+      if (!cards) {
+        return [];
+      }
 
-					const chunkSize = 1000;
-					const delay = (ms: number) =>
-						new Promise((resolve) => setTimeout(resolve, ms));
+      const chunkSize = 1000;
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
 
-					const cardsDetails: any[] = [];
-					for (let i = 0; i < cards.length; i += chunkSize) {
-						const chunk = cards.slice(i, i + chunkSize);
-						const cardsPromises = chunk.map(async (card: any) => {
-							const cardData = await this.tcgdex.fetch("cards", card.id);
-							return cardData;
-						});
+      const cardsDetails: any[] = [];
+      for (let i = 0; i < cards.length; i += chunkSize) {
+        const chunk = cards.slice(i, i + chunkSize);
+        const cardsPromises = chunk.map(async (card: any) => {
+          const cardData = await this.tcgdex.fetch("cards", card.id);
+          return cardData;
+        });
 
-						const chunkDetails = await Promise.all(cardsPromises);
-						cardsDetails.push(...chunkDetails);
+        const chunkDetails = await Promise.all(cardsPromises);
+        cardsDetails.push(...chunkDetails);
 
-						if (i + chunkSize < cards.length) {
-							await delay(30000);
-						}
-					}
+        if (i + chunkSize < cards.length) {
+          await delay(30000);
+        }
+      }
 
-					return cardsDetails;
-				} catch (error) {
-					console.error("Error fetching cards details:", error);
-					throw new Error("Erreur lors de la récupération des données des cartes");
-				}
+      return cardsDetails;
+    } catch (error) {
+      console.error("Error fetching cards details:", error);
+      throw new Error("Erreur lors de la récupération des données des cartes");
+    }
   }
 }
 

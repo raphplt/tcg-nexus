@@ -61,12 +61,14 @@ export function MatchBoardView({
   );
 
   const viewerPlayer =
-    enginePlayerId && gameState ? gameState.players[enginePlayerId] ?? null : null;
+    enginePlayerId && gameState
+      ? (gameState.players[enginePlayerId] ?? null)
+      : null;
   const opponentPlayer =
     enginePlayerId && gameState
-      ? Object.values(gameState.players).find(
+      ? (Object.values(gameState.players).find(
           (player) => player.playerId !== enginePlayerId,
-        ) ?? null
+        ) ?? null)
       : null;
 
   const pendingPrompt =
@@ -133,8 +135,7 @@ export function MatchBoardView({
     if (pendingPrompt.type === "CHOOSE_MULLIGAN_DRAW") {
       onRespondPrompt({
         promptId: pendingPrompt.id,
-        numericChoice:
-          promptNumericChoice ?? Number(promptSelections[0] || 0),
+        numericChoice: promptNumericChoice ?? Number(promptSelections[0] || 0),
       });
       return;
     }
@@ -150,7 +151,9 @@ export function MatchBoardView({
       <Card className="tcg-surface">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={sessionStatus === "FINISHED" ? "default" : "secondary"}>
+            <Badge
+              variant={sessionStatus === "FINISHED" ? "default" : "secondary"}
+            >
               {sessionStatusLabels[sessionStatus] ?? sessionStatus}
             </Badge>
             <Badge variant="outline">Tour {gameState.turnNumber}</Badge>
@@ -214,7 +217,10 @@ export function MatchBoardView({
               })}
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => submitPrompt()} disabled={!promptReady || isBusy}>
+              <Button
+                onClick={() => submitPrompt()}
+                disabled={!promptReady || isBusy}
+              >
                 Valider
               </Button>
               {pendingPrompt.allowPass ? (
@@ -399,7 +405,11 @@ function BoardPlayer({
         <PokemonPanel label="Actif" pokemon={player.active} />
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {player.bench.map((pokemon) => (
-            <PokemonPanel key={pokemon.instanceId} label="Banc" pokemon={pokemon} />
+            <PokemonPanel
+              key={pokemon.instanceId}
+              label="Banc"
+              pokemon={pokemon}
+            />
           ))}
         </div>
       </CardContent>

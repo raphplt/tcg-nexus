@@ -60,7 +60,8 @@ export class GameEngine {
         this.state.playerIds.map((playerId) => {
           const player = this.state.players[playerId];
           const isViewer = playerId === viewerPlayerId;
-          const hideBoard = this.state.gamePhase === GamePhase.Setup && !isViewer;
+          const hideBoard =
+            this.state.gamePhase === GamePhase.Setup && !isViewer;
 
           return [
             playerId,
@@ -75,7 +76,9 @@ export class GameEngine {
               bench: hideBoard
                 ? []
                 : player.bench.map((pokemon) => this.serializePokemon(pokemon)),
-              discard: player.discard.map((card) => this.serializeHandCard(card)),
+              discard: player.discard.map((card) =>
+                this.serializeHandCard(card),
+              ),
               hand: isViewer
                 ? player.hand.map((card) => this.serializeHandCard(card))
                 : undefined,
@@ -98,7 +101,9 @@ export class GameEngine {
     }
 
     if (this.state.pendingPrompt) {
-      throw new Error("A prompt must be resolved before playing another action");
+      throw new Error(
+        "A prompt must be resolved before playing another action",
+      );
     }
 
     if (this.state.activePlayerId !== action.playerId) {
@@ -579,21 +584,27 @@ export class GameEngine {
 
   private finalizeSetup(events: any[]) {
     if (!this.state.firstPlayerId) {
-      throw new Error("The starting player must be selected before finalizing setup");
+      throw new Error(
+        "The starting player must be selected before finalizing setup",
+      );
     }
 
     for (const playerId of this.state.playerIds) {
       const player = this.state.players[playerId];
 
       if (!player.active) {
-        throw new Error("Each player must have an active Pokemon before the game starts");
+        throw new Error(
+          "Each player must have an active Pokemon before the game starts",
+        );
       }
 
       if (player.prizes.length === 0) {
         for (let index = 0; index < 6; index += 1) {
           const prizeCard = player.deck.pop();
           if (!prizeCard) {
-            throw new Error("Deck does not contain enough cards to set prize cards");
+            throw new Error(
+              "Deck does not contain enough cards to set prize cards",
+            );
           }
           player.prizes.push(prizeCard);
         }
@@ -638,7 +649,10 @@ export class GameEngine {
 
     this.pokemonCheckup(events);
 
-    if (this.state.gamePhase === GamePhase.Finished || this.state.pendingPrompt) {
+    if (
+      this.state.gamePhase === GamePhase.Finished ||
+      this.state.pendingPrompt
+    ) {
       return;
     }
 
@@ -736,9 +750,10 @@ export class GameEngine {
         snapshot.playerId === this.state.activePlayerId &&
         activePokemon.specialConditions.includes(SpecialCondition.Paralyzed)
       ) {
-        activePokemon.specialConditions = activePokemon.specialConditions.filter(
-          (condition) => condition !== SpecialCondition.Paralyzed,
-        );
+        activePokemon.specialConditions =
+          activePokemon.specialConditions.filter(
+            (condition) => condition !== SpecialCondition.Paralyzed,
+          );
         events.push({
           type: "PARALYSIS_REMOVED",
           playerId: snapshot.playerId,
@@ -865,7 +880,9 @@ export class GameEngine {
       this.state.firstPlayerId === action.playerId &&
       (player.turnsTaken || 0) === 0
     ) {
-      throw new Error("The first player cannot play a Supporter on their first turn");
+      throw new Error(
+        "The first player cannot play a Supporter on their first turn",
+      );
     }
 
     if (trainerCard.baseCard.trainerType === "Supporter") {
@@ -1003,11 +1020,18 @@ export class GameEngine {
     }
 
     if (attack.effects && attack.effects.length > 0) {
-      this.effectResolver.resolveEffects(attack.effects, action.playerId, events);
+      this.effectResolver.resolveEffects(
+        attack.effects,
+        action.playerId,
+        events,
+      );
     }
 
     this.resolveKnockoutAfterAction(events, "AFTER_ATTACK_PROMOTION");
-    if (this.state.gamePhase === GamePhase.Finished || this.state.pendingPrompt) {
+    if (
+      this.state.gamePhase === GamePhase.Finished ||
+      this.state.pendingPrompt
+    ) {
       return;
     }
 
@@ -1117,7 +1141,9 @@ export class GameEngine {
     const discardedIds = action.payload.discardedEnergyInstanceIds || [];
 
     if (discardedIds.length !== retreatCost) {
-      throw new Error(`Retreat requires exactly ${retreatCost} energy to be discarded`);
+      throw new Error(
+        `Retreat requires exactly ${retreatCost} energy to be discarded`,
+      );
     }
 
     const discardedEnergy: EnergyCardInGame[] = [];
@@ -1131,7 +1157,9 @@ export class GameEngine {
     }
 
     if (discardedEnergy.length !== retreatCost) {
-      throw new Error("Selected energy cards are not attached to the active Pokemon");
+      throw new Error(
+        "Selected energy cards are not attached to the active Pokemon",
+      );
     }
 
     activePokemon.attachedEnergies = keptEnergy;
@@ -1159,7 +1187,9 @@ export class GameEngine {
     for (const playerId of this.state.playerIds) {
       const player = this.state.players[playerId];
       if (!player.deck.some((card) => this.isBasicPokemonCard(card))) {
-        throw new Error("A deck without a Basic Pokemon cannot start an online match");
+        throw new Error(
+          "A deck without a Basic Pokemon cannot start an online match",
+        );
       }
 
       let mulliganCount = 0;
@@ -1175,7 +1205,9 @@ export class GameEngine {
         for (let drawIndex = 0; drawIndex < 7; drawIndex += 1) {
           const drawnCard = player.deck.pop();
           if (!drawnCard) {
-            throw new Error("Deck does not contain enough cards for opening hand");
+            throw new Error(
+              "Deck does not contain enough cards for opening hand",
+            );
           }
           player.hand.push(drawnCard);
         }
@@ -1203,7 +1235,9 @@ export class GameEngine {
 
   private resolveKnockoutAfterAction(
     events: any[],
-    resumeActionOnPromotion?: "AFTER_ATTACK_PROMOTION" | "AFTER_CHECKUP_PROMOTION",
+    resumeActionOnPromotion?:
+      | "AFTER_ATTACK_PROMOTION"
+      | "AFTER_CHECKUP_PROMOTION",
   ) {
     for (const playerId of this.state.playerIds) {
       const activePokemon = this.state.players[playerId].active;
@@ -1227,7 +1261,9 @@ export class GameEngine {
   private knockOutActivePokemon(
     playerId: string,
     events: any[],
-    resumeActionOnPromotion?: "AFTER_ATTACK_PROMOTION" | "AFTER_CHECKUP_PROMOTION",
+    resumeActionOnPromotion?:
+      | "AFTER_ATTACK_PROMOTION"
+      | "AFTER_CHECKUP_PROMOTION",
   ) {
     const player = this.state.players[playerId];
     const knockedOutPokemon = player.active;
@@ -1515,7 +1551,11 @@ export class GameEngine {
           );
 
     if (weakness?.value) {
-      if (weakness.value.startsWith("x") || weakness.value.startsWith("X") || weakness.value.startsWith("×")) {
+      if (
+        weakness.value.startsWith("x") ||
+        weakness.value.startsWith("X") ||
+        weakness.value.startsWith("×")
+      ) {
         damage *= Number(weakness.value.replace(/\D/g, "")) || 2;
       } else if (weakness.value.startsWith("+")) {
         damage += this.parseDamageValue(weakness.value);
@@ -1579,7 +1619,11 @@ export class GameEngine {
 
   private shufflePlayerDeck(playerId: string) {
     const deck = this.state.players[playerId].deck;
-    for (let currentIndex = deck.length - 1; currentIndex > 0; currentIndex -= 1) {
+    for (
+      let currentIndex = deck.length - 1;
+      currentIndex > 0;
+      currentIndex -= 1
+    ) {
       const randomIndex = Math.floor(this.nextRandom() * (currentIndex + 1));
       [deck[currentIndex], deck[randomIndex]] = [
         deck[randomIndex],

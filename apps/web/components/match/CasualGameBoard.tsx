@@ -29,7 +29,9 @@ interface CasualGameBoardProps {
 export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
-  const [sessionView, setSessionView] = useState<CasualSessionView | null>(null);
+  const [sessionView, setSessionView] = useState<CasualSessionView | null>(
+    null,
+  );
   const [gameState, setGameState] = useState<SanitizedGameState | null>(null);
   const [recentEvents, setRecentEvents] = useState<OnlineMatchLogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -120,7 +122,9 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   const liveSession = sessionView || sessionQuery.data || null;
   const liveGameState = gameState || liveSession?.gameState || null;
   const enginePlayerId = liveSession?.enginePlayerId || null;
-  const liveLog = recentEvents.length ? recentEvents : liveSession?.recentLog || [];
+  const liveLog = recentEvents.length
+    ? recentEvents
+    : liveSession?.recentLog || [];
 
   if (sessionQuery.isLoading) {
     return (

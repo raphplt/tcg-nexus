@@ -1,6 +1,11 @@
 import { ActionType } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
-import { CardCategory, GamePhase, PromptType, TurnStep } from "../engine/models/enums";
+import {
+  CardCategory,
+  GamePhase,
+  PromptType,
+  TurnStep,
+} from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { TrainingDifficulty } from "../entities/training-match-session.entity";
 import { TRAINING_AI_PLAYER_ID } from "./training-match.types";
@@ -10,27 +15,27 @@ const HUMAN_PLAYER_ID = "12";
 
 const createPokemon = (instanceId: string, ownerId: string, hp = 100) =>
   ({
-  instanceId,
-  ownerId,
-  baseCard: {
-    id: `${instanceId}-base`,
-    name: `Pokemon ${instanceId}`,
-    category: CardCategory.Pokemon,
-    types: ["Feu"],
-    hp,
-    stage: "De base",
-    attacks: [{ name: "Charge", cost: [], damage: 30 }],
-    weaknesses: [],
-    resistances: [],
-    retreat: 1,
-  },
-  damageCounters: 0,
-  specialConditions: [],
-  attachedEnergies: [],
-  attachedTools: [],
-  attachedEvolutions: [],
-  turnsInPlay: 1,
-}) as any;
+    instanceId,
+    ownerId,
+    baseCard: {
+      id: `${instanceId}-base`,
+      name: `Pokemon ${instanceId}`,
+      category: CardCategory.Pokemon,
+      types: ["Feu"],
+      hp,
+      stage: "De base",
+      attacks: [{ name: "Charge", cost: [], damage: 30 }],
+      weaknesses: [],
+      resistances: [],
+      retreat: 1,
+    },
+    damageCounters: 0,
+    specialConditions: [],
+    attachedEnergies: [],
+    attachedTools: [],
+    attachedEvolutions: [],
+    turnsInPlay: 1,
+  }) as any;
 
 const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
   id: "training-spec",

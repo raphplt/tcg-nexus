@@ -6,10 +6,10 @@ import {
   IsObject,
   IsInt,
   Min,
-  IsBoolean
-} from 'class-validator';
-import { Transform } from 'class-transformer';
-import { CardEventType } from '../entities/card-event.entity';
+  IsBoolean,
+} from "class-validator";
+import { Transform } from "class-transformer";
+import { CardEventType } from "../entities/card-event.entity";
 
 export class CreateCardEventDto {
   @IsUUID()
@@ -49,8 +49,8 @@ export class GetTrendingCardsQueryDto {
   @IsOptional()
   @IsBoolean()
   @Transform(({ value }: { value: unknown }): boolean => {
-    if (value === 'true' || value === true) return true;
-    if (value === 'false' || value === false) return false;
+    if (value === "true" || value === true) return true;
+    if (value === "false" || value === false) return false;
     return false;
   })
   excludePopular?: boolean;

@@ -45,7 +45,8 @@ export class MatchmakingService {
       throw new Error("User not found");
     }
 
-    const userName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email;
+    const userName =
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email;
 
     this.queue.set(userId, {
       userId,
@@ -54,17 +55,23 @@ export class MatchmakingService {
       joinedAt: Date.now(),
     });
 
-    this.logger.log(`User ${userId} joined matchmaking queue (deck ${deckId}). Queue size: ${this.queue.size}`);
+    this.logger.log(
+      `User ${userId} joined matchmaking queue (deck ${deckId}). Queue size: ${this.queue.size}`,
+    );
 
     return this.tryMatch(userId);
   }
 
   leaveQueue(userId: number): void {
     this.queue.delete(userId);
-    this.logger.log(`User ${userId} left matchmaking queue. Queue size: ${this.queue.size}`);
+    this.logger.log(
+      `User ${userId} left matchmaking queue. Queue size: ${this.queue.size}`,
+    );
   }
 
-  private async tryMatch(requesterId: number): Promise<MatchmakingResult | null> {
+  private async tryMatch(
+    requesterId: number,
+  ): Promise<MatchmakingResult | null> {
     if (this.queue.size < 2) {
       return null;
     }

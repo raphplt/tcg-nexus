@@ -1,15 +1,15 @@
 import {
   Injectable,
   ConflictException,
-  NotFoundException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { Player } from 'src/player/entities/player.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+  NotFoundException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import * as bcrypt from "bcrypt";
+import { Player } from "src/player/entities/player.entity";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
@@ -17,23 +17,23 @@ export class UserService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Player)
-    private playerRepository: Repository<Player>
+    private playerRepository: Repository<Player>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email }
+      where: { email: createUserDto.email },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = this.userRepository.create({
       ...createUserDto,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     const savedUser = await this.userRepository.save(user);
@@ -44,18 +44,18 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
       select: [
-        'id',
-        'email',
-        'firstName',
-        'lastName',
-        'role',
-        'isActive',
-        'isPro',
-        'preferredCurrency',
-        'emailVerified',
-        'createdAt',
-        'updatedAt'
-      ]
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "isActive",
+        "isPro",
+        "preferredCurrency",
+        "emailVerified",
+        "createdAt",
+        "updatedAt",
+      ],
     });
   }
 
@@ -63,36 +63,36 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id },
       select: [
-        'id',
-        'email',
-        'firstName',
-        'lastName',
-        'avatarUrl',
-        'role',
-        'isActive',
-        'isPro',
-        'preferredCurrency',
-        'emailVerified',
-        'createdAt',
-        'updatedAt'
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "avatarUrl",
+        "role",
+        "isActive",
+        "isPro",
+        "preferredCurrency",
+        "emailVerified",
+        "createdAt",
+        "updatedAt",
       ],
-      relations: ['player']
+      relations: ["player"],
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
     const hydratedUser = await this.ensurePlayerProfile(user);
     if (!hydratedUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
     return hydratedUser;
   }
 
   async findById(id: number): Promise<User | null> {
     const user = await this.userRepository.findOne({
-      where: { id }
+      where: { id },
     });
     return this.ensurePlayerProfile(user);
   }
@@ -100,7 +100,7 @@ export class UserService {
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['player']
+      relations: ["player"],
     });
     return this.ensurePlayerProfile(user);
   }
@@ -110,10 +110,10 @@ export class UserService {
 
     if (updateUserDto.email && updateUserDto.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email }
+        where: { email: updateUserDto.email },
       });
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException("User with this email already exists");
       }
     }
 
@@ -127,7 +127,7 @@ export class UserService {
 
   async updateRefreshToken(
     userId: number,
-    refreshToken: string | null
+    refreshToken: string | null,
   ): Promise<void> {
     const updateData: { refreshToken?: string | null } = {};
 
@@ -156,7 +156,7 @@ export class UserService {
 
     const existingPlayer = await this.playerRepository.findOne({
       where: { user: { id: user.id } },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (existingPlayer) {
@@ -171,7 +171,7 @@ export class UserService {
     } catch (error) {
       const concurrentPlayer = await this.playerRepository.findOne({
         where: { user: { id: user.id } },
-        relations: ['user']
+        relations: ["user"],
       });
 
       if (concurrentPlayer) {

@@ -159,15 +159,19 @@ export class EffectResolver {
       return state.players[sourcePlayerId].active;
     }
 
-    if (target === TargetType.SELECTED_OWN_POKEMON && selectedTargetInstanceId) {
+    if (
+      target === TargetType.SELECTED_OWN_POKEMON &&
+      selectedTargetInstanceId
+    ) {
       const player = state.players[sourcePlayerId];
       if (player.active?.instanceId === selectedTargetInstanceId) {
         return player.active;
       }
 
       return (
-        player.bench.find((pokemon) => pokemon.instanceId === selectedTargetInstanceId) ||
-        null
+        player.bench.find(
+          (pokemon) => pokemon.instanceId === selectedTargetInstanceId,
+        ) || null
       );
     }
 

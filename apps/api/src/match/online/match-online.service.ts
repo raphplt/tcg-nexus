@@ -62,7 +62,10 @@ export class MatchOnlineService {
     };
   }
 
-  async getSessionView(matchId: number, user: User): Promise<OnlineMatchSessionView> {
+  async getSessionView(
+    matchId: number,
+    user: User,
+  ): Promise<OnlineMatchSessionView> {
     const { match, slot } = await this.loadMatchForUser(matchId, user.id);
     const session = await this.findOrCreateSession(match);
     return this.buildSessionView(match, session, slot);
@@ -81,7 +84,9 @@ export class MatchOnlineService {
       match.status === MatchStatus.FORFEIT ||
       match.status === MatchStatus.CANCELLED
     ) {
-      throw new BadRequestException("This match can no longer start an online session");
+      throw new BadRequestException(
+        "This match can no longer start an online session",
+      );
     }
 
     if (deckId) {
@@ -91,7 +96,9 @@ export class MatchOnlineService {
         user.id,
       );
       if (!eligibility.eligible) {
-        throw new BadRequestException("Selected deck is not eligible for online play");
+        throw new BadRequestException(
+          "Selected deck is not eligible for online play",
+        );
       }
 
       if (slot === "playerA") {
@@ -126,15 +133,26 @@ export class MatchOnlineService {
     const enginePlayerId = this.getEnginePlayerId(match, slot);
 
     if (action.playerId !== enginePlayerId) {
-      throw new ForbiddenException("You cannot dispatch actions for another player");
+      throw new ForbiddenException(
+        "You cannot dispatch actions for another player",
+      );
     }
 
-    const engine = new GameEngine(session.serializedState as unknown as GameState);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
     const events = engine.dispatch(action);
-    await this.persistEngineResult(match, session, engine, events, enginePlayerId, {
-      type: "PLAYER_ACTION",
-      action,
-    });
+    await this.persistEngineResult(
+      match,
+      session,
+      engine,
+      events,
+      enginePlayerId,
+      {
+        type: "PLAYER_ACTION",
+        action,
+      },
+    );
 
     return {
       events,
@@ -155,13 +173,22 @@ export class MatchOnlineService {
     const { match, slot } = await this.loadMatchForUser(matchId, user.id);
     const session = await this.requireActiveSession(match);
     const enginePlayerId = this.getEnginePlayerId(match, slot);
-    const engine = new GameEngine(session.serializedState as unknown as GameState);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
     const events = engine.respondToPrompt(enginePlayerId, response);
 
-    await this.persistEngineResult(match, session, engine, events, enginePlayerId, {
-      type: "PROMPT_RESPONSE",
-      response,
-    });
+    await this.persistEngineResult(
+      match,
+      session,
+      engine,
+      events,
+      enginePlayerId,
+      {
+        type: "PROMPT_RESPONSE",
+        response,
+      },
+    );
 
     return {
       events,
@@ -187,7 +214,9 @@ export class MatchOnlineService {
     }
 
     if (!match.playerA || !match.playerB) {
-      throw new BadRequestException("This match does not have two assigned players");
+      throw new BadRequestException(
+        "This match does not have two assigned players",
+      );
     }
 
     if (match.playerA.user?.id === userId) {
@@ -222,7 +251,9 @@ export class MatchOnlineService {
     return match.onlineSession;
   }
 
-  private async requireActiveSession(match: Match): Promise<OnlineMatchSession> {
+  private async requireActiveSession(
+    match: Match,
+  ): Promise<OnlineMatchSession> {
     const session = await this.findOrCreateSession(match);
     if (!session.serializedState) {
       throw new BadRequestException("Online session has not started yet");
@@ -239,7 +270,9 @@ export class MatchOnlineService {
     const gameState = session.serializedState
       ? (new GameEngine(
           session.serializedState as unknown as GameState,
-        ).getSanitizedState(enginePlayerId) as OnlineMatchSessionView["gameState"])
+        ).getSanitizedState(
+          enginePlayerId,
+        ) as OnlineMatchSessionView["gameState"])
       : null;
 
     return {
@@ -251,12 +284,21 @@ export class MatchOnlineService {
       selectedDeckId: this.getSelectedDeckIdForSlot(session, slot),
       opponentDeckReady: this.isOpponentDeckReady(session, slot),
       gameState,
-      recentLog: (session.eventLog || []).slice(-25) as unknown as OnlineMatchLogEntry[],
+      recentLog: (session.eventLog || []).slice(
+        -25,
+      ) as unknown as OnlineMatchLogEntry[],
     };
   }
 
-  private async ensureSessionStarted(match: Match, session: OnlineMatchSession) {
-    if (!session.playerADeckId || !session.playerBDeckId || session.serializedState) {
+  private async ensureSessionStarted(
+    match: Match,
+    session: OnlineMatchSession,
+  ) {
+    if (
+      !session.playerADeckId ||
+      !session.playerBDeckId ||
+      session.serializedState
+    ) {
       return;
     }
 
@@ -320,7 +362,9 @@ export class MatchOnlineService {
       return {};
     }
 
-    const engine = new GameEngine(session.serializedState as unknown as GameState);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
     const playerAId = this.getEnginePlayerId(match, "playerA");
     const playerBId = this.getEnginePlayerId(match, "playerB");
 
@@ -383,7 +427,8 @@ export class MatchOnlineService {
     actorPlayerId: string | undefined,
     payload: Record<string, unknown>,
   ) {
-    const nextLog = (session.eventLog || []) as unknown as OnlineMatchLogEntry[];
+    const nextLog = (session.eventLog ||
+      []) as unknown as OnlineMatchLogEntry[];
     nextLog.push({
       id: randomUUID(),
       kind,
@@ -391,7 +436,10 @@ export class MatchOnlineService {
       timestamp: new Date().toISOString(),
       payload,
     });
-    session.eventLog = nextLog.slice(-200) as unknown as Record<string, unknown>[];
+    session.eventLog = nextLog.slice(-200) as unknown as Record<
+      string,
+      unknown
+    >[];
   }
 
   private async loadUserDecks(userId: number): Promise<Deck[]> {

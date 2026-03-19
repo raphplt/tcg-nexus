@@ -13,7 +13,10 @@ import {
   TrainingActionInput,
   TrainingPromptResponseInput,
 } from "@/services/training-match.service";
-import { TrainingDifficulty, TrainingSessionView } from "@/types/training-match";
+import {
+  TrainingDifficulty,
+  TrainingSessionView,
+} from "@/types/training-match";
 import { extractApiErrorMessage } from "@/utils/api-error";
 
 interface TrainingBoardProps {
@@ -37,7 +40,9 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
   const syncSessionInCache = (session: TrainingSessionView) => {
     setLastError(null);
     queryClient.setQueryData(["training-matches", sessionId], session);
-    void queryClient.invalidateQueries({ queryKey: ["training-matches", "lobby"] });
+    void queryClient.invalidateQueries({
+      queryKey: ["training-matches", "lobby"],
+    });
   };
 
   const actionMutation = useMutation({

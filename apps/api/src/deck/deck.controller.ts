@@ -7,21 +7,26 @@ import {
   Param,
   Delete,
   Query,
-  UseGuards
-} from '@nestjs/common';
-import { DeckService, FindAllDecksParams } from './deck.service';
-import { CreateDeckDto } from './dto/create-deck.dto';
-import { UpdateDeckDto } from './dto/update-deck.dto';
-import { ShareDeckDto } from './dto/share-deck.dto';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User } from '../user/entities/user.entity';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from '../auth/decorators/public.decorator';
-import { AnalyzeDeckResultDto } from './dto/analyze-deck-result.dto';
+  UseGuards,
+} from "@nestjs/common";
+import { DeckService, FindAllDecksParams } from "./deck.service";
+import { CreateDeckDto } from "./dto/create-deck.dto";
+import { UpdateDeckDto } from "./dto/update-deck.dto";
+import { ShareDeckDto } from "./dto/share-deck.dto";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { User } from "../user/entities/user.entity";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
+import { AnalyzeDeckResultDto } from "./dto/analyze-deck-result.dto";
 
-@ApiTags('decks')
-@Controller('deck')
+@ApiTags("decks")
+@Controller("deck")
 export class DeckController {
   constructor(private readonly deckService: DeckService) {}
 
@@ -38,78 +43,78 @@ export class DeckController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/me')
+  @Get("/me")
   findAllFromUSer(
     @CurrentUser() user: User,
-    @Query() query: FindAllDecksParams
+    @Query() query: FindAllDecksParams,
   ) {
     return this.deckService.findAllFromUser(user, query);
   }
 
   @Public()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.deckService.findOneWithCards(+id);
   }
 
   @Public()
-  @Post(':id/analyze')
-  @ApiOperation({ summary: 'Analyser un deck et fournir des recommandations' })
+  @Post(":id/analyze")
+  @ApiOperation({ summary: "Analyser un deck et fournir des recommandations" })
   @ApiOkResponse({ type: AnalyzeDeckResultDto })
-  analyze(@Param('id') id: string): Promise<AnalyzeDeckResultDto> {
+  analyze(@Param("id") id: string): Promise<AnalyzeDeckResultDto> {
     return this.deckService.analyzeDeck(+id);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
+  @Patch(":id")
   update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @CurrentUser() user: User,
-    @Body() updateDeckDto: UpdateDeckDto
+    @Body() updateDeckDto: UpdateDeckDto,
   ) {
     return this.deckService.updateDeck(+id, user, updateDeckDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  remove(@Param("id") id: string) {
     return this.deckService.remove(+id);
   }
 
-  @Post(':id/clone')
+  @Post(":id/clone")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  clone(@Param('id') id: string, @CurrentUser() user: User) {
+  clone(@Param("id") id: string, @CurrentUser() user: User) {
     return this.deckService.cloneDeck(+id, user);
   }
 
   @Public()
-  @Post(':id/view')
-  incrementView(@Param('id') id: string) {
+  @Post(":id/view")
+  incrementView(@Param("id") id: string) {
     return this.deckService.incrementViews(+id);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id/share')
+  @Post(":id/share")
   @ApiBearerAuth()
   share(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @CurrentUser() user: User,
-    @Body() dto?: ShareDeckDto
+    @Body() dto?: ShareDeckDto,
   ) {
     return this.deckService.shareDeck(+id, user, dto);
   }
 
   @Public()
-  @Get('import/:code')
-  getDeckForImport(@Param('code') code: string) {
+  @Get("import/:code")
+  getDeckForImport(@Param("code") code: string) {
     return this.deckService.getDeckForImport(code);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('import/:code')
+  @Post("import/:code")
   @ApiBearerAuth()
-  importDeck(@Param('code') code: string, @CurrentUser() user: User) {
+  importDeck(@Param("code") code: string, @CurrentUser() user: User) {
     return this.deckService.importDeck(code, user);
   }
 }

@@ -1,35 +1,35 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
-import { CreateMatchDto } from './dto/create-match.dto';
-import { UpdateMatchDto } from './dto/update-match.dto';
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource, EntityManager } from "typeorm";
+import { CreateMatchDto } from "./dto/create-match.dto";
+import { UpdateMatchDto } from "./dto/update-match.dto";
 import {
   ReportScoreDto,
   StartMatchDto,
-  ResetMatchDto
-} from './dto/match-operations.dto';
-import { Match, MatchStatus, MatchPhase } from './entities/match.entity';
+  ResetMatchDto,
+} from "./dto/match-operations.dto";
+import { Match, MatchStatus, MatchPhase } from "./entities/match.entity";
 import {
   Tournament,
-  TournamentStatus
-} from '../tournament/entities/tournament.entity';
-import { Player } from '../player/entities/player.entity';
+  TournamentStatus,
+} from "../tournament/entities/tournament.entity";
+import { Player } from "../player/entities/player.entity";
 import {
   TournamentRegistration,
-  RegistrationStatus
-} from '../tournament/entities/tournament-registration.entity';
-import { TournamentType } from '../tournament/entities/tournament.entity';
-import { Ranking } from '../ranking/entities/ranking.entity';
-import { Statistics } from '../statistics/entities/statistic.entity';
-import { Deck } from '../deck/entities/deck.entity';
+  RegistrationStatus,
+} from "../tournament/entities/tournament-registration.entity";
+import { TournamentType } from "../tournament/entities/tournament.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { Statistics } from "../statistics/entities/statistic.entity";
+import { Deck } from "../deck/entities/deck.entity";
 import {
   OnlineMatchSession,
-  OnlineMatchSessionStatus
-} from './entities/online-match-session.entity';
+  OnlineMatchSessionStatus,
+} from "./entities/online-match-session.entity";
 
 export interface MatchQueryDto {
   tournamentId?: number;
@@ -73,7 +73,7 @@ export interface PlayHubResponse {
   playerId: number | null;
   ranked: {
     enabled: boolean;
-    status: 'coming_soon';
+    status: "coming_soon";
   };
   summary: {
     liveMatches: number;
@@ -105,7 +105,7 @@ export class MatchService {
     private readonly statisticsRepository: Repository<Statistics>,
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
   ) {}
 
   // Créer un nouveau match
@@ -118,15 +118,15 @@ export class MatchService {
       phase,
       scheduledDate,
       notes,
-      skipStatusCheck
+      skipStatusCheck,
     } = createMatchDto;
 
     const tournament: Tournament | null =
       await this.tournamentRepository.findOne({
-        where: { id: tournamentId }
+        where: { id: tournamentId },
       });
     if (!tournament) {
-      throw new NotFoundException('Tournoi non trouvé');
+      throw new NotFoundException("Tournoi non trouvé");
     }
     // Skip status check when creating matches during bracket generation
     if (
@@ -134,7 +134,7 @@ export class MatchService {
       tournament.status !== TournamentStatus.IN_PROGRESS
     ) {
       throw new BadRequestException(
-        'Le tournoi doit être en cours pour créer des matches'
+        "Le tournoi doit être en cours pour créer des matches",
       );
     }
 
@@ -144,11 +144,11 @@ export class MatchService {
 
     if (playerAId != null) {
       playerA = await this.playerRepository.findOne({
-        where: { id: playerAId }
+        where: { id: playerAId },
       });
       if (!playerA) {
         throw new NotFoundException(
-          `Joueur A avec l'ID ${playerAId} non trouvé`
+          `Joueur A avec l'ID ${playerAId} non trouvé`,
         );
       }
       const registrationA: TournamentRegistration | null =
@@ -156,23 +156,23 @@ export class MatchService {
           where: {
             tournament: { id: tournamentId },
             player: { id: playerAId },
-            status: RegistrationStatus.CONFIRMED
-          }
+            status: RegistrationStatus.CONFIRMED,
+          },
         });
       if (!registrationA) {
         throw new BadRequestException(
-          `Le joueur A n'est pas inscrit à ce tournoi`
+          `Le joueur A n'est pas inscrit à ce tournoi`,
         );
       }
     }
 
     if (playerBId != null) {
       playerB = await this.playerRepository.findOne({
-        where: { id: playerBId }
+        where: { id: playerBId },
       });
       if (!playerB) {
         throw new NotFoundException(
-          `Joueur B avec l'ID ${playerBId} non trouvé`
+          `Joueur B avec l'ID ${playerBId} non trouvé`,
         );
       }
       const registrationB: TournamentRegistration | null =
@@ -180,21 +180,21 @@ export class MatchService {
           where: {
             tournament: { id: tournamentId },
             player: { id: playerBId },
-            status: RegistrationStatus.CONFIRMED
-          }
+            status: RegistrationStatus.CONFIRMED,
+          },
         });
       if (!registrationB) {
         throw new BadRequestException(
-          `Le joueur B n'est pas inscrit à ce tournoi`
+          `Le joueur B n'est pas inscrit à ce tournoi`,
         );
       }
     }
 
     if (!tournament || !playerA || !playerB) {
-      throw new BadRequestException('Données invalides');
+      throw new BadRequestException("Données invalides");
     }
     if (!round || !phase || !scheduledDate || !notes) {
-      throw new BadRequestException('Données invalides');
+      throw new BadRequestException("Données invalides");
     }
 
     const matchData: Partial<Match> = {
@@ -205,7 +205,7 @@ export class MatchService {
       phase,
       scheduledDate,
       notes,
-      status: MatchStatus.SCHEDULED
+      status: MatchStatus.SCHEDULED,
     };
 
     const match = this.matchRepository.create(matchData);
@@ -223,38 +223,38 @@ export class MatchService {
       status,
       playerId,
       page = 1,
-      limit = 10
+      limit = 10,
     } = query;
 
     const qb = this.matchRepository
-      .createQueryBuilder('match')
-      .leftJoinAndSelect('match.tournament', 'tournament')
-      .leftJoinAndSelect('match.playerA', 'playerA')
-      .leftJoinAndSelect('match.playerB', 'playerB')
-      .leftJoinAndSelect('match.winner', 'winner')
-      .leftJoinAndSelect('match.statistics', 'statistics');
+      .createQueryBuilder("match")
+      .leftJoinAndSelect("match.tournament", "tournament")
+      .leftJoinAndSelect("match.playerA", "playerA")
+      .leftJoinAndSelect("match.playerB", "playerB")
+      .leftJoinAndSelect("match.winner", "winner")
+      .leftJoinAndSelect("match.statistics", "statistics");
 
     if (tournamentId != null) {
-      qb.andWhere('tournament.id = :tournamentId', { tournamentId });
+      qb.andWhere("tournament.id = :tournamentId", { tournamentId });
     }
     if (round != null) {
-      qb.andWhere('match.round = :round', { round });
+      qb.andWhere("match.round = :round", { round });
     }
     if (phase != null) {
-      qb.andWhere('match.phase = :phase', { phase });
+      qb.andWhere("match.phase = :phase", { phase });
     }
     if (status != null) {
-      qb.andWhere('match.status = :status', { status });
+      qb.andWhere("match.status = :status", { status });
     }
     if (playerId != null) {
-      qb.andWhere('(playerA.id = :playerId OR playerB.id = :playerId)', {
-        playerId
+      qb.andWhere("(playerA.id = :playerId OR playerB.id = :playerId)", {
+        playerId,
       });
     }
 
     const offset = (page - 1) * limit;
     qb.skip(offset).take(limit);
-    qb.orderBy('match.round', 'ASC').addOrderBy('match.phase', 'ASC');
+    qb.orderBy("match.round", "ASC").addOrderBy("match.phase", "ASC");
 
     const [matches, total] = await qb.getManyAndCount();
 
@@ -263,7 +263,7 @@ export class MatchService {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -271,7 +271,7 @@ export class MatchService {
   async findOne(id: number): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
-      relations: ['tournament', 'playerA', 'playerB', 'winner', 'statistics']
+      relations: ["tournament", "playerA", "playerB", "winner", "statistics"],
     });
 
     if (!match) {
@@ -296,7 +296,7 @@ export class MatchService {
 
       // Si un statut est fourni (finished), déterminer le winner
       const statusValue = updateMatchDto.status as string | undefined;
-      if (statusValue === 'finished' || statusValue === MatchStatus.FINISHED) {
+      if (statusValue === "finished" || statusValue === MatchStatus.FINISHED) {
         match.status = MatchStatus.FINISHED;
         match.finishedAt = new Date();
 
@@ -336,7 +336,7 @@ export class MatchService {
       match.status === MatchStatus.FINISHED
     ) {
       throw new BadRequestException(
-        'Impossible de supprimer un match en cours ou terminé'
+        "Impossible de supprimer un match en cours ou terminé",
       );
     }
     await this.matchRepository.remove(match);
@@ -347,12 +347,12 @@ export class MatchService {
     const match = await this.findOne(id);
     if (match.status !== MatchStatus.SCHEDULED) {
       throw new BadRequestException(
-        'Seuls les matches programmés peuvent être démarrés'
+        "Seuls les matches programmés peuvent être démarrés",
       );
     }
     if (!match.playerA || !match.playerB) {
       throw new BadRequestException(
-        'Le match doit avoir deux joueurs pour être démarré'
+        "Le match doit avoir deux joueurs pour être démarré",
       );
     }
     match.status = MatchStatus.IN_PROGRESS;
@@ -366,12 +366,12 @@ export class MatchService {
   // Reporter un score
   async reportScore(
     id: number,
-    reportScoreDto: ReportScoreDto
+    reportScoreDto: ReportScoreDto,
   ): Promise<Match> {
     const match = await this.findOne(id);
     if (match.status !== MatchStatus.IN_PROGRESS) {
       throw new BadRequestException(
-        'Seuls les matches en cours peuvent recevoir des scores'
+        "Seuls les matches en cours peuvent recevoir des scores",
       );
     }
 
@@ -417,7 +417,7 @@ export class MatchService {
         await this.checkTournamentProgression(match, manager);
 
         return savedMatch;
-      }
+      },
     );
   }
 
@@ -429,7 +429,7 @@ export class MatchService {
       match.status !== MatchStatus.FORFEIT
     ) {
       throw new BadRequestException(
-        'Seuls les matches terminés peuvent être réinitialisés'
+        "Seuls les matches terminés peuvent être réinitialisés",
       );
     }
 
@@ -451,50 +451,50 @@ export class MatchService {
         await manager.delete(Statistics, { match: { id } });
 
         return savedMatch;
-      }
+      },
     );
   }
 
   // Récupérer les matches d'un tournoi par round
   async getMatchesByRound(
     tournamentId: number,
-    round: number
+    round: number,
   ): Promise<Match[]> {
     return this.matchRepository.find({
       where: {
         tournament: { id: tournamentId },
-        round
+        round,
       },
-      relations: ['playerA', 'playerB', 'winner'],
-      order: { phase: 'ASC' }
+      relations: ["playerA", "playerB", "winner"],
+      order: { phase: "ASC" },
     });
   }
 
   // Récupérer les matches d'un joueur dans un tournoi
   async getPlayerMatches(
     tournamentId: number,
-    playerId: number
+    playerId: number,
   ): Promise<Match[]> {
     return this.matchRepository.find({
       where: [
         { tournament: { id: tournamentId }, playerA: { id: playerId } },
-        { tournament: { id: tournamentId }, playerB: { id: playerId } }
+        { tournament: { id: tournamentId }, playerB: { id: playerId } },
       ],
-      relations: ['playerA', 'playerB', 'winner'],
-      order: { round: 'ASC', phase: 'ASC' }
+      relations: ["playerA", "playerB", "winner"],
+      order: { round: "ASC", phase: "ASC" },
     });
   }
 
   async getPlayHub(userId: number): Promise<PlayHubResponse> {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['user']
+      relations: ["user"],
     });
 
     const [recentDecks, totalDecks] = await this.deckRepository.findAndCount({
       where: { user: { id: userId } },
-      order: { updatedAt: 'DESC' },
-      take: 6
+      order: { updatedAt: "DESC" },
+      take: 6,
     });
 
     if (!player) {
@@ -502,68 +502,70 @@ export class MatchService {
         playerId: null,
         ranked: {
           enabled: false,
-          status: 'coming_soon'
+          status: "coming_soon",
         },
         summary: {
           liveMatches: 0,
           readyMatches: 0,
           completedMatches: 0,
           totalMatches: 0,
-          totalDecks
+          totalDecks,
         },
         matches: [],
-        recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck))
+        recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck)),
       };
     }
 
     const matches = await this.matchRepository
-      .createQueryBuilder('match')
-      .leftJoinAndSelect('match.tournament', 'tournament')
-      .leftJoinAndSelect('match.playerA', 'playerA')
-      .leftJoinAndSelect('playerA.user', 'playerAUser')
-      .leftJoinAndSelect('match.playerB', 'playerB')
-      .leftJoinAndSelect('playerB.user', 'playerBUser')
-      .leftJoinAndSelect('match.onlineSession', 'onlineSession')
-      .where('playerA.id = :playerId OR playerB.id = :playerId', {
-        playerId: player.id
+      .createQueryBuilder("match")
+      .leftJoinAndSelect("match.tournament", "tournament")
+      .leftJoinAndSelect("match.playerA", "playerA")
+      .leftJoinAndSelect("playerA.user", "playerAUser")
+      .leftJoinAndSelect("match.playerB", "playerB")
+      .leftJoinAndSelect("playerB.user", "playerBUser")
+      .leftJoinAndSelect("match.onlineSession", "onlineSession")
+      .where("playerA.id = :playerId OR playerB.id = :playerId", {
+        playerId: player.id,
       })
       .orderBy(
-        'COALESCE(match.startedAt, match.scheduledDate, tournament.startDate)',
-        'DESC'
+        "COALESCE(match.startedAt, match.scheduledDate, tournament.startDate)",
+        "DESC",
       )
       .take(20)
       .getMany();
     const hydratedMatches = await this.ensureOnlineSessions(matches);
 
     const liveMatches = hydratedMatches.filter(
-      (match) => match.status === MatchStatus.IN_PROGRESS
+      (match) => match.status === MatchStatus.IN_PROGRESS,
     ).length;
     const readyMatches = hydratedMatches.filter(
-      (match) => match.status === MatchStatus.SCHEDULED
+      (match) => match.status === MatchStatus.SCHEDULED,
     ).length;
     const completedMatches = hydratedMatches.filter((match) =>
-      [MatchStatus.FINISHED, MatchStatus.FORFEIT, MatchStatus.CANCELLED].includes(
-        match.status
-      )
+      [
+        MatchStatus.FINISHED,
+        MatchStatus.FORFEIT,
+        MatchStatus.CANCELLED,
+      ].includes(match.status),
     ).length;
 
     return {
       playerId: player.id,
       ranked: {
         enabled: false,
-        status: 'coming_soon'
+        status: "coming_soon",
       },
       summary: {
         liveMatches,
         readyMatches,
         completedMatches,
         totalMatches: hydratedMatches.length,
-        totalDecks
+        totalDecks,
       },
       matches: hydratedMatches.map((match) =>
-        this.mapPlayHubMatch(match, player.id)
+        this.mapPlayHubMatch(match, player.id),
       ),
-      recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck))
+      recentDecks: recentDecks.map((deck) => this.mapDeckSummary(deck)),
     };
   }
 
@@ -585,9 +587,9 @@ export class MatchService {
     const existingSession = await this.onlineSessionRepository.findOne({
       where: {
         match: {
-          id: match.id
-        }
-      }
+          id: match.id,
+        },
+      },
     });
 
     if (existingSession) {
@@ -606,8 +608,8 @@ export class MatchService {
           winnerPlayerId: null,
           endedReason: null,
           serializedState: null,
-          eventLog: []
-        })
+          eventLog: [],
+        }),
       );
 
       return match;
@@ -615,9 +617,9 @@ export class MatchService {
       const concurrentSession = await this.onlineSessionRepository.findOne({
         where: {
           match: {
-            id: match.id
-          }
-        }
+            id: match.id,
+          },
+        },
       });
 
       if (concurrentSession) {
@@ -631,7 +633,7 @@ export class MatchService {
 
   private mapPlayHubMatch(
     match: Match,
-    currentPlayerId: number
+    currentPlayerId: number,
   ): PlayHubMatchSummary {
     const opponent =
       match.playerA?.id === currentPlayerId ? match.playerB : match.playerA;
@@ -649,7 +651,7 @@ export class MatchService {
       finishedAt: match.finishedAt,
       playerAScore: match.playerAScore,
       playerBScore: match.playerBScore,
-      onlineSessionStatus: match.onlineSession?.status || null
+      onlineSessionStatus: match.onlineSession?.status || null,
     };
   }
 
@@ -663,19 +665,19 @@ export class MatchService {
         ? {
             id: deck.coverCard.id,
             name: deck.coverCard.name || null,
-            image: deck.coverCard.image || null
+            image: deck.coverCard.image || null,
           }
-        : null
+        : null,
     };
   }
 
   private getPlayerDisplayName(player?: Player | null): string {
     if (!player) {
-      return 'Adversaire à confirmer';
+      return "Adversaire à confirmer";
     }
 
     if (player.user?.firstName || player.user?.lastName) {
-      return `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim();
+      return `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim();
     }
 
     return `Joueur #${player.id}`;
@@ -683,7 +685,7 @@ export class MatchService {
 
   private async updateRankings(
     match: Match,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<void> {
     if (!match.winner || !match.playerA || !match.playerB) return;
 
@@ -695,7 +697,7 @@ export class MatchService {
     // Gagnant
     let winnerRanking =
       (await manager.findOne(Ranking, {
-        where: { tournament: { id: tournamentId }, player: { id: winnerId } }
+        where: { tournament: { id: tournamentId }, player: { id: winnerId } },
       })) ?? null;
 
     if (winnerRanking) {
@@ -710,14 +712,14 @@ export class MatchService {
         draws: 0,
         points: 3,
         rank: 0,
-        winRate: 100
+        winRate: 100,
       });
     }
 
     // Perdant
     let loserRanking =
       (await manager.findOne(Ranking, {
-        where: { tournament: { id: tournamentId }, player: { id: loserId } }
+        where: { tournament: { id: tournamentId }, player: { id: loserId } },
       })) ?? null;
 
     if (loserRanking) {
@@ -731,7 +733,7 @@ export class MatchService {
         draws: 0,
         points: 0,
         rank: 0,
-        winRate: 0
+        winRate: 0,
       });
     }
 
@@ -750,10 +752,10 @@ export class MatchService {
 
   private async createMatchStatistics(
     match: Match,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<void> {
     const players = [match.playerA, match.playerB].filter((p): p is Player =>
-      Boolean(p)
+      Boolean(p),
     );
 
     for (const player of players) {
@@ -768,7 +770,7 @@ export class MatchService {
         points: score,
         opponentPoints: opponentScore,
         isWinner,
-        isPlayerA
+        isPlayerA,
       });
 
       await manager.save(stat);
@@ -780,23 +782,23 @@ export class MatchService {
    */
   private async checkTournamentProgression(
     match: Match,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<void> {
     const tournament = await manager.findOne(Tournament, {
       where: { id: match.tournament.id },
-      relations: ['matches']
+      relations: ["matches"],
     });
 
     if (!tournament) return;
 
     // Vérifier si tous les matches du round actuel sont terminés
     const currentRoundMatches = tournament.matches.filter(
-      (m) => m.round === tournament.currentRound
+      (m) => m.round === tournament.currentRound,
     );
 
     const unfinishedMatches = currentRoundMatches.filter(
       (m) =>
-        m.status !== MatchStatus.FINISHED && m.status !== MatchStatus.FORFEIT
+        m.status !== MatchStatus.FINISHED && m.status !== MatchStatus.FORFEIT,
     );
 
     // Si tous les matches du round sont terminés, on peut potentiellement avancer
@@ -816,21 +818,21 @@ export class MatchService {
    */
   private async propagateEliminationWinners(
     tournament: Tournament,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<void> {
     const currentRound = tournament.currentRound || 1;
     const nextRound = currentRound + 1;
 
     // Récupérer les matches du round actuel avec vainqueurs
     const currentRoundMatches = tournament.matches.filter(
-      (m) => m.round === currentRound && m.winner
+      (m) => m.round === currentRound && m.winner,
     );
 
     if (currentRoundMatches.length === 0) return;
 
     // Créer les matches du round suivant si pas déjà créés
     const nextRoundMatches = tournament.matches.filter(
-      (m) => m.round === nextRound
+      (m) => m.round === nextRound,
     );
 
     if (nextRoundMatches.length === 0 && currentRoundMatches.length > 1) {
@@ -847,10 +849,10 @@ export class MatchService {
             round: nextRound,
             phase: this.getPhaseForRound(
               nextRound,
-              tournament.totalRounds || 0
+              tournament.totalRounds || 0,
             ),
             status: MatchStatus.SCHEDULED,
-            scheduledDate: new Date()
+            scheduledDate: new Date(),
           });
 
           const savedMatch = await this.matchRepository.save(newMatch);

@@ -1,7 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Loader2, Swords, Users, Wifi, WifiOff } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  Swords,
+  Users,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -17,7 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { casualMatchService } from "@/services/casual-match.service";
-import type { CasualLobbyView, CasualSessionSummary } from "@/types/casual-match";
+import type {
+  CasualLobbyView,
+  CasualSessionSummary,
+} from "@/types/casual-match";
 import { extractApiErrorMessage } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
@@ -39,7 +49,8 @@ export function MatchmakingPanel() {
   });
 
   const eligibleDecks = useMemo(
-    () => (lobbyQuery.data?.availableDecks || []).filter((deck) => deck.eligible),
+    () =>
+      (lobbyQuery.data?.availableDecks || []).filter((deck) => deck.eligible),
     [lobbyQuery.data?.availableDecks],
   );
 
@@ -71,15 +82,18 @@ export function MatchmakingPanel() {
     socket.on("connect", () => setIsConnected(true));
     socket.on("disconnect", () => setIsConnected(false));
 
-    socket.on("matchmaking_status", (data: { status: string; queueSize?: number }) => {
-      if (data.status === "queued") {
-        setMmStatus("queued");
-        if (typeof data.queueSize === "number") setQueueSize(data.queueSize);
-      } else if (data.status === "idle") {
-        setMmStatus("idle");
-        setQueueSize(0);
-      }
-    });
+    socket.on(
+      "matchmaking_status",
+      (data: { status: string; queueSize?: number }) => {
+        if (data.status === "queued") {
+          setMmStatus("queued");
+          if (typeof data.queueSize === "number") setQueueSize(data.queueSize);
+        } else if (data.status === "idle") {
+          setMmStatus("idle");
+          setQueueSize(0);
+        }
+      },
+    );
 
     socket.on("matchmaking_matched", (data: { sessionId: number }) => {
       setMmStatus("matched");
@@ -208,7 +222,9 @@ export function MatchmakingPanel() {
               <Users className="h-5 w-5" />
               <span className="text-lg font-bold">Adversaire trouvé !</span>
             </div>
-            <p className="text-sm text-slate-300">Redirection vers la partie...</p>
+            <p className="text-sm text-slate-300">
+              Redirection vers la partie...
+            </p>
             <Loader2 className="mx-auto h-5 w-5 animate-spin text-emerald-400" />
           </div>
         ) : mmStatus === "queued" ? (
@@ -251,7 +267,10 @@ export function MatchmakingPanel() {
                     </SelectTrigger>
                     <SelectContent>
                       {eligibleDecks.map((deck) => (
-                        <SelectItem key={deck.deckId} value={String(deck.deckId)}>
+                        <SelectItem
+                          key={deck.deckId}
+                          value={String(deck.deckId)}
+                        >
                           {deck.deckName}
                         </SelectItem>
                       ))}
@@ -272,7 +291,11 @@ export function MatchmakingPanel() {
                 <p className="text-sm text-slate-400">
                   Aucun deck compatible pour le jeu en ligne.
                 </p>
-                <Button asChild variant="outline" className="rounded-full border-slate-600 text-slate-300">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-slate-600 text-slate-300"
+                >
                   <Link href="/decks/me">
                     Gérer mes decks
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -324,7 +347,12 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
           {session.awaitingPlayerAction ? "À vous" : "Tour adverse"}
         </Badge>
       </div>
-      <Button asChild variant="outline" size="sm" className="rounded-full border-slate-600 text-slate-300">
+      <Button
+        asChild
+        variant="outline"
+        size="sm"
+        className="rounded-full border-slate-600 text-slate-300"
+      >
         <Link href={`/play/casual/${session.sessionId}`}>
           Reprendre
           <ArrowRight className="ml-2 h-3 w-3" />

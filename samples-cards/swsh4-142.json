@@ -1,122 +1,112 @@
 {
-    "category": "Pokémon",
-    "id": "swsh4-142",
-    "illustrator": "Masakazu Fukuda",
-    "image": "https://assets.tcgdex.net/fr/swsh/swsh4/142",
-    "localId": "142",
-    "name": "Boréas",
-    "rarity": "Holo Rare",
-    "set": {
-        "cardCount": {
-            "official": 185,
-            "total": 203
-        },
-        "id": "swsh4",
-        "logo": "https://assets.tcgdex.net/fr/swsh/swsh4/logo",
-        "name": "Voltage Éclatant",
-        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4/symbol"
+  "category": "Pokémon",
+  "id": "swsh4-142",
+  "illustrator": "Masakazu Fukuda",
+  "image": "https://assets.tcgdex.net/fr/swsh/swsh4/142",
+  "localId": "142",
+  "name": "Boréas",
+  "rarity": "Holo Rare",
+  "set": {
+    "cardCount": {
+      "official": 185,
+      "total": 203
     },
-    "variants": {
-        "firstEdition": false,
-        "holo": true,
-        "normal": false,
-        "reverse": true,
-        "wPromo": false
+    "id": "swsh4",
+    "logo": "https://assets.tcgdex.net/fr/swsh/swsh4/logo",
+    "name": "Voltage Éclatant",
+    "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4/symbol"
+  },
+  "variants": {
+    "firstEdition": false,
+    "holo": true,
+    "normal": false,
+    "reverse": true,
+    "wPromo": false
+  },
+  "variants_detailed": [
+    {
+      "type": "reverse",
+      "size": "Standard"
     },
-    "variants_detailed": [
-        {
-            "type": "reverse",
-            "size": "Standard"
-        },
-        {
-            "type": "holo",
-            "size": "Standard"
-        }
-    ],
-    "dexId": [
-        641
-    ],
-    "hp": 120,
-    "types": [
-        "Incolore"
-    ],
-    "stage": "De base",
-    "attacks": [
-        {
-            "cost": [
-                "Incolore"
-            ],
-            "name": "Souffle Supersonique",
-            "effect": "Défaussez une Énergie spéciale du Pokémon Actif de votre adversaire.",
-            "damage": 30
-        },
-        {
-            "cost": [
-                "Incolore",
-                "Incolore",
-                "Incolore"
-            ],
-            "name": "Lame d'Air",
-            "effect": "Défaussez une Énergie de ce Pokémon.",
-            "damage": 120
-        }
-    ],
-    "weaknesses": [
-        {
-            "type": "Électrique",
-            "value": "×2"
-        }
-    ],
-    "resistances": [
-        {
-            "type": "Combat",
-            "value": "-30"
-        }
-    ],
-    "retreat": 1,
-    "regulationMark": "D",
-    "legal": {
-        "standard": false,
-        "expanded": true
-    },
-    "updated": "2025-08-16T20:39:55Z",
-    "pricing": {
-        "cardmarket": {
-            "updated": "2026-01-30T01:44:11.000Z",
-            "unit": "EUR",
-            "idProduct": 512420,
-            "avg": 0.18,
-            "low": 0.02,
-            "trend": 0.18,
-            "avg1": 0.14,
-            "avg7": 0.18,
-            "avg30": 0.23,
-            "avg-holo": 0.3,
-            "low-holo": 0.05,
-            "trend-holo": 0.32,
-            "avg1-holo": 0.5,
-            "avg7-holo": 0.38,
-            "avg30-holo": 0.36
-        },
-        "tcgplayer": {
-            "updated": "2026-01-29T20:04:55.000Z",
-            "unit": "USD",
-            "reverse-holofoil": {
-                "productId": 226600,
-                "lowPrice": 0.09,
-                "midPrice": 0.28,
-                "highPrice": 3,
-                "marketPrice": 0.27,
-                "directLowPrice": 0.27
-            },
-            "holofoil": {
-                "productId": 226600,
-                "lowPrice": 0.01,
-                "midPrice": 0.2,
-                "highPrice": 999.99,
-                "marketPrice": 0.14,
-                "directLowPrice": 0.11
-            }
-        }
+    {
+      "type": "holo",
+      "size": "Standard"
     }
+  ],
+  "dexId": [641],
+  "hp": 120,
+  "types": ["Incolore"],
+  "stage": "De base",
+  "attacks": [
+    {
+      "cost": ["Incolore"],
+      "name": "Souffle Supersonique",
+      "effect": "Défaussez une Énergie spéciale du Pokémon Actif de votre adversaire.",
+      "damage": 30
+    },
+    {
+      "cost": ["Incolore", "Incolore", "Incolore"],
+      "name": "Lame d'Air",
+      "effect": "Défaussez une Énergie de ce Pokémon.",
+      "damage": 120
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "Électrique",
+      "value": "×2"
+    }
+  ],
+  "resistances": [
+    {
+      "type": "Combat",
+      "value": "-30"
+    }
+  ],
+  "retreat": 1,
+  "regulationMark": "D",
+  "legal": {
+    "standard": false,
+    "expanded": true
+  },
+  "updated": "2025-08-16T20:39:55Z",
+  "pricing": {
+    "cardmarket": {
+      "updated": "2026-01-30T01:44:11.000Z",
+      "unit": "EUR",
+      "idProduct": 512420,
+      "avg": 0.18,
+      "low": 0.02,
+      "trend": 0.18,
+      "avg1": 0.14,
+      "avg7": 0.18,
+      "avg30": 0.23,
+      "avg-holo": 0.3,
+      "low-holo": 0.05,
+      "trend-holo": 0.32,
+      "avg1-holo": 0.5,
+      "avg7-holo": 0.38,
+      "avg30-holo": 0.36
+    },
+    "tcgplayer": {
+      "updated": "2026-01-29T20:04:55.000Z",
+      "unit": "USD",
+      "reverse-holofoil": {
+        "productId": 226600,
+        "lowPrice": 0.09,
+        "midPrice": 0.28,
+        "highPrice": 3,
+        "marketPrice": 0.27,
+        "directLowPrice": 0.27
+      },
+      "holofoil": {
+        "productId": 226600,
+        "lowPrice": 0.01,
+        "midPrice": 0.2,
+        "highPrice": 999.99,
+        "marketPrice": 0.14,
+        "directLowPrice": 0.11
+      }
+    }
+  }
 }

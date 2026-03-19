@@ -73,7 +73,9 @@ export class TrainingMatchService {
           cardCount: preset.cards.reduce((sum, card) => sum + card.qty, 0),
         })),
       difficulties: [TrainingDifficulty.EASY, TrainingDifficulty.STANDARD],
-      activeSessions: sessions.map((session) => this.buildSessionSummary(session)),
+      activeSessions: sessions.map((session) =>
+        this.buildSessionSummary(session),
+      ),
     };
   }
 
@@ -90,7 +92,9 @@ export class TrainingMatchService {
       user.id,
     );
     if (!eligibility.eligible) {
-      throw new BadRequestException("Selected deck is not eligible for training");
+      throw new BadRequestException(
+        "Selected deck is not eligible for training",
+      );
     }
 
     const preset = this.onlinePlaySupportService.getReferenceDeckPreset(
@@ -102,10 +106,11 @@ export class TrainingMatchService {
       deck,
       humanPlayerId,
     );
-    const aiDeck = await this.onlinePlaySupportService.mapReferenceDeckToEngineCards(
-      preset.id,
-      TRAINING_AI_PLAYER_ID,
-    );
+    const aiDeck =
+      await this.onlinePlaySupportService.mapReferenceDeckToEngineCards(
+        preset.id,
+        TRAINING_AI_PLAYER_ID,
+      );
 
     const session = this.trainingSessionRepository.create({
       user,
@@ -143,9 +148,8 @@ export class TrainingMatchService {
     });
 
     await this.trainingSessionRepository.save(session);
-    const { session: advancedSession } = await this.advanceAiUntilHumanTurn(
-      session,
-    );
+    const { session: advancedSession } =
+      await this.advanceAiUntilHumanTurn(session);
     return this.buildSessionView(advancedSession);
   }
 
@@ -212,7 +216,10 @@ export class TrainingMatchService {
 
   private async advanceAiUntilHumanTurn(
     session: TrainingMatchSession,
-  ): Promise<{ session: TrainingMatchSession; events: Record<string, unknown>[] }> {
+  ): Promise<{
+    session: TrainingMatchSession;
+    events: Record<string, unknown>[];
+  }> {
     const aggregatedEvents: Record<string, unknown>[] = [];
 
     for (let index = 0; index < 80; index += 1) {
@@ -260,7 +267,10 @@ export class TrainingMatchService {
             type: "AI_PROMPT_RESPONSE",
             response: decision.response,
           });
-          nextEvents = engine.respondToPrompt(TRAINING_AI_PLAYER_ID, decision.response);
+          nextEvents = engine.respondToPrompt(
+            TRAINING_AI_PLAYER_ID,
+            decision.response,
+          );
         } else {
           this.appendLog(session, "ACTION", TRAINING_AI_PLAYER_ID, {
             type: "AI_ACTION",
@@ -333,7 +343,9 @@ export class TrainingMatchService {
       gameState: engine.getSanitizedState(
         humanPlayerId,
       ) as TrainingSessionView["gameState"],
-      recentLog: (session.eventLog || []).slice(-40) as unknown as TrainingSessionView["recentLog"],
+      recentLog: (session.eventLog || []).slice(
+        -40,
+      ) as unknown as TrainingSessionView["recentLog"],
       createdAt: session.createdAt.toISOString(),
       updatedAt: session.updatedAt.toISOString(),
     };
@@ -388,7 +400,9 @@ export class TrainingMatchService {
   }
 
   private readGameState(session: TrainingMatchSession) {
-    return session.serializedState as unknown as ReturnType<GameEngine["getState"]>;
+    return session.serializedState as unknown as ReturnType<
+      GameEngine["getState"]
+    >;
   }
 
   private getHumanPlayerId(state: ReturnType<GameEngine["getState"]>): string {
@@ -410,7 +424,9 @@ export class TrainingMatchService {
   private async requireActiveSession(id: number, userId: number) {
     const session = await this.loadOwnedSession(id, userId);
     if (session.status !== TrainingMatchSessionStatus.ACTIVE) {
-      throw new BadRequestException("This training session is no longer active");
+      throw new BadRequestException(
+        "This training session is no longer active",
+      );
     }
     return session;
   }
@@ -467,7 +483,9 @@ export class TrainingMatchService {
     });
 
     if (!player) {
-      throw new BadRequestException("Player profile is required for training matches");
+      throw new BadRequestException(
+        "Player profile is required for training matches",
+      );
     }
 
     return player;

@@ -13,7 +13,10 @@ import {
   TurnStep,
 } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
-import { EligibleDeckSummary, DeckEligibilityReason } from "./online-match.types";
+import {
+  EligibleDeckSummary,
+  DeckEligibilityReason,
+} from "./online-match.types";
 import {
   ONLINE_SUPPORTED_BASIC_ENERGY_NAMES,
   getOnlineSupportedCardDefinition,
@@ -43,9 +46,13 @@ export class OnlinePlaySupportService {
   }
 
   getReferenceDeckPreset(presetId: string): ReferenceOnlineDeck {
-    const preset = REFERENCE_ONLINE_DECKS.find((entry) => entry.id === presetId);
+    const preset = REFERENCE_ONLINE_DECKS.find(
+      (entry) => entry.id === presetId,
+    );
     if (!preset) {
-      throw new NotFoundException(`Reference deck preset ${presetId} not found`);
+      throw new NotFoundException(
+        `Reference deck preset ${presetId} not found`,
+      );
     }
     return preset;
   }
@@ -70,7 +77,8 @@ export class OnlinePlaySupportService {
     if (totalCards !== 60) {
       reasons.push({
         code: "INVALID_SIZE",
-        message: "A Pokemon TCG online deck must contain exactly 60 mainboard cards",
+        message:
+          "A Pokemon TCG online deck must contain exactly 60 mainboard cards",
       });
     }
 
@@ -192,7 +200,10 @@ export class OnlinePlaySupportService {
 
       if (candidate.name) {
         const normalized = normalizeOnlineCardName(candidate.name);
-        if (names.includes(candidate.name) || names.some((name) => normalizeOnlineCardName(name) === normalized)) {
+        if (
+          names.includes(candidate.name) ||
+          names.some((name) => normalizeOnlineCardName(name) === normalized)
+        ) {
           if (!byName.has(normalized)) {
             byName.set(normalized, candidate);
           }
@@ -208,8 +219,9 @@ export class OnlinePlaySupportService {
         : byName.get(normalizeOnlineCardName(presetCard.name));
 
       if (!resolvedCard && presetCard.name) {
-        const syntheticBasicEnergy =
-          this.buildSyntheticBasicEnergyBaseCard(presetCard.name);
+        const syntheticBasicEnergy = this.buildSyntheticBasicEnergyBaseCard(
+          presetCard.name,
+        );
         if (syntheticBasicEnergy) {
           for (let index = 0; index < presetCard.qty; index += 1) {
             cards.push({
@@ -385,9 +397,9 @@ export class OnlinePlaySupportService {
       };
     }
 
-    const providedEnergy =
-      ONLINE_SUPPORTED_BASIC_ENERGY_NAMES[normalizeOnlineCardName(card.name)] ||
-      ["Incolore"];
+    const providedEnergy = ONLINE_SUPPORTED_BASIC_ENERGY_NAMES[
+      normalizeOnlineCardName(card.name)
+    ] || ["Incolore"];
 
     return {
       id: card.id,
@@ -464,7 +476,8 @@ export class OnlinePlaySupportService {
     return Boolean(
       card &&
         (card.pokemonDetails?.energyType ||
-          normalizeOnlineCardName(card.name) in ONLINE_SUPPORTED_BASIC_ENERGY_NAMES),
+          normalizeOnlineCardName(card.name) in
+            ONLINE_SUPPORTED_BASIC_ENERGY_NAMES),
     );
   }
 

@@ -43,12 +43,14 @@ export function TrainingLobbyPanel() {
   });
 
   const eligibleDecks = useMemo(
-    () => (lobbyQuery.data?.availableDecks || []).filter((deck) => deck.eligible),
+    () =>
+      (lobbyQuery.data?.availableDecks || []).filter((deck) => deck.eligible),
     [lobbyQuery.data?.availableDecks],
   );
 
   const blockedDecks = useMemo(
-    () => (lobbyQuery.data?.availableDecks || []).filter((deck) => !deck.eligible),
+    () =>
+      (lobbyQuery.data?.availableDecks || []).filter((deck) => !deck.eligible),
     [lobbyQuery.data?.availableDecks],
   );
 
@@ -87,8 +89,13 @@ export function TrainingLobbyPanel() {
     },
     onSuccess: (session) => {
       setLastError(null);
-      queryClient.setQueryData(["training-matches", session.sessionId], session);
-      void queryClient.invalidateQueries({ queryKey: ["training-matches", "lobby"] });
+      queryClient.setQueryData(
+        ["training-matches", session.sessionId],
+        session,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: ["training-matches", "lobby"],
+      });
       router.push(`/play/training/${session.sessionId}`);
     },
     onError: (error: unknown) => {
@@ -150,8 +157,8 @@ export function TrainingLobbyPanel() {
               Lancez une partie d’entraînement à la demande.
             </h2>
             <p className="text-sm leading-6 text-slate-600">
-              Choisissez un deck compatible, un preset IA et une difficulté.
-              La partie démarre immédiatement, sans tournoi ni classement.
+              Choisissez un deck compatible, un preset IA et une difficulté. La
+              partie démarre immédiatement, sans tournoi ni classement.
             </p>
           </div>
         </div>
@@ -275,7 +282,10 @@ export function TrainingLobbyPanel() {
 
         <div className="grid gap-3 md:grid-cols-2">
           {lobbyQuery.data.aiDeckPresets.map((preset) => (
-            <div key={preset.id} className="tcg-note-card flex items-start gap-3 p-4">
+            <div
+              key={preset.id}
+              className="tcg-note-card flex items-start gap-3 p-4"
+            >
               <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
               <div className="space-y-1">
                 <p className="font-semibold text-slate-950">{preset.name}</p>
@@ -327,12 +337,16 @@ export function TrainingLobbyPanel() {
           {lobbyQuery.data.activeSessions.length ? (
             <div className="space-y-3">
               {lobbyQuery.data.activeSessions.map((session) => (
-                <TrainingSessionCard key={session.sessionId} session={session} />
+                <TrainingSessionCard
+                  key={session.sessionId}
+                  session={session}
+                />
               ))}
             </div>
           ) : (
             <div className="tcg-empty-state px-5 py-6 text-sm text-slate-500">
-              Aucune session en cours. Lancez un nouveau match pour vous entraîner.
+              Aucune session en cours. Lancez un nouveau match pour vous
+              entraîner.
             </div>
           )}
         </div>
@@ -341,16 +355,14 @@ export function TrainingLobbyPanel() {
   );
 }
 
-function TrainingSessionCard({
-  session,
-}: {
-  session: TrainingSessionSummary;
-}) {
+function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
   return (
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-semibold text-slate-950">{session.aiDeckPresetName}</p>
+          <p className="font-semibold text-slate-950">
+            {session.aiDeckPresetName}
+          </p>
           <p className="text-sm text-slate-500">
             Difficulté {difficultyLabels[session.aiDifficulty]} • Tour{" "}
             {session.turnNumber}

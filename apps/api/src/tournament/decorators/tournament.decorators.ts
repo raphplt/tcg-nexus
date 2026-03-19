@@ -1,8 +1,8 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { TournamentOrganizer as TournamentOrganizerEntity } from '../entities/tournament-organizer.entity';
-import { Tournament as TournamentEntity } from '../entities/tournament.entity';
-import { Player } from '../../player/entities/player.entity';
-import { TournamentRegistration as TournamentRegistrationEntity } from '../entities/tournament-registration.entity';
+import { createParamDecorator, ExecutionContext } from "@nestjs/common";
+import { TournamentOrganizer as TournamentOrganizerEntity } from "../entities/tournament-organizer.entity";
+import { Tournament as TournamentEntity } from "../entities/tournament.entity";
+import { Player } from "../../player/entities/player.entity";
+import { TournamentRegistration as TournamentRegistrationEntity } from "../entities/tournament-registration.entity";
 
 interface AuthenticatedRequest {
   tournamentOrganizer?: TournamentOrganizerEntity;
@@ -18,11 +18,11 @@ interface AuthenticatedRequest {
 export const TournamentOrganizer = createParamDecorator(
   (
     data: unknown,
-    ctx: ExecutionContext
+    ctx: ExecutionContext,
   ): TournamentOrganizerEntity | undefined => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     return request.tournamentOrganizer;
-  }
+  },
 );
 
 /**
@@ -33,7 +33,7 @@ export const Tournament = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): TournamentEntity | undefined => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     return request.tournament;
-  }
+  },
 );
 
 /**
@@ -44,7 +44,7 @@ export const TournamentPlayer = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): Player | undefined => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     return request.tournamentPlayer;
-  }
+  },
 );
 
 /**
@@ -54,9 +54,9 @@ export const TournamentPlayer = createParamDecorator(
 export const TournamentRegistration = createParamDecorator(
   (
     data: unknown,
-    ctx: ExecutionContext
+    ctx: ExecutionContext,
   ): TournamentRegistrationEntity | undefined => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     return request.tournamentRegistration;
-  }
+  },
 );

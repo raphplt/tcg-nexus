@@ -1,5 +1,5 @@
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { DeckCardRole } from 'src/common/enums/deckCardRole';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from "class-validator";
+import { DeckCardRole } from "src/common/enums/deckCardRole";
 
 export class CreateDeckCardDto {
   @IsInt()

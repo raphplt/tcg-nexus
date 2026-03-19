@@ -31,7 +31,10 @@ export class MatchOnlineController {
   }
 
   @Get("session")
-  getSessionView(@Param("id", ParseIntPipe) id: number, @Req() request: Request) {
+  getSessionView(
+    @Param("id", ParseIntPipe) id: number,
+    @Req() request: Request,
+  ) {
     return this.matchOnlineService.getSessionView(id, request.user as User);
   }
 

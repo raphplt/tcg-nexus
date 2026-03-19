@@ -1,16 +1,16 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { IsNull, Repository } from "typeorm";
 import {
   Tournament,
   TournamentStatus,
-  TournamentType
-} from '../entities/tournament.entity';
+  TournamentType,
+} from "../entities/tournament.entity";
 import {
   TournamentRegistration,
-  RegistrationStatus
-} from '../entities/tournament-registration.entity';
-import { Match, MatchStatus } from '../../match/entities/match.entity';
+  RegistrationStatus,
+} from "../entities/tournament-registration.entity";
+import { Match, MatchStatus } from "../../match/entities/match.entity";
 
 export interface StateTransitionRule {
   from: TournamentStatus;
@@ -36,15 +36,15 @@ export class TournamentStateService {
         (t) => !!t.registrationDeadline,
         (t) => t.registrationDeadline! > new Date(),
         (t) => !!t.minPlayers && t.minPlayers >= 2,
-        (t) => !t.maxPlayers || t.maxPlayers >= t.minPlayers!
+        (t) => !t.maxPlayers || t.maxPlayers >= t.minPlayers!,
       ],
-      description: 'Ouvrir les inscriptions'
+      description: "Ouvrir les inscriptions",
     },
     {
       from: TournamentStatus.DRAFT,
       to: TournamentStatus.CANCELLED,
       conditions: [],
-      description: 'Annuler le tournoi'
+      description: "Annuler le tournoi",
     },
 
     // REGISTRATION_OPEN transitions
@@ -52,13 +52,13 @@ export class TournamentStateService {
       from: TournamentStatus.REGISTRATION_OPEN,
       to: TournamentStatus.REGISTRATION_CLOSED,
       conditions: [],
-      description: 'Fermer les inscriptions'
+      description: "Fermer les inscriptions",
     },
     {
       from: TournamentStatus.REGISTRATION_OPEN,
       to: TournamentStatus.CANCELLED,
       conditions: [],
-      description: 'Annuler le tournoi'
+      description: "Annuler le tournoi",
     },
 
     // REGISTRATION_CLOSED transitions
@@ -67,23 +67,23 @@ export class TournamentStateService {
       to: TournamentStatus.IN_PROGRESS,
       conditions: [
         (t) => this.hasMinimumPlayers(t),
-        (t) => this.allRequiredPlayersCheckedIn(t)
+        (t) => this.allRequiredPlayersCheckedIn(t),
       ],
-      description: 'Démarrer le tournoi'
+      description: "Démarrer le tournoi",
     },
     {
       from: TournamentStatus.REGISTRATION_CLOSED,
       to: TournamentStatus.REGISTRATION_OPEN,
       conditions: [
-        (t) => !t.registrationDeadline || t.registrationDeadline > new Date()
+        (t) => !t.registrationDeadline || t.registrationDeadline > new Date(),
       ],
-      description: 'Rouvrir les inscriptions'
+      description: "Rouvrir les inscriptions",
     },
     {
       from: TournamentStatus.REGISTRATION_CLOSED,
       to: TournamentStatus.CANCELLED,
       conditions: [],
-      description: 'Annuler le tournoi'
+      description: "Annuler le tournoi",
     },
 
     // IN_PROGRESS transitions
@@ -92,16 +92,16 @@ export class TournamentStateService {
       to: TournamentStatus.FINISHED,
       conditions: [
         (t) => this.allMatchesCompleted(t),
-        (t) => this.isLastRoundCompleted(t)
+        (t) => this.isLastRoundCompleted(t),
       ],
-      description: 'Terminer le tournoi'
+      description: "Terminer le tournoi",
     },
     {
       from: TournamentStatus.IN_PROGRESS,
       to: TournamentStatus.CANCELLED,
       conditions: [],
-      description: 'Annuler le tournoi'
-    }
+      description: "Annuler le tournoi",
+    },
 
     // FINISHED et CANCELLED sont des états terminaux
   ];
@@ -112,7 +112,7 @@ export class TournamentStateService {
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
     @InjectRepository(Match)
-    private matchRepository: Repository<Match>
+    private matchRepository: Repository<Match>,
   ) {}
 
   /**
@@ -120,32 +120,32 @@ export class TournamentStateService {
    */
   async validateStateTransition(
     tournamentId: number,
-    targetStatus: TournamentStatus
+    targetStatus: TournamentStatus,
   ): Promise<StateValidationResult> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
-      relations: ['registrations', 'matches']
+      relations: ["registrations", "matches"],
     });
 
     if (!tournament) {
       return {
         canTransition: false,
-        errors: ['Tournoi non trouvé'],
-        warnings: []
+        errors: ["Tournoi non trouvé"],
+        warnings: [],
       };
     }
 
     const rule = this.transitionRules.find(
-      (r) => r.from === tournament.status && r.to === targetStatus
+      (r) => r.from === tournament.status && r.to === targetStatus,
     );
 
     if (!rule) {
       return {
         canTransition: false,
         errors: [
-          `Transition de ${tournament.status} vers ${targetStatus} non autorisée`
+          `Transition de ${tournament.status} vers ${targetStatus} non autorisée`,
         ],
-        warnings: []
+        warnings: [],
       };
     }
 
@@ -161,7 +161,7 @@ export class TournamentStateService {
         }
       } catch (error) {
         errors.push(
-          `Erreur lors de la validation: ${(error as Error).message}`
+          `Erreur lors de la validation: ${(error as Error).message}`,
         );
       }
     }
@@ -173,14 +173,14 @@ export class TournamentStateService {
         tournament.maxPlayers &&
         confirmedCount > tournament.maxPlayers * 0.8
       ) {
-        warnings.push('Le tournoi est presque complet');
+        warnings.push("Le tournoi est presque complet");
       }
     }
 
     return {
       canTransition: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -198,12 +198,12 @@ export class TournamentStateService {
    */
   getTransitionDescription(
     from: TournamentStatus,
-    to: TournamentStatus
+    to: TournamentStatus,
   ): string {
     const rule = this.transitionRules.find(
-      (r) => r.from === from && r.to === to
+      (r) => r.from === from && r.to === to,
     );
-    return rule?.description || 'Transition inconnue';
+    return rule?.description || "Transition inconnue";
   }
 
   /**
@@ -212,25 +212,25 @@ export class TournamentStateService {
   async transitionState(
     tournamentId: number,
     targetStatus: TournamentStatus,
-    reason?: string
+    reason?: string,
   ): Promise<Tournament> {
     const validation = await this.validateStateTransition(
       tournamentId,
-      targetStatus
+      targetStatus,
     );
 
     if (!validation.canTransition) {
       throw new BadRequestException(
-        `Impossible de changer l'état: ${validation.errors.join(', ')}`
+        `Impossible de changer l'état: ${validation.errors.join(", ")}`,
       );
     }
 
     const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId }
+      where: { id: tournamentId },
     });
 
     if (!tournament) {
-      throw new BadRequestException('Tournoi non trouvé');
+      throw new BadRequestException("Tournoi non trouvé");
     }
 
     const previousStatus = tournament.status;
@@ -240,7 +240,7 @@ export class TournamentStateService {
       tournament,
       previousStatus,
       targetStatus,
-      reason
+      reason,
     );
 
     return this.tournamentRepository.save(tournament);
@@ -258,18 +258,18 @@ export class TournamentStateService {
    * Vérifie si tous les joueurs requis sont check-in
    */
   private async allRequiredPlayersCheckedIn(
-    tournament: Tournament
+    tournament: Tournament,
   ): Promise<boolean> {
     // Si le check-in n'est pas requis, toujours vrai
     const requiresCheckIn =
-      tournament.additionalInfo?.includes('check-in-required');
+      tournament.additionalInfo?.includes("check-in-required");
     if (!requiresCheckIn) return true;
 
     const confirmedRegistrations = await this.registrationRepository.find({
       where: {
         tournament: { id: tournament.id },
-        status: RegistrationStatus.CONFIRMED
-      }
+        status: RegistrationStatus.CONFIRMED,
+      },
     });
 
     return confirmedRegistrations.every((reg) => reg.checkedIn);
@@ -282,8 +282,8 @@ export class TournamentStateService {
     const incompleteMatches = await this.matchRepository.count({
       where: {
         tournament: { id: tournament.id },
-        status: MatchStatus.SCHEDULED
-      }
+        status: MatchStatus.SCHEDULED,
+      },
     });
 
     return incompleteMatches === 0;
@@ -303,8 +303,8 @@ export class TournamentStateService {
         where: {
           tournament: { id: tournament.id },
           status: RegistrationStatus.CONFIRMED,
-          eliminatedAt: IsNull()
-        }
+          eliminatedAt: IsNull(),
+        },
       });
       return activeRegistrations <= 1;
     }
@@ -317,13 +317,13 @@ export class TournamentStateService {
    * Récupère le nombre de joueurs confirmés
    */
   private async getConfirmedPlayersCount(
-    tournamentId: number
+    tournamentId: number,
   ): Promise<number> {
     return this.registrationRepository.count({
       where: {
         tournament: { id: tournamentId },
-        status: RegistrationStatus.CONFIRMED
-      }
+        status: RegistrationStatus.CONFIRMED,
+      },
     });
   }
 
@@ -334,7 +334,7 @@ export class TournamentStateService {
     tournament: Tournament,
     fromStatus: TournamentStatus,
     toStatus: TournamentStatus,
-    reason?: string
+    reason?: string,
   ): void {
     switch (toStatus) {
       case TournamentStatus.REGISTRATION_OPEN:
@@ -355,7 +355,7 @@ export class TournamentStateService {
         // Enregistrer la raison d'annulation
         if (reason) {
           tournament.additionalInfo =
-            `${tournament.additionalInfo || ''}\nAnnulé: ${reason}`.trim();
+            `${tournament.additionalInfo || ""}\nAnnulé: ${reason}`.trim();
         }
         break;
     }
@@ -370,29 +370,29 @@ export class TournamentStateService {
     transitionDescriptions: { [key in TournamentStatus]?: string };
   }> {
     const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId }
+      where: { id: tournamentId },
     });
 
     if (!tournament) {
-      throw new BadRequestException('Tournoi non trouvé');
+      throw new BadRequestException("Tournoi non trouvé");
     }
 
     const availableTransitions = this.getAvailableTransitions(
-      tournament.status
+      tournament.status,
     );
     const transitionDescriptions: { [key in TournamentStatus]?: string } = {};
 
     availableTransitions.forEach((status) => {
       transitionDescriptions[status] = this.getTransitionDescription(
         tournament.status,
-        status
+        status,
       );
     });
 
     return {
       currentStatus: tournament.status,
       availableTransitions,
-      transitionDescriptions
+      transitionDescriptions,
     };
   }
 }

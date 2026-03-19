@@ -170,7 +170,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return { status: "matched", sessionId: result.session.id };
       }
 
-      return { status: "queued", queueSize: this.matchmakingService.getQueueSize() };
+      return {
+        status: "queued",
+        queueSize: this.matchmakingService.getQueueSize(),
+      };
     } catch (error: any) {
       client.emit("matchmaking_error", {
         message: error?.message || "Unable to join matchmaking",
@@ -180,9 +183,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage("matchmaking_leave")
-  async handleMatchmakingLeave(
-    @ConnectedSocket() client: AuthenticatedSocket,
-  ) {
+  async handleMatchmakingLeave(@ConnectedSocket() client: AuthenticatedSocket) {
     const user = this.requireSocketUser(client);
     this.matchmakingService.leaveQueue(user.id);
     client.leave(`matchmaking:${user.id}`);

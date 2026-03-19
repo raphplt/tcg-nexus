@@ -159,7 +159,9 @@ export default function GameBoard({ matchId }: GameBoardProps) {
   const liveSession = sessionView || sessionQuery.data || null;
   const liveGameState = gameState || liveSession?.gameState || null;
   const enginePlayerId = liveSession?.enginePlayerId || null;
-  const recentLog = recentEvents.length ? recentEvents : liveSession?.recentLog || [];
+  const recentLog = recentEvents.length
+    ? recentEvents
+    : liveSession?.recentLog || [];
 
   if (sessionQuery.isLoading || eligibilityQuery.isLoading) {
     return (

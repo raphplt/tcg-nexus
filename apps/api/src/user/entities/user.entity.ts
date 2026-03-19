@@ -5,17 +5,17 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
-  OneToMany
-} from 'typeorm';
-import { Exclude } from 'class-transformer';
-import { Player } from 'src/player/entities/player.entity';
-import { Deck } from 'src/deck/entities/deck.entity';
-import { Collection } from 'src/collection/entities/collection.entity';
-import { UserRole } from 'src/common/enums/user';
-import { Currency } from 'src/common/enums/currency';
-import { UserCart } from 'src/user_cart/entities/user_cart.entity';
-import { TournamentOrganizer } from 'src/tournament/entities';
-import { UserBadge } from 'src/badge/entities/user-badge.entity';
+  OneToMany,
+} from "typeorm";
+import { Exclude } from "class-transformer";
+import { Player } from "src/player/entities/player.entity";
+import { Deck } from "src/deck/entities/deck.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { UserRole } from "src/common/enums/user";
+import { Currency } from "src/common/enums/currency";
+import { UserCart } from "src/user_cart/entities/user_cart.entity";
+import { TournamentOrganizer } from "src/tournament/entities";
+import { UserBadge } from "src/badge/entities/user-badge.entity";
 
 @Entity()
 export class User {
@@ -39,16 +39,16 @@ export class User {
   avatarUrl: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: UserRole,
-    default: UserRole.USER
+    default: UserRole.USER,
   })
   role: UserRole;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: Currency,
-    default: Currency.EUR
+    default: Currency.EUR,
   })
   preferredCurrency: Currency;
 
@@ -61,27 +61,46 @@ export class User {
   @Column({ default: false })
   emailVerified: boolean;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: "varchar", nullable: true })
   @Exclude()
   refreshToken: string | null;
 
   // Relations
-  @OneToOne(() => Player, (player) => player.user, { nullable: true })
+  @OneToOne(
+    () => Player,
+    (player) => player.user,
+    { nullable: true },
+  )
   player?: Player;
 
-  @OneToMany(() => Deck, (deck) => deck.user)
+  @OneToMany(
+    () => Deck,
+    (deck) => deck.user,
+  )
   decks?: Deck[];
 
-  @OneToMany(() => Collection, (collection) => collection.user)
+  @OneToMany(
+    () => Collection,
+    (collection) => collection.user,
+  )
   collections?: Collection[];
 
-  @OneToOne(() => UserCart, (userCart) => userCart.user)
+  @OneToOne(
+    () => UserCart,
+    (userCart) => userCart.user,
+  )
   userCart?: UserCart;
 
-  @OneToMany(() => TournamentOrganizer, (organizer) => organizer.user)
+  @OneToMany(
+    () => TournamentOrganizer,
+    (organizer) => organizer.user,
+  )
   tournamentOrganizers: TournamentOrganizer[];
 
-  @OneToMany(() => UserBadge, (userBadge) => userBadge.user)
+  @OneToMany(
+    () => UserBadge,
+    (userBadge) => userBadge.user,
+  )
   userBadges?: UserBadge[];
 
   // Dates

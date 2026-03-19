@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateCardStateDto } from './dto/create-card-state.dto';
-import { UpdateCardStateDto } from './dto/update-card-state.dto';
-import { CardState, CardStateCode } from './entities/card-state.entity';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CreateCardStateDto } from "./dto/create-card-state.dto";
+import { UpdateCardStateDto } from "./dto/update-card-state.dto";
+import { CardState, CardStateCode } from "./entities/card-state.entity";
 
 @Injectable()
 export class CardStateService {
   constructor(
     @InjectRepository(CardState)
-    private cardStateRepository: Repository<CardState>
+    private cardStateRepository: Repository<CardState>,
   ) {}
 
   async create(createCardStateDto: CreateCardStateDto): Promise<CardState> {
@@ -31,14 +31,14 @@ export class CardStateService {
 
   async findByCode(code: CardStateCode): Promise<CardState | null> {
     const cardState = await this.cardStateRepository.findOne({
-      where: { code }
+      where: { code },
     });
     return cardState;
   }
 
   async update(
     id: number,
-    updateCardStateDto: UpdateCardStateDto
+    updateCardStateDto: UpdateCardStateDto,
   ): Promise<CardState> {
     await this.cardStateRepository.update(id, updateCardStateDto);
     return this.findOne(id);

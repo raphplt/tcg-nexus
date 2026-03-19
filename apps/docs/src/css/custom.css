@@ -14,15 +14,15 @@
   --ifm-color-primary-lighter: #e28c5c;
   --ifm-color-primary-lightest: #e89b72;
   --ifm-code-font-size: 95%;
-  --ifm-font-family-base: 'Lato', system-ui, -apple-system, sans-serif;
-  --ifm-heading-font-family: 'Lato', system-ui, -apple-system, sans-serif;
+  --ifm-font-family-base: "Lato", system-ui, -apple-system, sans-serif;
+  --ifm-heading-font-family: "Lato", system-ui, -apple-system, sans-serif;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
   --ifm-navbar-background-color: #f7f7ff;
   --ifm-background-color: #ffffff;
   --ifm-footer-background-color: #0a0a0a;
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-color-primary: #f28f41;
   --ifm-color-primary-dark: #e37f31;
   --ifm-color-primary-darker: #c66f2a;
@@ -38,7 +38,18 @@
 
 /* Hero + brutalist accents inspired by apps/web theme */
 .hero--primary {
-  background: linear-gradient(120deg, rgba(209, 107, 47, 0.85), rgba(94, 112, 227, 0.85)), radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1), transparent 25%), radial-gradient(circle at 80% 0%, rgba(255, 255, 255, 0.08), transparent 25%);
+  background:
+    linear-gradient(120deg, rgba(209, 107, 47, 0.85), rgba(94, 112, 227, 0.85)),
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(255, 255, 255, 0.1),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 80% 0%,
+      rgba(255, 255, 255, 0.08),
+      transparent 25%
+    );
   color: #0a0a0a;
   border-bottom: 4px solid #0a0a0a;
   position: relative;
@@ -46,10 +57,12 @@
 }
 
 .hero--primary::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
   background-size: 24px 24px;
   opacity: 0.4;
   pointer-events: none;

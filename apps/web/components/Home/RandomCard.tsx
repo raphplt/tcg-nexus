@@ -6,7 +6,13 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import type { PokemonCardType } from "@/types/cardPokemon";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { RefreshCw, Info, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  RefreshCw,
+  Info,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
 import { FavoriteButton } from "./FavoritesButton";
 import { getCardImage } from "@/utils/images";

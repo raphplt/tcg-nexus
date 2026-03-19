@@ -312,7 +312,9 @@ describe("GameEngine Basics", () => {
     expect(engine.getState().gamePhase).toBe(GamePhase.Finished);
     expect(engine.getState().winnerId).toBe("Player1");
     expect(engine.getState().winnerReason).toBe("PRIZE_OUT");
-    expect(events.some((event) => event.type === "PRIZE_CARDS_TAKEN")).toBe(true);
+    expect(events.some((event) => event.type === "PRIZE_CARDS_TAKEN")).toBe(
+      true,
+    );
   });
 
   it("should require a promotion after knocking out an active pokemon with a bench", () => {
@@ -324,7 +326,11 @@ describe("GameEngine Basics", () => {
     p1.prizes = new Array(6).fill(null).map((_, index) => ({
       instanceId: `p1-prize-${index}`,
       ownerId: "Player1",
-      baseCard: { id: `prize-${index}`, name: "Prize", category: "Dresseur" } as any,
+      baseCard: {
+        id: `prize-${index}`,
+        name: "Prize",
+        category: "Dresseur",
+      } as any,
     }));
     p1.active = {
       instanceId: "p1-active",
@@ -378,7 +384,11 @@ describe("GameEngine Basics", () => {
     p2.prizes = new Array(6).fill(null).map((_, index) => ({
       instanceId: `p2-prize-${index}`,
       ownerId: "Player2",
-      baseCard: { id: `prize-${index}`, name: "Prize", category: "Dresseur" } as any,
+      baseCard: {
+        id: `prize-${index}`,
+        name: "Prize",
+        category: "Dresseur",
+      } as any,
     }));
 
     engine.dispatch({

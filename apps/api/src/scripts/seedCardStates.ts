@@ -1,9 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from 'src/app.module';
-import { SeedService } from 'src/seed/seed.service';
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "src/app.module";
+import { SeedService } from "src/seed/seed.service";
 
 async function bootstrap() {
-  console.log('🌱 Seeding CardStates...');
+  console.log("🌱 Seeding CardStates...");
 
   const app = await NestFactory.createApplicationContext(AppModule);
   const seedService = app.get(SeedService);
@@ -16,9 +16,9 @@ async function bootstrap() {
       console.log(`  📝 ${state.label} (${state.code})`);
     });
 
-    console.log('🎉 CardState seeding completed!');
+    console.log("🎉 CardState seeding completed!");
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error("❌ Seeding failed:", error);
   }
 
   await app.close();

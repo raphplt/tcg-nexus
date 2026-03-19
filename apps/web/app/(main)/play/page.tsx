@@ -25,10 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { matchService } from "@/services/match.service";
-import {
-  PlayHubMatchSummary,
-  PlayHubResponse,
-} from "@/types/play-hub";
+import { PlayHubMatchSummary, PlayHubResponse } from "@/types/play-hub";
 
 type MatchBucket = "all" | "live" | "ready" | "done";
 
@@ -132,11 +129,7 @@ export default function PlayPage() {
 
   if (isLoading) {
     return (
-      <PageWrapper
-        maxWidth="xl"
-        gradient="none"
-        className="tcg-page--soft"
-      >
+      <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--soft">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_360px]">
           <Skeleton className="h-[340px] rounded-3xl" />
           <Skeleton className="h-[340px] rounded-3xl" />
@@ -147,11 +140,7 @@ export default function PlayPage() {
 
   if (!isAuthenticated) {
     return (
-      <PageWrapper
-        maxWidth="xl"
-        gradient="none"
-        className="tcg-page--soft"
-      >
+      <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--soft">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
           <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play">
             <CardContent className="space-y-6 p-8">
@@ -215,13 +204,13 @@ export default function PlayPage() {
     );
   }
 
-  if (isAuthenticated && !playHubQuery.isLoading && playHub?.playerId === null) {
+  if (
+    isAuthenticated &&
+    !playHubQuery.isLoading &&
+    playHub?.playerId === null
+  ) {
     return (
-      <PageWrapper
-        maxWidth="xl"
-        gradient="none"
-        className="tcg-page--soft"
-      >
+      <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--soft">
         <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play">
           <CardContent className="space-y-5 p-8">
             <Badge className="w-fit rounded-full border-0 bg-primary/10 text-primary hover:bg-primary/10">
@@ -249,11 +238,7 @@ export default function PlayPage() {
   }
 
   return (
-    <PageWrapper
-      maxWidth="xl"
-      gradient="none"
-      className="tcg-page--play"
-    >
+    <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--play">
       <div className="space-y-8">
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_360px]">
           <div className="tcg-surface tcg-surface--hero tcg-surface--hero-play p-8">
@@ -319,7 +304,12 @@ export default function PlayPage() {
                     <Layers3 className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="ghost" className="rounded-full px-4">
+                <Button
+                  asChild
+                  size="lg"
+                  variant="ghost"
+                  className="rounded-full px-4"
+                >
                   <Link href="/tournaments">
                     Retour aux tournois
                     <Trophy className="ml-2 h-4 w-4" />
@@ -360,17 +350,16 @@ export default function PlayPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-          <Card
-            id="match-list"
-            className="tcg-surface tcg-surface--hero"
-          >
+          <Card id="match-list" className="tcg-surface tcg-surface--hero">
             <CardContent className="space-y-6 p-6">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
                     Mes tables
                   </p>
-                  <h2 className="text-2xl font-black">Trouver un match à jouer</h2>
+                  <h2 className="text-2xl font-black">
+                    Trouver un match à jouer
+                  </h2>
                   <p className="max-w-2xl text-sm leading-6 text-slate-600">
                     Recherchez par tournoi, adversaire ou numéro de match. Les
                     cartes ci-dessous sont les vraies parties que vous pouvez
@@ -432,9 +421,13 @@ export default function PlayPage() {
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                       Decks récents
                     </p>
-                    <h3 className="mt-1 text-xl font-bold">Prêts pour la table</h3>
+                    <h3 className="mt-1 text-xl font-bold">
+                      Prêts pour la table
+                    </h3>
                   </div>
-                  {playHubQuery.isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+                  {playHubQuery.isLoading && (
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                  )}
                 </div>
 
                 {decks.length ? (
@@ -444,9 +437,12 @@ export default function PlayPage() {
                         key={deck.id}
                         className="rounded-3xl border border-slate-200/80 bg-slate-50/80 px-4 py-3"
                       >
-                        <p className="font-semibold text-slate-950">{deck.name}</p>
+                        <p className="font-semibold text-slate-950">
+                          {deck.name}
+                        </p>
                         <p className="text-sm text-slate-500">
-                          La compatibilité online est vérifiée à l’ouverture du match.
+                          La compatibilité online est vérifiée à l’ouverture du
+                          match.
                         </p>
                       </div>
                     ))}
@@ -455,7 +451,11 @@ export default function PlayPage() {
                   <SoftEmptyState message="Aucun deck détecté sur votre compte pour l'instant." />
                 )}
 
-                <Button asChild variant="outline" className="w-full rounded-full">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full rounded-full"
+                >
                   <Link href="/decks/me">
                     Ouvrir mes decks
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -473,9 +473,8 @@ export default function PlayPage() {
                   Tout votre jeu en ligne est ici.
                 </h3>
                 <p className="text-sm leading-6 text-slate-600">
-                  Reprenez vos rondes de tournoi, entraînez-vous contre l’IA
-                  ou lancez un match 1v1 contre un autre joueur depuis
-                  cette page.
+                  Reprenez vos rondes de tournoi, entraînez-vous contre l’IA ou
+                  lancez un match 1v1 contre un autre joueur depuis cette page.
                 </p>
                 <Button asChild className="rounded-full">
                   <Link href="/tournaments">
@@ -529,7 +528,13 @@ function StepRow({
         {index}
       </div>
       <div className="space-y-1">
-        <p className={tone === "dark" ? "font-semibold text-white" : "font-semibold text-slate-950"}>
+        <p
+          className={
+            tone === "dark"
+              ? "font-semibold text-white"
+              : "font-semibold text-slate-950"
+          }
+        >
           {title}
         </p>
         <p
@@ -604,7 +609,9 @@ function PlayerMatchCard({ record }: { record: PlayerMatchRecord }) {
 
         <div className="flex flex-wrap gap-3">
           <Button asChild className="rounded-full">
-            <Link href={`/tournaments/${record.match.tournamentId}/matches/${record.match.id}`}>
+            <Link
+              href={`/tournaments/${record.match.tournamentId}/matches/${record.match.id}`}
+            >
               {actionLabel}
               <Swords className="ml-2 h-4 w-4" />
             </Link>

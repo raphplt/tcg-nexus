@@ -1,6 +1,11 @@
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { ActionType } from "../engine/actions/Action";
-import { CardCategory, GamePhase, PromptType, TurnStep } from "../engine/models/enums";
+import {
+  CardCategory,
+  GamePhase,
+  PromptType,
+  TurnStep,
+} from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import {
   TrainingDifficulty,
@@ -13,42 +18,42 @@ const HUMAN_PLAYER_ID = "12";
 
 const createPokemon = (instanceId: string, ownerId: string, hp = 100) =>
   ({
-  instanceId,
-  ownerId,
-  baseCard: {
-    id: `${instanceId}-base`,
-    name: `Pokemon ${instanceId}`,
-    category: CardCategory.Pokemon,
-    types: ["Feu"],
-    hp,
-    stage: "De base",
-    attacks: [{ name: "Charge", cost: [], damage: 30 }],
-    weaknesses: [],
-    resistances: [],
-    retreat: 1,
-  },
-  damageCounters: 0,
-  specialConditions: [],
-  attachedEnergies: [],
-  attachedTools: [],
-  attachedEvolutions: [],
-  turnsInPlay: 1,
-}) as any;
+    instanceId,
+    ownerId,
+    baseCard: {
+      id: `${instanceId}-base`,
+      name: `Pokemon ${instanceId}`,
+      category: CardCategory.Pokemon,
+      types: ["Feu"],
+      hp,
+      stage: "De base",
+      attacks: [{ name: "Charge", cost: [], damage: 30 }],
+      weaknesses: [],
+      resistances: [],
+      retreat: 1,
+    },
+    damageCounters: 0,
+    specialConditions: [],
+    attachedEnergies: [],
+    attachedTools: [],
+    attachedEvolutions: [],
+    turnsInPlay: 1,
+  }) as any;
 
 const createEnergy = (instanceId: string, ownerId: string) =>
   ({
-  instanceId,
-  ownerId,
-  baseCard: {
-    id: `${instanceId}-base`,
-    name: "Feu",
-    category: CardCategory.Energy,
-    energyType: "Basic",
-    effect: "",
-    provides: ["Feu"],
-    isSpecial: false,
-  },
-}) as any;
+    instanceId,
+    ownerId,
+    baseCard: {
+      id: `${instanceId}-base`,
+      name: "Feu",
+      category: CardCategory.Energy,
+      energyType: "Basic",
+      effect: "",
+      provides: ["Feu"],
+      isSpecial: false,
+    },
+  }) as any;
 
 const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
   id: "training-service-spec",
@@ -142,8 +147,7 @@ describe("TrainingMatchService", () => {
       save: jest.fn(async (session) => ({
         ...session,
         id: session.id || 41,
-        createdAt:
-          session.createdAt || new Date("2026-03-13T09:00:00.000Z"),
+        createdAt: session.createdAt || new Date("2026-03-13T09:00:00.000Z"),
         updatedAt: new Date("2026-03-13T09:05:00.000Z"),
       })),
       find: jest.fn(),
@@ -193,14 +197,11 @@ describe("TrainingMatchService", () => {
     });
 
     await expect(
-      service.createSession(
-        { id: 5 } as any,
-        {
-          deckId: 9,
-          aiDeckPresetId: "mvp-blaziken-lite",
-          difficulty: TrainingDifficulty.EASY,
-        },
-      ),
+      service.createSession({ id: 5 } as any, {
+        deckId: 9,
+        aiDeckPresetId: "mvp-blaziken-lite",
+        difficulty: TrainingDifficulty.EASY,
+      }),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -247,17 +248,16 @@ describe("TrainingMatchService", () => {
       cards: [],
     });
     onlinePlaySupportService.mapDeckToEngineCards.mockReturnValue([]);
-    onlinePlaySupportService.mapReferenceDeckToEngineCards.mockResolvedValue([]);
+    onlinePlaySupportService.mapReferenceDeckToEngineCards.mockResolvedValue(
+      [],
+    );
     onlinePlaySupportService.createInitialGameState.mockReturnValue(setupState);
 
-    const result = await service.createSession(
-      { id: 5 } as any,
-      {
-        deckId: 9,
-        aiDeckPresetId: "mvp-blaziken-lite",
-        difficulty: TrainingDifficulty.STANDARD,
-      },
-    );
+    const result = await service.createSession({ id: 5 } as any, {
+      deckId: 9,
+      aiDeckPresetId: "mvp-blaziken-lite",
+      difficulty: TrainingDifficulty.STANDARD,
+    });
 
     expect(result.sessionId).toBe(41);
     expect(result.aiDeckPresetName).toBe("MVP Blazing Basics");
@@ -295,7 +295,11 @@ describe("TrainingMatchService", () => {
       totalCards: 60,
     });
     onlinePlaySupportService.listReferenceDeckPresets.mockReturnValue([
-      { id: "mvp-lucario-lite", name: "MVP Lucario Tempo", cards: [{ qty: 60 }] },
+      {
+        id: "mvp-lucario-lite",
+        name: "MVP Lucario Tempo",
+        cards: [{ qty: 60 }],
+      },
     ]);
     onlinePlaySupportService.getReferenceDeckPreset.mockReturnValue({
       id: "mvp-lucario-lite",
@@ -353,11 +357,9 @@ describe("TrainingMatchService", () => {
       },
     });
 
-    const result = await service.dispatchAction(
-      60,
-      { id: 5 } as any,
-      { type: ActionType.END_TURN },
-    );
+    const result = await service.dispatchAction(60, { id: 5 } as any, {
+      type: ActionType.END_TURN,
+    });
 
     expect(trainingAiService.decideNextMove).toHaveBeenCalled();
     expect(result.session.gameState?.activePlayerId).toBe(HUMAN_PLAYER_ID);

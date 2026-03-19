@@ -145,13 +145,9 @@ export const tournamentService = {
   async getUpcomingTournaments(
     params: TournamentQueryParams,
   ): Promise<Tournament[]> {
-    return authedFetch<Tournament[]>(
-      "GET",
-      `/tournaments/upcoming`,
-      {
-        params: params as any,
-      },
-    );
+    return authedFetch<Tournament[]>("GET", `/tournaments/upcoming`, {
+      params: params as any,
+    });
   },
 
   /**

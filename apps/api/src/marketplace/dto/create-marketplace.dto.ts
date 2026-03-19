@@ -1,5 +1,5 @@
-import { CardState } from 'src/common/enums/pokemonCardsType';
-import { Currency } from '../../common/enums/currency';
+import { CardState } from "src/common/enums/pokemonCardsType";
+import { Currency } from "../../common/enums/currency";
 import {
   IsEnum,
   IsInt,
@@ -8,8 +8,8 @@ import {
   IsOptional,
   IsPositive,
   IsString,
-  Min
-} from 'class-validator';
+  Min,
+} from "class-validator";
 
 export class CreateListingDto {
   @IsOptional()

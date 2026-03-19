@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { MarketplaceService } from './marketplace.service';
-import { CardPopularityService } from './card-popularity.service';
-import { CardPopularityScheduler } from './card-popularity.scheduler';
-import { MarketplaceController } from './marketplace.controller';
-import { CardPopularityController } from './card-popularity.controller';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { MarketplaceService } from "./marketplace.service";
+import { CardPopularityService } from "./card-popularity.service";
+import { CardPopularityScheduler } from "./card-popularity.scheduler";
+import { MarketplaceController } from "./marketplace.controller";
+import { CardPopularityController } from "./card-popularity.controller";
 import {
   Listing,
   Order,
@@ -12,16 +12,16 @@ import {
   PaymentTransaction,
   PriceHistory,
   CardEvent,
-  CardPopularityMetrics
-} from './entities';
-import { Player } from 'src/player/entities/player.entity';
-import { Card } from 'src/card/entities/card.entity';
-import { User } from 'src/user/entities/user.entity';
-import { ConfigModule } from '@nestjs/config';
-import { StripeService } from './stripe.service';
-import { PaymentController } from './payment.controller';
-import { WebhookController } from './webhook.controller';
-import { UserCartModule } from '../user_cart/user_cart.module';
+  CardPopularityMetrics,
+} from "./entities";
+import { Player } from "src/player/entities/player.entity";
+import { Card } from "src/card/entities/card.entity";
+import { User } from "src/user/entities/user.entity";
+import { ConfigModule } from "@nestjs/config";
+import { StripeService } from "./stripe.service";
+import { PaymentController } from "./payment.controller";
+import { WebhookController } from "./webhook.controller";
+import { UserCartModule } from "../user_cart/user_cart.module";
 
 @Module({
   imports: [
@@ -35,23 +35,23 @@ import { UserCartModule } from '../user_cart/user_cart.module';
       CardPopularityMetrics,
       Player,
       Card,
-      User
+      User,
     ]),
     ConfigModule,
-    UserCartModule
+    UserCartModule,
   ],
   controllers: [
     MarketplaceController,
     CardPopularityController,
     PaymentController,
-    WebhookController
+    WebhookController,
   ],
   providers: [
     MarketplaceService,
     CardPopularityService,
     CardPopularityScheduler,
-    StripeService
+    StripeService,
   ],
-  exports: [MarketplaceService]
+  exports: [MarketplaceService],
 })
 export class MarketplaceModule {}

@@ -34,7 +34,7 @@ export const ONLINE_SUPPORTED_CARD_REGISTRY: Record<
   "xy7-5": {
     kind: "pokemon",
     attacks: {
-      "Sécrétion": {
+      Sécrétion: {
         effects: [
           {
             type: EffectType.COIN_FLIP,
@@ -109,7 +109,9 @@ export const isOnlineSupportedCard = (
     return true;
   }
 
-  return Boolean(ONLINE_SUPPORTED_BASIC_ENERGY_NAMES[normalizeOnlineCardName(name)]);
+  return Boolean(
+    ONLINE_SUPPORTED_BASIC_ENERGY_NAMES[normalizeOnlineCardName(name)],
+  );
 };
 
 export const getOnlineSupportedCardDefinition = (
