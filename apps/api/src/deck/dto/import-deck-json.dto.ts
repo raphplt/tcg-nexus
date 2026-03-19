@@ -19,6 +19,11 @@ class ImportDeckCardDto {
   @IsNotEmpty()
   tcgDexId: string;
 
+  @ApiProperty({ example: 'Dame du Centre Pokémon', required: false })
+  @IsString()
+  @IsOptional()
+  name?: string;
+
   @ApiProperty({ example: 2 })
   @IsInt()
   @Min(1)

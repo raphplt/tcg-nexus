@@ -474,7 +474,7 @@ export class GameEngine {
       return;
     }
 
-    while (!this.state.pendingPrompt && this.state.setup.tasks.length > 0) {
+    while (!this.state.pendingPrompt && this.state.setup && this.state.setup.tasks.length > 0) {
       const task = this.state.setup.tasks.shift()!;
 
       if (task.type === "FINALIZE_SETUP") {
@@ -1471,6 +1471,7 @@ export class GameEngine {
     return {
       instanceId: pokemon.instanceId,
       name: pokemon.baseCard.name,
+      image: pokemon.baseCard.image,
       hp: pokemon.baseCard.hp,
       damageCounters: pokemon.damageCounters,
       types: pokemon.baseCard.types,

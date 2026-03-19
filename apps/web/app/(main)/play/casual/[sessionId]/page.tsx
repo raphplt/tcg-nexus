@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import CasualGameBoard from "@/components/match/CasualGameBoard";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
+import CasualGameBoard from "@/components/match/CasualGameBoard";
 import { Button } from "@/components/ui/button";
 
 interface CasualMatchPageProps {

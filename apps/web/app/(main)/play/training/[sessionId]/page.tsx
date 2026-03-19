@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import TrainingBoard from "@/components/match/TrainingBoard";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
+import TrainingBoard from "@/components/match/TrainingBoard";
 import { Button } from "@/components/ui/button";
 
 interface TrainingMatchPageProps {
@@ -23,18 +23,7 @@ export default async function TrainingMatchPage({
 
   return (
     <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--play">
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" className="rounded-full">
-            <Link href="/play">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour à Jouer
-            </Link>
-          </Button>
-        </div>
-
-        <TrainingBoard sessionId={numericSessionId} />
-      </div>
+      <TrainingBoard sessionId={numericSessionId} />
     </PageWrapper>
   );
 }

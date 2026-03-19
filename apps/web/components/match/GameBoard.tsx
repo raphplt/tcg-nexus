@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MatchBoardActionInput,
-  MatchBoardView,
   MatchPromptResponseInput,
 } from "@/components/match/MatchBoardView";
+import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { matchOnlineService } from "@/services/match-online.service";
 import { useMatchStore } from "@/store/useMatchStore";
 import {
@@ -290,7 +290,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
   }
 
   return (
-    <MatchBoardView
+    <VisualMatchBoardView
       sessionStatus={liveSession.status}
       gameState={liveGameState}
       enginePlayerId={enginePlayerId}
@@ -311,3 +311,4 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     />
   );
 }
+

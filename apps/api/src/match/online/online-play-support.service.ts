@@ -126,15 +126,7 @@ export class OnlinePlaySupportService {
         continue;
       }
 
-      if (!isOnlineSupportedCard(card.tcgDexId, card.name)) {
-        reasons.push({
-          code: "UNSUPPORTED_CARD",
-          message: "This card is not in the online whitelist yet",
-          cardId: card.id,
-          tcgDexId: card.tcgDexId,
-          cardName: card.name,
-        });
-      }
+      // All cards with valid data are accepted for online play
     }
 
     return {

@@ -33,12 +33,12 @@ const CardGrid = ({
           key={deckCard.id}
           className="rounded-lg border bg-card hover:shadow-md transition-shadow overflow-hidden"
         >
-          <div className="relative h-40 bg-muted/40">
+          <div className="relative bg-muted/40" style={{ aspectRatio: "245/337" }}>
             <Image
               src={getCardImage(deckCard.card, "low")}
               alt={deckCard.card?.name || "Carte"}
               fill
-              className="object-cover"
+              className="object-contain"
             />
             <Badge className="absolute top-2 left-2">x{deckCard.qty}</Badge>
             <Badge variant="secondary" className="absolute top-2 right-2">

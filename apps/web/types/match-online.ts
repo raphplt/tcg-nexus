@@ -65,6 +65,7 @@ export interface OnlineMatchLogEntry {
 export interface SanitizedPokemonCardView {
   instanceId: string;
   name: string;
+  image?: string;
   hp: number;
   damageCounters: number;
   types: string[];

@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MatchBoardActionInput,
-  MatchBoardView,
   MatchPromptResponseInput,
 } from "@/components/match/MatchBoardView";
+import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { casualMatchService } from "@/services/casual-match.service";
 import type { CasualSessionView } from "@/types/casual-match";
 import type {
@@ -206,7 +206,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   };
 
   return (
-    <MatchBoardView
+    <VisualMatchBoardView
       sessionStatus={liveSession.status}
       gameState={liveGameState}
       enginePlayerId={enginePlayerId}

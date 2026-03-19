@@ -4,14 +4,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bot, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { MatchBoardView } from "@/components/match/MatchBoardView";
+import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  trainingMatchService,
   TrainingActionInput,
   TrainingPromptResponseInput,
+  trainingMatchService,
 } from "@/services/training-match.service";
 import {
   TrainingDifficulty,
@@ -99,8 +99,8 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <MatchBoardView
+    <div className="space-y-2">
+      <VisualMatchBoardView
         sessionStatus={session.status}
         gameState={session.gameState}
         enginePlayerId={session.humanPlayerId}

@@ -47,18 +47,49 @@ vi.stubGlobal("sessionStorage", storage);
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  navigationMocks.reset();
 });
 
 const push = vi.fn();
 const replace = vi.fn();
 const prefetch = vi.fn();
+const navigationState = {
+  pathname: "/",
+  searchParams: new URLSearchParams(),
+  params: {},
+};
+
+const setSearchParams = (
+  next:
+    | string
+    | URLSearchParams
+    | Record<string, string | number | boolean | undefined>,
+) => {
+  if (typeof next === "string") {
+    navigationState.searchParams = new URLSearchParams(
+      next.startsWith("?") ? next.slice(1) : next,
+    );
+    return;
+  }
+
+  if (next instanceof URLSearchParams) {
+    navigationState.searchParams = new URLSearchParams(next.toString());
+    return;
+  }
+
+  navigationState.searchParams = new URLSearchParams(
+    Object.entries(next)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  );
+};
 
 vi.mock("next/navigation", () => ({
   __esModule: true,
   useRouter: () => ({ push, replace, prefetch }),
-  usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
-  useParams: () => ({}),
+  usePathname: () => navigationState.pathname,
+  useSearchParams: () => new URLSearchParams(navigationState.searchParams),
+  useParams: () => navigationState.params,
 }));
 
 vi.mock("next/link", () => ({
@@ -103,3 +134,17 @@ vi.mock("next/image", () => ({
 }));
 
 export const routerMocks = { push, replace, prefetch };
+export const navigationMocks = {
+  setPathname: (pathname: string) => {
+    navigationState.pathname = pathname;
+  },
+  setSearchParams,
+  setParams: (params: Record<string, string>) => {
+    navigationState.params = params;
+  },
+  reset: () => {
+    navigationState.pathname = "/";
+    navigationState.searchParams = new URLSearchParams();
+    navigationState.params = {};
+  },
+};
