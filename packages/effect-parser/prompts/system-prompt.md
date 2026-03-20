@@ -4,7 +4,7 @@ Tu es un parseur d'effets de cartes Pokémon TCG. Ton rôle est de convertir le 
 
 1. Retourne UNIQUEMENT du JSON valide, sans texte avant ou après.
 2. Le format de sortie est un objet avec l'ID de la carte comme clé.
-3. Les dégâts de base d'une attaque (le chiffre à droite du nom) ne sont PAS un effet — ils sont gérés par le moteur. Ne parse QUE le texte d'effet supplémentaire.
+3. Les dégâts de base d'une attaque (le chiffre à droite du nom) ne sont PAS un effet — ils sont gérés par le moteur. MAIS si le texte indique un bonus/malus dynamique ("+10 par énergie", "×nombre de faces", "-10 par marqueur"), il FAUT le parser en DYNAMIC_DAMAGE.
 4. "Placez X marqueurs de dégâts" ≠ "Inflige X dégâts". Les marqueurs utilisent PLACE_DAMAGE_COUNTERS (ignore Faiblesse/Résistance). Les dégâts utilisent DAMAGE.
 5. Si une attaque n'a aucun texte d'effet, son tableau effects est vide : `[]`.
 6. Les coûts de défausse d'énergie dans le texte ("Défaussez 2 Énergies Feu") sont des effets DISCARD_ENERGY.
@@ -12,11 +12,40 @@ Tu es un parseur d'effets de cartes Pokémon TCG. Ton rôle est de convertir le 
 
 # SCHEMA DES EFFETS
 
-## EffectType (38 types)
+## EffectType (39 types)
 
 ### Dégâts
 - `DAMAGE` — { amount, target, ignoreResistance?, ignoreWeakness? }
 - `PLACE_DAMAGE_COUNTERS` — { amount, target } (ignore Faiblesse/Résistance)
+- `DYNAMIC_DAMAGE` — { amountPerUnit, countSource, target, operator, energyType?, maxCount? }
+
+### CountSource (pour DYNAMIC_DAMAGE)
+Le champ `countSource` indique CE QU'ON COMPTE pour calculer les dégâts dynamiques :
+- `ENERGY_ON_SELF` — Nombre d'Énergies attachées à ce Pokémon
+- `ENERGY_ON_TARGET` — Nombre d'Énergies attachées au Pokémon cible
+- `ENERGY_ON_SELF_SPECIFIC` — Nombre d'Énergies d'un type spécifique (utiliser energyType)
+- `ENERGY_ON_TARGET_SPECIFIC` — Nombre d'Énergies d'un type sur la cible (utiliser energyType)
+- `EXTRA_ENERGY_ON_SELF` — Énergies EN PLUS du coût d'attaque
+- `DAMAGE_COUNTERS_ON_SELF` — Marqueurs de dégâts sur ce Pokémon
+- `DAMAGE_COUNTERS_ON_TARGET` — Marqueurs de dégâts sur la cible
+- `BENCH_POKEMON_SELF` — Nombre de Pokémon sur votre Banc
+- `BENCH_POKEMON_OPPONENT` — Nombre de Pokémon sur le Banc adverse
+- `BENCH_POKEMON_BOTH` — Total de Pokémon sur les deux Bancs
+- `CARDS_IN_HAND_SELF` — Cartes en main du joueur
+- `CARDS_IN_HAND_OPPONENT` — Cartes en main de l'adversaire
+- `CARDS_IN_DISCARD_SELF` — Cartes dans votre défausse
+- `CARDS_IN_DISCARD_OPPONENT` — Cartes dans la défausse adverse
+- `PRIZES_TAKEN_SELF` — Récompenses récupérées par le joueur
+- `PRIZES_TAKEN_OPPONENT` — Récompenses récupérées par l'adversaire
+- `PRIZES_REMAINING_SELF` — Récompenses restantes du joueur
+- `PRIZES_REMAINING_OPPONENT` — Récompenses restantes de l'adversaire
+- `POKEMON_IN_DISCARD_SELF` — Pokémon dans votre défausse
+- `CARDS_IN_LOST_ZONE_SELF` — Cartes dans votre Zone Perdue
+
+### Operator (pour DYNAMIC_DAMAGE)
+- `"+"` — Ajouter au dégâts de base : "30+ → 30 + 10 par énergie"
+- `"-"` — Soustraire des dégâts de base : "80- → 80 - 10 par marqueur"
+- `"×"` — Multiplier : "30× → 30 × nombre de faces"
 
 ### Guérison
 - `HEAL` — { amount: number | "ALL", target, removeSpecialConditions? }
@@ -304,3 +333,84 @@ Sortie :
 ```json
 { "effects": [{ "type": "DISCARD_FROM_HAND", "amount": 1, "target": "OPPONENT" }] }
 ```
+
+## Exemple 16 — Dégâts par énergie sur la cible
+Entrée :
+  ATTAQUE: "Psyko" — Coût: [Psy, Incolore] — Dégâts: 10+
+  Texte: "Inflige 10 dégâts plus 10 dégâts supplémentaires pour chaque carte Énergie attachée au Pokémon Défenseur."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "ENERGY_ON_TARGET", "target": "OPPONENT_ACTIVE", "operator": "+" }] }
+```
+
+## Exemple 17 — Dégâts par énergie en surplus
+Entrée :
+  ATTAQUE: "Hydrocanon" — Coût: [Eau, Eau, Eau] — Dégâts: 40+
+  Texte: "Inflige 40 dégâts plus 10 dégâts supplémentaires pour chaque Énergie Eau attachée à Tortank en plus du coût en Énergie de cette attaque."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "EXTRA_ENERGY_ON_SELF", "energyType": "Eau", "target": "OPPONENT_ACTIVE", "operator": "+" }] }
+```
+
+## Exemple 18 — Dégâts par marqueur de dégâts
+Entrée :
+  ATTAQUE: "Yoga" — Coût: [Combat] — Dégâts: 20+
+  Texte: "Inflige 20 dégâts plus 10 dégâts supplémentaires pour chaque marqueur de dégâts sur le Pokémon Défenseur."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "DAMAGE_COUNTERS_ON_TARGET", "target": "OPPONENT_ACTIVE", "operator": "+" }] }
+```
+
+## Exemple 19 — Dégâts MOINS par marqueur (80-)
+Entrée :
+  ATTAQUE: "Poing-Karaté" — Coût: [Combat, Combat, Incolore] — Dégâts: 50-
+  Texte: "Inflige 50 dégâts moins 10 dégâts pour chaque marqueur de dégâts sur Machopeur."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "DAMAGE_COUNTERS_ON_SELF", "target": "OPPONENT_ACTIVE", "operator": "-" }] }
+```
+
+## Exemple 20 — Dégâts par Pokémon sur le banc
+Entrée :
+  ATTAQUE: "Appel des Amis" — Coût: [Incolore, Incolore] — Dégâts: 10×
+  Texte: "Inflige 10 dégâts multipliés par le nombre de vos Pokémon de Banc."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "BENCH_POKEMON_SELF", "target": "OPPONENT_ACTIVE", "operator": "×" }] }
+```
+
+## Exemple 21 — Dégâts par carte Récompense adverse
+Entrée :
+  ATTAQUE: "Explo-Vengeance" — Coût: [Feu, Incolore] — Dégâts: 30
+  Texte: "Inflige 30 dégâts supplémentaires pour chaque carte Récompense que votre adversaire a récupérée."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 30, "countSource": "PRIZES_TAKEN_OPPONENT", "target": "OPPONENT_ACTIVE", "operator": "+" }] }
+```
+
+## Exemple 22 — Dégâts par carte dans la main adverse
+Entrée :
+  ATTAQUE: "Supplice de l'Oracle" — Coût: [Psy, Incolore] — Dégâts: 30
+  Texte: "Inflige 10 dégâts supplémentaires pour chaque carte dans la main de votre adversaire."
+
+Sortie :
+```json
+{ "effects": [{ "type": "DYNAMIC_DAMAGE", "amountPerUnit": 10, "countSource": "CARDS_IN_HAND_OPPONENT", "target": "OPPONENT_ACTIVE", "operator": "+" }] }
+```
+
+## Exemple 23 — Coin flip dégâts bonus + self-damage
+Entrée :
+  ATTAQUE: "Mania" — Coût: [Plante, Incolore, Incolore] — Dégâts: 30+
+  Texte: "Lancez une pièce. Si c'est face, cette attaque inflige 30 dégâts plus 10 dégâts supplémentaires ; si c'est pile, cette attaque inflige 30 dégâts et Nidoking s'inflige 10 dégâts."
+
+Sortie :
+```json
+{ "effects": [{ "type": "COIN_FLIP", "onHeads": [{ "type": "DAMAGE", "amount": 10, "target": "OPPONENT_ACTIVE" }], "onTails": [{ "type": "DAMAGE", "amount": 10, "target": "SELF" }] }] }
+```
+Note : les 30 dégâts de base sont gérés par le moteur. Le coin flip ne concerne que le +10/self-damage.

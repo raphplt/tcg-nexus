@@ -1,0 +1,33 @@
+{
+  "name": "Zoroark-ex de N Shadow",
+  "format": "Standard",
+  "isPublic": true,
+  "cards": [
+    { "tcgDexId": "sv09-097", "name": "Zorua de N", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv09-098", "name": "Zoroark-ex de N", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv09-026", "name": "Darumarond de N", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv09-027", "name": "Darumacho de N", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv09-116", "name": "Reshiram de N", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06.5-039", "name": "Pêchaminus-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06-095", "name": "Fortusimia", "qty": 1, "role": "main" },
+    { "tcgDexId": "me01-119", "name": "Détermination de Lilie", "qty": 4, "role": "main" },
+    { "tcgDexId": "me01-114", "name": "Ordres du Boss", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv02-185", "name": "Mashynn", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv08-170", "name": "Cyano", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv04-171", "name": "Plan du Professeur Turum", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv09-143", "name": "Entraînement de Karatéka", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv05-144", "name": "Poffin Copain-Copain", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv09-153", "name": "PP Plus de N", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv04-160", "name": "Attrape-Riposte", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-181", "name": "Faiblo Ball", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06-163", "name": "Boîte à Secrets", "qty": 1, "role": "main" },
+    { "tcgDexId": "me01-131", "name": "Hyper Ball", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-182", "name": "Registre Ami", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06.5-063", "name": "Sablier du Pouvoir", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-169", "name": "Bandeau de Défi", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv09-152", "name": "Palais de N", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv10-180", "name": "Tour d'Observation de la Team Rocket", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv02-171", "name": "Cuencia", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv02-192", "name": "Énergie Inversion", "qty": 2, "role": "main" }
+  ]
+}

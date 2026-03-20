@@ -34,6 +34,10 @@ export type { BatchOptions, BatchReport } from "./batch-processor.js";
 export { buildUserPrompt, getSystemPrompt } from "./prompt-builder.js";
 export type { CardInput } from "./prompt-builder.js";
 
+// Pipeline
+export { loadCardsFromCSV, exportCardInputsToJSON } from "./pipeline.js";
+export type { PipelineOptions } from "./pipeline.js";
+
 // Providers
 export type { LLMProvider } from "./providers/base.js";
 export { GeminiProvider } from "./providers/gemini.js";

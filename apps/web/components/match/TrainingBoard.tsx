@@ -99,8 +99,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <VisualMatchBoardView
+    <VisualMatchBoardView
         sessionStatus={session.status}
         gameState={session.gameState}
         enginePlayerId={session.humanPlayerId}
@@ -165,7 +164,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
         }
         onDispatchAction={(action) => actionMutation.mutate(action)}
         onRespondPrompt={(response) => promptMutation.mutate(response)}
+        onForfeit={() => actionMutation.mutate({ type: "FORFEIT" })}
       />
-    </div>
   );
 }

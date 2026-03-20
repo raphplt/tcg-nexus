@@ -1,0 +1,27 @@
+{
+  "name": "Lanssorien-ex Control",
+  "format": "Standard",
+  "isPublic": true,
+  "cards": [
+    { "tcgDexId": "sv06-128", "name": "Fantyrm", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv06-129", "name": "Dispareptil", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv06-130", "name": "Lanssorien-ex", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv08.5-035", "name": "Skelénox", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv08.5-036", "name": "Téraclope", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv08.5-037", "name": "Noctunoir", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06-141", "name": "Ursaking Lune Vermeille-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv08-076", "name": "Latias-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06-095", "name": "Fortusimia", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-118", "name": "Brutalibré", "qty": 1, "role": "main" },
+    { "tcgDexId": "me01-119", "name": "Détermination de Lilie", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv02-185", "name": "Mashynn", "qty": 4, "role": "main" },
+    { "tcgDexId": "me01-114", "name": "Ordres du Boss", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv10.5w-084", "name": "Ludvina", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv05-144", "name": "Poffin Copain-Copain", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv04-160", "name": "Attrape-Riposte", "qty": 3, "role": "main" },
+    { "tcgDexId": "me01-131", "name": "Hyper Ball", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv06-153", "name": "Tour de Brouillage", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv02-191", "name": "Énergie Lumineuse", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv05-162", "name": "Néo-Énergie Sup", "qty": 1, "role": "main" }
+  ]
+}

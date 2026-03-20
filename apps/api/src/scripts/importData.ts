@@ -115,6 +115,10 @@ async function bootstrap() {
     await seedService.seedDecks();
     logSuccess("Decks créés !");
 
+    logStep("Création des decks compétitifs (IA / templates)...");
+    await seedService.seedCompetitiveDecks();
+    logSuccess("Decks compétitifs créés !");
+
     logStep("Création d'un tournoi complet avec seeding...");
     const completeTournament = await seedService.seedCompleteTournament(
       "Tournoi de Démonstration avec Seeding",

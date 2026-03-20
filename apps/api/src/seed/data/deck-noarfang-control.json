@@ -1,0 +1,32 @@
+{
+  "name": "Noarfang Control",
+  "format": "Standard",
+  "isPublic": true,
+  "cards": [
+    { "tcgDexId": "sv07-114", "name": "Hoothoot", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv07-115", "name": "Noarfang", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv06-025", "name": "Ogerpon Masque Turquoise-ex", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv05-123", "name": "Ire-Foudre-ex", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv07-118", "name": "Motisma Hélice", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv03.5-132", "name": "Métamorph", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv03.5-151", "name": "Mew-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv06-064", "name": "Ogerpon Masque du Puits-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv07-111", "name": "Ire-Foudre", "qty": 1, "role": "main" },
+    { "tcgDexId": "me01-104", "name": "Méga-Kangourex-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv04-108", "name": "Pelage-Sablé-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv08-076", "name": "Latias-ex", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv07-133", "name": "Rubépin", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv04-170", "name": "Vitalité de la Professeure Olim", "qty": 3, "role": "main" },
+    { "tcgDexId": "me01-114", "name": "Ordres du Boss", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv04-171", "name": "Plan du Professeur Turum", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-181", "name": "Faiblo Ball", "qty": 4, "role": "main" },
+    { "tcgDexId": "me01-131", "name": "Hyper Ball", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv04-163", "name": "Urne Terrestre", "qty": 2, "role": "main" },
+    { "tcgDexId": "me01-115", "name": "Échange d'Énergie", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv05-157", "name": "Attrape-Ultime", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv07-135", "name": "Trompette de Verre", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv01-197", "name": "Bandeau Vitalité", "qty": 1, "role": "main" },
+    { "tcgDexId": "sv07-131", "name": "Abîme Zéro", "qty": 2, "role": "main" },
+    { "tcgDexId": "sv02-171", "name": "Cuencia", "qty": 1, "role": "main" }
+  ]
+}

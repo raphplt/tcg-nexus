@@ -4,6 +4,8 @@ import {
   EffectType,
   TargetType,
   type PlaceDamageCountersEffect,
+  type DynamicDamageEffect,
+  CountSource,
   type DiscardFromHandEffect,
   type ShuffleHandDrawEffect,
   type MillEffect,
@@ -69,6 +71,35 @@ export class EffectResolver {
             amount: effect.amount,
             targetInstanceId: targetMon.instanceId,
           });
+        }
+        break;
+      }
+
+      case EffectType.DYNAMIC_DAMAGE: {
+        // Dynamic damage is computed at resolution time based on
+        // game state counts. The base damage is handled by the
+        // engine; this effect adds/subtracts the dynamic portion.
+        const dynAmount = this.engine.computeDynamicDamage(
+          effect,
+          sourcePlayerId,
+          opponentId,
+        );
+        if (dynAmount > 0) {
+          const targets = this.resolveAllPokemonTargets(
+            effect.target,
+            sourcePlayerId,
+            opponentId,
+            context?.selectedTargetInstanceId,
+          );
+          for (const t of targets) {
+            t.damageCounters += dynAmount;
+            events.push({
+              type: "DYNAMIC_DAMAGE_DEALT",
+              amount: dynAmount,
+              targetInstanceId: t.instanceId,
+              countSource: effect.countSource,
+            });
+          }
         }
         break;
       }

@@ -6,6 +6,7 @@ export const EffectTypeSchema = z.enum([
   // Damage
   "DAMAGE",
   "PLACE_DAMAGE_COUNTERS",
+  "DYNAMIC_DAMAGE",
   // Healing
   "HEAL",
   // Special Conditions
@@ -91,6 +92,29 @@ export const SpecialConditionSchema = z.enum([
 
 export const EffectAmountSchema = z.union([z.number(), z.literal("ALL")]);
 
+export const CountSourceSchema = z.enum([
+  "ENERGY_ON_SELF",
+  "ENERGY_ON_TARGET",
+  "ENERGY_ON_SELF_SPECIFIC",
+  "ENERGY_ON_TARGET_SPECIFIC",
+  "EXTRA_ENERGY_ON_SELF",
+  "DAMAGE_COUNTERS_ON_SELF",
+  "DAMAGE_COUNTERS_ON_TARGET",
+  "BENCH_POKEMON_SELF",
+  "BENCH_POKEMON_OPPONENT",
+  "BENCH_POKEMON_BOTH",
+  "CARDS_IN_HAND_SELF",
+  "CARDS_IN_HAND_OPPONENT",
+  "CARDS_IN_DISCARD_SELF",
+  "CARDS_IN_DISCARD_OPPONENT",
+  "PRIZES_TAKEN_SELF",
+  "PRIZES_TAKEN_OPPONENT",
+  "PRIZES_REMAINING_SELF",
+  "PRIZES_REMAINING_OPPONENT",
+  "POKEMON_IN_DISCARD_SELF",
+  "CARDS_IN_LOST_ZONE_SELF",
+]);
+
 export const SearchFilterSchema = z
   .object({
     cardCategory: z
@@ -124,6 +148,16 @@ const PlaceDamageCountersEffectSchema = z.object({
   type: z.literal("PLACE_DAMAGE_COUNTERS"),
   amount: z.number(),
   target: TargetTypeSchema,
+});
+
+const DynamicDamageEffectSchema = z.object({
+  type: z.literal("DYNAMIC_DAMAGE"),
+  amountPerUnit: z.number(),
+  countSource: CountSourceSchema,
+  energyType: z.string().optional(),
+  target: TargetTypeSchema,
+  operator: z.enum(["+", "-", "×"]),
+  maxCount: z.number().optional(),
 });
 
 const HealEffectSchema = z.object({
@@ -341,9 +375,10 @@ const ExtraPrizeSchema = z.object({
 // ─── Union Schema ────────────────────────────────────────────
 
 export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
-  z.discriminatedUnion("type", [
+  z.union([
     DamageEffectSchema,
     PlaceDamageCountersEffectSchema,
+    DynamicDamageEffectSchema,
     HealEffectSchema,
     ApplySpecialConditionSchema,
     RemoveSpecialConditionSchema,

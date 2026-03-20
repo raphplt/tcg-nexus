@@ -46,26 +46,68 @@ export function GameCard({
   return (
     <div
       className={cn(
-        "relative flex-shrink-0 rounded-lg overflow-hidden",
+        "game-card relative flex-shrink-0 rounded-lg overflow-hidden",
         "transition-all duration-200 ease-out",
         sizeClasses[size],
-        onClick && !disabled && "cursor-pointer hover:scale-105 hover:z-10",
-        selected && "ring-3 ring-blue-400 shadow-[0_0_16px_rgba(96,165,250,0.5)] -translate-y-2 z-20",
-        highlighted && "ring-3 ring-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.5)] animate-pulse",
+        onClick &&
+          !disabled &&
+          "cursor-pointer hover:scale-105 hover:z-10 hover:-translate-y-1",
+        selected &&
+          "ring-3 ring-blue-400 shadow-[0_0_20px_rgba(96,165,250,0.5)] -translate-y-2 z-20",
+        highlighted &&
+          "ring-3 ring-emerald-400 shadow-[0_0_20px_rgba(52,211,153,0.5)] animate-pulse",
         disabled && "opacity-60 cursor-default",
         className,
       )}
-      style={style}
+      style={{
+        ...style,
+        transformStyle: "preserve-3d",
+      }}
       onClick={!disabled ? onClick : undefined}
       title={name}
+      onMouseMove={
+        onClick && !disabled
+          ? (e) => {
+              const card = e.currentTarget;
+              const rect = card.getBoundingClientRect();
+              const x = (e.clientX - rect.left) / rect.width;
+              const y = (e.clientY - rect.top) / rect.height;
+              const rotateX = (y - 0.5) * -8;
+              const rotateY = (x - 0.5) * 8;
+              card.style.transform = `perspective(400px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) ${
+                selected ? "translateY(-8px)" : ""
+              }`;
+            }
+          : undefined
+      }
+      onMouseLeave={
+        onClick && !disabled
+          ? (e) => {
+              e.currentTarget.style.transform = "";
+            }
+          : undefined
+      }
     >
+      {/* Hover glow effect */}
+      {onClick && !disabled && (
+        <div className="absolute -inset-1 rounded-xl bg-white/0 group-hover:bg-white/5 transition-colors pointer-events-none" />
+      )}
+
       {src ? (
         <Image
           src={src}
           alt={name}
           fill
           className="object-cover"
-          sizes={size === "xl" ? "160px" : size === "lg" ? "128px" : size === "md" ? "96px" : "64px"}
+          sizes={
+            size === "xl"
+              ? "160px"
+              : size === "lg"
+                ? "128px"
+                : size === "md"
+                  ? "96px"
+                  : "64px"
+          }
           unoptimized={src.includes("tcgdex.net")}
         />
       ) : (
@@ -96,11 +138,13 @@ export function EmptySlot({
     <div
       className={cn(
         "relative flex-shrink-0 rounded-lg border-2 border-dashed",
-        "flex items-center justify-center",
+        "flex items-center justify-center transition-all duration-300",
         sizeClasses[size],
         "border-white/20 bg-white/5",
-        onClick && "cursor-pointer hover:border-white/40 hover:bg-white/10",
-        highlighted && "border-emerald-400/60 bg-emerald-400/10 shadow-[0_0_12px_rgba(52,211,153,0.3)]",
+        onClick &&
+          "cursor-pointer hover:border-white/40 hover:bg-white/10",
+        highlighted &&
+          "border-emerald-400/60 bg-emerald-400/10 shadow-[0_0_16px_rgba(52,211,153,0.3)] animate-pulse",
         className,
       )}
       onClick={onClick}

@@ -6,6 +6,7 @@ export enum EffectType {
   // ── Damage ──────────────────────────────────────────────
   DAMAGE = "DAMAGE",
   PLACE_DAMAGE_COUNTERS = "PLACE_DAMAGE_COUNTERS",
+  DYNAMIC_DAMAGE = "DYNAMIC_DAMAGE",
 
   // ── Healing ─────────────────────────────────────────────
   HEAL = "HEAL",
@@ -108,6 +109,31 @@ export interface SearchFilter {
   trainerType?: "Objet" | "Supporter" | "Stade" | "Outil Pokémon";
 }
 
+// ─── Count Sources (for DYNAMIC_DAMAGE) ─────────────────────
+
+export enum CountSource {
+  ENERGY_ON_SELF = "ENERGY_ON_SELF",
+  ENERGY_ON_TARGET = "ENERGY_ON_TARGET",
+  ENERGY_ON_SELF_SPECIFIC = "ENERGY_ON_SELF_SPECIFIC",
+  ENERGY_ON_TARGET_SPECIFIC = "ENERGY_ON_TARGET_SPECIFIC",
+  EXTRA_ENERGY_ON_SELF = "EXTRA_ENERGY_ON_SELF",
+  DAMAGE_COUNTERS_ON_SELF = "DAMAGE_COUNTERS_ON_SELF",
+  DAMAGE_COUNTERS_ON_TARGET = "DAMAGE_COUNTERS_ON_TARGET",
+  BENCH_POKEMON_SELF = "BENCH_POKEMON_SELF",
+  BENCH_POKEMON_OPPONENT = "BENCH_POKEMON_OPPONENT",
+  BENCH_POKEMON_BOTH = "BENCH_POKEMON_BOTH",
+  CARDS_IN_HAND_SELF = "CARDS_IN_HAND_SELF",
+  CARDS_IN_HAND_OPPONENT = "CARDS_IN_HAND_OPPONENT",
+  CARDS_IN_DISCARD_SELF = "CARDS_IN_DISCARD_SELF",
+  CARDS_IN_DISCARD_OPPONENT = "CARDS_IN_DISCARD_OPPONENT",
+  PRIZES_TAKEN_SELF = "PRIZES_TAKEN_SELF",
+  PRIZES_TAKEN_OPPONENT = "PRIZES_TAKEN_OPPONENT",
+  PRIZES_REMAINING_SELF = "PRIZES_REMAINING_SELF",
+  PRIZES_REMAINING_OPPONENT = "PRIZES_REMAINING_OPPONENT",
+  POKEMON_IN_DISCARD_SELF = "POKEMON_IN_DISCARD_SELF",
+  CARDS_IN_LOST_ZONE_SELF = "CARDS_IN_LOST_ZONE_SELF",
+}
+
 // ─── Quantity Helpers ────────────────────────────────────────
 
 export type EffectAmount = number | "ALL";
@@ -132,6 +158,21 @@ export interface PlaceDamageCountersEffect extends BaseEffect {
   type: EffectType.PLACE_DAMAGE_COUNTERS;
   amount: number;
   target: TargetType;
+}
+
+export interface DynamicDamageEffect extends BaseEffect {
+  type: EffectType.DYNAMIC_DAMAGE;
+  /** Base damage added/subtracted per count unit (e.g. 10 = "+10 per energy") */
+  amountPerUnit: number;
+  /** What to count */
+  countSource: CountSource;
+  /** Energy type filter when countSource is *_SPECIFIC */
+  energyType?: string;
+  target: TargetType;
+  /** "+" = add to base damage, "-" = subtract from base, "×" = multiply base */
+  operator: "+" | "-" | "×";
+  /** Max count (if capped), e.g. "Les Énergies supplémentaires après la seconde ne comptent pas" */
+  maxCount?: number;
 }
 
 // ── Healing ───────────────────────────────────────────────
@@ -371,6 +412,7 @@ export type AnyEffect =
   // Damage
   | DamageEffect
   | PlaceDamageCountersEffect
+  | DynamicDamageEffect
   // Healing
   | HealEffect
   // Special Conditions

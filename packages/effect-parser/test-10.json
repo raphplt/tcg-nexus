@@ -1,0 +1,265 @@
+{
+  "base1-1": {
+    "kind": "pokemon",
+    "attacks": {
+      "Onde Folie": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onHeads": [
+              {
+                "type": "APPLY_SPECIAL_CONDITION",
+                "condition": "Confused",
+                "target": "OPPONENT_ACTIVE"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "ability": {
+      "name": "Transfert de dégâts",
+      "effects": []
+    }
+  },
+  "base1-10": {
+    "kind": "pokemon",
+    "attacks": {
+      "Psyko": {
+        "effects": []
+      },
+      "Bouclier": {
+        "effects": [
+          {
+            "type": "DISCARD_ENERGY",
+            "amount": 1,
+            "target": "SELF"
+          },
+          {
+            "type": "PREVENT_DAMAGE",
+            "target": "SELF",
+            "duration": "UNTIL_NEXT_OPPONENT_TURN"
+          }
+        ]
+      }
+    }
+  },
+  "base1-11": {
+    "kind": "pokemon",
+    "attacks": {
+      "Mania": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onHeads": [
+              {
+                "type": "DAMAGE",
+                "amount": 10,
+                "target": "OPPONENT_ACTIVE"
+              }
+            ],
+            "onTails": [
+              {
+                "type": "DAMAGE",
+                "amount": 10,
+                "target": "SELF"
+              }
+            ]
+          }
+        ]
+      },
+      "Toxik": {
+        "effects": [
+          {
+            "type": "APPLY_SPECIAL_CONDITION",
+            "condition": "Poisoned",
+            "target": "OPPONENT_ACTIVE",
+            "poisonDamage": 20
+          }
+        ]
+      }
+    }
+  },
+  "exu-!": {
+    "kind": "pokemon",
+    "attacks": {
+      "Puissance cachée": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onHeads": [
+              {
+                "type": "PLACE_DAMAGE_COUNTERS",
+                "amount": 2,
+                "target": "SELECTED_OPPONENT_POKEMON"
+              }
+            ],
+            "onTails": [
+              {
+                "type": "PLACE_DAMAGE_COUNTERS",
+                "amount": 2,
+                "target": "SELECTED_OWN_POKEMON"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "ability": {
+      "name": "Réorganisation",
+      "effects": []
+    }
+  },
+  "base1-12": {
+    "kind": "pokemon",
+    "attacks": {
+      "Leurre": {
+        "effects": [
+          {
+            "type": "SWITCH_OPPONENT_ACTIVE"
+          }
+        ]
+      },
+      "Déflagration": {
+        "effects": [
+          {
+            "type": "DISCARD_ENERGY",
+            "amount": 1,
+            "target": "SELF"
+          }
+        ]
+      }
+    }
+  },
+  "base1-13": {
+    "kind": "pokemon",
+    "attacks": {
+      "Pistolet à O": {
+        "effects": []
+      },
+      "Lessiveuse": {
+        "effects": [
+          {
+            "type": "DISCARD_ENERGY",
+            "amount": 1,
+            "target": "OPPONENT_ACTIVE"
+          }
+        ]
+      }
+    }
+  },
+  "base1-14": {
+    "kind": "pokemon",
+    "attacks": {
+      "Hâte": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onHeads": [
+              {
+                "type": "PREVENT_DAMAGE",
+                "target": "SELF",
+                "duration": "UNTIL_NEXT_OPPONENT_TURN"
+              }
+            ]
+          }
+        ]
+      },
+      "Fatal-Foudre": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onTails": [
+              {
+                "type": "DAMAGE",
+                "amount": 30,
+                "target": "SELF"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "base1-15": {
+    "kind": "pokemon",
+    "attacks": {
+      "Lance-Soleil": {
+        "effects": []
+      }
+    },
+    "ability": {
+      "name": "Transfert d'Énergie",
+      "effects": [
+        {
+          "type": "MOVE_ENERGY",
+          "amount": 1,
+          "from": "SELECTED_OWN_POKEMON",
+          "to": "SELECTED_OWN_POKEMON"
+        }
+      ]
+    }
+  },
+  "base1-16": {
+    "kind": "pokemon",
+    "attacks": {
+      "Tonnerre": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onTails": [
+              {
+                "type": "DAMAGE",
+                "amount": 30,
+                "target": "SELF"
+              }
+            ]
+          }
+        ]
+      },
+      "Fatal-Foudre": {
+        "effects": [
+          {
+            "type": "DISCARD_ENERGY",
+            "amount": "ALL",
+            "target": "SELF"
+          }
+        ]
+      }
+    }
+  },
+  "base1-17": {
+    "kind": "pokemon",
+    "attacks": {
+      "Double-Dard": {
+        "effects": [
+          {
+            "type": "MULTI_COIN_FLIP",
+            "count": 2,
+            "perHeads": [
+              {
+                "type": "DAMAGE",
+                "amount": 30,
+                "target": "OPPONENT_ACTIVE"
+              }
+            ]
+          }
+        ]
+      },
+      "Dard-Venin": {
+        "effects": [
+          {
+            "type": "COIN_FLIP",
+            "onHeads": [
+              {
+                "type": "APPLY_SPECIAL_CONDITION",
+                "condition": "Poisoned",
+                "target": "OPPONENT_ACTIVE"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1474,6 +1474,99 @@ export class SeedService {
   }
 
   /**
+   * Seed competitive decks from JSON preset files.
+   * Creates public decks owned by the first admin user, linked to real cards in the DB.
+   */
+  async seedCompetitiveDecks() {
+    const users = await this.userRepository.find();
+    if (users.length === 0) return;
+
+    const owner =
+      users.find((u) => u.role === UserRole.ADMIN) ?? users[0];
+    const formats = await this.seedDeckFormats();
+    const standardFormat = formats.find((f) => f.type === "Standard");
+    if (!standardFormat) return;
+
+    const deckFiles = [
+      "deck-lanssorien.json",
+      "deck-gardevoir.json",
+      "deck-gromago.json",
+      "deck-zoroark-n.json",
+      "deck-angoliath-rosemary.json",
+      "deck-noarfang-control.json",
+    ];
+
+    let created = 0;
+
+    for (const filename of deckFiles) {
+      const filePath = path.join(__dirname, "data", filename);
+      if (!fs.existsSync(filePath)) {
+        console.log(`⚠️  Fichier ${filename} introuvable, ignoré.`);
+        continue;
+      }
+
+      const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+      const existing = await this.deckRepository.findOne({
+        where: { name: raw.name, user: { id: owner.id } },
+      });
+      if (existing) {
+        console.log(`⏭️  Deck "${raw.name}" existe déjà, ignoré.`);
+        continue;
+      }
+
+      const resolvedCards: { card: Card; qty: number }[] = [];
+      const notFound: string[] = [];
+
+      for (const entry of raw.cards) {
+        const card = await this.pokemonCardRepository.findOne({
+          where: { tcgDexId: entry.tcgDexId },
+        });
+        if (card) {
+          resolvedCards.push({ card, qty: entry.qty });
+        } else {
+          notFound.push(entry.tcgDexId || entry.name);
+        }
+      }
+
+      if (resolvedCards.length === 0) {
+        console.log(
+          `⚠️  Deck "${raw.name}" : aucune carte trouvée en BDD, ignoré.`,
+        );
+        continue;
+      }
+
+      const deck = this.deckRepository.create({
+        name: raw.name,
+        isPublic: true,
+        user: owner,
+        format: standardFormat,
+        coverCard: resolvedCards[0]?.card,
+      });
+      await this.deckRepository.save(deck);
+
+      const deckCards = resolvedCards.map((rc) =>
+        this.deckCardRepository.create({
+          card: rc.card,
+          qty: rc.qty,
+          role: DeckCardRole.main,
+          deck,
+        }),
+      );
+      await this.deckCardRepository.save(deckCards);
+      created++;
+
+      if (notFound.length > 0) {
+        console.log(
+          `⚠️  Deck "${raw.name}" : ${notFound.length} cartes introuvables (${notFound.slice(0, 5).join(", ")}${notFound.length > 5 ? "..." : ""})`,
+        );
+      }
+    }
+
+    console.log(`✅ ${created} deck(s) compétitif(s) créé(s).`);
+  }
+
+  /**
    * Seed card events to simulate user interactions (dev only)
    * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
    */

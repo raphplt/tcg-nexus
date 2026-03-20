@@ -262,6 +262,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       }
       onDispatchAction={emitAction}
       onRespondPrompt={emitPromptResponse}
+      onForfeit={() => emitAction({ type: "FORFEIT" })}
     />
   );
 }

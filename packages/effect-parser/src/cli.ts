@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { EffectParser } from "./parser.js";
@@ -7,7 +8,12 @@ import { GeminiProvider } from "./providers/gemini.js";
 import { OpenAIProvider } from "./providers/openai.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import type { LLMProvider } from "./providers/base.js";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { CardInput } from "./prompt-builder.js";
+import { loadCardsFromCSV, exportCardInputsToJSON } from "./pipeline.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── CLI ─────────────────────────────────────────────────────
 
@@ -15,15 +21,22 @@ const USAGE = `
 Usage: tsx src/cli.ts <command> [options]
 
 Commands:
+  extract                                 Extract parseable cards from CSV → JSON
   parse-file <input.json> [output.json]   Parse cards from JSON file
+  parse-csv [output.json]                 Extract from CSV + parse in one step
   parse-card <card.json>                  Parse a single card
   validate <registry.json>                Validate an existing registry
+
+CSV options (for extract / parse-csv):
+  --cards <path>      card.csv path (default: ../../doc/card.csv)
+  --details <path>    pokemon_card_details.csv path (default: ../../doc/pokemon_card_details.csv)
 
 Options:
   --provider <gemini|openai|anthropic>    LLM provider (default: gemini)
   --model <model>                         Model override
   --batch-size <n>                        Cards per batch (default: 5)
   --delay <ms>                            Delay between batches (default: 1000)
+  --limit <n>                             Limit number of cards to parse (for testing)
 
 Environment:
   GEMINI_API_KEY       API key for Gemini
@@ -72,8 +85,81 @@ async function main() {
   const model = getArg(args, "--model");
   const batchSize = Number(getArg(args, "--batch-size", "5"));
   const delay = Number(getArg(args, "--delay", "1000"));
+  const limit = getArg(args, "--limit")
+    ? Number(getArg(args, "--limit"))
+    : undefined;
+
+  const cardsCsv =
+    getArg(args, "--cards") ??
+    resolve(__dirname, "../../../doc/card.csv");
+  const detailsCsv =
+    getArg(args, "--details") ??
+    resolve(__dirname, "../../../doc/pokemon_card_details.csv");
 
   switch (command) {
+    case "extract": {
+      const output =
+        args[1] ?? resolve(__dirname, "../cards-to-parse.json");
+      exportCardInputsToJSON({
+        cardsCsvPath: resolve(cardsCsv),
+        detailsCsvPath: resolve(detailsCsv),
+        outputPath: resolve(output),
+      });
+      break;
+    }
+
+    case "parse-csv": {
+      const output =
+        args[1] ??
+        resolve(__dirname, "../card-effects-registry.json");
+      console.log("Step 1: Extracting cards from CSV...");
+      let cards = loadCardsFromCSV({
+        cardsCsvPath: resolve(cardsCsv),
+        detailsCsvPath: resolve(detailsCsv),
+        outputPath: "",
+      });
+      if (limit) cards = cards.slice(0, limit);
+      console.log(`\nStep 2: Parsing ${cards.length} cards with ${providerName}...`);
+
+      const provider = createProvider(providerName, model);
+      const parser = new EffectParser({ provider });
+
+      const csvCheckpoint = output + ".checkpoint";
+      const report = await processBatch(parser, cards, {
+        batchSize,
+        delayBetweenBatches: delay,
+        checkpointPath: resolve(csvCheckpoint),
+        onBatchComplete: (_results, idx, total) => {
+          const pct = Math.round(((idx + 1) / total) * 100);
+          console.log(
+            `  Batch ${idx + 1}/${total} (${pct}%) — ${report.successCount} ok, ${report.failureCount} fail`,
+          );
+        },
+      });
+
+      writeFileSync(
+        resolve(output),
+        JSON.stringify(report.registry, null, 2),
+      );
+
+      console.log(`\nResults:`);
+      console.log(`  Success: ${report.successCount}`);
+      console.log(`  Failures: ${report.failureCount}`);
+      if (report.failures.length > 0) {
+        console.log(`\nFailures:`);
+        for (const f of report.failures.slice(0, 20)) {
+          console.log(`  ${f.cardId}: ${f.error}`);
+        }
+        if (report.failures.length > 20) {
+          console.log(
+            `  ... and ${report.failures.length - 20} more`,
+          );
+        }
+      }
+      console.log(`\nRegistry written to: ${output}`);
+      break;
+    }
+
     case "parse-file": {
       const inputFile = args[1];
       const outputFile =
@@ -84,9 +170,10 @@ async function main() {
         process.exit(1);
       }
 
-      const cards: CardInput[] = JSON.parse(
+      let cards: CardInput[] = JSON.parse(
         readFileSync(resolve(inputFile), "utf-8"),
       );
+      if (limit) cards = cards.slice(0, limit);
       console.log(
         `Parsing ${cards.length} cards with ${providerName}...`,
       );
@@ -94,11 +181,16 @@ async function main() {
       const provider = createProvider(providerName, model);
       const parser = new EffectParser({ provider });
 
+      const checkpointFile = outputFile + ".checkpoint";
       const report = await processBatch(parser, cards, {
         batchSize,
         delayBetweenBatches: delay,
+        checkpointPath: resolve(checkpointFile!),
         onBatchComplete: (_results, idx, total) => {
-          console.log(`  Batch ${idx + 1}/${total} complete`);
+          const pct = Math.round(((idx + 1) / total) * 100);
+          console.log(
+            `  Batch ${idx + 1}/${total} (${pct}%) — ${report.successCount} ok, ${report.failureCount} fail`,
+          );
         },
       });
 
@@ -106,6 +198,15 @@ async function main() {
         resolve(outputFile!),
         JSON.stringify(report.registry, null, 2),
       );
+
+      // Clean up checkpoint on successful completion
+      if (
+        existsSync(resolve(checkpointFile!)) &&
+        report.failureCount === 0
+      ) {
+        const { unlinkSync } = await import("node:fs");
+        unlinkSync(resolve(checkpointFile!));
+      }
 
       console.log(`\nResults:`);
       console.log(`  Success: ${report.successCount}`);

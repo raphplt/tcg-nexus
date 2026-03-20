@@ -10,6 +10,8 @@ import {
 import { EffectResolver } from "./effects/EffectResolver";
 import {
   TargetType,
+  CountSource,
+  type DynamicDamageEffect,
   type SearchDeckEffect,
   type SearchDiscardEffect,
   type DiscardFromHandEffect,
@@ -1699,6 +1701,103 @@ export class GameEngine {
   }
 
   // ─── Public methods called by EffectResolver (Phase 1) ───
+
+  public computeDynamicDamage(
+    effect: DynamicDamageEffect,
+    sourcePlayerId: string,
+    opponentId: string,
+  ): number {
+    const source = this.state.players[sourcePlayerId];
+    const opponent = this.state.players[opponentId];
+
+    let count = 0;
+    switch (effect.countSource) {
+      case CountSource.ENERGY_ON_SELF:
+        count = source.active?.attachedEnergies.length ?? 0;
+        break;
+      case CountSource.ENERGY_ON_TARGET:
+        count = opponent.active?.attachedEnergies.length ?? 0;
+        break;
+      case CountSource.ENERGY_ON_SELF_SPECIFIC:
+        count = source.active?.attachedEnergies.filter(
+          (e) => e.baseCard.provides?.includes(effect.energyType ?? ""),
+        ).length ?? 0;
+        break;
+      case CountSource.ENERGY_ON_TARGET_SPECIFIC:
+        count = opponent.active?.attachedEnergies.filter(
+          (e) => e.baseCard.provides?.includes(effect.energyType ?? ""),
+        ).length ?? 0;
+        break;
+      case CountSource.EXTRA_ENERGY_ON_SELF:
+        // Total energy minus attack cost — simplified: just count all for now
+        count = source.active?.attachedEnergies.filter(
+          (e) => !effect.energyType || e.baseCard.provides?.includes(effect.energyType),
+        ).length ?? 0;
+        break;
+      case CountSource.DAMAGE_COUNTERS_ON_SELF:
+        count = Math.floor((source.active?.damageCounters ?? 0) / 10);
+        break;
+      case CountSource.DAMAGE_COUNTERS_ON_TARGET:
+        count = Math.floor((opponent.active?.damageCounters ?? 0) / 10);
+        break;
+      case CountSource.BENCH_POKEMON_SELF:
+        count = source.bench.length;
+        break;
+      case CountSource.BENCH_POKEMON_OPPONENT:
+        count = opponent.bench.length;
+        break;
+      case CountSource.BENCH_POKEMON_BOTH:
+        count = source.bench.length + opponent.bench.length;
+        break;
+      case CountSource.CARDS_IN_HAND_SELF:
+        count = source.hand.length;
+        break;
+      case CountSource.CARDS_IN_HAND_OPPONENT:
+        count = opponent.hand.length;
+        break;
+      case CountSource.CARDS_IN_DISCARD_SELF:
+        count = source.discard.length;
+        break;
+      case CountSource.CARDS_IN_DISCARD_OPPONENT:
+        count = opponent.discard.length;
+        break;
+      case CountSource.PRIZES_TAKEN_SELF:
+        count = source.prizeCardsTaken;
+        break;
+      case CountSource.PRIZES_TAKEN_OPPONENT:
+        count = opponent.prizeCardsTaken;
+        break;
+      case CountSource.PRIZES_REMAINING_SELF:
+        count = source.prizes.length;
+        break;
+      case CountSource.PRIZES_REMAINING_OPPONENT:
+        count = opponent.prizes.length;
+        break;
+      case CountSource.POKEMON_IN_DISCARD_SELF:
+        count = source.discard.filter(
+          (c) => c.baseCard.category === CardCategory.Pokemon,
+        ).length;
+        break;
+      case CountSource.CARDS_IN_LOST_ZONE_SELF:
+        count = source.lostZone.length;
+        break;
+    }
+
+    if (effect.maxCount !== undefined) {
+      count = Math.min(count, effect.maxCount);
+    }
+
+    const dynamicAmount = effect.amountPerUnit * count;
+
+    if (effect.operator === "-") {
+      // For "-" operator, the engine applies this as negative
+      // (base damage - dynamicAmount), but we return just the
+      // amount to subtract; the engine handles the subtraction
+      return dynamicAmount;
+    }
+
+    return dynamicAmount;
+  }
 
   public shuffleDeck(playerId: string) {
     this.shufflePlayerDeck(playerId);
