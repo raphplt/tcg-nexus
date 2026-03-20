@@ -23,7 +23,8 @@
   "workspaces": [
     "apps/*",
     "packages/typescript-config",
-    "packages/ui"
+    "packages/ui",
+    "packages/effect-parser"
   ],
   "overrides": {
     "@types/react": "~19.0.8",

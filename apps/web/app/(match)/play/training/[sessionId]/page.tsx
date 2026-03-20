@@ -1,9 +1,5 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageWrapper } from "@/components/Layout/PageWrapper";
 import TrainingBoard from "@/components/match/TrainingBoard";
-import { Button } from "@/components/ui/button";
 
 interface TrainingMatchPageProps {
   params: Promise<{
@@ -21,9 +17,5 @@ export default async function TrainingMatchPage({
     notFound();
   }
 
-  return (
-    <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--play">
-      <TrainingBoard sessionId={numericSessionId} />
-    </PageWrapper>
-  );
+  return <TrainingBoard sessionId={numericSessionId} />;
 }
