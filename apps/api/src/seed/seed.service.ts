@@ -277,7 +277,7 @@ export class SeedService {
   async importPokemonSeries() {
     const dataPath = path.resolve(
       __dirname,
-      "../../../data/pokemon_series.json",
+      "../../../../data/pokemon_series.json",
     );
     if (!fs.existsSync(dataPath)) {
       console.warn(`Series file not found at ${dataPath}`);

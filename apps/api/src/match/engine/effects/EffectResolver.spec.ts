@@ -107,7 +107,15 @@ describe("EffectResolver", () => {
       turnStep: TurnStep.Main,
       stadium: null,
       winnerId: null,
-    };
+      winnerReason: null,
+      firstPlayerId: null,
+      rngState: 12345,
+      pendingTurnTransitionToPlayerId: null,
+      pendingPrompt: null,
+      setup: null,
+      resumeAction: null,
+      pendingTrainerPlay: null,
+    } as GameState;
 
     engine = new GameEngine(initialState);
     resolver = new EffectResolver(engine);

@@ -8,7 +8,18 @@ import {
   RetreatAction,
 } from "./actions/Action";
 import { EffectResolver } from "./effects/EffectResolver";
-import { TargetType } from "./effects/Effect";
+import {
+  TargetType,
+  type SearchDeckEffect,
+  type SearchDiscardEffect,
+  type DiscardFromHandEffect,
+  type MoveEnergyEffect,
+  type AttachEnergyFromDeckEffect,
+  type AttachEnergyFromDiscardEffect,
+  type CopyAttackEffect,
+  type ReviveEffect,
+  type EffectDuration,
+} from "./effects/Effect";
 import {
   CardCategory,
   GameFinishedReason,
@@ -228,22 +239,36 @@ export class GameEngine {
   public discardAttachedEnergy(
     sourcePlayerId: string,
     target: TargetType,
-    amount: number,
+    amount: number | "ALL",
     events: any[],
+    energyType?: string,
   ) {
     const opponentId = this.getOpponentId(sourcePlayerId);
     const playerId =
       target === TargetType.OPPONENT_ACTIVE ? opponentId : sourcePlayerId;
     const pokemon = this.state.players[playerId].active;
 
-    if (!pokemon || amount <= 0) {
-      return;
+    if (!pokemon) return;
+
+    let candidates = pokemon.attachedEnergies;
+    if (energyType) {
+      candidates = candidates.filter((e) =>
+        e.baseCard.provides?.includes(energyType),
+      );
     }
 
-    const discarded = pokemon.attachedEnergies.splice(
-      Math.max(0, pokemon.attachedEnergies.length - amount),
-      amount,
-    );
+    const discardCount = amount === "ALL" ? candidates.length : amount;
+    if (discardCount <= 0) return;
+
+    const discarded: typeof candidates = [];
+    for (let i = 0; i < discardCount && candidates.length > 0; i++) {
+      const idx = pokemon.attachedEnergies.indexOf(
+        candidates[candidates.length - 1 - i],
+      );
+      if (idx !== -1) {
+        discarded.push(...pokemon.attachedEnergies.splice(idx, 1));
+      }
+    }
     this.state.players[playerId].discard.push(...discarded);
 
     if (discarded.length > 0) {
@@ -1671,6 +1696,354 @@ export class GameEngine {
       playerId,
       metadata,
     };
+  }
+
+  // ─── Public methods called by EffectResolver (Phase 1) ───
+
+  public shuffleDeck(playerId: string) {
+    this.shufflePlayerDeck(playerId);
+  }
+
+  /**
+   * Initiate a deck search — creates a prompt for the player
+   * to choose which card(s) to take from their deck.
+   * TODO: Full implementation with prompt flow in Phase 4.
+   */
+  public initiateSearchDeck(
+    playerId: string,
+    effect: SearchDeckEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "SEARCH_DECK_INITIATED",
+      playerId,
+      filter: effect.filter,
+      amount: effect.amount,
+      destination: effect.destination,
+    });
+    // TODO Phase 4: Create ChooseCardFromDeck prompt
+    // For now shuffle deck to respect the game flow
+    if (effect.shuffleAfter !== false) {
+      this.shufflePlayerDeck(playerId);
+    }
+  }
+
+  public initiateSearchDiscard(
+    playerId: string,
+    effect: SearchDiscardEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "SEARCH_DISCARD_INITIATED",
+      playerId,
+      filter: effect.filter,
+      amount: effect.amount,
+      destination: effect.destination,
+    });
+    // TODO Phase 4: Create ChooseCardFromDiscard prompt
+  }
+
+  public initiateDiscardFromHand(
+    playerId: string,
+    effect: DiscardFromHandEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "DISCARD_FROM_HAND_INITIATED",
+      playerId,
+      amount: effect.amount,
+    });
+    // TODO Phase 4: Create ChooseCardFromHand prompt
+  }
+
+  public initiateMoveEnergy(
+    sourcePlayerId: string,
+    effect: MoveEnergyEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "MOVE_ENERGY_INITIATED",
+      playerId: sourcePlayerId,
+      amount: effect.amount,
+      energyType: effect.energyType,
+    });
+    // TODO Phase 4: Create ChooseEnergyToMove prompt
+  }
+
+  public initiateAttachEnergyFromDeck(
+    playerId: string,
+    effect: AttachEnergyFromDeckEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "ATTACH_ENERGY_FROM_DECK_INITIATED",
+      playerId,
+      amount: effect.amount,
+      energyType: effect.energyType,
+    });
+    // TODO Phase 4: Search deck for energy, attach, shuffle
+  }
+
+  public initiateAttachEnergyFromDiscard(
+    playerId: string,
+    effect: AttachEnergyFromDiscardEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "ATTACH_ENERGY_FROM_DISCARD_INITIATED",
+      playerId,
+      amount: effect.amount,
+      energyType: effect.energyType,
+    });
+    // TODO Phase 4: Create prompt to choose energy from discard
+  }
+
+  public initiateSwitchOpponentActive(
+    sourcePlayerId: string,
+    events: any[],
+  ) {
+    const opponentId = this.getOpponentId(sourcePlayerId);
+    const opponent = this.state.players[opponentId];
+
+    if (opponent.bench.length === 0) {
+      events.push({ type: "SWITCH_FAILED_NO_BENCH", playerId: opponentId });
+      return;
+    }
+
+    events.push({
+      type: "SWITCH_OPPONENT_INITIATED",
+      playerId: sourcePlayerId,
+    });
+    // TODO Phase 4: Create ChooseOpponentBenchTarget prompt
+    // For now, auto-select first bench pokemon for basic implementation
+  }
+
+  public initiateSwitchOwnActive(
+    playerId: string,
+    events: any[],
+  ) {
+    const player = this.state.players[playerId];
+
+    if (player.bench.length === 0) {
+      events.push({ type: "SWITCH_FAILED_NO_BENCH", playerId });
+      return;
+    }
+
+    events.push({
+      type: "SWITCH_OWN_INITIATED",
+      playerId,
+    });
+    // TODO Phase 4: Create ChooseBenchTarget prompt
+  }
+
+  public returnPokemonToHand(
+    pokemon: PokemonCardInGame,
+    events: any[],
+  ) {
+    const player = this.state.players[pokemon.ownerId];
+
+    // Return to hand: the pokemon card + all attached cards
+    player.hand.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    for (const energy of pokemon.attachedEnergies) {
+      player.hand.push(energy);
+    }
+    for (const tool of pokemon.attachedTools) {
+      player.hand.push(tool);
+    }
+    for (const evo of pokemon.attachedEvolutions) {
+      player.hand.push({ instanceId: evo.instanceId, ownerId: evo.ownerId, baseCard: evo.baseCard });
+    }
+
+    // Remove from board
+    if (player.active?.instanceId === pokemon.instanceId) {
+      player.active = null;
+    } else {
+      player.bench = player.bench.filter(
+        (p) => p.instanceId !== pokemon.instanceId,
+      );
+    }
+
+    events.push({
+      type: "RETURNED_TO_HAND",
+      targetInstanceId: pokemon.instanceId,
+      playerId: pokemon.ownerId,
+    });
+  }
+
+  public shufflePokemonIntoDeck(
+    pokemon: PokemonCardInGame,
+    events: any[],
+  ) {
+    const player = this.state.players[pokemon.ownerId];
+
+    // Shuffle into deck: the pokemon card + all attached cards
+    player.deck.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    for (const energy of pokemon.attachedEnergies) {
+      player.deck.push(energy);
+    }
+    for (const tool of pokemon.attachedTools) {
+      player.deck.push(tool);
+    }
+    for (const evo of pokemon.attachedEvolutions) {
+      player.deck.push({ instanceId: evo.instanceId, ownerId: evo.ownerId, baseCard: evo.baseCard });
+    }
+
+    // Remove from board
+    if (player.active?.instanceId === pokemon.instanceId) {
+      player.active = null;
+    } else {
+      player.bench = player.bench.filter(
+        (p) => p.instanceId !== pokemon.instanceId,
+      );
+    }
+
+    this.shufflePlayerDeck(pokemon.ownerId);
+
+    events.push({
+      type: "SHUFFLED_INTO_DECK",
+      targetInstanceId: pokemon.instanceId,
+      playerId: pokemon.ownerId,
+    });
+  }
+
+  public devolvePokemon(
+    pokemon: PokemonCardInGame,
+    events: any[],
+  ) {
+    if (pokemon.attachedEvolutions.length === 0) return;
+
+    // Remove top evolution → goes to discard or hand of owner
+    const topEvo = pokemon.attachedEvolutions.pop()!;
+    const player = this.state.players[pokemon.ownerId];
+    player.discard.push({
+      instanceId: pokemon.instanceId,
+      ownerId: pokemon.ownerId,
+      baseCard: pokemon.baseCard,
+    });
+
+    // The Pokemon becomes the previous stage
+    pokemon.baseCard = topEvo.baseCard;
+    pokemon.specialConditions = [];
+
+    events.push({
+      type: "DEVOLVED",
+      targetInstanceId: pokemon.instanceId,
+      playerId: pokemon.ownerId,
+    });
+  }
+
+  public initiateRevive(
+    playerId: string,
+    effect: ReviveEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "REVIVE_INITIATED",
+      playerId,
+      filter: effect.filter,
+    });
+    // TODO Phase 4: Create ChooseCardFromDiscard prompt
+    // to choose a Basic Pokemon to put on bench
+  }
+
+  public initiateCopyAttack(
+    playerId: string,
+    effect: CopyAttackEffect,
+    events: any[],
+  ) {
+    events.push({
+      type: "COPY_ATTACK_INITIATED",
+      playerId,
+      source: effect.source,
+    });
+    // TODO Phase 4: Create ChooseAttackToCopy prompt
+  }
+
+  public sendToLostZone(
+    pokemon: PokemonCardInGame,
+    events: any[],
+  ) {
+    const player = this.state.players[pokemon.ownerId];
+
+    // Send to lost zone: the pokemon card + all attached cards
+    player.lostZone.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    for (const energy of pokemon.attachedEnergies) {
+      player.lostZone.push(energy);
+    }
+    for (const tool of pokemon.attachedTools) {
+      player.lostZone.push(tool);
+    }
+
+    // Remove from board
+    if (player.active?.instanceId === pokemon.instanceId) {
+      player.active = null;
+    } else {
+      player.bench = player.bench.filter(
+        (p) => p.instanceId !== pokemon.instanceId,
+      );
+    }
+
+    events.push({
+      type: "SENT_TO_LOST_ZONE",
+      targetInstanceId: pokemon.instanceId,
+      playerId: pokemon.ownerId,
+    });
+  }
+
+  public markExtraPrize(playerId: string, amount: number) {
+    // Store on the state so the KO handler knows to grant extra prizes
+    // TODO Phase 4: Add pendingExtraPrize field to GameState
+  }
+
+  /**
+   * Apply a temporary effect to a Pokemon (PREVENT_DAMAGE,
+   * REDUCE_DAMAGE, CANT_ATTACK, CANT_RETREAT, BOOST_DAMAGE, etc.)
+   * TODO Phase 4: Implement temporal effect tracking system.
+   * These effects need to be stored, checked during damage resolution
+   * / action validation, and cleaned up at turn boundaries.
+   */
+  public applyTemporaryEffect(
+    pokemonInstanceId: string,
+    effect: Record<string, unknown>,
+    events: any[],
+  ) {
+    events.push({
+      type: "TEMPORARY_EFFECT_APPLIED",
+      targetInstanceId: pokemonInstanceId,
+      effect,
+    });
+    // TODO Phase 4: Add temporaryEffects[] to PokemonCardInGame
+    // and/or GameState for tracking duration-based effects
+  }
+
+  /**
+   * Apply a player-level effect (TRAINER_LOCK, etc.)
+   */
+  public applyPlayerEffect(
+    playerId: string,
+    effect: Record<string, unknown>,
+    events: any[],
+  ) {
+    events.push({
+      type: "PLAYER_EFFECT_APPLIED",
+      playerId,
+      effect,
+    });
+    // TODO Phase 4: Add playerEffects[] to PlayerState
+  }
+
+  /**
+   * Apply a global game effect (ABILITY_LOCK, etc.)
+   */
+  public applyGlobalEffect(
+    effect: Record<string, unknown>,
+    events: any[],
+  ) {
+    events.push({
+      type: "GLOBAL_EFFECT_APPLIED",
+      effect,
+    });
+    // TODO Phase 4: Add globalEffects[] to GameState
   }
 
   private getOpponentId(playerId: string): string {

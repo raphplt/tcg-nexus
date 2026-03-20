@@ -44,12 +44,25 @@ export enum PlayerId {
 }
 
 export enum PromptType {
+  // Setup prompts
   ChooseFirstPlayer = "CHOOSE_FIRST_PLAYER",
   ChooseActive = "CHOOSE_ACTIVE",
   ChooseBench = "CHOOSE_BENCH",
   ChooseMulliganDraw = "CHOOSE_MULLIGAN_DRAW",
+
+  // Runtime prompts
   ChoosePromotion = "CHOOSE_PROMOTION",
   ChooseTrainerTarget = "CHOOSE_TRAINER_TARGET",
+
+  // Effect-driven prompts (Phase 1 — effect parser support)
+  ChooseCardFromHand = "CHOOSE_CARD_FROM_HAND",
+  ChooseCardFromDeck = "CHOOSE_CARD_FROM_DECK",
+  ChooseCardFromDiscard = "CHOOSE_CARD_FROM_DISCARD",
+  ChooseBenchTarget = "CHOOSE_BENCH_TARGET",
+  ChooseOpponentBenchTarget = "CHOOSE_OPPONENT_BENCH_TARGET",
+  ChooseAttackToCopy = "CHOOSE_ATTACK_TO_COPY",
+  ChooseEnergyToMove = "CHOOSE_ENERGY_TO_MOVE",
+  ChooseEnergyToDiscard = "CHOOSE_ENERGY_TO_DISCARD",
 }
 
 export enum GameFinishedReason {
