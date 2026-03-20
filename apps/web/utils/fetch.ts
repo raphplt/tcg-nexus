@@ -22,6 +22,106 @@ export const secureApi = axios.create({
   withCredentials: true,
 });
 
+// --- Intercepteur de refresh token sur secureApi ---
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (error?: any) => void;
+}> = [];
+
+const processQueue = (error: any) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve();
+    }
+  });
+  failedQueue = [];
+};
+
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+const clearRefreshTimer = () => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+};
+
+export const scheduleRefresh = (tokenExpirationTime: number) => {
+  clearRefreshTimer();
+
+  const refreshTime = Math.max(
+    tokenExpirationTime - Date.now() - 5 * 60 * 1000,
+    2 * 60 * 1000,
+  );
+
+  refreshTimer = setTimeout(async () => {
+    try {
+      await secureApi.post("/auth/refresh");
+      scheduleRefresh(Date.now() + 12 * 60 * 1000);
+    } catch (error) {
+      console.error("Proactive refresh failed:", error);
+      clearRefreshTimer();
+    }
+  }, refreshTime);
+};
+
+export { clearRefreshTimer };
+
+secureApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    const skipRefreshRoutes = [
+      "/auth/login",
+      "/auth/register",
+      "/auth/logout",
+      "/auth/refresh",
+    ];
+    const shouldSkipRefresh = skipRefreshRoutes.some((route) =>
+      originalRequest.url?.includes(route),
+    );
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !shouldSkipRefresh
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return secureApi(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        await secureApi.post("/auth/refresh");
+        scheduleRefresh(Date.now() + 14 * 60 * 1000);
+        processQueue(null);
+        return secureApi(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 /**
  * Fonction fetcher générique pour Tanstack Query (compatible avec axios et sécurisée)
  * @param url L'URL relative de l'API (ex: /tournaments)
