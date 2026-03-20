@@ -1,9 +1,22 @@
+import { AnyEffect } from "../effects/Effect";
 import { TrainerCardInGame } from "./Card";
-import { GameFinishedReason, TurnStep, GamePhase } from "./enums";
+import { GameFinishedReason, GamePhase, TurnStep } from "./enums";
 import { PlayerState } from "./Player";
 import { PendingPrompt } from "./Prompt";
 import { SetupState } from "./Setup";
-import { AnyEffect } from "../effects/Effect";
+
+/** Global game-level temporary effect (e.g. ABILITY_LOCK) */
+export interface GlobalEffect {
+  type: "ABILITY_LOCK";
+  expiresAt: { turnNumber: number; playerId: string };
+}
+
+/** Context for an effect that requires user input via a prompt */
+export interface PendingEffectAction {
+  type: string;
+  playerId: string;
+  effect: AnyEffect;
+}
 
 export interface GameState {
   id: string; // Match ID
@@ -30,6 +43,8 @@ export interface GameState {
     trainerCardInstanceId: string;
     effects: AnyEffect[];
   } | null;
+  pendingEffectAction: PendingEffectAction | null;
+  globalEffects: GlobalEffect[];
 
   // Result
   winnerId: string | null;

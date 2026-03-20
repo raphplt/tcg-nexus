@@ -182,14 +182,20 @@ async function main() {
       const parser = new EffectParser({ provider });
 
       const checkpointFile = outputFile + ".checkpoint";
+      let runningSuccess = 0;
+      let runningFailure = 0;
       const report = await processBatch(parser, cards, {
         batchSize,
         delayBetweenBatches: delay,
         checkpointPath: resolve(checkpointFile!),
-        onBatchComplete: (_results, idx, total) => {
+        onBatchComplete: (results, idx, total) => {
+          for (const r of results) {
+            if (r.success) runningSuccess++;
+            else runningFailure++;
+          }
           const pct = Math.round(((idx + 1) / total) * 100);
           console.log(
-            `  Batch ${idx + 1}/${total} (${pct}%) — ${report.successCount} ok, ${report.failureCount} fail`,
+            `  Batch ${idx + 1}/${total} (${pct}%) — ${runningSuccess} ok, ${runningFailure} fail`,
           );
         },
       });

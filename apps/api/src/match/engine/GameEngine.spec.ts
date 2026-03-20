@@ -24,6 +24,7 @@ describe("GameEngine Basics", () => {
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
           turnsTaken: 0,
+          playerEffects: [],
         },
         Player2: {
           playerId: "Player2",
@@ -40,6 +41,7 @@ describe("GameEngine Basics", () => {
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
           turnsTaken: 0,
+          playerEffects: [],
         },
       },
       playerIds: ["Player1", "Player2"],
@@ -57,6 +59,8 @@ describe("GameEngine Basics", () => {
       pendingTrainerPlay: null,
       winnerId: null,
       winnerReason: null,
+      pendingEffectAction: null,
+      globalEffects: [],
     };
   });
 
@@ -197,6 +201,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         attacks: [{ name: "Scratch", cost: ["Incolore"], damage: 10 }],
       } as any,
@@ -238,6 +243,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         attacks: [{ name: "Scratch", cost: ["Incolore"], damage: 10 }],
       } as any,
@@ -281,6 +287,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         attacks: [{ name: "KO Hit", cost: ["Incolore"], damage: 10 }],
         types: ["Combat"],
@@ -295,6 +302,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         hp: 10,
         attacks: [],
@@ -341,6 +349,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         attacks: [{ name: "KO Hit", cost: ["Incolore"], damage: 20 }],
         types: ["Combat"],
@@ -355,6 +364,7 @@ describe("GameEngine Basics", () => {
       attachedEvolutions: [],
       damageCounters: 0,
       turnsInPlay: 1,
+      temporaryEffects: [],
       baseCard: {
         hp: 10,
         attacks: [],
@@ -372,6 +382,7 @@ describe("GameEngine Basics", () => {
         attachedEvolutions: [],
         damageCounters: 0,
         turnsInPlay: 1,
+        temporaryEffects: [],
         baseCard: {
           hp: 60,
           name: "Bench Mon",

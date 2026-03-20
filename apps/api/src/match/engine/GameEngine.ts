@@ -9,8 +9,10 @@ import {
 } from "./actions/Action";
 import { EffectResolver } from "./effects/EffectResolver";
 import {
+  EffectType,
   TargetType,
   CountSource,
+  type AnyEffect,
   type DynamicDamageEffect,
   type SearchDeckEffect,
   type SearchDiscardEffect,
@@ -35,9 +37,11 @@ import {
   CardInGame,
   EnergyCardInGame,
   PokemonCardInGame,
+  TemporaryEffect,
   TrainerCardInGame,
 } from "./models/Card";
 import { GameState } from "./models/GameState";
+import { PlayerEffect } from "./models/Player";
 import { PendingPrompt, PromptOption, PromptResponse } from "./models/Prompt";
 import { SetupTask, SetupTaskType } from "./models/Setup";
 
@@ -186,6 +190,25 @@ export class GameEngine {
         break;
       case PromptType.ChooseTrainerTarget:
         this.handleChooseTrainerTarget(playerId, response, events);
+        break;
+      case PromptType.ChooseCardFromDeck:
+        this.handleChooseCardFromDeck(playerId, response, events);
+        break;
+      case PromptType.ChooseCardFromDiscard:
+        this.handleChooseCardFromDiscard(playerId, response, events);
+        break;
+      case PromptType.ChooseCardFromHand:
+        this.handleChooseCardFromHand(playerId, response, events);
+        break;
+      case PromptType.ChooseBenchTarget:
+        this.handleChooseBenchTarget(playerId, response, events);
+        break;
+      case PromptType.ChooseOpponentBenchTarget:
+        this.handleChooseOpponentBenchTarget(
+          playerId,
+          response,
+          events,
+        );
         break;
       default:
         throw new Error(`Prompt ${prompt.type} is not supported`);
@@ -671,6 +694,9 @@ export class GameEngine {
     this.state.players[currentPlayerId].turnsTaken =
       (this.state.players[currentPlayerId].turnsTaken || 0) + 1;
 
+    // Clean up expired temporary effects at end of turn
+    this.cleanupExpiredEffects(currentPlayerId);
+
     this.state.pendingTurnTransitionToPlayerId = nextPlayerId;
     this.state.turnStep = TurnStep.PokemonCheckup;
 
@@ -883,6 +909,12 @@ export class GameEngine {
 
   private playTrainer(action: PlayTrainerAction, events: any[]) {
     const player = this.state.players[action.playerId];
+
+    // Check TRAINER_LOCK player effect
+    const trainerLock = (player.playerEffects || []).find(
+      (e) => e.type === "TRAINER_LOCK",
+    );
+
     const trainerCardIndex = player.hand.findIndex(
       (card) => card.instanceId === action.payload.trainerCardInstanceId,
     );
@@ -893,6 +925,21 @@ export class GameEngine {
     const trainerCard = player.hand[trainerCardIndex] as TrainerCardInGame;
     if (trainerCard.baseCard.category !== CardCategory.Trainer) {
       throw new Error("Selected card is not a Trainer");
+    }
+
+    if (trainerLock) {
+      const lockType = trainerLock.lockType || "ALL";
+      const cardType = trainerCard.baseCard.trainerType;
+      if (
+        lockType === "ALL" ||
+        (lockType === "ITEM" && cardType === "Item") ||
+        (lockType === "SUPPORTER" && cardType === "Supporter") ||
+        (lockType === "STADIUM" && cardType === "Stadium")
+      ) {
+        throw new Error(
+          "Trainer cards are locked by an opponent's effect",
+        );
+      }
     }
 
     if (
@@ -1013,9 +1060,28 @@ export class GameEngine {
       );
     }
 
+    // Check CANT_ATTACK temporary effect
+    if (this.hasTemporaryEffect(activePokemon, "CANT_ATTACK")) {
+      throw new Error(
+        "This Pokemon cannot attack this turn",
+      );
+    }
+
     const attack = activePokemon.baseCard.attacks[action.payload.attackIndex];
     if (!attack) {
       throw new Error("Attack not found");
+    }
+
+    // Check CANT_USE_SAME_ATTACK temporary effect
+    const sameAttackBlock = activePokemon.temporaryEffects.find(
+      (e) =>
+        e.type === "CANT_USE_SAME_ATTACK" &&
+        e.attackName === attack.name,
+    );
+    if (sameAttackBlock) {
+      throw new Error(
+        "Cannot use the same attack twice in a row",
+      );
     }
 
     if (!this.canPayAttackCost(activePokemon, attack.cost)) {
@@ -1031,11 +1097,64 @@ export class GameEngine {
 
     const opponentId = this.getOpponentId(action.playerId);
     const opponentActive = this.state.players[opponentId].active;
-    const attackDamage = this.calculateAttackDamage(
+
+    // Calculate base damage, integrating DYNAMIC_DAMAGE from effects
+    let attackDamage = this.calculateAttackDamage(
       activePokemon,
       opponentActive,
       attack,
     );
+
+    // Apply DYNAMIC_DAMAGE from attack effects to modify base damage
+    const dynamicEffect = (attack.effects || []).find(
+      (e): e is DynamicDamageEffect =>
+        e.type === EffectType.DYNAMIC_DAMAGE,
+    );
+    if (dynamicEffect && this.isDynamicDamageString(attack.damage)) {
+      const dynAmount = this.computeDynamicDamage(
+        dynamicEffect,
+        action.playerId,
+        opponentId,
+      );
+      if (dynamicEffect.operator === "+") {
+        attackDamage += dynAmount;
+      } else if (dynamicEffect.operator === "-") {
+        attackDamage = Math.max(0, attackDamage - dynAmount);
+      } else if (dynamicEffect.operator === "×") {
+        // For × operator, base damage is 0 and total is dynamic
+        attackDamage = this.calculateAttackDamage(
+          activePokemon,
+          opponentActive,
+          { ...attack, damage: dynAmount },
+        );
+      }
+    }
+
+    // Apply BOOST_DAMAGE from temporary effects on attacker
+    const boostEffect = activePokemon.temporaryEffects.find(
+      (e) => e.type === "BOOST_DAMAGE" && e.amount,
+    );
+    if (boostEffect?.amount) {
+      attackDamage += boostEffect.amount;
+    }
+
+    // Apply REDUCE_DAMAGE / PREVENT_DAMAGE from temporary effects on defender
+    if (opponentActive && attackDamage > 0) {
+      if (this.hasTemporaryEffect(opponentActive, "PREVENT_DAMAGE")) {
+        attackDamage = 0;
+        events.push({
+          type: "DAMAGE_PREVENTED",
+          targetInstanceId: opponentActive.instanceId,
+        });
+      } else {
+        const reduceEffect = opponentActive.temporaryEffects.find(
+          (e) => e.type === "REDUCE_DAMAGE" && e.amount,
+        );
+        if (reduceEffect?.amount) {
+          attackDamage = Math.max(0, attackDamage - reduceEffect.amount);
+        }
+      }
+    }
 
     if (opponentActive && attackDamage > 0) {
       opponentActive.damageCounters += attackDamage;
@@ -1046,9 +1165,23 @@ export class GameEngine {
       });
     }
 
-    if (attack.effects && attack.effects.length > 0) {
+    // Resolve remaining effects, skipping DYNAMIC_DAMAGE if already applied
+    const remainingEffects = (attack.effects || []).filter(
+      (e) => {
+        if (
+          e.type === EffectType.DYNAMIC_DAMAGE &&
+          dynamicEffect &&
+          this.isDynamicDamageString(attack.damage)
+        ) {
+          return false; // Already integrated into damage calculation
+        }
+        return true;
+      },
+    );
+
+    if (remainingEffects.length > 0) {
       this.effectResolver.resolveEffects(
-        attack.effects,
+        remainingEffects,
         action.playerId,
         events,
       );
@@ -1063,6 +1196,13 @@ export class GameEngine {
     }
 
     this.endTurn(events);
+  }
+
+  private isDynamicDamageString(
+    damage?: number | string,
+  ): boolean {
+    if (typeof damage !== "string") return false;
+    return /[+\-×x]/.test(damage);
   }
 
   private evolvePokemon(action: EvolvePokemonAction, events: any[]) {
@@ -1111,6 +1251,7 @@ export class GameEngine {
     evolutionCard.attachedEnergies = targetPokemon.attachedEnergies;
     evolutionCard.attachedTools = targetPokemon.attachedTools;
     evolutionCard.specialConditions = [];
+    evolutionCard.temporaryEffects = [];
     evolutionCard.turnsInPlay = 0;
     evolutionCard.attachedEvolutions = [
       ...targetPokemon.attachedEvolutions,
@@ -1154,6 +1295,12 @@ export class GameEngine {
     ) {
       throw new Error(
         "Active Pokemon cannot retreat due to a special condition",
+      );
+    }
+
+    if (this.hasTemporaryEffect(activePokemon, "CANT_RETREAT")) {
+      throw new Error(
+        "Active Pokemon cannot retreat due to an effect",
       );
     }
 
@@ -1460,6 +1607,7 @@ export class GameEngine {
       attachedTools: card.attachedTools || [],
       attachedEvolutions: card.attachedEvolutions || [],
       turnsInPlay: card.turnsInPlay || 0,
+      temporaryEffects: card.temporaryEffects || [],
     };
   }
 
@@ -1803,16 +1951,24 @@ export class GameEngine {
     this.shufflePlayerDeck(playerId);
   }
 
-  /**
-   * Initiate a deck search — creates a prompt for the player
-   * to choose which card(s) to take from their deck.
-   * TODO: Full implementation with prompt flow in Phase 4.
-   */
   public initiateSearchDeck(
     playerId: string,
     effect: SearchDeckEffect,
     events: any[],
   ) {
+    const player = this.state.players[playerId];
+    const matchingCards = player.deck.filter((card) =>
+      this.matchesSearchFilter(card, effect.filter),
+    );
+
+    if (matchingCards.length === 0) {
+      events.push({ type: "SEARCH_DECK_NO_MATCH", playerId });
+      if (effect.shuffleAfter !== false) {
+        this.shufflePlayerDeck(playerId);
+      }
+      return;
+    }
+
     events.push({
       type: "SEARCH_DECK_INITIATED",
       playerId,
@@ -1820,11 +1976,26 @@ export class GameEngine {
       amount: effect.amount,
       destination: effect.destination,
     });
-    // TODO Phase 4: Create ChooseCardFromDeck prompt
-    // For now shuffle deck to respect the game flow
-    if (effect.shuffleAfter !== false) {
-      this.shufflePlayerDeck(playerId);
-    }
+
+    const options: PromptOption[] = matchingCards.map((card) => ({
+      value: card.instanceId,
+      label: card.baseCard.name,
+    }));
+
+    this.state.pendingEffectAction = {
+      type: "SEARCH_DECK",
+      playerId,
+      effect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseCardFromDeck,
+      title: "Cherchez une carte dans votre deck",
+      minSelections: 0,
+      maxSelections: Math.min(effect.amount, matchingCards.length),
+      allowPass: true,
+      options,
+    });
   }
 
   public initiateSearchDiscard(
@@ -1832,6 +2003,16 @@ export class GameEngine {
     effect: SearchDiscardEffect,
     events: any[],
   ) {
+    const player = this.state.players[playerId];
+    const matchingCards = player.discard.filter((card) =>
+      this.matchesSearchFilter(card, effect.filter),
+    );
+
+    if (matchingCards.length === 0) {
+      events.push({ type: "SEARCH_DISCARD_NO_MATCH", playerId });
+      return;
+    }
+
     events.push({
       type: "SEARCH_DISCARD_INITIATED",
       playerId,
@@ -1839,7 +2020,26 @@ export class GameEngine {
       amount: effect.amount,
       destination: effect.destination,
     });
-    // TODO Phase 4: Create ChooseCardFromDiscard prompt
+
+    const options: PromptOption[] = matchingCards.map((card) => ({
+      value: card.instanceId,
+      label: card.baseCard.name,
+    }));
+
+    this.state.pendingEffectAction = {
+      type: "SEARCH_DISCARD",
+      playerId,
+      effect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseCardFromDiscard,
+      title: "Choisissez une carte de votre défausse",
+      minSelections: 0,
+      maxSelections: Math.min(effect.amount, matchingCards.length),
+      allowPass: true,
+      options,
+    });
   }
 
   public initiateDiscardFromHand(
@@ -1847,12 +2047,46 @@ export class GameEngine {
     effect: DiscardFromHandEffect,
     events: any[],
   ) {
+    const player = this.state.players[playerId];
+    const matchingCards = player.hand.filter((card) =>
+      this.matchesSearchFilter(card, effect.filter),
+    );
+
+    if (matchingCards.length === 0) {
+      events.push({ type: "DISCARD_FROM_HAND_NO_MATCH", playerId });
+      return;
+    }
+
+    const discardAmount =
+      effect.amount === "ALL"
+        ? matchingCards.length
+        : Math.min(effect.amount, matchingCards.length);
+
     events.push({
       type: "DISCARD_FROM_HAND_INITIATED",
       playerId,
-      amount: effect.amount,
+      amount: discardAmount,
     });
-    // TODO Phase 4: Create ChooseCardFromHand prompt
+
+    const options: PromptOption[] = matchingCards.map((card) => ({
+      value: card.instanceId,
+      label: card.baseCard.name,
+    }));
+
+    this.state.pendingEffectAction = {
+      type: "DISCARD_FROM_HAND",
+      playerId,
+      effect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseCardFromHand,
+      title: "Choisissez les cartes à défausser",
+      minSelections: discardAmount,
+      maxSelections: discardAmount,
+      allowPass: effect.amount !== "ALL",
+      options,
+    });
   }
 
   public initiateMoveEnergy(
@@ -1860,13 +2094,60 @@ export class GameEngine {
     effect: MoveEnergyEffect,
     events: any[],
   ) {
-    events.push({
-      type: "MOVE_ENERGY_INITIATED",
-      playerId: sourcePlayerId,
-      amount: effect.amount,
-      energyType: effect.energyType,
-    });
-    // TODO Phase 4: Create ChooseEnergyToMove prompt
+    const opponentId = this.getOpponentId(sourcePlayerId);
+    const sourcePokemon = this.resolveSingleTarget(
+      effect.from,
+      sourcePlayerId,
+      opponentId,
+    );
+    const targetPokemon = this.resolveSingleTarget(
+      effect.to,
+      sourcePlayerId,
+      opponentId,
+    );
+
+    if (!sourcePokemon || !targetPokemon) {
+      events.push({
+        type: "MOVE_ENERGY_FAILED",
+        playerId: sourcePlayerId,
+      });
+      return;
+    }
+
+    let moved = 0;
+    for (
+      let i = 0;
+      i < effect.amount &&
+      sourcePokemon.attachedEnergies.length > 0;
+      i++
+    ) {
+      let idx = -1;
+      if (effect.energyType) {
+        idx = sourcePokemon.attachedEnergies.findIndex((e) =>
+          e.baseCard.provides?.includes(effect.energyType!),
+        );
+      } else {
+        idx = sourcePokemon.attachedEnergies.length - 1;
+      }
+      if (idx === -1) break;
+
+      const [energy] = sourcePokemon.attachedEnergies.splice(
+        idx,
+        1,
+      );
+      targetPokemon.attachedEnergies.push(energy);
+      moved++;
+    }
+
+    if (moved > 0) {
+      events.push({
+        type: "ENERGY_MOVED",
+        playerId: sourcePlayerId,
+        from: sourcePokemon.instanceId,
+        to: targetPokemon.instanceId,
+        count: moved,
+      });
+    }
   }
 
   public initiateAttachEnergyFromDeck(
@@ -1874,13 +2155,52 @@ export class GameEngine {
     effect: AttachEnergyFromDeckEffect,
     events: any[],
   ) {
-    events.push({
-      type: "ATTACH_ENERGY_FROM_DECK_INITIATED",
+    const player = this.state.players[playerId];
+    const target = this.resolveSingleTarget(
+      effect.target,
       playerId,
-      amount: effect.amount,
-      energyType: effect.energyType,
-    });
-    // TODO Phase 4: Search deck for energy, attach, shuffle
+      this.getOpponentId(playerId),
+    );
+
+    if (!target) {
+      events.push({
+        type: "ATTACH_ENERGY_FROM_DECK_FAILED",
+        playerId,
+      });
+      return;
+    }
+
+    let attached = 0;
+    for (let i = 0; i < effect.amount; i++) {
+      const idx = player.deck.findIndex((card) => {
+        if (card.baseCard.category !== CardCategory.Energy)
+          return false;
+        if (!effect.energyType) return true;
+        return (card.baseCard as any).provides?.includes(
+          effect.energyType,
+        );
+      });
+      if (idx === -1) break;
+
+      const [energyCard] = player.deck.splice(idx, 1);
+      target.attachedEnergies.push(
+        energyCard as EnergyCardInGame,
+      );
+      attached++;
+    }
+
+    if (attached > 0) {
+      events.push({
+        type: "ENERGY_ATTACHED_FROM_DECK",
+        playerId,
+        targetInstanceId: target.instanceId,
+        count: attached,
+      });
+    }
+
+    if (effect.shuffleAfter !== false) {
+      this.shufflePlayerDeck(playerId);
+    }
   }
 
   public initiateAttachEnergyFromDiscard(
@@ -1888,13 +2208,48 @@ export class GameEngine {
     effect: AttachEnergyFromDiscardEffect,
     events: any[],
   ) {
-    events.push({
-      type: "ATTACH_ENERGY_FROM_DISCARD_INITIATED",
+    const player = this.state.players[playerId];
+    const target = this.resolveSingleTarget(
+      effect.target,
       playerId,
-      amount: effect.amount,
-      energyType: effect.energyType,
-    });
-    // TODO Phase 4: Create prompt to choose energy from discard
+      this.getOpponentId(playerId),
+    );
+
+    if (!target) {
+      events.push({
+        type: "ATTACH_ENERGY_FROM_DISCARD_FAILED",
+        playerId,
+      });
+      return;
+    }
+
+    let attached = 0;
+    for (let i = 0; i < effect.amount; i++) {
+      const idx = player.discard.findIndex((card) => {
+        if (card.baseCard.category !== CardCategory.Energy)
+          return false;
+        if (!effect.energyType) return true;
+        return (card.baseCard as any).provides?.includes(
+          effect.energyType,
+        );
+      });
+      if (idx === -1) break;
+
+      const [energyCard] = player.discard.splice(idx, 1);
+      target.attachedEnergies.push(
+        energyCard as EnergyCardInGame,
+      );
+      attached++;
+    }
+
+    if (attached > 0) {
+      events.push({
+        type: "ENERGY_ATTACHED_FROM_DISCARD",
+        playerId,
+        targetInstanceId: target.instanceId,
+        count: attached,
+      });
+    }
   }
 
   public initiateSwitchOpponentActive(
@@ -1905,7 +2260,10 @@ export class GameEngine {
     const opponent = this.state.players[opponentId];
 
     if (opponent.bench.length === 0) {
-      events.push({ type: "SWITCH_FAILED_NO_BENCH", playerId: opponentId });
+      events.push({
+        type: "SWITCH_FAILED_NO_BENCH",
+        playerId: opponentId,
+      });
       return;
     }
 
@@ -1913,8 +2271,40 @@ export class GameEngine {
       type: "SWITCH_OPPONENT_INITIATED",
       playerId: sourcePlayerId,
     });
-    // TODO Phase 4: Create ChooseOpponentBenchTarget prompt
-    // For now, auto-select first bench pokemon for basic implementation
+
+    if (opponent.bench.length === 1) {
+      this.performSwitch(
+        opponentId,
+        opponent.bench[0].instanceId,
+        events,
+      );
+      return;
+    }
+
+    const options: PromptOption[] = opponent.bench.map(
+      (pokemon) => ({
+        value: pokemon.instanceId,
+        label: pokemon.baseCard.name,
+      }),
+    );
+
+    this.state.pendingEffectAction = {
+      type: "SWITCH_OPPONENT",
+      playerId: sourcePlayerId,
+      effect: {
+        type: EffectType.SWITCH_OPPONENT_ACTIVE,
+      } as AnyEffect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId: sourcePlayerId,
+      type: PromptType.ChooseOpponentBenchTarget,
+      title:
+        "Choisissez le Pokémon adverse à mettre en actif",
+      minSelections: 1,
+      maxSelections: 1,
+      allowPass: false,
+      options,
+    });
   }
 
   public initiateSwitchOwnActive(
@@ -1932,7 +2322,39 @@ export class GameEngine {
       type: "SWITCH_OWN_INITIATED",
       playerId,
     });
-    // TODO Phase 4: Create ChooseBenchTarget prompt
+
+    if (player.bench.length === 1) {
+      this.performSwitch(
+        playerId,
+        player.bench[0].instanceId,
+        events,
+      );
+      return;
+    }
+
+    const options: PromptOption[] = player.bench.map(
+      (pokemon) => ({
+        value: pokemon.instanceId,
+        label: pokemon.baseCard.name,
+      }),
+    );
+
+    this.state.pendingEffectAction = {
+      type: "SWITCH_OWN",
+      playerId,
+      effect: {
+        type: EffectType.SWITCH_OWN_ACTIVE,
+      } as AnyEffect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseBenchTarget,
+      title: "Choisissez le Pokémon à mettre en actif",
+      minSelections: 1,
+      maxSelections: 1,
+      allowPass: false,
+      options,
+    });
   }
 
   public returnPokemonToHand(
@@ -2036,13 +2458,52 @@ export class GameEngine {
     effect: ReviveEffect,
     events: any[],
   ) {
+    const player = this.state.players[playerId];
+
+    if (player.bench.length >= 5) {
+      events.push({ type: "REVIVE_FAILED_BENCH_FULL", playerId });
+      return;
+    }
+
+    // Find basic Pokemon in discard matching the filter
+    const candidates = player.discard.filter((card) => {
+      if (card.baseCard.category !== CardCategory.Pokemon) return false;
+      const pokemon = card as PokemonCardInGame;
+      if (pokemon.baseCard.stage !== "De base") return false;
+      return this.matchesSearchFilter(card, effect.filter);
+    });
+
+    if (candidates.length === 0) {
+      events.push({ type: "REVIVE_NO_TARGET", playerId });
+      return;
+    }
+
     events.push({
       type: "REVIVE_INITIATED",
       playerId,
       filter: effect.filter,
     });
-    // TODO Phase 4: Create ChooseCardFromDiscard prompt
-    // to choose a Basic Pokemon to put on bench
+
+    const options: PromptOption[] = candidates.map((card) => ({
+      value: card.instanceId,
+      label: card.baseCard.name,
+    }));
+
+    this.state.pendingEffectAction = {
+      type: "REVIVE",
+      playerId,
+      effect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseCardFromDiscard,
+      title:
+        "Choisissez un Pokémon de base à remettre sur le banc",
+      minSelections: 1,
+      maxSelections: 1,
+      allowPass: true,
+      options,
+    });
   }
 
   public initiateCopyAttack(
@@ -2050,12 +2511,51 @@ export class GameEngine {
     effect: CopyAttackEffect,
     events: any[],
   ) {
+    const opponentId = this.getOpponentId(playerId);
+    const sourcePokemon =
+      effect.source === "OPPONENT_ACTIVE"
+        ? this.state.players[opponentId].active
+        : this.state.players[playerId].active;
+
+    if (!sourcePokemon || !sourcePokemon.baseCard.attacks?.length) {
+      events.push({ type: "COPY_ATTACK_NO_TARGET", playerId });
+      return;
+    }
+
     events.push({
       type: "COPY_ATTACK_INITIATED",
       playerId,
       source: effect.source,
     });
-    // TODO Phase 4: Create ChooseAttackToCopy prompt
+
+    // If only one attack, auto-select
+    if (sourcePokemon.baseCard.attacks.length === 1) {
+      const copiedAttack = sourcePokemon.baseCard.attacks[0];
+      this.executeCopiedAttack(playerId, copiedAttack, events);
+      return;
+    }
+
+    const options: PromptOption[] =
+      sourcePokemon.baseCard.attacks.map((atk, idx) => ({
+        value: String(idx),
+        label: atk.name,
+        description: atk.effect || undefined,
+      }));
+
+    this.state.pendingEffectAction = {
+      type: "COPY_ATTACK",
+      playerId,
+      effect,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ChooseAttackToCopy,
+      title: "Choisissez l'attaque à copier",
+      minSelections: 1,
+      maxSelections: 1,
+      allowPass: false,
+      options,
+    });
   }
 
   public sendToLostZone(
@@ -2091,58 +2591,552 @@ export class GameEngine {
 
   public markExtraPrize(playerId: string, amount: number) {
     // Store on the state so the KO handler knows to grant extra prizes
-    // TODO Phase 4: Add pendingExtraPrize field to GameState
+    // TODO: Add pendingExtraPrize field to GameState
   }
 
-  /**
-   * Apply a temporary effect to a Pokemon (PREVENT_DAMAGE,
-   * REDUCE_DAMAGE, CANT_ATTACK, CANT_RETREAT, BOOST_DAMAGE, etc.)
-   * TODO Phase 4: Implement temporal effect tracking system.
-   * These effects need to be stored, checked during damage resolution
-   * / action validation, and cleaned up at turn boundaries.
-   */
   public applyTemporaryEffect(
     pokemonInstanceId: string,
     effect: Record<string, unknown>,
     events: any[],
   ) {
+    const pokemon = this.findPokemonAnywhere(pokemonInstanceId);
+    if (!pokemon) return;
+
+    const currentTurn = this.state.turnNumber;
+    const activePlayer = this.state.activePlayerId;
+    const opponentId = this.getOpponentId(activePlayer);
+
+    // Determine expiration based on effect type
+    let expiresAt: TemporaryEffect["expiresAt"];
+    const duration = effect.duration as string | undefined;
+
+    if (
+      duration === "UNTIL_YOUR_NEXT_TURN" ||
+      effect.type === "BOOST_DAMAGE"
+    ) {
+      // Expires at end of your next turn
+      expiresAt = {
+        turnNumber: currentTurn + 2,
+        playerId: activePlayer,
+      };
+    } else if (
+      duration === "UNTIL_NEXT_OPPONENT_TURN" ||
+      effect.type === "CANT_ATTACK" ||
+      effect.type === "CANT_RETREAT"
+    ) {
+      // Expires at end of opponent's next turn
+      expiresAt = {
+        turnNumber: currentTurn + 1,
+        playerId: opponentId,
+      };
+    } else {
+      // Default: until end of opponent's next turn
+      expiresAt = {
+        turnNumber: currentTurn + 1,
+        playerId: opponentId,
+      };
+    }
+
+    const tempEffect: TemporaryEffect = {
+      type: effect.type as TemporaryEffect["type"],
+      amount: effect.amount as number | undefined,
+      expiresAt,
+    };
+
+    // For CANT_USE_SAME_ATTACK, record the attack name
+    if (effect.type === "CANT_USE_SAME_ATTACK") {
+      // Find the attack that was just used
+      const attackEvent = events.find(
+        (e) => e.type === "ATTACK_USED",
+      );
+      if (attackEvent) {
+        tempEffect.attackName = attackEvent.attackName;
+      }
+    }
+
+    pokemon.temporaryEffects.push(tempEffect);
+
     events.push({
       type: "TEMPORARY_EFFECT_APPLIED",
       targetInstanceId: pokemonInstanceId,
-      effect,
+      effect: tempEffect,
     });
-    // TODO Phase 4: Add temporaryEffects[] to PokemonCardInGame
-    // and/or GameState for tracking duration-based effects
   }
 
-  /**
-   * Apply a player-level effect (TRAINER_LOCK, etc.)
-   */
   public applyPlayerEffect(
     playerId: string,
     effect: Record<string, unknown>,
     events: any[],
   ) {
+    const player = this.state.players[playerId];
+    const currentTurn = this.state.turnNumber;
+    const activePlayer = this.state.activePlayerId;
+
+    // Determine expiration
+    let expiresAt: PlayerEffect["expiresAt"];
+    const duration = effect.duration as string | undefined;
+
+    if (duration === "UNTIL_YOUR_NEXT_TURN") {
+      expiresAt = {
+        turnNumber: currentTurn + 2,
+        playerId: activePlayer,
+      };
+    } else {
+      expiresAt = {
+        turnNumber: currentTurn + 1,
+        playerId,
+      };
+    }
+
+    const playerEffect: PlayerEffect = {
+      type: effect.type as PlayerEffect["type"],
+      lockType: effect.lockType as PlayerEffect["lockType"],
+      expiresAt,
+    };
+
+    if (!player.playerEffects) player.playerEffects = [];
+    player.playerEffects.push(playerEffect);
+
     events.push({
       type: "PLAYER_EFFECT_APPLIED",
       playerId,
-      effect,
+      effect: playerEffect,
     });
-    // TODO Phase 4: Add playerEffects[] to PlayerState
   }
 
-  /**
-   * Apply a global game effect (ABILITY_LOCK, etc.)
-   */
   public applyGlobalEffect(
     effect: Record<string, unknown>,
     events: any[],
   ) {
+    const currentTurn = this.state.turnNumber;
+    const activePlayer = this.state.activePlayerId;
+    const duration = effect.duration as string | undefined;
+
+    const expiresAt =
+      duration === "UNTIL_YOUR_NEXT_TURN"
+        ? {
+            turnNumber: currentTurn + 2,
+            playerId: activePlayer,
+          }
+        : {
+            turnNumber: currentTurn + 1,
+            playerId: this.getOpponentId(activePlayer),
+          };
+
+    const globalEffect = {
+      type: effect.type as "ABILITY_LOCK",
+      expiresAt,
+    };
+
+    this.state.globalEffects.push(globalEffect);
+
     events.push({
       type: "GLOBAL_EFFECT_APPLIED",
-      effect,
+      effect: globalEffect,
     });
-    // TODO Phase 4: Add globalEffects[] to GameState
+  }
+
+  // ─── Prompt Response Handlers (Phase 4) ───
+
+  private handleChooseCardFromDeck(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending || pending.type !== "SEARCH_DECK") return;
+
+    const effect = pending.effect as SearchDeckEffect;
+    const player = this.state.players[playerId];
+    const selectedIds = response.selections || [];
+
+    for (const instanceId of selectedIds) {
+      const idx = player.deck.findIndex(
+        (c) => c.instanceId === instanceId,
+      );
+      if (idx === -1) continue;
+
+      const [card] = player.deck.splice(idx, 1);
+      if (effect.destination === "HAND") {
+        player.hand.push(card);
+      } else if (effect.destination === "BENCH") {
+        if (
+          player.bench.length < 5 &&
+          card.baseCard.category === CardCategory.Pokemon
+        ) {
+          player.bench.push(
+            this.initializePokemonRuntime(
+              card as PokemonCardInGame,
+            ),
+          );
+        }
+      }
+      events.push({
+        type: "CARD_TAKEN_FROM_DECK",
+        playerId,
+        cardInstanceId: instanceId,
+        destination: effect.destination,
+      });
+    }
+
+    if (effect.shuffleAfter !== false) {
+      this.shufflePlayerDeck(playerId);
+    }
+
+    this.state.pendingEffectAction = null;
+  }
+
+  private handleChooseCardFromDiscard(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending) return;
+
+    const player = this.state.players[playerId];
+    const selectedIds = response.selections || [];
+
+    if (pending.type === "SEARCH_DISCARD") {
+      const effect = pending.effect as SearchDiscardEffect;
+      for (const instanceId of selectedIds) {
+        const idx = player.discard.findIndex(
+          (c) => c.instanceId === instanceId,
+        );
+        if (idx === -1) continue;
+
+        const [card] = player.discard.splice(idx, 1);
+        if (effect.destination === "HAND") {
+          player.hand.push(card);
+        } else if (effect.destination === "BENCH") {
+          if (
+            player.bench.length < 5 &&
+            card.baseCard.category === CardCategory.Pokemon
+          ) {
+            player.bench.push(
+              this.initializePokemonRuntime(
+                card as PokemonCardInGame,
+              ),
+            );
+          }
+        } else if (effect.destination === "TOP_DECK") {
+          player.deck.push(card);
+        }
+        events.push({
+          type: "CARD_TAKEN_FROM_DISCARD",
+          playerId,
+          cardInstanceId: instanceId,
+          destination: effect.destination,
+        });
+      }
+    } else if (pending.type === "REVIVE") {
+      for (const instanceId of selectedIds) {
+        const idx = player.discard.findIndex(
+          (c) => c.instanceId === instanceId,
+        );
+        if (idx === -1) continue;
+        if (player.bench.length >= 5) break;
+
+        const [card] = player.discard.splice(idx, 1);
+        const pokemon = this.initializePokemonRuntime(
+          card as PokemonCardInGame,
+        );
+        pokemon.damageCounters = 0;
+        pokemon.specialConditions = [];
+        pokemon.attachedEnergies = [];
+        pokemon.attachedTools = [];
+        player.bench.push(pokemon);
+
+        events.push({
+          type: "POKEMON_REVIVED",
+          playerId,
+          cardInstanceId: instanceId,
+        });
+      }
+    }
+
+    this.state.pendingEffectAction = null;
+  }
+
+  private handleChooseCardFromHand(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending || pending.type !== "DISCARD_FROM_HAND") return;
+
+    const player = this.state.players[playerId];
+    const selectedIds = response.selections || [];
+
+    for (const instanceId of selectedIds) {
+      const idx = player.hand.findIndex(
+        (c) => c.instanceId === instanceId,
+      );
+      if (idx === -1) continue;
+
+      const [card] = player.hand.splice(idx, 1);
+      player.discard.push(card);
+      events.push({
+        type: "CARD_DISCARDED_FROM_HAND",
+        playerId,
+        cardInstanceId: instanceId,
+      });
+    }
+
+    this.state.pendingEffectAction = null;
+  }
+
+  private handleChooseBenchTarget(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending || pending.type !== "SWITCH_OWN") return;
+
+    const selectedId = response.selections?.[0];
+    if (!selectedId) {
+      throw new Error("You must select a bench Pokemon");
+    }
+
+    this.performSwitch(playerId, selectedId, events);
+    this.state.pendingEffectAction = null;
+  }
+
+  private handleChooseOpponentBenchTarget(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending || pending.type !== "SWITCH_OPPONENT") return;
+
+    const selectedId = response.selections?.[0];
+    if (!selectedId) {
+      throw new Error(
+        "You must select an opponent bench Pokemon",
+      );
+    }
+
+    const opponentId = this.getOpponentId(playerId);
+    this.performSwitch(opponentId, selectedId, events);
+    this.state.pendingEffectAction = null;
+  }
+
+  // ─── Helper Methods ───
+
+  private performSwitch(
+    playerId: string,
+    benchPokemonInstanceId: string,
+    events: any[],
+  ) {
+    const player = this.state.players[playerId];
+    const benchIndex = player.bench.findIndex(
+      (p) => p.instanceId === benchPokemonInstanceId,
+    );
+    if (benchIndex === -1) return;
+
+    const oldActive = player.active;
+    const [newActive] = player.bench.splice(benchIndex, 1);
+
+    if (oldActive) {
+      player.bench.push(oldActive);
+    }
+    player.active = newActive;
+
+    events.push({
+      type: "POKEMON_SWITCHED",
+      playerId,
+      oldActiveInstanceId: oldActive?.instanceId,
+      newActiveInstanceId: newActive.instanceId,
+    });
+  }
+
+  private executeCopiedAttack(
+    playerId: string,
+    attack: Attack,
+    events: any[],
+  ) {
+    const opponentId = this.getOpponentId(playerId);
+    const opponentActive =
+      this.state.players[opponentId].active;
+    const activePokemon = this.state.players[playerId].active;
+
+    if (!activePokemon) return;
+
+    const damage = this.calculateAttackDamage(
+      activePokemon,
+      opponentActive,
+      attack,
+    );
+
+    if (opponentActive && damage > 0) {
+      opponentActive.damageCounters += damage;
+      events.push({
+        type: "DAMAGE_DEALT",
+        amount: damage,
+        targetInstanceId: opponentActive.instanceId,
+      });
+    }
+
+    if (attack.effects && attack.effects.length > 0) {
+      this.effectResolver.resolveEffects(
+        attack.effects,
+        playerId,
+        events,
+      );
+    }
+  }
+
+  private resolveSingleTarget(
+    target: TargetType,
+    sourcePlayerId: string,
+    opponentId: string,
+  ): PokemonCardInGame | null {
+    const source = this.state.players[sourcePlayerId];
+    const opponent = this.state.players[opponentId];
+
+    switch (target) {
+      case TargetType.SELF:
+      case TargetType.PLAYER_ACTIVE:
+        return source.active;
+      case TargetType.OPPONENT_ACTIVE:
+        return opponent.active;
+      default:
+        return source.active;
+    }
+  }
+
+  private matchesSearchFilter(
+    card: CardInGame,
+    filter?: {
+      cardCategory?: string;
+      pokemonStage?: string;
+      pokemonType?: string;
+      energyType?: string;
+      trainerType?: string;
+    },
+  ): boolean {
+    if (!filter) return true;
+
+    const base = card.baseCard;
+
+    if (filter.cardCategory && base.category !== filter.cardCategory) {
+      return false;
+    }
+    if (
+      filter.pokemonStage &&
+      base.category === CardCategory.Pokemon &&
+      (base as any).stage !== filter.pokemonStage
+    ) {
+      return false;
+    }
+    if (
+      filter.pokemonType &&
+      base.category === CardCategory.Pokemon &&
+      !(base as any).types?.includes(filter.pokemonType)
+    ) {
+      return false;
+    }
+    if (
+      filter.energyType &&
+      base.category === CardCategory.Energy &&
+      !(base as any).provides?.includes(filter.energyType)
+    ) {
+      return false;
+    }
+    if (
+      filter.trainerType &&
+      base.category === CardCategory.Trainer &&
+      (base as any).trainerType !== filter.trainerType
+    ) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private hasTemporaryEffect(
+    pokemon: PokemonCardInGame,
+    effectType: TemporaryEffect["type"],
+  ): boolean {
+    return (pokemon.temporaryEffects || []).some(
+      (e) => e.type === effectType,
+    );
+  }
+
+  private findPokemonAnywhere(
+    instanceId: string,
+  ): PokemonCardInGame | null {
+    for (const playerId of this.state.playerIds) {
+      const player = this.state.players[playerId];
+      if (player.active?.instanceId === instanceId) {
+        return player.active;
+      }
+      const benchMon = player.bench.find(
+        (p) => p.instanceId === instanceId,
+      );
+      if (benchMon) return benchMon;
+    }
+    return null;
+  }
+
+  private cleanupExpiredEffects(currentPlayerId: string) {
+    const turnNumber = this.state.turnNumber;
+
+    for (const playerId of this.state.playerIds) {
+      const player = this.state.players[playerId];
+
+      // Clean Pokemon temporary effects
+      const allPokemon = [
+        player.active,
+        ...player.bench,
+      ].filter(Boolean) as PokemonCardInGame[];
+
+      for (const pokemon of allPokemon) {
+        if (!pokemon.temporaryEffects) continue;
+        pokemon.temporaryEffects =
+          pokemon.temporaryEffects.filter((effect) => {
+            if (
+              effect.expiresAt.playerId === currentPlayerId &&
+              effect.expiresAt.turnNumber <= turnNumber
+            ) {
+              return false; // expired
+            }
+            return true;
+          });
+      }
+
+      // Clean player effects
+      if (player.playerEffects) {
+        player.playerEffects = player.playerEffects.filter(
+          (effect) => {
+            if (
+              effect.expiresAt.playerId === currentPlayerId &&
+              effect.expiresAt.turnNumber <= turnNumber
+            ) {
+              return false;
+            }
+            return true;
+          },
+        );
+      }
+    }
+
+    // Clean global effects
+    if (this.state.globalEffects) {
+      this.state.globalEffects =
+        this.state.globalEffects.filter((effect) => {
+          if (
+            effect.expiresAt.playerId === currentPlayerId &&
+            effect.expiresAt.turnNumber <= turnNumber
+          ) {
+            return false;
+          }
+          return true;
+        });
+    }
   }
 
   private getOpponentId(playerId: string): string {

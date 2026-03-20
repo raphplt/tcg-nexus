@@ -38,6 +38,7 @@ const createPokemon = (instanceId: string, ownerId: string, hp = 100) =>
     attachedTools: [],
     attachedEvolutions: [],
     turnsInPlay: 1,
+    temporaryEffects: [],
   }) as any;
 
 const createEnergy = (instanceId: string, ownerId: string) =>
@@ -73,6 +74,7 @@ const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
       hasAttachedEnergyThisTurn: false,
       prizeCardsTaken: 0,
       turnsTaken: 1,
+      playerEffects: [],
     },
     [TRAINING_AI_PLAYER_ID]: {
       playerId: TRAINING_AI_PLAYER_ID,
@@ -89,6 +91,7 @@ const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
       hasAttachedEnergyThisTurn: false,
       prizeCardsTaken: 0,
       turnsTaken: 1,
+      playerEffects: [],
     },
   },
   playerIds: [HUMAN_PLAYER_ID, TRAINING_AI_PLAYER_ID],
@@ -106,6 +109,8 @@ const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
   pendingTrainerPlay: null,
   winnerId: null,
   winnerReason: null,
+  pendingEffectAction: null,
+  globalEffects: [],
   ...overrides,
 });
 

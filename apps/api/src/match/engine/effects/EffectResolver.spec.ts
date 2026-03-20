@@ -37,6 +37,7 @@ describe("EffectResolver", () => {
             attachedTools: [],
             attachedEvolutions: [],
             turnsInPlay: 1,
+            temporaryEffects: [],
             baseCard: {
               id: "test-mon-1",
               name: "Pikachu",
@@ -49,6 +50,7 @@ describe("EffectResolver", () => {
           hasRetreatedThisTurn: false,
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
+          playerEffects: [],
         },
         Player2: {
           playerId: "Player2",
@@ -86,6 +88,7 @@ describe("EffectResolver", () => {
             attachedTools: [],
             attachedEvolutions: [],
             turnsInPlay: 1,
+            temporaryEffects: [],
             baseCard: {
               id: "test-mon-2",
               name: "Squirtle",
@@ -98,6 +101,7 @@ describe("EffectResolver", () => {
           hasRetreatedThisTurn: false,
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
+          playerEffects: [],
         },
       },
       playerIds: ["Player1", "Player2"],
@@ -115,6 +119,8 @@ describe("EffectResolver", () => {
       setup: null,
       resumeAction: null,
       pendingTrainerPlay: null,
+      pendingEffectAction: null,
+      globalEffects: [],
     } as GameState;
 
     engine = new GameEngine(initialState);

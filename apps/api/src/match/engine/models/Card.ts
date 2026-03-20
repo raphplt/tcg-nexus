@@ -66,6 +66,20 @@ export interface CardInGame<T extends TcgDexCardBase = TcgDexCard> {
 export interface EnergyCardInGame extends CardInGame<TcgDexEnergy> {}
 export interface TrainerCardInGame extends CardInGame<TcgDexTrainer> {}
 
+/** Temporary effect applied to a Pokemon (expires at a turn boundary) */
+export interface TemporaryEffect {
+  type:
+    | "PREVENT_DAMAGE"
+    | "REDUCE_DAMAGE"
+    | "CANT_ATTACK"
+    | "CANT_RETREAT"
+    | "BOOST_DAMAGE"
+    | "CANT_USE_SAME_ATTACK";
+  amount?: number;
+  attackName?: string; // For CANT_USE_SAME_ATTACK
+  expiresAt: { turnNumber: number; playerId: string };
+}
+
 /** Runtime state for a Pokemon on the board */
 export interface PokemonCardInGame extends CardInGame<TcgDexPokemon> {
   damageCounters: number; // 10 = 1 counter, usually we just store total damage (e.g. 30)
@@ -75,4 +89,5 @@ export interface PokemonCardInGame extends CardInGame<TcgDexPokemon> {
   // If evolved, this list contains the pre-evolutions underneath
   attachedEvolutions: PokemonCardInGame[];
   turnsInPlay: number; // To track if it can evolve this turn
+  temporaryEffects: TemporaryEffect[];
 }

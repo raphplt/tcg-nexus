@@ -272,6 +272,7 @@ export class OnlinePlaySupportService {
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
           turnsTaken: 0,
+          playerEffects: [],
         },
         [playerB.playerId]: {
           playerId: playerB.playerId,
@@ -288,6 +289,7 @@ export class OnlinePlaySupportService {
           hasAttachedEnergyThisTurn: false,
           prizeCardsTaken: 0,
           turnsTaken: 0,
+          playerEffects: [],
         },
       },
       playerIds: [playerA.playerId, playerB.playerId],
@@ -327,6 +329,8 @@ export class OnlinePlaySupportService {
       },
       resumeAction: null,
       pendingTrainerPlay: null,
+      pendingEffectAction: null,
+      globalEffects: [],
       winnerId: null,
       winnerReason: null,
     };

@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "fs";
+import { join } from "path";
 import { AnyEffect, EffectType, TargetType } from "../engine/effects/Effect";
 
 export interface SupportedAttackDefinition {
@@ -21,7 +23,8 @@ export type SupportedCardDefinition =
   | SupportedPokemonCardDefinition
   | SupportedTrainerCardDefinition;
 
-export const ONLINE_SUPPORTED_CARD_REGISTRY: Record<
+// Hardcoded fallback for when the parsed registry is not yet available
+const FALLBACK_CARD_REGISTRY: Record<
   string,
   SupportedCardDefinition
 > = {
@@ -81,6 +84,36 @@ export const ONLINE_SUPPORTED_CARD_REGISTRY: Record<
     ],
   },
 };
+
+function loadCardEffectsRegistry(): Record<
+  string,
+  SupportedCardDefinition
+> {
+  const registryPath = join(
+    __dirname,
+    "../../../../packages/effect-parser/card-effects-registry.json",
+  );
+
+  if (!existsSync(registryPath)) {
+    return FALLBACK_CARD_REGISTRY;
+  }
+
+  try {
+    const data = JSON.parse(readFileSync(registryPath, "utf-8"));
+    // Merge: parsed registry takes precedence, fallback fills gaps
+    return { ...FALLBACK_CARD_REGISTRY, ...data };
+  } catch {
+    console.warn(
+      "Failed to load card-effects-registry.json, using fallback",
+    );
+    return FALLBACK_CARD_REGISTRY;
+  }
+}
+
+export const ONLINE_SUPPORTED_CARD_REGISTRY: Record<
+  string,
+  SupportedCardDefinition
+> = loadCardEffectsRegistry();
 
 export const ONLINE_SUPPORTED_BASIC_ENERGY_NAMES: Record<string, string[]> = {
   plante: ["Plante"],
