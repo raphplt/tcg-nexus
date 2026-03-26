@@ -22,34 +22,39 @@ export function ActionBar({
   onCancel,
 }: ActionBarProps) {
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-black/50 backdrop-blur-sm border-t border-white/5">
-      {/* Left: hint text */}
-      <div className="flex-1 min-w-0">
-        {hintText ? (
-          <motion.p
-            key={hintText}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-sm text-amber-300 font-medium"
-          >
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-2 animate-pulse" />
-            {hintText}
-          </motion.p>
-        ) : canAct ? (
-          <p className="text-sm text-white/50">
-            C&apos;est votre tour. Jouez des cartes ou cliquez
-            sur votre Pokémon actif pour attaquer.
-          </p>
-        ) : (
-          <p className="text-sm text-white/30 flex items-center gap-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400/60 animate-pulse" />
-            Tour de l&apos;adversaire...
-          </p>
-        )}
+    <div className="flex flex-col gap-3 border-t border-white/5 bg-black/40 px-3 py-3 backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-4">
+      <div className="min-w-0 flex-1">
+        <div className="rounded-2xl border border-white/8 bg-white/5 px-3 py-2.5">
+          {hintText ? (
+            <motion.p
+              key={hintText}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-sm font-medium text-amber-300"
+            >
+              <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              {hintText}
+            </motion.p>
+          ) : canAct ? (
+            <p className="text-sm text-white/60">
+              Votre tour. Jouez une carte ou ouvrez les attaques de votre
+              Pokémon actif.
+            </p>
+          ) : (
+            <p className="flex items-center gap-2 text-sm text-white/35">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400/60 animate-pulse" />
+              Tour de l&apos;adversaire...
+            </p>
+          )}
+        </div>
       </div>
 
-      {/* Right: action buttons */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex flex-wrap items-center justify-end gap-2 md:flex-shrink-0">
+        {mode !== "idle" ? (
+          <div className="rounded-full border border-cyan-400/16 bg-cyan-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-100/75">
+            Action en cours
+          </div>
+        ) : null}
         {mode !== "idle" && (
           <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
@@ -57,8 +62,8 @@ export function ActionBar({
             exit={{ opacity: 0, scale: 0.9 }}
             onClick={onCancel}
             className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium",
-              "bg-white/10 text-white/70 hover:bg-white/20 transition-colors",
+              "rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
+              "bg-white/10 text-white/70 hover:bg-white/18",
             )}
           >
             Annuler
@@ -68,9 +73,9 @@ export function ActionBar({
           onClick={onEndTurn}
           disabled={!canAct || isBusy}
           className={cn(
-            "px-5 py-2 rounded-lg text-sm font-bold transition-all",
+            "rounded-full px-5 py-2.5 text-sm font-bold transition-all",
             canAct
-              ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/40"
+              ? "bg-linear-to-r from-red-600 to-rose-500 text-white shadow-lg shadow-red-600/30 hover:shadow-red-500/40"
               : "bg-white/5 text-white/30 cursor-not-allowed",
           )}
         >

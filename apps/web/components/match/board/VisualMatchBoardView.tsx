@@ -88,9 +88,9 @@ export function VisualMatchBoardView({
       : null;
 
   // Detect attack events for flash animation
-  const [attackFlash, setAttackFlash] = useState<
-    "player" | "opponent" | null
-  >(null);
+  const [attackFlash, setAttackFlash] = useState<"player" | "opponent" | null>(
+    null,
+  );
   const prevLogLenRef = useRef(recentLog.length);
 
   useEffect(() => {
@@ -100,9 +100,7 @@ export function VisualMatchBoardView({
         const type = evt.payload.type;
         if (type === "ATTACK" || type === "attack") {
           const attackerId = evt.payload.playerId;
-          setAttackFlash(
-            attackerId === enginePlayerId ? "player" : "opponent",
-          );
+          setAttackFlash(attackerId === enginePlayerId ? "player" : "opponent");
           setTimeout(() => setAttackFlash(null), 600);
           break;
         }
@@ -149,9 +147,18 @@ export function VisualMatchBoardView({
   }
 
   const isMyTurn = gameState.activePlayerId === enginePlayerId;
+  const mobileFeedEntries = recentLog.slice(-4).reverse();
+  const desktopFeedEntries = recentLog.slice(-8).reverse();
 
   return (
-    <div className="relative flex flex-col h-dvh bg-gradient-to-b from-slate-950 via-blue-950/30 to-slate-950 overflow-hidden select-none">
+    <div className="relative flex h-dvh select-none flex-col overflow-hidden bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.14),transparent_22%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_24%),linear-gradient(180deg,#020617_0%,#020617_28%,#04111f_100%)]">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute left-[10%] top-[12%] h-56 w-56 rounded-full bg-cyan-400/10 blur-[120px]" />
+        <div className="absolute bottom-[8%] right-[12%] h-64 w-64 rounded-full bg-emerald-400/10 blur-[130px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_40%)]" />
+      </div>
+
       {/* Animated ambient border glow */}
       <div
         className={cn(
@@ -166,81 +173,56 @@ export function VisualMatchBoardView({
       </div>
 
       {/* ═══════════ HUD TOP BAR ═══════════ */}
-      <div className="relative flex items-center justify-between px-4 py-2.5 bg-black/50 border-b border-white/5 z-30 backdrop-blur-sm">
-        {/* Left: Player info */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "w-2 h-2 rounded-full transition-colors duration-500",
-                isMyTurn ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" : "bg-white/20",
-              )}
+      <div className="relative z-30 border-b border-white/8 bg-black/35 px-3 py-3 backdrop-blur-md md:px-4">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <HudPlayerChip
+              name="Vous"
+              prizesRemaining={viewerPlayer.prizesRemaining}
+              active={isMyTurn}
+              tone="emerald"
             />
-            <span className="text-sm font-bold text-white">
-              Vous
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Shield className="w-3 h-3 text-yellow-400/70" />
-            <span className="text-[11px] text-yellow-300/80 font-medium">
-              {viewerPlayer.prizesRemaining}
-            </span>
-          </div>
-        </div>
-
-        {/* Center: Turn indicator */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
-          <div
-            className={cn(
-              "px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-500",
-              isMyTurn
-                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-[0_0_12px_rgba(52,211,153,0.2)]"
-                : "bg-red-500/10 text-red-300/70 border border-red-500/20",
-            )}
-          >
-            <span className="flex items-center gap-2">
-              {isMyTurn ? (
-                <Swords className="w-3 h-3" />
-              ) : (
-                <Zap className="w-3 h-3" />
-              )}
-              Tour {gameState.turnNumber}
-            </span>
-          </div>
-        </div>
-
-        {/* Right: Opponent info + controls */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <Shield className="w-3 h-3 text-yellow-400/70" />
-            <span className="text-[11px] text-yellow-300/80 font-medium">
-              {opponentPlayer.prizesRemaining}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-red-300/80">
-              {opponentPlayer.name}
-            </span>
-            <div
-              className={cn(
-                "w-2 h-2 rounded-full transition-colors duration-500",
-                !isMyTurn ? "bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]" : "bg-white/20",
-              )}
+            <HudPlayerChip
+              name={opponentPlayer.name}
+              prizesRemaining={opponentPlayer.prizesRemaining}
+              active={!isMyTurn}
+              tone="rose"
             />
           </div>
-          {headerAside}
-          <PauseMenu
-            onForfeit={onForfeit}
-            sessionStatus={sessionStatus}
-          />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <HudBadge>
+              {sessionStatusLabels[sessionStatus] ?? sessionStatus}
+            </HudBadge>
+            <HudBadge>{`Tour ${gameState.turnNumber}`}</HudBadge>
+            <HudBadge>{formatPhaseLabel(gameState.gamePhase)}</HudBadge>
+            <HudBadge tone={isMyTurn ? "emerald" : "rose"}>
+              <span className="flex items-center gap-1.5">
+                {isMyTurn ? (
+                  <Swords className="h-3 w-3" />
+                ) : (
+                  <Zap className="h-3 w-3" />
+                )}
+                {isMyTurn ? "Votre tour" : "Tour adverse"}
+              </span>
+            </HudBadge>
+            {winnerLabel ? (
+              <HudBadge tone={winnerLabel === "Victoire" ? "amber" : "rose"}>
+                {winnerLabel}
+              </HudBadge>
+            ) : null}
+          </div>
+
+          <div className="flex items-center justify-between gap-2 xl:justify-end">
+            {headerAside ? (
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 backdrop-blur-sm">
+                {headerAside}
+              </div>
+            ) : null}
+            <PauseMenu onForfeit={onForfeit} sessionStatus={sessionStatus} />
+          </div>
         </div>
       </div>
-
-      {introCard && (
-        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-40">
-          {introCard}
-        </div>
-      )}
 
       {/* Error toast */}
       <AnimatePresence>
@@ -257,171 +239,182 @@ export function VisualMatchBoardView({
       </AnimatePresence>
 
       {/* ═══════════ GAME BOARD ═══════════ */}
-      <div className="flex-1 relative overflow-hidden min-h-0">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        {introCard || mobileFeedEntries.length ? (
+          <div className="relative z-20 space-y-3 px-3 pt-3 lg:hidden">
+            {introCard}
+            <CombatFeedCard entries={mobileFeedEntries} compact />
+          </div>
+        ) : null}
+
+        {introCard ? (
+          <div className="absolute left-4 top-4 z-20 hidden w-[320px] lg:block">
+            {introCard}
+          </div>
+        ) : null}
+
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center"
+          className="absolute inset-0 flex flex-col items-center justify-center px-2 pb-2 pt-4 sm:px-4 lg:pt-0"
           style={{ perspective: "1200px" }}
         >
           <div
-            className="relative w-full max-w-3xl"
-            style={{
-              transformStyle: "preserve-3d",
-              transform: "rotateX(30deg) scale(0.9)",
-              transformOrigin: "center bottom",
-            }}
+            className="relative w-full max-w-5xl"
+            style={{ transformStyle: "preserve-3d" }}
           >
-            {/* Board surface */}
-            <div className="relative rounded-2xl bg-gradient-to-b from-blue-900/30 to-teal-900/30 border border-white/5 px-6 py-3 space-y-2">
-              {/* Mat texture - hex pattern */}
-              <div className="absolute inset-0 rounded-2xl opacity-[0.04]">
-                <svg
-                  className="w-full h-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    <pattern
-                      id="hex"
-                      width="28"
-                      height="49"
-                      patternUnits="userSpaceOnUse"
-                      patternTransform="scale(0.8)"
-                    >
-                      <path
-                        d="M14 0 L28 8.66 L28 25.98 L14 34.64 L0 25.98 L0 8.66 Z"
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="0.5"
-                      />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#hex)" />
-                </svg>
-              </div>
-
-              {/* Radial glow overlay */}
-              <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.06)_0%,transparent_70%)]" />
-
-              {/* Opponent field */}
-              <motion.div
-                className="relative"
-                animate={
-                  attackFlash === "opponent"
-                    ? { x: [0, -4, 4, -3, 3, 0] }
-                    : {}
-                }
-                transition={{ duration: 0.4 }}
-              >
-                <PlayerField
-                  player={opponentPlayer}
-                  isOpponent
-                  isCurrentTurn={
-                    gameState.activePlayerId === opponentPlayer.playerId
-                  }
-                  disabled
-                />
-              </motion.div>
-
-              {/* Center divider - battle zone */}
-              <div className="flex items-center gap-4 py-0.5">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                <div className="relative">
-                  <span className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold">
-                    VS
-                  </span>
-                  {/* Active turn glow on VS */}
-                  <div
-                    className={cn(
-                      "absolute -inset-3 rounded-full blur-xl transition-opacity duration-700",
-                      isMyTurn
-                        ? "bg-emerald-500/10 opacity-100"
-                        : "bg-red-500/10 opacity-50",
-                    )}
-                  />
+            <div className="mx-auto w-full max-w-4xl origin-center [transform:rotateX(16deg)_scale(0.72)] [transform-style:preserve-3d] sm:[transform:rotateX(18deg)_scale(0.82)] lg:[transform:rotateX(20deg)_scale(0.94)] xl:[transform:rotateX(22deg)_scale(1)]">
+              {/* Board surface */}
+              <div className="relative space-y-3 overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95)] sm:px-6 sm:py-5">
+                {/* Mat texture - hex pattern */}
+                <div className="absolute inset-0 rounded-[2rem] opacity-[0.045]">
+                  <svg
+                    className="w-full h-full"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <pattern
+                        id="hex"
+                        width="28"
+                        height="49"
+                        patternUnits="userSpaceOnUse"
+                        patternTransform="scale(0.8)"
+                      >
+                        <path
+                          d="M14 0 L28 8.66 L28 25.98 L14 34.64 L0 25.98 L0 8.66 Z"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="0.5"
+                        />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#hex)" />
+                  </svg>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              </div>
 
-              {/* Player field */}
-              <motion.div
-                className="relative"
-                animate={
-                  attackFlash === "player"
-                    ? { scale: [1, 1.01, 1] }
-                    : {}
-                }
-                transition={{ duration: 0.3 }}
-              >
-                {/* Active glow when it's our turn */}
-                {isMyTurn && (
-                  <div className="absolute -inset-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 -z-10 animate-pulse" />
-                )}
+                {/* Radial glow overlay */}
+                <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07)_0%,transparent_70%)]" />
+                <div className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300/16 to-transparent" />
+                <div className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/6 to-transparent" />
 
-                <PlayerField
-                  player={viewerPlayer}
-                  isCurrentTurn={isMyTurn}
-                  onActivePokemonClick={
-                    canAct && interaction.mode === "idle"
-                      ? interaction.openAttackPanel
-                      : interaction.mode === "attaching_energy" ||
-                          interaction.mode === "evolving"
-                        ? () =>
-                            viewerPlayer.active &&
-                            interaction.selectTarget(
-                              viewerPlayer.active.instanceId,
-                            )
-                        : undefined
+                {/* Opponent field */}
+                <motion.div
+                  className="relative"
+                  animate={
+                    attackFlash === "opponent"
+                      ? { x: [0, -4, 4, -3, 3, 0] }
+                      : {}
                   }
-                  onBenchPokemonClick={(instanceId) => {
-                    if (interaction.mode === "placing_pokemon") {
-                      interaction.selectTarget(instanceId);
-                    } else if (
+                  transition={{ duration: 0.4 }}
+                >
+                  <PlayerField
+                    player={opponentPlayer}
+                    isOpponent
+                    isCurrentTurn={
+                      gameState.activePlayerId === opponentPlayer.playerId
+                    }
+                    disabled
+                  />
+                </motion.div>
+
+                {/* Center divider - battle zone */}
+                <div className="flex items-center gap-4 py-1">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <div className="relative">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-100/25">
+                      Arena
+                    </span>
+                    {/* Active turn glow on VS */}
+                    <div
+                      className={cn(
+                        "absolute -inset-3 rounded-full blur-xl transition-opacity duration-700",
+                        isMyTurn
+                          ? "bg-emerald-500/10 opacity-100"
+                          : "bg-red-500/10 opacity-50",
+                      )}
+                    />
+                  </div>
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                </div>
+
+                {/* Player field */}
+                <motion.div
+                  className="relative"
+                  animate={
+                    attackFlash === "player" ? { scale: [1, 1.01, 1] } : {}
+                  }
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Active glow when it's our turn */}
+                  {isMyTurn && (
+                    <div className="absolute -inset-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 -z-10 animate-pulse" />
+                  )}
+
+                  <PlayerField
+                    player={viewerPlayer}
+                    isCurrentTurn={isMyTurn}
+                    onActivePokemonClick={
+                      canAct && interaction.mode === "idle"
+                        ? interaction.openAttackPanel
+                        : interaction.mode === "attaching_energy" ||
+                            interaction.mode === "evolving"
+                          ? () =>
+                              viewerPlayer.active &&
+                              interaction.selectTarget(
+                                viewerPlayer.active.instanceId,
+                              )
+                          : undefined
+                    }
+                    onBenchPokemonClick={(instanceId) => {
+                      if (interaction.mode === "placing_pokemon") {
+                        interaction.selectTarget(instanceId);
+                      } else if (
+                        interaction.mode === "attaching_energy" ||
+                        interaction.mode === "evolving"
+                      ) {
+                        interaction.selectTarget(instanceId);
+                      }
+                    }}
+                    activeSelected={interaction.mode === "choosing_attack"}
+                    activeHighlighted={
                       interaction.mode === "attaching_energy" ||
                       interaction.mode === "evolving"
-                    ) {
-                      interaction.selectTarget(instanceId);
                     }
-                  }}
-                  activeSelected={interaction.mode === "choosing_attack"}
-                  activeHighlighted={
-                    interaction.mode === "attaching_energy" ||
-                    interaction.mode === "evolving"
-                  }
-                  highlightedBenchIds={interaction.validTargetIds.filter(
-                    (id) => id !== "empty_bench",
-                  )}
-                  highlightedEmptyBench={
-                    interaction.mode === "placing_pokemon"
-                  }
-                  disabled={!canAct && interaction.mode === "idle"}
-                />
-
-                {/* Attack panel overlay */}
-                <AnimatePresence>
-                  {interaction.mode === "choosing_attack" &&
-                    viewerPlayer.active && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                        transition={{
-                          type: "spring",
-                          damping: 20,
-                          stiffness: 300,
-                        }}
-                        className="absolute left-1/2 -translate-x-1/2 bottom-0 z-40"
-                      >
-                        <AttackPanel
-                          pokemon={viewerPlayer.active}
-                          onAttack={interaction.dispatchAttack}
-                          onRetreat={interaction.dispatchRetreat}
-                          onClose={interaction.closeAttackPanel}
-                          benchPokemon={viewerPlayer.bench}
-                          disabled={isBusy}
-                        />
-                      </motion.div>
+                    highlightedBenchIds={interaction.validTargetIds.filter(
+                      (id) => id !== "empty_bench",
                     )}
-                </AnimatePresence>
-              </motion.div>
+                    highlightedEmptyBench={
+                      interaction.mode === "placing_pokemon"
+                    }
+                    disabled={!canAct && interaction.mode === "idle"}
+                  />
+
+                  {/* Attack panel overlay */}
+                  <AnimatePresence>
+                    {interaction.mode === "choosing_attack" &&
+                      viewerPlayer.active && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                          transition={{
+                            type: "spring",
+                            damping: 20,
+                            stiffness: 300,
+                          }}
+                          className="absolute left-1/2 -translate-x-1/2 bottom-0 z-40"
+                        >
+                          <AttackPanel
+                            pokemon={viewerPlayer.active}
+                            onAttack={interaction.dispatchAttack}
+                            onRetreat={interaction.dispatchRetreat}
+                            onClose={interaction.closeAttackPanel}
+                            benchPokemon={viewerPlayer.bench}
+                            disabled={isBusy}
+                          />
+                        </motion.div>
+                      )}
+                  </AnimatePresence>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>
@@ -445,30 +438,8 @@ export function VisualMatchBoardView({
         </AnimatePresence>
 
         {/* Event log (floating, right side) */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 w-48 max-h-60 overflow-y-auto z-20 bg-black/50 rounded-xl p-2.5 backdrop-blur-sm border border-white/5">
-          <div className="text-[8px] uppercase text-white/30 tracking-wider mb-1.5 font-bold flex items-center gap-1.5">
-            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-            Événements
-          </div>
-          <AnimatePresence initial={false}>
-            {recentLog.slice(-8).map((entry) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-[10px] text-white/40 py-0.5 border-b border-white/5 last:border-0 flex items-center gap-1.5"
-              >
-                {getEventIcon(entry)}
-                <span>{formatLogEntry(entry)}</span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {recentLog.length === 0 && (
-            <div className="text-[10px] text-white/20">
-              Aucun événement
-            </div>
-          )}
+        <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 xl:block">
+          <CombatFeedCard entries={desktopFeedEntries} />
         </div>
 
         {/* Turn banner overlay */}
@@ -480,7 +451,7 @@ export function VisualMatchBoardView({
       </div>
 
       {/* ═══════════ HAND BAR ═══════════ */}
-      <div className="relative z-30 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/80 backdrop-blur-sm border-t border-white/10">
+      <div className="relative z-30 border-t border-white/10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/75 backdrop-blur-sm">
         <HandBar
           hand={viewerPlayer.hand || []}
           selectedCardId={interaction.selectedHandCard?.instanceId ?? null}
@@ -540,10 +511,7 @@ export function VisualMatchBoardView({
                     repeat: Infinity,
                     ease: "linear",
                   }}
-                  className={cn(
-                    "absolute top-0 rounded-sm",
-                    p.color,
-                  )}
+                  className={cn("absolute top-0 rounded-sm", p.color)}
                   style={{
                     width: p.size,
                     height: p.size * 0.6,
@@ -582,9 +550,7 @@ export function VisualMatchBoardView({
                     : "text-red-400 drop-shadow-[0_0_40px_rgba(248,113,113,0.5)]",
                 )}
               >
-                {winnerLabel === "Victoire"
-                  ? "VICTOIRE !"
-                  : "DÉFAITE"}
+                {winnerLabel === "Victoire" ? "VICTOIRE !" : "DÉFAITE"}
               </motion.h2>
 
               {gameState.winnerReason && (
@@ -615,6 +581,111 @@ export function VisualMatchBoardView({
 
 /* ───────── Helpers ───────── */
 
+function HudPlayerChip({
+  name,
+  prizesRemaining,
+  active,
+  tone,
+}: {
+  name: string;
+  prizesRemaining: number;
+  active: boolean;
+  tone: "emerald" | "rose";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 rounded-full border px-3 py-1.5 text-xs font-semibold backdrop-blur-sm transition-all",
+        tone === "emerald"
+          ? "border-emerald-400/20 bg-emerald-400/8 text-emerald-100"
+          : "border-rose-400/20 bg-rose-400/8 text-rose-100",
+        active && "shadow-[0_0_24px_rgba(255,255,255,0.06)]",
+      )}
+    >
+      <div
+        className={cn(
+          "h-2 w-2 rounded-full",
+          tone === "emerald"
+            ? active
+              ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.75)]"
+              : "bg-emerald-300/35"
+            : active
+              ? "bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.75)]"
+              : "bg-rose-300/35",
+        )}
+      />
+      <span className="max-w-[10rem] truncate">{name}</span>
+      <span className="inline-flex items-center gap-1 text-[11px] text-amber-200/85">
+        <Shield className="h-3 w-3" />
+        {prizesRemaining}
+      </span>
+    </div>
+  );
+}
+
+function HudBadge({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "emerald" | "rose" | "amber";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm",
+        tone === "neutral" && "border-white/10 bg-white/6 text-white/65",
+        tone === "emerald" &&
+          "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+        tone === "rose" && "border-rose-400/20 bg-rose-400/10 text-rose-200",
+        tone === "amber" &&
+          "border-amber-400/20 bg-amber-400/10 text-amber-200",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CombatFeedCard({
+  entries,
+  compact = false,
+}: {
+  entries: OnlineMatchLogEntry[];
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "max-h-72 overflow-y-auto rounded-2xl border border-white/8 bg-black/40 p-3 backdrop-blur-md",
+        compact ? "w-full" : "w-56",
+      )}
+    >
+      <div className="mb-2 flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.28em] text-white/35">
+        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        Feed
+      </div>
+      <AnimatePresence initial={false}>
+        {entries.map((entry) => (
+          <motion.div
+            key={entry.id}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex items-center gap-2 border-b border-white/6 py-1.5 text-[11px] text-white/52 last:border-0"
+          >
+            {getEventIcon(entry)}
+            <span className="line-clamp-2">{formatLogEntry(entry)}</span>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      {entries.length === 0 ? (
+        <div className="text-[11px] text-white/20">Aucun événement</div>
+      ) : null}
+    </div>
+  );
+}
+
 function getEventIcon(entry: OnlineMatchLogEntry) {
   const type = String(entry.payload.type || "");
   if (type.includes("ATTACK"))
@@ -622,12 +693,8 @@ function getEventIcon(entry: OnlineMatchLogEntry) {
   if (type.includes("ENERGY") || type.includes("ATTACH"))
     return <Zap className="w-2.5 h-2.5 text-yellow-400/60 flex-shrink-0" />;
   if (type.includes("POKEMON") || type.includes("EVOLVE"))
-    return (
-      <Shield className="w-2.5 h-2.5 text-blue-400/60 flex-shrink-0" />
-    );
-  return (
-    <div className="w-1.5 h-1.5 rounded-full bg-white/20 flex-shrink-0" />
-  );
+    return <Shield className="w-2.5 h-2.5 text-blue-400/60 flex-shrink-0" />;
+  return <div className="w-1.5 h-1.5 rounded-full bg-white/20 flex-shrink-0" />;
 }
 
 function formatLogEntry(entry: OnlineMatchLogEntry) {
@@ -641,6 +708,21 @@ function formatLogEntry(entry: OnlineMatchLogEntry) {
   const reason = entry.payload.reason;
   if (typeof reason === "string") return reason;
   return JSON.stringify(entry.payload).slice(0, 50);
+}
+
+function formatPhaseLabel(phase?: string | null) {
+  if (!phase) return "Phase";
+
+  const labels: Record<string, string> = {
+    Setup: "Setup",
+    Mulligan: "Mulligan",
+    Play: "Action",
+    Attack: "Attaque",
+    BetweenTurns: "Entre tours",
+    Finished: "Fin",
+  };
+
+  return labels[phase] ?? phase;
 }
 
 function formatWinReason(reason: string): string {

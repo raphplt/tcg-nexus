@@ -37,16 +37,12 @@ export function GameCard({
   disabled = false,
   style,
 }: GameCardProps) {
-  const src = faceDown
-    ? CARD_BACK
-    : image
-      ? `${image}/high.png`
-      : null;
+  const src = faceDown ? CARD_BACK : image ? `${image}/high.png` : null;
 
   return (
     <div
       className={cn(
-        "game-card relative flex-shrink-0 rounded-lg overflow-hidden",
+        "game-card group relative flex-shrink-0 overflow-hidden rounded-[0.9rem] border border-white/10 bg-black/20 shadow-[0_18px_40px_-24px_rgba(2,6,23,0.9)]",
         "transition-all duration-200 ease-out",
         sizeClasses[size],
         onClick &&
@@ -111,7 +107,7 @@ export function GameCard({
           unoptimized={src.includes("tcgdex.net")}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900 flex items-center justify-center p-1">
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-slate-700 to-slate-900 p-1">
           <span className="text-white text-[10px] text-center font-medium leading-tight">
             {name}
           </span>
@@ -137,12 +133,11 @@ export function EmptySlot({
   return (
     <div
       className={cn(
-        "relative flex-shrink-0 rounded-lg border-2 border-dashed",
+        "relative flex-shrink-0 rounded-[0.9rem] border-2 border-dashed",
         "flex items-center justify-center transition-all duration-300",
         sizeClasses[size],
-        "border-white/20 bg-white/5",
-        onClick &&
-          "cursor-pointer hover:border-white/40 hover:bg-white/10",
+        "border-white/20 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
+        onClick && "cursor-pointer hover:border-white/40 hover:bg-white/10",
         highlighted &&
           "border-emerald-400/60 bg-emerald-400/10 shadow-[0_0_16px_rgba(52,211,153,0.3)] animate-pulse",
         className,

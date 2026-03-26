@@ -43,19 +43,22 @@ export function PlayerField({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-1.5",
+        "relative flex flex-col items-center gap-2",
         isOpponent && "flex-col-reverse",
       )}
     >
       {/* Player name and turn indicator */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
         <span
           className={cn(
-            "text-xs font-semibold uppercase tracking-wider",
-            isOpponent ? "text-red-300" : "text-blue-300",
+            "text-[11px] font-semibold uppercase tracking-[0.22em]",
+            isOpponent ? "text-rose-200/80" : "text-cyan-200/80",
           )}
         >
           {isOpponent ? player.name : "Vous"}
+        </span>
+        <span className="text-[10px] text-white/35">
+          Main {player.handCount}
         </span>
         {isCurrentTurn && (
           <motion.span
@@ -75,9 +78,7 @@ export function PlayerField({
             <motion.div
               key={pokemon?.instanceId ?? `empty-${i}`}
               layout
-              initial={
-                pokemon ? { scale: 0, opacity: 0 } : false
-              }
+              initial={pokemon ? { scale: 0, opacity: 0 } : false}
               animate={{ scale: 1, opacity: 1 }}
               transition={{
                 type: "spring",
@@ -89,27 +90,18 @@ export function PlayerField({
                 pokemon={pokemon}
                 onClick={
                   pokemon && !isOpponent
-                    ? () =>
-                        onBenchPokemonClick?.(
-                          pokemon.instanceId,
-                        )
-                    : !pokemon &&
-                        highlightedEmptyBench &&
-                        !isOpponent
+                    ? () => onBenchPokemonClick?.(pokemon.instanceId)
+                    : !pokemon && highlightedEmptyBench && !isOpponent
                       ? () => onBenchPokemonClick?.("empty")
                       : undefined
                 }
                 highlighted={
                   (pokemon &&
-                    highlightedBenchIds.includes(
-                      pokemon.instanceId,
-                    )) ||
+                    highlightedBenchIds.includes(pokemon.instanceId)) ||
                   (!pokemon && highlightedEmptyBench)
                 }
                 disabled={disabled || isOpponent}
-                showEmpty={
-                  !isOpponent || i < player.bench.length
-                }
+                showEmpty={!isOpponent || i < player.bench.length}
               />
             </motion.div>
           ))}
@@ -139,59 +131,66 @@ export function PlayerField({
         )}
       >
         {/* Deck pile */}
-        <div className="relative group">
-          <GameCard name="Deck" faceDown size="sm" disabled />
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/80 rounded px-1.5 py-0.5">
-            <span className="text-[9px] text-white font-bold">
-              {player.deckCount}
-            </span>
+        <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
+          <div className="relative group">
+            <GameCard name="Deck" faceDown size="sm" disabled />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded bg-black/80 px-1.5 py-0.5">
+              <span className="text-[9px] font-bold text-white">
+                {player.deckCount}
+              </span>
+            </div>
+          </div>
+          <div className="mt-1 text-center text-[8px] uppercase tracking-[0.18em] text-white/30">
+            Deck
           </div>
         </div>
 
         {/* Prize cards */}
-        <div className="relative">
-          <div className="flex flex-col gap-0.5">
-            {Array.from(
-              {
-                length: Math.min(
-                  player.prizesRemaining,
-                  MAX_PRIZES,
+        <div className="rounded-2xl border border-white/10 bg-black/35 p-2 backdrop-blur-sm">
+          <div className="relative">
+            <div className="flex flex-col gap-0.5">
+              {Array.from(
+                {
+                  length: Math.min(player.prizesRemaining, MAX_PRIZES),
+                },
+                (_, i) => (
+                  <motion.div
+                    key={`prize-${i}`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="h-2 w-8 rounded-sm border border-yellow-400/30 bg-gradient-to-r from-yellow-600 to-yellow-500"
+                  />
                 ),
-              },
-              (_, i) => (
-                <motion.div
-                  key={`prize-${i}`}
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="w-8 h-2 rounded-sm bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-400/30"
-                />
-              ),
-            )}
-          </div>
-          <div className="mt-0.5 text-center">
-            <span className="text-[8px] text-yellow-300/80">
-              {player.prizesRemaining} prix
-            </span>
+              )}
+            </div>
+            <div className="mt-1 text-center">
+              <span className="text-[8px] text-yellow-300/80">
+                {player.prizesRemaining} récomp.
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Discard pile */}
         {player.discard.length > 0 && (
-          <div className="relative">
-            <GameCard
-              image={
-                player.discard[player.discard.length - 1]?.image
-              }
-              name="Défausse"
-              size="sm"
-              disabled
-              className="opacity-70"
-            />
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-black/80 rounded px-1.5 py-0.5">
-              <span className="text-[9px] text-white font-bold">
-                {player.discard.length}
-              </span>
+          <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
+            <div className="relative">
+              <GameCard
+                image={player.discard[player.discard.length - 1]?.image}
+                name="Défausse"
+                size="sm"
+                disabled
+                className="opacity-70"
+              />
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded bg-black/80 px-1.5 py-0.5">
+                <span className="text-[9px] font-bold text-white">
+                  {player.discard.length}
+                </span>
+              </div>
+            </div>
+            <div className="mt-1 text-center text-[8px] uppercase tracking-[0.18em] text-white/30">
+              Défausse
             </div>
           </div>
         )}
