@@ -61,8 +61,9 @@ export const pokemonCardService = {
     return response.data;
   },
 
-  async getAllSets(): Promise<PokemonSetType[]> {
-    const response = await api.get<PokemonSetType[]>("/pokemon-set");
+  async getAllSets(limit?: number): Promise<PokemonSetType[]> {
+    const params = limit ? { limit: limit.toString() } : {};
+    const response = await api.get<PokemonSetType[]>("/pokemon-set", { params });
     return response.data;
   },
 

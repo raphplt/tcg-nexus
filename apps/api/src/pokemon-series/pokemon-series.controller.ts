@@ -32,7 +32,7 @@ export class PokemonSeriesController {
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
-    return this.pokemonSeriesService.findOne(+id);
+    return this.pokemonSeriesService.findOne(id);
   }
 
   @Patch(':id')
@@ -40,11 +40,11 @@ export class PokemonSeriesController {
     @Param('id') id: string,
     @Body() updatePokemonSeryDto: UpdatePokemonSeryDto
   ) {
-    return this.pokemonSeriesService.update(+id, updatePokemonSeryDto);
+    return this.pokemonSeriesService.update(id, updatePokemonSeryDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.pokemonSeriesService.remove(+id);
+    return this.pokemonSeriesService.remove(id);
   }
 }

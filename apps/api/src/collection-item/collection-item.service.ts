@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CollectionItem } from './entities/collection-item.entity';
 import { Collection } from 'src/collection/entities/collection.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   CardState,
@@ -19,8 +19,8 @@ export class CollectionItemService {
     @InjectRepository(Collection)
     private readonly collectionRepo: Repository<Collection>,
 
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepo: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepo: Repository<Card>,
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,

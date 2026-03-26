@@ -2,12 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
-import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import pokemonSeriesData from 'src/common/data/pokemon_series.json';
-import pokemonSetsData from 'src/common/data/pokemon_sets.json';
-import AdmZip from 'adm-zip';
+import * as fs from 'fs';
 import * as path from 'path';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
+import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Tournament,
@@ -69,8 +67,14 @@ import {
 import { BracketService } from 'src/tournament/services/bracket.service';
 import { MatchService } from 'src/match/match.service';
 
-import { CardState } from 'src/common/enums/pokemonCardsType';
+import { CardState, PokemonCardsType } from 'src/common/enums/pokemonCardsType';
 import { UserRole } from 'src/common/enums/user';
+import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
+import { ConfigService } from '@nestjs/config';
+import { CardGame } from 'src/common/enums/cardGame';
+import { TrainerType } from 'src/common/enums/trainerType';
+import { EnergyType } from 'src/common/enums/energyType';
+
 @Injectable()
 export class SeedService {
   constructor(
@@ -78,8 +82,10 @@ export class SeedService {
     private readonly pokemonSerieRepository: Repository<PokemonSerie>,
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
+    @InjectRepository(PokemonCardDetails)
+    private readonly pokemonCardDetailsRepository: Repository<PokemonCardDetails>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Tournament)
@@ -124,7 +130,8 @@ export class SeedService {
     private readonly cardStateRepository: Repository<CardStateEntity>,
     private readonly seedingService: SeedingService,
     private readonly bracketService: BracketService,
-    private readonly matchService: MatchService
+    private readonly matchService: MatchService,
+    private readonly configService: ConfigService
   ) {}
 
   /**
@@ -136,6 +143,74 @@ export class SeedService {
     // Convert special characters to their ASCII equivalents or remove them
     // eslint-disable-next-line no-control-regex
     return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+  }
+
+  private normalizeForMapping(value?: string): string {
+    if (!value) return '';
+    return (
+      value
+        .normalize('NFKD')
+        // eslint-disable-next-line no-control-regex
+        .replace(/[^\x00-\x7F]/g, '')
+        .toLowerCase()
+        .trim()
+    );
+  }
+
+  private mapPokemonCategory(value?: string): PokemonCardsType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'pokemon':
+        return PokemonCardsType.Pokemon;
+      case 'energie':
+      case 'energy':
+        return PokemonCardsType.Energy;
+      case 'dresseur':
+      case 'trainer':
+        return PokemonCardsType.Trainer;
+      default:
+        return undefined;
+    }
+  }
+
+  private mapTrainerType(value?: string): TrainerType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'supporter':
+        return TrainerType.Supporter;
+      case 'objet':
+      case 'item':
+        return TrainerType.Item;
+      case 'stade':
+      case 'stadium':
+        return TrainerType.Stadium;
+      case 'outil':
+      case 'tool':
+        return TrainerType.Tool;
+      case 'machine technique':
+      case 'technical machine':
+        return TrainerType.TechnicalMachine;
+      default:
+        return undefined;
+    }
+  }
+
+  private mapEnergyType(value?: string): EnergyType | undefined {
+    const normalized = this.normalizeForMapping(value);
+    switch (normalized) {
+      case 'de base':
+      case 'basic':
+        return EnergyType.Basic;
+      case 'special':
+      case 'speciale':
+      case 'speciales':
+      case 'special energy':
+      case 'speciale energie':
+      case 'specialeenergie':
+        return EnergyType.Special;
+      default:
+        return undefined;
+    }
   }
 
   /**
@@ -194,16 +269,34 @@ export class SeedService {
    * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
    * @throws {Error} If a Serie is not found
    */
+  /**
+   * Seed the database with the Pokemon Series data
+   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
+   * @throws {Error} If a Serie is not found
+   */
   async importPokemonSeries() {
+    const dataPath = path.resolve(
+      __dirname,
+      '../../../data/pokemon_series.json'
+    );
+    if (!fs.existsSync(dataPath)) {
+      console.warn(`Series file not found at ${dataPath}`);
+      return [];
+    }
+
+    const seriesData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     const series: PokemonSerie[] = [];
 
-    for (const serieData of pokemonSeriesData as DeepPartial<PokemonSerie>[]) {
+    for (const serieData of seriesData as DeepPartial<PokemonSerie>[]) {
       const existingSerie = await this.pokemonSerieRepository.findOne({
         where: { name: serieData.name }
       });
 
       if (!existingSerie) {
-        const newSerie = this.pokemonSerieRepository.create(serieData);
+        const newSerie = this.pokemonSerieRepository.create({
+          ...serieData,
+          game: CardGame.Pokemon
+        });
         series.push(newSerie);
       }
     }
@@ -220,10 +313,24 @@ export class SeedService {
    * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
    * @throws {Error} If a Serie is not found
    */
+  /**
+   * Seed the database with the Pokemon Sets data
+   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
+   * @throws {Error} If a Serie is not found
+   */
   async importPokemonSets() {
+    const dataPath = path.resolve(
+      __dirname,
+      '../../../../data/pokemon_sets.json'
+    );
+    if (!fs.existsSync(dataPath)) {
+      console.warn(`Sets file not found at ${dataPath}`);
+      return [];
+    }
+    const setsData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
     const sets: PokemonSet[] = [];
 
-    for (const setData of pokemonSetsData as DeepPartial<PokemonSet>[]) {
+    for (const setData of setsData as DeepPartial<PokemonSet>[]) {
       const existingSet = await this.pokemonSetRepository.findOne({
         where: { name: setData.name }
       });
@@ -255,8 +362,12 @@ export class SeedService {
         delete (setProps as any).serieId;
         delete (setProps as any).serie;
 
+        // Logo and symbol URLs are now provided by update-data.ts
+        // No need to construct them here
+
         const newSet = this.pokemonSetRepository.create({
           ...(setProps as DeepPartial<PokemonSet>),
+          game: CardGame.Pokemon,
           serie
         });
         sets.push(newSet);
@@ -273,120 +384,186 @@ export class SeedService {
   /**
    * Seed the database with the Pokemon Series and Sets data
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: PokemonCard[] }>} The Pokemon Series and Sets created
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
+   * @throws {Error} If a Serie is not found
+   */
+  /**
+   * Seed the database with the Pokemon Series and Sets data
+   *
+   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
    * @throws {Error} If a Serie is not found
    */
   async importPokemon(): Promise<{
     series: PokemonSerie[];
     sets: PokemonSet[];
-    cards: PokemonCard[];
   }> {
     const series = await this.importPokemonSeries();
     const sets = await this.importPokemonSets();
 
-    const zipPath = path.resolve(__dirname, '../common/data/pokemon.zip');
-    let zip: AdmZip;
-    try {
-      zip = new AdmZip(zipPath);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to read zip file at ${zipPath}: ${error.message}`
-        );
-      } else {
-        throw new Error(`Failed to read zip file at ${zipPath}`);
-      }
-    }
+    const dataPath = path.resolve(__dirname, '../../../../data');
+    // Removed the large 'cards' array to save memory
 
-    const zipEntries = zip.getEntries();
-    const cards: PokemonCard[] = [];
-
-    if (zipEntries && zipEntries.length > 0) {
-      for (const entry of zipEntries) {
-        if (entry.isDirectory || !entry.name.endsWith('.json')) {
-          continue;
-        }
-
-        const entryContent = entry.getData().toString('utf8');
-
-        try {
-          const parsedContent = JSON.parse(entryContent);
-          // Handle both single card object and array of cards
-          const cardsData = Array.isArray(parsedContent)
-            ? parsedContent
-            : [parsedContent];
-
-          for (const cardData of cardsData) {
-            const setId = cardData.set?.id;
-            if (!setId) {
-              continue;
-            }
-            const set = await this.pokemonSetRepository.findOne({
-              where: { id: setId }
-            });
-            if (!set) {
-              // console.warn(
-              //   `Set avec id ${setId} non trouvé pour la carte ${cardData.id}.`
-              // );
-              continue;
-            }
-            delete cardData.set;
-            cardData.set = set;
-
-            cardData.tcgDexId = cardData.id;
-            delete cardData.id;
-
-            cardData.name = cardData.name
-              ? this.cleanString(cardData.name as string)
-              : '';
-            cardData.illustrator = cardData.illustrator
-              ? this.cleanString(cardData.illustrator as string)
-              : null;
-            cardData.description = cardData.description
-              ? this.cleanString(cardData.description as string)
-              : null;
-            cardData.evolveFrom = cardData.evolveFrom
-              ? this.cleanString(cardData.evolveFrom as string)
-              : null;
-            cardData.effect = cardData.effect
-              ? this.cleanString(cardData.effect as string)
-              : null;
-
-            if (cardData.variants && cardData.variants.wPromo !== undefined) {
-              const { ...validVariants } = cardData.variants;
-              cardData.variants = validVariants;
-            }
-            const card = this.pokemonCardRepository.create(
-              cardData as DeepPartial<PokemonCard>
-            );
-            cards.push(card);
+    // Recursively find all JSON files in dataPath that are NOT the series/sets files
+    const getAllFiles = (dir: string, fileList: string[] = []) => {
+      const files = fs.readdirSync(dir);
+      files.forEach((file) => {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+          getAllFiles(filePath, fileList);
+        } else {
+          if (
+            file.endsWith('.json') &&
+            !file.endsWith('pokemon_series.json') &&
+            !file.endsWith('pokemon_sets.json')
+          ) {
+            fileList.push(filePath);
           }
-        } catch (jsonError) {
-          console.error(
-            `Failed to parse JSON content for ${entry.name}:`,
-            jsonError
-          );
         }
+      });
+      return fileList;
+    };
+
+    const cardFiles = getAllFiles(dataPath);
+
+    console.log(`Found ${cardFiles.length} card files to process.`);
+
+    let processedFiles = 0;
+    const batchSize = 100; // Process cards in batches of 100
+    let cardBatch: Card[] = [];
+    let metricsSavedCards = 0;
+
+    for (const filePath of cardFiles) {
+      try {
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const parsedContent = JSON.parse(fileContent);
+
+        const cardsData = Array.isArray(parsedContent)
+          ? parsedContent
+          : [parsedContent];
+
+        for (const cardData of cardsData) {
+          const setId = cardData.set?.id;
+          if (!setId) {
+            continue;
+          }
+          const set = await this.pokemonSetRepository.findOne({
+            where: { id: setId }
+          });
+          if (!set) {
+            continue;
+          }
+
+          const name = cardData.name
+            ? this.cleanString(cardData.name as string)
+            : '';
+          const illustrator = cardData.illustrator
+            ? this.cleanString(cardData.illustrator as string)
+            : null;
+          const description = cardData.description
+            ? this.cleanString(cardData.description as string)
+            : null;
+          const evolveFrom = cardData.evolveFrom
+            ? this.cleanString(cardData.evolveFrom as string)
+            : null;
+          const effect = cardData.effect
+            ? this.cleanString(cardData.effect as string)
+            : null;
+
+          const card = this.pokemonCardRepository.create({
+            game: CardGame.Pokemon,
+            tcgDexId: cardData.id,
+            localId: cardData.localId,
+            name,
+            image: cardData.image,
+            category: cardData.category,
+            illustrator,
+            rarity: cardData.rarity,
+            variants: cardData.variants,
+            variantsDetailed: cardData.variants_detailed,
+            legal: cardData.legal,
+            updated: cardData.updated,
+            pricing: cardData.pricing,
+            set
+          } as DeepPartial<Card>);
+
+          const details = this.pokemonCardDetailsRepository.create({
+            category: this.mapPokemonCategory(cardData.category),
+            dexId: cardData.dexId,
+            hp: cardData.hp,
+            types: cardData.types,
+            evolveFrom,
+            description,
+            effect,
+            level: cardData.level,
+            stage: cardData.stage,
+            suffix: cardData.suffix,
+            item: cardData.item,
+            abilities: cardData.abilities,
+            attacks: cardData.attacks,
+            weaknesses: cardData.weaknesses,
+            resistances: cardData.resistances,
+            retreat: cardData.retreat,
+            regulationMark: cardData.regulationMark,
+            trainerType: this.mapTrainerType(cardData.trainerType),
+            energyType: this.mapEnergyType(cardData.energyType),
+            boosters: cardData.boosters
+          } as DeepPartial<PokemonCardDetails>);
+
+          details.card = card;
+          card.pokemonDetails = details;
+
+          cardBatch.push(card);
+        }
+      } catch (jsonError) {
+        console.error(
+          `Failed to parse JSON content for ${filePath}:`,
+          jsonError
+        );
       }
 
-      if (cards.length > 0) {
-        const batchSize = 500;
-        for (let i = 0; i < cards.length; i += batchSize) {
-          const batch = cards.slice(i, i + batchSize);
-          await this.pokemonCardRepository.save(batch);
-        }
+      // Check if batch is full and save
+      if (cardBatch.length >= batchSize) {
+        await this.pokemonCardRepository.save(cardBatch);
+        metricsSavedCards += cardBatch.length;
+        cardBatch = []; // Clear memory
       }
-    } else {
-      console.log('No entries found in the zip file.');
+
+      // Update progress bar
+      processedFiles++;
+      const total = cardFiles.length;
+      const percentage = Math.round((processedFiles / total) * 100);
+      const width = 40;
+      const filled = Math.round((width * processedFiles) / total);
+      const empty = width - filled;
+      const bar = '█'.repeat(filled) + '░'.repeat(empty);
+      process.stdout.write(
+        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`
+      );
     }
 
-    return { series, sets, cards };
+    // Save remaining cards in batch
+    if (cardBatch.length > 0) {
+      await this.pokemonCardRepository.save(cardBatch);
+      metricsSavedCards += cardBatch.length;
+    }
+
+    process.stdout.write('\n'); // New line after progress bar
+    console.log(`Successfully saved a total of ${metricsSavedCards} cards.`);
+
+    // Return empty cards array as we don't want to load them all back into memory
+    return { series, sets };
   }
 
   /**
-   * Seed test users
+   * Seed test users (dev only)
    */
   async seedUsers() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test users seed in production environment.');
+      return [];
+    }
+
     // Bypass TypeScript transpilation of dynamic import to require()
     const { faker } = await (eval('import("@faker-js/faker")') as Promise<
       typeof import('@faker-js/faker')
@@ -484,9 +661,50 @@ export class SeedService {
   }
 
   /**
-   * Seed test tournaments with related entities
+   * Create a single user (for production use)
+   */
+  async createUser(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: UserRole = UserRole.USER
+  ): Promise<User> {
+    const existing = await this.userRepository.findOne({ where: { email } });
+    if (existing) {
+      throw new Error(`User with email ${email} already exists`);
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const user = this.userRepository.create({
+      email,
+      password: hash,
+      firstName,
+      lastName,
+      role,
+      isPro: false,
+      isActive: true,
+      emailVerified: true,
+      preferredCurrency: Currency.EUR,
+      decks: [],
+      collections: []
+    });
+
+    await this.userRepository.save(user);
+    await this.createDefaultCollections(user.id);
+    console.log(`✅ User created: ${email} (${role})`);
+    return user;
+  }
+
+  /**
+   * Seed test tournaments with related entities (dev only)
    */
   async seedTournaments() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test tournaments seed in production environment.');
+      return [];
+    }
     // Crée quelques joueurs (réutilise si déjà existants)
     const players: Player[] = [];
 
@@ -1004,7 +1222,7 @@ export class SeedService {
         order: 8
       },
       {
-        question: "Que se passe-t-il si je ne reçois pas ma commande ?",
+        question: 'Que se passe-t-il si je ne reçois pas ma commande ?',
         answer:
           'Le service support peut suspendre la transaction le temps de l’enquête. Fournissez vos preuves d’expédition/réception ; un remboursement ou une re-livraison peut être proposé selon la situation.',
         category: FaqCategory.MARKETPLACE,
@@ -1053,10 +1271,15 @@ export class SeedService {
   }
 
   /**
-   * Seed test listings
+   * Seed test listings (dev only)
    * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
   async seedListings() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test listings seed in production environment.');
+      return;
+    }
     // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
     const sellers = await this.userRepository.find();
     // Limiter à 1500 cartes pour éviter les performances trop longues
@@ -1249,10 +1472,15 @@ export class SeedService {
   }
 
   /**
-   * Seed card events to simulate user interactions
+   * Seed card events to simulate user interactions (dev only)
    * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
    */
   async seedCardEvents() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test card events seed in production environment.');
+      return;
+    }
     console.log('🌱 Starting card events seed...');
     const users = await this.userRepository.find();
     const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limiter à 200 cartes
@@ -1369,11 +1597,16 @@ export class SeedService {
   }
 
   /**
-   * Seed card popularity metrics by aggregating events
+   * Seed card popularity metrics by aggregating events (dev only)
    * Agrège les événements existants pour créer des métriques de popularité
    * Note: Cette méthode nécessite que seedCardEvents() ait été appelé avant
    */
   async seedCardPopularityMetrics() {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    if (isProduction) {
+      console.log('⚠️  Skipping test card popularity metrics seed in production environment.');
+      return;
+    }
     console.log('🌱 Starting card popularity metrics seed...');
 
     // Réduire le nombre de cartes traitées pour éviter la surcharge mémoire
@@ -1637,7 +1870,7 @@ export class SeedService {
         player,
         article,
         faq,
-        pokemon_card,
+        card,
         pokemon_set,
         pokemon_serie,
         "user"

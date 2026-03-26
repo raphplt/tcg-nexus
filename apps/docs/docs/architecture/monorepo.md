@@ -13,7 +13,6 @@ apps/
 packages/
   ui/               -> Librairie de composants partagés
   typescript-config/-> tsconfig commun
-  eslint-config/    -> règles ESLint partagées
 ```
 
 ### Flux applicatif

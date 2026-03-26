@@ -1,0 +1,120 @@
+{
+    "category": "Pokémon",
+    "id": "base1-2",
+    "illustrator": "Ken Sugimori",
+    "image": "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev/cards/base1/base1-2/low.png",
+    "localId": "2",
+    "name": "Tortank",
+    "rarity": "Rare",
+    "set": {
+        "cardCount": {
+            "official": 102,
+            "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+    },
+    "variants": {
+        "firstEdition": true,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+    },
+    "variants_detailed": [
+        {
+            "type": "Holo",
+            "subtype": "illimité",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard",
+            "stamp": [
+                "1re Édition"
+            ]
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "Copyright 1999-2000",
+            "size": "Standard"
+        }
+    ],
+    "dexId": [
+        9
+    ],
+    "hp": 100,
+    "types": [
+        "Eau"
+    ],
+    "description": "Un Pokémon brutal armé de canons hydrauliques. Ses puissants jets d'eau sont dévastateurs.",
+    "stage": "Niveau 2",
+    "abilities": [
+        {
+            "type": "Pouvoir Pokémon",
+            "name": "Danse de la pluie",
+            "effect": "Aussi souvent que vous le souhaitez pendant votre tour (avant votre attaque), vous pouvez attacher 1 carte Énergie  à 1 de vos Pokémon  (En plus de la carte Énergie que vous pouvez attacher normalement.) Ce pouvoir ne peut être utilisé si Tortank est Endormi, Confus ou Paralysé."
+        }
+    ],
+    "attacks": [
+        {
+            "cost": [
+                "Eau",
+                "Eau",
+                "Eau"
+            ],
+            "name": "Hydrocanon",
+            "effect": "Inflige 40 dégâts plus 10 dégâts supplémentaires pour chaque Énergie  attachée à Tortank en plus du coût en Énergie de cette attaque. Les Énergies  supplémentaires après la seconde ne comptent pas.",
+            "damage": "40+"
+        }
+    ],
+    "weaknesses": [
+        {
+            "type": "Électrique",
+            "value": "×2"
+        }
+    ],
+    "retreat": 3,
+    "legal": {
+        "standard": false,
+        "expanded": false
+    },
+    "updated": "2026-01-07T13:21:43+01:00",
+    "pricing": {
+        "cardmarket": {
+            "updated": "2026-01-30T01:44:11.000Z",
+            "unit": "EUR",
+            "idProduct": 273697,
+            "avg": 115.39,
+            "low": 12,
+            "trend": 83.02,
+            "avg1": 64.37,
+            "avg7": 57.8,
+            "avg30": 109.31,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 73.51,
+            "avg1-holo": 100,
+            "avg7-holo": 50.43,
+            "avg30-holo": 64.46
+        },
+        "tcgplayer": {
+            "updated": "2026-01-29T20:04:55.000Z",
+            "unit": "USD",
+            "holofoil": {
+                "productId": 42360,
+                "lowPrice": 109,
+                "midPrice": 149.99,
+                "highPrice": 499.99,
+                "marketPrice": 164.09,
+                "directLowPrice": 136.49
+            }
+        }
+    }
+}

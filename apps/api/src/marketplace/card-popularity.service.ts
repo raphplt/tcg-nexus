@@ -1,9 +1,10 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual } from 'typeorm';
+import { createHash } from 'crypto';
 import { CardEvent, CardEventType } from './entities/card-event.entity';
 import { CardPopularityMetrics } from './entities/card-popularity-metrics.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { Listing } from './entities/listing.entity';
 import { Order } from './entities/order.entity';
 import { CreateCardEventDto } from './dto/card-popularity.dto';
@@ -40,8 +41,8 @@ export class CardPopularityService {
     private readonly cardEventRepository: Repository<CardEvent>,
     @InjectRepository(CardPopularityMetrics)
     private readonly metricsRepository: Repository<CardPopularityMetrics>,
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(Order)
@@ -66,12 +67,17 @@ export class CardPopularityService {
       throw new BadRequestException('Card not found');
     }
 
+    // Hash IP address for GDPR compliance
+    const hashedIp = ipAddress
+      ? createHash('sha256').update(ipAddress).digest('hex').substring(0, 16)
+      : undefined;
+
     const event = this.cardEventRepository.create({
       card: { id: dto.cardId },
       eventType: dto.eventType,
       user: userId ? { id: userId } : undefined,
       sessionId: sessionId || dto.sessionId,
-      ipAddress,
+      ipAddress: hashedIp,
       userAgent,
       context: dto.context
     });
@@ -169,23 +175,27 @@ export class CardPopularityService {
       }
     });
 
-    // Récupérer les métriques marketplace
-    const listings = await this.listingRepository.find({
-      where: { pokemonCard: { id: cardId } },
-      relations: ['pokemonCard']
-    });
+    // Use SQL aggregates instead of loading all listings into memory
+    const listingStats = await this.listingRepository
+      .createQueryBuilder('listing')
+      .select('COUNT(listing.id)', 'listingCount')
+      .addSelect('MIN(listing.price)', 'minPrice')
+      .addSelect('AVG(listing.price)', 'avgPrice')
+      .where('listing.pokemonCard.id = :cardId', { cardId })
+      .andWhere(
+        '(listing.expiresAt IS NULL OR listing.expiresAt > :endDate)',
+        { endDate }
+      )
+      .andWhere('listing.quantityAvailable > 0')
+      .getRawOne();
 
-    const activeListings = listings.filter(
-      (l) => !l.expiresAt || new Date(l.expiresAt) > endDate
-    );
-
-    const prices = activeListings.map((l) => parseFloat(l.price.toString()));
-    const listingCount = activeListings.length;
-    const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-    const avgPrice =
-      prices.length > 0
-        ? prices.reduce((a, b) => a + b, 0) / prices.length
-        : null;
+    const listingCount = parseInt(listingStats?.listingCount, 10) || 0;
+    const minPrice = listingStats?.minPrice
+      ? parseFloat(listingStats.minPrice)
+      : null;
+    const avgPrice = listingStats?.avgPrice
+      ? parseFloat(listingStats.avgPrice)
+      : null;
 
     // Calculer les scores
     const popularityScore = await this.calculatePopularityScore(cardId);
@@ -223,31 +233,32 @@ export class CardPopularityService {
   }
 
   /**
-   * Calcule le popularity_score sur une fenêtre glissante (90 jours par défaut)
+   * Calcule le popularity_score via SQL aggregation (pas de chargement en mémoire)
    */
   private async calculatePopularityScore(cardId: string): Promise<number> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - this.POPULARITY_WINDOW_DAYS);
 
-    const events = await this.cardEventRepository.find({
-      where: {
-        card: { id: cardId },
-        createdAt: Between(cutoffDate, new Date())
-      }
-    });
+    const result = await this.cardEventRepository
+      .createQueryBuilder('event')
+      .select('event.eventType', 'eventType')
+      .addSelect('COUNT(*)', 'count')
+      .where('event.card.id = :cardId', { cardId })
+      .andWhere('event.createdAt >= :cutoff', { cutoff: cutoffDate })
+      .groupBy('event.eventType')
+      .getRawMany<{ eventType: CardEventType; count: string }>();
 
     let score = 0;
-
-    events.forEach((event) => {
-      const weight = this.EVENT_WEIGHTS[event.eventType] || 0;
-      score += weight;
+    result.forEach(({ eventType, count }) => {
+      const weight = this.EVENT_WEIGHTS[eventType] || 0;
+      score += weight * parseInt(count, 10);
     });
 
     return score;
   }
 
   /**
-   * Calcule le trend_score en comparant la période récente vs période de base
+   * Calcule le trend_score via SQL aggregation
    */
   private async calculateTrendScore(cardId: string): Promise<number> {
     const now = new Date();
@@ -260,50 +271,55 @@ export class CardPopularityService {
       baseWindowStart.getDate() - this.TREND_BASE_WINDOW_DAYS
     );
 
-    // Événements récents (7 jours)
-    const recentEvents = await this.cardEventRepository.find({
-      where: {
-        card: { id: cardId },
-        createdAt: Between(shortWindowStart, now)
-      }
-    });
-
-    // Événements de base (30 jours précédents les 7 derniers jours)
-    const baseEvents = await this.cardEventRepository.find({
-      where: {
-        card: { id: cardId },
-        createdAt: Between(baseWindowStart, shortWindowStart)
-      }
-    });
+    // Single query with CASE to split recent vs base window
+    const results = await this.cardEventRepository
+      .createQueryBuilder('event')
+      .select('event.eventType', 'eventType')
+      .addSelect(
+        `CASE WHEN event.createdAt >= :shortStart THEN 'recent' ELSE 'base' END`,
+        'window'
+      )
+      .addSelect('COUNT(*)', 'count')
+      .where('event.card.id = :cardId', { cardId })
+      .andWhere('event.createdAt >= :baseStart', {
+        baseStart: baseWindowStart
+      })
+      .setParameter('shortStart', shortWindowStart)
+      .groupBy('event.eventType')
+      .addGroupBy(
+        `CASE WHEN event.createdAt >= :shortStart THEN 'recent' ELSE 'base' END`
+      )
+      .getRawMany<{
+        eventType: CardEventType;
+        window: string;
+        count: string;
+      }>();
 
     let recentScore = 0;
-    recentEvents.forEach((event) => {
-      recentScore += this.EVENT_WEIGHTS[event.eventType] || 0;
-    });
-
     let baseScore = 0;
-    baseEvents.forEach((event) => {
-      baseScore += this.EVENT_WEIGHTS[event.eventType] || 0;
+    results.forEach(({ eventType, window, count }) => {
+      const weight = this.EVENT_WEIGHTS[eventType] || 0;
+      const total = weight * parseInt(count, 10);
+      if (window === 'recent') recentScore += total;
+      else baseScore += total;
     });
 
-    // Normaliser par le nombre de jours
     const recentDailyAvg = recentScore / this.TREND_SHORT_WINDOW_DAYS;
     const baseDailyAvg =
       baseScore / (this.TREND_BASE_WINDOW_DAYS - this.TREND_SHORT_WINDOW_DAYS);
 
-    // Calculer le ratio de croissance
     if (baseDailyAvg === 0) {
       return recentDailyAvg > 0 ? 100 : 0;
     }
 
     const growthRatio = ((recentDailyAvg - baseDailyAvg) / baseDailyAvg) * 100;
 
-    // Pénaliser si trop de listings
-    const listings = await this.listingRepository.count({
+    const listingCount = await this.listingRepository.count({
       where: { pokemonCard: { id: cardId } }
     });
 
-    const listingPenalty = listings > 100 ? Math.min(0.5, 100 / listings) : 1;
+    const listingPenalty =
+      listingCount > 100 ? Math.min(0.5, 100 / listingCount) : 1;
 
     return growthRatio * listingPenalty;
   }
@@ -344,6 +360,7 @@ export class CardPopularityService {
         id: metric.card.id,
         name: metric.card.name,
         image: metric.card.image,
+        localId: metric.card.localId,
         rarity: metric.card.rarity,
         set: metric.card.set
           ? {
@@ -406,6 +423,7 @@ export class CardPopularityService {
         id: metric.card.id,
         name: metric.card.name,
         image: metric.card.image,
+        localId: metric.card.localId,
         rarity: metric.card.rarity,
         set: metric.card.set
           ? {

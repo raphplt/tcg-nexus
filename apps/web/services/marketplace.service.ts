@@ -1,4 +1,5 @@
 import type { PaginationParams, PaginatedResult } from "@/types/pagination";
+import type { CardPricing } from "@/types/cardPokemon";
 import { Listing } from "@/types/listing";
 import { fetcher, authedFetch } from "@/utils/fetch";
 import { PokemonCardType } from "@/types/cardPokemon";
@@ -39,6 +40,7 @@ export interface CardStatistics {
     currency: string;
     recordedAt: Date;
   }>;
+  marketPricing: CardPricing | null;
 }
 
 export interface PopularCard {
@@ -63,6 +65,15 @@ export interface BestSeller {
 
 export interface SellerStatistics {
   sellerId: number;
+  seller: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatarUrl: string;
+    isPro: boolean;
+    createdAt: string;
+  };
   totalListings: number;
   activeListings: number;
   totalSales: number;
@@ -184,8 +195,12 @@ export const marketplaceService = {
   /**
    * Récupère les listings d'un vendeur
    */
-  async getSellerListings(sellerId: number): Promise<Listing[]> {
-    return fetcher<Listing[]>(`/marketplace/sellers/${sellerId}/listings`);
+  async getSellerListings(
+    sellerId: number,
+  ): Promise<PaginatedResult<Listing>> {
+    return fetcher<PaginatedResult<Listing>>(
+      `/marketplace/sellers/${sellerId}/listings`,
+    );
   },
 
   /**

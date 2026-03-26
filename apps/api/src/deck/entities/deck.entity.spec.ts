@@ -3,7 +3,7 @@ import { getMetadataArgsStorage } from 'typeorm';
 import { Deck } from './deck.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 
 describe('Deck entity', () => {
@@ -48,7 +48,7 @@ describe('Deck entity', () => {
       }
       return relType;
     })();
-    expect(coverCardRelType).toBe(PokemonCard);
+    expect(coverCardRelType).toBe(Card);
     expect(coverCardRel?.options?.nullable).toBe(true);
 
     const cardsRel = relations.find((r) => r.propertyName === 'cards');

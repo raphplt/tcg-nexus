@@ -10,7 +10,7 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
 import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 
 @Entity()
 export class Deck {
@@ -35,8 +35,8 @@ export class Deck {
   })
   format: DeckFormat;
 
-  @ManyToOne(() => PokemonCard, { nullable: true, eager: true })
-  coverCard: PokemonCard;
+  @ManyToOne(() => Card, { nullable: true, eager: true })
+  coverCard: Card;
 
   @OneToMany(() => DeckCard, (deckCard) => deckCard.deck, { cascade: true })
   cards?: DeckCard[];

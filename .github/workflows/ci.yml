@@ -10,6 +10,7 @@ on:
         branches:
             - main
             - develop
+    workflow_call:
 
 jobs:
     # Job pour le linting et la vérification des types

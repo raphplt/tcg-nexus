@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
 import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
 import { PokemonSet } from './entities/pokemon-set.entity';
+import { CardGame } from 'src/common/enums/cardGame';
 
 @Injectable()
 export class PokemonSetService {
@@ -13,21 +14,31 @@ export class PokemonSetService {
   ) {}
 
   async create(createPokemonSetDto: CreatePokemonSetDto): Promise<PokemonSet> {
-    const pokemonSet = this.pokemonSetRepository.create(createPokemonSetDto);
+    const pokemonSet = this.pokemonSetRepository.create({
+      ...createPokemonSetDto,
+      game: CardGame.Pokemon
+    });
     return this.pokemonSetRepository.save(pokemonSet);
   }
 
-  async findAll(): Promise<PokemonSet[]> {
-    return this.pokemonSetRepository.find({
-      order: {
-        releaseDate: 'DESC'
-      }
-    });
+  async findAll(limit?: number): Promise<PokemonSet[]> {
+    const query = this.pokemonSetRepository
+      .createQueryBuilder('set')
+      .leftJoinAndSelect('set.serie', 'serie')
+      .where('set.game = :game', { game: CardGame.Pokemon })
+      .orderBy('set.releaseDate', 'DESC');
+
+    if (limit) {
+      query.take(limit);
+    }
+
+    return query.getMany();
   }
 
   async findOne(id: string): Promise<PokemonSet> {
     const pokemonSet = await this.pokemonSetRepository.findOne({
-      where: { id }
+      where: { id, game: CardGame.Pokemon },
+      relations: ['serie']
     });
     if (!pokemonSet) {
       throw new Error(`PokemonSet with id ${id} not found`);
@@ -39,11 +50,12 @@ export class PokemonSetService {
     id: string,
     updatePokemonSetDto: UpdatePokemonSetDto
   ): Promise<PokemonSet> {
-    await this.pokemonSetRepository.update(id, updatePokemonSetDto);
-    return this.findOne(id);
+    const existing = await this.findOne(id);
+    this.pokemonSetRepository.merge(existing, updatePokemonSetDto);
+    return this.pokemonSetRepository.save(existing);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.pokemonSetRepository.delete(id);
   }
 }

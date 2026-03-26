@@ -1,0 +1,128 @@
+{
+    "category": "Pokémon",
+    "id": "base1-6",
+    "illustrator": "Mitsuhiro Arita",
+    "image": "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev/cards/base1/base1-6/low.png",
+    "localId": "6",
+    "name": "Léviator",
+    "rarity": "Rare",
+    "set": {
+        "cardCount": {
+            "official": 102,
+            "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+    },
+    "variants": {
+        "firstEdition": true,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+    },
+    "variants_detailed": [
+        {
+            "type": "Holo",
+            "subtype": "illimité",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard",
+            "stamp": [
+                "1re Édition"
+            ]
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "Copyright 1999-2000",
+            "size": "Standard"
+        }
+    ],
+    "dexId": [
+        130
+    ],
+    "hp": 100,
+    "types": [
+        "Eau"
+    ],
+    "description": "Gigantesque et maléfique, il est capable de raser une ville dans un accès de rage terrifiante.",
+    "stage": "Niveau 1",
+    "attacks": [
+        {
+            "cost": [
+                "Eau",
+                "Eau",
+                "Eau"
+            ],
+            "name": "Draco-Rage",
+            "damage": 50
+        },
+        {
+            "cost": [
+                "Eau",
+                "Eau",
+                "Eau",
+                "Eau"
+            ],
+            "name": "Bulles d'O",
+            "effect": "Lancez une pièce. Si c'est face, le Pokémon Défenseur est maintenant Paralysé.",
+            "damage": 40
+        }
+    ],
+    "weaknesses": [
+        {
+            "type": "Plante",
+            "value": "×2"
+        }
+    ],
+    "resistances": [
+        {
+            "type": "Combat",
+            "value": "-30"
+        }
+    ],
+    "legal": {
+        "standard": false,
+        "expanded": false
+    },
+    "updated": "2026-01-07T13:21:43+01:00",
+    "pricing": {
+        "cardmarket": {
+            "updated": "2026-01-30T01:44:11.000Z",
+            "unit": "EUR",
+            "idProduct": 273701,
+            "avg": 18.73,
+            "low": 2,
+            "trend": 15.57,
+            "avg1": 5.67,
+            "avg7": 16.03,
+            "avg30": 18.66,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 14.3,
+            "avg1-holo": 12.94,
+            "avg7-holo": 13.88,
+            "avg30-holo": 12.87
+        },
+        "tcgplayer": {
+            "updated": "2026-01-29T20:04:55.000Z",
+            "unit": "USD",
+            "holofoil": {
+                "productId": 42404,
+                "lowPrice": 19.86,
+                "midPrice": 33.08,
+                "highPrice": 69.99,
+                "marketPrice": 34.96,
+                "directLowPrice": null
+            }
+        }
+    }
+}

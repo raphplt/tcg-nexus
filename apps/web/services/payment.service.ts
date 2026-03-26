@@ -2,6 +2,8 @@ import { authedFetch } from "@/utils/fetch";
 
 export interface CreatePaymentIntentResponse {
   clientSecret: string;
+  amount: number;
+  currency: string;
 }
 
 export interface CreateOrderDto {
@@ -10,9 +12,9 @@ export interface CreateOrderDto {
 }
 
 export const paymentService = {
-  async createPaymentIntent(amount: number, currency: string): Promise<CreatePaymentIntentResponse> {
+  async createPaymentIntent(): Promise<CreatePaymentIntentResponse> {
     return authedFetch<CreatePaymentIntentResponse>("POST", "/payments/create-payment-intent", {
-      data: { amount, currency },
+      data: {},
     });
   },
 

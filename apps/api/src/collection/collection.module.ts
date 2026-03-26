@@ -4,11 +4,11 @@ import { CollectionController } from './collection.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Collection } from './entities/collection.entity';
 import { CollectionItem } from '../collection-item/entities/collection-item.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Collection, CollectionItem, PokemonCard])
+    TypeOrmModule.forFeature([Collection, CollectionItem, Card])
   ],
   controllers: [CollectionController],
   providers: [CollectionService],

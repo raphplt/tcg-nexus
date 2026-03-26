@@ -49,7 +49,7 @@ const TrendingDecks = () => {
   return (
     <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
       <div className="flex items-center justify-between mb-4">
-        <H2>Derniers Decks</H2>
+        <H2>Meilleurs Decks</H2>
         <Link
           href="/decks"
           className="text-sm text-primary hover:underline"
@@ -65,7 +65,7 @@ const TrendingDecks = () => {
               key={deck.id}
               className="flex items-center gap-4 p-3 rounded-lg border bg-background hover:shadow-md transition group"
             >
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 {deck.cards &&
                 deck.cards.length > 0 &&
                 deck.cards[0]?.card?.image ? (

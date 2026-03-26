@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index
 } from 'typeorm';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { User } from 'src/user/entities/user.entity';
 
 export enum CardEventType {
@@ -26,9 +26,9 @@ export class CardEvent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => PokemonCard, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'pokemon_card_id' })
-  card: PokemonCard;
+  @ManyToOne(() => Card, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'card_id' })
+  card: Card;
 
   @Column({ type: 'enum', enum: CardEventType })
   eventType: CardEventType;

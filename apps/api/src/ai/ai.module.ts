@@ -3,10 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiService } from './ai.service';
 import { AiController } from './ai.controller';
 import { Deck } from '../deck/entities/deck.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Deck, PokemonCard])],
+  imports: [TypeOrmModule.forFeature([Deck, Card])],
   controllers: [AiController],
   providers: [AiService]
 })

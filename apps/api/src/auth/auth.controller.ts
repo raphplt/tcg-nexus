@@ -10,6 +10,7 @@ import {
   UnauthorizedException
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -61,7 +62,10 @@ const buildCookieOptions = (
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @UseGuardsDecorator(ThrottlerGuard)
@@ -189,13 +193,6 @@ export class AuthController {
   @Post('profile')
   @HttpCode(HttpStatus.OK)
   getProfile(@CurrentUser() user: User) {
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      isPro: user.isPro
-    };
+    return this.userService.findOne(user.id);
   }
 }

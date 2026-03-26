@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Listing } from './entities/listing.entity';
 import { UpdateListingDto } from './dto/update-marketplace.dto';
 import { PriceHistory } from './entities/price-history.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { Order, OrderStatus } from './entities/order.entity';
 import {
   ForbiddenException,
@@ -118,7 +118,7 @@ describe('MarketplaceService', () => {
           useValue: mockPriceHistoryRepo
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: mockPokemonCardRepo
         },
         { provide: getRepositoryToken(Order), useValue: mockOrderRepo },

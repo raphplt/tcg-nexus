@@ -17,7 +17,7 @@ export function H1({ children, className, variant = "default" }: TitleProps) {
   return (
     <h1
       className={clsx(
-        "text-3xl font-extrabold tracking-tight font-sans md:text-4xl",
+        "text-3xl font-extrabold tracking-tight font-heading md:text-4xl",
         getColor(variant),
         className,
       )}
@@ -31,7 +31,7 @@ export function H2({ children, className, variant = "default" }: TitleProps) {
   return (
     <h2
       className={clsx(
-        "text-2xl font-bold tracking-tight font-sans md:text-3xl",
+        "text-2xl font-bold tracking-tight font-heading md:text-3xl",
         getColor(variant),
         className,
       )}

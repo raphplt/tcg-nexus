@@ -13,6 +13,7 @@ export async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, { rawBody: true });
     app.use(cookieParser());
+    app.setGlobalPrefix('api');
 
     if (process.env.NODE_ENV !== 'production') {
       const config = new DocumentBuilder()
@@ -32,7 +33,7 @@ export async function bootstrap() {
         )
         .build();
       const documentFactory = () => SwaggerModule.createDocument(app, config);
-      SwaggerModule.setup('api', app, documentFactory, {
+      SwaggerModule.setup('api/docs', app, documentFactory, {
         swaggerOptions: {
           docExpansion: 'none',
           defaultModelsExpandDepth: -1
@@ -70,7 +71,7 @@ export async function bootstrap() {
     await app.listen(port, '0.0.0.0').then(() => {
       // console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`🚀 Server running on http://0.0.0.0:${port}`);
-      console.log(`📚 API Documentation: http://localhost:${port}/api`);
+      console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
     });
   } catch (error) {
     if (error instanceof Error) {

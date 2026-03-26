@@ -23,7 +23,7 @@ title: Commandes utiles
 
 - `npm run dev` : serveur Next.js (App Router) sur le port 3000.
 - `npm run build` puis `npm start` : build + serveur de prod.
-- `npm run lint` / `npm run lint:fix` : linting ESLint.
+- `npm run lint` / `npm run lint:fix` : linting Biome.
 - `npm run check-types` : vérification TypeScript.
 - `npm run test` : tests unitaires Vitest.
 

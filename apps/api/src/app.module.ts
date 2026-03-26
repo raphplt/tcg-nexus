@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PokemonCardModule } from './pokemon-card/pokemon-card.module';
+import { CardModule } from './card/card.module';
 import { PokemonSetModule } from './pokemon-set/pokemon-set.module';
 import { PokemonSeriesModule } from './pokemon-series/pokemon-series.module';
 import { SeedModule } from './seed/seed.module';
@@ -31,6 +32,8 @@ import { AiModule } from './ai/ai.module';
 import { UserCartModule } from './user_cart/user_cart.module';
 import { FaqModule } from './faq/faq.module';
 import { SupportTicketModule } from './support-ticket/support-ticket.module';
+import { BadgeModule } from './badge/badge.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -54,11 +57,12 @@ import { SupportTicketModule } from './support-ticket/support-ticket.module';
       autoLoadEntities: true,
       synchronize: true,
       ssl:
-        process.env.NODE_ENV === 'production'
+        process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL !== 'false'
           ? { rejectUnauthorized: false }
           : false
     }),
     UserModule,
+    CardModule,
     PokemonCardModule,
     PokemonSetModule,
     PokemonSeriesModule,
@@ -82,7 +86,9 @@ import { SupportTicketModule } from './support-ticket/support-ticket.module';
     AiModule,
     UserCartModule,
     FaqModule,
-    SupportTicketModule
+    SupportTicketModule,
+    BadgeModule,
+    DashboardModule
   ],
   controllers: [AppController],
   providers: [

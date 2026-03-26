@@ -6,7 +6,7 @@ import {
   CreateDateColumn
 } from 'typeorm';
 import { Collection } from 'src/collection/entities/collection.entity';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { CardState } from 'src/card-state/entities/card-state.entity';
 
 @Entity('collection_item')
@@ -19,10 +19,10 @@ export class CollectionItem {
   })
   collection: Collection;
 
-  @ManyToOne(() => PokemonCard, (pokemonCard) => pokemonCard.collectionItems, {
+  @ManyToOne(() => Card, (pokemonCard) => pokemonCard.collectionItems, {
     eager: true
   })
-  pokemonCard: PokemonCard;
+  pokemonCard: Card;
 
   @ManyToOne(() => CardState, (cardState) => cardState.collectionItems, {
     eager: true

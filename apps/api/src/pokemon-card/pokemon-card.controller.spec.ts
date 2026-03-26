@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PokemonCardController } from './pokemon-card.controller';
 import { PokemonCardService } from './pokemon-card.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { PokemonCard } from './entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 
 describe('PokemonCardController', () => {
   let controller: PokemonCardController;
@@ -27,7 +27,7 @@ describe('PokemonCardController', () => {
           useValue: mockPokemonCardService
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: {}
         }
       ]

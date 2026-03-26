@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AiService } from './ai.service';
 import { Deck } from '../deck/entities/deck.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { PokemonCardsType } from '../common/enums/pokemonCardsType';
 
 describe('AiService', () => {
@@ -17,6 +17,16 @@ describe('AiService', () => {
     find: jest.fn()
   };
 
+  const withPokemonDetails = <T extends Record<string, any>>(card: T) => ({
+    ...card,
+    pokemonDetails: {
+      category: card.category,
+      types: card.types,
+      attacks: card.attacks,
+      evolveFrom: card.evolveFrom
+    }
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -26,7 +36,7 @@ describe('AiService', () => {
           useValue: mockDeckRepo
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: mockPokemonCardRepo
         }
       ]
@@ -87,7 +97,7 @@ describe('AiService', () => {
           name: 'Professor Research',
           category: PokemonCardsType.Trainer
         }
-      ];
+      ].map(withPokemonDetails);
 
       const mockDeck = {
         id: 1,
@@ -129,7 +139,7 @@ describe('AiService', () => {
           name: 'Fire Energy',
           category: PokemonCardsType.Energy
         }
-      ];
+      ].map(withPokemonDetails);
 
       mockPokemonCardRepo.find.mockResolvedValue(mockPokemonCards);
 
@@ -143,12 +153,12 @@ describe('AiService', () => {
     });
 
     it('should detect duplicates correctly', async () => {
-      const mockPokemonCard = {
+      const mockPokemonCard = withPokemonDetails({
         id: 'card1',
         name: 'Mewtwo',
         category: PokemonCardsType.Pokemon,
         types: ['Psychic']
-      };
+      });
 
       const mockDeck = {
         id: 1,
@@ -165,12 +175,12 @@ describe('AiService', () => {
     });
 
     it('should provide warnings for incomplete deck', async () => {
-      const mockPokemonCard = {
+      const mockPokemonCard = withPokemonDetails({
         id: 'card1',
         name: 'Eevee',
         category: PokemonCardsType.Pokemon,
         types: ['Colorless']
-      };
+      });
 
       const mockDeck = {
         id: 1,
@@ -185,13 +195,13 @@ describe('AiService', () => {
     });
 
     it('should warn when deck has more than 60 cards', async () => {
-      const mockPokemonCard = {
+      const mockPokemonCard = withPokemonDetails({
         id: 'card1',
         name: 'Pidgey',
         category: PokemonCardsType.Pokemon,
         types: ['Colorless'],
         attacks: [{ cost: [], name: 'Call', damage: 0 }]
-      };
+      });
 
       const mockDeck = {
         id: 1,
@@ -221,7 +231,7 @@ describe('AiService', () => {
           name: 'Colorless Energy',
           category: PokemonCardsType.Energy
         }
-      ];
+      ].map(withPokemonDetails);
 
       const mockDeck = {
         id: 1,
@@ -260,7 +270,7 @@ describe('AiService', () => {
           category: PokemonCardsType.Pokemon,
           types: ['Water']
         }
-      ];
+      ].map(withPokemonDetails);
 
       const mockDeck = {
         id: 1,
@@ -293,7 +303,7 @@ describe('AiService', () => {
           types: ['Fire'],
           evolveFrom: 'Charmander'
         }
-      ];
+      ].map(withPokemonDetails);
 
       const mockDeck = {
         id: 1,
@@ -338,7 +348,7 @@ describe('AiService', () => {
           name: 'Gust of Wind',
           category: PokemonCardsType.Trainer
         }
-      ];
+      ].map(withPokemonDetails);
 
       const mockDeck = {
         id: 1,

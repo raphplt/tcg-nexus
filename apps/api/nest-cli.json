@@ -5,7 +5,8 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "assets": [
-      "common/data/*.zip"
+      "common/data/*.zip",
+      "mail/templates/*.hbs"
     ]
   }
 }

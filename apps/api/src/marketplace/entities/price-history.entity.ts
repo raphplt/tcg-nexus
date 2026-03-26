@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index
 } from 'typeorm';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 import { Currency } from 'src/common/enums/currency';
 import { CardState } from 'src/common/enums/pokemonCardsType';
 
@@ -18,9 +18,9 @@ export class PriceHistory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => PokemonCard, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'pokemon_card_id' })
-  pokemonCard: PokemonCard;
+  @ManyToOne(() => Card, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'card_id' })
+  pokemonCard: Card;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;

@@ -1,0 +1,124 @@
+{
+    "category": "Pokémon",
+    "id": "base1-5",
+    "illustrator": "Ken Sugimori",
+    "image": "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev/cards/base1/base1-5/low.png",
+    "localId": "5",
+    "name": "Mélofée",
+    "rarity": "Rare",
+    "set": {
+        "cardCount": {
+            "official": 102,
+            "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+    },
+    "variants": {
+        "firstEdition": true,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+    },
+    "variants_detailed": [
+        {
+            "type": "Holo",
+            "subtype": "illimité",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard",
+            "stamp": [
+                "1re Édition"
+            ]
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "Copyright 1999-2000",
+            "size": "Standard"
+        }
+    ],
+    "dexId": [
+        35
+    ],
+    "hp": 40,
+    "types": [
+        "Incolore"
+    ],
+    "description": "Très recherché pour son aura mystique, il est très rare et ne vit que dans des endroits précis.",
+    "stage": "De base",
+    "attacks": [
+        {
+            "cost": [
+                "Incolore"
+            ],
+            "name": "Berceuse",
+            "effect": "Lancez une pièce. Si c'est face, le Pokémon Défenseur est maintenant Endormi."
+        },
+        {
+            "cost": [
+                "Incolore",
+                "Incolore",
+                "Incolore"
+            ],
+            "name": "Métronome",
+            "effect": "Choisissez 1 des attaques du Pokémon Défenseur. Métronome copie cette attaque à l'exception de son coût d'Énergie et de toute autre action requise pour utiliser cette attaque, comme par exemple, défausser des cartes Énergie. (Quel que soit le type du Pokémon Défenseur, Mélofée demeure de type Incolore.)"
+        }
+    ],
+    "weaknesses": [
+        {
+            "type": "Combat",
+            "value": "×2"
+        }
+    ],
+    "resistances": [
+        {
+            "type": "Psy",
+            "value": "-30"
+        }
+    ],
+    "legal": {
+        "standard": false,
+        "expanded": false
+    },
+    "updated": "2026-01-07T13:21:43+01:00",
+    "pricing": {
+        "cardmarket": {
+            "updated": "2026-01-30T01:44:11.000Z",
+            "unit": "EUR",
+            "idProduct": 273700,
+            "avg": 29.24,
+            "low": 4.94,
+            "trend": 29.5,
+            "avg1": 30.26,
+            "avg7": 27.9,
+            "avg30": 31.35,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 14,
+            "avg1-holo": 16.81,
+            "avg7-holo": 11.97,
+            "avg30-holo": 19.63
+        },
+        "tcgplayer": {
+            "updated": "2026-01-29T20:04:55.000Z",
+            "unit": "USD",
+            "holofoil": {
+                "productId": 42393,
+                "lowPrice": 17.2,
+                "midPrice": 26.27,
+                "highPrice": 95.98,
+                "marketPrice": 26.13,
+                "directLowPrice": 11.94
+            }
+        }
+    }
+}

@@ -4,5 +4,8 @@
       "source": "/api/(.*)",
       "destination": "https://tcg-nexus-494105993690.europe-west1.run.app/$1"
     }
-  ]
+  ],
+  "git": {
+    "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" == \"main\" ]; then exit 1; else exit 0; fi"
+  }
 }

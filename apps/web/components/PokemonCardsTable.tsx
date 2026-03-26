@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 import {
   Table,
   TableBody,
@@ -368,19 +369,13 @@ export function PokemonCardsTable({
             {currentData.data.map((card) => (
               <TableRow key={card.id}>
                 <TableCell>
-                  {card.image ? (
                     <Image
-                      src={card.image + "/low.png"}
+                      src={getCardImage(card, "low")}
                       alt={card.name || "Pokemon Card"}
                       width={48}
                       height={64}
                       className="object-cover rounded"
                     />
-                  ) : (
-                    <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center">
-                      <span className="text-xs text-gray-500">N/A</span>
-                    </div>
-                  )}
                 </TableCell>
                 <TableCell className="font-medium">
                   {card.name || "N/A"}

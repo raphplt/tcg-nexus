@@ -1,0 +1,101 @@
+import React from "react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Shield, Mail, Calendar, Settings } from "lucide-react";
+import { User, UserRole } from "@/types/auth";
+
+interface ProfileHeaderProps {
+  user: User;
+}
+
+export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
+  const getUserInitials = (firstName: string, lastName: string) => {
+    return (
+      `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
+      "U"
+    );
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "bg-red-500 text-white";
+      case "moderator":
+        return "bg-blue-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
+    }
+  };
+
+  const getRoleLabel = (role: UserRole) => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return "Administrateur";
+      case UserRole.MODERATOR:
+        return "Modérateur";
+      default:
+        return "Utilisateur";
+    }
+  };
+
+  const formatMemberSince = (date: Date) => {
+    return new Date(date).toLocaleDateString("fr-FR", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  return (
+    <Card className="p-6 bg-gradient-to-r from-background to-muted/20 border-l-4 border-l-primary shadow-sm">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6 w-full">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+            <AvatarImage
+              src={user.avatarUrl || ""}
+              alt={`${user.firstName} ${user.lastName}`}
+            />
+            <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+              {getUserInitials(user.firstName, user.lastName)}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="space-y-2 text-center md:text-left flex-1">
+            <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-3">
+              <h1 className="text-3xl font-bold tracking-tight">
+                {user.firstName} {user.lastName}
+              </h1>
+              <Badge className={`${getRoleBadgeColor(user.role)} shadow-sm`}>
+                <Shield className="w-3 h-3 mr-1" />
+                {getRoleLabel(user.role)}
+              </Badge>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-4 text-muted-foreground text-sm">
+              <div className="flex items-center space-x-1.5">
+                <Mail className="w-4 h-4" />
+                <span>{user.email}</span>
+              </div>
+              <div className="hidden md:block text-muted-foreground/30">•</div>
+              <div className="flex items-center space-x-1.5">
+                <Calendar className="w-4 h-4" />
+                <span>Membre depuis {formatMemberSince(user.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center w-full md:w-auto justify-center md:justify-end">
+          <Button asChild variant="outline" className="space-x-2">
+            <Link href="/settings">
+              <Settings className="w-4 h-4" />
+              <span>Paramètres</span>
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+};

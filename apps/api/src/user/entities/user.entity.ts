@@ -17,6 +17,7 @@ import { UserCart } from 'src/user_cart/entities/user_cart.entity';
 import { TournamentOrganizer } from 'src/tournament/entities';
 import {SupportTicket} from "../../support-ticket/entities/support-ticket.entity";
 import {SupportMessage} from "../../support-message/entities/support-message.entity";
+import { UserBadge } from 'src/badge/entities/user-badge.entity';
 
 @Entity()
 export class User {
@@ -87,6 +88,8 @@ export class User {
 
   @OneToMany(() => SupportMessage, (supportMessage) => supportMessage.user)
   supportMessages?: SupportMessage[];
+  @OneToMany(() => UserBadge, (userBadge) => userBadge.user)
+  userBadges?: UserBadge[];
 
   // Dates
   @CreateDateColumn()

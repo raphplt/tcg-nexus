@@ -1,0 +1,127 @@
+{
+    "category": "Pokémon",
+    "id": "base1-4",
+    "illustrator": "Mitsuhiro Arita",
+    "image": "https://pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev/cards/base1/base1-4/low.png",
+    "localId": "4",
+    "name": "Dracaufeu",
+    "rarity": "Rare",
+    "set": {
+        "cardCount": {
+            "official": 102,
+            "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+    },
+    "variants": {
+        "firstEdition": true,
+        "holo": true,
+        "normal": false,
+        "reverse": false,
+        "wPromo": false
+    },
+    "variants_detailed": [
+        {
+            "type": "Holo",
+            "subtype": "illimité",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard",
+            "stamp": [
+                "1re Édition"
+            ]
+        },
+        {
+            "type": "Holo",
+            "subtype": "sans ombre",
+            "size": "Standard"
+        },
+        {
+            "type": "Holo",
+            "subtype": "Copyright 1999-2000",
+            "size": "Standard"
+        }
+    ],
+    "dexId": [
+        6
+    ],
+    "hp": 120,
+    "types": [
+        "Feu"
+    ],
+    "description": "Il peut fondre la roche de son souffle brûlant. Il est souvent la cause de nombreux incendies.",
+    "stage": "Niveau 2",
+    "abilities": [
+        {
+            "type": "Pouvoir Pokémon",
+            "name": "Combustion d'Énergie",
+            "effect": "Aussi souvent que vous le souhaitez pendant votre tour (avant votre attaque), vous pouvez transformer toutes les Énergies attachées à Dracaufeu en Énergie  jusqu'à la fin du tour. Ce pouvoir ne peut être utilisé si Dracaufeu est Endormi, Confus ou Paralysé."
+        }
+    ],
+    "attacks": [
+        {
+            "cost": [
+                "Feu",
+                "Feu",
+                "Feu",
+                "Feu"
+            ],
+            "name": "Danseflamme",
+            "effect": "Défaussez 2 cartes Énergie attachées à Dracaufeu pour pouvoir utiliser cette attaque.",
+            "damage": 100
+        }
+    ],
+    "weaknesses": [
+        {
+            "type": "Eau",
+            "value": "×2"
+        }
+    ],
+    "resistances": [
+        {
+            "type": "Combat",
+            "value": "-30"
+        }
+    ],
+    "retreat": 3,
+    "legal": {
+        "standard": false,
+        "expanded": false
+    },
+    "updated": "2026-01-07T13:21:43+01:00",
+    "pricing": {
+        "cardmarket": {
+            "updated": "2026-01-30T01:44:11.000Z",
+            "unit": "EUR",
+            "idProduct": 273699,
+            "avg": 395.61,
+            "low": 69.9,
+            "trend": 371.81,
+            "avg1": 344.37,
+            "avg7": 405.12,
+            "avg30": 358.64,
+            "avg-holo": null,
+            "low-holo": null,
+            "trend-holo": 123.63,
+            "avg1-holo": 207.4,
+            "avg7-holo": 129.55,
+            "avg30-holo": 202.71
+        },
+        "tcgplayer": {
+            "updated": "2026-01-29T20:04:55.000Z",
+            "unit": "USD",
+            "holofoil": {
+                "productId": 42382,
+                "lowPrice": 354.94,
+                "midPrice": 599.99,
+                "highPrice": 1500,
+                "marketPrice": 461.32,
+                "directLowPrice": null
+            }
+        }
+    }
+}

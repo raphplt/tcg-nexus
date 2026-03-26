@@ -4,7 +4,7 @@ import { CollectionItemService } from './collection-item.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CollectionItem } from './entities/collection-item.entity';
 import { Collection } from '../collection/entities/collection.entity';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
+import { Card } from '../card/entities/card.entity';
 import { User } from '../user/entities/user.entity';
 import { CardState } from '../card-state/entities/card-state.entity';
 
@@ -34,7 +34,7 @@ describe('CollectionItemController', () => {
           useValue: {}
         },
         {
-          provide: getRepositoryToken(PokemonCard),
+          provide: getRepositoryToken(Card),
           useValue: {}
         },
         {

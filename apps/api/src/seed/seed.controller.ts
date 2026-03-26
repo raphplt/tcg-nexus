@@ -1,8 +1,9 @@
-import { Controller, Post, Query } from '@nestjs/common';
+import { Controller, Post, Query, Body } from '@nestjs/common';
 import { SeedService } from './seed.service';
-import { ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { TournamentType } from 'src/tournament/entities/tournament.entity';
 import { SeedingMethod } from 'src/tournament/services/seeding.service';
+import { UserRole } from 'src/common/enums/user';
 
 @ApiTags('seed')
 @Controller('seed')
@@ -24,6 +25,33 @@ export class SeedController {
     await this.seedService.seedCardEvents();
     await this.seedService.seedCardPopularityMetrics();
     return { users, tournaments, faqs };
+  }
+
+  @Post('create-user')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['email', 'password', 'firstName', 'lastName'],
+      properties: {
+        email: { type: 'string' },
+        password: { type: 'string' },
+        firstName: { type: 'string' },
+        lastName: { type: 'string' },
+        role: { type: 'string', enum: ['admin', 'user', 'moderator'] }
+      }
+    }
+  })
+  async createUser(
+    @Body() body: { email: string; password: string; firstName: string; lastName: string; role?: UserRole }
+  ) {
+    const user = await this.seedService.createUser(
+      body.email,
+      body.password,
+      body.firstName,
+      body.lastName,
+      body.role || UserRole.USER
+    );
+    return { id: user.id, email: user.email, role: user.role };
   }
 
   @Post('complete-tournament')

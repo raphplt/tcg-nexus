@@ -1,4 +1,4 @@
-export const FULLSCREEN_PATHS = ["/auth/login", "/auth/register", "/strategy"];
+export const FULLSCREEN_PATHS = ["/auth/login", "/auth/register"];
 
 // Routes qui nécessitent une authentification
 export const PROTECTED_ROUTES = [
@@ -11,6 +11,7 @@ export const PROTECTED_ROUTES = [
   "/tournaments/admin",
   "/admin",
   "/settings",
+  "/support",
 ];
 
 // Routes d'authentification (rediriger si déjà connecté)

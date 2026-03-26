@@ -52,7 +52,8 @@ export class UserCartService {
         'user',
         'cartItems',
         'cartItems.listing',
-        'cartItems.listing.pokemonCard'
+        'cartItems.listing.pokemonCard',
+        'cartItems.listing.seller'
       ]
     });
 

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { PROTECTED_ROUTES, AUTH_ROUTES } from "@/utils/constants";
 
 function resolveApiBaseUrl(request: NextRequest): string {
+  const internalUrl = process.env.API_INTERNAL_URL;
+  if (internalUrl) {
+    return internalUrl;
+  }
+
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
   if (envUrl) {

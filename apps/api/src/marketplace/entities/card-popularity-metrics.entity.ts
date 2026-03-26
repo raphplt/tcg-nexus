@@ -7,7 +7,7 @@ import {
   Index,
   Unique
 } from 'typeorm';
-import { PokemonCard } from 'src/pokemon-card/entities/pokemon-card.entity';
+import { Card } from 'src/card/entities/card.entity';
 
 @Entity('card_popularity_metrics')
 @Unique(['card', 'date'])
@@ -19,9 +19,9 @@ export class CardPopularityMetrics {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => PokemonCard, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'pokemon_card_id' })
-  card: PokemonCard;
+  @ManyToOne(() => Card, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'card_id' })
+  card: Card;
 
   @Column({ type: 'date' })
   date: Date;

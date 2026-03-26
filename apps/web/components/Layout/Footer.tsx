@@ -1,26 +1,10 @@
-"use client";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FULLSCREEN_PATHS } from "@/utils/constants";
 
 export default function Footer() {
-  const currentPath = usePathname();
-  const isFullscreenPath = FULLSCREEN_PATHS.includes(currentPath);
-  const [currentYear, setCurrentYear] = useState<number | null>(null);
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
-
-  if (isFullscreenPath) {
-    return null;
-  }
-
   return (
-    <footer className="bg-background border-t-4 border-black">
+    <footer className="bg-background border-t-4 border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1">
@@ -35,8 +19,8 @@ export default function Footer() {
               <h3 className="text-xl font-bold text-foreground">TCG Nexus</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Votre plateforme complète pour le trading de cartes Pokémon, les
-              tournois et l'analyse stratégique.
+              Votre plateforme complete pour le trading de cartes Pokemon, les
+              tournois et l&apos;analyse strategique.
             </p>
             <div className="flex space-x-3">
               <Link
@@ -45,10 +29,7 @@ export default function Footer() {
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="GitHub"
               >
-                <Icon
-                  icon="akar-icons:github-fill"
-                  className="w-5 h-5"
-                />
+                <Icon icon="akar-icons:github-fill" className="w-5 h-5" />
               </Link>
               <Link
                 href="https://www.linkedin.com/company/tcg-nexus"
@@ -56,10 +37,7 @@ export default function Footer() {
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="LinkedIn"
               >
-                <Icon
-                  icon="akar-icons:linkedin-fill"
-                  className="w-5 h-5"
-                />
+                <Icon icon="akar-icons:linkedin-fill" className="w-5 h-5" />
               </Link>
               <Link
                 href="https://twitter.com/tcgnexus"
@@ -67,10 +45,7 @@ export default function Footer() {
                 className="text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Twitter"
               >
-                <Icon
-                  icon="akar-icons:twitter-fill"
-                  className="w-5 h-5"
-                />
+                <Icon icon="akar-icons:twitter-fill" className="w-5 h-5" />
               </Link>
             </div>
           </div>
@@ -112,14 +87,6 @@ export default function Footer() {
                   FAQ &amp; Aide
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/strategy"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Stratégie
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -133,12 +100,12 @@ export default function Footer() {
                   href="/pokemon"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Cartes Pokémon
+                  Cartes Pokemon
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/deck-builder"
+                  href="/decks"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Constructeur de deck
@@ -146,59 +113,20 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/statistics"
+                  href="/collection"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Statistiques
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/ranking"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Classements
+                  Ma collection
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-4">Légal</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Confidentialité
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Conditions d'utilisation
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/cookies"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Politique des cookies
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Contact
-                </Link>
-              </li>
-            </ul>
+            <h3 className="text-lg font-bold text-foreground mb-4">Legal</h3>
+            <p className="text-sm text-muted-foreground">
+              Les pages de mentions legales seront disponibles prochainement.
+            </p>
           </div>
         </div>
       </div>
@@ -207,10 +135,11 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              &copy; {currentYear || ""} TCG Nexus. Tous droits réservés.
+              &copy; {new Date().getFullYear()} TCG Nexus. Tous droits
+              reserves.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Fait avec ❤️ pour la communauté Pokémon TCG</span>
+              <span>Fait avec amour pour la communaute Pokemon TCG</span>
             </div>
           </div>
         </div>
