@@ -206,9 +206,10 @@ describe("PlayPage", () => {
 
     await screen.findByRole("heading", { name: /^Tournois$/, level: 2 });
 
-    expect(
-      screen.getByRole("tab", { name: /Tournois/i }),
-    ).toHaveAttribute("data-state", "active");
+    expect(screen.getByRole("tab", { name: /Tournois/i })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
 
     await waitFor(() =>
       expect(routerMocks.replace).toHaveBeenCalledWith("/play?tab=tournois", {
@@ -356,7 +357,9 @@ describe("PlayPage", () => {
     );
     await userEvent.type(searchInput, "Brock");
 
-    await waitFor(() => expect(screen.getByText("vs Brock")).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText("vs Brock")).toBeInTheDocument(),
+    );
     expect(screen.queryByText("vs Misty")).not.toBeInTheDocument();
   });
 
@@ -414,9 +417,7 @@ describe("PlayPage", () => {
 
     renderPage();
 
-    expect(
-      screen.getByText(/Un hub clair pour reprendre vos matches et lancer vos parties/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Connectez-vous pour jouer/i)).toBeInTheDocument();
     expect(screen.getByText("Tournoi")).toBeInTheDocument();
     expect(screen.getByText("IA")).toBeInTheDocument();
     expect(screen.getByText("Duel")).toBeInTheDocument();
