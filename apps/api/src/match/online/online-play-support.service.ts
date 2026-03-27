@@ -331,6 +331,7 @@ export class OnlinePlaySupportService {
       pendingTrainerPlay: null,
       pendingEffectAction: null,
       globalEffects: [],
+      pendingExtraPrizes: {},
       winnerId: null,
       winnerReason: null,
     };

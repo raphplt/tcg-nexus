@@ -210,6 +210,9 @@ export class GameEngine {
           events,
         );
         break;
+      case PromptType.ReorderCards:
+        this.handleReorderCards(playerId, response, events);
+        break;
       default:
         throw new Error(`Prompt ${prompt.type} is not supported`);
     }
@@ -264,7 +267,7 @@ export class GameEngine {
   public discardAttachedEnergy(
     sourcePlayerId: string,
     target: TargetType,
-    amount: number | "ALL",
+    amount: number | "ALL" | "RANDOM",
     events: any[],
     energyType?: string,
   ) {
@@ -282,7 +285,18 @@ export class GameEngine {
       );
     }
 
-    const discardCount = amount === "ALL" ? candidates.length : amount;
+    // RANDOM: pick one random energy from candidates
+    if (amount === "RANDOM" && candidates.length > 0) {
+      const randomIdx = Math.floor(
+        this.nextRandom() * candidates.length,
+      );
+      candidates = [candidates[randomIdx]!];
+    }
+
+    const discardCount =
+      amount === "ALL" || amount === "RANDOM"
+        ? candidates.length
+        : amount;
     if (discardCount <= 0) return;
 
     const discarded: typeof candidates = [];
@@ -742,32 +756,34 @@ export class GameEngine {
   }
 
   private pokemonCheckup(events: any[]) {
-    const activeSnapshots = this.state.playerIds.map((playerId) => ({
-      playerId,
-      pokemon: this.state.players[playerId].active,
-    }));
+    // Poison and Burn apply to active Pokemon of BOTH players
+    for (const playerId of this.state.playerIds) {
+      const activePokemon = this.state.players[playerId].active;
+      if (!activePokemon) continue;
 
-    for (const snapshot of activeSnapshots) {
-      const activePokemon = snapshot.pokemon;
-      if (!activePokemon) {
-        continue;
-      }
-
-      if (activePokemon.specialConditions.includes(SpecialCondition.Poisoned)) {
+      if (
+        activePokemon.specialConditions.includes(
+          SpecialCondition.Poisoned,
+        )
+      ) {
         activePokemon.damageCounters += 10;
         events.push({
           type: "POISON_DAMAGE_APPLIED",
-          playerId: snapshot.playerId,
+          playerId,
           targetInstanceId: activePokemon.instanceId,
           amount: 10,
         });
       }
 
-      if (activePokemon.specialConditions.includes(SpecialCondition.Burned)) {
+      if (
+        activePokemon.specialConditions.includes(
+          SpecialCondition.Burned,
+        )
+      ) {
         activePokemon.damageCounters += 20;
         events.push({
           type: "BURN_DAMAGE_APPLIED",
-          playerId: snapshot.playerId,
+          playerId,
           targetInstanceId: activePokemon.instanceId,
           amount: 20,
         });
@@ -775,44 +791,54 @@ export class GameEngine {
         if (this.nextRandom() >= 0.5) {
           activePokemon.specialConditions =
             activePokemon.specialConditions.filter(
-              (condition) => condition !== SpecialCondition.Burned,
+              (c) => c !== SpecialCondition.Burned,
             );
           events.push({
             type: "BURN_REMOVED",
-            playerId: snapshot.playerId,
+            playerId,
             targetInstanceId: activePokemon.instanceId,
           });
         }
       }
+    }
 
-      if (activePokemon.specialConditions.includes(SpecialCondition.Asleep)) {
-        if (this.nextRandom() >= 0.5) {
-          activePokemon.specialConditions =
-            activePokemon.specialConditions.filter(
-              (condition) => condition !== SpecialCondition.Asleep,
-            );
-          events.push({
-            type: "ASLEEP_REMOVED",
-            playerId: snapshot.playerId,
-            targetInstanceId: activePokemon.instanceId,
-          });
-        }
-      }
-
-      if (
-        snapshot.playerId === this.state.activePlayerId &&
-        activePokemon.specialConditions.includes(SpecialCondition.Paralyzed)
-      ) {
-        activePokemon.specialConditions =
-          activePokemon.specialConditions.filter(
-            (condition) => condition !== SpecialCondition.Paralyzed,
+    // Sleep flip: only the active player's active Pokemon
+    const activePlayer = this.state.activePlayerId;
+    const activePlayerPokemon =
+      this.state.players[activePlayer].active;
+    if (
+      activePlayerPokemon?.specialConditions.includes(
+        SpecialCondition.Asleep,
+      )
+    ) {
+      if (this.nextRandom() >= 0.5) {
+        activePlayerPokemon.specialConditions =
+          activePlayerPokemon.specialConditions.filter(
+            (c) => c !== SpecialCondition.Asleep,
           );
         events.push({
-          type: "PARALYSIS_REMOVED",
-          playerId: snapshot.playerId,
-          targetInstanceId: activePokemon.instanceId,
+          type: "ASLEEP_REMOVED",
+          playerId: activePlayer,
+          targetInstanceId: activePlayerPokemon.instanceId,
         });
       }
+    }
+
+    // Paralysis: removed at end of the active player's turn
+    if (
+      activePlayerPokemon?.specialConditions.includes(
+        SpecialCondition.Paralyzed,
+      )
+    ) {
+      activePlayerPokemon.specialConditions =
+        activePlayerPokemon.specialConditions.filter(
+          (c) => c !== SpecialCondition.Paralyzed,
+        );
+      events.push({
+        type: "PARALYSIS_REMOVED",
+        playerId: activePlayer,
+        targetInstanceId: activePlayerPokemon.instanceId,
+      });
     }
 
     this.resolveKnockoutAfterAction(events, "AFTER_CHECKUP_PROMOTION");
@@ -1067,6 +1093,40 @@ export class GameEngine {
       );
     }
 
+    // TCG rule: Confused Pokemon must flip a coin before attacking
+    if (
+      activePokemon.specialConditions.includes(SpecialCondition.Confused)
+    ) {
+      const flipResult = this.nextRandom() >= 0.5; // heads = true
+      events.push({
+        type: "CONFUSION_FLIP",
+        playerId: action.playerId,
+        targetInstanceId: activePokemon.instanceId,
+        result: flipResult ? "heads" : "tails",
+      });
+
+      if (!flipResult) {
+        // Tails: 30 damage to self, attack fails, end turn
+        activePokemon.damageCounters += 30;
+        events.push({
+          type: "CONFUSION_SELF_DAMAGE",
+          playerId: action.playerId,
+          targetInstanceId: activePokemon.instanceId,
+          amount: 30,
+        });
+        this.resolveKnockoutAfterAction(events);
+        if (
+          this.state.gamePhase === GamePhase.Finished ||
+          this.state.pendingPrompt
+        ) {
+          return;
+        }
+        this.endTurn(events);
+        return;
+      }
+      // Heads: attack proceeds normally
+    }
+
     const attack = activePokemon.baseCard.attacks[action.payload.attackIndex];
     if (!attack) {
       throw new Error("Attack not found");
@@ -1084,6 +1144,16 @@ export class GameEngine {
       );
     }
 
+    // Check oncePerGame attacks
+    if (
+      attack.oncePerGame &&
+      activePokemon.usedOncePerGameAttacks.includes(attack.name)
+    ) {
+      throw new Error(
+        "This attack can only be used once per game",
+      );
+    }
+
     if (!this.canPayAttackCost(activePokemon, attack.cost)) {
       throw new Error("Not enough energy attached");
     }
@@ -1098,44 +1168,53 @@ export class GameEngine {
     const opponentId = this.getOpponentId(action.playerId);
     const opponentActive = this.state.players[opponentId].active;
 
-    // Calculate base damage, integrating DYNAMIC_DAMAGE from effects
-    let attackDamage = this.calculateAttackDamage(
-      activePokemon,
-      opponentActive,
-      attack,
-    );
-
-    // Apply DYNAMIC_DAMAGE from attack effects to modify base damage
+    // Pre-compute DYNAMIC_DAMAGE bonus BEFORE weakness/resistance
+    // TCG rule: total = (baseDamage + dynamicDamage) × weakness − resistance
     const dynamicEffect = (attack.effects || []).find(
       (e): e is DynamicDamageEffect =>
         e.type === EffectType.DYNAMIC_DAMAGE,
     );
+
+    let adjustedAttack = attack;
     if (dynamicEffect && this.isDynamicDamageString(attack.damage)) {
+      const baseDamage = this.parseDamageValue(attack.damage);
       const dynAmount = this.computeDynamicDamage(
         dynamicEffect,
         action.playerId,
         opponentId,
+        attack,
       );
+
+      let adjustedDamage: number;
       if (dynamicEffect.operator === "+") {
-        attackDamage += dynAmount;
+        adjustedDamage = baseDamage + dynAmount;
       } else if (dynamicEffect.operator === "-") {
-        attackDamage = Math.max(0, attackDamage - dynAmount);
+        adjustedDamage = Math.max(0, baseDamage - dynAmount);
       } else if (dynamicEffect.operator === "×") {
-        // For × operator, base damage is 0 and total is dynamic
-        attackDamage = this.calculateAttackDamage(
-          activePokemon,
-          opponentActive,
-          { ...attack, damage: dynAmount },
-        );
+        adjustedDamage = baseDamage * dynAmount;
+      } else {
+        adjustedDamage = baseDamage;
       }
+      adjustedAttack = { ...attack, damage: adjustedDamage };
     }
 
-    // Apply BOOST_DAMAGE from temporary effects on attacker
+    // Calculate damage with weakness/resistance applied on the full amount
+    let attackDamage = this.calculateAttackDamage(
+      activePokemon,
+      opponentActive,
+      adjustedAttack,
+    );
+
+    // Apply BOOST_DAMAGE from temporary effects on attacker (consumed after use)
     const boostEffect = activePokemon.temporaryEffects.find(
       (e) => e.type === "BOOST_DAMAGE" && e.amount,
     );
     if (boostEffect?.amount) {
       attackDamage += boostEffect.amount;
+      activePokemon.temporaryEffects =
+        activePokemon.temporaryEffects.filter(
+          (e) => e !== boostEffect,
+        );
     }
 
     // Apply REDUCE_DAMAGE / PREVENT_DAMAGE from temporary effects on defender
@@ -1184,7 +1263,13 @@ export class GameEngine {
         remainingEffects,
         action.playerId,
         events,
+        { currentAttackName: attack.name },
       );
+    }
+
+    // Record oncePerGame usage
+    if (attack.oncePerGame) {
+      activePokemon.usedOncePerGameAttacks.push(attack.name);
     }
 
     this.resolveKnockoutAfterAction(events, "AFTER_ATTACK_PROMOTION");
@@ -1342,7 +1427,15 @@ export class GameEngine {
     const [newActive] = player.bench.splice(benchIndex, 1);
     player.bench.push(activePokemon);
     player.active = newActive;
-    activePokemon.specialConditions = [];
+    // TCG rule: only Asleep, Confused, Paralyzed are removed on retreat
+    // Poisoned and Burned persist
+    activePokemon.specialConditions =
+      activePokemon.specialConditions.filter(
+        (c) =>
+          c !== SpecialCondition.Asleep &&
+          c !== SpecialCondition.Confused &&
+          c !== SpecialCondition.Paralyzed,
+      );
     player.hasRetreatedThisTurn = true;
 
     events.push({
@@ -1608,6 +1701,7 @@ export class GameEngine {
       attachedEvolutions: card.attachedEvolutions || [],
       turnsInPlay: card.turnsInPlay || 0,
       temporaryEffects: card.temporaryEffects || [],
+      usedOncePerGameAttacks: card.usedOncePerGameAttacks || [],
     };
   }
 
@@ -1854,6 +1948,7 @@ export class GameEngine {
     effect: DynamicDamageEffect,
     sourcePlayerId: string,
     opponentId: string,
+    currentAttack?: Attack,
   ): number {
     const source = this.state.players[sourcePlayerId];
     const opponent = this.state.players[opponentId];
@@ -1876,12 +1971,16 @@ export class GameEngine {
           (e) => e.baseCard.provides?.includes(effect.energyType ?? ""),
         ).length ?? 0;
         break;
-      case CountSource.EXTRA_ENERGY_ON_SELF:
-        // Total energy minus attack cost — simplified: just count all for now
-        count = source.active?.attachedEnergies.filter(
-          (e) => !effect.energyType || e.baseCard.provides?.includes(effect.energyType),
+      case CountSource.EXTRA_ENERGY_ON_SELF: {
+        const totalEnergy = source.active?.attachedEnergies.filter(
+          (e) =>
+            !effect.energyType ||
+            e.baseCard.provides?.includes(effect.energyType),
         ).length ?? 0;
+        const attackCost = currentAttack?.cost?.length ?? 0;
+        count = Math.max(0, totalEnergy - attackCost);
         break;
+      }
       case CountSource.DAMAGE_COUNTERS_ON_SELF:
         count = Math.floor((source.active?.damageCounters ?? 0) / 10);
         break;
@@ -1949,6 +2048,45 @@ export class GameEngine {
 
   public shuffleDeck(playerId: string) {
     this.shufflePlayerDeck(playerId);
+  }
+
+  public initiateLookAtTopDeck(
+    playerId: string,
+    amount: number,
+    events: any[],
+  ) {
+    const player = this.state.players[playerId];
+    const topCards = player.deck.slice(-amount);
+
+    events.push({
+      type: "LOOKED_AT_TOP_DECK",
+      playerId,
+      count: topCards.length,
+    });
+
+    if (topCards.length <= 1) return;
+
+    // Let the player reorder the cards
+    const options: PromptOption[] = topCards.map((card) => ({
+      value: card.instanceId,
+      label: card.baseCard.name,
+    }));
+
+    this.state.pendingEffectAction = {
+      type: "REORDER_TOP_DECK",
+      playerId,
+      effect: { type: "LOOK_AT_TOP_DECK", amount } as any,
+    };
+    this.state.pendingPrompt = this.buildPrompt({
+      playerId,
+      type: PromptType.ReorderCards,
+      title:
+        "Replacez les cartes sur le dessus de votre deck dans l'ordre de votre choix",
+      minSelections: topCards.length,
+      maxSelections: topCards.length,
+      allowPass: true,
+      options,
+    });
   }
 
   public initiateSearchDeck(
@@ -2060,7 +2198,9 @@ export class GameEngine {
     const discardAmount =
       effect.amount === "ALL"
         ? matchingCards.length
-        : Math.min(effect.amount, matchingCards.length);
+        : effect.amount === "RANDOM"
+          ? 1
+          : Math.min(effect.amount, matchingCards.length);
 
     events.push({
       type: "DISCARD_FROM_HAND_INITIATED",
@@ -2084,7 +2224,8 @@ export class GameEngine {
       title: "Choisissez les cartes à défausser",
       minSelections: discardAmount,
       maxSelections: discardAmount,
-      allowPass: effect.amount !== "ALL",
+      allowPass: effect.amount !== "ALL" &&
+        matchingCards.length < (effect.amount as number),
       options,
     });
   }
@@ -2433,16 +2574,18 @@ export class GameEngine {
   ) {
     if (pokemon.attachedEvolutions.length === 0) return;
 
-    // Remove top evolution → goes to discard or hand of owner
+    // Remove top evolution → goes to discard of owner
     const topEvo = pokemon.attachedEvolutions.pop()!;
     const player = this.state.players[pokemon.ownerId];
+
+    // The current stage (being removed) goes to discard
     player.discard.push({
-      instanceId: pokemon.instanceId,
+      instanceId: topEvo.instanceId,
       ownerId: pokemon.ownerId,
-      baseCard: pokemon.baseCard,
+      baseCard: topEvo.baseCard,
     });
 
-    // The Pokemon becomes the previous stage
+    // The Pokemon reverts to the previous stage
     pokemon.baseCard = topEvo.baseCard;
     pokemon.specialConditions = [];
 
@@ -2590,8 +2733,8 @@ export class GameEngine {
   }
 
   public markExtraPrize(playerId: string, amount: number) {
-    // Store on the state so the KO handler knows to grant extra prizes
-    // TODO: Add pendingExtraPrize field to GameState
+    this.state.pendingExtraPrizes[playerId] =
+      (this.state.pendingExtraPrizes[playerId] ?? 0) + amount;
   }
 
   public applyTemporaryEffect(
@@ -2643,15 +2786,12 @@ export class GameEngine {
       expiresAt,
     };
 
-    // For CANT_USE_SAME_ATTACK, record the attack name
-    if (effect.type === "CANT_USE_SAME_ATTACK") {
-      // Find the attack that was just used
-      const attackEvent = events.find(
-        (e) => e.type === "ATTACK_USED",
-      );
-      if (attackEvent) {
-        tempEffect.attackName = attackEvent.attackName;
-      }
+    // For CANT_USE_SAME_ATTACK, record the attack name from the effect
+    if (
+      effect.type === "CANT_USE_SAME_ATTACK" &&
+      effect.attackName
+    ) {
+      tempEffect.attackName = effect.attackName as string;
     }
 
     pokemon.temporaryEffects.push(tempEffect);
@@ -2770,6 +2910,8 @@ export class GameEngine {
             ),
           );
         }
+      } else if (effect.destination === "TOP_DECK") {
+        player.deck.unshift(card);
       }
       events.push({
         type: "CARD_TAKEN_FROM_DECK",
@@ -2781,6 +2923,48 @@ export class GameEngine {
 
     if (effect.shuffleAfter !== false) {
       this.shufflePlayerDeck(playerId);
+    }
+
+    this.state.pendingEffectAction = null;
+  }
+
+  private handleReorderCards(
+    playerId: string,
+    response: PromptResponse,
+    events: any[],
+  ) {
+    const pending = this.state.pendingEffectAction;
+    if (!pending || pending.type !== "REORDER_TOP_DECK") return;
+
+    const player = this.state.players[playerId];
+    const selectedIds = response.selections || [];
+
+    if (selectedIds.length > 0) {
+      // Remove the top N cards from the deck
+      const amount =
+        (pending.effect as any).amount || selectedIds.length;
+      const removed = player.deck.splice(-amount);
+
+      // Re-add them in the order specified by the player
+      // (last in selectedIds = top of deck)
+      const orderedCards: typeof removed = [];
+      for (const id of selectedIds) {
+        const card = removed.find((c) => c.instanceId === id);
+        if (card) orderedCards.push(card);
+      }
+      // Add any missing cards (safety)
+      for (const card of removed) {
+        if (!orderedCards.includes(card)) {
+          orderedCards.push(card);
+        }
+      }
+      player.deck.push(...orderedCards);
+
+      events.push({
+        type: "CARDS_REORDERED",
+        playerId,
+        count: orderedCards.length,
+      });
     }
 
     this.state.pendingEffectAction = null;

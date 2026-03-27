@@ -63,6 +63,7 @@ export enum PromptType {
   ChooseAttackToCopy = "CHOOSE_ATTACK_TO_COPY",
   ChooseEnergyToMove = "CHOOSE_ENERGY_TO_MOVE",
   ChooseEnergyToDiscard = "CHOOSE_ENERGY_TO_DISCARD",
+  ReorderCards = "REORDER_CARDS",
 }
 
 export enum GameFinishedReason {

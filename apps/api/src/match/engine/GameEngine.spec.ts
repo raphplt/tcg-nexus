@@ -61,6 +61,7 @@ describe("GameEngine Basics", () => {
       winnerReason: null,
       pendingEffectAction: null,
       globalEffects: [],
+      pendingExtraPrizes: {},
     };
   });
 

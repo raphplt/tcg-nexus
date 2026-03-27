@@ -2,11 +2,12 @@ import "dotenv/config";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { EffectParser } from "./parser.js";
-import { processBatch } from "./batch-processor.js";
+import { processBatch, type ParserLike } from "./batch-processor.js";
 import { validateRegistry } from "./validator.js";
 import { GeminiProvider } from "./providers/gemini.js";
 import { OpenAIProvider } from "./providers/openai.js";
 import { AnthropicProvider } from "./providers/anthropic.js";
+import { RuleBasedParser } from "./rule-based-parser.js";
 import type { LLMProvider } from "./providers/base.js";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,7 +33,8 @@ CSV options (for extract / parse-csv):
   --details <path>    pokemon_card_details.csv path (default: ../../doc/pokemon_card_details.csv)
 
 Options:
-  --provider <gemini|openai|anthropic>    LLM provider (default: gemini)
+  --provider <gemini|openai|anthropic|rule-based>  LLM provider (default: gemini)
+                                          "rule-based" = parseur déterministe, sans API
   --model <model>                         Model override
   --batch-size <n>                        Cards per batch (default: 5)
   --delay <ms>                            Delay between batches (default: 1000)
@@ -58,6 +60,16 @@ function createProvider(
     default:
       throw new Error(`Unknown provider: ${providerName}`);
   }
+}
+
+/** Retourne le parser approprié selon le provider choisi */
+function createParser(providerName: string, model?: string): ParserLike {
+  if (providerName === "rule-based") {
+    console.log("  Utilisation du parseur déterministe (rule-based) — aucune API requise.");
+    return new RuleBasedParser();
+  }
+  const provider = createProvider(providerName, model);
+  return new EffectParser({ provider });
 }
 
 function getArg(
@@ -121,8 +133,7 @@ async function main() {
       if (limit) cards = cards.slice(0, limit);
       console.log(`\nStep 2: Parsing ${cards.length} cards with ${providerName}...`);
 
-      const provider = createProvider(providerName, model);
-      const parser = new EffectParser({ provider });
+      const parser = createParser(providerName, model);
 
       const csvCheckpoint = output + ".checkpoint";
       const report = await processBatch(parser, cards, {
@@ -178,8 +189,7 @@ async function main() {
         `Parsing ${cards.length} cards with ${providerName}...`,
       );
 
-      const provider = createProvider(providerName, model);
-      const parser = new EffectParser({ provider });
+      const parser = createParser(providerName, model);
 
       const checkpointFile = outputFile + ".checkpoint";
       let runningSuccess = 0;
@@ -244,9 +254,12 @@ async function main() {
         readFileSync(resolve(cardFile), "utf-8"),
       );
 
-      const provider = createProvider(providerName, model);
-      const parser = new EffectParser({ provider });
-      const result = await parser.parseCard(card);
+      const parserForCard = createParser(providerName, model);
+      // parseCard peut ne pas exister sur ParserLike (batch only), on vérifie
+      const result =
+        "parseCard" in parserForCard
+          ? await (parserForCard as any).parseCard(card)
+          : (await parserForCard.parseBatch([card]))[0]!;
 
       if (result.success) {
         console.log(JSON.stringify(result.effects, null, 2));

@@ -38,6 +38,7 @@ describe("EffectResolver", () => {
             attachedEvolutions: [],
             turnsInPlay: 1,
             temporaryEffects: [],
+            usedOncePerGameAttacks: [],
             baseCard: {
               id: "test-mon-1",
               name: "Pikachu",
@@ -89,6 +90,7 @@ describe("EffectResolver", () => {
             attachedEvolutions: [],
             turnsInPlay: 1,
             temporaryEffects: [],
+            usedOncePerGameAttacks: [],
             baseCard: {
               id: "test-mon-2",
               name: "Squirtle",
@@ -121,6 +123,7 @@ describe("EffectResolver", () => {
       pendingTrainerPlay: null,
       pendingEffectAction: null,
       globalEffects: [],
+      pendingExtraPrizes: {},
     } as GameState;
 
     engine = new GameEngine(initialState);

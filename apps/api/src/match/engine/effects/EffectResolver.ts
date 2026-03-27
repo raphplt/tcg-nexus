@@ -16,11 +16,13 @@ import {
   type SearchDiscardEffect,
   type MultiCoinFlipEffect,
   type FlipUntilTailsEffect,
+  type ConditionalEffect,
 } from "./Effect";
 import { PokemonCardInGame } from "../models/Card";
 
 export interface EffectContext {
   selectedTargetInstanceId?: string;
+  currentAttackName?: string;
 }
 
 export class EffectResolver {
@@ -234,13 +236,11 @@ export class EffectResolver {
       }
 
       case EffectType.LOOK_AT_TOP_DECK: {
-        const player = state.players[sourcePlayerId];
-        const topCards = player.deck.slice(-effect.amount);
-        events.push({
-          type: "LOOKED_AT_TOP_DECK",
-          playerId: sourcePlayerId,
-          count: topCards.length,
-        });
+        this.engine.initiateLookAtTopDeck(
+          sourcePlayerId,
+          effect.amount,
+          events,
+        );
         break;
       }
 
@@ -487,7 +487,10 @@ export class EffectResolver {
         if (self) {
           this.engine.applyTemporaryEffect(
             self.instanceId,
-            { type: "CANT_USE_SAME_ATTACK" },
+            {
+              type: "CANT_USE_SAME_ATTACK",
+              attackName: context?.currentAttackName,
+            },
             events,
           );
         }
@@ -660,10 +663,80 @@ export class EffectResolver {
         break;
       }
 
+      // ── Conditional ────────────────────────────────────────
+      case EffectType.CONDITIONAL: {
+        const condEffect = effect as ConditionalEffect;
+        const condMet = this.evaluateCondition(
+          condEffect.condition,
+          sourcePlayerId,
+          opponentId,
+        );
+        if (condMet) {
+          this.resolveEffects(
+            condEffect.thenEffects,
+            sourcePlayerId,
+            events,
+            context,
+          );
+        } else if (condEffect.elseEffects) {
+          this.resolveEffects(
+            condEffect.elseEffects,
+            sourcePlayerId,
+            events,
+            context,
+          );
+        }
+        break;
+      }
+
       default:
         console.warn(
           `Effect type not implemented: ${(effect as any).type}`,
         );
+    }
+  }
+
+  private evaluateCondition(
+    condition: ConditionalEffect["condition"],
+    sourcePlayerId: string,
+    opponentId: string,
+  ): boolean {
+    const state = this.engine.getState();
+    const source = state.players[sourcePlayerId];
+    const opponent = state.players[opponentId];
+
+    switch (condition.type) {
+      case "IF_COIN_HEADS":
+        return this.engine.nextRandom() >= 0.5;
+      case "IF_COIN_TAILS":
+        return this.engine.nextRandom() < 0.5;
+      case "IF_MORE_PRIZES":
+        return condition.than === "OPPONENT"
+          ? source.prizeCardsTaken > opponent.prizeCardsTaken
+          : opponent.prizeCardsTaken > source.prizeCardsTaken;
+      case "IF_LESS_HP":
+        return (
+          (source.active?.damageCounters ?? 0) >=
+          (source.active?.baseCard.hp ?? 0) -
+            (condition.threshold ?? 0)
+        );
+      case "IF_KNOCKED_OUT":
+        return (
+          (source.active?.damageCounters ?? 0) >=
+          (source.active?.baseCard.hp ?? 0)
+        );
+      case "IF_OPPONENT_POISONED":
+        return (
+          opponent.active?.specialConditions.includes(
+            "Poisoned" as any,
+          ) ?? false
+        );
+      case "IF_OPPONENT_HAS_SPECIAL_CONDITION":
+        return (
+          (opponent.active?.specialConditions.length ?? 0) > 0
+        );
+      default:
+        return false;
     }
   }
 

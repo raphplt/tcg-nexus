@@ -1,8 +1,13 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { EffectParser, type ParseResult } from "./parser.js";
+import type { ParseResult } from "./parser.js";
 import type { CardInput } from "./prompt-builder.js";
 import { checkCoherence } from "./validator.js";
 import type { CardEffectsRegistry } from "./schema.js";
+
+/** Interface commune à EffectParser (LLM) et RuleBasedParser */
+export interface ParserLike {
+  parseBatch(cards: CardInput[]): Promise<ParseResult[]>;
+}
 
 export interface BatchOptions {
   batchSize?: number;
@@ -51,7 +56,7 @@ function saveCheckpoint(path: string, checkpoint: Checkpoint) {
  * and checkpoint/resume support.
  */
 export async function processBatch(
-  parser: EffectParser,
+  parser: ParserLike,
   cards: CardInput[],
   opts?: BatchOptions,
 ): Promise<BatchReport> {

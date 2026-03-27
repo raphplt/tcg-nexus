@@ -56,6 +56,8 @@ export const EffectTypeSchema = z.enum([
   "SEND_TO_LOST_ZONE",
   // Prizes
   "EXTRA_PRIZE",
+  // Conditional
+  "CONDITIONAL",
 ]);
 
 export const TargetTypeSchema = z.enum([
@@ -90,7 +92,11 @@ export const SpecialConditionSchema = z.enum([
   "Poisoned",
 ]);
 
-export const EffectAmountSchema = z.union([z.number(), z.literal("ALL")]);
+export const EffectAmountSchema = z.union([
+  z.number(),
+  z.literal("ALL"),
+  z.literal("RANDOM"),
+]);
 
 export const CountSourceSchema = z.enum([
   "ENERGY_ON_SELF",
@@ -194,7 +200,7 @@ const SearchDeckSchema = z.object({
   type: z.literal("SEARCH_DECK"),
   amount: z.number(),
   filter: SearchFilterSchema,
-  destination: z.enum(["HAND", "BENCH", "ATTACHED"]),
+  destination: z.enum(["HAND", "BENCH", "ATTACHED", "TOP_DECK"]),
   shuffleAfter: z.boolean().optional(),
 });
 
@@ -359,7 +365,13 @@ const FlipUntilTailsSchema: z.ZodType<any> = z.lazy(() =>
 
 const CopyAttackSchema = z.object({
   type: z.literal("COPY_ATTACK"),
-  source: z.enum(["OPPONENT_ACTIVE", "SELF"]),
+  source: z.enum([
+    "OPPONENT_ACTIVE",
+    "SELF",
+    "OWN_BENCH",
+    "OPPONENT_BENCH",
+    "ANY_BENCH",
+  ]),
 });
 
 const SendToLostZoneSchema = z.object({
@@ -371,6 +383,33 @@ const ExtraPrizeSchema = z.object({
   type: z.literal("EXTRA_PRIZE"),
   amount: z.number(),
 });
+
+// ── Conditional Effects ─────────────────────────────────────
+
+const ConditionSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("IF_COIN_HEADS") }),
+  z.object({ type: z.literal("IF_COIN_TAILS") }),
+  z.object({
+    type: z.literal("IF_MORE_PRIZES"),
+    than: z.enum(["OPPONENT", "SELF"]),
+  }),
+  z.object({
+    type: z.literal("IF_LESS_HP"),
+    threshold: z.number(),
+  }),
+  z.object({ type: z.literal("IF_KNOCKED_OUT") }),
+  z.object({ type: z.literal("IF_OPPONENT_POISONED") }),
+  z.object({ type: z.literal("IF_OPPONENT_HAS_SPECIAL_CONDITION") }),
+]);
+
+const ConditionalEffectSchema: z.ZodType<any> = z.lazy(() =>
+  z.object({
+    type: z.literal("CONDITIONAL"),
+    condition: ConditionSchema,
+    thenEffects: z.array(AnyEffectSchema),
+    elseEffects: z.array(AnyEffectSchema).optional(),
+  }),
+);
 
 // ─── Union Schema ────────────────────────────────────────────
 
@@ -415,6 +454,7 @@ export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
     CopyAttackSchema,
     SendToLostZoneSchema,
     ExtraPrizeSchema,
+    ConditionalEffectSchema,
   ]),
 );
 
@@ -422,6 +462,7 @@ export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
 
 export const AttackEffectsSchema = z.object({
   effects: z.array(AnyEffectSchema),
+  oncePerGame: z.boolean().optional(),
 });
 
 export const PokemonCardEffectsSchema = z.object({

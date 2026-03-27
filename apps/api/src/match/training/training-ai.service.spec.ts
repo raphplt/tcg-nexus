@@ -93,6 +93,7 @@ const createBaseState = (overrides: Partial<GameState> = {}): GameState => ({
   winnerReason: null,
   pendingEffectAction: null,
   globalEffects: [],
+  pendingExtraPrizes: {},
   ...overrides,
 });
 

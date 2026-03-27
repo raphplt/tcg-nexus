@@ -46,6 +46,9 @@ export interface GameState {
   pendingEffectAction: PendingEffectAction | null;
   globalEffects: GlobalEffect[];
 
+  // Extra prizes (EX/GX/V/VSTAR KOs grant 2-3 prizes)
+  pendingExtraPrizes: Record<string, number>;
+
   // Result
   winnerId: string | null;
   winnerReason: GameFinishedReason | null;

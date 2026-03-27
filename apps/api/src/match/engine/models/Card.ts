@@ -16,6 +16,7 @@ export interface Attack {
   effect?: string;
   effects?: AnyEffect[];
   ignoreResistance?: boolean;
+  oncePerGame?: boolean;
 }
 
 export interface TcgDexPokemon extends TcgDexCardBase {
@@ -90,4 +91,5 @@ export interface PokemonCardInGame extends CardInGame<TcgDexPokemon> {
   attachedEvolutions: PokemonCardInGame[];
   turnsInPlay: number; // To track if it can evolve this turn
   temporaryEffects: TemporaryEffect[];
+  usedOncePerGameAttacks: string[]; // attack names already used (oncePerGame)
 }

@@ -69,6 +69,9 @@ export enum EffectType {
 
   // ── Prizes ──────────────────────────────────────────────
   EXTRA_PRIZE = "EXTRA_PRIZE",
+
+  // ── Conditional ──────────────────────────────────────────
+  CONDITIONAL = "CONDITIONAL",
 }
 
 // ─── Target Types ────────────────────────────────────────────
@@ -136,7 +139,7 @@ export enum CountSource {
 
 // ─── Quantity Helpers ────────────────────────────────────────
 
-export type EffectAmount = number | "ALL";
+export type EffectAmount = number | "ALL" | "RANDOM";
 
 // ─── Effect Interfaces ──────────────────────────────────────
 
@@ -215,7 +218,7 @@ export interface SearchDeckEffect extends BaseEffect {
   type: EffectType.SEARCH_DECK;
   amount: number;
   filter?: SearchFilter;
-  destination: "HAND" | "BENCH" | "ATTACHED";
+  destination: "HAND" | "BENCH" | "ATTACHED" | "TOP_DECK";
   shuffleAfter?: boolean;
 }
 
@@ -389,7 +392,12 @@ export interface FlipUntilTailsEffect extends BaseEffect {
 
 export interface CopyAttackEffect extends BaseEffect {
   type: EffectType.COPY_ATTACK;
-  source: "OPPONENT_ACTIVE" | "SELF";
+  source:
+    | "OPPONENT_ACTIVE"
+    | "SELF"
+    | "OWN_BENCH"
+    | "OPPONENT_BENCH"
+    | "ANY_BENCH";
 }
 
 // ── Lost Zone ─────────────────────────────────────────────
@@ -404,6 +412,28 @@ export interface SendToLostZoneEffect extends BaseEffect {
 export interface ExtraPrizeEffect extends BaseEffect {
   type: EffectType.EXTRA_PRIZE;
   amount: number;
+}
+
+// ── Conditional ─────────────────────────────────────────────
+
+export interface EffectCondition {
+  type:
+    | "IF_COIN_HEADS"
+    | "IF_COIN_TAILS"
+    | "IF_MORE_PRIZES"
+    | "IF_LESS_HP"
+    | "IF_KNOCKED_OUT"
+    | "IF_OPPONENT_POISONED"
+    | "IF_OPPONENT_HAS_SPECIAL_CONDITION";
+  than?: "OPPONENT" | "SELF";
+  threshold?: number;
+}
+
+export interface ConditionalEffect extends BaseEffect {
+  type: EffectType.CONDITIONAL;
+  condition: EffectCondition;
+  thenEffects: AnyEffect[];
+  elseEffects?: AnyEffect[];
 }
 
 // ─── Union Type ──────────────────────────────────────────────
@@ -461,4 +491,6 @@ export type AnyEffect =
   // Lost Zone
   | SendToLostZoneEffect
   // Prizes
-  | ExtraPrizeEffect;
+  | ExtraPrizeEffect
+  // Conditional
+  | ConditionalEffect;
