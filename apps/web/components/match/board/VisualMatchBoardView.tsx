@@ -8,6 +8,12 @@ import type {
   MatchPromptResponseInput,
 } from "@/components/match/MatchBoardView";
 import { cn } from "@/lib/utils";
+
+const sessionStatusLabels: Record<string, string> = {
+  WAITING_FOR_DECKS: "En attente des decks",
+  ACTIVE: "En cours",
+  FINISHED: "Terminé",
+};
 import type {
   OnlineMatchLogEntry,
   SanitizedGameState,
@@ -239,7 +245,7 @@ export function VisualMatchBoardView({
       </AnimatePresence>
 
       {/* ═══════════ GAME BOARD ═══════════ */}
-      <div className="relative min-h-0 flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-clip">
         {introCard || mobileFeedEntries.length ? (
           <div className="relative z-20 space-y-3 px-3 pt-3 lg:hidden">
             {introCard}
@@ -255,17 +261,13 @@ export function VisualMatchBoardView({
 
         <div
           className="absolute inset-0 flex flex-col items-center justify-center px-2 pb-2 pt-4 sm:px-4 lg:pt-0"
-          style={{ perspective: "1200px" }}
         >
-          <div
-            className="relative w-full max-w-5xl"
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            <div className="mx-auto w-full max-w-4xl origin-center [transform:rotateX(16deg)_scale(0.72)] [transform-style:preserve-3d] sm:[transform:rotateX(18deg)_scale(0.82)] lg:[transform:rotateX(20deg)_scale(0.94)] xl:[transform:rotateX(22deg)_scale(1)]">
+          <div className="relative w-full max-w-5xl">
+            <div className="mx-auto w-full max-w-4xl origin-center scale-[0.72] sm:scale-[0.82] lg:scale-[0.94] xl:scale-100" style={{ perspective: "800px" }}>
               {/* Board surface */}
-              <div className="relative space-y-3 overflow-hidden rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95)] sm:px-6 sm:py-5">
+              <div className="relative space-y-3 overflow-clip rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95),0_-4px_30px_-10px_rgba(6,182,212,0.08)] sm:px-6 sm:py-5 [transform:rotateX(8deg)]">
                 {/* Mat texture - hex pattern */}
-                <div className="absolute inset-0 rounded-[2rem] opacity-[0.045]">
+                <div className="absolute inset-0 rounded-[2rem] opacity-[0.045] pointer-events-none">
                   <svg
                     className="w-full h-full"
                     xmlns="http://www.w3.org/2000/svg"
@@ -291,9 +293,9 @@ export function VisualMatchBoardView({
                 </div>
 
                 {/* Radial glow overlay */}
-                <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07)_0%,transparent_70%)]" />
-                <div className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300/16 to-transparent" />
-                <div className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/6 to-transparent" />
+                <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07)_0%,transparent_70%)] pointer-events-none" />
+                <div className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300/16 to-transparent pointer-events-none" />
+                <div className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/6 to-transparent pointer-events-none" />
 
                 {/* Opponent field */}
                 <motion.div
@@ -451,7 +453,7 @@ export function VisualMatchBoardView({
       </div>
 
       {/* ═══════════ HAND BAR ═══════════ */}
-      <div className="relative z-30 border-t border-white/10 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/75 backdrop-blur-sm">
+      <div className="relative z-30">
         <HandBar
           hand={viewerPlayer.hand || []}
           selectedCardId={interaction.selectedHandCard?.instanceId ?? null}

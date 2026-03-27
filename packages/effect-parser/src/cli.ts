@@ -173,8 +173,10 @@ async function main() {
 
     case "parse-file": {
       const inputFile = args[1];
+      // args[2] is the output file only if it doesn't start with "--"
       const outputFile =
-        args[2] ?? inputFile?.replace(".json", "-effects.json");
+        (args[2] && !args[2].startsWith("--") ? args[2] : null) ??
+        inputFile?.replace(".json", "-effects.json");
 
       if (!inputFile || !existsSync(inputFile)) {
         console.error(`Input file not found: ${inputFile}`);

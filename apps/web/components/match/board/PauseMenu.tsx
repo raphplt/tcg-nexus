@@ -46,7 +46,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
       <button
         onClick={toggle}
         className={cn(
-          "p-2 rounded-lg transition-all",
+          "inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg transition-all",
           "text-white/50 hover:text-white hover:bg-white/10",
         )}
         title="Menu (Échap)"

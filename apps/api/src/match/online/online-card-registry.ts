@@ -17,6 +17,8 @@ export interface SupportedTrainerCardDefinition {
   kind: "trainer";
   targetStrategy?: "OWN_POKEMON";
   playEffects: AnyEffect[];
+  /** Continuous effects applied while this Stadium is in play. */
+  passiveEffects?: AnyEffect[];
 }
 
 export type SupportedCardDefinition =
@@ -91,7 +93,7 @@ function loadCardEffectsRegistry(): Record<
 > {
   const registryPath = join(
     __dirname,
-    "../../../../packages/effect-parser/card-effects-registry.json",
+    "../../../../../packages/effect-parser/card-effects-registry.json",
   );
 
   if (!existsSync(registryPath)) {

@@ -58,6 +58,9 @@ export const EffectTypeSchema = z.enum([
   "EXTRA_PRIZE",
   // Conditional
   "CONDITIONAL",
+  // Stadium Passive
+  "STADIUM_PASSIVE_DAMAGE_BOOST",
+  "STADIUM_PASSIVE_DAMAGE_REDUCE",
 ]);
 
 export const TargetTypeSchema = z.enum([
@@ -455,6 +458,19 @@ export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
     SendToLostZoneSchema,
     ExtraPrizeSchema,
     ConditionalEffectSchema,
+    // Stadium Passive
+    z.object({
+      type: z.literal("STADIUM_PASSIVE_DAMAGE_BOOST"),
+      amount: z.number(),
+      pokemonType: z.string().optional(),
+      pokemonStage: z.string().optional(),
+    }),
+    z.object({
+      type: z.literal("STADIUM_PASSIVE_DAMAGE_REDUCE"),
+      amount: z.number(),
+      pokemonType: z.string().optional(),
+      pokemonStage: z.string().optional(),
+    }),
   ]),
 );
 
@@ -480,6 +496,7 @@ export const TrainerCardEffectsSchema = z.object({
   kind: z.literal("trainer"),
   playEffects: z.array(AnyEffectSchema),
   targetStrategy: z.string().optional(),
+  passiveEffects: z.array(AnyEffectSchema).optional(),
 });
 
 export const CardEffectsSchema = z.discriminatedUnion("kind", [

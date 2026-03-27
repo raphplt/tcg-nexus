@@ -158,36 +158,68 @@ function detectDuration(text: string): Duration {
   return "UNTIL_NEXT_OPPONENT_TURN";
 }
 
-/** Extrait un type d'énergie depuis le texte */
+/** Extrait un type d'énergie depuis le texte (français + anglais + symboles {X}) */
 function detectEnergyType(text: string): string | undefined {
-  const types = [
-    "Feu",
-    "Eau",
-    "Plante",
-    "Électrique",
-    "Electrique",
-    "Psy",
-    "Combat",
-    "Obscurité",
-    "Obscurite",
-    "Métal",
-    "Metal",
-    "Fée",
-    "Fee",
-    "Dragon",
-    "Incolore",
-  ];
-  const textLower = text.toLowerCase();
-  for (const t of types) {
-    if (textLower.includes(t.toLowerCase())) {
-      // Normalize accents
-      if (t === "Electrique") return "Électrique";
-      if (t === "Obscurite") return "Obscurité";
-      if (t === "Metal") return "Métal";
-      if (t === "Fee") return "Fée";
-      return t;
-    }
+  // Symboles d'énergie entre accolades (ex: {M}, {D}, {W}...)
+  const symbolMap: Record<string, string> = {
+    R: "Feu",
+    W: "Eau",
+    G: "Plante",
+    L: "Électrique",
+    P: "Psy",
+    F: "Combat",
+    D: "Obscurité",
+    M: "Métal",
+    N: "Dragon",
+    Y: "Fée",
+    C: "Incolore",
+  };
+  const symMatch = /\{([A-Z])\}/i.exec(text);
+  if (symMatch) {
+    const normalized = (symMatch[1] ?? "").toUpperCase();
+    if (symbolMap[normalized]) return symbolMap[normalized];
   }
+
+  const textLower = text.toLowerCase();
+
+  // Noms anglais (présents dans les fichiers de données normalisés)
+  // — utilisation de word-boundary \b pour éviter les faux positifs
+  //   (ex: "niveau" contient "eau", "combat" en contexte, etc.)
+  const enTypes: Array<[RegExp, string]> = [
+    [/\bfire\b/i, "Feu"],
+    [/\bwater\b/i, "Eau"],
+    [/\bgrass\b/i, "Plante"],
+    [/\blightning\b/i, "Électrique"],
+    [/\bpsychic\b/i, "Psy"],
+    [/\bfighting\b/i, "Combat"],
+    [/\bdarkness\b/i, "Obscurité"],
+    [/\bmetal\b/i, "Métal"],
+    [/\bfairy\b/i, "Fée"],
+    [/\bcolorless\b/i, "Incolore"],
+    [/\bdragon\b/i, "Dragon"],
+  ];
+  for (const [re, fr] of enTypes) {
+    if (re.test(text)) return fr;
+  }
+
+  // Noms français — word-boundary idem
+  const frTypes: Array<[RegExp, string]> = [
+    [/\bfeu\b/i, "Feu"],
+    [/\beau\b/i, "Eau"],
+    [/\bplante\b/i, "Plante"],
+    [/[eé]lectrique/i, "Électrique"],
+    [/\bpsy\b/i, "Psy"],
+    [/\bcombat\b/i, "Combat"],
+    [/obscurit[eé]/i, "Obscurité"],
+    [/m[eé]tal/i, "Métal"],
+    [/f[eé]e/i, "Fée"],
+    [/\bincolore\b/i, "Incolore"],
+    [/\bdragon\b/i, "Dragon"],
+  ];
+  for (const [re, canonical] of frTypes) {
+    if (re.test(text)) return canonical;
+  }
+
   return undefined;
 }
 
@@ -1076,6 +1108,104 @@ function tryDevolve(text: string): AnyEffect[] {
   return [];
 }
 
+// ─── Parseurs d'effets passifs de Stade ───────────────────────
+
+/**
+ * STADIUM_PASSIVE_DAMAGE_BOOST
+ * Textes réels (données non-accentuées, noms anglais) :
+ *   "infligent 10 degats supplementaires au Pokemon Actif de ladversaire"
+ *   "infligent 30 degats supplementaires au Pokemon Actif de l'adversaire"
+ * Anciens jeux (français accentué) :
+ *   "infligent N dégâts de plus"
+ */
+function tryStadiumPassiveDamageBoost(text: string): AnyEffect[] {
+  const t = norm(text);
+
+  // Pattern principal : "infligent N dégâts supplémentaires"
+  const suppM =
+    /infligent? (\d+) d[eé]g[aâ]ts? suppl[eé]mentaires?/i.exec(t);
+  if (suppM) {
+    const amount = parseInt(suppM[1]!);
+    if (!isNaN(amount) && amount > 0) {
+      // Extraire le type depuis le contexte précédant le match
+      const context = t.slice(0, suppM.index + suppM[0].length);
+      const energyType = detectEnergyType(context);
+      const effect: AnyEffect = { type: "STADIUM_PASSIVE_DAMAGE_BOOST", amount };
+      if (energyType) effect.pokemonType = energyType;
+      return [effect];
+    }
+  }
+
+  // Ancienne formulation : "N dégâts de plus"
+  const plusPatterns = [
+    /infligent? (\d+) d[eé]g[aâ]ts? de plus/i,
+    /(\d+) d[eé]g[aâ]ts? de plus/i,
+  ];
+  for (const p of plusPatterns) {
+    const m = p.exec(t);
+    if (m) {
+      const amount = parseInt(m[1]!);
+      if (isNaN(amount) || amount <= 0) continue;
+      const context = t.slice(0, m.index + m[0].length);
+      const energyType = detectEnergyType(context);
+      const effect: AnyEffect = { type: "STADIUM_PASSIVE_DAMAGE_BOOST", amount };
+      if (energyType) effect.pokemonType = energyType;
+      return [effect];
+    }
+  }
+
+  return [];
+}
+
+/**
+ * STADIUM_PASSIVE_DAMAGE_REDUCE
+ * Textes réels (données non-accentuées, noms anglais) :
+ *   "subissent 30 degats de moins provenant des attaques..."
+ *   "recoivent 30 degats de moins des attaques de ladversaire"
+ *   "sont reduits de 10 (apres application...)"
+ * Anciens jeux (français accentué) :
+ *   "sont réduits de N"
+ */
+function tryStadiumPassiveDamageReduce(text: string): AnyEffect[] {
+  const t = norm(text);
+
+  // Patterns dans l'ordre de priorité — on cherche le premier match
+  const patterns: RegExp[] = [
+    // "subissent N dégâts de moins" — sujet quelconque (Pokemon, Onix-GX, etc.)
+    /subissent? (\d+) d[eé]g[aâ]ts? de moins/i,
+    // "recoivent N dégâts de moins"
+    /recoivent? (\d+) d[eé]g[aâ]ts? de moins/i,
+    // "sont réduits de N"
+    /sont r[eé]duits? de (\d+)/i,
+    // "réduits de N dégâts"
+    /r[eé]duits? de (\d+) d[eé]g[aâ]ts?/i,
+    // Ancienne formulation explicite
+    /(\d+) d[eé]g[aâ]ts? de moins (sur|pour|aux)/i,
+  ];
+
+  for (const p of patterns) {
+    const m = p.exec(t);
+    if (!m) continue;
+
+    // Toujours le 1er groupe de capture numérique
+    let amount = 0;
+    for (let i = 1; i < m.length; i++) {
+      const n = parseInt(m[i] ?? "");
+      if (!isNaN(n) && n > 0) { amount = n; break; }
+    }
+    if (amount <= 0) continue;
+
+    // Extraire le type depuis le contexte précédant le match
+    const context = t.slice(0, m.index + m[0].length);
+    const energyType = detectEnergyType(context);
+    const effect: AnyEffect = { type: "STADIUM_PASSIVE_DAMAGE_REDUCE", amount };
+    if (energyType) effect.pokemonType = energyType;
+    return [effect];
+  }
+
+  return [];
+}
+
 // ─── Parseur de texte d'effet ─────────────────────────────────
 
 /** Tous les parseurs d'effets simples, dans l'ordre de priorité */
@@ -1322,13 +1452,32 @@ function parseCardEffectsInternal(card: CardInput): AnyEffect {
   }
 
   if (card.category === "Dresseur") {
-    const playEffects = parseEffectsFromText(card.effect ?? "");
+    const effectText = card.effect ?? "";
+
+    // Stades : les effets continus sont séparés des effets ponctuels
+    if (card.trainerType === "Stade" || card.trainerType === "Stadium") {
+      const passiveEffects = parseSimpleEffects(effectText, [
+        tryStadiumPassiveDamageBoost,
+        tryStadiumPassiveDamageReduce,
+      ]);
+      // Effets ponctuels éventuels (ex: soigner au jeu du stade)
+      const playEffects = parseSimpleEffects(effectText, [
+        tryHeal,
+        tryDrawCard,
+        trySearchDeck,
+      ]);
+      const result: AnyEffect = { kind: "trainer", playEffects };
+      if (passiveEffects.length > 0) result.passiveEffects = passiveEffects;
+      return result;
+    }
+
+    const playEffects = parseEffectsFromText(effectText);
     const result: AnyEffect = { kind: "trainer", playEffects };
 
     // targetStrategy
     if (
       /l'un de vos pok[eé]mon|d'un de vos pok[eé]mon|choisissez? l'un de vos pok[eé]mon/i.test(
-        card.effect ?? "",
+        effectText,
       )
     ) {
       result.targetStrategy = "OWN_POKEMON";

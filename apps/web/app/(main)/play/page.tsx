@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  startTransition,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -29,7 +30,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { io, type Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -320,6 +321,55 @@ export default function PlayPage() {
   const deferredSearch = useDeferredValue(search);
   const [activeFilter, setActiveFilter] = useState<MatchBucket>("all");
   const [activeTab, setActiveTab] = useState<PlayTab>("tournois");
+  const [secondaryQueriesEnabled, setSecondaryQueriesEnabled] = useState(false);
+  const searchParamsString = searchParams.toString();
+  const tabParam = new URLSearchParams(searchParamsString).get("tab");
+  const requestedTab = isPlayTab(tabParam) ? tabParam : null;
+  const shouldPrioritizeSecondaryQueries =
+    requestedTab === "ia" ||
+    requestedTab === "duel" ||
+    activeTab === "ia" ||
+    activeTab === "duel";
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSecondaryQueriesEnabled(false);
+      return;
+    }
+
+    if (shouldPrioritizeSecondaryQueries) {
+      setSecondaryQueriesEnabled(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const enableSecondaryQueries = () => {
+      if (cancelled) return;
+
+      startTransition(() => {
+        setSecondaryQueriesEnabled(true);
+      });
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(enableSecondaryQueries, {
+        timeout: 600,
+      });
+
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = globalThis.setTimeout(enableSecondaryQueries, 0);
+
+    return () => {
+      cancelled = true;
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [isAuthenticated, shouldPrioritizeSecondaryQueries]);
 
   const playHubQuery = useQuery<PlayHubResponse>({
     queryKey: ["play", "hub"],
@@ -329,20 +379,17 @@ export default function PlayPage() {
   const trainingLobbyQuery = useQuery<TrainingLobbyView>({
     queryKey: ["training-matches", "lobby"],
     queryFn: () => trainingMatchService.getLobby(),
-    enabled: Boolean(isAuthenticated),
+    enabled: Boolean(isAuthenticated && secondaryQueriesEnabled),
   });
   const casualLobbyQuery = useQuery<CasualLobbyView>({
     queryKey: ["casual-matches", "lobby"],
     queryFn: () => casualMatchService.getLobby(),
-    enabled: Boolean(isAuthenticated),
+    enabled: Boolean(isAuthenticated && secondaryQueriesEnabled),
   });
 
   const playHub = playHubQuery.data;
   const trainingLobby = trainingLobbyQuery.data;
   const casualLobby = casualLobbyQuery.data;
-  const searchParamsString = searchParams.toString();
-  const tabParam = new URLSearchParams(searchParamsString).get("tab");
-  const requestedTab = isPlayTab(tabParam) ? tabParam : null;
   const matchRecords = useMemo(
     () =>
       (playHub?.matches || []).map((match) => ({
@@ -498,13 +545,17 @@ export default function PlayPage() {
           secondarySessionsCount={secondarySessionsCount}
           deckCount={playHub?.summary.totalDecks || 0}
           secondaryMetricsLoading={
-            trainingLobbyQuery.isLoading || casualLobbyQuery.isLoading
+            secondaryQueriesEnabled &&
+            (trainingLobbyQuery.isLoading || casualLobbyQuery.isLoading)
           }
         />
 
         <PlayResumeStrip
           items={resumeItems}
-          isLoading={trainingLobbyQuery.isLoading || casualLobbyQuery.isLoading}
+          isLoading={
+            secondaryQueriesEnabled &&
+            (trainingLobbyQuery.isLoading || casualLobbyQuery.isLoading)
+          }
         />
 
         <Tabs
@@ -1376,6 +1427,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
 function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
+  const socketPromiseRef = useRef<Promise<Socket | null> | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
   const [mmStatus, setMmStatus] = useState<MatchmakingStatus>("idle");
   const [queueSize, setQueueSize] = useState(0);
@@ -1435,51 +1487,65 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   const disconnectSocket = () => {
     socketRef.current?.disconnect();
     socketRef.current = null;
+    socketPromiseRef.current = null;
     setIsConnected(false);
   };
 
-  const connectSocket = () => {
-    if (socketRef.current || !socketBaseUrl) return socketRef.current;
+  const connectSocket = async (): Promise<Socket | null> => {
+    if (socketRef.current || !socketBaseUrl) {
+      return socketRef.current;
+    }
 
-    const socket = io(`${socketBaseUrl}/match`, {
-      transports: ["websocket"],
-      withCredentials: true,
-    });
+    if (!socketPromiseRef.current) {
+      socketPromiseRef.current = (async () => {
+        const { io } = await import("socket.io-client");
+        const socket = io(`${socketBaseUrl}/match`, {
+          transports: ["websocket"],
+          withCredentials: true,
+        });
 
-    socketRef.current = socket;
-    socket.on("connect", () => setIsConnected(true));
-    socket.on("disconnect", () => setIsConnected(false));
-    socket.on(
-      "matchmaking_status",
-      (data: { status: string; queueSize?: number }) => {
-        if (data.status === "queued") {
-          setMmStatus("queued");
-          setQueueSize(typeof data.queueSize === "number" ? data.queueSize : 0);
-          return;
-        }
+        socketRef.current = socket;
+        socket.on("connect", () => setIsConnected(true));
+        socket.on("disconnect", () => setIsConnected(false));
+        socket.on(
+          "matchmaking_status",
+          (data: { status: string; queueSize?: number }) => {
+            if (data.status === "queued") {
+              setMmStatus("queued");
+              setQueueSize(
+                typeof data.queueSize === "number" ? data.queueSize : 0,
+              );
+              return;
+            }
 
-        if (data.status === "idle") {
+            if (data.status === "idle") {
+              setMmStatus("idle");
+              setQueueSize(0);
+            }
+          },
+        );
+        socket.on("matchmaking_matched", (data: { sessionId: number }) => {
+          setMmStatus("matched");
+          setMatchedSessionId(data.sessionId);
+        });
+        socket.on("matchmaking_error", (data: { message: string }) => {
+          setLastError(data.message);
           setMmStatus("idle");
           setQueueSize(0);
-        }
-      },
-    );
-    socket.on("matchmaking_matched", (data: { sessionId: number }) => {
-      setMmStatus("matched");
-      setMatchedSessionId(data.sessionId);
-    });
-    socket.on("matchmaking_error", (data: { message: string }) => {
-      setLastError(data.message);
-      setMmStatus("idle");
-      setQueueSize(0);
-    });
+        });
 
-    return socket;
+        return socket;
+      })().finally(() => {
+        socketPromiseRef.current = null;
+      });
+    }
+
+    return socketPromiseRef.current;
   };
 
   useEffect(() => {
     if (mmStatus === "queued") {
-      connectSocket();
+      void connectSocket();
     }
 
     return () => {
@@ -1487,11 +1553,11 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
     };
   }, [mmStatus, socketBaseUrl]);
 
-  const handleJoinQueue = () => {
+  const handleJoinQueue = async () => {
     if (!selectedDeckId) return;
 
     setLastError(null);
-    const socket = socketRef.current || connectSocket();
+    const socket = socketRef.current || (await connectSocket());
 
     if (socket) {
       socket.emit("matchmaking_join", { deckId: selectedDeckId });
@@ -1652,7 +1718,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
               <Button
                 className="w-full rounded-full"
                 disabled={!selectedDeckId}
-                onClick={handleJoinQueue}
+                onClick={() => void handleJoinQueue()}
               >
                 Lancer la recherche
                 <Swords className="ml-2 h-4 w-4" />

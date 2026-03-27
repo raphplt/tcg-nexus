@@ -1493,7 +1493,7 @@ export class SeedService {
       "deck-gromago.json",
       "deck-zoroark-n.json",
       "deck-angoliath-rosemary.json",
-      "deck-noarfang-control.json",
+      "deck-momartik-munkidori.json",
     ];
 
     let created = 0;

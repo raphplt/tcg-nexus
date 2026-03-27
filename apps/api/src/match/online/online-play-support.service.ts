@@ -339,7 +339,15 @@ export class OnlinePlaySupportService {
 
   private mapCardEntityToBaseCard(card: Card): TcgDexCard {
     const details = card.pokemonDetails;
-    const supportedDefinition = getOnlineSupportedCardDefinition(card.tcgDexId);
+
+    // Priorité 1 : effets synchronisés en base (via npm run sync:effects)
+    // Priorité 2 : fallback sur le JSON chargé au boot (rétro-compat)
+    const dbEffects = details?.parsedEffects as
+      | import("./online-card-registry").SupportedCardDefinition
+      | null
+      | undefined;
+    const supportedDefinition =
+      dbEffects ?? getOnlineSupportedCardDefinition(card.tcgDexId);
 
     if (this.isPokemonCardEntity(card)) {
       const attackDefinitions =
@@ -390,6 +398,10 @@ export class OnlinePlaySupportService {
         targetStrategy:
           supportedDefinition && supportedDefinition.kind === "trainer"
             ? supportedDefinition.targetStrategy
+            : undefined,
+        passiveEffects:
+          supportedDefinition && supportedDefinition.kind === "trainer"
+            ? supportedDefinition.passiveEffects
             : undefined,
       };
     }

@@ -1,6 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "../app.module";
 import { SeedService } from "../seed/seed.service";
+import { CardEffectsSyncService } from "../card/card-effects-sync.service";
 import * as readline from "readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
@@ -42,6 +43,7 @@ async function bootstrap() {
   }
 
   const seedService = app.get(SeedService);
+  const effectsSyncService = app.get(CardEffectsSyncService);
 
   try {
     logStep("Voulez-vous détruire toutes les données existantes ? (oui/non)");
@@ -98,6 +100,23 @@ async function bootstrap() {
     logStep("Import des cartes Pokémon...");
     await seedService.importPokemon();
     logSuccess("Cartes Pokémon importées !");
+
+    logStep("Synchronisation des effets parsés (card-effects-registry)...");
+    try {
+      const syncResult = await effectsSyncService.syncEffectsFromRegistry();
+      logSuccess(
+        `Effets synchronisés : ${syncResult.updated}/${syncResult.total} cartes mises à jour`,
+      );
+      if (syncResult.notFound.length > 0) {
+        logWarn(
+          `${syncResult.notFound.length} cartes du registry absentes de la DB (normal si le registry est plus récent que le seed)`,
+        );
+      }
+    } catch (err) {
+      logWarn(
+        `Sync des effets ignorée : ${(err as Error).message} — relancez 'npm run sync:effects' manuellement`,
+      );
+    }
 
     logStep("Création des listings de test...");
     await seedService.seedListings();

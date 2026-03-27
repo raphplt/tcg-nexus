@@ -39,6 +39,8 @@ export interface TcgDexTrainer extends TcgDexCardBase {
   effect: string;
   playEffects?: AnyEffect[];
   targetStrategy?: "OWN_POKEMON";
+  /** Continuous effects applied while this Stadium is in play. */
+  passiveEffects?: AnyEffect[];
 }
 
 export interface TcgDexEnergy extends TcgDexCardBase {

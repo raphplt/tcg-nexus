@@ -102,4 +102,12 @@ export class PokemonCardDetails {
     id?: string;
     name?: string;
   }[];
+
+  /**
+   * Effets parsés par l'effect-parser.
+   * Peuplé via `npm run sync:effects` dans apps/api.
+   * Structure : SupportedCardDefinition (kind + attacks/playEffects/passiveEffects…)
+   */
+  @Column({ type: "jsonb", nullable: true })
+  parsedEffects?: Record<string, unknown> | null;
 }

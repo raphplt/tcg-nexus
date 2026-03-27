@@ -23,6 +23,8 @@ import {
   type CopyAttackEffect,
   type ReviveEffect,
   type EffectDuration,
+  type StadiumPassiveDamageBoostEffect,
+  type StadiumPassiveDamageReduceEffect,
 } from "./effects/Effect";
 import {
   CardCategory,
@@ -756,48 +758,50 @@ export class GameEngine {
   }
 
   private pokemonCheckup(events: any[]) {
-    // Poison and Burn apply to active Pokemon of BOTH players
+    // Poison and Burn apply to ALL Pokemon of BOTH players that carry those
+    // conditions — including benched Pokemon that retreated while Poisoned/Burned
     for (const playerId of this.state.playerIds) {
-      const activePokemon = this.state.players[playerId].active;
-      if (!activePokemon) continue;
+      const player = this.state.players[playerId];
+      const allPokemon = [
+        player.active,
+        ...player.bench,
+      ].filter((p): p is NonNullable<typeof p> => p !== null && p !== undefined);
 
-      if (
-        activePokemon.specialConditions.includes(
-          SpecialCondition.Poisoned,
-        )
-      ) {
-        activePokemon.damageCounters += 10;
-        events.push({
-          type: "POISON_DAMAGE_APPLIED",
-          playerId,
-          targetInstanceId: activePokemon.instanceId,
-          amount: 10,
-        });
-      }
+      for (const pokemon of allPokemon) {
+        if (
+          pokemon.specialConditions.includes(SpecialCondition.Poisoned)
+        ) {
+          pokemon.damageCounters += 10;
+          events.push({
+            type: "POISON_DAMAGE_APPLIED",
+            playerId,
+            targetInstanceId: pokemon.instanceId,
+            amount: 10,
+          });
+        }
 
-      if (
-        activePokemon.specialConditions.includes(
-          SpecialCondition.Burned,
-        )
-      ) {
-        activePokemon.damageCounters += 20;
-        events.push({
-          type: "BURN_DAMAGE_APPLIED",
-          playerId,
-          targetInstanceId: activePokemon.instanceId,
-          amount: 20,
-        });
+        if (
+          pokemon.specialConditions.includes(SpecialCondition.Burned)
+        ) {
+          pokemon.damageCounters += 20;
+          events.push({
+            type: "BURN_DAMAGE_APPLIED",
+            playerId,
+            targetInstanceId: pokemon.instanceId,
+            amount: 20,
+          });
 
-        if (this.nextRandom() >= 0.5) {
-          activePokemon.specialConditions =
-            activePokemon.specialConditions.filter(
+          // Flip to remove Burn: heads = Burn removed
+          if (this.nextRandom() >= 0.5) {
+            pokemon.specialConditions = pokemon.specialConditions.filter(
               (c) => c !== SpecialCondition.Burned,
             );
-          events.push({
-            type: "BURN_REMOVED",
-            playerId,
-            targetInstanceId: activePokemon.instanceId,
-          });
+            events.push({
+              type: "BURN_REMOVED",
+              playerId,
+              targetInstanceId: pokemon.instanceId,
+            });
+          }
         }
       }
     }
@@ -1002,6 +1006,16 @@ export class GameEngine {
         playerId: action.playerId,
         cardInstanceId: trainerCard.instanceId,
       });
+
+      // Resolve any one-time on-play effects (e.g. "heal all your Pokémon")
+      const onPlayEffects = trainerCard.baseCard.playEffects;
+      if (onPlayEffects && onPlayEffects.length > 0) {
+        this.effectResolver.resolveEffects(
+          onPlayEffects,
+          action.playerId,
+          events,
+        );
+      }
       return;
     }
 
@@ -1191,31 +1205,43 @@ export class GameEngine {
       } else if (dynamicEffect.operator === "-") {
         adjustedDamage = Math.max(0, baseDamage - dynAmount);
       } else if (dynamicEffect.operator === "×") {
-        adjustedDamage = baseDamage * dynAmount;
+        // computeDynamicDamage() returns amountPerUnit × count already
+        // e.g. "10× bench Pokémon" with 5 bench → dynAmount=50, baseDamage irrelevant
+        adjustedDamage = dynAmount;
       } else {
         adjustedDamage = baseDamage;
       }
       adjustedAttack = { ...attack, damage: adjustedDamage };
     }
 
-    // Calculate damage with weakness/resistance applied on the full amount
-    let attackDamage = this.calculateAttackDamage(
-      activePokemon,
-      opponentActive,
-      adjustedAttack,
-    );
-
-    // Apply BOOST_DAMAGE from temporary effects on attacker (consumed after use)
+    // Apply BOOST_DAMAGE BEFORE weakness/resistance (TCG rule: attacker-side
+    // damage boosts are factored in before W/R, same as DYNAMIC_DAMAGE).
+    // Consumed immediately after use.
     const boostEffect = activePokemon.temporaryEffects.find(
       (e) => e.type === "BOOST_DAMAGE" && e.amount,
     );
     if (boostEffect?.amount) {
-      attackDamage += boostEffect.amount;
+      const currentDamage =
+        typeof adjustedAttack.damage === "number"
+          ? adjustedAttack.damage
+          : this.parseDamageValue(adjustedAttack.damage);
+      adjustedAttack = {
+        ...adjustedAttack,
+        damage: currentDamage + boostEffect.amount,
+      };
       activePokemon.temporaryEffects =
         activePokemon.temporaryEffects.filter(
           (e) => e !== boostEffect,
         );
     }
+
+    // Calculate damage with weakness/resistance applied on the full amount
+    // (includes dynamic damage and boost damage)
+    let attackDamage = this.calculateAttackDamage(
+      activePokemon,
+      opponentActive,
+      adjustedAttack,
+    );
 
     // Apply REDUCE_DAMAGE / PREVENT_DAMAGE from temporary effects on defender
     if (opponentActive && attackDamage > 0) {
@@ -1554,11 +1580,13 @@ export class GameEngine {
     });
 
     const opponentId = this.getOpponentId(playerId);
-    this.takePrizeCards(
-      opponentId,
-      knockedOutPokemon.baseCard.prizeCards || 1,
-      events,
-    );
+    // Static prize count from card type (2 for EX/GX, 3 for VSTAR, etc.)
+    const staticPrizes = knockedOutPokemon.baseCard.prizeCards || 1;
+    // Dynamic extra prizes from EXTRA_PRIZE effects resolved this turn
+    const extraPrizes = this.state.pendingExtraPrizes[opponentId] ?? 0;
+    this.state.pendingExtraPrizes[opponentId] = 0;
+
+    this.takePrizeCards(opponentId, staticPrizes + extraPrizes, events);
     if (this.state.gamePhase === GamePhase.Finished) {
       return;
     }
@@ -1834,6 +1862,38 @@ export class GameEngine {
 
     if (resistance?.value) {
       damage -= this.parseDamageValue(resistance.value);
+    }
+
+    // Stadium passive modifiers — applied after W/R
+    // TCG rule: stadium passive boosts/reductions are applied last
+    const passiveEffects = (this.state.stadium?.baseCard as any)
+      ?.passiveEffects as AnyEffect[] | undefined;
+    if (passiveEffects) {
+      for (const passive of passiveEffects) {
+        if (passive.type === EffectType.STADIUM_PASSIVE_DAMAGE_BOOST) {
+          const boost = passive as StadiumPassiveDamageBoostEffect;
+          if (
+            (!boost.pokemonType ||
+              attacker.baseCard.types?.includes(boost.pokemonType)) &&
+            (!boost.pokemonStage ||
+              (attacker.baseCard as any).stage === boost.pokemonStage)
+          ) {
+            damage += boost.amount;
+          }
+        } else if (
+          passive.type === EffectType.STADIUM_PASSIVE_DAMAGE_REDUCE
+        ) {
+          const reduce = passive as StadiumPassiveDamageReduceEffect;
+          if (
+            (!reduce.pokemonType ||
+              defender.baseCard.types?.includes(reduce.pokemonType)) &&
+            (!reduce.pokemonStage ||
+              (defender.baseCard as any).stage === reduce.pokemonStage)
+          ) {
+            damage = Math.max(0, damage - reduce.amount);
+          }
+        }
+      }
     }
 
     return Math.max(0, damage);

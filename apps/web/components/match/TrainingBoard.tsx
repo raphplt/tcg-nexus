@@ -1,32 +1,24 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   TrainingActionInput,
   TrainingPromptResponseInput,
   trainingMatchService,
 } from "@/services/training-match.service";
-import {
-  TrainingDifficulty,
-  TrainingSessionView,
-} from "@/types/training-match";
+import { TrainingSessionView } from "@/types/training-match";
 import { extractApiErrorMessage } from "@/utils/api-error";
 
 interface TrainingBoardProps {
   sessionId: number;
 }
-
-const difficultyLabels: Record<TrainingDifficulty, string> = {
-  easy: "Facile",
-  standard: "Standard",
-};
 
 export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
   const queryClient = useQueryClient();
@@ -118,23 +110,6 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
               <span>Prêt</span>
             )}
           </div>
-        }
-        introCard={
-          <Card className="tcg-surface tcg-surface--soft">
-            <CardHeader>
-              <CardTitle className="flex flex-wrap items-center gap-2">
-                <Bot className="h-5 w-5 text-primary" />
-                Match d’entraînement
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <Badge>{session.aiDeckPresetName}</Badge>
-              <Badge variant="secondary">
-                Difficulté {difficultyLabels[session.aiDifficulty]}
-              </Badge>
-              <Badge variant="outline">Session #{session.sessionId}</Badge>
-            </CardContent>
-          </Card>
         }
         footerCard={
           session.status === "FINISHED" ? (

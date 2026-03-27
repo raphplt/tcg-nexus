@@ -313,7 +313,10 @@ describe("PlayPage", () => {
 
     renderPage();
 
-    const items = await screen.findAllByTestId("resume-item");
+    await waitFor(() =>
+      expect(screen.getAllByTestId("resume-item")).toHaveLength(3),
+    );
+    const items = screen.getAllByTestId("resume-item");
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent("vs Cynthia");
     expect(items[1]).toHaveTextContent("vs Blue");

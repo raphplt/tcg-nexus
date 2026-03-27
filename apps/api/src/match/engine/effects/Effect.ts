@@ -72,6 +72,13 @@ export enum EffectType {
 
   // ── Conditional ──────────────────────────────────────────
   CONDITIONAL = "CONDITIONAL",
+
+  // ── Stadium Passive ──────────────────────────────────────
+  // Continuous modifiers applied while this Stadium is in play.
+  // BOOST: the matching Pokémon's attacks deal N more damage.
+  // REDUCE: the matching Pokémon takes N less damage.
+  STADIUM_PASSIVE_DAMAGE_BOOST = "STADIUM_PASSIVE_DAMAGE_BOOST",
+  STADIUM_PASSIVE_DAMAGE_REDUCE = "STADIUM_PASSIVE_DAMAGE_REDUCE",
 }
 
 // ─── Target Types ────────────────────────────────────────────
@@ -436,6 +443,28 @@ export interface ConditionalEffect extends BaseEffect {
   elseEffects?: AnyEffect[];
 }
 
+// ── Stadium Passive Effects ──────────────────────────────────
+
+/** Attacks by the matching Pokémon deal N more damage while this Stadium is in play. */
+export interface StadiumPassiveDamageBoostEffect extends BaseEffect {
+  type: EffectType.STADIUM_PASSIVE_DAMAGE_BOOST;
+  amount: number;
+  /** If set, only applies when the attacker is this Pokémon type. */
+  pokemonType?: string;
+  /** If set, only applies when the attacker is this stage ("De base", "Niveau 1", etc.). */
+  pokemonStage?: string;
+}
+
+/** The matching Pokémon takes N less damage from attacks while this Stadium is in play. */
+export interface StadiumPassiveDamageReduceEffect extends BaseEffect {
+  type: EffectType.STADIUM_PASSIVE_DAMAGE_REDUCE;
+  amount: number;
+  /** If set, only applies when the defender is this Pokémon type. */
+  pokemonType?: string;
+  /** If set, only applies when the defender is this stage. */
+  pokemonStage?: string;
+}
+
 // ─── Union Type ──────────────────────────────────────────────
 
 export type AnyEffect =
@@ -493,4 +522,7 @@ export type AnyEffect =
   // Prizes
   | ExtraPrizeEffect
   // Conditional
-  | ConditionalEffect;
+  | ConditionalEffect
+  // Stadium Passive
+  | StadiumPassiveDamageBoostEffect
+  | StadiumPassiveDamageReduceEffect;
