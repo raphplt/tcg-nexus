@@ -1,31 +1,38 @@
 import {
-  AttachEnergyAction,
-  AttackAction,
-  EvolvePokemonAction,
-  PlayPokemonAction,
-  PlayTrainerAction,
-  PlayerAction,
-  RetreatAction,
+  type AttachEnergyAction,
+  type AttackAction,
+  type EvolvePokemonAction,
+  type PlayPokemonAction,
+  type PlayTrainerAction,
+  type PlayerAction,
+  type RetreatAction,
 } from "./actions/Action";
-import { EffectResolver } from "./effects/EffectResolver";
 import {
+  CountSource,
   EffectType,
   TargetType,
-  CountSource,
   type AnyEffect,
-  type DynamicDamageEffect,
-  type SearchDeckEffect,
-  type SearchDiscardEffect,
-  type DiscardFromHandEffect,
-  type MoveEnergyEffect,
   type AttachEnergyFromDeckEffect,
   type AttachEnergyFromDiscardEffect,
   type CopyAttackEffect,
+  type DiscardFromHandEffect,
+  type DynamicDamageEffect,
+  type MoveEnergyEffect,
   type ReviveEffect,
-  type EffectDuration,
+  type SearchDeckEffect,
+  type SearchDiscardEffect,
   type StadiumPassiveDamageBoostEffect,
   type StadiumPassiveDamageReduceEffect,
 } from "./effects/Effect";
+import { EffectResolver } from "./effects/EffectResolver";
+import {
+  type Attack,
+  type CardInGame,
+  type EnergyCardInGame,
+  type PokemonCardInGame,
+  type TemporaryEffect,
+  type TrainerCardInGame,
+} from "./models/Card";
 import {
   CardCategory,
   GameFinishedReason,
@@ -34,18 +41,10 @@ import {
   SpecialCondition,
   TurnStep,
 } from "./models/enums";
-import {
-  Attack,
-  CardInGame,
-  EnergyCardInGame,
-  PokemonCardInGame,
-  TemporaryEffect,
-  TrainerCardInGame,
-} from "./models/Card";
-import { GameState } from "./models/GameState";
-import { PlayerEffect } from "./models/Player";
-import { PendingPrompt, PromptOption, PromptResponse } from "./models/Prompt";
-import { SetupTask, SetupTaskType } from "./models/Setup";
+import type { GameState } from "./models/GameState";
+import type { PlayerEffect } from "./models/Player";
+import type { PendingPrompt, PromptOption, PromptResponse } from "./models/Prompt";
+import type { SetupTask, SetupTaskType } from "./models/Setup";
 
 export class GameEngine {
   private state: GameState;
