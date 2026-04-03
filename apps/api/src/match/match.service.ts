@@ -527,10 +527,11 @@ export class MatchService {
       .where("playerA.id = :playerId OR playerB.id = :playerId", {
         playerId: player.id,
       })
-      .orderBy(
-        "COALESCE(match.startedAt, match.scheduledDate, tournament.startDate)",
-        "DESC",
+      .addSelect(
+        `COALESCE("match"."startedAt", "match"."scheduledDate", "tournament"."startDate")`,
+        "sort_date",
       )
+      .orderBy("sort_date", "DESC")
       .take(20)
       .getMany();
     const hydratedMatches = await this.ensureOnlineSessions(matches);
