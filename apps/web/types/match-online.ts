@@ -40,6 +40,7 @@ export interface SanitizedPromptOption {
   value: string;
   label: string;
   description?: string;
+  image?: string;
 }
 
 export interface PendingPromptView {

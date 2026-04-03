@@ -313,6 +313,13 @@ export class OnlinePlaySupportService {
           { value: playerA.playerId, label: playerA.name },
           { value: playerB.playerId, label: playerB.name },
         ],
+        metadata: {
+          coinFlipWinnerId,
+          coinFlipWinnerName:
+            coinFlipWinnerId === playerA.playerId
+              ? playerA.name
+              : playerB.name,
+        },
       },
       setup: {
         coinFlipWinnerId,

@@ -4,6 +4,7 @@ export interface PromptOption {
   value: string;
   label: string;
   description?: string;
+  image?: string;
 }
 
 export interface PendingPrompt {

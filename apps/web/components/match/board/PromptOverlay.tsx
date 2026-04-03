@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
 import { cn } from "@/lib/utils";
 import type { PendingPromptView } from "@/types/match-online";
-import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
 
 interface PromptOverlayProps {
   prompt: PendingPromptView;

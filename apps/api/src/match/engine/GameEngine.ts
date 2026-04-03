@@ -558,9 +558,11 @@ export class GameEngine {
 
   private createPromptForTask(task: SetupTask): PendingPrompt | null {
     switch (task.type) {
-      case "CHOOSE_FIRST_PLAYER":
+      case "CHOOSE_FIRST_PLAYER": {
+        const coinFlipWinnerId =
+          task.playerId || this.state.setup?.coinFlipWinnerId || "";
         return this.buildPrompt({
-          playerId: task.playerId || this.state.setup?.coinFlipWinnerId || "",
+          playerId: coinFlipWinnerId,
           type: PromptType.ChooseFirstPlayer,
           title: "Choisissez le premier joueur",
           minSelections: 1,
@@ -570,8 +572,14 @@ export class GameEngine {
             value: playerId,
             label: this.state.players[playerId].name,
           })),
-          metadata: task.metadata,
+          metadata: {
+            ...task.metadata,
+            coinFlipWinnerId,
+            coinFlipWinnerName:
+              this.state.players[coinFlipWinnerId]?.name ?? "",
+          },
         });
+      }
       case "CHOOSE_ACTIVE": {
         const playerId = task.playerId!;
         const basicPokemonOptions = this.state.players[playerId].hand
@@ -583,6 +591,7 @@ export class GameEngine {
           .map((card) => ({
             value: card.instanceId,
             label: card.baseCard.name,
+            image: card.baseCard.image,
           }));
 
         return this.buildPrompt({
@@ -608,6 +617,7 @@ export class GameEngine {
           .map((card) => ({
             value: card.instanceId,
             label: card.baseCard.name,
+            image: card.baseCard.image,
           }));
 
         if (benchOptions.length === 0 || player.bench.length >= 5) {
