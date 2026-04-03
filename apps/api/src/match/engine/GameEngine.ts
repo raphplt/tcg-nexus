@@ -2634,19 +2634,19 @@ export class GameEngine {
   ) {
     if (pokemon.attachedEvolutions.length === 0) return;
 
-    // Remove top evolution → goes to discard of owner
-    const topEvo = pokemon.attachedEvolutions.pop()!;
+    const previousStage = pokemon.attachedEvolutions.pop()!;
     const player = this.state.players[pokemon.ownerId];
 
-    // The current stage (being removed) goes to discard
+    // The current (top) evolution card goes to discard
     player.discard.push({
-      instanceId: topEvo.instanceId,
+      instanceId: pokemon.instanceId,
       ownerId: pokemon.ownerId,
-      baseCard: topEvo.baseCard,
+      baseCard: pokemon.baseCard,
     });
 
-    // The Pokemon reverts to the previous stage
-    pokemon.baseCard = topEvo.baseCard;
+    // The Pokemon reverts to the previous stage underneath
+    pokemon.instanceId = previousStage.instanceId;
+    pokemon.baseCard = previousStage.baseCard;
     pokemon.specialConditions = [];
 
     events.push({
