@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
 import { cn } from "@/lib/utils";
 import type { PendingPromptView } from "@/types/match-online";
-import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
 
 interface CoinFlipOverlayProps {
   prompt: PendingPromptView;
@@ -25,15 +25,11 @@ export function CoinFlipOverlay({
   const [phase, setPhase] = useState<Phase>("intro");
   const [selected, setSelected] = useState<string | null>(null);
 
-  const winnerName =
-    (prompt.metadata?.coinFlipWinnerName as string) ?? "???";
+  const winnerName = (prompt.metadata?.coinFlipWinnerName as string) ?? "???";
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("flipping"), 600);
-    const t2 = setTimeout(
-      () => setPhase("result"),
-      600 + FLIP_DURATION,
-    );
+    const t2 = setTimeout(() => setPhase("result"), 600 + FLIP_DURATION);
     const t3 = setTimeout(
       () => setPhase("choose"),
       600 + FLIP_DURATION + RESULT_PAUSE,

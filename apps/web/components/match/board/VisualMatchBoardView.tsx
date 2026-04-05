@@ -14,12 +14,14 @@ const sessionStatusLabels: Record<string, string> = {
   ACTIVE: "En cours",
   FINISHED: "Terminé",
 };
+
 import type {
   OnlineMatchLogEntry,
   SanitizedGameState,
 } from "@/types/match-online";
 import { ActionBar } from "./ActionBar";
 import { AttackPanel } from "./AttackPanel";
+import { CoinFlipOverlay } from "./CoinFlipOverlay";
 import { HandBar } from "./HandBar";
 import { PauseMenu } from "./PauseMenu";
 import { PlayerField } from "./PlayerField";
@@ -259,11 +261,12 @@ export function VisualMatchBoardView({
           </div>
         ) : null}
 
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center px-2 pb-2 pt-4 sm:px-4 lg:pt-0"
-        >
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-2 pb-2 pt-4 sm:px-4 lg:pt-0">
           <div className="relative w-full max-w-5xl">
-            <div className="mx-auto w-full max-w-4xl origin-center scale-[0.72] sm:scale-[0.82] lg:scale-[0.94] xl:scale-100" style={{ perspective: "800px" }}>
+            <div
+              className="mx-auto w-full max-w-4xl origin-center scale-[0.72] sm:scale-[0.82] lg:scale-[0.94] xl:scale-100"
+              style={{ perspective: "800px" }}
+            >
               {/* Board surface */}
               <div className="relative space-y-3 overflow-clip rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95),0_-4px_30px_-10px_rgba(6,182,212,0.08)] sm:px-6 sm:py-5 [transform:rotateX(8deg)]">
                 {/* Mat texture - hex pattern */}
@@ -475,13 +478,20 @@ export function VisualMatchBoardView({
       </div>
 
       {/* Prompt overlay */}
-      {pendingPrompt && (
-        <PromptOverlay
-          prompt={pendingPrompt}
-          isBusy={isBusy}
-          onRespond={onRespondPrompt}
-        />
-      )}
+      {pendingPrompt &&
+        (pendingPrompt.type === "CHOOSE_FIRST_PLAYER" ? (
+          <CoinFlipOverlay
+            prompt={pendingPrompt}
+            isBusy={isBusy}
+            onRespond={onRespondPrompt}
+          />
+        ) : (
+          <PromptOverlay
+            prompt={pendingPrompt}
+            isBusy={isBusy}
+            onRespond={onRespondPrompt}
+          />
+        ))}
 
       {/* ═══════════ VICTORY / DEFEAT OVERLAY ═══════════ */}
       <AnimatePresence>
