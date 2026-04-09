@@ -11,8 +11,8 @@ import {
   TrainingDifficulty,
   TrainingMatchSessionStatus,
 } from "../entities/training-match-session.entity";
-import { TRAINING_AI_PLAYER_ID } from "./training-match.types";
 import { TrainingMatchService } from "./training-match.service";
+import { TRAINING_AI_PLAYER_ID } from "./training-match.types";
 
 const HUMAN_PLAYER_ID = "12";
 
@@ -127,6 +127,10 @@ describe("TrainingMatchService", () => {
     findOne: jest.Mock;
     find: jest.Mock;
   };
+  let savedDeckRepository: {
+    findOne: jest.Mock;
+    createQueryBuilder: jest.Mock;
+  };
   let playerRepository: {
     findOne: jest.Mock;
   };
@@ -163,6 +167,15 @@ describe("TrainingMatchService", () => {
       findOne: jest.fn(),
       find: jest.fn(),
     };
+    savedDeckRepository = {
+      findOne: jest.fn(),
+      createQueryBuilder: jest.fn(() => ({
+        innerJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([]),
+      })),
+    };
     playerRepository = {
       findOne: jest.fn(),
     };
@@ -181,6 +194,7 @@ describe("TrainingMatchService", () => {
     service = new TrainingMatchService(
       trainingSessionRepository as any,
       deckRepository as any,
+      savedDeckRepository as any,
       playerRepository as any,
       onlinePlaySupportService as any,
       trainingAiService as any,

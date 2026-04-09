@@ -15,12 +15,12 @@ import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { PromptResponse } from "../engine/models/Prompt";
-import { MatchService } from "../match.service";
 import { Match, MatchStatus } from "../entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,
 } from "../entities/online-match-session.entity";
+import { MatchService } from "../match.service";
 import {
   DeckEligibilityResult,
   MatchParticipantSlot,
@@ -102,9 +102,11 @@ export class MatchOnlineService {
 
     if (deckId) {
       const deck = await this.loadOwnedDeck(deckId, user.id);
+      const savedIds = await this.loadSavedDeckIds(user.id);
       const eligibility = this.onlinePlaySupportService.evaluateDeckEligibility(
         deck,
         user.id,
+        new Set(savedIds),
       );
       if (!eligibility.eligible) {
         throw new BadRequestException(
@@ -454,24 +456,56 @@ export class MatchOnlineService {
   }
 
   private async loadUserDecks(userId: number): Promise<Deck[]> {
+    const savedIds = await this.loadSavedDeckIds(userId);
     return this.deckRepository.find({
-      where: { user: { id: userId } },
+      where:
+        savedIds.length > 0
+          ? [{ user: { id: userId } }, { id: In(savedIds) }]
+          : { user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
       order: { id: "ASC" },
     });
   }
 
+  private async loadSavedDeckIds(userId: number): Promise<number[]> {
+    const rows = await this.savedDeckRepository
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .innerJoin("savedDeck.deck", "deck")
+      .select("deck.id", "deckId")
+      .where("savedUser.id = :userId", { userId })
+      .getRawMany<{ deckId: number }>();
+    return rows.map((row) => Number(row.deckId));
+  }
+
   private async loadOwnedDeck(deckId: number, userId: number): Promise<Deck> {
-    const deck = await this.deckRepository.findOne({
+    const ownedDeck = await this.deckRepository.findOne({
       where: { id: deckId, user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
     });
 
-    if (!deck) {
+    if (ownedDeck) {
+      return ownedDeck;
+    }
+
+    const savedEntry = await this.savedDeckRepository.findOne({
+      where: { user: { id: userId }, deck: { id: deckId } },
+    });
+
+    if (!savedEntry) {
       throw new NotFoundException("Deck not found");
     }
 
-    return deck;
+    const savedDeck = await this.deckRepository.findOne({
+      where: { id: deckId },
+      relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
+    });
+
+    if (!savedDeck) {
+      throw new NotFoundException("Deck not found");
+    }
+
+    return savedDeck;
   }
 
   private async loadDeckForSession(deckId: number): Promise<Deck> {

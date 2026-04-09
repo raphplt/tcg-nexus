@@ -14,18 +14,18 @@ import {
 } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import {
-  EligibleDeckSummary,
-  DeckEligibilityReason,
-} from "./online-match.types";
-import {
-  ONLINE_SUPPORTED_BASIC_ENERGY_NAMES,
   getOnlineSupportedCardDefinition,
   isOnlineSupportedCard,
   normalizeOnlineCardName,
+  ONLINE_SUPPORTED_BASIC_ENERGY_NAMES,
 } from "./online-card-registry";
 import {
-  ReferenceOnlineDeck,
+  DeckEligibilityReason,
+  EligibleDeckSummary,
+} from "./online-match.types";
+import {
   REFERENCE_ONLINE_DECKS,
+  ReferenceOnlineDeck,
 } from "./reference-online-decks";
 
 export interface OnlineGamePlayerConfig {

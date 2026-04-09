@@ -20,8 +20,8 @@ import {
   CasualMatchSession,
   CasualMatchSessionStatus,
 } from "../entities/casual-match-session.entity";
-import { OnlinePlaySupportService } from "../online/online-play-support.service";
 import { OnlineMatchLogEntry } from "../online/online-match.types";
+import { OnlinePlaySupportService } from "../online/online-play-support.service";
 import {
   CasualActionResult,
   CasualLobbyView,

@@ -11,6 +11,7 @@ import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
 import { User } from "../../user/entities/user.entity";
+import { CreateTrainingMatchDto } from "../dto/create-training-match.dto";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GamePhase } from "../engine/models/enums";
@@ -22,7 +23,7 @@ import {
   TrainingMatchWinnerSide,
 } from "../entities/training-match-session.entity";
 import { OnlinePlaySupportService } from "../online/online-play-support.service";
-import { CreateTrainingMatchDto } from "../dto/create-training-match.dto";
+import { TrainingAiService } from "./training-ai.service";
 import {
   TRAINING_AI_PLAYER_ID,
   TrainingActionResult,
@@ -30,7 +31,6 @@ import {
   TrainingSessionSummary,
   TrainingSessionView,
 } from "./training-match.types";
-import { TrainingAiService } from "./training-ai.service";
 
 @Injectable()
 export class TrainingMatchService {
