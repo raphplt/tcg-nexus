@@ -4,6 +4,7 @@ import { DeckController } from "./deck.controller";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Deck } from "./entities/deck.entity";
 import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { User } from "../user/entities/user.entity";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
@@ -18,6 +19,7 @@ import { Card } from "../card/entities/card.entity";
       Card,
       User,
       DeckShare,
+      SavedDeck,
     ]),
   ],
   controllers: [DeckController],

@@ -16,6 +16,7 @@ import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { DeckCardRole } from "../common/enums/deckCardRole";
 import { UserRole } from "src/common/enums/user";
 import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 import { ShareDeckDto } from "./dto/share-deck.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import {
@@ -46,6 +47,8 @@ export class DeckService {
     private readonly decksRepository: Repository<Deck>,
     @InjectRepository(DeckShare)
     private readonly deckShareRepo: Repository<DeckShare>,
+    @InjectRepository(SavedDeck)
+    private readonly savedDeckRepo: Repository<SavedDeck>,
   ) {}
   async createDeck(user: User, dto: CreateDeckDto) {
     const format = await this.formatRepo.findOneBy({ id: dto.formatId });
@@ -449,6 +452,107 @@ export class DeckService {
   async incrementViews(id: number) {
     await this.decksRepository.increment({ id }, "views", 1);
     return { message: "View incremented" };
+  }
+
+  async saveDeckToLibrary(deckId: number, user: User) {
+    const deck = await this.decksRepository.findOne({
+      where: { id: deckId },
+      relations: ["user"],
+    });
+    if (!deck) throw new NotFoundException("Deck introuvable");
+    if (deck.user?.id === user.id) {
+      throw new BadRequestException(
+        "Vous ne pouvez pas ajouter votre propre deck à votre bibliothèque",
+      );
+    }
+    if (!deck.isPublic) {
+      throw new ForbiddenException("Ce deck n'est pas public");
+    }
+
+    const existing = await this.savedDeckRepo.findOne({
+      where: { user: { id: user.id }, deck: { id: deckId } },
+    });
+    if (existing) {
+      return { saved: true, alreadySaved: true };
+    }
+
+    const savedDeck = this.savedDeckRepo.create({ user, deck });
+    await this.savedDeckRepo.save(savedDeck);
+    return { saved: true, alreadySaved: false };
+  }
+
+  async removeDeckFromLibrary(deckId: number, user: User) {
+    const result = await this.savedDeckRepo.delete({
+      user: { id: user.id },
+      deck: { id: deckId },
+    });
+    if (!result.affected) {
+      throw new NotFoundException("Ce deck n'est pas dans votre bibliothèque");
+    }
+    return { saved: false };
+  }
+
+  async findSavedDecks(user: User, params: FindAllDecksParams = {}) {
+    const {
+      formatId = 0,
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      search,
+    } = params;
+
+    const qb = this.savedDeckRepo
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .leftJoinAndSelect("savedDeck.deck", "deck")
+      .leftJoinAndSelect("deck.user", "user")
+      .leftJoinAndSelect("deck.format", "format")
+      .leftJoinAndSelect("deck.coverCard", "coverCard")
+      .leftJoinAndSelect("coverCard.pokemonDetails", "coverCardDetails")
+      .leftJoinAndSelect("deck.cards", "cards")
+      .leftJoinAndSelect("cards.card", "card")
+      .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
+      .where("savedUser.id = :userId", { userId: user.id });
+
+    if (formatId !== 0) {
+      qb.andWhere("format.id = :formatId", { formatId });
+    }
+    if (search) {
+      qb.andWhere("LOWER(deck.name) LIKE LOWER(:search)", {
+        search: `%${search}%`,
+      });
+    }
+
+    const orderColumn =
+      sortBy === "format.type"
+        ? "format.type"
+        : sortBy === "createdAt"
+          ? "savedDeck.createdAt"
+          : `deck.${sortBy}`;
+
+    const paginated = await PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      orderColumn,
+      sortOrder,
+    );
+
+    return {
+      data: paginated.data.map((entry) => entry.deck),
+      meta: paginated.meta,
+    };
+  }
+
+  async findSavedDeckIds(user: User): Promise<number[]> {
+    const rows = await this.savedDeckRepo
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .innerJoin("savedDeck.deck", "deck")
+      .select("deck.id", "deckId")
+      .where("savedUser.id = :userId", { userId: user.id })
+      .getRawMany<{ deckId: number }>();
+    return rows.map((r) => Number(r.deckId));
   }
 
   private generateShareCode(): string {

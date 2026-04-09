@@ -125,4 +125,26 @@ export const decksService = {
   ): Promise<{ deck: Deck; warnings?: string[] }> {
     return authedFetch("POST", "/deck/import-json", { data });
   },
+
+  async getSavedDecksPaginated(
+    params: DecksQueryParams = {},
+  ): Promise<PaginatedResult<Deck>> {
+    return fetcher<PaginatedResult<Deck>>("/deck/saved", { params });
+  },
+
+  async getSavedDeckIds(): Promise<number[]> {
+    return authedFetch("GET", "/deck/saved/ids");
+  },
+
+  async saveDeckToLibrary(
+    deckId: number,
+  ): Promise<{ saved: boolean; alreadySaved?: boolean }> {
+    return authedFetch("POST", `/deck/${deckId}/save`);
+  },
+
+  async removeDeckFromLibrary(
+    deckId: number,
+  ): Promise<{ saved: boolean }> {
+    return authedFetch("DELETE", `/deck/${deckId}/save`);
+  },
 };

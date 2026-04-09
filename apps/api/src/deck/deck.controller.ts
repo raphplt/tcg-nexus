@@ -52,6 +52,43 @@ export class DeckController {
     return this.deckService.findAllFromUser(user, query);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get("/saved")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Lister les decks de la bibliothèque de l'utilisateur" })
+  findSavedDecks(
+    @CurrentUser() user: User,
+    @Query() query: FindAllDecksParams,
+  ) {
+    return this.deckService.findSavedDecks(user, query);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get("/saved/ids")
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: "Récupérer les IDs des decks sauvegardés en bibliothèque",
+  })
+  findSavedDeckIds(@CurrentUser() user: User) {
+    return this.deckService.findSavedDeckIds(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/save")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Ajouter un deck public à sa bibliothèque" })
+  saveDeck(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.deckService.saveDeckToLibrary(+id, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(":id/save")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Retirer un deck de sa bibliothèque" })
+  unsaveDeck(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.deckService.removeDeckFromLibrary(+id, user);
+  }
+
   @Public()
   @Get("export/:id")
   @ApiOperation({ summary: "Exporter un deck au format JSON" })
