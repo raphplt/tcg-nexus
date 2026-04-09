@@ -1,12 +1,16 @@
 import { LoginRequest, RegisterRequest, User } from "@/types/auth";
-import { clearRefreshTimer, scheduleRefresh, secureApi } from "@/utils/fetch";
+import { secureApi } from "@/utils/fetch";
+
+export interface AuthSessionResponse {
+  user: User;
+  /** Expiration absolue du access token en ms Unix (source de vérité côté serveur). */
+  accessTokenExpiresAt?: number;
+}
 
 export const authService = {
-  scheduleRefresh,
-
-  async login(credentials: LoginRequest): Promise<{ user: User }> {
+  async login(credentials: LoginRequest): Promise<AuthSessionResponse> {
     const { rememberMe, ...loginPayload } = credentials;
-    const response = await secureApi.post<{ user: User }>(
+    const response = await secureApi.post<AuthSessionResponse>(
       "/auth/login",
       loginPayload,
       {
@@ -16,16 +20,14 @@ export const authService = {
       },
     );
 
-    scheduleRefresh(Date.now() + 14 * 60 * 1000);
-
     return response.data;
   },
 
   async register(
     userData: RegisterRequest,
     rememberMe = false,
-  ): Promise<{ user: User }> {
-    const response = await secureApi.post<{ user: User }>(
+  ): Promise<AuthSessionResponse> {
+    const response = await secureApi.post<AuthSessionResponse>(
       "/auth/register",
       userData,
       {
@@ -35,13 +37,10 @@ export const authService = {
       },
     );
 
-    scheduleRefresh(Date.now() + 14 * 60 * 1000);
-
     return response.data;
   },
 
   async logout(): Promise<void> {
-    clearRefreshTimer();
     await secureApi.post("/auth/logout");
   },
 

@@ -37,12 +37,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // L'intercepteur axios de secureApi tentera automatiquement un refresh
+        // sur 401 puis rejouera la requête. On n'a donc rien à faire ici :
+        // soit getProfile réussit (directement ou après refresh), soit il
+        // rejette définitivement et on est non authentifié.
         const userData = await authService.getProfile();
         setUser(userData);
-
-        if (userData && typeof window !== "undefined") {
-          authService.scheduleRefresh(Date.now() + 14 * 60 * 1000);
-        }
       } catch (error: any) {
         if (error?.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);

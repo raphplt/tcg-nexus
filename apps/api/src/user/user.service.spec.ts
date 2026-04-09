@@ -158,20 +158,55 @@ describe("UserService", () => {
     ).rejects.toThrow(ConflictException);
   });
 
-  it("should update refresh token hashing when provided", async () => {
+  it("should update refresh token and move previous to grace window", async () => {
+    repo.findOne.mockResolvedValueOnce({
+      id: 1,
+      refreshToken: "previousHashed",
+    });
     repo.update.mockResolvedValue({ affected: 1 });
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    const before = Date.now();
     await service.updateRefreshToken(1, "token");
-    expect(repo.update).toHaveBeenCalledWith(1, { refreshToken: "hashed" });
-    logSpy.mockRestore();
+    const after = Date.now();
+
+    expect(repo.update).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        refreshToken: "hashed",
+        previousRefreshToken: "previousHashed",
+      }),
+    );
+    const updateCall = repo.update.mock.calls[0][1];
+    expect(updateCall.previousRefreshTokenExpiresAt).toBeInstanceOf(Date);
+    expect(updateCall.previousRefreshTokenExpiresAt.getTime()).toBeGreaterThanOrEqual(
+      before + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS,
+    );
+    expect(updateCall.previousRefreshTokenExpiresAt.getTime()).toBeLessThanOrEqual(
+      after + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS,
+    );
   });
 
-  it("should clear refresh token when null", async () => {
+  it("should not set a previous token on first refresh attribution", async () => {
+    repo.findOne.mockResolvedValueOnce({ id: 1, refreshToken: null });
     repo.update.mockResolvedValue({ affected: 1 });
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+    await service.updateRefreshToken(1, "token");
+
+    expect(repo.update).toHaveBeenCalledWith(1, {
+      refreshToken: "hashed",
+      previousRefreshToken: null,
+      previousRefreshTokenExpiresAt: null,
+    });
+  });
+
+  it("should fully clear refresh tokens (current and previous) when null", async () => {
+    repo.update.mockResolvedValue({ affected: 1 });
     await service.updateRefreshToken(1, null);
-    expect(repo.update).toHaveBeenCalledWith(1, { refreshToken: null });
-    logSpy.mockRestore();
+    expect(repo.update).toHaveBeenCalledWith(1, {
+      refreshToken: null,
+      previousRefreshToken: null,
+      previousRefreshTokenExpiresAt: null,
+    });
   });
 
   it("should remove user", async () => {

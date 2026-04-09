@@ -259,7 +259,49 @@ describe("AuthService", () => {
       const result = await service.refreshTokens(1, "validrefreshtoken");
 
       expect(result.accessToken).toBe("newtoken");
-      expect(userService.updateRefreshToken).toHaveBeenCalled();
+      expect(result.refreshToken).toBe("newtoken");
+      expect(typeof result.accessTokenExpiresAt).toBe("number");
+      expect(result.accessTokenExpiresAt).toBeGreaterThan(Date.now());
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, "newtoken");
+    });
+
+    it("should accept the previous refresh token within the grace window", async () => {
+      mockUserService.findById.mockResolvedValue({
+        ...mockUser,
+        refreshToken: "currentHash",
+        previousRefreshToken: "previousHash",
+        previousRefreshTokenExpiresAt: new Date(Date.now() + 10_000),
+      });
+      // current → false, previous → true
+      (bcrypt.compare as jest.Mock)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
+      mockJwtService.signAsync.mockResolvedValue("newtoken");
+
+      const result = await service.refreshTokens(1, "racingtoken");
+
+      expect(result.accessToken).toBe("newtoken");
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, "newtoken");
+    });
+
+    it("should reject the previous refresh token after the grace window expires", async () => {
+      mockUserService.findById.mockResolvedValue({
+        ...mockUser,
+        refreshToken: "currentHash",
+        previousRefreshToken: "previousHash",
+        previousRefreshTokenExpiresAt: new Date(Date.now() - 1_000),
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      const warnSpy = jest
+        .spyOn((service as any).logger, "warn")
+        .mockImplementation(() => {});
+
+      await expect(service.refreshTokens(1, "staletoken")).rejects.toThrow(
+        UnauthorizedException,
+      );
+      // Replay suspecté → toutes les sessions sont nuked
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, null);
+      warnSpy.mockRestore();
     });
 
     it("should throw UnauthorizedException if user not found", async () => {
@@ -270,13 +312,18 @@ describe("AuthService", () => {
       );
     });
 
-    it("should throw UnauthorizedException if refresh token invalid", async () => {
+    it("should throw UnauthorizedException and nuke sessions if refresh token invalid", async () => {
       mockUserService.findById.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      const warnSpy = jest
+        .spyOn((service as any).logger, "warn")
+        .mockImplementation(() => {});
 
       await expect(service.refreshTokens(1, "invalidtoken")).rejects.toThrow(
         UnauthorizedException,
       );
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, null);
+      warnSpy.mockRestore();
     });
 
     it("should throw UnauthorizedException if user has no stored refresh token", async () => {
@@ -288,6 +335,8 @@ describe("AuthService", () => {
       await expect(service.refreshTokens(1, "token")).rejects.toThrow(
         UnauthorizedException,
       );
+      // Pas de refreshToken stocké → pas de nuke (rien à invalider)
+      expect(userService.updateRefreshToken).not.toHaveBeenCalled();
     });
   });
 

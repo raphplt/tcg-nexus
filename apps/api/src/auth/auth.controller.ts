@@ -67,6 +67,29 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  /**
+   * Calcule la maxAge à appliquer aux deux cookies d'auth.
+   *
+   * - Le cookie accessToken est légèrement plus long que le JWT lui-même pour
+   *   que l'intercepteur 401 puisse toujours déclencher un refresh même quand
+   *   le JWT vient juste d'expirer (sinon le navigateur supprimerait le cookie
+   *   avant qu'on ait l'occasion d'agir).
+   * - Le cookie refreshToken vit aussi longtemps que le JWT refresh quand
+   *   `rememberMe=true`. Sinon on retourne `undefined` → cookie de session,
+   *   supprimé à la fermeture du navigateur.
+   */
+  private getCookieMaxAges(rememberMe: boolean): {
+    accessTokenMaxAge: number;
+    refreshTokenMaxAge: number | undefined;
+  } {
+    const accessTtl = this.authService.getAccessTokenTtlMs();
+    const refreshTtl = this.authService.getRefreshTokenTtlMs();
+    return {
+      accessTokenMaxAge: refreshTtl > accessTtl ? refreshTtl : accessTtl,
+      refreshTokenMaxAge: rememberMe ? refreshTtl : undefined,
+    };
+  }
+
   @UseGuards(LocalAuthGuard)
   @UseGuardsDecorator(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60 } })
@@ -80,23 +103,23 @@ export class AuthController {
   ) {
     const rememberMe = req.headers["x-remember-me"] === "true";
     const result = await this.authService.login(loginDto);
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
     res.cookie(
       "accessToken",
       result.tokens.accessToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000,
-      ),
+      buildCookieOptions(req, accessTokenMaxAge),
     );
     res.cookie(
       "refreshToken",
       result.tokens.refreshToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
-      ),
+      buildCookieOptions(req, refreshTokenMaxAge),
     );
-    res.json({ user: result.user });
+    res.json({
+      user: result.user,
+      accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
+    });
     return;
   }
   @UseGuardsDecorator(ThrottlerGuard)
@@ -111,23 +134,23 @@ export class AuthController {
   ) {
     const rememberMe = req.headers["x-remember-me"] === "true";
     const result = await this.authService.register(registerDto);
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
     res.cookie(
       "accessToken",
       result.tokens.accessToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000,
-      ),
+      buildCookieOptions(req, accessTokenMaxAge),
     );
     res.cookie(
       "refreshToken",
       result.tokens.refreshToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
-      ),
+      buildCookieOptions(req, refreshTokenMaxAge),
     );
-    res.json({ user: result.user });
+    res.json({
+      user: result.user,
+      accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
+    });
     return;
   }
 
@@ -150,23 +173,23 @@ export class AuthController {
       user.id,
       user.refreshToken,
     );
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
     res.cookie(
       "accessToken",
       tokens.accessToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 7 * 24 * 60 * 60 * 1000 : 15 * 60 * 1000,
-      ),
+      buildCookieOptions(req, accessTokenMaxAge),
     );
     res.cookie(
       "refreshToken",
       tokens.refreshToken,
-      buildCookieOptions(
-        req,
-        rememberMe ? 30 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000,
-      ),
+      buildCookieOptions(req, refreshTokenMaxAge),
     );
-    res.json({ success: true });
+    res.json({
+      success: true,
+      accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+    });
     return;
   }
 

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
 import { NEXT_PUBLIC_API_URL } from "./variables";
 
 export const API_BASE_URL =
@@ -22,103 +22,77 @@ export const secureApi = axios.create({
   withCredentials: true,
 });
 
-// --- Intercepteur de refresh token sur secureApi ---
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (error?: any) => void;
-}> = [];
+// ---------------------------------------------------------------------------
+// Intercepteur de refresh — filet de sécurité
+//
+// Principes :
+// 1. Le refresh "proactif" côté client a été retiré : il s'appuyait sur un
+//    setTimeout throttlé quand l'onglet passait en arrière-plan, ce qui laissait
+//    l'utilisateur avec un token expiré. Le refresh est désormais piloté par le
+//    middleware Next.js (pour les navigations) et par cet intercepteur (pour
+//    les requêtes XHR qui reçoivent un 401).
+// 2. Une seule Promise `refreshPromise` sert de mutex naturel : toutes les
+//    requêtes qui reçoivent un 401 en même temps attendent le même refresh. Pas
+//    de file d'attente manuelle, pas d'état dupliqué.
+// 3. Les routes d'auth (`/auth/login`, `/auth/register`, `/auth/logout`,
+//    `/auth/refresh`) ne déclenchent jamais de refresh automatique sur 401,
+//    sinon on s'enferme dans des boucles.
+// ---------------------------------------------------------------------------
 
-const processQueue = (error: any) => {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) {
-      reject(error);
-    } else {
-      resolve();
-    }
-  });
-  failedQueue = [];
-};
+type RetriableConfig = AxiosRequestConfig & { _retry?: boolean };
 
-let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+const AUTH_ROUTES_SKIPPING_REFRESH = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/logout",
+  "/auth/refresh",
+];
 
-const clearRefreshTimer = () => {
-  if (refreshTimer) {
-    clearTimeout(refreshTimer);
-    refreshTimer = null;
+let refreshPromise: Promise<void> | null = null;
+
+/**
+ * Déclenche un refresh et partage la Promise en cours entre tous les appelants
+ * concurrents. Remise à null dès que la requête se termine (succès ou échec),
+ * pour que le prochain 401 puisse retenter.
+ */
+const refreshOnce = (): Promise<void> => {
+  if (!refreshPromise) {
+    refreshPromise = secureApi
+      .post("/auth/refresh")
+      .then(() => undefined)
+      .finally(() => {
+        refreshPromise = null;
+      });
   }
+  return refreshPromise;
 };
-
-export const scheduleRefresh = (tokenExpirationTime: number) => {
-  clearRefreshTimer();
-
-  const refreshTime = Math.max(
-    tokenExpirationTime - Date.now() - 5 * 60 * 1000,
-    2 * 60 * 1000,
-  );
-
-  refreshTimer = setTimeout(async () => {
-    try {
-      await secureApi.post("/auth/refresh");
-      scheduleRefresh(Date.now() + 12 * 60 * 1000);
-    } catch (error) {
-      console.error("Proactive refresh failed:", error);
-      clearRefreshTimer();
-    }
-  }, refreshTime);
-};
-
-export { clearRefreshTimer };
 
 secureApi.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetriableConfig | undefined;
 
-    const skipRefreshRoutes = [
-      "/auth/login",
-      "/auth/register",
-      "/auth/logout",
-      "/auth/refresh",
-    ];
-    const shouldSkipRefresh = skipRefreshRoutes.some((route) =>
-      originalRequest.url?.includes(route),
-    );
-
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !shouldSkipRefresh
-    ) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then(() => {
-            return secureApi(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        await secureApi.post("/auth/refresh");
-        scheduleRefresh(Date.now() + 14 * 60 * 1000);
-        processQueue(null);
-        return secureApi(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError);
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+    if (!originalRequest || error.response?.status !== 401) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    const url = originalRequest.url || "";
+    const isAuthRoute = AUTH_ROUTES_SKIPPING_REFRESH.some((route) =>
+      url.includes(route),
+    );
+    if (isAuthRoute || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      await refreshOnce();
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
+    }
+
+    return secureApi(originalRequest);
   },
 );
 

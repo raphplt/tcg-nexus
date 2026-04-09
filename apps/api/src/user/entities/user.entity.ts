@@ -65,6 +65,14 @@ export class User {
   @Exclude()
   refreshToken: string | null;
 
+  @Column({ type: "varchar", nullable: true })
+  @Exclude()
+  previousRefreshToken: string | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  @Exclude()
+  previousRefreshTokenExpiresAt: Date | null;
+
   // Relations
   @OneToOne(
     () => Player,

@@ -125,20 +125,46 @@ export class UserService {
     return this.findOne(id);
   }
 
+  /**
+   * Met à jour le refresh token d'un utilisateur.
+   *
+   * Quand un nouveau token est fourni, l'ancien hash est conservé dans
+   * `previousRefreshToken` pendant `REFRESH_TOKEN_GRACE_WINDOW_MS` afin
+   * d'absorber les courses entre plusieurs refresh concurrents (par exemple
+   * le middleware SSR et l'intercepteur XHR qui peuvent tirer en parallèle).
+   */
   async updateRefreshToken(
     userId: number,
     refreshToken: string | null,
   ): Promise<void> {
-    const updateData: { refreshToken?: string | null } = {};
-
-    if (refreshToken) {
-      updateData.refreshToken = await bcrypt.hash(refreshToken, 10);
-    } else {
-      updateData.refreshToken = null;
+    if (!refreshToken) {
+      await this.userRepository.update(userId, {
+        refreshToken: null,
+        previousRefreshToken: null,
+        previousRefreshTokenExpiresAt: null,
+      });
+      return;
     }
 
-    await this.userRepository.update(userId, updateData);
+    const existing = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ["id", "refreshToken"],
+    });
+
+    const hashed = await bcrypt.hash(refreshToken, 10);
+    const previousHash = existing?.refreshToken ?? null;
+    const previousExpiresAt = previousHash
+      ? new Date(Date.now() + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS)
+      : null;
+
+    await this.userRepository.update(userId, {
+      refreshToken: hashed,
+      previousRefreshToken: previousHash,
+      previousRefreshTokenExpiresAt: previousExpiresAt,
+    });
   }
+
+  static readonly REFRESH_TOKEN_GRACE_WINDOW_MS = 30 * 1000;
 
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);

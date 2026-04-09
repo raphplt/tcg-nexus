@@ -569,7 +569,15 @@ export class SeedService {
       typeof import("@faker-js/faker")
     >);
     const usersData: Array<
-      Omit<User, "id" | "createdAt" | "updatedAt" | "refreshToken">
+      Omit<
+        User,
+        | "id"
+        | "createdAt"
+        | "updatedAt"
+        | "refreshToken"
+        | "previousRefreshToken"
+        | "previousRefreshTokenExpiresAt"
+      >
     > = [
       {
         email: "test1@test.com",
