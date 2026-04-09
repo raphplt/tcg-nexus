@@ -3,6 +3,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './user/user.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
@@ -33,11 +34,13 @@ import { UserCartModule } from './user_cart/user_cart.module';
 import { FaqModule } from './faq/faq.module';
 import { BadgeModule } from './badge/badge.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { ChallengeModule } from './challenge/challenge.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -86,7 +89,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     UserCartModule,
     FaqModule,
     BadgeModule,
-    DashboardModule
+    DashboardModule,
+    ChallengeModule
   ],
   controllers: [AppController],
   providers: [

@@ -28,6 +28,7 @@ import {
   Shield,
   User,
   LogIn,
+  Target,
 } from "lucide-react";
 
 interface NavItem {
@@ -48,6 +49,7 @@ const mainNavItems: NavItem[] = [
 const userNavItems: NavItem[] = [
   { label: "Collection", href: "/collection", icon: FolderHeart, requireAuth: true },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requireAuth: true },
+  { label: "Défis", href: "/challenges", icon: Target, requireAuth: true },
   { label: "Panier", href: "/cart", icon: ShoppingCart, requireAuth: true },
 ];
 

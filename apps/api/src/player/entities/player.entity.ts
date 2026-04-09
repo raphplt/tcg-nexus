@@ -1,5 +1,6 @@
 import {
   Entity,
+  Column,
   PrimaryGeneratedColumn,
   ManyToMany,
   OneToMany,
@@ -15,6 +16,12 @@ import { User } from 'src/user/entities/user.entity';
 export class Player {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ default: 0 })
+  xp: number;
+
+  @Column({ default: 1 })
+  level: number;
 
   @OneToOne(() => User, (user) => user.player)
   @JoinColumn()

@@ -19,11 +19,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
 import { AnalyzeDeckResultDto } from './dto/analyze-deck-result.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @ApiTags('decks')
 @Controller('deck')
 export class DeckController {
-  constructor(private readonly deckService: DeckService) {}
+  constructor(
+    private readonly deckService: DeckService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -48,8 +52,12 @@ export class DeckController {
 
   @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.deckService.findOneWithCards(+id);
+  async findOne(@Param('id') id: string, @CurrentUser() user?: User) {
+    const deck = await this.deckService.findOneWithCards(+id);
+    if (user?.id) {
+      this.eventEmitter.emit('action.VIEW_DECK', { userId: user.id });
+    }
+    return deck;
   }
 
   @Public()

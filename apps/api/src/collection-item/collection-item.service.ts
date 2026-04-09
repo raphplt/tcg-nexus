@@ -9,6 +9,7 @@ import {
   CardState,
   CardStateCode
 } from 'src/card-state/entities/card-state.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CollectionItemService {
@@ -26,7 +27,9 @@ export class CollectionItemService {
     private readonly userRepo: Repository<User>,
 
     @InjectRepository(CardState)
-    private readonly cardStateRepo: Repository<CardState>
+    private readonly cardStateRepo: Repository<CardState>,
+
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   /**
@@ -97,7 +100,9 @@ export class CollectionItemService {
       quantity: 1
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit('action.ADD_CARD', { userId: user.id });
+    return savedItem;
   }
 
   /**
@@ -160,7 +165,9 @@ export class CollectionItemService {
       quantity: 1
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit('action.ADD_CARD', { userId: user.id });
+    return savedItem;
   }
 
   /**
@@ -173,7 +180,7 @@ export class CollectionItemService {
     // Vérifier que la collection existe
     const collection = await this.collectionRepo.findOne({
       where: { id: collectionId },
-      relations: ['items', 'items.pokemonCard']
+      relations: ['items', 'items.pokemonCard', 'user']
     });
     if (!collection) throw new NotFoundException('Collection non trouvée');
 
@@ -209,6 +216,10 @@ export class CollectionItemService {
       quantity: 1
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit('action.ADD_CARD', { userId: collection.user.id });
+    }
+    return savedItem;
   }
 }
