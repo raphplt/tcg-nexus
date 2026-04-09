@@ -1,18 +1,18 @@
 "use client";
 
-import { use } from "react";
 import Image from "next/image";
+import { use } from "react";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useSealedProduct,
   useSealedProductListings,
 } from "@/hooks/useSealedProducts";
+import { useCurrencyStore } from "@/store/currency.store";
 import { sealedProductTypeLabels } from "@/types/sealed-product";
 import { getSealedImageUrl } from "@/utils/sealedImage";
-import { useCurrencyStore } from "@/store/currency.store";
 import SellSealedForm from "./_components/SellSealedForm";
 
 interface PageProps {

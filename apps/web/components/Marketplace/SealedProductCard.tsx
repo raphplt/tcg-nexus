@@ -5,10 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import {
-  SealedProduct,
-  sealedProductTypeLabels,
-} from "@/types/sealed-product";
+import { SealedProduct, sealedProductTypeLabels } from "@/types/sealed-product";
 import { getSealedImageUrl } from "@/utils/sealedImage";
 
 interface SealedProductCardProps {

@@ -1,12 +1,12 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { H1 } from "@/components/Shared/Titles";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
+import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { H1 } from "@/components/Shared/Titles";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSealedProducts } from "@/hooks/useSealedProducts";
 import {

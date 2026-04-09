@@ -1,6 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,10 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useParams, usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { marketplaceService } from "@/services/marketplace.service";
+import { pokemonCardService } from "@/services/pokemonCard.service";
 
 // Translations
 const translations = {

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  sealedProductService,
   SealedProductFilters,
+  sealedProductService,
 } from "@/services/sealed-product.service";
 
 export function useSealedProducts(filters: SealedProductFilters = {}) {

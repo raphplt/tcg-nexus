@@ -1,18 +1,18 @@
 "use client";
 
+import { ArrowRight, Flame, Package, Star, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
-import { H1, H2 } from "@/components/Shared/Titles";
 import { CardCard } from "@/components/Marketplace/CardCard";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
+import SetCard from "@/components/Marketplace/SetCard";
+import { CurrencySelector } from "@/components/Shared/CurrencySelector";
+import { H1, H2 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Flame, TrendingUp, Star, Package } from "lucide-react";
-import Link from "next/link";
-import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import SetCard from "@/components/Marketplace/SetCard";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
-import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 
 export default function MarketplaceHomePage() {
   const {
@@ -46,6 +46,12 @@ export default function MarketplaceHomePage() {
               <Link href="/marketplace/cards">
                 Explorer les cartes
                 <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/marketplace/sealed">
+                Produits scellés
+                <Package className="ml-2 w-4 h-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">

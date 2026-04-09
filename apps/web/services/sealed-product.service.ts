@@ -1,11 +1,11 @@
-import { authedFetch, fetcher } from "@/utils/fetch";
+import { Listing } from "@/types/listing";
 import { PaginatedResult, PaginationParams } from "@/types/pagination";
 import {
   SealedCondition,
   SealedProduct,
   SealedProductType,
 } from "@/types/sealed-product";
-import { Listing } from "@/types/listing";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface SealedProductFilters extends PaginationParams {
   setId?: string;
@@ -57,9 +57,13 @@ export const sealedProductService = {
     sealedProductId: string,
     sealedCondition: SealedCondition = SealedCondition.SEALED,
   ): Promise<unknown> {
-    return authedFetch("POST", `/collection-item/collection/${collectionId}/sealed`, {
-      data: { sealedProductId, sealedCondition },
-    });
+    return authedFetch(
+      "POST",
+      `/collection-item/collection/${collectionId}/sealed`,
+      {
+        data: { sealedProductId, sealedCondition },
+      },
+    );
   },
 
   async addToWishlist(

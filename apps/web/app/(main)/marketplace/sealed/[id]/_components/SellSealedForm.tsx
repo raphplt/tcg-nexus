@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -16,19 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { sealedProductService } from "@/services/sealed-product.service";
-import {
-  SealedCondition,
-  sealedConditionLabels,
-} from "@/types/sealed-product";
+import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { currencyOptions } from "@/utils/variables";
 
 interface SellSealedFormProps {
   sealedProductId: string;
 }
 
-export default function SellSealedForm({ sealedProductId }: SellSealedFormProps) {
+export default function SellSealedForm({
+  sealedProductId,
+}: SellSealedFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -74,7 +73,8 @@ export default function SellSealedForm({ sealedProductId }: SellSealedFormProps)
       setDescription("");
     } catch (err: any) {
       const message =
-        err?.response?.data?.message || "Erreur lors de la création de l'annonce.";
+        err?.response?.data?.message ||
+        "Erreur lors de la création de l'annonce.";
       toast.error(Array.isArray(message) ? message.join(", ") : message);
     } finally {
       setLoading(false);
