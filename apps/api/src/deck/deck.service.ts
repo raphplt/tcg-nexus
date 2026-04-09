@@ -1,30 +1,30 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from "@nestjs/common";
-import { CreateDeckDto } from "./dto/create-deck.dto";
-import { UpdateDeckDto } from "./dto/update-deck.dto";
-import { PaginationHelper } from "../helpers/pagination";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Deck } from "./entities/deck.entity";
-import { DeckCard } from "../deck-card/entities/deck-card.entity";
-import { User } from "../user/entities/user.entity";
-import { Card } from "../card/entities/card.entity";
-import { DeckFormat } from "../deck-format/entities/deck-format.entity";
-import { DeckCardRole } from "../common/enums/deckCardRole";
 import { UserRole } from "src/common/enums/user";
-import { DeckShare } from "./entities/deck-share.entity";
-import { SavedDeck } from "./entities/saved-deck.entity";
-import { ShareDeckDto } from "./dto/share-deck.dto";
-import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
+import { Repository } from "typeorm";
+import { Card } from "../card/entities/card.entity";
+import { DeckCardRole } from "../common/enums/deckCardRole";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { DeckCard } from "../deck-card/entities/deck-card.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { PaginationHelper } from "../helpers/pagination";
+import { User } from "../user/entities/user.entity";
 import {
   AnalyzeDeckResultDto,
   MissingCardSuggestionDto,
 } from "./dto/analyze-deck-result.dto";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
-import { BadRequestException } from "@nestjs/common";
+import { CreateDeckDto } from "./dto/create-deck.dto";
+import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
+import { ShareDeckDto } from "./dto/share-deck.dto";
+import { UpdateDeckDto } from "./dto/update-deck.dto";
+import { Deck } from "./entities/deck.entity";
+import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
@@ -791,12 +791,7 @@ export class DeckService {
   async exportDeck(id: number) {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: [
-        "format",
-        "cards",
-        "cards.card",
-        "cards.card.pokemonDetails",
-      ],
+      relations: ["format", "cards", "cards.card", "cards.card.pokemonDetails"],
     });
     if (!deck) throw new NotFoundException("Deck introuvable");
 

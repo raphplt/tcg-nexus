@@ -14,16 +14,10 @@ export class SavedDeck {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @ManyToOne(
-    () => User,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   user!: User;
 
-  @ManyToOne(
-    () => Deck,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => Deck, { onDelete: "CASCADE" })
   deck!: Deck;
 
   @CreateDateColumn()

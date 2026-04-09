@@ -6,6 +6,7 @@ import { Card } from "../card/entities/card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { Deck } from "./entities/deck.entity";
 import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 import { NotFoundException } from "@nestjs/common";
 import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 
@@ -34,6 +35,7 @@ describe("DeckService analyzeDeck", () => {
         { provide: getRepositoryToken(DeckFormat), useValue: {} },
         { provide: getRepositoryToken(Deck), useValue: deckRepo },
         { provide: getRepositoryToken(DeckShare), useValue: {} },
+        { provide: getRepositoryToken(SavedDeck), useValue: {} },
       ],
     }).compile();
 

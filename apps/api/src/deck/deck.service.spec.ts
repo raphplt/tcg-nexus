@@ -6,6 +6,7 @@ import { Card } from "../card/entities/card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { Deck } from "./entities/deck.entity";
 import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 import { NotFoundException, ForbiddenException } from "@nestjs/common";
 import { PaginationHelper } from "../helpers/pagination";
 import { DeckCardRole } from "../common/enums/deckCardRole";
@@ -19,6 +20,7 @@ describe("DeckService", () => {
   let deckFormatRepo: any;
   let deckRepo: any;
   let deckShareRepo: any;
+  let savedDeckRepo: any;
 
   const withPokemonDetails = <T extends Record<string, any>>(card: T) => ({
     ...card,
@@ -70,6 +72,14 @@ describe("DeckService", () => {
       findOneBy: jest.fn(),
     };
 
+    savedDeckRepo = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => data),
+      findOne: jest.fn(),
+      delete: jest.fn(),
+      createQueryBuilder: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeckService,
@@ -92,6 +102,10 @@ describe("DeckService", () => {
         {
           provide: getRepositoryToken(DeckShare),
           useValue: deckShareRepo,
+        },
+        {
+          provide: getRepositoryToken(SavedDeck),
+          useValue: savedDeckRepo,
         },
       ],
     }).compile();

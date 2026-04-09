@@ -1,10 +1,10 @@
 "use client";
 
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
-import { TopBar } from "./TopBar";
-import Footer from "./Footer";
 import { Toaster } from "react-hot-toast";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
+import Footer from "./Footer";
+import { TopBar } from "./TopBar";
 
 export default function SidebarLayout({
   children,
@@ -14,9 +14,11 @@ export default function SidebarLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <TopBar />
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
+          {children}
+        </div>
         <Footer />
       </SidebarInset>
       <Toaster />

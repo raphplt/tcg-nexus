@@ -1,9 +1,9 @@
-import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import { authedFetch, fetcher } from "@/utils/fetch";
-import { Deck } from "@/types/Decks";
-import { DeckCard } from "@/types/deck-cards";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
+import { Deck } from "@/types/Decks";
 import { DeckAnalysis } from "@/types/deck-analysis";
+import { DeckCard } from "@/types/deck-cards";
+import type { PaginatedResult, PaginationParams } from "@/types/pagination";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface DecksQueryParams extends PaginationParams {
   search?: string;
@@ -142,9 +142,7 @@ export const decksService = {
     return authedFetch("POST", `/deck/${deckId}/save`);
   },
 
-  async removeDeckFromLibrary(
-    deckId: number,
-  ): Promise<{ saved: boolean }> {
+  async removeDeckFromLibrary(deckId: number): Promise<{ saved: boolean }> {
     return authedFetch("DELETE", `/deck/${deckId}/save`);
   },
 };
