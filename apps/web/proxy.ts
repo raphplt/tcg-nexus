@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PROTECTED_ROUTES, AUTH_ROUTES } from "@/utils/constants";
+import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/utils/constants";
 
 type AuthCheckResult = {
   authenticated: boolean;
