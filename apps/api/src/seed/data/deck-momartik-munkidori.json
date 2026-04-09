@@ -8,28 +8,98 @@
     { "tcgDexId": "sv04-003", "name": "Momartik-ex", "qty": 1, "role": "main" },
     { "tcgDexId": "sv06-095", "name": "Fortusimia", "qty": 4, "role": "main" },
     { "tcgDexId": "sv08.5-004", "name": "Rozbouton", "qty": 3, "role": "main" },
-    { "tcgDexId": "sv10-093", "name": "Simularbre de Luth", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "sv10-093",
+      "name": "Simularbre de Luth",
+      "qty": 1,
+      "role": "main"
+    },
     { "tcgDexId": "sv06-110", "name": "Dinglu", "qty": 1, "role": "main" },
     { "tcgDexId": "sv10-010", "name": "Shaymin", "qty": 1, "role": "main" },
-    { "tcgDexId": "me01-119", "name": "Détermination de Lilie", "qty": 4, "role": "main" },
+    {
+      "tcgDexId": "me01-119",
+      "name": "Détermination de Lilie",
+      "qty": 4,
+      "role": "main"
+    },
     { "tcgDexId": "sv02-185", "name": "Mashynn", "qty": 4, "role": "main" },
     { "tcgDexId": "sv03-186", "name": "Pepper", "qty": 3, "role": "main" },
     { "tcgDexId": "sv10.5w-084", "name": "Ludvina", "qty": 1, "role": "main" },
-    { "tcgDexId": "sv07-135", "name": "Trompette de Verre", "qty": 3, "role": "main" },
-    { "tcgDexId": "sv01-186", "name": "Pokématos 3.0", "qty": 2, "role": "main" },
-    { "tcgDexId": "sv04-160", "name": "Attrape-Riposte", "qty": 2, "role": "main" },
-    { "tcgDexId": "sv05-144", "name": "Poffin Copain-Copain", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "sv07-135",
+      "name": "Trompette de Verre",
+      "qty": 3,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv01-186",
+      "name": "Pokématos 3.0",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv04-160",
+      "name": "Attrape-Riposte",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv05-144",
+      "name": "Poffin Copain-Copain",
+      "qty": 1,
+      "role": "main"
+    },
     { "tcgDexId": "me01-131", "name": "Hyper Ball", "qty": 1, "role": "main" },
-    { "tcgDexId": "sv01-172", "name": "Recherche d'Énergie", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "sv01-172",
+      "name": "Recherche d'Énergie",
+      "qty": 1,
+      "role": "main"
+    },
     { "tcgDexId": "sv02-188", "name": "Méga Canne", "qty": 1, "role": "main" },
-    { "tcgDexId": "sv06.5-061", "name": "Civière Nocturne", "qty": 1, "role": "main" },
-    { "tcgDexId": "sv06-163", "name": "Boîte à Secrets", "qty": 1, "role": "main" },
-    { "tcgDexId": "sv02-173", "name": "Amulette Bravoure", "qty": 3, "role": "main" },
-    { "tcgDexId": "sv04-177", "name": "Capsule Technique : Dés-Évolution", "qty": 2, "role": "main" },
+    {
+      "tcgDexId": "sv06.5-061",
+      "name": "Civière Nocturne",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv06-163",
+      "name": "Boîte à Secrets",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv02-173",
+      "name": "Amulette Bravoure",
+      "qty": 3,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv04-177",
+      "name": "Capsule Technique : Dés-Évolution",
+      "qty": 2,
+      "role": "main"
+    },
     { "tcgDexId": "me01-166", "name": "Ballon", "qty": 1, "role": "main" },
     { "tcgDexId": "sv02-171", "name": "Cuencia", "qty": 3, "role": "main" },
-    { "tcgDexId": "sv02-191", "name": "Énergie Lumineuse", "qty": 4, "role": "main" },
-    { "tcgDexId": "sv10.5b-086", "name": "Énergie Prisme", "qty": 2, "role": "main" },
-    { "tcgDexId": "sv06.5-098", "name": "Énergie Obscurité", "qty": 2, "role": "main" }
+    {
+      "tcgDexId": "sv02-191",
+      "name": "Énergie Lumineuse",
+      "qty": 4,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv10.5b-086",
+      "name": "Énergie Prisme",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv06.5-098",
+      "name": "Énergie Obscurité",
+      "qty": 2,
+      "role": "main"
+    }
   ]
 }

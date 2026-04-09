@@ -57,7 +57,11 @@ export class OnlinePlaySupportService {
     return preset;
   }
 
-  evaluateDeckEligibility(deck: Deck, userId?: number): EligibleDeckSummary {
+  evaluateDeckEligibility(
+    deck: Deck,
+    userId?: number,
+    savedDeckIds?: ReadonlySet<number> | number[],
+  ): EligibleDeckSummary {
     const reasons: DeckEligibilityReason[] = [];
     const mainboardCards = (deck.cards || []).filter(
       (deckCard) => deckCard.role === DeckCardRole.main,
@@ -67,7 +71,19 @@ export class OnlinePlaySupportService {
       0,
     );
 
-    if (typeof userId === "number" && deck.user?.id !== userId) {
+    const savedSet =
+      savedDeckIds instanceof Set
+        ? savedDeckIds
+        : Array.isArray(savedDeckIds)
+          ? new Set(savedDeckIds)
+          : null;
+    const isInLibrary = savedSet ? savedSet.has(deck.id) : false;
+
+    if (
+      typeof userId === "number" &&
+      deck.user?.id !== userId &&
+      !isInLibrary
+    ) {
       reasons.push({
         code: "NOT_OWNER",
         message: "You can only use your own decks for online play",
@@ -316,9 +332,7 @@ export class OnlinePlaySupportService {
         metadata: {
           coinFlipWinnerId,
           coinFlipWinnerName:
-            coinFlipWinnerId === playerA.playerId
-              ? playerA.name
-              : playerB.name,
+            coinFlipWinnerId === playerA.playerId ? playerA.name : playerB.name,
         },
       },
       setup: {

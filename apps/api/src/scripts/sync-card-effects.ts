@@ -46,7 +46,9 @@ async function main() {
       if (result.notFound.length <= 10) {
         result.notFound.forEach((id) => console.warn(`     - ${id}`));
       } else {
-        result.notFound.slice(0, 10).forEach((id) => console.warn(`     - ${id}`));
+        result.notFound
+          .slice(0, 10)
+          .forEach((id) => console.warn(`     - ${id}`));
         console.warn(`     ... and ${result.notFound.length - 10} more`);
       }
     }

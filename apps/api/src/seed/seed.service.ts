@@ -1481,8 +1481,7 @@ export class SeedService {
     const users = await this.userRepository.find();
     if (users.length === 0) return;
 
-    const owner =
-      users.find((u) => u.role === UserRole.ADMIN) ?? users[0];
+    const owner = users.find((u) => u.role === UserRole.ADMIN) ?? users[0];
     const formats = await this.seedDeckFormats();
     const standardFormat = formats.find((f) => f.type === "Standard");
     if (!standardFormat) return;

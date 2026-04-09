@@ -94,20 +94,16 @@ function detectTarget(text: string): TargetType {
 
   // ── Banc (plus spécifique → vérifié AVANT "tous les pokemon") ──
   if (
-    /chacun des pok[eé]mon de banc advers|tous les pok[eé]mon de banc advers/.test(t)
+    /chacun des pok[eé]mon de banc advers|tous les pok[eé]mon de banc advers/.test(
+      t,
+    )
   )
     return "ALL_OPPONENT_BENCH";
-  if (
-    /chacun de vos pok[eé]mon de banc|tous vos pok[eé]mon de banc/.test(t)
-  )
+  if (/chacun de vos pok[eé]mon de banc|tous vos pok[eé]mon de banc/.test(t))
     return "ALL_PLAYER_BENCH";
-  if (
-    /l'un des pok[eé]mon de banc advers|un pok[eé]mon de banc advers/.test(t)
-  )
+  if (/l'un des pok[eé]mon de banc advers|un pok[eé]mon de banc advers/.test(t))
     return "OPPONENT_BENCH";
-  if (
-    /l'un de vos pok[eé]mon de banc|un de vos pok[eé]mon de banc/.test(t)
-  )
+  if (/l'un de vos pok[eé]mon de banc|un de vos pok[eé]mon de banc/.test(t))
     return "PLAYER_BENCH";
 
   // ── Tous Pokémon d'un côté (après les cas "de Banc") ────────
@@ -117,7 +113,9 @@ function detectTarget(text: string): TargetType {
     return "ALL_PLAYER_POKEMON";
 
   // ── Sélectionnés ─────────────────────────────────────────────
-  if (/l'un de vos pok[eé]mon|d'un de vos pok[eé]mon|un de vos pok[eé]mon/.test(t))
+  if (
+    /l'un de vos pok[eé]mon|d'un de vos pok[eé]mon|un de vos pok[eé]mon/.test(t)
+  )
     return "SELECTED_OWN_POKEMON";
   if (/l'un des pok[eé]mon advers|un des pok[eé]mon advers/.test(t))
     return "SELECTED_OPPONENT_POKEMON";
@@ -154,7 +152,8 @@ function detectDuration(text: string): Duration {
   if (/pendant votre prochain tour/.test(t)) return "UNTIL_YOUR_NEXT_TURN";
   if (/jusqu'[aà] la fin de (ce|votre) tour/.test(t))
     return "UNTIL_END_OF_TURN";
-  if (/tant que (ce pok[eé]mon est|il est) actif/.test(t)) return "WHILE_ACTIVE";
+  if (/tant que (ce pok[eé]mon est|il est) actif/.test(t))
+    return "WHILE_ACTIVE";
   return "UNTIL_NEXT_OPPONENT_TURN";
 }
 
@@ -294,7 +293,12 @@ function trySpecialCondition(text: string): AnyEffect[] {
         if (poisonM) extra.poisonDamage = parseInt(poisonM[1]!);
       }
 
-      effects.push({ type: "APPLY_SPECIAL_CONDITION", condition, target, ...extra });
+      effects.push({
+        type: "APPLY_SPECIAL_CONDITION",
+        condition,
+        target,
+        ...extra,
+      });
     }
   }
 
@@ -340,7 +344,11 @@ function tryHeal(text: string): AnyEffect[] {
   }
 
   // "Soignez tous les dégâts" (ALL)
-  if (/soignez? tous les d[eé]g[aâ]ts?|retirez? tous les? marqueurs? de d[eé]g[aâ]ts?/i.test(t)) {
+  if (
+    /soignez? tous les d[eé]g[aâ]ts?|retirez? tous les? marqueurs? de d[eé]g[aâ]ts?/i.test(
+      t,
+    )
+  ) {
     const target = detectHealTarget(t);
     return [{ type: "HEAL", amount: "ALL", target }];
   }
@@ -361,8 +369,7 @@ function tryDamage(text: string): AnyEffect[] {
   if (isDynamic) return [];
 
   // Self-damage: "ce Pokémon s'inflige X dégâts"
-  const selfDmgM =
-    /ce pok[eé]mon s'inflige (\d+) d[eé]g[aâ]ts?/i.exec(t);
+  const selfDmgM = /ce pok[eé]mon s'inflige (\d+) d[eé]g[aâ]ts?/i.exec(t);
   if (selfDmgM) {
     effects.push({
       type: "DAMAGE",
@@ -382,9 +389,7 @@ function tryDamage(text: string): AnyEffect[] {
     // On ne génère DAMAGE que si la cible est non-standard
     if (
       target !== "OPPONENT_ACTIVE" ||
-      /[aà] chacun|[aà] tous|[aà] l'un|[aà] votre pok[eé]mon de banc/i.test(
-        t,
-      )
+      /[aà] chacun|[aà] tous|[aà] l'un|[aà] votre pok[eé]mon de banc/i.test(t)
     ) {
       effects.push({
         type: "DAMAGE",
@@ -400,8 +405,7 @@ function tryDamage(text: string): AnyEffect[] {
 /** PLACE_DAMAGE_COUNTERS */
 function tryPlaceDamageCounters(text: string): AnyEffect[] {
   const t = norm(text);
-  const m =
-    /placez? (\d+|\w+) marqueurs? de d[eé]g[aâ]ts? sur/i.exec(t);
+  const m = /placez? (\d+|\w+) marqueurs? de d[eé]g[aâ]ts? sur/i.exec(t);
   if (!m) return [];
 
   const amount = parseNumber(m[1]!);
@@ -434,12 +438,11 @@ function tryDynamicDamage(text: string): AnyEffect[] {
         extra.energyType = energyType;
       }
       // Parse maxCount: "(maximum N dégâts supplémentaires)"
-      const maxM =
-        /\(maximum (\d+) d[eé]g[aâ]ts? suppl[eé]mentaires?\)/i.exec(t);
+      const maxM = /\(maximum (\d+) d[eé]g[aâ]ts? suppl[eé]mentaires?\)/i.exec(
+        t,
+      );
       if (maxM) {
-        extra.maxCount = Math.floor(
-          parseInt(maxM[1]!) / amountPerUnit,
-        );
+        extra.maxCount = Math.floor(parseInt(maxM[1]!) / amountPerUnit);
       }
       effects.push({
         type: "DYNAMIC_DAMAGE",
@@ -453,8 +456,7 @@ function tryDynamicDamage(text: string): AnyEffect[] {
   }
 
   // Pattern -: "X dégâts de moins pour chaque ..."
-  const subM =
-    /(\d+) d[eé]g[aâ]ts? de moins pour chaque ([^.;]+)/i.exec(t);
+  const subM = /(\d+) d[eé]g[aâ]ts? de moins pour chaque ([^.;]+)/i.exec(t);
   if (subM) {
     const amountPerUnit = parseInt(subM[1]!);
     const sourceText = subM[2]!.toLowerCase();
@@ -502,7 +504,10 @@ function detectCountSource(
   const full = fullText.toLowerCase();
 
   // Énergie en surplus
-  if (/en plus du co[uû]t/.test(full) || /[eé]nergie.{0,40}en plus/.test(full)) {
+  if (
+    /en plus du co[uû]t/.test(full) ||
+    /[eé]nergie.{0,40}en plus/.test(full)
+  ) {
     return "EXTRA_ENERGY_ON_SELF";
   }
 
@@ -512,7 +517,11 @@ function detectCountSource(
   if (/marqueur.{0,20}d[eé]g[aâ]t/.test(t)) return "DAMAGE_COUNTERS_ON_SELF";
 
   // Énergie avec type spécifique
-  if (/[eé]nergie.{0,20}(feu|eau|plante|[eé]lectrique|psy|combat|obscurit[eé]|m[eé]tal|f[eé]e|dragon)/.test(t)) {
+  if (
+    /[eé]nergie.{0,20}(feu|eau|plante|[eé]lectrique|psy|combat|obscurit[eé]|m[eé]tal|f[eé]e|dragon)/.test(
+      t,
+    )
+  ) {
     if (/(d[eé]fenseur|cible|advers|sur lui)/.test(t))
       return "ENERGY_ON_TARGET_SPECIFIC";
     return "ENERGY_ON_SELF_SPECIFIC";
@@ -520,7 +529,8 @@ function detectCountSource(
 
   // Énergie générique
   if (/[eé]nergie/.test(t)) {
-    if (/(d[eé]fenseur|cible|advers|sur lui)/.test(t)) return "ENERGY_ON_TARGET";
+    if (/(d[eé]fenseur|cible|advers|sur lui)/.test(t))
+      return "ENERGY_ON_TARGET";
     return "ENERGY_ON_SELF";
   }
 
@@ -542,9 +552,11 @@ function detectCountSource(
   if (/carte.{0,20}d[eé]fausse/.test(t)) return "CARDS_IN_DISCARD_SELF";
 
   // Récompenses
-  if (/(r[eé]compense.{0,30}r[eé]cup[eé]r[eé]e.{0,30}advers|advers.{0,30}r[eé]cup[eé]r[eé]).{0,30}r[eé]compense/.test(
-    full,
-  ))
+  if (
+    /(r[eé]compense.{0,30}r[eé]cup[eé]r[eé]e.{0,30}advers|advers.{0,30}r[eé]cup[eé]r[eé]).{0,30}r[eé]compense/.test(
+      full,
+    )
+  )
     return "PRIZES_TAKEN_OPPONENT";
   if (/r[eé]compense.{0,30}r[eé]cup[eé]r[eé]/.test(t))
     return "PRIZES_TAKEN_SELF";
@@ -575,8 +587,7 @@ function tryDrawCard(text: string): AnyEffect[] {
 /** DRAW_UNTIL_HAND_SIZE */
 function tryDrawUntilHandSize(text: string): AnyEffect[] {
   const t = norm(text);
-  const m =
-    /piochez? jusqu'[aà] avoir (\d+|\w+) cartes? en main/i.exec(t);
+  const m = /piochez? jusqu'[aà] avoir (\d+|\w+) cartes? en main/i.exec(t);
   if (m) {
     return [{ type: "DRAW_UNTIL_HAND_SIZE", handSize: parseNumber(m[1]!) }];
   }
@@ -598,7 +609,11 @@ function trySearchDeck(text: string): AnyEffect[] {
 
   // Destination
   let destination: "HAND" | "BENCH" | "ATTACHED" = "HAND";
-  if (/placez?[- ]les? sur votre banc|mettez?[- ]les? sur votre banc/.test(t.toLowerCase()))
+  if (
+    /placez?[- ]les? sur votre banc|mettez?[- ]les? sur votre banc/.test(
+      t.toLowerCase(),
+    )
+  )
     destination = "BENCH";
   else if (
     /attachez?[- ]les?[- ][aà] ce pok[eé]mon|attache[- ][aà] ce pok[eé]mon/.test(
@@ -608,7 +623,8 @@ function trySearchDeck(text: string): AnyEffect[] {
     destination = "ATTACHED";
 
   const filter = extractSearchFilter(t);
-  const shuffleM = /m[eé]langez? ensuite votre deck|m[eé]langez? votre deck/i.test(t);
+  const shuffleM =
+    /m[eé]langez? ensuite votre deck|m[eé]langez? votre deck/i.test(t);
 
   const effect: AnyEffect = { type: "SEARCH_DECK", amount, destination };
   if (filter) effect.filter = filter;
@@ -634,7 +650,8 @@ function trySearchDiscard(text: string): AnyEffect[] {
   const t = norm(text);
   if (!/cherchez? dans votre (pile de )?d[eé]fausse/i.test(t)) return [];
 
-  const amountM = /cherchez? dans votre (?:pile de )?d[eé]fausse (\d+|\w+)/i.exec(t);
+  const amountM =
+    /cherchez? dans votre (?:pile de )?d[eé]fausse (\d+|\w+)/i.exec(t);
   const amount = amountM ? parseNumber(amountM[1]!) : 1;
 
   let destination: "HAND" | "BENCH" | "ATTACHED" | "TOP_DECK" = "HAND";
@@ -654,9 +671,7 @@ function trySearchDiscard(text: string): AnyEffect[] {
 /** DISCARD_ENERGY */
 function tryDiscardEnergy(text: string): AnyEffect[] {
   const t = norm(text);
-  if (
-    !/d[eé]faussez?.{0,30}[eé]nergie|d[eé]faussez?.{0,30}[eé]nergi/i.test(t)
-  )
+  if (!/d[eé]faussez?.{0,30}[eé]nergie|d[eé]faussez?.{0,30}[eé]nergi/i.test(t))
     return [];
 
   // Pas une énergie depuis le deck/défausse (c'est ATTACH)
@@ -696,8 +711,7 @@ function tryAttachEnergyFromDiscard(text: string): AnyEffect[] {
   const amount = amountM ? parseNumber(amountM[1]!) : 1;
   const energyType = detectEnergyType(text);
   const target = detectTarget(t);
-  const targetFinal =
-    target === "OPPONENT_ACTIVE" ? "SELF" : target; // default = SELF pour les attaches
+  const targetFinal = target === "OPPONENT_ACTIVE" ? "SELF" : target; // default = SELF pour les attaches
 
   const effect: AnyEffect = {
     type: "ATTACH_ENERGY_FROM_DISCARD",
@@ -748,9 +762,7 @@ function tryMoveEnergy(text: string): AnyEffect[] {
   let from = "SELF";
   if (/de votre banc|depuis votre banc/.test(t)) {
     from = "PLAYER_BENCH";
-  } else if (
-    /du pok[eé]mon actif advers|de l'actif advers/.test(t)
-  ) {
+  } else if (/du pok[eé]mon actif advers|de l'actif advers/.test(t)) {
     from = "OPPONENT_ACTIVE";
   } else if (/entre vos pok[eé]mon|comme vous le souhaitez/.test(t)) {
     from = "ANY";
@@ -802,8 +814,7 @@ function tryDiscardFromHand(text: string): AnyEffect[] {
   }
 
   // "Défaussez X cartes de votre main"
-  const selfM =
-    /d[eé]faussez? (\d+|\w+) cartes? de votre main/i.exec(t);
+  const selfM = /d[eé]faussez? (\d+|\w+) cartes? de votre main/i.exec(t);
   if (selfM) {
     return [
       {
@@ -895,9 +906,7 @@ function trySwitchOwn(text: string): AnyEffect[] {
 /** PREVENT_DAMAGE */
 function tryPreventDamage(text: string): AnyEffect[] {
   const t = norm(text);
-  if (
-    /ne subit aucun d[eé]g[aâ]t|ne re[cç]oit aucun d[eé]g[aâ]t/i.test(t)
-  ) {
+  if (/ne subit aucun d[eé]g[aâ]t|ne re[cç]oit aucun d[eé]g[aâ]t/i.test(t)) {
     const target = detectTarget(t);
     const finalTarget = target === "OPPONENT_ACTIVE" ? "SELF" : target;
     const duration = detectDuration(t);
@@ -1042,8 +1051,9 @@ function trySendToLostZone(text: string): AnyEffect[] {
 /** EXTRA_PRIZE */
 function tryExtraPrize(text: string): AnyEffect[] {
   const t = norm(text);
-  const m =
-    /prenez? (\d+|\w+) cartes? r[eé]compense suppl[eé]mentaires?/i.exec(t);
+  const m = /prenez? (\d+|\w+) cartes? r[eé]compense suppl[eé]mentaires?/i.exec(
+    t,
+  );
   if (m) {
     return [{ type: "EXTRA_PRIZE", amount: parseNumber(m[1]!) }];
   }
@@ -1053,7 +1063,11 @@ function tryExtraPrize(text: string): AnyEffect[] {
 /** RETURN_TO_HAND */
 function tryReturnToHand(text: string): AnyEffect[] {
   const t = norm(text);
-  if (/renvoyez?.{0,30}dans la main|retournez?.{0,30}dans (sa|votre) main/i.test(t)) {
+  if (
+    /renvoyez?.{0,30}dans la main|retournez?.{0,30}dans (sa|votre) main/i.test(
+      t,
+    )
+  ) {
     const target = detectTarget(t);
     return [{ type: "RETURN_TO_HAND", target }];
   }
@@ -1089,7 +1103,9 @@ function tryShuffleDeck(text: string): AnyEffect[] {
 /** REVIVE */
 function tryRevive(text: string): AnyEffect[] {
   const t = norm(text).toLowerCase();
-  if (/r[eé]animez?|mettez? un pok[eé]mon de base de votre d[eé]fausse/i.test(t)) {
+  if (
+    /r[eé]animez?|mettez? un pok[eé]mon de base de votre d[eé]fausse/i.test(t)
+  ) {
     const effect: AnyEffect = { type: "REVIVE" };
     const filter = extractSearchFilter(t);
     if (filter) effect.filter = filter;
@@ -1122,15 +1138,17 @@ function tryStadiumPassiveDamageBoost(text: string): AnyEffect[] {
   const t = norm(text);
 
   // Pattern principal : "infligent N dégâts supplémentaires"
-  const suppM =
-    /infligent? (\d+) d[eé]g[aâ]ts? suppl[eé]mentaires?/i.exec(t);
+  const suppM = /infligent? (\d+) d[eé]g[aâ]ts? suppl[eé]mentaires?/i.exec(t);
   if (suppM) {
     const amount = parseInt(suppM[1]!);
     if (!isNaN(amount) && amount > 0) {
       // Extraire le type depuis le contexte précédant le match
       const context = t.slice(0, suppM.index + suppM[0].length);
       const energyType = detectEnergyType(context);
-      const effect: AnyEffect = { type: "STADIUM_PASSIVE_DAMAGE_BOOST", amount };
+      const effect: AnyEffect = {
+        type: "STADIUM_PASSIVE_DAMAGE_BOOST",
+        amount,
+      };
       if (energyType) effect.pokemonType = energyType;
       return [effect];
     }
@@ -1148,7 +1166,10 @@ function tryStadiumPassiveDamageBoost(text: string): AnyEffect[] {
       if (isNaN(amount) || amount <= 0) continue;
       const context = t.slice(0, m.index + m[0].length);
       const energyType = detectEnergyType(context);
-      const effect: AnyEffect = { type: "STADIUM_PASSIVE_DAMAGE_BOOST", amount };
+      const effect: AnyEffect = {
+        type: "STADIUM_PASSIVE_DAMAGE_BOOST",
+        amount,
+      };
       if (energyType) effect.pokemonType = energyType;
       return [effect];
     }
@@ -1191,7 +1212,10 @@ function tryStadiumPassiveDamageReduce(text: string): AnyEffect[] {
     let amount = 0;
     for (let i = 1; i < m.length; i++) {
       const n = parseInt(m[i] ?? "");
-      if (!isNaN(n) && n > 0) { amount = n; break; }
+      if (!isNaN(n) && n > 0) {
+        amount = n;
+        break;
+      }
     }
     if (amount <= 0) continue;
 
@@ -1210,13 +1234,13 @@ function tryStadiumPassiveDamageReduce(text: string): AnyEffect[] {
 
 /** Tous les parseurs d'effets simples, dans l'ordre de priorité */
 const SIMPLE_PARSERS: Array<(text: string) => AnyEffect[]> = [
-  tryDynamicDamage,       // avant tryDamage (pour éviter double-match)
+  tryDynamicDamage, // avant tryDamage (pour éviter double-match)
   tryPlaceDamageCounters, // avant tryDamage
   tryDamage,
   tryHeal,
   trySpecialCondition,
   tryRemoveSpecialCondition,
-  tryDrawUntilHandSize,   // avant tryDrawCard
+  tryDrawUntilHandSize, // avant tryDrawCard
   tryDrawCard,
   trySearchDeck,
   tryLookAtTopDeck,
@@ -1308,7 +1332,10 @@ export function parseEffectsFromText(text: string): AnyEffect[] {
   }
 
   // 2. MULTI_COIN_FLIP — exclure "une pièce" (= single flip, traité en étape 3)
-  const multiM = /lancez? (\d+|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze) pièces?/i.exec(t);
+  const multiM =
+    /lancez? (\d+|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze) pièces?/i.exec(
+      t,
+    );
   if (multiM) {
     const count = parseNumber(multiM[1]!);
     const dmgM = /(\d+) d[eé]g[aâ]ts? pour chaque face/i.exec(t);
@@ -1419,9 +1446,7 @@ const ABILITY_PARSERS: Array<(text: string) => AnyEffect[]> = [
 ];
 
 /** Parse les effets d'un texte de Talent */
-export function parseAbilityEffectsFromText(
-  text: string,
-): AnyEffect[] {
+export function parseAbilityEffectsFromText(text: string): AnyEffect[] {
   if (!text?.trim()) return [];
   const t = norm(text);
   return parseSimpleEffects(t, ABILITY_PARSERS);

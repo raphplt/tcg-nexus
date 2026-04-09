@@ -50,9 +50,7 @@ export function TurnBanner({
             transition={{ duration: 1.5 }}
             className={cn(
               "absolute inset-0",
-              isMyTurn
-                ? "bg-emerald-500"
-                : "bg-red-500",
+              isMyTurn ? "bg-emerald-500" : "bg-red-500",
             )}
           />
 
@@ -72,9 +70,7 @@ export function TurnBanner({
             <div
               className={cn(
                 "absolute inset-0 blur-3xl opacity-60 -z-10 scale-150",
-                isMyTurn
-                  ? "bg-emerald-500"
-                  : "bg-red-500",
+                isMyTurn ? "bg-emerald-500" : "bg-red-500",
               )}
             />
 

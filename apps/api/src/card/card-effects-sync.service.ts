@@ -106,7 +106,10 @@ export class CardEffectsSyncService {
         .map((_, j) => `($${j * 2 + 1}::uuid, $${j * 2 + 2}::jsonb)`)
         .join(", ");
 
-      const params = batch.flatMap((r) => [r.cardId, JSON.stringify(r.effects)]);
+      const params = batch.flatMap((r) => [
+        r.cardId,
+        JSON.stringify(r.effects),
+      ]);
 
       await this.dataSource.query(
         `UPDATE pokemon_card_details AS pcd

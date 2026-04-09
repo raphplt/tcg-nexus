@@ -4,6 +4,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "../auth/auth.module";
 import { Card } from "../card/entities/card.entity";
 import { Deck } from "../deck/entities/deck.entity";
+import { SavedDeck } from "../deck/entities/saved-deck.entity";
 import { Player } from "../player/entities/player.entity";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { Statistics } from "../statistics/entities/statistic.entity";
@@ -45,6 +46,7 @@ import { TrainingMatchService } from "./training/training-match.service";
       Ranking,
       Statistics,
       Deck,
+      SavedDeck,
       Card,
       User,
     ]),

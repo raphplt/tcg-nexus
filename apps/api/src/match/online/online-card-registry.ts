@@ -26,10 +26,7 @@ export type SupportedCardDefinition =
   | SupportedTrainerCardDefinition;
 
 // Hardcoded fallback for when the parsed registry is not yet available
-const FALLBACK_CARD_REGISTRY: Record<
-  string,
-  SupportedCardDefinition
-> = {
+const FALLBACK_CARD_REGISTRY: Record<string, SupportedCardDefinition> = {
   "np-6": {
     kind: "pokemon",
     attacks: {
@@ -87,10 +84,7 @@ const FALLBACK_CARD_REGISTRY: Record<
   },
 };
 
-function loadCardEffectsRegistry(): Record<
-  string,
-  SupportedCardDefinition
-> {
+function loadCardEffectsRegistry(): Record<string, SupportedCardDefinition> {
   const registryPath = join(
     __dirname,
     "../../../../../packages/effect-parser/card-effects-registry.json",
@@ -105,9 +99,7 @@ function loadCardEffectsRegistry(): Record<
     // Merge: parsed registry takes precedence, fallback fills gaps
     return { ...FALLBACK_CARD_REGISTRY, ...data };
   } catch {
-    console.warn(
-      "Failed to load card-effects-registry.json, using fallback",
-    );
+    console.warn("Failed to load card-effects-registry.json, using fallback");
     return FALLBACK_CARD_REGISTRY;
   }
 }

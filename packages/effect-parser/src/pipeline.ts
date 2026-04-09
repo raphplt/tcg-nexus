@@ -115,10 +115,8 @@ export function loadCardsFromCSV(opts: PipelineOptions): CardInput[] {
     // Filter: skip cards with no effect text to parse
     if (opts.filterWithEffects !== false) {
       const hasAttackEffect = attacks?.some((a) => a.effect) ?? false;
-      const hasAbilityEffect =
-        abilities?.some((a) => a.effect) ?? false;
-      const hasTrainerEffect =
-        category === "Dresseur" && !!detail.effect;
+      const hasAbilityEffect = abilities?.some((a) => a.effect) ?? false;
+      const hasTrainerEffect = category === "Dresseur" && !!detail.effect;
 
       if (!hasAttackEffect && !hasAbilityEffect && !hasTrainerEffect) {
         continue;
@@ -135,9 +133,7 @@ export function loadCardsFromCSV(opts: PipelineOptions): CardInput[] {
       input.types = types ?? undefined;
       input.hp = detail.hp ? Number(detail.hp) : undefined;
       input.stage = detail.stage || undefined;
-      input.retreat = detail.retreat
-        ? Number(detail.retreat)
-        : undefined;
+      input.retreat = detail.retreat ? Number(detail.retreat) : undefined;
 
       if (attacks?.length) {
         input.attacks = attacks.map((a) => ({
@@ -170,9 +166,7 @@ export function loadCardsFromCSV(opts: PipelineOptions): CardInput[] {
   return cardInputs;
 }
 
-function mapCategory(
-  cat: string,
-): "Pokémon" | "Dresseur" | "Énergie" | null {
+function mapCategory(cat: string): "Pokémon" | "Dresseur" | "Énergie" | null {
   if (cat === "Pokémon" || cat === "Pokemon") return "Pokémon";
   if (cat === "Dresseur" || cat === "Trainer") return "Dresseur";
   if (cat === "Énergie" || cat === "Energy") return "Énergie";
@@ -184,9 +178,7 @@ function mapCategory(
 export function exportCardInputsToJSON(opts: PipelineOptions): void {
   const cardInputs = loadCardsFromCSV(opts);
 
-  console.log(
-    `\n${cardInputs.length} cards with parseable effects`,
-  );
+  console.log(`\n${cardInputs.length} cards with parseable effects`);
 
   const byCategory = {
     pokemon: cardInputs.filter((c) => c.category === "Pokémon").length,
@@ -197,9 +189,6 @@ export function exportCardInputsToJSON(opts: PipelineOptions): void {
     `  Pokémon: ${byCategory.pokemon} | Dresseur: ${byCategory.trainer} | Énergie: ${byCategory.energy}`,
   );
 
-  writeFileSync(
-    resolve(opts.outputPath),
-    JSON.stringify(cardInputs, null, 2),
-  );
+  writeFileSync(resolve(opts.outputPath), JSON.stringify(cardInputs, null, 2));
   console.log(`\nExported to: ${opts.outputPath}`);
 }

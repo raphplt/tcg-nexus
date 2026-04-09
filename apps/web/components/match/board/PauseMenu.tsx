@@ -1,13 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  LogOut,
-  Play,
-  Settings,
-  Flag,
-  X,
-} from "lucide-react";
+import { LogOut, Play, Settings, Flag, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -122,8 +116,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                           className="bg-red-950/50 border border-red-500/30 rounded-xl p-4 space-y-3"
                         >
                           <p className="text-sm text-red-200">
-                            Êtes-vous sûr ? Vous perdrez cette
-                            partie.
+                            Êtes-vous sûr ? Vous perdrez cette partie.
                           </p>
                           <div className="flex gap-2">
                             <button
@@ -185,9 +178,7 @@ function MenuButton({
       {icon}
       <div>
         <div className="text-sm font-semibold">{label}</div>
-        {sublabel && (
-          <div className="text-[11px] opacity-60">{sublabel}</div>
-        )}
+        {sublabel && <div className="text-[11px] opacity-60">{sublabel}</div>}
       </div>
     </button>
   );

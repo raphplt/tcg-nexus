@@ -133,17 +133,14 @@ export function AttackPanel({
                 <button
                   key={bench.instanceId}
                   onClick={() => {
-                    const energiesToDiscard = (
-                      pokemon.attachedEnergies || []
-                    )
+                    const energiesToDiscard = (pokemon.attachedEnergies || [])
                       .slice(0, pokemon.retreat ?? 0)
                       .map((e) => e.instanceId);
                     onRetreat(bench.instanceId, energiesToDiscard);
                   }}
                   disabled={
                     disabled ||
-                    (pokemon.retreat ?? 0) >
-                      pokemon.attachedEnergies.length
+                    (pokemon.retreat ?? 0) > pokemon.attachedEnergies.length
                   }
                   className={cn(
                     "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",

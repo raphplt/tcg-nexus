@@ -35,9 +35,7 @@ export function validateCardEffects(data: unknown): ValidationResult {
 /**
  * Validate an entire registry (record of cardId → CardEffects).
  */
-export function validateRegistry(
-  data: unknown,
-): RegistryValidationResult {
+export function validateRegistry(data: unknown): RegistryValidationResult {
   const result = CardEffectsRegistrySchema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
@@ -54,10 +52,7 @@ export function validateRegistry(
 /**
  * Coherence checks beyond schema validation.
  */
-export function checkCoherence(
-  cardId: string,
-  effects: CardEffects,
-): string[] {
+export function checkCoherence(cardId: string, effects: CardEffects): string[] {
   const warnings: string[] = [];
 
   if (effects.kind === "pokemon") {
@@ -75,10 +70,7 @@ export function checkCoherence(
         }
 
         // HEAL to OPPONENT is unusual
-        if (
-          eff.type === "HEAL" &&
-          eff.target === "OPPONENT_ACTIVE"
-        ) {
+        if (eff.type === "HEAL" && eff.target === "OPPONENT_ACTIVE") {
           warnings.push(
             `[${cardId}] ${atkName}: HEAL targeting OPPONENT_ACTIVE is unusual`,
           );

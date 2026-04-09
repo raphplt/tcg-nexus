@@ -79,9 +79,7 @@ export function PromptOverlay({
       >
         {/* Title */}
         <div className="px-6 py-4 bg-gradient-to-r from-blue-600/30 to-purple-600/30 border-b border-white/10">
-          <h3 className="text-lg font-bold text-white">
-            {prompt.title}
-          </h3>
+          <h3 className="text-lg font-bold text-white">{prompt.title}</h3>
         </div>
 
         {/* Options */}
@@ -125,9 +123,7 @@ export function PromptOverlay({
                     <span
                       className={cn(
                         "text-xs font-medium max-w-30 truncate",
-                        selected
-                          ? "text-blue-300"
-                          : "text-white/70",
+                        selected ? "text-blue-300" : "text-white/70",
                       )}
                     >
                       {option.label}

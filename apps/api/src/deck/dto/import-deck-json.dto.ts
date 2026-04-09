@@ -7,19 +7,19 @@ import {
   IsOptional,
   IsString,
   Min,
-  ValidateNested
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { DeckCardRole } from '../../common/enums/deckCardRole';
-import { ApiProperty } from '@nestjs/swagger';
+  ValidateNested,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { DeckCardRole } from "../../common/enums/deckCardRole";
+import { ApiProperty } from "@nestjs/swagger";
 
 class ImportDeckCardDto {
-  @ApiProperty({ example: 'swsh4-185' })
+  @ApiProperty({ example: "swsh4-185" })
   @IsString()
   @IsNotEmpty()
   tcgDexId: string;
 
-  @ApiProperty({ example: 'Dame du Centre Pokémon', required: false })
+  @ApiProperty({ example: "Dame du Centre Pokémon", required: false })
   @IsString()
   @IsOptional()
   name?: string;
@@ -35,12 +35,12 @@ class ImportDeckCardDto {
 }
 
 export class ImportDeckJsonDto {
-  @ApiProperty({ example: 'Mon deck compétitif' })
+  @ApiProperty({ example: "Mon deck compétitif" })
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'Standard' })
+  @ApiProperty({ example: "Standard" })
   @IsString()
   @IsNotEmpty()
   format: string;

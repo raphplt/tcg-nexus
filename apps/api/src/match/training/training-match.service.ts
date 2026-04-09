@@ -6,8 +6,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
+import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
 import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
@@ -38,6 +39,8 @@ export class TrainingMatchService {
     private readonly trainingSessionRepository: Repository<TrainingMatchSession>,
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
+    @InjectRepository(SavedDeck)
+    private readonly savedDeckRepository: Repository<SavedDeck>,
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
@@ -45,7 +48,7 @@ export class TrainingMatchService {
   ) {}
 
   async getLobby(user: User): Promise<TrainingLobbyView> {
-    const [decks, sessions] = await Promise.all([
+    const [decks, sessions, savedIds] = await Promise.all([
       this.loadUserDecks(user.id),
       this.trainingSessionRepository.find({
         where: {
@@ -59,11 +62,17 @@ export class TrainingMatchService {
         },
         take: 8,
       }),
+      this.loadSavedDeckIds(user.id),
     ]);
+    const savedSet = new Set(savedIds);
 
     return {
       availableDecks: decks.map((deck) =>
-        this.onlinePlaySupportService.evaluateDeckEligibility(deck, user.id),
+        this.onlinePlaySupportService.evaluateDeckEligibility(
+          deck,
+          user.id,
+          savedSet,
+        ),
       ),
       aiDeckPresets: this.onlinePlaySupportService
         .listReferenceDeckPresets()
@@ -83,13 +92,15 @@ export class TrainingMatchService {
     user: User,
     input: CreateTrainingMatchDto,
   ): Promise<TrainingSessionView> {
-    const [deck, player] = await Promise.all([
+    const [deck, player, savedIds] = await Promise.all([
       this.loadOwnedDeck(input.deckId, user.id),
       this.loadPlayerForUser(user.id),
+      this.loadSavedDeckIds(user.id),
     ]);
     const eligibility = this.onlinePlaySupportService.evaluateDeckEligibility(
       deck,
       user.id,
+      new Set(savedIds),
     );
     if (!eligibility.eligible) {
       throw new BadRequestException(
@@ -451,25 +462,57 @@ export class TrainingMatchService {
   }
 
   private async loadOwnedDeck(deckId: number, userId: number): Promise<Deck> {
-    const deck = await this.deckRepository.findOne({
+    const ownedDeck = await this.deckRepository.findOne({
       where: { id: deckId, user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
     });
 
-    if (!deck) {
+    if (ownedDeck) {
+      return ownedDeck;
+    }
+
+    const savedEntry = await this.savedDeckRepository.findOne({
+      where: { user: { id: userId }, deck: { id: deckId } },
+    });
+
+    if (!savedEntry) {
       throw new NotFoundException("Deck not found");
     }
 
-    return deck;
+    const savedDeck = await this.deckRepository.findOne({
+      where: { id: deckId },
+      relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
+    });
+
+    if (!savedDeck) {
+      throw new NotFoundException("Deck not found");
+    }
+
+    return savedDeck;
   }
 
   private async loadUserDecks(userId: number): Promise<Deck[]> {
+    const savedIds = await this.loadSavedDeckIds(userId);
     return this.deckRepository.find({
-      where: { user: { id: userId } },
+      where:
+        savedIds.length > 0
+          ? [{ user: { id: userId } }, { id: In(savedIds) }]
+          : { user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
       order: { updatedAt: "DESC" },
-      take: 8,
+      take: 16,
     });
+  }
+
+  private async loadSavedDeckIds(userId: number): Promise<number[]> {
+    const rows = await this.savedDeckRepository
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .innerJoin("savedDeck.deck", "deck")
+      .select("deck.id", "deckId")
+      .where("savedUser.id = :userId", { userId })
+      .getRawMany<{ deckId: number }>();
+    return rows.map((row) => Number(row.deckId));
   }
 
   private async loadPlayerForUser(userId: number): Promise<Player> {

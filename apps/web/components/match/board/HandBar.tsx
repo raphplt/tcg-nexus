@@ -47,8 +47,7 @@ export function HandBar({
 
             // Fan rotation: ±15° max spread
             const maxAngle = Math.min(count * 2.5, 20);
-            const rotation =
-              count > 1 ? (offset / mid) * maxAngle : 0;
+            const rotation = count > 1 ? (offset / mid) * maxAngle : 0;
 
             // Arc: cards at edges sit lower
             const normalizedOffset = count > 1 ? Math.abs(offset / mid) : 0;
@@ -77,8 +76,7 @@ export function HandBar({
                   "translate-y-[45%]",
                   !isSelected &&
                     "hover:-translate-y-4 hover:!rotate-0 hover:scale-110",
-                  isSelected &&
-                    "-translate-y-6 !rotate-0 scale-110",
+                  isSelected && "-translate-y-6 !rotate-0 scale-110",
                   "transition-[transform,filter] duration-200 ease-out",
                 )}
                 style={{

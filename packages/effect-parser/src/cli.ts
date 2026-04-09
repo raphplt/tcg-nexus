@@ -46,10 +46,7 @@ Environment:
   ANTHROPIC_API_KEY    API key for Anthropic
 `;
 
-function createProvider(
-  providerName: string,
-  model?: string,
-): LLMProvider {
+function createProvider(providerName: string, model?: string): LLMProvider {
   switch (providerName) {
     case "gemini":
       return new GeminiProvider(undefined, model);
@@ -65,7 +62,9 @@ function createProvider(
 /** Retourne le parser approprié selon le provider choisi */
 function createParser(providerName: string, model?: string): ParserLike {
   if (providerName === "rule-based") {
-    console.log("  Utilisation du parseur déterministe (rule-based) — aucune API requise.");
+    console.log(
+      "  Utilisation du parseur déterministe (rule-based) — aucune API requise.",
+    );
     return new RuleBasedParser();
   }
   const provider = createProvider(providerName, model);
@@ -102,16 +101,14 @@ async function main() {
     : undefined;
 
   const cardsCsv =
-    getArg(args, "--cards") ??
-    resolve(__dirname, "../../../doc/card.csv");
+    getArg(args, "--cards") ?? resolve(__dirname, "../../../doc/card.csv");
   const detailsCsv =
     getArg(args, "--details") ??
     resolve(__dirname, "../../../doc/pokemon_card_details.csv");
 
   switch (command) {
     case "extract": {
-      const output =
-        args[1] ?? resolve(__dirname, "../cards-to-parse.json");
+      const output = args[1] ?? resolve(__dirname, "../cards-to-parse.json");
       exportCardInputsToJSON({
         cardsCsvPath: resolve(cardsCsv),
         detailsCsvPath: resolve(detailsCsv),
@@ -122,8 +119,7 @@ async function main() {
 
     case "parse-csv": {
       const output =
-        args[1] ??
-        resolve(__dirname, "../card-effects-registry.json");
+        args[1] ?? resolve(__dirname, "../card-effects-registry.json");
       console.log("Step 1: Extracting cards from CSV...");
       let cards = loadCardsFromCSV({
         cardsCsvPath: resolve(cardsCsv),
@@ -131,7 +127,9 @@ async function main() {
         outputPath: "",
       });
       if (limit) cards = cards.slice(0, limit);
-      console.log(`\nStep 2: Parsing ${cards.length} cards with ${providerName}...`);
+      console.log(
+        `\nStep 2: Parsing ${cards.length} cards with ${providerName}...`,
+      );
 
       const parser = createParser(providerName, model);
 
@@ -148,10 +146,7 @@ async function main() {
         },
       });
 
-      writeFileSync(
-        resolve(output),
-        JSON.stringify(report.registry, null, 2),
-      );
+      writeFileSync(resolve(output), JSON.stringify(report.registry, null, 2));
 
       console.log(`\nResults:`);
       console.log(`  Success: ${report.successCount}`);
@@ -162,9 +157,7 @@ async function main() {
           console.log(`  ${f.cardId}: ${f.error}`);
         }
         if (report.failures.length > 20) {
-          console.log(
-            `  ... and ${report.failures.length - 20} more`,
-          );
+          console.log(`  ... and ${report.failures.length - 20} more`);
         }
       }
       console.log(`\nRegistry written to: ${output}`);
@@ -187,9 +180,7 @@ async function main() {
         readFileSync(resolve(inputFile), "utf-8"),
       );
       if (limit) cards = cards.slice(0, limit);
-      console.log(
-        `Parsing ${cards.length} cards with ${providerName}...`,
-      );
+      console.log(`Parsing ${cards.length} cards with ${providerName}...`);
 
       const parser = createParser(providerName, model);
 
@@ -218,10 +209,7 @@ async function main() {
       );
 
       // Clean up checkpoint on successful completion
-      if (
-        existsSync(resolve(checkpointFile!)) &&
-        report.failureCount === 0
-      ) {
+      if (existsSync(resolve(checkpointFile!)) && report.failureCount === 0) {
         const { unlinkSync } = await import("node:fs");
         unlinkSync(resolve(checkpointFile!));
       }
@@ -282,9 +270,7 @@ async function main() {
         process.exit(1);
       }
 
-      const data = JSON.parse(
-        readFileSync(resolve(registryFile), "utf-8"),
-      );
+      const data = JSON.parse(readFileSync(resolve(registryFile), "utf-8"));
       const result = validateRegistry(data);
 
       if (result.success) {

@@ -124,10 +124,7 @@ export async function processBatch(
           registry[result.cardId] = result.effects;
           successCount++;
 
-          const cardWarnings = checkCoherence(
-            result.cardId,
-            result.effects,
-          );
+          const cardWarnings = checkCoherence(result.cardId, result.effects);
           warnings.push(...cardWarnings);
         } else {
           failureCount++;
@@ -151,11 +148,7 @@ export async function processBatch(
       }
 
       // Rate limit between batches
-      if (
-        !interrupted &&
-        i + batchSize < parseable.length &&
-        delay > 0
-      ) {
+      if (!interrupted && i + batchSize < parseable.length && delay > 0) {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }

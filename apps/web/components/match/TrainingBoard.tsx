@@ -92,54 +92,54 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
 
   return (
     <VisualMatchBoardView
-        sessionStatus={session.status}
-        gameState={session.gameState}
-        enginePlayerId={session.humanPlayerId}
-        recentLog={session.recentLog}
-        lastError={lastError}
-        isBusy={isBusy}
-        headerAside={
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant="outline">Mode synchrone</Badge>
-            {isBusy ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                L’IA joue son tour...
-              </span>
-            ) : (
-              <span>Prêt</span>
-            )}
-          </div>
-        }
-        footerCard={
-          session.status === "FINISHED" ? (
-            <Card className="tcg-surface tcg-surface--highlight">
-              <CardContent className="space-y-4 p-6">
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold">Partie terminée</h2>
-                  <p className="text-sm leading-6 text-slate-600">
-                    {session.winnerSide === "PLAYER"
-                      ? "Vous avez remporté ce match d’entraînement."
-                      : session.winnerSide === "AI"
-                        ? "L’IA a remporté ce match d’entraînement."
-                        : "Le match s’est terminé sans vainqueur déclaré."}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild className="rounded-full">
-                    <Link href="/play#training-ai">Nouvelle partie</Link>
-                  </Button>
-                  <Button asChild variant="outline" className="rounded-full">
-                    <Link href="/play">Retour à /play</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : null
-        }
-        onDispatchAction={(action) => actionMutation.mutate(action)}
-        onRespondPrompt={(response) => promptMutation.mutate(response)}
-        onForfeit={() => actionMutation.mutate({ type: "FORFEIT" })}
-      />
+      sessionStatus={session.status}
+      gameState={session.gameState}
+      enginePlayerId={session.humanPlayerId}
+      recentLog={session.recentLog}
+      lastError={lastError}
+      isBusy={isBusy}
+      headerAside={
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant="outline">Mode synchrone</Badge>
+          {isBusy ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              L’IA joue son tour...
+            </span>
+          ) : (
+            <span>Prêt</span>
+          )}
+        </div>
+      }
+      footerCard={
+        session.status === "FINISHED" ? (
+          <Card className="tcg-surface tcg-surface--highlight">
+            <CardContent className="space-y-4 p-6">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">Partie terminée</h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  {session.winnerSide === "PLAYER"
+                    ? "Vous avez remporté ce match d’entraînement."
+                    : session.winnerSide === "AI"
+                      ? "L’IA a remporté ce match d’entraînement."
+                      : "Le match s’est terminé sans vainqueur déclaré."}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild className="rounded-full">
+                  <Link href="/play#training-ai">Nouvelle partie</Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-full">
+                  <Link href="/play">Retour à /play</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null
+      }
+      onDispatchAction={(action) => actionMutation.mutate(action)}
+      onRespondPrompt={(response) => promptMutation.mutate(response)}
+      onForfeit={() => actionMutation.mutate({ type: "FORFEIT" })}
+    />
   );
 }

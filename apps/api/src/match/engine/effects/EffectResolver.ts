@@ -53,9 +53,7 @@ export class EffectResolver {
     context?: EffectContext,
   ) {
     const state = this.engine.getState();
-    const opponentId = state.playerIds.find(
-      (id) => id !== sourcePlayerId,
-    )!;
+    const opponentId = state.playerIds.find((id) => id !== sourcePlayerId)!;
 
     switch (effect.type) {
       // ── Damage ──────────────────────────────────────────
@@ -134,9 +132,7 @@ export class EffectResolver {
         );
         for (const healTarget of targets) {
           const healAmount =
-            effect.amount === "ALL"
-              ? healTarget.damageCounters
-              : effect.amount;
+            effect.amount === "ALL" ? healTarget.damageCounters : effect.amount;
           healTarget.damageCounters = Math.max(
             0,
             healTarget.damageCounters - healAmount,
@@ -162,11 +158,10 @@ export class EffectResolver {
           context?.selectedTargetInstanceId,
         );
         for (const condTarget of targets) {
-          condTarget.specialConditions =
-            this.engine.applySpecialCondition(
-              condTarget.specialConditions,
-              effect.condition as any,
-            );
+          condTarget.specialConditions = this.engine.applySpecialCondition(
+            condTarget.specialConditions,
+            effect.condition as any,
+          );
           events.push({
             type: "SPECIAL_CONDITION_APPLIED",
             condition: effect.condition,
@@ -185,10 +180,9 @@ export class EffectResolver {
         );
         for (const target of targets) {
           if (effect.condition) {
-            target.specialConditions =
-              target.specialConditions.filter(
-                (c) => c !== effect.condition,
-              );
+            target.specialConditions = target.specialConditions.filter(
+              (c) => c !== effect.condition,
+            );
           } else {
             target.specialConditions = [];
           }
@@ -210,14 +204,8 @@ export class EffectResolver {
       }
 
       case EffectType.DRAW_UNTIL_HAND_SIZE: {
-        while (
-          state.players[sourcePlayerId].hand.length <
-          effect.handSize
-        ) {
-          const drawn = this.engine.drawCardForEffect(
-            sourcePlayerId,
-            events,
-          );
+        while (state.players[sourcePlayerId].hand.length < effect.handSize) {
+          const drawn = this.engine.drawCardForEffect(sourcePlayerId, events);
           if (!drawn) break;
         }
         break;
@@ -257,9 +245,7 @@ export class EffectResolver {
       case EffectType.DISCARD_FROM_HAND: {
         const discardEffect = effect as DiscardFromHandEffect;
         const targetPlayerId =
-          discardEffect.target === "OPPONENT"
-            ? opponentId
-            : sourcePlayerId;
+          discardEffect.target === "OPPONENT" ? opponentId : sourcePlayerId;
         this.engine.initiateDiscardFromHand(
           targetPlayerId,
           discardEffect,
@@ -299,9 +285,7 @@ export class EffectResolver {
       case EffectType.MILL: {
         const millEffect = effect as MillEffect;
         const millPlayerId =
-          millEffect.target === "OPPONENT"
-            ? opponentId
-            : sourcePlayerId;
+          millEffect.target === "OPPONENT" ? opponentId : sourcePlayerId;
         const millPlayer = state.players[millPlayerId];
         const milled = millPlayer.deck.splice(
           -millEffect.amount,
@@ -357,10 +341,7 @@ export class EffectResolver {
 
       // ── Board Manipulation ──────────────────────────────
       case EffectType.SWITCH_OPPONENT_ACTIVE: {
-        this.engine.initiateSwitchOpponentActive(
-          sourcePlayerId,
-          events,
-        );
+        this.engine.initiateSwitchOpponentActive(sourcePlayerId, events);
         break;
       }
 
@@ -555,19 +536,9 @@ export class EffectResolver {
           playerId: sourcePlayerId,
         });
         if (isHeads && effect.onHeads) {
-          this.resolveEffects(
-            effect.onHeads,
-            sourcePlayerId,
-            events,
-            context,
-          );
+          this.resolveEffects(effect.onHeads, sourcePlayerId, events, context);
         } else if (!isHeads && effect.onTails) {
-          this.resolveEffects(
-            effect.onTails,
-            sourcePlayerId,
-            events,
-            context,
-          );
+          this.resolveEffects(effect.onTails, sourcePlayerId, events, context);
         }
         break;
       }
@@ -630,11 +601,7 @@ export class EffectResolver {
 
       // ── Copy / Transform ────────────────────────────────
       case EffectType.COPY_ATTACK: {
-        this.engine.initiateCopyAttack(
-          sourcePlayerId,
-          effect,
-          events,
-        );
+        this.engine.initiateCopyAttack(sourcePlayerId, effect, events);
         break;
       }
 
@@ -690,9 +657,7 @@ export class EffectResolver {
       }
 
       default:
-        console.warn(
-          `Effect type not implemented: ${(effect as any).type}`,
-        );
+        console.warn(`Effect type not implemented: ${(effect as any).type}`);
     }
   }
 
@@ -717,8 +682,7 @@ export class EffectResolver {
       case "IF_LESS_HP":
         return (
           (source.active?.damageCounters ?? 0) >=
-          (source.active?.baseCard.hp ?? 0) -
-            (condition.threshold ?? 0)
+          (source.active?.baseCard.hp ?? 0) - (condition.threshold ?? 0)
         );
       case "IF_KNOCKED_OUT":
         return (
@@ -727,14 +691,11 @@ export class EffectResolver {
         );
       case "IF_OPPONENT_POISONED":
         return (
-          opponent.active?.specialConditions.includes(
-            "Poisoned" as any,
-          ) ?? false
+          opponent.active?.specialConditions.includes("Poisoned" as any) ??
+          false
         );
       case "IF_OPPONENT_HAS_SPECIAL_CONDITION":
-        return (
-          (opponent.active?.specialConditions.length ?? 0) > 0
-        );
+        return (opponent.active?.specialConditions.length ?? 0) > 0;
       default:
         return false;
     }
@@ -808,10 +769,7 @@ export class EffectResolver {
         return [...opponent.bench];
 
       case TargetType.ALL_PLAYER_POKEMON:
-        return [
-          ...(source.active ? [source.active] : []),
-          ...source.bench,
-        ];
+        return [...(source.active ? [source.active] : []), ...source.bench];
 
       case TargetType.ALL_OPPONENT_POKEMON:
         return [
@@ -829,9 +787,7 @@ export class EffectResolver {
 
       case TargetType.SELECTED_OWN_POKEMON:
         if (selectedTargetInstanceId) {
-          if (
-            source.active?.instanceId === selectedTargetInstanceId
-          ) {
+          if (source.active?.instanceId === selectedTargetInstanceId) {
             return [source.active];
           }
           const benchMon = source.bench.find(
@@ -843,10 +799,7 @@ export class EffectResolver {
 
       case TargetType.SELECTED_OPPONENT_POKEMON:
         if (selectedTargetInstanceId) {
-          if (
-            opponent.active?.instanceId ===
-            selectedTargetInstanceId
-          ) {
+          if (opponent.active?.instanceId === selectedTargetInstanceId) {
             return [opponent.active];
           }
           const benchMon = opponent.bench.find(

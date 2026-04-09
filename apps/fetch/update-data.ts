@@ -142,113 +142,105 @@ async function updateData() {
   }
 
   // 4. Fetch details for new series
-    console.log("Fetching details for new series...");
-    for (const serie of newSeries) {
-      const details = await tcgdex.fetch("series", serie.id);
-      if (details) {
-        // Strip 'sets' to avoid bloating the file
-        const { sets, ...seriesData } = details;
-        localSeries.push(seriesData);
-        console.log(`Added series: ${serie.name}`);
-      }
+  console.log("Fetching details for new series...");
+  for (const serie of newSeries) {
+    const details = await tcgdex.fetch("series", serie.id);
+    if (details) {
+      // Strip 'sets' to avoid bloating the file
+      const { sets, ...seriesData } = details;
+      localSeries.push(seriesData);
+      console.log(`Added series: ${serie.name}`);
     }
-    fs.writeFileSync(SERIES_FILE, JSON.stringify(localSeries, null, 4));
-    console.log("Updated pokemon_series.json");
   }
+  fs.writeFileSync(SERIES_FILE, JSON.stringify(localSeries, null, 4));
+  console.log("Updated pokemon_series.json");
 
   // 5. Fetch details for new sets and their cards
-    console.log("Fetching details for new sets...");
+  console.log("Fetching details for new sets...");
 
-    for (const set of newSets) {
-      console.log(`Processing set: ${set.name} (${set.id})...`);
-      const setDetails = await tcgdex.fetch("sets", set.id);
+  for (const set of newSets) {
+    console.log(`Processing set: ${set.name} (${set.id})...`);
+    const setDetails = await tcgdex.fetch("sets", set.id);
 
-      if (!setDetails) continue;
+    if (!setDetails) continue;
 
-      // Prepare set metadata
-      const { cards, serie, ...setMetadata } = setDetails;
-      const serieId = serie.id || serie; // Handle if it's an object or ID
+    // Prepare set metadata
+    const { cards, serie, ...setMetadata } = setDetails;
+    const serieId = serie.id || serie; // Handle if it's an object or ID
 
-      // Upload Set Images to R2
-      const slug = slugify(set.name);
-      if (setDetails.logo) {
-        const logoKey = `sets/${slug}/logo.webp`;
-        const logoUrl = await uploadToR2(setDetails.logo + ".webp", logoKey);
-        if (logoUrl) setMetadata.logo = logoUrl;
-      }
-      if (setDetails.symbol) {
-        const symbolKey = `sets/${slug}/symbol.png`;
-        const symbolUrl = await uploadToR2(
-          setDetails.symbol + ".png",
-          symbolKey,
-        );
-        if (symbolUrl) setMetadata.symbol = symbolUrl;
-      }
-
-      const setToSave = {
-        ...setMetadata,
-        serieId: serieId,
-      };
-
-      // Fetch and Save cards for this set
-      if (cards) {
-        console.log(`  Fetching ${cards.length} cards for set ${set.name}...`);
-
-        // Create directory structure: apps/data/[serieId]/[setId]
-        // We use serieId from the set details
-        const serieDir = path.join(DATA_DIR, String(serieId));
-        const setDir = path.join(serieDir, set.id);
-
-        if (!fs.existsSync(serieDir))
-          fs.mkdirSync(serieDir, { recursive: true });
-        if (!fs.existsSync(setDir)) fs.mkdirSync(setDir, { recursive: true });
-
-        let currentCard = 0;
-        for (const cardRef of cards) {
-          currentCard++;
-          try {
-            const cardDetails = await tcgdex.fetch("cards", cardRef.id);
-            if (cardDetails) {
-              // Save card to JSON file (no R2 upload for card images)
-              const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
-              fs.writeFileSync(
-                cardFilePath,
-                JSON.stringify(cardDetails, null, 4),
-              );
-            }
-          } catch (err) {
-            console.error(`\nError fetching card ${cardRef.id}:`, err);
-          }
-
-          // Progress bar
-          const total = cards.length;
-          const percentage = Math.round((currentCard / total) * 100);
-          const width = 40;
-          const filled = Math.round((width * currentCard) / total);
-          const empty = width - filled;
-          const bar = "█".repeat(filled) + "░".repeat(empty);
-          process.stdout.write(
-            `\r  [${bar}] ${percentage}% (${currentCard}/${total})`,
-          );
-
-          // Add a small delay to avoid rate limiting
-          await new Promise((r) => setTimeout(r, 100));
-        }
-        process.stdout.write("\n"); // New line after progress bar completes
-      }
-
-      // Save set to local list ONLY after successfully processing all cards
-      // This ensures that if the script crashes, we retry this set next time
-      localSets.push(setToSave);
-      fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
+    // Upload Set Images to R2
+    const slug = slugify(set.name);
+    if (setDetails.logo) {
+      const logoKey = `sets/${slug}/logo.webp`;
+      const logoUrl = await uploadToR2(setDetails.logo + ".webp", logoKey);
+      if (logoUrl) setMetadata.logo = logoUrl;
     }
-    console.log("Updated pokemon_sets.json");
+    if (setDetails.symbol) {
+      const symbolKey = `sets/${slug}/symbol.png`;
+      const symbolUrl = await uploadToR2(setDetails.symbol + ".png", symbolKey);
+      if (symbolUrl) setMetadata.symbol = symbolUrl;
+    }
+
+    const setToSave = {
+      ...setMetadata,
+      serieId: serieId,
+    };
+
+    // Fetch and Save cards for this set
+    if (cards) {
+      console.log(`  Fetching ${cards.length} cards for set ${set.name}...`);
+
+      // Create directory structure: apps/data/[serieId]/[setId]
+      // We use serieId from the set details
+      const serieDir = path.join(DATA_DIR, String(serieId));
+      const setDir = path.join(serieDir, set.id);
+
+      if (!fs.existsSync(serieDir)) fs.mkdirSync(serieDir, { recursive: true });
+      if (!fs.existsSync(setDir)) fs.mkdirSync(setDir, { recursive: true });
+
+      let currentCard = 0;
+      for (const cardRef of cards) {
+        currentCard++;
+        try {
+          const cardDetails = await tcgdex.fetch("cards", cardRef.id);
+          if (cardDetails) {
+            // Save card to JSON file (no R2 upload for card images)
+            const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
+            fs.writeFileSync(
+              cardFilePath,
+              JSON.stringify(cardDetails, null, 4),
+            );
+          }
+        } catch (err) {
+          console.error(`\nError fetching card ${cardRef.id}:`, err);
+        }
+
+        // Progress bar
+        const total = cards.length;
+        const percentage = Math.round((currentCard / total) * 100);
+        const width = 40;
+        const filled = Math.round((width * currentCard) / total);
+        const empty = width - filled;
+        const bar = "█".repeat(filled) + "░".repeat(empty);
+        process.stdout.write(
+          `\r  [${bar}] ${percentage}% (${currentCard}/${total})`,
+        );
+
+        // Add a small delay to avoid rate limiting
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      process.stdout.write("\n"); // New line after progress bar completes
+    }
+
+    // Save set to local list ONLY after successfully processing all cards
+    // This ensures that if the script crashes, we retry this set next time
+    localSets.push(setToSave);
+    fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
   }
+  console.log("Updated pokemon_sets.json");
 
   console.log("Update complete!");
 }
-
-// ... imports ...
 
 async function main() {
   try {

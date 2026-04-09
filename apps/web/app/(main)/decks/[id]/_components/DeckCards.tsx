@@ -33,7 +33,10 @@ const CardGrid = ({
           key={deckCard.id}
           className="rounded-lg border bg-card hover:shadow-md transition-shadow overflow-hidden"
         >
-          <div className="relative bg-muted/40" style={{ aspectRatio: "245/337" }}>
+          <div
+            className="relative bg-muted/40"
+            style={{ aspectRatio: "245/337" }}
+          >
             <Image
               src={getCardImage(deckCard.card, "low")}
               alt={deckCard.card?.name || "Carte"}

@@ -12,21 +12,13 @@ import {
   Upload,
 } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  decksService,
-  DeckExportJson,
-} from "@/services/decks.service";
+import { decksService, DeckExportJson } from "@/services/decks.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
@@ -88,8 +80,7 @@ function DeckImportContent() {
   });
 
   const importJsonMutation = useMutation({
-    mutationFn: (data: DeckExportJson) =>
-      decksService.importDeckFromJson(data),
+    mutationFn: (data: DeckExportJson) => decksService.importDeckFromJson(data),
     onSuccess: (result) => {
       const deckName = result.deck.name;
       toast.success(`Le deck "${deckName}" a été importé avec succès`);
@@ -342,10 +333,7 @@ function DeckImportContent() {
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground mb-2">
                         Énergie (
-                        {cardGroups.energy.reduce(
-                          (sum, dc) => sum + dc.qty,
-                          0,
-                        )}
+                        {cardGroups.energy.reduce((sum, dc) => sum + dc.qty, 0)}
                         )
                       </h4>
                       <div className="space-y-1">

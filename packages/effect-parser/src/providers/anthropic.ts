@@ -10,8 +10,7 @@ export class AnthropicProvider implements LLMProvider {
   private model: string;
 
   constructor(opts?: { apiKey?: string; model?: string }) {
-    this.apiKey =
-      opts?.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
+    this.apiKey = opts?.apiKey ?? process.env.ANTHROPIC_API_KEY ?? "";
     this.model = opts?.model ?? "claude-sonnet-4-6";
     this.name = this.model;
 
@@ -24,29 +23,24 @@ export class AnthropicProvider implements LLMProvider {
     systemPrompt: string,
     userPrompt: string,
   ): Promise<string> {
-    const res = await fetch(
-      "https://api.anthropic.com/v1/messages",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": this.apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: this.model,
-          max_tokens: 8192,
-          temperature: 0,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-        }),
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": this.apiKey,
+        "anthropic-version": "2023-06-01",
       },
-    );
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: 8192,
+        temperature: 0,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    });
 
     if (!res.ok) {
-      throw new Error(
-        `Anthropic API error: ${res.status} ${await res.text()}`,
-      );
+      throw new Error(`Anthropic API error: ${res.status} ${await res.text()}`);
     }
 
     const data = (await res.json()) as any;

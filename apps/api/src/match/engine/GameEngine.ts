@@ -43,7 +43,11 @@ import {
 } from "./models/enums";
 import type { GameState } from "./models/GameState";
 import type { PlayerEffect } from "./models/Player";
-import type { PendingPrompt, PromptOption, PromptResponse } from "./models/Prompt";
+import type {
+  PendingPrompt,
+  PromptOption,
+  PromptResponse,
+} from "./models/Prompt";
 import type { SetupTask, SetupTaskType } from "./models/Setup";
 
 export class GameEngine {
@@ -205,11 +209,7 @@ export class GameEngine {
         this.handleChooseBenchTarget(playerId, response, events);
         break;
       case PromptType.ChooseOpponentBenchTarget:
-        this.handleChooseOpponentBenchTarget(
-          playerId,
-          response,
-          events,
-        );
+        this.handleChooseOpponentBenchTarget(playerId, response, events);
         break;
       case PromptType.ReorderCards:
         this.handleReorderCards(playerId, response, events);
@@ -288,16 +288,12 @@ export class GameEngine {
 
     // RANDOM: pick one random energy from candidates
     if (amount === "RANDOM" && candidates.length > 0) {
-      const randomIdx = Math.floor(
-        this.nextRandom() * candidates.length,
-      );
+      const randomIdx = Math.floor(this.nextRandom() * candidates.length);
       candidates = [candidates[randomIdx]!];
     }
 
     const discardCount =
-      amount === "ALL" || amount === "RANDOM"
-        ? candidates.length
-        : amount;
+      amount === "ALL" || amount === "RANDOM" ? candidates.length : amount;
     if (discardCount <= 0) return;
 
     const discarded: typeof candidates = [];
@@ -539,7 +535,11 @@ export class GameEngine {
       return;
     }
 
-    while (!this.state.pendingPrompt && this.state.setup && this.state.setup.tasks.length > 0) {
+    while (
+      !this.state.pendingPrompt &&
+      this.state.setup &&
+      this.state.setup.tasks.length > 0
+    ) {
       const task = this.state.setup.tasks.shift()!;
 
       if (task.type === "FINALIZE_SETUP") {
@@ -771,15 +771,12 @@ export class GameEngine {
     // conditions — including benched Pokemon that retreated while Poisoned/Burned
     for (const playerId of this.state.playerIds) {
       const player = this.state.players[playerId];
-      const allPokemon = [
-        player.active,
-        ...player.bench,
-      ].filter((p): p is NonNullable<typeof p> => p !== null && p !== undefined);
+      const allPokemon = [player.active, ...player.bench].filter(
+        (p): p is NonNullable<typeof p> => p !== null && p !== undefined,
+      );
 
       for (const pokemon of allPokemon) {
-        if (
-          pokemon.specialConditions.includes(SpecialCondition.Poisoned)
-        ) {
+        if (pokemon.specialConditions.includes(SpecialCondition.Poisoned)) {
           pokemon.damageCounters += 10;
           events.push({
             type: "POISON_DAMAGE_APPLIED",
@@ -789,9 +786,7 @@ export class GameEngine {
           });
         }
 
-        if (
-          pokemon.specialConditions.includes(SpecialCondition.Burned)
-        ) {
+        if (pokemon.specialConditions.includes(SpecialCondition.Burned)) {
           pokemon.damageCounters += 20;
           events.push({
             type: "BURN_DAMAGE_APPLIED",
@@ -817,12 +812,9 @@ export class GameEngine {
 
     // Sleep flip: only the active player's active Pokemon
     const activePlayer = this.state.activePlayerId;
-    const activePlayerPokemon =
-      this.state.players[activePlayer].active;
+    const activePlayerPokemon = this.state.players[activePlayer].active;
     if (
-      activePlayerPokemon?.specialConditions.includes(
-        SpecialCondition.Asleep,
-      )
+      activePlayerPokemon?.specialConditions.includes(SpecialCondition.Asleep)
     ) {
       if (this.nextRandom() >= 0.5) {
         activePlayerPokemon.specialConditions =
@@ -975,9 +967,7 @@ export class GameEngine {
         (lockType === "SUPPORTER" && cardType === "Supporter") ||
         (lockType === "STADIUM" && cardType === "Stadium")
       ) {
-        throw new Error(
-          "Trainer cards are locked by an opponent's effect",
-        );
+        throw new Error("Trainer cards are locked by an opponent's effect");
       }
     }
 
@@ -1111,15 +1101,11 @@ export class GameEngine {
 
     // Check CANT_ATTACK temporary effect
     if (this.hasTemporaryEffect(activePokemon, "CANT_ATTACK")) {
-      throw new Error(
-        "This Pokemon cannot attack this turn",
-      );
+      throw new Error("This Pokemon cannot attack this turn");
     }
 
     // TCG rule: Confused Pokemon must flip a coin before attacking
-    if (
-      activePokemon.specialConditions.includes(SpecialCondition.Confused)
-    ) {
+    if (activePokemon.specialConditions.includes(SpecialCondition.Confused)) {
       const flipResult = this.nextRandom() >= 0.5; // heads = true
       events.push({
         type: "CONFUSION_FLIP",
@@ -1157,14 +1143,10 @@ export class GameEngine {
 
     // Check CANT_USE_SAME_ATTACK temporary effect
     const sameAttackBlock = activePokemon.temporaryEffects.find(
-      (e) =>
-        e.type === "CANT_USE_SAME_ATTACK" &&
-        e.attackName === attack.name,
+      (e) => e.type === "CANT_USE_SAME_ATTACK" && e.attackName === attack.name,
     );
     if (sameAttackBlock) {
-      throw new Error(
-        "Cannot use the same attack twice in a row",
-      );
+      throw new Error("Cannot use the same attack twice in a row");
     }
 
     // Check oncePerGame attacks
@@ -1172,9 +1154,7 @@ export class GameEngine {
       attack.oncePerGame &&
       activePokemon.usedOncePerGameAttacks.includes(attack.name)
     ) {
-      throw new Error(
-        "This attack can only be used once per game",
-      );
+      throw new Error("This attack can only be used once per game");
     }
 
     if (!this.canPayAttackCost(activePokemon, attack.cost)) {
@@ -1194,8 +1174,7 @@ export class GameEngine {
     // Pre-compute DYNAMIC_DAMAGE bonus BEFORE weakness/resistance
     // TCG rule: total = (baseDamage + dynamicDamage) × weakness − resistance
     const dynamicEffect = (attack.effects || []).find(
-      (e): e is DynamicDamageEffect =>
-        e.type === EffectType.DYNAMIC_DAMAGE,
+      (e): e is DynamicDamageEffect => e.type === EffectType.DYNAMIC_DAMAGE,
     );
 
     let adjustedAttack = attack;
@@ -1238,10 +1217,9 @@ export class GameEngine {
         ...adjustedAttack,
         damage: currentDamage + boostEffect.amount,
       };
-      activePokemon.temporaryEffects =
-        activePokemon.temporaryEffects.filter(
-          (e) => e !== boostEffect,
-        );
+      activePokemon.temporaryEffects = activePokemon.temporaryEffects.filter(
+        (e) => e !== boostEffect,
+      );
     }
 
     // Calculate damage with weakness/resistance applied on the full amount
@@ -1280,18 +1258,16 @@ export class GameEngine {
     }
 
     // Resolve remaining effects, skipping DYNAMIC_DAMAGE if already applied
-    const remainingEffects = (attack.effects || []).filter(
-      (e) => {
-        if (
-          e.type === EffectType.DYNAMIC_DAMAGE &&
-          dynamicEffect &&
-          this.isDynamicDamageString(attack.damage)
-        ) {
-          return false; // Already integrated into damage calculation
-        }
-        return true;
-      },
-    );
+    const remainingEffects = (attack.effects || []).filter((e) => {
+      if (
+        e.type === EffectType.DYNAMIC_DAMAGE &&
+        dynamicEffect &&
+        this.isDynamicDamageString(attack.damage)
+      ) {
+        return false; // Already integrated into damage calculation
+      }
+      return true;
+    });
 
     if (remainingEffects.length > 0) {
       this.effectResolver.resolveEffects(
@@ -1318,9 +1294,7 @@ export class GameEngine {
     this.endTurn(events);
   }
 
-  private isDynamicDamageString(
-    damage?: number | string,
-  ): boolean {
+  private isDynamicDamageString(damage?: number | string): boolean {
     if (typeof damage !== "string") return false;
     return /[+\-×x]/.test(damage);
   }
@@ -1419,9 +1393,7 @@ export class GameEngine {
     }
 
     if (this.hasTemporaryEffect(activePokemon, "CANT_RETREAT")) {
-      throw new Error(
-        "Active Pokemon cannot retreat due to an effect",
-      );
+      throw new Error("Active Pokemon cannot retreat due to an effect");
     }
 
     const benchIndex = player.bench.findIndex(
@@ -1464,13 +1436,12 @@ export class GameEngine {
     player.active = newActive;
     // TCG rule: only Asleep, Confused, Paralyzed are removed on retreat
     // Poisoned and Burned persist
-    activePokemon.specialConditions =
-      activePokemon.specialConditions.filter(
-        (c) =>
-          c !== SpecialCondition.Asleep &&
-          c !== SpecialCondition.Confused &&
-          c !== SpecialCondition.Paralyzed,
-      );
+    activePokemon.specialConditions = activePokemon.specialConditions.filter(
+      (c) =>
+        c !== SpecialCondition.Asleep &&
+        c !== SpecialCondition.Confused &&
+        c !== SpecialCondition.Paralyzed,
+    );
     player.hasRetreatedThisTurn = true;
 
     events.push({
@@ -1889,9 +1860,7 @@ export class GameEngine {
           ) {
             damage += boost.amount;
           }
-        } else if (
-          passive.type === EffectType.STADIUM_PASSIVE_DAMAGE_REDUCE
-        ) {
+        } else if (passive.type === EffectType.STADIUM_PASSIVE_DAMAGE_REDUCE) {
           const reduce = passive as StadiumPassiveDamageReduceEffect;
           if (
             (!reduce.pokemonType ||
@@ -2031,21 +2000,24 @@ export class GameEngine {
         count = opponent.active?.attachedEnergies.length ?? 0;
         break;
       case CountSource.ENERGY_ON_SELF_SPECIFIC:
-        count = source.active?.attachedEnergies.filter(
-          (e) => e.baseCard.provides?.includes(effect.energyType ?? ""),
-        ).length ?? 0;
+        count =
+          source.active?.attachedEnergies.filter((e) =>
+            e.baseCard.provides?.includes(effect.energyType ?? ""),
+          ).length ?? 0;
         break;
       case CountSource.ENERGY_ON_TARGET_SPECIFIC:
-        count = opponent.active?.attachedEnergies.filter(
-          (e) => e.baseCard.provides?.includes(effect.energyType ?? ""),
-        ).length ?? 0;
+        count =
+          opponent.active?.attachedEnergies.filter((e) =>
+            e.baseCard.provides?.includes(effect.energyType ?? ""),
+          ).length ?? 0;
         break;
       case CountSource.EXTRA_ENERGY_ON_SELF: {
-        const totalEnergy = source.active?.attachedEnergies.filter(
-          (e) =>
-            !effect.energyType ||
-            e.baseCard.provides?.includes(effect.energyType),
-        ).length ?? 0;
+        const totalEnergy =
+          source.active?.attachedEnergies.filter(
+            (e) =>
+              !effect.energyType ||
+              e.baseCard.provides?.includes(effect.energyType),
+          ).length ?? 0;
         const attackCost = currentAttack?.cost?.length ?? 0;
         count = Math.max(0, totalEnergy - attackCost);
         break;
@@ -2293,7 +2265,8 @@ export class GameEngine {
       title: "Choisissez les cartes à défausser",
       minSelections: discardAmount,
       maxSelections: discardAmount,
-      allowPass: effect.amount !== "ALL" &&
+      allowPass:
+        effect.amount !== "ALL" &&
         matchingCards.length < (effect.amount as number),
       options,
     });
@@ -2327,8 +2300,7 @@ export class GameEngine {
     let moved = 0;
     for (
       let i = 0;
-      i < effect.amount &&
-      sourcePokemon.attachedEnergies.length > 0;
+      i < effect.amount && sourcePokemon.attachedEnergies.length > 0;
       i++
     ) {
       let idx = -1;
@@ -2341,10 +2313,7 @@ export class GameEngine {
       }
       if (idx === -1) break;
 
-      const [energy] = sourcePokemon.attachedEnergies.splice(
-        idx,
-        1,
-      );
+      const [energy] = sourcePokemon.attachedEnergies.splice(idx, 1);
       targetPokemon.attachedEnergies.push(energy);
       moved++;
     }
@@ -2383,19 +2352,14 @@ export class GameEngine {
     let attached = 0;
     for (let i = 0; i < effect.amount; i++) {
       const idx = player.deck.findIndex((card) => {
-        if (card.baseCard.category !== CardCategory.Energy)
-          return false;
+        if (card.baseCard.category !== CardCategory.Energy) return false;
         if (!effect.energyType) return true;
-        return (card.baseCard as any).provides?.includes(
-          effect.energyType,
-        );
+        return (card.baseCard as any).provides?.includes(effect.energyType);
       });
       if (idx === -1) break;
 
       const [energyCard] = player.deck.splice(idx, 1);
-      target.attachedEnergies.push(
-        energyCard as EnergyCardInGame,
-      );
+      target.attachedEnergies.push(energyCard as EnergyCardInGame);
       attached++;
     }
 
@@ -2436,19 +2400,14 @@ export class GameEngine {
     let attached = 0;
     for (let i = 0; i < effect.amount; i++) {
       const idx = player.discard.findIndex((card) => {
-        if (card.baseCard.category !== CardCategory.Energy)
-          return false;
+        if (card.baseCard.category !== CardCategory.Energy) return false;
         if (!effect.energyType) return true;
-        return (card.baseCard as any).provides?.includes(
-          effect.energyType,
-        );
+        return (card.baseCard as any).provides?.includes(effect.energyType);
       });
       if (idx === -1) break;
 
       const [energyCard] = player.discard.splice(idx, 1);
-      target.attachedEnergies.push(
-        energyCard as EnergyCardInGame,
-      );
+      target.attachedEnergies.push(energyCard as EnergyCardInGame);
       attached++;
     }
 
@@ -2462,10 +2421,7 @@ export class GameEngine {
     }
   }
 
-  public initiateSwitchOpponentActive(
-    sourcePlayerId: string,
-    events: any[],
-  ) {
+  public initiateSwitchOpponentActive(sourcePlayerId: string, events: any[]) {
     const opponentId = this.getOpponentId(sourcePlayerId);
     const opponent = this.state.players[opponentId];
 
@@ -2483,20 +2439,14 @@ export class GameEngine {
     });
 
     if (opponent.bench.length === 1) {
-      this.performSwitch(
-        opponentId,
-        opponent.bench[0].instanceId,
-        events,
-      );
+      this.performSwitch(opponentId, opponent.bench[0].instanceId, events);
       return;
     }
 
-    const options: PromptOption[] = opponent.bench.map(
-      (pokemon) => ({
-        value: pokemon.instanceId,
-        label: pokemon.baseCard.name,
-      }),
-    );
+    const options: PromptOption[] = opponent.bench.map((pokemon) => ({
+      value: pokemon.instanceId,
+      label: pokemon.baseCard.name,
+    }));
 
     this.state.pendingEffectAction = {
       type: "SWITCH_OPPONENT",
@@ -2508,8 +2458,7 @@ export class GameEngine {
     this.state.pendingPrompt = this.buildPrompt({
       playerId: sourcePlayerId,
       type: PromptType.ChooseOpponentBenchTarget,
-      title:
-        "Choisissez le Pokémon adverse à mettre en actif",
+      title: "Choisissez le Pokémon adverse à mettre en actif",
       minSelections: 1,
       maxSelections: 1,
       allowPass: false,
@@ -2517,10 +2466,7 @@ export class GameEngine {
     });
   }
 
-  public initiateSwitchOwnActive(
-    playerId: string,
-    events: any[],
-  ) {
+  public initiateSwitchOwnActive(playerId: string, events: any[]) {
     const player = this.state.players[playerId];
 
     if (player.bench.length === 0) {
@@ -2534,20 +2480,14 @@ export class GameEngine {
     });
 
     if (player.bench.length === 1) {
-      this.performSwitch(
-        playerId,
-        player.bench[0].instanceId,
-        events,
-      );
+      this.performSwitch(playerId, player.bench[0].instanceId, events);
       return;
     }
 
-    const options: PromptOption[] = player.bench.map(
-      (pokemon) => ({
-        value: pokemon.instanceId,
-        label: pokemon.baseCard.name,
-      }),
-    );
+    const options: PromptOption[] = player.bench.map((pokemon) => ({
+      value: pokemon.instanceId,
+      label: pokemon.baseCard.name,
+    }));
 
     this.state.pendingEffectAction = {
       type: "SWITCH_OWN",
@@ -2567,14 +2507,15 @@ export class GameEngine {
     });
   }
 
-  public returnPokemonToHand(
-    pokemon: PokemonCardInGame,
-    events: any[],
-  ) {
+  public returnPokemonToHand(pokemon: PokemonCardInGame, events: any[]) {
     const player = this.state.players[pokemon.ownerId];
 
     // Return to hand: the pokemon card + all attached cards
-    player.hand.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    player.hand.push({
+      instanceId: pokemon.instanceId,
+      ownerId: pokemon.ownerId,
+      baseCard: pokemon.baseCard,
+    });
     for (const energy of pokemon.attachedEnergies) {
       player.hand.push(energy);
     }
@@ -2582,7 +2523,11 @@ export class GameEngine {
       player.hand.push(tool);
     }
     for (const evo of pokemon.attachedEvolutions) {
-      player.hand.push({ instanceId: evo.instanceId, ownerId: evo.ownerId, baseCard: evo.baseCard });
+      player.hand.push({
+        instanceId: evo.instanceId,
+        ownerId: evo.ownerId,
+        baseCard: evo.baseCard,
+      });
     }
 
     // Remove from board
@@ -2601,14 +2546,15 @@ export class GameEngine {
     });
   }
 
-  public shufflePokemonIntoDeck(
-    pokemon: PokemonCardInGame,
-    events: any[],
-  ) {
+  public shufflePokemonIntoDeck(pokemon: PokemonCardInGame, events: any[]) {
     const player = this.state.players[pokemon.ownerId];
 
     // Shuffle into deck: the pokemon card + all attached cards
-    player.deck.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    player.deck.push({
+      instanceId: pokemon.instanceId,
+      ownerId: pokemon.ownerId,
+      baseCard: pokemon.baseCard,
+    });
     for (const energy of pokemon.attachedEnergies) {
       player.deck.push(energy);
     }
@@ -2616,7 +2562,11 @@ export class GameEngine {
       player.deck.push(tool);
     }
     for (const evo of pokemon.attachedEvolutions) {
-      player.deck.push({ instanceId: evo.instanceId, ownerId: evo.ownerId, baseCard: evo.baseCard });
+      player.deck.push({
+        instanceId: evo.instanceId,
+        ownerId: evo.ownerId,
+        baseCard: evo.baseCard,
+      });
     }
 
     // Remove from board
@@ -2637,10 +2587,7 @@ export class GameEngine {
     });
   }
 
-  public devolvePokemon(
-    pokemon: PokemonCardInGame,
-    events: any[],
-  ) {
+  public devolvePokemon(pokemon: PokemonCardInGame, events: any[]) {
     if (pokemon.attachedEvolutions.length === 0) return;
 
     const previousStage = pokemon.attachedEvolutions.pop()!;
@@ -2665,11 +2612,7 @@ export class GameEngine {
     });
   }
 
-  public initiateRevive(
-    playerId: string,
-    effect: ReviveEffect,
-    events: any[],
-  ) {
+  public initiateRevive(playerId: string, effect: ReviveEffect, events: any[]) {
     const player = this.state.players[playerId];
 
     if (player.bench.length >= 5) {
@@ -2709,8 +2652,7 @@ export class GameEngine {
     this.state.pendingPrompt = this.buildPrompt({
       playerId,
       type: PromptType.ChooseCardFromDiscard,
-      title:
-        "Choisissez un Pokémon de base à remettre sur le banc",
+      title: "Choisissez un Pokémon de base à remettre sur le banc",
       minSelections: 1,
       maxSelections: 1,
       allowPass: true,
@@ -2747,12 +2689,13 @@ export class GameEngine {
       return;
     }
 
-    const options: PromptOption[] =
-      sourcePokemon.baseCard.attacks.map((atk, idx) => ({
+    const options: PromptOption[] = sourcePokemon.baseCard.attacks.map(
+      (atk, idx) => ({
         value: String(idx),
         label: atk.name,
         description: atk.effect || undefined,
-      }));
+      }),
+    );
 
     this.state.pendingEffectAction = {
       type: "COPY_ATTACK",
@@ -2770,14 +2713,15 @@ export class GameEngine {
     });
   }
 
-  public sendToLostZone(
-    pokemon: PokemonCardInGame,
-    events: any[],
-  ) {
+  public sendToLostZone(pokemon: PokemonCardInGame, events: any[]) {
     const player = this.state.players[pokemon.ownerId];
 
     // Send to lost zone: the pokemon card + all attached cards
-    player.lostZone.push({ instanceId: pokemon.instanceId, ownerId: pokemon.ownerId, baseCard: pokemon.baseCard });
+    player.lostZone.push({
+      instanceId: pokemon.instanceId,
+      ownerId: pokemon.ownerId,
+      baseCard: pokemon.baseCard,
+    });
     for (const energy of pokemon.attachedEnergies) {
       player.lostZone.push(energy);
     }
@@ -2822,10 +2766,7 @@ export class GameEngine {
     let expiresAt: TemporaryEffect["expiresAt"];
     const duration = effect.duration as string | undefined;
 
-    if (
-      duration === "UNTIL_YOUR_NEXT_TURN" ||
-      effect.type === "BOOST_DAMAGE"
-    ) {
+    if (duration === "UNTIL_YOUR_NEXT_TURN" || effect.type === "BOOST_DAMAGE") {
       // Expires at end of your next turn
       expiresAt = {
         turnNumber: currentTurn + 2,
@@ -2856,10 +2797,7 @@ export class GameEngine {
     };
 
     // For CANT_USE_SAME_ATTACK, record the attack name from the effect
-    if (
-      effect.type === "CANT_USE_SAME_ATTACK" &&
-      effect.attackName
-    ) {
+    if (effect.type === "CANT_USE_SAME_ATTACK" && effect.attackName) {
       tempEffect.attackName = effect.attackName as string;
     }
 
@@ -2913,10 +2851,7 @@ export class GameEngine {
     });
   }
 
-  public applyGlobalEffect(
-    effect: Record<string, unknown>,
-    events: any[],
-  ) {
+  public applyGlobalEffect(effect: Record<string, unknown>, events: any[]) {
     const currentTurn = this.state.turnNumber;
     const activePlayer = this.state.activePlayerId;
     const duration = effect.duration as string | undefined;
@@ -2960,9 +2895,7 @@ export class GameEngine {
     const selectedIds = response.selections || [];
 
     for (const instanceId of selectedIds) {
-      const idx = player.deck.findIndex(
-        (c) => c.instanceId === instanceId,
-      );
+      const idx = player.deck.findIndex((c) => c.instanceId === instanceId);
       if (idx === -1) continue;
 
       const [card] = player.deck.splice(idx, 1);
@@ -2974,9 +2907,7 @@ export class GameEngine {
           card.baseCard.category === CardCategory.Pokemon
         ) {
           player.bench.push(
-            this.initializePokemonRuntime(
-              card as PokemonCardInGame,
-            ),
+            this.initializePokemonRuntime(card as PokemonCardInGame),
           );
         }
       } else if (effect.destination === "TOP_DECK") {
@@ -3010,8 +2941,7 @@ export class GameEngine {
 
     if (selectedIds.length > 0) {
       // Remove the top N cards from the deck
-      const amount =
-        (pending.effect as any).amount || selectedIds.length;
+      const amount = (pending.effect as any).amount || selectedIds.length;
       const removed = player.deck.splice(-amount);
 
       // Re-add them in the order specified by the player
@@ -3067,9 +2997,7 @@ export class GameEngine {
             card.baseCard.category === CardCategory.Pokemon
           ) {
             player.bench.push(
-              this.initializePokemonRuntime(
-                card as PokemonCardInGame,
-              ),
+              this.initializePokemonRuntime(card as PokemonCardInGame),
             );
           }
         } else if (effect.destination === "TOP_DECK") {
@@ -3123,9 +3051,7 @@ export class GameEngine {
     const selectedIds = response.selections || [];
 
     for (const instanceId of selectedIds) {
-      const idx = player.hand.findIndex(
-        (c) => c.instanceId === instanceId,
-      );
+      const idx = player.hand.findIndex((c) => c.instanceId === instanceId);
       if (idx === -1) continue;
 
       const [card] = player.hand.splice(idx, 1);
@@ -3167,9 +3093,7 @@ export class GameEngine {
 
     const selectedId = response.selections?.[0];
     if (!selectedId) {
-      throw new Error(
-        "You must select an opponent bench Pokemon",
-      );
+      throw new Error("You must select an opponent bench Pokemon");
     }
 
     const opponentId = this.getOpponentId(playerId);
@@ -3206,14 +3130,9 @@ export class GameEngine {
     });
   }
 
-  private executeCopiedAttack(
-    playerId: string,
-    attack: Attack,
-    events: any[],
-  ) {
+  private executeCopiedAttack(playerId: string, attack: Attack, events: any[]) {
     const opponentId = this.getOpponentId(playerId);
-    const opponentActive =
-      this.state.players[opponentId].active;
+    const opponentActive = this.state.players[opponentId].active;
     const activePokemon = this.state.players[playerId].active;
 
     if (!activePokemon) return;
@@ -3234,11 +3153,7 @@ export class GameEngine {
     }
 
     if (attack.effects && attack.effects.length > 0) {
-      this.effectResolver.resolveEffects(
-        attack.effects,
-        playerId,
-        events,
-      );
+      this.effectResolver.resolveEffects(attack.effects, playerId, events);
     }
   }
 
@@ -3314,22 +3229,16 @@ export class GameEngine {
     pokemon: PokemonCardInGame,
     effectType: TemporaryEffect["type"],
   ): boolean {
-    return (pokemon.temporaryEffects || []).some(
-      (e) => e.type === effectType,
-    );
+    return (pokemon.temporaryEffects || []).some((e) => e.type === effectType);
   }
 
-  private findPokemonAnywhere(
-    instanceId: string,
-  ): PokemonCardInGame | null {
+  private findPokemonAnywhere(instanceId: string): PokemonCardInGame | null {
     for (const playerId of this.state.playerIds) {
       const player = this.state.players[playerId];
       if (player.active?.instanceId === instanceId) {
         return player.active;
       }
-      const benchMon = player.bench.find(
-        (p) => p.instanceId === instanceId,
-      );
+      const benchMon = player.bench.find((p) => p.instanceId === instanceId);
       if (benchMon) return benchMon;
     }
     return null;
@@ -3342,45 +3251,26 @@ export class GameEngine {
       const player = this.state.players[playerId];
 
       // Clean Pokemon temporary effects
-      const allPokemon = [
-        player.active,
-        ...player.bench,
-      ].filter(Boolean) as PokemonCardInGame[];
+      const allPokemon = [player.active, ...player.bench].filter(
+        Boolean,
+      ) as PokemonCardInGame[];
 
       for (const pokemon of allPokemon) {
         if (!pokemon.temporaryEffects) continue;
-        pokemon.temporaryEffects =
-          pokemon.temporaryEffects.filter((effect) => {
-            if (
-              effect.expiresAt.playerId === currentPlayerId &&
-              effect.expiresAt.turnNumber <= turnNumber
-            ) {
-              return false; // expired
-            }
-            return true;
-          });
+        pokemon.temporaryEffects = pokemon.temporaryEffects.filter((effect) => {
+          if (
+            effect.expiresAt.playerId === currentPlayerId &&
+            effect.expiresAt.turnNumber <= turnNumber
+          ) {
+            return false; // expired
+          }
+          return true;
+        });
       }
 
       // Clean player effects
       if (player.playerEffects) {
-        player.playerEffects = player.playerEffects.filter(
-          (effect) => {
-            if (
-              effect.expiresAt.playerId === currentPlayerId &&
-              effect.expiresAt.turnNumber <= turnNumber
-            ) {
-              return false;
-            }
-            return true;
-          },
-        );
-      }
-    }
-
-    // Clean global effects
-    if (this.state.globalEffects) {
-      this.state.globalEffects =
-        this.state.globalEffects.filter((effect) => {
+        player.playerEffects = player.playerEffects.filter((effect) => {
           if (
             effect.expiresAt.playerId === currentPlayerId &&
             effect.expiresAt.turnNumber <= turnNumber
@@ -3389,6 +3279,20 @@ export class GameEngine {
           }
           return true;
         });
+      }
+    }
+
+    // Clean global effects
+    if (this.state.globalEffects) {
+      this.state.globalEffects = this.state.globalEffects.filter((effect) => {
+        if (
+          effect.expiresAt.playerId === currentPlayerId &&
+          effect.expiresAt.turnNumber <= turnNumber
+        ) {
+          return false;
+        }
+        return true;
+      });
     }
   }
 

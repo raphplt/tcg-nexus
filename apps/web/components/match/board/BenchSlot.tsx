@@ -23,13 +23,7 @@ export function BenchSlot({
 }: BenchSlotProps) {
   if (!pokemon) {
     if (!showEmpty) return null;
-    return (
-      <EmptySlot
-        size="sm"
-        highlighted={highlighted}
-        onClick={onClick}
-      />
-    );
+    return <EmptySlot size="sm" highlighted={highlighted} onClick={onClick} />;
   }
 
   return (

@@ -126,12 +126,8 @@ export const CountSourceSchema = z.enum([
 
 export const SearchFilterSchema = z
   .object({
-    cardCategory: z
-      .enum(["Pokémon", "Dresseur", "Énergie"])
-      .optional(),
-    pokemonStage: z
-      .enum(["De base", "Niveau 1", "Niveau 2"])
-      .optional(),
+    cardCategory: z.enum(["Pokémon", "Dresseur", "Énergie"]).optional(),
+    pokemonStage: z.enum(["De base", "Niveau 1", "Niveau 2"]).optional(),
     pokemonType: z.string().optional(),
     energyType: z.string().optional(),
     trainerType: z

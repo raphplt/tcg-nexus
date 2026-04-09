@@ -16,8 +16,7 @@ export class OpenAIProvider implements LLMProvider {
     model?: string;
   }) {
     this.apiKey = opts?.apiKey ?? process.env.OPENAI_API_KEY ?? "";
-    this.baseURL =
-      opts?.baseURL ?? "https://api.openai.com/v1";
+    this.baseURL = opts?.baseURL ?? "https://api.openai.com/v1";
     this.model = opts?.model ?? "gpt-4o-mini";
     this.name = this.model;
 
@@ -48,9 +47,7 @@ export class OpenAIProvider implements LLMProvider {
     });
 
     if (!res.ok) {
-      throw new Error(
-        `OpenAI API error: ${res.status} ${await res.text()}`,
-      );
+      throw new Error(`OpenAI API error: ${res.status} ${await res.text()}`);
     }
 
     const data = (await res.json()) as any;

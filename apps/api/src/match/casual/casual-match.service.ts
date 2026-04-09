@@ -8,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
 import { In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
+import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
 import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
@@ -36,13 +37,15 @@ export class CasualMatchService {
     private readonly sessionRepository: Repository<CasualMatchSession>,
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
+    @InjectRepository(SavedDeck)
+    private readonly savedDeckRepository: Repository<SavedDeck>,
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
   ) {}
 
   async getLobby(user: User): Promise<CasualLobbyView> {
-    const [decks, sessions] = await Promise.all([
+    const [decks, sessions, savedIds] = await Promise.all([
       this.loadUserDecks(user.id),
       this.sessionRepository.find({
         where: [
@@ -65,11 +68,17 @@ export class CasualMatchService {
         order: { updatedAt: "DESC" },
         take: 10,
       }),
+      this.loadSavedDeckIds(user.id),
     ]);
+    const savedSet = new Set(savedIds);
 
     return {
       availableDecks: decks.map((deck) =>
-        this.onlinePlaySupportService.evaluateDeckEligibility(deck, user.id),
+        this.onlinePlaySupportService.evaluateDeckEligibility(
+          deck,
+          user.id,
+          savedSet,
+        ),
       ),
       activeSessions: sessions.map((session) =>
         this.buildSessionSummary(session, user.id),
@@ -121,9 +130,11 @@ export class CasualMatchService {
     }
 
     const deck = await this.loadOwnedDeck(deckId, user.id);
+    const savedIds = await this.loadSavedDeckIds(user.id);
     const eligibility = this.onlinePlaySupportService.evaluateDeckEligibility(
       deck,
       user.id,
+      new Set(savedIds),
     );
     if (!eligibility.eligible) {
       throw new BadRequestException(
@@ -466,25 +477,57 @@ export class CasualMatchService {
   }
 
   private async loadUserDecks(userId: number): Promise<Deck[]> {
+    const savedIds = await this.loadSavedDeckIds(userId);
     return this.deckRepository.find({
-      where: { user: { id: userId } },
+      where:
+        savedIds.length > 0
+          ? [{ user: { id: userId } }, { id: In(savedIds) }]
+          : { user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
       order: { updatedAt: "DESC" },
-      take: 8,
+      take: 16,
     });
   }
 
+  private async loadSavedDeckIds(userId: number): Promise<number[]> {
+    const rows = await this.savedDeckRepository
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .innerJoin("savedDeck.deck", "deck")
+      .select("deck.id", "deckId")
+      .where("savedUser.id = :userId", { userId })
+      .getRawMany<{ deckId: number }>();
+    return rows.map((row) => Number(row.deckId));
+  }
+
   private async loadOwnedDeck(deckId: number, userId: number): Promise<Deck> {
-    const deck = await this.deckRepository.findOne({
+    const ownedDeck = await this.deckRepository.findOne({
       where: { id: deckId, user: { id: userId } },
       relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
     });
 
-    if (!deck) {
+    if (ownedDeck) {
+      return ownedDeck;
+    }
+
+    const savedEntry = await this.savedDeckRepository.findOne({
+      where: { user: { id: userId }, deck: { id: deckId } },
+    });
+
+    if (!savedEntry) {
       throw new NotFoundException("Deck not found");
     }
 
-    return deck;
+    const savedDeck = await this.deckRepository.findOne({
+      where: { id: deckId },
+      relations: ["cards", "cards.card", "cards.card.pokemonDetails", "user"],
+    });
+
+    if (!savedDeck) {
+      throw new NotFoundException("Deck not found");
+    }
+
+    return savedDeck;
   }
 
   private async loadDeck(deckId: number): Promise<Deck> {

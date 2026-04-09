@@ -33,9 +33,7 @@ describe("AnyEffectSchema", () => {
     const result = AnyEffectSchema.safeParse({
       type: "MULTI_COIN_FLIP",
       count: 4,
-      perHeads: [
-        { type: "DAMAGE", amount: 20, target: "OPPONENT_ACTIVE" },
-      ],
+      perHeads: [{ type: "DAMAGE", amount: 20, target: "OPPONENT_ACTIVE" }],
     });
     expect(result.success).toBe(true);
   });
@@ -164,9 +162,7 @@ describe("CardEffectsSchema", () => {
       attacks: {},
       ability: {
         name: "Jus Fermenté",
-        effects: [
-          { type: "HEAL", amount: 10, target: "SELF" },
-        ],
+        effects: [{ type: "HEAL", amount: 10, target: "SELF" }],
       },
     });
     expect(result.success).toBe(true);

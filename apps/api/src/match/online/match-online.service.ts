@@ -6,8 +6,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
+import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
@@ -37,6 +38,8 @@ export class MatchOnlineService {
     private readonly onlineSessionRepository: Repository<OnlineMatchSession>,
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
+    @InjectRepository(SavedDeck)
+    private readonly savedDeckRepository: Repository<SavedDeck>,
     private readonly matchService: MatchService,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
   ) {}
@@ -47,9 +50,17 @@ export class MatchOnlineService {
   ): Promise<DeckEligibilityResult> {
     const { match, slot } = await this.loadMatchForUser(matchId, user.id);
     const session = await this.findOrCreateSession(match);
-    const decks = await this.loadUserDecks(user.id);
+    const [decks, savedIds] = await Promise.all([
+      this.loadUserDecks(user.id),
+      this.loadSavedDeckIds(user.id),
+    ]);
+    const savedSet = new Set(savedIds);
     const eligibleDecks = decks.map((deck) =>
-      this.onlinePlaySupportService.evaluateDeckEligibility(deck, user.id),
+      this.onlinePlaySupportService.evaluateDeckEligibility(
+        deck,
+        user.id,
+        savedSet,
+      ),
     );
 
     return {

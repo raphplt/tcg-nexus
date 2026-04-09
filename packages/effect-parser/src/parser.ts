@@ -74,10 +74,7 @@ export class EffectParser {
     return results[0]!;
   }
 
-  private parseResponse(
-    rawJSON: string,
-    cards: CardInput[],
-  ): ParseResult[] {
+  private parseResponse(rawJSON: string, cards: CardInput[]): ParseResult[] {
     let parsed: Record<string, any>;
     try {
       parsed = JSON.parse(rawJSON);
