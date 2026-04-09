@@ -126,7 +126,10 @@ export class AuthService {
     }
   }
 
-  async refreshTokens(userId: number, refreshToken: string): Promise<AuthTokens> {
+  async refreshTokens(
+    userId: number,
+    refreshToken: string,
+  ): Promise<AuthTokens> {
     const user = await this.userService.findById(userId);
 
     if (!user) {

@@ -178,12 +178,14 @@ describe("UserService", () => {
     );
     const updateCall = repo.update.mock.calls[0][1];
     expect(updateCall.previousRefreshTokenExpiresAt).toBeInstanceOf(Date);
-    expect(updateCall.previousRefreshTokenExpiresAt.getTime()).toBeGreaterThanOrEqual(
+    expect(
+      updateCall.previousRefreshTokenExpiresAt.getTime(),
+    ).toBeGreaterThanOrEqual(
       before + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS,
     );
-    expect(updateCall.previousRefreshTokenExpiresAt.getTime()).toBeLessThanOrEqual(
-      after + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS,
-    );
+    expect(
+      updateCall.previousRefreshTokenExpiresAt.getTime(),
+    ).toBeLessThanOrEqual(after + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS);
   });
 
   it("should not set a previous token on first refresh attribution", async () => {

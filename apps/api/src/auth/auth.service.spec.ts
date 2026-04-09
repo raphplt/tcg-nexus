@@ -262,7 +262,10 @@ describe("AuthService", () => {
       expect(result.refreshToken).toBe("newtoken");
       expect(typeof result.accessTokenExpiresAt).toBe("number");
       expect(result.accessTokenExpiresAt).toBeGreaterThan(Date.now());
-      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, "newtoken");
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(
+        1,
+        "newtoken",
+      );
     });
 
     it("should accept the previous refresh token within the grace window", async () => {
@@ -281,7 +284,10 @@ describe("AuthService", () => {
       const result = await service.refreshTokens(1, "racingtoken");
 
       expect(result.accessToken).toBe("newtoken");
-      expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, "newtoken");
+      expect(userService.updateRefreshToken).toHaveBeenCalledWith(
+        1,
+        "newtoken",
+      );
     });
 
     it("should reject the previous refresh token after the grace window expires", async () => {

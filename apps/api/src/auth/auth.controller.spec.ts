@@ -132,7 +132,11 @@ describe("AuthController", () => {
     process.env.COOKIE_DOMAIN = "example.org";
     mockAuthService.register.mockResolvedValue({
       user: { id: 3 },
-      tokens: { accessToken: "aa", refreshToken: "bb", accessTokenExpiresAt: 1 },
+      tokens: {
+        accessToken: "aa",
+        refreshToken: "bb",
+        accessTokenExpiresAt: 1,
+      },
     });
 
     await controller.register({} as any, res, req);
@@ -153,7 +157,11 @@ describe("AuthController", () => {
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     mockAuthService.login.mockResolvedValue({
       user: { id: 4 },
-      tokens: { accessToken: "aa", refreshToken: "bb", accessTokenExpiresAt: 7 },
+      tokens: {
+        accessToken: "aa",
+        refreshToken: "bb",
+        accessTokenExpiresAt: 7,
+      },
     });
 
     await controller.login({} as any, res, req);
