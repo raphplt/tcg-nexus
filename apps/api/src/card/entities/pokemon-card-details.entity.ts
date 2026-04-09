@@ -1,14 +1,8 @@
-import {
-  Entity,
-  Column,
-  OneToOne,
-  JoinColumn,
-  PrimaryColumn
-} from 'typeorm';
-import { Card } from './card.entity';
-import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
-import { TrainerType } from 'src/common/enums/trainerType';
-import { EnergyType } from 'src/common/enums/energyType';
+import { Entity, Column, OneToOne, JoinColumn, PrimaryColumn } from "typeorm";
+import { Card } from "./card.entity";
+import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
+import { TrainerType } from "src/common/enums/trainerType";
+import { EnergyType } from "src/common/enums/energyType";
 
 export type PokemonAbility = {
   type?: string;
@@ -30,25 +24,29 @@ export type PokemonWeaknessResistance = {
 
 @Entity()
 export class PokemonCardDetails {
-  @PrimaryColumn('uuid', { name: 'card_id' })
+  @PrimaryColumn("uuid", { name: "card_id" })
   cardId: string;
 
-  @OneToOne(() => Card, (card) => card.pokemonDetails, {
-    onDelete: 'CASCADE'
-  })
-  @JoinColumn({ name: 'card_id', referencedColumnName: 'id' })
+  @OneToOne(
+    () => Card,
+    (card) => card.pokemonDetails,
+    {
+      onDelete: "CASCADE",
+    },
+  )
+  @JoinColumn({ name: "card_id", referencedColumnName: "id" })
   card: Card;
 
-  @Column({ type: 'enum', enum: PokemonCardsType, nullable: true })
+  @Column({ type: "enum", enum: PokemonCardsType, nullable: true })
   category?: PokemonCardsType;
 
-  @Column({ type: 'int', array: true, nullable: true })
+  @Column({ type: "int", array: true, nullable: true })
   dexId?: number[];
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: "int", nullable: true })
   hp?: number;
 
-  @Column('text', { array: true, nullable: true })
+  @Column("text", { array: true, nullable: true })
   types?: string[];
 
   @Column({ nullable: true })
@@ -57,7 +55,7 @@ export class PokemonCardDetails {
   @Column({ nullable: true })
   description?: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   effect?: string;
 
   @Column({ nullable: true })
@@ -69,25 +67,25 @@ export class PokemonCardDetails {
   @Column({ nullable: true })
   suffix?: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   item?: {
     name: string;
     effect: string;
   };
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   abilities?: PokemonAbility[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   attacks?: PokemonAttack[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   weaknesses?: PokemonWeaknessResistance[];
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   resistances?: PokemonWeaknessResistance[];
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: "int", nullable: true })
   retreat?: number;
 
   @Column({ nullable: true })
@@ -99,9 +97,17 @@ export class PokemonCardDetails {
   @Column({ nullable: true })
   energyType?: EnergyType;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   boosters?: {
     id?: string;
     name?: string;
   }[];
+
+  /**
+   * Effets parsés par l'effect-parser.
+   * Peuplé via `npm run sync:effects` dans apps/api.
+   * Structure : SupportedCardDefinition (kind + attacks/playEffects/passiveEffects…)
+   */
+  @Column({ type: "jsonb", nullable: true })
+  parsedEffects?: Record<string, unknown> | null;
 }

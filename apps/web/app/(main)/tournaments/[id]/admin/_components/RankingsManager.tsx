@@ -112,10 +112,7 @@ export function RankingsManager({ tournamentId }: RankingsManagerProps) {
                     <div className="flex justify-center mb-3">
                       {getRankIcon(actualRank)}
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="mb-2"
-                    >
+                    <Badge variant="outline" className="mb-2">
                       #{actualRank}
                     </Badge>
                     <h3 className="font-bold text-lg mb-2">

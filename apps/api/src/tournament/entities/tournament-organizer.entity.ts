@@ -4,16 +4,16 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn
-} from 'typeorm';
-import { Tournament } from './tournament.entity';
-import { User } from 'src/user/entities/user.entity';
+  UpdateDateColumn,
+} from "typeorm";
+import { Tournament } from "./tournament.entity";
+import { User } from "src/user/entities/user.entity";
 
 export enum OrganizerRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  MODERATOR = 'moderator',
-  JUDGE = 'judge'
+  OWNER = "owner",
+  ADMIN = "admin",
+  MODERATOR = "moderator",
+  JUDGE = "judge",
 }
 
 @Entity()
@@ -21,14 +21,22 @@ export class TournamentOrganizer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, (tournament) => tournament.organizers, {
-    onDelete: 'CASCADE'
-  })
+  @ManyToOne(
+    () => Tournament,
+    (tournament) => tournament.organizers,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   tournament: Tournament;
 
-  @ManyToOne(() => User, (user) => user.tournamentOrganizers, {
-    onDelete: 'CASCADE'
-  })
+  @ManyToOne(
+    () => User,
+    (user) => user.tournamentOrganizers,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   user: User;
 
   @Column()
@@ -38,8 +46,8 @@ export class TournamentOrganizer {
   email: string;
 
   @Column({
-    type: 'enum',
-    enum: OrganizerRole
+    type: "enum",
+    enum: OrganizerRole,
   })
   role: OrganizerRole;
 
@@ -49,7 +57,7 @@ export class TournamentOrganizer {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   responsibilities: string;
 
   @CreateDateColumn()

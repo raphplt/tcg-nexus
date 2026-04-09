@@ -15,10 +15,7 @@ export function TournamentOverview({
   formatDate,
 }: TournamentOverviewProps) {
   return (
-    <section
-      id="aperçu"
-      className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-    >
+    <section id="aperçu" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -37,14 +34,8 @@ export function TournamentOverview({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <InfoRow
-              label="Période"
-              value={headerSubtitle}
-            />
-            <InfoRow
-              label="Lieu"
-              value={tournament.location || "-"}
-            />
+            <InfoRow label="Période" value={headerSubtitle} />
+            <InfoRow label="Lieu" value={tournament.location || "-"} />
             <InfoRow
               label="Tour actuel"
               value={`${tournament.currentRound ?? 0}/${tournament.totalRounds ?? 0}`}

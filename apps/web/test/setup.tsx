@@ -5,10 +5,14 @@ import React from "react";
 
 // Polyfill for pointer capture (required by Radix UI Select in jsdom)
 if (typeof Element !== "undefined") {
-  Element.prototype.hasPointerCapture = Element.prototype.hasPointerCapture || (() => false);
-  Element.prototype.setPointerCapture = Element.prototype.setPointerCapture || (() => {});
-  Element.prototype.releasePointerCapture = Element.prototype.releasePointerCapture || (() => {});
-  Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
+  Element.prototype.hasPointerCapture =
+    Element.prototype.hasPointerCapture || (() => false);
+  Element.prototype.setPointerCapture =
+    Element.prototype.setPointerCapture || (() => {});
+  Element.prototype.releasePointerCapture =
+    Element.prototype.releasePointerCapture || (() => {});
+  Element.prototype.scrollIntoView =
+    Element.prototype.scrollIntoView || (() => {});
 }
 
 // Mock ResizeObserver for Radix UI components
@@ -43,18 +47,49 @@ vi.stubGlobal("sessionStorage", storage);
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  navigationMocks.reset();
 });
 
 const push = vi.fn();
 const replace = vi.fn();
 const prefetch = vi.fn();
+const navigationState = {
+  pathname: "/",
+  searchParams: new URLSearchParams(),
+  params: {},
+};
+
+const setSearchParams = (
+  next:
+    | string
+    | URLSearchParams
+    | Record<string, string | number | boolean | undefined>,
+) => {
+  if (typeof next === "string") {
+    navigationState.searchParams = new URLSearchParams(
+      next.startsWith("?") ? next.slice(1) : next,
+    );
+    return;
+  }
+
+  if (next instanceof URLSearchParams) {
+    navigationState.searchParams = new URLSearchParams(next.toString());
+    return;
+  }
+
+  navigationState.searchParams = new URLSearchParams(
+    Object.entries(next)
+      .filter(([, value]) => value !== undefined)
+      .map(([key, value]) => [key, String(value)]),
+  );
+};
 
 vi.mock("next/navigation", () => ({
   __esModule: true,
   useRouter: () => ({ push, replace, prefetch }),
-  usePathname: () => "/",
-  useSearchParams: () => new URLSearchParams(),
-  useParams: () => ({}),
+  usePathname: () => navigationState.pathname,
+  useSearchParams: () => new URLSearchParams(navigationState.searchParams),
+  useParams: () => navigationState.params,
 }));
 
 vi.mock("next/link", () => ({
@@ -62,11 +97,7 @@ vi.mock("next/link", () => ({
   default: (() => {
     const LinkMock = React.forwardRef<HTMLAnchorElement, any>(
       ({ href, children, ...rest }, ref) => (
-        <a
-          href={typeof href === "string" ? href : ""}
-          ref={ref}
-          {...rest}
-        >
+        <a href={typeof href === "string" ? href : ""} ref={ref} {...rest}>
           {children}
         </a>
       ),
@@ -94,7 +125,7 @@ vi.mock("next/image", () => ({
 
     return (
       <img
-        src={typeof src === "string" ? src : src?.src ?? ""}
+        src={typeof src === "string" ? src : (src?.src ?? "")}
         alt={alt || ""}
         {...rest}
       />
@@ -103,3 +134,17 @@ vi.mock("next/image", () => ({
 }));
 
 export const routerMocks = { push, replace, prefetch };
+export const navigationMocks = {
+  setPathname: (pathname: string) => {
+    navigationState.pathname = pathname;
+  },
+  setSearchParams,
+  setParams: (params: Record<string, string>) => {
+    navigationState.params = params;
+  },
+  reset: () => {
+    navigationState.pathname = "/";
+    navigationState.searchParams = new URLSearchParams();
+    navigationState.params = {};
+  },
+};

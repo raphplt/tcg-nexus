@@ -58,10 +58,7 @@ const Test = () => {
   return (
     <div className="flex flex-col gap-4 container mx-auto">
       <H2>Test de requête authentifiée</H2>
-      <Button
-        onClick={handleCreate}
-        disabled={loading}
-      >
+      <Button onClick={handleCreate} disabled={loading}>
         Créer une nouvelle vente
       </Button>
       {loading && <div>Chargement...</div>}

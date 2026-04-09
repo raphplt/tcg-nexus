@@ -1,4 +1,4 @@
-import { IsOptional, IsDateString } from 'class-validator';
+import { IsOptional, IsDateString } from "class-validator";
 
 export class ShareDeckDto {
   @IsOptional()

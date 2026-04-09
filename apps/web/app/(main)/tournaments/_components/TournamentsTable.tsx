@@ -132,10 +132,7 @@ export function TournamentsTable({
               className="transition-all hover:scale-[1.01] hover:shadow-lg"
             >
               <TableCell className="font-semibold text-lg text-primary max-w-xs">
-                <div
-                  className="truncate"
-                  title={tournament.name}
-                >
+                <div className="truncate" title={tournament.name}>
                   {tournament.name}
                 </div>
               </TableCell>

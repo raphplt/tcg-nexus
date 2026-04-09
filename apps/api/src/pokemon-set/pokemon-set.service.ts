@@ -1,32 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreatePokemonSetDto } from './dto/create-pokemon-set.dto';
-import { UpdatePokemonSetDto } from './dto/update-pokemon-set.dto';
-import { PokemonSet } from './entities/pokemon-set.entity';
-import { CardGame } from 'src/common/enums/cardGame';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CreatePokemonSetDto } from "./dto/create-pokemon-set.dto";
+import { UpdatePokemonSetDto } from "./dto/update-pokemon-set.dto";
+import { PokemonSet } from "./entities/pokemon-set.entity";
+import { CardGame } from "src/common/enums/cardGame";
 
 @Injectable()
 export class PokemonSetService {
   constructor(
     @InjectRepository(PokemonSet)
-    private readonly pokemonSetRepository: Repository<PokemonSet>
+    private readonly pokemonSetRepository: Repository<PokemonSet>,
   ) {}
 
   async create(createPokemonSetDto: CreatePokemonSetDto): Promise<PokemonSet> {
     const pokemonSet = this.pokemonSetRepository.create({
       ...createPokemonSetDto,
-      game: CardGame.Pokemon
+      game: CardGame.Pokemon,
     });
     return this.pokemonSetRepository.save(pokemonSet);
   }
 
   async findAll(limit?: number): Promise<PokemonSet[]> {
     const query = this.pokemonSetRepository
-      .createQueryBuilder('set')
-      .leftJoinAndSelect('set.serie', 'serie')
-      .where('set.game = :game', { game: CardGame.Pokemon })
-      .orderBy('set.releaseDate', 'DESC');
+      .createQueryBuilder("set")
+      .leftJoinAndSelect("set.serie", "serie")
+      .where("set.game = :game", { game: CardGame.Pokemon })
+      .orderBy("set.releaseDate", "DESC");
 
     if (limit) {
       query.take(limit);
@@ -38,7 +38,7 @@ export class PokemonSetService {
   async findOne(id: string): Promise<PokemonSet> {
     const pokemonSet = await this.pokemonSetRepository.findOne({
       where: { id, game: CardGame.Pokemon },
-      relations: ['serie']
+      relations: ["serie"],
     });
     if (!pokemonSet) {
       throw new Error(`PokemonSet with id ${id} not found`);
@@ -48,7 +48,7 @@ export class PokemonSetService {
 
   async update(
     id: string,
-    updatePokemonSetDto: UpdatePokemonSetDto
+    updatePokemonSetDto: UpdatePokemonSetDto,
   ): Promise<PokemonSet> {
     const existing = await this.findOne(id);
     this.pokemonSetRepository.merge(existing, updatePokemonSetDto);

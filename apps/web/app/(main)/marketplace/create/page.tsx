@@ -21,10 +21,7 @@ const CreateSell = () => {
         <div className="max-w-7xl mx-auto mb-6 px-2">
           <MarketplaceBreadcrumb />
         </div>
-        <Alert
-          variant="destructive"
-          className="mx-auto max-w-3xl"
-        >
+        <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
           <AlertTitle>Connexion requise.</AlertTitle>
           <AlertDescription>

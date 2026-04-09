@@ -195,9 +195,7 @@ export const marketplaceService = {
   /**
    * Récupère les listings d'un vendeur
    */
-  async getSellerListings(
-    sellerId: number,
-  ): Promise<PaginatedResult<Listing>> {
+  async getSellerListings(sellerId: number): Promise<PaginatedResult<Listing>> {
     return fetcher<PaginatedResult<Listing>>(
       `/marketplace/sellers/${sellerId}/listings`,
     );

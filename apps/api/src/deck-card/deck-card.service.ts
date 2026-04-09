@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { CreateDeckCardDto } from './dto/create-deck-card.dto';
-import { UpdateDeckCardDto } from './dto/update-deck-card.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateDeckCardDto } from "./dto/create-deck-card.dto";
+import { UpdateDeckCardDto } from "./dto/update-deck-card.dto";
 
 @Injectable()
 export class DeckCardService {
   create(_createDeckCardDto: CreateDeckCardDto) {
-    return 'This action adds a new deckCard';
+    return "This action adds a new deckCard";
   }
 
   findAll() {

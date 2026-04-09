@@ -51,8 +51,6 @@ import {
 import {
   TournamentStatus,
   TournamentType,
-  TournamentFormat,
-  tournamentFormatTranslation,
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
 import { tournamentService } from "@/services/tournament.service";
@@ -91,7 +89,6 @@ export default function CreateTournamentPage() {
       location: "",
       startDate: "",
       endDate: "",
-      format: TournamentFormat.STANDARD,
       type: TournamentType.SINGLE_ELIMINATION,
       status: TournamentStatus.DRAFT,
       isPublic: true,
@@ -203,10 +200,7 @@ export default function CreateTournamentPage() {
   return (
     <div className="min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 py-16 px-4">
       <div className="flex mb-6 max-w-xl">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-        >
+        <Button variant="outline" onClick={() => window.history.back()}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Retour
         </Button>
@@ -230,10 +224,7 @@ export default function CreateTournamentPage() {
         )}
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -242,10 +233,7 @@ export default function CreateTournamentPage() {
                   <FormItem className="col-span-2">
                     <FormLabel>Nom du tournoi</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Nom du tournoi"
-                        {...field}
-                      />
+                      <Input placeholder="Nom du tournoi" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -259,10 +247,7 @@ export default function CreateTournamentPage() {
                   <FormItem className="col-span-2">
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Description du tournoi"
-                        {...field}
-                      />
+                      <Input placeholder="Description du tournoi" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -274,10 +259,7 @@ export default function CreateTournamentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lieu</FormLabel>
-                    <Popover
-                      open={locationOpen}
-                      onOpenChange={setLocationOpen}
-                    >
+                    <Popover open={locationOpen} onOpenChange={setLocationOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -340,10 +322,7 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date limite d'inscription</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -356,10 +335,7 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date de début</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -372,10 +348,7 @@ export default function CreateTournamentPage() {
                   <FormItem>
                     <FormLabel>Date de fin</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                      />
+                      <Input type="date" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -399,41 +372,8 @@ export default function CreateTournamentPage() {
                       </FormControl>
                       <SelectContent>
                         {Object.values(TournamentType).map((value) => (
-                          <SelectItem
-                            key={value}
-                            value={value}
-                          >
+                          <SelectItem key={value} value={value}>
                             {tournamentTypeTranslation[value]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="format"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Format</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choisir un format" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(TournamentFormat).map((value) => (
-                          <SelectItem
-                            key={value}
-                            value={value}
-                          >
-                            {tournamentFormatTranslation[value]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -472,7 +412,11 @@ export default function CreateTournamentPage() {
                           {...field}
                           value={field.value ?? ""}
                           onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber || undefined)
+                            field.onChange(
+                              Number.isNaN(e.target.valueAsNumber)
+                                ? undefined
+                                : e.target.valueAsNumber,
+                            )
                           }
                         />
                       </FormControl>
@@ -492,7 +436,11 @@ export default function CreateTournamentPage() {
                           {...field}
                           value={field.value ?? ""}
                           onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber || undefined)
+                            field.onChange(
+                              Number.isNaN(e.target.valueAsNumber)
+                                ? undefined
+                                : e.target.valueAsNumber,
+                            )
                           }
                         />
                       </FormControl>
@@ -533,11 +481,7 @@ export default function CreateTournamentPage() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Création en cours..." : "Créer le tournoi"}
             </Button>
           </form>

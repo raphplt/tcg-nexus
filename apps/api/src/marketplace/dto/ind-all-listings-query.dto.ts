@@ -1,5 +1,5 @@
-import { IsInt, IsOptional, IsString, Min, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Min, IsNumber } from "class-validator";
+import { Type } from "class-transformer";
 
 export class FindAllListingsQuery {
   @IsOptional()
@@ -48,9 +48,9 @@ export class FindAllListingsQuery {
 
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = "createdAt";
 
   @IsOptional()
   @IsString()
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }

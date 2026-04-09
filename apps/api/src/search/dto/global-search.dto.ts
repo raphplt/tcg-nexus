@@ -1,5 +1,5 @@
-import { IsOptional, IsString, IsNumber, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, Min, Max } from "class-validator";
+import { Type } from "class-transformer";
 
 export class GlobalSearchDto {
   @IsString()
@@ -7,7 +7,7 @@ export class GlobalSearchDto {
 
   @IsOptional()
   @IsString()
-  type?: 'all' | 'cards' | 'tournaments' | 'players' | 'marketplace';
+  type?: "all" | "cards" | "tournaments" | "players" | "marketplace";
 
   @IsOptional()
   @Type(() => Number)
@@ -24,16 +24,16 @@ export class GlobalSearchDto {
 
   @IsOptional()
   @IsString()
-  sortBy?: string = 'relevance';
+  sortBy?: string = "relevance";
 
   @IsOptional()
   @IsString()
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }
 
 export interface SearchResultItem {
   id: string | number;
-  type: 'card' | 'tournament' | 'player' | 'marketplace';
+  type: "card" | "tournament" | "player" | "marketplace";
   title: string;
   description: string;
   url: string;

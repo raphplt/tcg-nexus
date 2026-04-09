@@ -73,10 +73,7 @@ export function TabOrganizers({
                         {organizer.name}
                       </h4>
                       {organizer.role && (
-                        <Badge
-                          variant="secondary"
-                          className="text-xs"
-                        >
+                        <Badge variant="secondary" className="text-xs">
                           {organizer.role}
                         </Badge>
                       )}
@@ -92,11 +89,7 @@ export function TabOrganizers({
                     )}
                   </div>
                   {organizer.email && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                    >
+                    <Button variant="outline" size="sm" asChild>
                       <a href={`mailto:${organizer.email}`}>
                         <MessageSquare className="size-4" />
                       </a>
@@ -143,10 +136,7 @@ export function TabOrganizers({
                             {notification.title}
                           </h4>
                           {notification.type && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                            >
+                            <Badge variant="outline" className="text-xs">
                               {notification.type}
                             </Badge>
                           )}

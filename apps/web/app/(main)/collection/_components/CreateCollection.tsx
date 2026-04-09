@@ -119,10 +119,7 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
         Créer une Collection
       </Button>
 
-      <Dialog
-        open={open}
-        onOpenChange={setOpen}
-      >
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Créer une nouvelle collection</DialogTitle>
@@ -133,10 +130,7 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
           </DialogHeader>
 
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"

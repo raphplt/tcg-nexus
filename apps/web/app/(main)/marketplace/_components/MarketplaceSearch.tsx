@@ -118,10 +118,7 @@ const MarketplaceSearch = ({
                 <SelectContent>
                   <SelectItem value="all">Toutes les séries</SelectItem>
                   {series?.map((s) => (
-                    <SelectItem
-                      key={s.id}
-                      value={s.id.toString()}
-                    >
+                    <SelectItem key={s.id} value={s.id.toString()}>
                       {s.name}
                     </SelectItem>
                   ))}
@@ -145,10 +142,7 @@ const MarketplaceSearch = ({
                 <SelectContent>
                   <SelectItem value="all">Toutes les extensions</SelectItem>
                   {sets?.map((s) => (
-                    <SelectItem
-                      key={s.id}
-                      value={s.id}
-                    >
+                    <SelectItem key={s.id} value={s.id}>
                       {s.name}
                     </SelectItem>
                   ))}
@@ -183,10 +177,7 @@ const MarketplaceSearch = ({
                 <SelectContent>
                   <SelectItem value="all">Tous les états</SelectItem>
                   {cardStates.map((cs) => (
-                    <SelectItem
-                      key={cs.value}
-                      value={cs.value}
-                    >
+                    <SelectItem key={cs.value} value={cs.value}>
                       {cs.label}
                     </SelectItem>
                   ))}
@@ -210,10 +201,7 @@ const MarketplaceSearch = ({
                 <SelectContent>
                   <SelectItem value="all">Toutes les devises</SelectItem>
                   {currencyOptions.map((c) => (
-                    <SelectItem
-                      key={c.value}
-                      value={c.value}
-                    >
+                    <SelectItem key={c.value} value={c.value}>
                       {c.label}
                     </SelectItem>
                   ))}
@@ -237,10 +225,7 @@ const MarketplaceSearch = ({
                 <SelectContent>
                   <SelectItem value="all">Toutes les langues</SelectItem>
                   {languages.map((l) => (
-                    <SelectItem
-                      key={l.value}
-                      value={l.value}
-                    >
+                    <SelectItem key={l.value} value={l.value}>
                       {l.label}
                     </SelectItem>
                   ))}
@@ -282,10 +267,7 @@ const MarketplaceSearch = ({
 
             {activeFiltersCount > 0 && (
               <div className="col-span-full">
-                <Button
-                  variant="outline"
-                  onClick={resetFilters}
-                >
+                <Button variant="outline" onClick={resetFilters}>
                   <X className="w-4 h-4 mr-2" />
                   Réinitialiser les filtres
                 </Button>

@@ -1,7 +1,10 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Trophy, Settings2, Info } from "lucide-react";
-import { tournamentTypeTranslation, tournamentStatusTranslation } from "@/utils/tournaments";
+import {
+  tournamentTypeTranslation,
+  tournamentStatusTranslation,
+} from "@/utils/tournaments";
 
 interface TournamentStatsProps {
   participantCount: number;

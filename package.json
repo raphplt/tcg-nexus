@@ -1,28 +1,33 @@
 {
-    "name": "tcgdex",
-    "private": true,
-    "scripts": {
-        "build": "turbo build",
-        "dev": "turbo dev",
-        "seed": "cd apps/api && npm run seed",
-        "lint": "turbo lint",
-        "format": "biome format --write .",
-        "check-types": "turbo check-types",
-        "test:cov": "turbo run test:cov"
-    },
-    "devDependencies": {
-        "@biomejs/biome": "^2.4.3",
-        "npm-check-updates": "^18.0.2",
-        "turbo": "^2.6.0",
-        "typescript": "5.8.3"
-    },
-    "engines": {
-        "node": ">=18"
-    },
-    "packageManager": "npm@10.9.0",
-    "workspaces": ["apps/*", "packages/typescript-config", "packages/ui"],
-    "overrides": {
-        "@types/react": "~19.0.8",
-        "@types/react-dom": "~19.0.3"
-    }
+  "name": "tcgdex",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "seed": "cd apps/api && npm run seed",
+    "lint": "turbo lint",
+    "format": "biome format --write .",
+    "check-types": "turbo check-types",
+    "test:cov": "turbo run test:cov"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.3",
+    "npm-check-updates": "^18.0.2",
+    "turbo": "^2.6.0",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.9.0",
+  "workspaces": [
+    "apps/*",
+    "packages/typescript-config",
+    "packages/ui",
+    "packages/effect-parser"
+  ],
+  "overrides": {
+    "@types/react": "~19.0.8",
+    "@types/react-dom": "~19.0.3"
+  }
 }

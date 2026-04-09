@@ -43,9 +43,7 @@ describe("AdminUsersTable", () => {
   it("charge et affiche la liste des utilisateurs", async () => {
     render(<AdminUsersTable />);
     await waitFor(() => expect(mockedGetUsers).toHaveBeenCalled());
-    expect(
-      screen.getByText(/admin@example.com/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/admin@example.com/i)).toBeInTheDocument();
     expect(screen.getByText(/Ada Lovelace/)).toBeInTheDocument();
   });
 
@@ -53,15 +51,17 @@ describe("AdminUsersTable", () => {
     render(<AdminUsersTable />);
     await screen.findByText(/admin@example.com/);
 
-    await userEvent.click(screen.getByRole("button", { name: /Nouvel utilisateur/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /Nouvel utilisateur/i }),
+    );
     await userEvent.type(screen.getByLabelText(/Prénom/), "Grace");
     await userEvent.type(screen.getByLabelText(/Nom/), "Hopper");
     await userEvent.type(screen.getByLabelText(/Email/), "grace@example.com");
     await userEvent.type(screen.getByLabelText(/Mot de passe/), "secret123");
-    
+
     // Toggle switches
     await userEvent.click(screen.getByRole("switch", { name: /Compte pro/i }));
-    
+
     // Click create button (uses default role from form state)
     await userEvent.click(screen.getByRole("button", { name: /Créer/i }));
 
@@ -87,7 +87,9 @@ describe("AdminUsersTable", () => {
     await userEvent.clear(firstNameInput);
     await userEvent.type(firstNameInput, "Alicia");
     await userEvent.click(screen.getByRole("switch", { name: /Compte pro/i }));
-    await userEvent.click(screen.getByRole("button", { name: /Mettre à jour/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /Mettre à jour/i }),
+    );
 
     await waitFor(() =>
       expect(mockedUpdateUser).toHaveBeenCalledWith(

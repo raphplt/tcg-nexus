@@ -1,0 +1,120 @@
+{
+  "name": "Gardevoir-ex Méga-Évolution",
+  "format": "Standard",
+  "cards": [
+    { "tcgDexId": "me01-058", "name": "Tarsal", "qty": 3, "role": "main" },
+    { "tcgDexId": "me01-059", "name": "Kirlia", "qty": 2, "role": "main" },
+    {
+      "tcgDexId": "sv01-086",
+      "name": "Gardevoir-ex",
+      "qty": 2,
+      "role": "main"
+    },
+    { "tcgDexId": "sv06-095", "name": "Fortusimia", "qty": 3, "role": "main" },
+    { "tcgDexId": "sv10.5w-044", "name": "Viskuse", "qty": 2, "role": "main" },
+    {
+      "tcgDexId": "sv10.5w-045",
+      "name": "Moyade-ex",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv09-056",
+      "name": "Mélofée-ex de Lilie",
+      "qty": 1,
+      "role": "main"
+    },
+    { "tcgDexId": "sv03.5-151", "name": "Mew-ex", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "me02-041",
+      "name": "Méga-Diancie-ex",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv06.5-038",
+      "name": "Favianos-ex",
+      "qty": 1,
+      "role": "main"
+    },
+    { "tcgDexId": "sv04-086", "name": "Hurle-Queue", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "me01-119",
+      "name": "Détermination de Lilie",
+      "qty": 4,
+      "role": "main"
+    },
+    { "tcgDexId": "sv02-185", "name": "Mashynn", "qty": 4, "role": "main" },
+    { "tcgDexId": "sv03-186", "name": "Pepper", "qty": 2, "role": "main" },
+    {
+      "tcgDexId": "sv04-171",
+      "name": "Plan du Professeur Turum",
+      "qty": 1,
+      "role": "main"
+    },
+    { "tcgDexId": "me01-131", "name": "Hyper Ball", "qty": 4, "role": "main" },
+    {
+      "tcgDexId": "sv04-163",
+      "name": "Urne Terrestre",
+      "qty": 3,
+      "role": "main"
+    },
+    { "tcgDexId": "sv01-181", "name": "Faiblo Ball", "qty": 2, "role": "main" },
+    {
+      "tcgDexId": "me01-125",
+      "name": "Super Bonbon",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv06.5-061",
+      "name": "Civière Nocturne",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv04-160",
+      "name": "Attrape-Riposte",
+      "qty": 1,
+      "role": "main"
+    },
+    { "tcgDexId": "sv02-188", "name": "Méga Canne", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "sv06-163",
+      "name": "Boîte à Secrets",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv02-173",
+      "name": "Amulette Bravoure",
+      "qty": 2,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "sv04-178",
+      "name": "Capsule Technique : Évolution",
+      "qty": 1,
+      "role": "main"
+    },
+    { "tcgDexId": "sv02-171", "name": "Cuencia", "qty": 1, "role": "main" },
+    {
+      "tcgDexId": "me01-122",
+      "name": "Jardin Mystère",
+      "qty": 1,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "swsh12.5-156",
+      "name": "Énergie Psy",
+      "qty": 7,
+      "role": "main"
+    },
+    {
+      "tcgDexId": "swsh12.5-158",
+      "name": "Énergie Obscurité",
+      "qty": 3,
+      "role": "main"
+    }
+  ]
+}

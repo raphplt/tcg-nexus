@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 class DistributionEntryDto {
   @ApiProperty()
@@ -92,5 +92,5 @@ export type {
   DistributionEntryDto,
   AttackCostDistributionDto,
   DuplicateCardIssueDto,
-  MissingCardSuggestionDto
+  MissingCardSuggestionDto,
 };

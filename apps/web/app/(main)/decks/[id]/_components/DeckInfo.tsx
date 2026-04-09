@@ -31,10 +31,7 @@ export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
         <CardTitle>Informations</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <InfoRow
-          label="Format"
-          value={deck.format?.type}
-        />
+        <InfoRow label="Format" value={deck.format?.type} />
         <InfoRow
           label="Créateur"
           value={
@@ -64,11 +61,7 @@ export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
         />
         {isOwner && (
           <div className="pt-2">
-            <Button
-              asChild
-              className="w-full"
-              variant="secondary"
-            >
+            <Button asChild className="w-full" variant="secondary">
               <Link href={`/decks/${deck.id}/update`}>
                 <Edit3 className="w-4 h-4 mr-2" />
                 Modifier mon deck

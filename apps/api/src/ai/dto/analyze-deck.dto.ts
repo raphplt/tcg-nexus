@@ -3,8 +3,8 @@ import {
   IsNumber,
   IsArray,
   IsString,
-  ValidateIf
-} from 'class-validator';
+  ValidateIf,
+} from "class-validator";
 
 export class AnalyzeDeckDto {
   @IsOptional()

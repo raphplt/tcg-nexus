@@ -61,4 +61,3 @@ export const cartService = {
     return authedFetch<void>("DELETE", `/user-cart/${id}`);
   },
 };
-

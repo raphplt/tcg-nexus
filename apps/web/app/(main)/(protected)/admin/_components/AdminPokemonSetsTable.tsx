@@ -258,14 +258,18 @@ export function AdminPokemonSetsTable() {
               {!isLoading &&
                 sortedSets.map((set) => (
                   <TableRow key={set.id}>
-                    <TableCell className="font-mono text-xs">{set.id}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {set.id}
+                    </TableCell>
                     <TableCell className="font-semibold">{set.name}</TableCell>
                     <TableCell>{set.serie?.name ?? "-"}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4" />
                         {set.releaseDate
-                          ? new Date(set.releaseDate).toLocaleDateString("fr-FR")
+                          ? new Date(set.releaseDate).toLocaleDateString(
+                              "fr-FR",
+                            )
                           : "-"}
                       </div>
                     </TableCell>
@@ -279,10 +283,14 @@ export function AdminPokemonSetsTable() {
                       )}
                     </TableCell>
                     <TableCell className="space-x-1">
-                      <Badge variant={set.legal?.standard ? "default" : "outline"}>
+                      <Badge
+                        variant={set.legal?.standard ? "default" : "outline"}
+                      >
                         Standard
                       </Badge>
-                      <Badge variant={set.legal?.expanded ? "default" : "outline"}>
+                      <Badge
+                        variant={set.legal?.expanded ? "default" : "outline"}
+                      >
                         Étendu
                       </Badge>
                     </TableCell>
@@ -324,9 +332,12 @@ export function AdminPokemonSetsTable() {
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? "Modifier le set" : "Nouveau set"}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Modifier le set" : "Nouveau set"}
+            </DialogTitle>
             <DialogDescription>
-              Renseignez les informations principales et l'association à une série.
+              Renseignez les informations principales et l'association à une
+              série.
             </DialogDescription>
           </DialogHeader>
 
@@ -379,7 +390,10 @@ export function AdminPokemonSetsTable() {
                 type="date"
                 value={form.releaseDate}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, releaseDate: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    releaseDate: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -409,7 +423,10 @@ export function AdminPokemonSetsTable() {
                 id="set-tcg-online"
                 value={form.tcgOnline}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, tcgOnline: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    tcgOnline: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -423,7 +440,10 @@ export function AdminPokemonSetsTable() {
                 type="number"
                 value={form.cardCountTotal}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, cardCountTotal: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    cardCountTotal: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -462,7 +482,10 @@ export function AdminPokemonSetsTable() {
                 type="number"
                 value={form.cardCountHolo}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, cardCountHolo: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    cardCountHolo: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -529,7 +552,9 @@ export function AdminPokemonSetsTable() {
             <Button variant="outline" onClick={() => setOpenModal(false)}>
               Annuler
             </Button>
-            <Button onClick={saveSet}>{editing ? "Mettre à jour" : "Créer"}</Button>
+            <Button onClick={saveSet}>
+              {editing ? "Mettre à jour" : "Créer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

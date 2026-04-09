@@ -38,7 +38,8 @@ const PokemonCardPage = () => {
               Erreur lors du chargement de la carte
             </p>
             <p className="text-muted-foreground text-sm">
-              La carte avec l&apos;ID &quot;{id}&quot; n&apos;a pas pu être trouvée.
+              La carte avec l&apos;ID &quot;{id}&quot; n&apos;a pas pu être
+              trouvée.
             </p>
           </CardContent>
         </Card>

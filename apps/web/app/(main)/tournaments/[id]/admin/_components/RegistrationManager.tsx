@@ -52,17 +52,17 @@ import toast from "react-hot-toast";
 const getPlayerName = (registration: TournamentRegistration): string => {
   const player = registration.player;
   if (player?.user) {
-    return `${player.user.firstName || ''} ${player.user.lastName || ''}`.trim();
+    return `${player.user.firstName || ""} ${player.user.lastName || ""}`.trim();
   }
-  return player?.name || `Joueur #${player?.id || '?'}`;
+  return player?.name || `Joueur #${player?.id || "?"}`;
 };
 
 const getPlayerInitials = (registration: TournamentRegistration): string => {
   const player = registration.player;
   if (player?.user) {
-    return `${player.user.firstName?.[0] || ''}${player.user.lastName?.[0] || ''}`.toUpperCase();
+    return `${player.user.firstName?.[0] || ""}${player.user.lastName?.[0] || ""}`.toUpperCase();
   }
-  return player?.name?.slice(0, 2)?.toUpperCase() || '??';
+  return player?.name?.slice(0, 2)?.toUpperCase() || "??";
 };
 
 interface RegistrationManagerProps {
@@ -594,10 +594,7 @@ export function RegistrationManager({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-8"
-                    >
+                    <TableCell colSpan={7} className="text-center py-8">
                       <div className="text-muted-foreground">
                         <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>Aucune inscription trouvée</p>
@@ -612,10 +609,7 @@ export function RegistrationManager({
       </div>
 
       {/* Modal de confirmation pour actions bulk */}
-      <AlertDialog
-        open={!!bulkAction}
-        onOpenChange={() => setBulkAction(null)}
-      >
+      <AlertDialog open={!!bulkAction} onOpenChange={() => setBulkAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer l'action groupée</AlertDialogTitle>

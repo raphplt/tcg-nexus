@@ -140,16 +140,10 @@ export default function CheckoutForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-    >
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="shipping-address">Adresse de livraison</Label>
-        <Popover
-          open={open}
-          onOpenChange={setOpen}
-        >
+        <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -201,10 +195,7 @@ export default function CheckoutForm() {
 
       {message && <div className="text-red-500 text-sm">{message}</div>}
 
-      <Button
-        disabled={isLoading || !stripe || !elements}
-        className="w-full"
-      >
+      <Button disabled={isLoading || !stripe || !elements} className="w-full">
         {isLoading ? "Traitement..." : `Payer ${formatPrice(total, currency)}`}
       </Button>
 

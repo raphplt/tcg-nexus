@@ -1,16 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserCartService } from './user_cart.service';
-import { UserCart } from './entities/user_cart.entity';
-import { CartItem } from './entities/cart-item.entity';
-import { Listing } from 'src/marketplace/entities/listing.entity';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateCartItemDto } from './dto/create-cart-item.dto';
-import { UpdateCartItemDto } from './dto/update-cart-item.dto';
-import { User } from 'src/user/entities/user.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { UserCartService } from "./user_cart.service";
+import { UserCart } from "./entities/user_cart.entity";
+import { CartItem } from "./entities/cart-item.entity";
+import { Listing } from "src/marketplace/entities/listing.entity";
+import { NotFoundException, BadRequestException } from "@nestjs/common";
+import { CreateCartItemDto } from "./dto/create-cart-item.dto";
+import { UpdateCartItemDto } from "./dto/update-cart-item.dto";
+import { User } from "src/user/entities/user.entity";
 
-describe('UserCartService', () => {
+describe("UserCartService", () => {
   let service: UserCartService;
   let userCartRepo: jest.Mocked<Repository<UserCart>>;
   let cartItemRepo: jest.Mocked<Repository<CartItem>>;
@@ -18,9 +18,9 @@ describe('UserCartService', () => {
 
   const mockUser: User = {
     id: 1,
-    email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User'
+    email: "test@example.com",
+    firstName: "Test",
+    lastName: "User",
   } as User;
 
   const mockCart: UserCart = {
@@ -28,7 +28,7 @@ describe('UserCartService', () => {
     user: mockUser,
     cartItems: [],
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   } as UserCart;
 
   const mockListing: Listing = {
@@ -37,8 +37,8 @@ describe('UserCartService', () => {
     pokemonCard: {} as any,
     price: 10.5,
     quantityAvailable: 5,
-    currency: 'EUR' as any,
-    cardState: 'MINT' as any
+    currency: "EUR" as any,
+    cardState: "MINT" as any,
   } as Listing;
 
   const mockCartItem: CartItem = {
@@ -47,7 +47,7 @@ describe('UserCartService', () => {
     listing: mockListing,
     quantity: 2,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   } as CartItem;
 
   beforeEach(async () => {
@@ -55,18 +55,18 @@ describe('UserCartService', () => {
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
-      remove: jest.fn()
+      remove: jest.fn(),
     };
 
     const cartItemRepoMock: Partial<jest.Mocked<Repository<CartItem>>> = {
       findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
-      remove: jest.fn()
+      remove: jest.fn(),
     };
 
     const listingRepoMock: Partial<jest.Mocked<Repository<Listing>>> = {
-      findOne: jest.fn()
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -74,17 +74,17 @@ describe('UserCartService', () => {
         UserCartService,
         {
           provide: getRepositoryToken(UserCart),
-          useValue: userCartRepoMock
+          useValue: userCartRepoMock,
         },
         {
           provide: getRepositoryToken(CartItem),
-          useValue: cartItemRepoMock
+          useValue: cartItemRepoMock,
         },
         {
           provide: getRepositoryToken(Listing),
-          useValue: listingRepoMock
-        }
-      ]
+          useValue: listingRepoMock,
+        },
+      ],
     }).compile();
 
     service = module.get<UserCartService>(UserCartService);
@@ -93,12 +93,12 @@ describe('UserCartService', () => {
     listingRepo = module.get(getRepositoryToken(Listing));
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('findOrCreateCart', () => {
-    it('should return existing cart if found', async () => {
+  describe("findOrCreateCart", () => {
+    it("should return existing cart if found", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       const result = await service.findOrCreateCart(1);
@@ -106,11 +106,11 @@ describe('UserCartService', () => {
       expect(result).toEqual(mockCart);
       expect(jest.mocked(userCartRepo.findOne)).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
-        relations: ['user']
+        relations: ["user"],
       });
     });
 
-    it('should create new cart if not found', async () => {
+    it("should create new cart if not found", async () => {
       userCartRepo.findOne.mockResolvedValue(null);
       userCartRepo.create.mockReturnValue(mockCart);
       userCartRepo.save.mockResolvedValue(mockCart);
@@ -119,17 +119,17 @@ describe('UserCartService', () => {
 
       expect(result).toEqual(mockCart);
       expect(userCartRepo.create).toHaveBeenCalledWith({
-        user: { id: 1 }
+        user: { id: 1 },
       });
       expect(jest.mocked(userCartRepo.save)).toHaveBeenCalled();
     });
   });
 
-  describe('findCartByUserId', () => {
-    it('should return cart with items', async () => {
+  describe("findCartByUserId", () => {
+    it("should return cart with items", async () => {
       const cartWithItems = {
         ...mockCart,
-        cartItems: [mockCartItem]
+        cartItems: [mockCartItem],
       };
       userCartRepo.findOne.mockResolvedValue(cartWithItems);
 
@@ -139,15 +139,15 @@ describe('UserCartService', () => {
       expect(jest.mocked(userCartRepo.findOne)).toHaveBeenCalledWith({
         where: { user: { id: 1 } },
         relations: [
-          'user',
-          'cartItems',
-          'cartItems.listing',
-          'cartItems.listing.pokemonCard'
-        ]
+          "user",
+          "cartItems",
+          "cartItems.listing",
+          "cartItems.listing.pokemonCard",
+        ],
       });
     });
 
-    it('should create cart if not found', async () => {
+    it("should create cart if not found", async () => {
       userCartRepo.findOne.mockResolvedValue(null);
       userCartRepo.create.mockReturnValue(mockCart);
       userCartRepo.save.mockResolvedValue(mockCart);
@@ -158,8 +158,8 @@ describe('UserCartService', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should return cart if found', async () => {
+  describe("findOne", () => {
+    it("should return cart if found", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       const result = await service.findOne(1);
@@ -167,7 +167,7 @@ describe('UserCartService', () => {
       expect(result).toEqual(mockCart);
     });
 
-    it('should return cart if found without userId check', async () => {
+    it("should return cart if found without userId check", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       const result = await service.findOne(1);
@@ -175,7 +175,7 @@ describe('UserCartService', () => {
       expect(result).toEqual(mockCart);
     });
 
-    it('should return cart if user owns it', async () => {
+    it("should return cart if user owns it", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       const result = await service.findOne(1, 1);
@@ -183,26 +183,26 @@ describe('UserCartService', () => {
       expect(result).toEqual(mockCart);
     });
 
-    it('should throw BadRequestException if user does not own cart', async () => {
+    it("should throw BadRequestException if user does not own cart", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       await expect(service.findOne(1, 2)).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw NotFoundException if cart not found', async () => {
+    it("should throw NotFoundException if cart not found", async () => {
       userCartRepo.findOne.mockResolvedValue(null);
 
       await expect(service.findOne(1)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('addItemToCart', () => {
+  describe("addItemToCart", () => {
     const createDto: CreateCartItemDto = {
       listingId: 1,
-      quantity: 2
+      quantity: 2,
     };
 
-    it('should add new item to cart', async () => {
+    it("should add new item to cart", async () => {
       listingRepo.findOne.mockResolvedValue(mockListing);
       userCartRepo.findOne.mockResolvedValue(mockCart);
       cartItemRepo.findOne.mockResolvedValue(null);
@@ -216,14 +216,14 @@ describe('UserCartService', () => {
       expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
-    it('should update quantity if item already exists', async () => {
+    it("should update quantity if item already exists", async () => {
       const existingItem = { ...mockCartItem, quantity: 1 };
       listingRepo.findOne.mockResolvedValue(mockListing);
       userCartRepo.findOne.mockResolvedValue(mockCart);
       cartItemRepo.findOne.mockResolvedValue(existingItem);
       cartItemRepo.save.mockResolvedValue({
         ...existingItem,
-        quantity: 3
+        quantity: 3,
       });
 
       const result = await service.addItemToCart(1, createDto);
@@ -232,49 +232,49 @@ describe('UserCartService', () => {
       expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if listing not found', async () => {
+    it("should throw NotFoundException if listing not found", async () => {
       listingRepo.findOne.mockResolvedValue(null);
 
       await expect(service.addItemToCart(1, createDto)).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if user tries to add own listing', async () => {
+    it("should throw BadRequestException if user tries to add own listing", async () => {
       const ownListing = { ...mockListing, seller: { id: 1 } as User };
       listingRepo.findOne.mockResolvedValue(ownListing);
 
       await expect(service.addItemToCart(1, createDto)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
 
-    it('should throw BadRequestException if not enough quantity', async () => {
+    it("should throw BadRequestException if not enough quantity", async () => {
       const lowStockListing = { ...mockListing, quantityAvailable: 1 };
       listingRepo.findOne.mockResolvedValue(lowStockListing);
       userCartRepo.findOne.mockResolvedValue(mockCart);
       cartItemRepo.findOne.mockResolvedValue(null);
 
       await expect(service.addItemToCart(1, createDto)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
   });
 
-  describe('updateCartItem', () => {
+  describe("updateCartItem", () => {
     const updateDto: UpdateCartItemDto = {
-      quantity: 3
+      quantity: 3,
     };
 
-    it('should update cart item quantity', async () => {
+    it("should update cart item quantity", async () => {
       const cartItemWithCart = {
         ...mockCartItem,
-        cart: { ...mockCart, user: mockUser }
+        cart: { ...mockCart, user: mockUser },
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithCart);
       cartItemRepo.save.mockResolvedValue({
         ...cartItemWithCart,
-        quantity: 3
+        quantity: 3,
       });
 
       const result = await service.updateCartItem(1, 1, updateDto);
@@ -283,50 +283,50 @@ describe('UserCartService', () => {
       expect(jest.mocked(cartItemRepo.save)).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException if cart item not found', async () => {
+    it("should throw NotFoundException if cart item not found", async () => {
       cartItemRepo.findOne.mockResolvedValue(null);
 
       await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if user does not own cart', async () => {
+    it("should throw BadRequestException if user does not own cart", async () => {
       const otherUserCart = {
         ...mockCart,
-        user: { id: 2 } as User
+        user: { id: 2 } as User,
       };
       const cartItemWithOtherCart = {
         ...mockCartItem,
-        cart: otherUserCart
+        cart: otherUserCart,
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithOtherCart);
 
       await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
 
-    it('should throw BadRequestException if not enough quantity', async () => {
+    it("should throw BadRequestException if not enough quantity", async () => {
       const lowStockListing = { ...mockListing, quantityAvailable: 2 };
       const cartItemWithCart = {
         ...mockCartItem,
         cart: { ...mockCart, user: mockUser },
-        listing: lowStockListing
+        listing: lowStockListing,
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithCart);
 
       await expect(service.updateCartItem(1, 1, updateDto)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
   });
 
-  describe('removeItemFromCart', () => {
-    it('should remove cart item', async () => {
+  describe("removeItemFromCart", () => {
+    it("should remove cart item", async () => {
       const cartItemWithCart = {
         ...mockCartItem,
-        cart: { ...mockCart, user: mockUser }
+        cart: { ...mockCart, user: mockUser },
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithCart);
       cartItemRepo.remove.mockResolvedValue(cartItemWithCart);
@@ -334,40 +334,40 @@ describe('UserCartService', () => {
       await service.removeItemFromCart(1, 1);
 
       expect(jest.mocked(cartItemRepo.remove)).toHaveBeenCalledWith(
-        cartItemWithCart
+        cartItemWithCart,
       );
     });
 
-    it('should throw NotFoundException if cart item not found', async () => {
+    it("should throw NotFoundException if cart item not found", async () => {
       cartItemRepo.findOne.mockResolvedValue(null);
 
       await expect(service.removeItemFromCart(1, 1)).rejects.toThrow(
-        NotFoundException
+        NotFoundException,
       );
     });
 
-    it('should throw BadRequestException if user does not own cart', async () => {
+    it("should throw BadRequestException if user does not own cart", async () => {
       const otherUserCart = {
         ...mockCart,
-        user: { id: 2 } as User
+        user: { id: 2 } as User,
       };
       const cartItemWithOtherCart = {
         ...mockCartItem,
-        cart: otherUserCart
+        cart: otherUserCart,
       };
       cartItemRepo.findOne.mockResolvedValue(cartItemWithOtherCart);
 
       await expect(service.removeItemFromCart(1, 1)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
   });
 
-  describe('clearCart', () => {
-    it('should clear all items from cart', async () => {
+  describe("clearCart", () => {
+    it("should clear all items from cart", async () => {
       const cartWithItems = {
         ...mockCart,
-        cartItems: [mockCartItem]
+        cartItems: [mockCartItem],
       };
       userCartRepo.findOne.mockResolvedValue(cartWithItems);
       (cartItemRepo.remove as jest.Mock).mockResolvedValue([mockCartItem]);
@@ -375,11 +375,11 @@ describe('UserCartService', () => {
       await service.clearCart(1);
 
       expect(jest.mocked(cartItemRepo.remove)).toHaveBeenCalledWith([
-        mockCartItem
+        mockCartItem,
       ]);
     });
 
-    it('should do nothing if cart does not exist', async () => {
+    it("should do nothing if cart does not exist", async () => {
       userCartRepo.findOne.mockResolvedValue(null);
 
       await service.clearCart(1);
@@ -388,8 +388,8 @@ describe('UserCartService', () => {
     });
   });
 
-  describe('remove', () => {
-    it('should remove cart', async () => {
+  describe("remove", () => {
+    it("should remove cart", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
       userCartRepo.remove.mockResolvedValue(mockCart);
 
@@ -398,13 +398,13 @@ describe('UserCartService', () => {
       expect(jest.mocked(userCartRepo.remove)).toHaveBeenCalledWith(mockCart);
     });
 
-    it('should throw NotFoundException if cart not found', async () => {
+    it("should throw NotFoundException if cart not found", async () => {
       userCartRepo.findOne.mockResolvedValue(null);
 
       await expect(service.remove(1, 1)).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw BadRequestException if user does not own cart', async () => {
+    it("should throw BadRequestException if user does not own cart", async () => {
       userCartRepo.findOne.mockResolvedValue(mockCart);
 
       await expect(service.remove(1, 2)).rejects.toThrow(BadRequestException);

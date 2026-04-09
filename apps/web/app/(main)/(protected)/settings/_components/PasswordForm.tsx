@@ -21,7 +21,9 @@ import { toast } from "react-hot-toast";
 
 const passwordSchema = z
   .object({
-    password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+    password: z
+      .string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -47,7 +49,9 @@ export const PasswordForm = () => {
       form.reset();
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la mise à jour";
       toast.error(message);
     }
   };

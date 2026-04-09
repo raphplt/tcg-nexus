@@ -62,12 +62,7 @@ export function CardListItem({
           {card.set && (
             <div className="flex items-center gap-1 mt-0.5">
               {card.set.symbol && (
-                <Image
-                  src={card.set.symbol}
-                  alt=""
-                  width={14}
-                  height={14}
-                />
+                <Image src={card.set.symbol} alt="" width={14} height={14} />
               )}
               <p className="text-xs text-muted-foreground line-clamp-1">
                 {card.set.name}
@@ -78,10 +73,7 @@ export function CardListItem({
 
         <div className="hidden sm:flex shrink-0">
           {card.rarity && (
-            <Badge
-              variant="outline"
-              className="text-xs"
-            >
+            <Badge variant="outline" className="text-xs">
               {card.rarity}
             </Badge>
           )}
@@ -89,10 +81,7 @@ export function CardListItem({
 
         <div className="hidden md:flex shrink-0">
           {hasListings && (
-            <Badge
-              variant="secondary"
-              className="text-xs"
-            >
+            <Badge variant="secondary" className="text-xs">
               {listingCount} offre{listingCount > 1 ? "s" : ""}
             </Badge>
           )}

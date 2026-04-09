@@ -91,11 +91,7 @@ export default function RankingsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-            >
+            <Button variant="ghost" size="sm" asChild>
               <Link href={`/tournaments/${id}`}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Retour au tournoi
@@ -113,10 +109,7 @@ export default function RankingsPage() {
                   </>
                 )}
                 {tournament?.status === "in_progress" && (
-                  <Badge
-                    variant="secondary"
-                    className="animate-pulse"
-                  >
+                  <Badge variant="secondary" className="animate-pulse">
                     Mise à jour automatique
                   </Badge>
                 )}
@@ -184,10 +177,7 @@ export default function RankingsPage() {
                     <p className="text-sm text-muted-foreground">
                       {rankings[0]?.points} pts
                     </p>
-                    <Badge
-                      variant="default"
-                      className="mt-1"
-                    >
+                    <Badge variant="default" className="mt-1">
                       Champion
                     </Badge>
                   </div>

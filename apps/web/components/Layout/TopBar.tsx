@@ -66,7 +66,12 @@ export function TopBar() {
             <Button asChild size="sm">
               <Link href="/auth/login">Se connecter</Link>
             </Button>
-            <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
               <Link href="/auth/register">S&apos;inscrire</Link>
             </Button>
           </div>

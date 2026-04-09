@@ -1,12 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { decksService } from "@/services/decks.service";
-import DeckCard from "./DeckCard";
-import { Skeleton } from "@components/ui/skeleton";
 import { H2 } from "@components/Shared/Titles";
 import { Button } from "@components/ui/button";
-import { Plus, User as UserIcon, Download } from "lucide-react";
+import { Skeleton } from "@components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { Download, Plus, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { decksService } from "@/services/decks.service";
+import DeckCard from "./DeckCard";
 
 export default function UserDecks() {
   const { user } = useAuth();
@@ -24,10 +24,7 @@ export default function UserDecks() {
         <H2>Mes Decks</H2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-[300px] w-full rounded-xl"
-            />
+            <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
           ))}
         </div>
       </div>
@@ -36,21 +33,23 @@ export default function UserDecks() {
 
   return (
     <div className="space-y-6 mb-12">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <H2 className="flex items-center gap-2">
           <UserIcon className="w-6 h-6 text-primary" /> Mes Decks
         </H2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href="/decks/import">
-            <Button variant="outline">
+            <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
-              Importer un deck
+              <span className="hidden sm:inline">Importer un deck</span>
+              <span className="sm:hidden">Importer</span>
             </Button>
           </Link>
           <Link href="/decks/create">
-            <Button>
+            <Button size="sm">
               <Plus className="w-4 h-4 mr-2" />
-              Nouveau Deck
+              <span className="hidden sm:inline">Nouveau Deck</span>
+              <span className="sm:hidden">Nouveau</span>
             </Button>
           </Link>
         </div>

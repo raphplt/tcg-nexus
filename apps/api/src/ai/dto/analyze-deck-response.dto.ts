@@ -22,7 +22,7 @@ export class DeckAnalysisResponseDto {
     count: number;
   }[];
   synergies: {
-    type: 'energy-type' | 'evolution' | 'trainer-support';
+    type: "energy-type" | "evolution" | "trainer-support";
     description: string;
     cardIds: string[];
   }[];

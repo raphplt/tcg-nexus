@@ -52,22 +52,10 @@ export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <StatBlock
-            label="Total cartes"
-            value={mainCount + sideCount}
-          />
-          <StatBlock
-            label="Principal"
-            value={mainCount}
-          />
-          <StatBlock
-            label="Side"
-            value={sideCount}
-          />
-          <StatBlock
-            label="Variétés"
-            value={cards.length}
-          />
+          <StatBlock label="Total cartes" value={mainCount + sideCount} />
+          <StatBlock label="Principal" value={mainCount} />
+          <StatBlock label="Side" value={sideCount} />
+          <StatBlock label="Variétés" value={cards.length} />
         </div>
         <Separator />
         <div className="flex -space-x-3">

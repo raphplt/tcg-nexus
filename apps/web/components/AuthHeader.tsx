@@ -38,10 +38,7 @@ export const AuthHeader = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link
-            href="/"
-            className="font-bold text-xl"
-          >
+          <Link href="/" className="font-bold text-xl">
             TCG Nexus
           </Link>
         </div>
@@ -63,11 +60,7 @@ export const AuthHeader = () => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56"
-                align="end"
-                forceMount
-              >
+              <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
@@ -88,19 +81,13 @@ export const AuthHeader = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link
-                    href="/profile"
-                    className="w-full cursor-pointer"
-                  >
+                  <Link href="/profile" className="w-full cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profil</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link
-                    href="/settings"
-                    className="w-full cursor-pointer"
-                  >
+                  <Link href="/settings" className="w-full cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Paramètres</span>
                   </Link>
@@ -117,10 +104,7 @@ export const AuthHeader = () => {
             </DropdownMenu>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                asChild
-              >
+              <Button variant="ghost" asChild>
                 <Link href="/auth/login">Connexion</Link>
               </Button>
               <Button asChild>

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePlayerDto } from './dto/create-player.dto';
-import { UpdatePlayerDto } from './dto/update-player.dto';
+import { Injectable } from "@nestjs/common";
+import { CreatePlayerDto } from "./dto/create-player.dto";
+import { UpdatePlayerDto } from "./dto/update-player.dto";
 
 @Injectable()
 export class PlayerService {
   create(_createPlayerDto: CreatePlayerDto) {
-    return 'This action adds a new player';
+    return "This action adds a new player";
   }
 
   findAll() {

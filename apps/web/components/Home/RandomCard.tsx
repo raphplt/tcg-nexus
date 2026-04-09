@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card } from "../ui/card";
 import { H2 } from "../Shared/Titles";
 import { useQuery } from "@tanstack/react-query";
 import { pokemonCardService } from "@/services/pokemonCard.service";
+import type { PokemonCardType } from "@/types/cardPokemon";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { RefreshCw, Info, Loader2 } from "lucide-react";
+import {
+  RefreshCw,
+  Info,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Link from "next/link";
 import { FavoriteButton } from "./FavoritesButton";
 import { getCardImage } from "@/utils/images";
@@ -13,11 +20,15 @@ import { getCardImage } from "@/utils/images";
 const RandomCard = () => {
   const [isFlippingOut, setIsFlippingOut] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
-  const [previousCardId, setPreviousCardId] = useState<string | null>(null);
   const [shouldStartFromLeft, setShouldStartFromLeft] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+
+  const [history, setHistory] = useState<PokemonCardType[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isNavigatingRef = useRef(false);
+
   const {
-    data: card,
+    data: fetchedCard,
     isLoading,
     error,
     refetch,
@@ -27,13 +38,30 @@ const RandomCard = () => {
   });
 
   useEffect(() => {
+    if (fetchedCard && !isNavigatingRef.current) {
+      setHistory((prev) => {
+        const trimmed = prev.slice(0, historyIndex + 1);
+        if (trimmed[trimmed.length - 1]?.id === fetchedCard.id) return trimmed;
+        return [...trimmed, fetchedCard];
+      });
+      setHistoryIndex((prev) => prev + 1);
+    }
+    isNavigatingRef.current = false;
+  }, [fetchedCard]);
+
+  const card = history[historyIndex] ?? null;
+
+  useEffect(() => {
     if (card?.id) {
       setIsImageLoading(true);
     }
   }, [card?.id]);
 
-  useEffect(() => {
-    if (card?.id && card.id !== previousCardId && previousCardId !== null) {
+  const animateTransition = useCallback((callback: () => void) => {
+    setIsFlippingOut(true);
+    setTimeout(async () => {
+      callback();
+      setIsFlippingOut(false);
       setShouldStartFromLeft(true);
       setIsEntering(false);
       requestAnimationFrame(() => {
@@ -45,18 +73,31 @@ const RandomCard = () => {
           }, 300);
         });
       });
-    }
-    if (card?.id) {
-      setPreviousCardId(card.id);
-    }
-  }, [card?.id, previousCardId]);
+    }, 300);
+  }, []);
 
-  const handleNextCard = async () => {
-    if (isFlippingOut || isEntering) return;
-    setIsFlippingOut(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    await refetch();
-    setIsFlippingOut(false);
+  const isAnimating = isFlippingOut || isEntering;
+
+  const handleNextCard = () => {
+    if (isAnimating) return;
+    if (historyIndex < history.length - 1) {
+      animateTransition(() => {
+        isNavigatingRef.current = true;
+        setHistoryIndex((i) => i + 1);
+      });
+    } else {
+      animateTransition(() => {
+        refetch();
+      });
+    }
+  };
+
+  const handlePreviousCard = () => {
+    if (isAnimating || historyIndex <= 0) return;
+    animateTransition(() => {
+      isNavigatingRef.current = true;
+      setHistoryIndex((i) => i - 1);
+    });
   };
 
   return (
@@ -118,17 +159,28 @@ const RandomCard = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <FavoriteButton
-                key={card.id}
-                cardId={card.id}
-              />
+              <FavoriteButton key={card.id} cardId={card.id} />
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Carte précédente"
+                onClick={handlePreviousCard}
+                disabled={historyIndex <= 0 || isAnimating}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
               <Button
                 variant="outline"
                 size="icon"
                 aria-label="Nouvelle carte"
                 onClick={handleNextCard}
+                disabled={isAnimating}
               >
-                <RefreshCw className="w-5 h-5" />
+                {historyIndex < history.length - 1 ? (
+                  <ChevronRight className="w-5 h-5" />
+                ) : (
+                  <RefreshCw className="w-5 h-5" />
+                )}
               </Button>
               <Button
                 variant="secondary"

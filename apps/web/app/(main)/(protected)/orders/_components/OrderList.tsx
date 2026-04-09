@@ -70,10 +70,7 @@ export default function OrderList({ orders }: OrderListProps) {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <Card
-          key={order.id}
-          className="overflow-hidden"
-        >
+        <Card key={order.id} className="overflow-hidden">
           <CardHeader className="bg-muted/50 p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="space-y-1">
@@ -102,14 +99,8 @@ export default function OrderList({ orders }: OrderListProps) {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Accordion
-              type="single"
-              collapsible
-            >
-              <AccordionItem
-                value={`order-${order.id}`}
-                className="border-b-0"
-              >
+            <Accordion type="single" collapsible>
+              <AccordionItem value={`order-${order.id}`} className="border-b-0">
                 <AccordionTrigger className="px-4 py-2 hover:no-underline">
                   <span className="text-sm text-muted-foreground">
                     Voir les détails
@@ -141,10 +132,7 @@ export default function OrderList({ orders }: OrderListProps) {
                             {item.listing.pokemonCard.set?.name}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                            >
+                            <Badge variant="outline" className="text-xs">
                               {item.listing.cardState}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
