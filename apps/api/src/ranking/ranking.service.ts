@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { CreateRankingDto } from "./dto/create-ranking.dto";
-import { UpdateRankingDto } from "./dto/update-ranking.dto";
-import { Ranking } from "./entities/ranking.entity";
+import { Match } from "../match/entities/match.entity";
+import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
-import { Match } from "../match/entities/match.entity";
+import { CreateRankingDto } from "./dto/create-ranking.dto";
+import { UpdateRankingDto } from "./dto/update-ranking.dto";
+import { Ranking } from "./entities/ranking.entity";
 
 export interface RankingCalculationResult {
   playerId: number;

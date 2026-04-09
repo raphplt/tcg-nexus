@@ -1,8 +1,8 @@
-import { Entity, Column, OneToOne, JoinColumn, PrimaryColumn } from "typeorm";
-import { Card } from "./card.entity";
+import { EnergyType } from "src/common/enums/energyType";
 import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { TrainerType } from "src/common/enums/trainerType";
-import { EnergyType } from "src/common/enums/energyType";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
+import { Card } from "./card.entity";
 
 export type PokemonAbility = {
   type?: string;

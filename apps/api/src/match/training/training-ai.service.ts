@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { ActionType, PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
-import { GamePhase } from "../engine/models/enums";
 import {
   CardInGame,
   PokemonCardInGame,
   TrainerCardInGame,
 } from "../engine/models/Card";
+import { GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { PromptResponse } from "../engine/models/Prompt";
 import { TrainingDifficulty } from "../entities/training-match-session.entity";

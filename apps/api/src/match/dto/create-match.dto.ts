@@ -1,13 +1,13 @@
+import { Type } from "class-transformer";
 import {
+  IsBoolean,
+  IsDateString,
+  IsEnum,
   IsNumber,
   IsOptional,
-  IsEnum,
-  IsDateString,
   IsString,
   Min,
-  IsBoolean,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { MatchPhase } from "../entities/match.entity";
 
 export class CreateMatchDto {

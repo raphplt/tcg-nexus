@@ -1,15 +1,15 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Tournament, TournamentType } from "../entities/tournament.entity";
 import { Match, MatchPhase } from "../../match/entities/match.entity";
-import { Player } from "../../player/entities/player.entity";
-import {
-  TournamentRegistration,
-  RegistrationStatus,
-} from "../entities/tournament-registration.entity";
-import { Ranking } from "../../ranking/entities/ranking.entity";
 import { MatchService } from "../../match/match.service";
+import { Player } from "../../player/entities/player.entity";
+import { Ranking } from "../../ranking/entities/ranking.entity";
+import { Tournament, TournamentType } from "../entities/tournament.entity";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "../entities/tournament-registration.entity";
 
 export interface BracketNode {
   matchId?: number;

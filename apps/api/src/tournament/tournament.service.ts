@@ -1,41 +1,41 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
   ConflictException,
+  Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, In, LessThan } from "typeorm";
+import { In, LessThan, Repository } from "typeorm";
+import { UserRole } from "../common/enums/user";
+import { PaginationHelper } from "../helpers/pagination";
+import { UpdateMatchDto } from "../match/dto/update-match.dto";
+import { MatchStatus } from "../match/entities/match.entity";
+import { MatchService } from "../match/match.service";
+import { Player } from "../player/entities/player.entity";
+import { RankingService } from "../ranking/ranking.service";
+import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
-import { UpdateTournamentDto } from "./dto/update-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
-import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
 import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
+import { UpdateTournamentDto } from "./dto/update-tournament.dto";
+import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
 import {
   Tournament,
   TournamentStatus,
   TournamentType,
 } from "./entities/tournament.entity";
 import {
-  TournamentRegistration,
-  RegistrationStatus,
-} from "./entities/tournament-registration.entity";
-import {
-  TournamentOrganizer,
   OrganizerRole,
+  TournamentOrganizer,
 } from "./entities/tournament-organizer.entity";
-import { Player } from "../player/entities/player.entity";
-import { User } from "../user/entities/user.entity";
-import { PaginationHelper } from "../helpers/pagination";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "./entities/tournament-registration.entity";
 import { BracketService } from "./services/bracket.service";
-import { UpdateMatchDto } from "../match/dto/update-match.dto";
-import { SeedingService, SeedingMethod } from "./services/seeding.service";
+import { SeedingMethod, SeedingService } from "./services/seeding.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
 import { TournamentStateService } from "./services/tournament-state.service";
-import { RankingService } from "../ranking/ranking.service";
-import { MatchService } from "../match/match.service";
-import { MatchStatus } from "../match/entities/match.entity";
-import { UserRole } from "../common/enums/user";
 
 @Injectable()
 export class TournamentService {

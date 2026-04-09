@@ -1,5 +1,5 @@
 import { PartialType } from "@nestjs/swagger";
-import { CreateDeckDto } from "./create-deck.dto";
+import { Type } from "class-transformer";
 import {
   IsInt,
   IsNumber,
@@ -8,8 +8,8 @@ import {
   IsUUID,
   ValidateNested,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { DeckCardRole } from "../../common/enums/deckCardRole";
+import { CreateDeckDto } from "./create-deck.dto";
 
 class DeckCardDto {
   @IsUUID()

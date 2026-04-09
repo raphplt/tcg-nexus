@@ -1,28 +1,28 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Put,
-  Delete,
-  Param,
   Query,
-  Body,
   UseGuards,
 } from "@nestjs/common";
-import { CollectionService } from "./collection.service";
-import { Collection } from "./entities/collection.entity";
-import { CreateCollectionDto } from "./dto/create-collection.dto";
-import { UpdateCollectionDto } from "./dto/update-collection.dto";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { User } from "../user/entities/user.entity";
 import {
-  ApiTags,
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
+  ApiTags,
 } from "@nestjs/swagger";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { User } from "../user/entities/user.entity";
+import { CollectionService } from "./collection.service";
+import { CreateCollectionDto } from "./dto/create-collection.dto";
+import { UpdateCollectionDto } from "./dto/update-collection.dto";
+import { Collection } from "./entities/collection.entity";
 
 @ApiTags("collection")
 @Controller("collection")

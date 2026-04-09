@@ -1,15 +1,15 @@
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
+import { CardGame } from "src/common/enums/cardGame";
+import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import {
-  Entity,
   Column,
+  Entity,
   ManyToOne,
-  PrimaryGeneratedColumn,
   OneToMany,
   OneToOne,
+  PrimaryGeneratedColumn,
 } from "typeorm";
-import { CardGame } from "src/common/enums/cardGame";
-import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { DeckCard } from "src/deck-card/entities/deck-card.entity";
-import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { PokemonCardDetails } from "./pokemon-card-details.entity";
 
 export type CardVariants = {

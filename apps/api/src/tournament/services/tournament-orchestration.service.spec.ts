@@ -1,19 +1,19 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { TournamentOrchestrationService } from "./tournament-orchestration.service";
+import {
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "../../match/entities/match.entity";
 import {
   Tournament,
   TournamentStatus,
   TournamentType,
 } from "../entities/tournament.entity";
 import {
-  Match,
-  MatchStatus,
-  MatchPhase,
-} from "../../match/entities/match.entity";
-import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../entities/tournament-registration.entity";
+import { TournamentOrchestrationService } from "./tournament-orchestration.service";
 
 const mockTournamentRepository = {
   findOne: jest.fn(),

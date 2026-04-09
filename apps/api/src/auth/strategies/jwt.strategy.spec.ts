@@ -1,7 +1,7 @@
 import { UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtStrategy } from "./jwt.strategy";
 import { UserService } from "../../user/user.service";
+import { JwtStrategy } from "./jwt.strategy";
 
 describe("JwtStrategy", () => {
   const mockConfig = {

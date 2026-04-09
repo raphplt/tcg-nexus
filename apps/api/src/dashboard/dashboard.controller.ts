@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import { ApiTags, ApiOperation } from "@nestjs/swagger";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { User } from "src/user/entities/user.entity";
 import { DashboardService } from "./dashboard.service";

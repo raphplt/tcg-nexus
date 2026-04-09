@@ -1,12 +1,12 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from "typeorm";
-import { Order } from "./order.entity";
 import { Listing } from "./listing.entity";
+import { Order } from "./order.entity";
 
 @Entity()
 export class OrderItem {

@@ -1,10 +1,10 @@
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { NotFoundException, BadRequestException } from "@nestjs/common";
-import { AiService } from "./ai.service";
-import { Deck } from "../deck/entities/deck.entity";
 import { Card } from "../card/entities/card.entity";
 import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { Deck } from "../deck/entities/deck.entity";
+import { AiService } from "./ai.service";
 
 describe("AiService", () => {
   let service: AiService;

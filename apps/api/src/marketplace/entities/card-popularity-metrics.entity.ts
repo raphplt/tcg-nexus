@@ -1,13 +1,13 @@
+import { Card } from "src/card/entities/card.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  JoinColumn,
+  Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   Unique,
 } from "typeorm";
-import { Card } from "src/card/entities/card.entity";
 
 @Entity("card_popularity_metrics")
 @Unique(["card", "date"])

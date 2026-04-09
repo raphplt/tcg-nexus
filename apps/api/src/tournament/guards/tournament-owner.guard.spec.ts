@@ -1,7 +1,7 @@
 import { ExecutionContext } from "@nestjs/common";
-import { TournamentOwnerGuard } from "./tournament-owner.guard";
 import { UserRole } from "src/common/enums/user";
 import { OrganizerRole } from "../entities/tournament-organizer.entity";
+import { TournamentOwnerGuard } from "./tournament-owner.guard";
 
 const ctx = (req: any): ExecutionContext =>
   ({

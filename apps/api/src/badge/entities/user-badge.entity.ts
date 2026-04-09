@@ -1,12 +1,12 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  CreateDateColumn,
-  JoinColumn,
-  Index,
-} from "typeorm";
 import { User } from "src/user/entities/user.entity";
+import {
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { Badge } from "./badge.entity";
 
 @Entity("user_badge")

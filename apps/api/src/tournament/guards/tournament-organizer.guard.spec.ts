@@ -1,10 +1,10 @@
 import { ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { UserRole } from "src/common/enums/user";
 import {
   TournamentOrganizerGuard,
   TournamentOrganizerRoles,
 } from "./tournament-organizer.guard";
-import { UserRole } from "src/common/enums/user";
 
 const createContext = (req: any): ExecutionContext =>
   ({

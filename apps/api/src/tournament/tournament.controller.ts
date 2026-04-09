@@ -1,39 +1,39 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  HttpStatus,
+  Get,
   HttpCode,
+  HttpStatus,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
-import { TournamentService } from "./tournament.service";
-import { CreateTournamentDto } from "./dto/create-tournament.dto";
-import { UpdateTournamentDto } from "./dto/update-tournament.dto";
-import { TournamentQueryDto } from "./dto/tournament-query.dto";
-import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
-import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "src/common/enums/user";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
-import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { User } from "../user/entities/user.entity";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { TournamentQueryDto } from "./dto/tournament-query.dto";
+import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
+import { UpdateTournamentDto } from "./dto/update-tournament.dto";
+import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
+import { TournamentStatus } from "./entities";
+import { OrganizerRole } from "./entities/tournament-organizer.entity";
 import {
   TournamentOrganizerGuard,
-  TournamentParticipantGuard,
-  TournamentOwnerGuard,
   TournamentOrganizerRoles,
+  TournamentOwnerGuard,
+  TournamentParticipantGuard,
 } from "./guards";
-import { OrganizerRole } from "./entities/tournament-organizer.entity";
-import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { User } from "../user/entities/user.entity";
-import { TournamentStatus } from "./entities";
-import { UserRole } from "src/common/enums/user";
+import { TournamentService } from "./tournament.service";
 
 @ApiTags("tournaments")
 @ApiBearerAuth()

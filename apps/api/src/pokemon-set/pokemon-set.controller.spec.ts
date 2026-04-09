@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { PokemonSetController } from "./pokemon-set.controller";
-import { PokemonSetService } from "./pokemon-set.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { PokemonSet } from "./entities/pokemon-set.entity";
+import { PokemonSetController } from "./pokemon-set.controller";
+import { PokemonSetService } from "./pokemon-set.service";
 
 describe("PokemonSetController", () => {
   let controller: PokemonSetController;

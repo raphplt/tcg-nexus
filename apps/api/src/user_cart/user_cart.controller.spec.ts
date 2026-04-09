@@ -1,12 +1,12 @@
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { UserCartController } from "./user_cart.controller";
-import { UserCartService } from "./user_cart.service";
-import { NotFoundException, BadRequestException } from "@nestjs/common";
 import { User } from "../user/entities/user.entity";
-import { UserCart } from "./entities/user_cart.entity";
-import { CartItem } from "./entities/cart-item.entity";
 import { CreateCartItemDto } from "./dto/create-cart-item.dto";
 import { UpdateCartItemDto } from "./dto/update-cart-item.dto";
+import { CartItem } from "./entities/cart-item.entity";
+import { UserCart } from "./entities/user_cart.entity";
+import { UserCartController } from "./user_cart.controller";
+import { UserCartService } from "./user_cart.service";
 
 describe("UserCartController", () => {
   let controller: UserCartController;

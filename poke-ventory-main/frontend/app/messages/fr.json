@@ -1,0 +1,85 @@
+{
+	"import": {
+		"search": {
+			"title": "Import par recherche",
+			"description": "Recherche des cartes dans notre base de données et ajoute-les à ta collection.",
+			"descriptionProducts": "Recherche des produits scellés dans notre base de données et ajoute-les à ton inventaire.",
+			"searchPlaceholder": "Ex: Pikachu, Dracaufeu, Base Set...",
+			"searchPlaceholderProducts": "Ex: Booster Écarlate et Violet, Display Paradoxe...",
+			"searchButton": "Rechercher",
+			"searching": "Recherche...",
+			"showFilters": "Afficher les filtres",
+			"hideFilters": "Masquer les filtres",
+			"filters": {
+				"title": "Filtres avancés",
+				"series": "Série",
+				"set": "Set",
+				"localId": "Numéro dans le set",
+				"localIdPlaceholder": "Ex: 001, 025, 150",
+				"rarity": "Rareté",
+				"category": "Catégorie",
+				"type": "Type",
+				"stage": "Stage",
+				"allSeries": "Toutes les séries",
+				"allSets": "Tous les sets",
+				"allRarities": "Toutes les raretés",
+				"allCategories": "Toutes les catégories",
+				"allTypes": "Tous les types",
+				"allStages": "Tous les stages",
+				"resetFilters": "Réinitialiser les filtres"
+			},
+			"results": {
+				"title": "Résultats",
+				"selected": "carte(s) sélectionnée(s)",
+				"addSelected": "Ajouter",
+				"adding": "Ajout...",
+				"noResults": "Aucun résultat trouvé.",
+				"emptyState": "Utilise la barre de recherche ou les filtres pour trouver des cartes.",
+				"newSearch": "Nouvelle recherche"
+			},
+			"errors": {
+				"noKeyword": "Saisis au moins un mot-clé ou utilise des filtres pour lancer la recherche.",
+				"searchError": "Une erreur est survenue lors de la recherche.",
+				"noSelection": "Sélectionne au moins une carte à ajouter.",
+				"addError": "Une erreur est survenue.",
+				"addFailed": "Aucune carte n'a pu être ajoutée."
+			},
+			"success": {
+				"added": "ajouté(s) à ta",
+				"collection": "collection",
+				"inventory": "inventaire"
+			}
+		}
+	},
+	"collection": {
+		"title": "Ma collection",
+		"description": "Gère et consulte ta collection de cartes Pokémon",
+		"stats": {
+			"uniqueCards": "Cartes uniques",
+			"totalQuantity": "Quantité totale",
+			"estimatedValue": "Valeur estimée"
+		},
+		"myCards": "Mes cartes",
+		"addCards": "Ajouter des cartes",
+		"loading": "Chargement de ta collection...",
+		"empty": {
+			"title": "Tu n'as pas encore de cartes dans ta collection.",
+			"action": "Ajouter des cartes"
+		},
+		"card": {
+			"noImage": "Pas d'image",
+			"unknown": "Carte inconnue",
+			"pricePaid": "Prix payé"
+		},
+		"pagination": {
+			"previous": "Précédent",
+			"next": "Suivant",
+			"page": "Page",
+			"of": "sur"
+		},
+		"errors": {
+			"loadError": "Une erreur est survenue lors du chargement de ta collection."
+		}
+	}
+}
+

@@ -1,15 +1,15 @@
+import { Listing } from "src/marketplace/entities/listing.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
+  Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import { UserCart } from "./user_cart.entity";
-import { Listing } from "src/marketplace/entities/listing.entity";
 
 @Entity()
 @Index(["cart", "listing"], { unique: true })

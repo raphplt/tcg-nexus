@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import { DeckFormatController } from "./deck-format.controller";
 import { DeckFormatService } from "./deck-format.service";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { DeckFormat } from "./entities/deck-format.entity";
 
 describe("DeckFormatController", () => {

@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from "@nestjs/common";
-import { PlayerService } from "./player.service";
+import { ApiTags } from "@nestjs/swagger";
 import { CreatePlayerDto } from "./dto/create-player.dto";
 import { UpdatePlayerDto } from "./dto/update-player.dto";
-import { ApiTags } from "@nestjs/swagger";
+import { PlayerService } from "./player.service";
 
 @ApiTags("player")
 @Controller("player")

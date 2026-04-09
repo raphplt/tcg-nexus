@@ -1,14 +1,14 @@
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { UserCartService } from "./user_cart.service";
-import { UserCart } from "./entities/user_cart.entity";
-import { CartItem } from "./entities/cart-item.entity";
 import { Listing } from "src/marketplace/entities/listing.entity";
-import { NotFoundException, BadRequestException } from "@nestjs/common";
+import { User } from "src/user/entities/user.entity";
+import { Repository } from "typeorm";
 import { CreateCartItemDto } from "./dto/create-cart-item.dto";
 import { UpdateCartItemDto } from "./dto/update-cart-item.dto";
-import { User } from "src/user/entities/user.entity";
+import { CartItem } from "./entities/cart-item.entity";
+import { UserCart } from "./entities/user_cart.entity";
+import { UserCartService } from "./user_cart.service";
 
 describe("UserCartService", () => {
   let service: UserCartService;

@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Deck } from "src/deck/entities/deck.entity";
 import { Card } from "src/card/entities/card.entity";
+import { Deck } from "src/deck/entities/deck.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { DeckCardRole } from "../../common/enums/deckCardRole";
 
 @Entity()

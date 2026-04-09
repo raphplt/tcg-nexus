@@ -1,31 +1,31 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource, EntityManager } from "typeorm";
-import { CreateMatchDto } from "./dto/create-match.dto";
-import { UpdateMatchDto } from "./dto/update-match.dto";
-import {
-  ReportScoreDto,
-  StartMatchDto,
-  ResetMatchDto,
-} from "./dto/match-operations.dto";
-import { Match, MatchStatus, MatchPhase } from "./entities/match.entity";
+import { DataSource, EntityManager, Repository } from "typeorm";
+import { Deck } from "../deck/entities/deck.entity";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { Statistics } from "../statistics/entities/statistic.entity";
 import {
   Tournament,
   TournamentStatus,
+  TournamentType,
 } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
 import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
-import { TournamentType } from "../tournament/entities/tournament.entity";
-import { Ranking } from "../ranking/entities/ranking.entity";
-import { Statistics } from "../statistics/entities/statistic.entity";
-import { Deck } from "../deck/entities/deck.entity";
+import { CreateMatchDto } from "./dto/create-match.dto";
+import {
+  ReportScoreDto,
+  ResetMatchDto,
+  StartMatchDto,
+} from "./dto/match-operations.dto";
+import { UpdateMatchDto } from "./dto/update-match.dto";
+import { Match, MatchPhase, MatchStatus } from "./entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,

@@ -1,9 +1,9 @@
-import { Controller, Post, Query, Body } from "@nestjs/common";
-import { SeedService } from "./seed.service";
-import { ApiTags, ApiQuery, ApiBody } from "@nestjs/swagger";
+import { Body, Controller, Post, Query } from "@nestjs/common";
+import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "src/common/enums/user";
 import { TournamentType } from "src/tournament/entities/tournament.entity";
 import { SeedingMethod } from "src/tournament/services/seeding.service";
-import { UserRole } from "src/common/enums/user";
+import { SeedService } from "./seed.service";
 
 @ApiTags("seed")
 @Controller("seed")

@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from "@nestjs/common";
-import { StatisticsService } from "./statistics.service";
+import { ApiTags } from "@nestjs/swagger";
 import { CreateStatisticDto } from "./dto/create-statistic.dto";
 import { UpdateStatisticDto } from "./dto/update-statistic.dto";
-import { ApiTags } from "@nestjs/swagger";
+import { StatisticsService } from "./statistics.service";
 
 @ApiTags("statistics")
 @Controller("statistics")

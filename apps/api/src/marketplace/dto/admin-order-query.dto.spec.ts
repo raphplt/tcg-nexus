@@ -1,8 +1,7 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-
-import { AdminOrderQueryDto } from "./admin-order-query.dto";
 import { OrderStatus } from "../entities/order.entity";
+import { AdminOrderQueryDto } from "./admin-order-query.dto";
 
 describe("AdminOrderQueryDto", () => {
   it("transforms and validates numeric fields", () => {

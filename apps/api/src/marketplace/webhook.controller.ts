@@ -1,17 +1,17 @@
 import {
-  Controller,
-  Post,
-  Headers,
-  Req,
   BadRequestException,
+  Controller,
+  Headers,
   Logger,
+  Post,
+  Req,
 } from "@nestjs/common";
-import { StripeService } from "./stripe.service";
-import { MarketplaceService } from "./marketplace.service";
-import { Request } from "express";
 import { ApiTags } from "@nestjs/swagger";
-import { Public } from "../auth/decorators/public.decorator";
+import { Request } from "express";
 import Stripe from "stripe";
+import { Public } from "../auth/decorators/public.decorator";
+import { MarketplaceService } from "./marketplace.service";
+import { StripeService } from "./stripe.service";
 
 @ApiTags("webhook")
 @Controller("webhook")

@@ -1,12 +1,11 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-
+import { CardEventType } from "../entities/card-event.entity";
 import {
   CreateCardEventDto,
   GetPopularCardsQueryDto,
   GetTrendingCardsQueryDto,
 } from "./card-popularity.dto";
-import { CardEventType } from "../entities/card-event.entity";
 
 describe("CardPopularity DTOs", () => {
   it("validates CreateCardEventDto", () => {

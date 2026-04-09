@@ -1,33 +1,32 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { TournamentService } from "./tournament.service";
-import { getRepositoryToken } from "@nestjs/typeorm";
-import {
-  Tournament,
-  TournamentStatus,
-  TournamentType,
-} from "./entities/tournament.entity";
-import {
-  TournamentRegistration,
-  RegistrationStatus,
-} from "./entities/tournament-registration.entity";
-import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
-import { Player } from "../player/entities/player.entity";
-import { User } from "../user/entities/user.entity";
-import { BracketService } from "./services/bracket.service";
-import { SeedingService } from "./services/seeding.service";
-import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
-import { TournamentStateService } from "./services/tournament-state.service";
-import { RankingService } from "../ranking/ranking.service";
-import { MatchService } from "../match/match.service";
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
-import { CreateTournamentDto } from "./dto/create-tournament.dto";
-import { PaginationHelper } from "../helpers/pagination";
-import { SeedingMethod } from "./services/seeding.service";
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import { UserRole } from "../common/enums/user";
+import { PaginationHelper } from "../helpers/pagination";
+import { MatchService } from "../match/match.service";
+import { Player } from "../player/entities/player.entity";
+import { RankingService } from "../ranking/ranking.service";
+import { User } from "../user/entities/user.entity";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentType,
+} from "./entities/tournament.entity";
+import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "./entities/tournament-registration.entity";
+import { BracketService } from "./services/bracket.service";
+import { SeedingMethod, SeedingService } from "./services/seeding.service";
+import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
+import { TournamentStateService } from "./services/tournament-state.service";
+import { TournamentService } from "./tournament.service";
 
 describe("TournamentService", () => {
   let service: TournamentService;

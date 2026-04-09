@@ -1,17 +1,17 @@
+import { User } from "src/user/entities/user.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
-  CreateDateColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-  JoinColumn,
 } from "typeorm";
-import { User } from "src/user/entities/user.entity";
+import { Currency } from "../../common/enums/currency";
 import { OrderItem } from "./order-item.entity";
 import { PaymentTransaction } from "./payment-transaction.entity";
-import { Currency } from "../../common/enums/currency";
 
 export enum OrderStatus {
   PENDING = "Pending",

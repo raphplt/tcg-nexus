@@ -1,19 +1,18 @@
+import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
-import { TournamentController } from "./tournament.controller";
-import { TournamentService } from "./tournament.service";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Player } from "../player/entities/player.entity";
+import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
-import { User } from "../user/entities/user.entity";
-import { TournamentStatus } from "./entities/tournament.entity";
-import { TournamentOrganizerGuard } from "./guards/tournament-organizer.guard";
-import { TournamentParticipantGuard } from "./guards/tournament-participant.guard";
-import { TournamentOwnerGuard } from "./guards/tournament-owner.guard";
-import { Reflector } from "@nestjs/core";
-import { getRepositoryToken } from "@nestjs/typeorm";
+import { Tournament, TournamentStatus } from "./entities/tournament.entity";
 import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
-import { Tournament } from "./entities/tournament.entity";
 import { TournamentRegistration } from "./entities/tournament-registration.entity";
-import { Player } from "../player/entities/player.entity";
+import { TournamentOrganizerGuard } from "./guards/tournament-organizer.guard";
+import { TournamentOwnerGuard } from "./guards/tournament-owner.guard";
+import { TournamentParticipantGuard } from "./guards/tournament-participant.guard";
+import { TournamentController } from "./tournament.controller";
+import { TournamentService } from "./tournament.service";
 
 describe("TournamentController", () => {
   let controller: TournamentController;

@@ -1,5 +1,5 @@
-import { IsInt, IsOptional, IsString, Min, IsNumber } from "class-validator";
 import { Type } from "class-transformer";
+import { IsInt, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
 export class FindAllListingsQuery {
   @IsOptional()

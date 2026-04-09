@@ -1,9 +1,9 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "../app.module";
-import { SeedService } from "../seed/seed.service";
-import { CardEffectsSyncService } from "../card/card-effects-sync.service";
-import * as readline from "readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { NestFactory } from "@nestjs/core";
+import * as readline from "readline/promises";
+import { AppModule } from "../app.module";
+import { CardEffectsSyncService } from "../card/card-effects-sync.service";
+import { SeedService } from "../seed/seed.service";
 
 function logStep(msg: string) {
   console.log(`\x1b[36m➡️  ${msg}\x1b[0m`);

@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { TournamentOrganizer as TournamentOrganizerEntity } from "../entities/tournament-organizer.entity";
-import { Tournament as TournamentEntity } from "../entities/tournament.entity";
 import { Player } from "../../player/entities/player.entity";
+import { Tournament as TournamentEntity } from "../entities/tournament.entity";
+import { TournamentOrganizer as TournamentOrganizerEntity } from "../entities/tournament-organizer.entity";
 import { TournamentRegistration as TournamentRegistrationEntity } from "../entities/tournament-registration.entity";
 
 interface AuthenticatedRequest {

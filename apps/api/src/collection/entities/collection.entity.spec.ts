@@ -1,8 +1,7 @@
-import { getMetadataArgsStorage } from "typeorm";
-
-import { Collection } from "./collection.entity";
-import { User } from "src/user/entities/user.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
+import { User } from "src/user/entities/user.entity";
+import { getMetadataArgsStorage } from "typeorm";
+import { Collection } from "./collection.entity";
 
 describe("Collection entity", () => {
   it("should register relations and defaults", () => {

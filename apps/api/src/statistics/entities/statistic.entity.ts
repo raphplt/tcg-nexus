@@ -1,14 +1,14 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-} from "typeorm";
-import { Player } from "src/player/entities/player.entity";
 import { Match } from "src/match/entities/match.entity";
+import { Player } from "src/player/entities/player.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 @Entity()
 @Index(["player", "match"], { unique: true })

@@ -1,15 +1,15 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
-import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
-import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
-import { Deck } from "../deck/entities/deck.entity";
 import { Card } from "../card/entities/card.entity";
 import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { Deck } from "../deck/entities/deck.entity";
+import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
+import { DeckAnalysisResponseDto } from "./dto/analyze-deck-response.dto";
 
 @Injectable()
 export class AiService {

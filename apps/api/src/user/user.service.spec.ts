@@ -2,9 +2,9 @@ import { ConflictException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
-import { UserService } from "./user.service";
-import { User } from "./entities/user.entity";
 import { Player } from "src/player/entities/player.entity";
+import { User } from "./entities/user.entity";
+import { UserService } from "./user.service";
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("hashed"),

@@ -1,16 +1,16 @@
+import { Player } from "src/player/entities/player.entity";
+import { Statistics } from "src/statistics/entities/statistic.entity";
+import { Tournament } from "src/tournament/entities/tournament.entity";
 import {
+  Column,
+  CreateDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
-  Column,
-  CreateDateColumn,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { Tournament } from "src/tournament/entities/tournament.entity";
-import { Player } from "src/player/entities/player.entity";
-import { Statistics } from "src/statistics/entities/statistic.entity";
 import { OnlineMatchSession } from "./online-match-session.entity";
 
 export enum MatchStatus {

@@ -1,17 +1,17 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Match } from "../entities/match.entity";
-import { TournamentOrganizer } from "../../tournament/entities/tournament-organizer.entity";
-import { User } from "../../user/entities/user.entity";
 import { Request } from "express";
 import { UserRole } from "src/common/enums/user";
+import { Repository } from "typeorm";
+import { TournamentOrganizer } from "../../tournament/entities/tournament-organizer.entity";
+import { User } from "../../user/entities/user.entity";
+import { Match } from "../entities/match.entity";
 
 @Injectable()
 export class MatchPermissionGuard implements CanActivate {

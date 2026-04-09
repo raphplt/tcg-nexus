@@ -1,10 +1,10 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { Card } from "src/card/entities/card.entity";
 import { CardPopularityService } from "./card-popularity.service";
 import { CardEvent, CardEventType } from "./entities/card-event.entity";
 import { CardPopularityMetrics } from "./entities/card-popularity-metrics.entity";
-import { Card } from "src/card/entities/card.entity";
 import { Listing } from "./entities/listing.entity";
 import { Order } from "./entities/order.entity";
 

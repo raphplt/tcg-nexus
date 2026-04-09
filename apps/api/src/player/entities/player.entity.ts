@@ -1,15 +1,15 @@
+import { Ranking } from "src/ranking/entities/ranking.entity";
+import { Statistics } from "src/statistics/entities/statistic.entity";
+import { Tournament } from "src/tournament/entities/tournament.entity";
+import { User } from "src/user/entities/user.entity";
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  JoinColumn,
   ManyToMany,
   OneToMany,
   OneToOne,
-  JoinColumn,
+  PrimaryGeneratedColumn,
 } from "typeorm";
-import { Tournament } from "src/tournament/entities/tournament.entity";
-import { Statistics } from "src/statistics/entities/statistic.entity";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import { User } from "src/user/entities/user.entity";
 
 @Entity()
 export class Player {

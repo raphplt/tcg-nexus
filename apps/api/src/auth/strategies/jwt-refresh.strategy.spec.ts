@@ -1,7 +1,7 @@
 import { UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtRefreshStrategy } from "./jwt-refresh.strategy";
 import { UserService } from "../../user/user.service";
+import { JwtRefreshStrategy } from "./jwt-refresh.strategy";
 
 describe("JwtRefreshStrategy", () => {
   const mockConfig = {

@@ -1,12 +1,12 @@
+import { CreateTournamentDto as CreateTournamentDtoStandalone } from "./create-tournament.dto";
 import {
   CreateFullTournamentDto,
-  CreateTournamentDto as TournamentDtoCreateTournamentDto,
   CreateTournamentPricingDto,
   CreateTournamentRewardDto,
+  CreateTournamentDto as TournamentDtoCreateTournamentDto,
   TournamentRegistrationDto as TournamentDtoRegistrationDto,
   UpdateTournamentStatusDto,
 } from "./tournament.dto";
-import { CreateTournamentDto as CreateTournamentDtoStandalone } from "./create-tournament.dto";
 import { TournamentQueryDto } from "./tournament-query.dto";
 import { TournamentRegistrationDto as TournamentRegistrationDtoStandalone } from "./tournament-registration.dto";
 

@@ -1,6 +1,6 @@
 import { ExecutionContext } from "@nestjs/common";
-import { TournamentParticipantGuard } from "./tournament-participant.guard";
 import { RegistrationStatus } from "../entities/tournament-registration.entity";
+import { TournamentParticipantGuard } from "./tournament-participant.guard";
 
 const ctx = (req: any): ExecutionContext =>
   ({

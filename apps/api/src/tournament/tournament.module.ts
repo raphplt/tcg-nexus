@@ -1,31 +1,31 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { TournamentService } from "./tournament.service";
-import { TournamentController } from "./tournament.controller";
+import { Match } from "../match/entities/match.entity";
+import { MatchModule } from "../match/match.module";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { RankingModule } from "../ranking/ranking.module";
+import { User } from "../user/entities/user.entity";
 import {
+  RegistrationPayment,
   Tournament,
+  TournamentNotification,
+  TournamentOrganizer,
+  TournamentPricing,
   TournamentRegistration,
   TournamentReward,
-  TournamentPricing,
-  TournamentOrganizer,
-  TournamentNotification,
-  RegistrationPayment,
 } from "./entities";
-import { Player } from "../player/entities/player.entity";
-import { User } from "../user/entities/user.entity";
-import { Match } from "../match/entities/match.entity";
-import { Ranking } from "../ranking/entities/ranking.entity";
 import {
   TournamentOrganizerGuard,
-  TournamentParticipantGuard,
   TournamentOwnerGuard,
+  TournamentParticipantGuard,
 } from "./guards";
 import { BracketService } from "./services/bracket.service";
 import { SeedingService } from "./services/seeding.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
 import { TournamentStateService } from "./services/tournament-state.service";
-import { RankingModule } from "../ranking/ranking.module";
-import { MatchModule } from "../match/match.module";
+import { TournamentController } from "./tournament.controller";
+import { TournamentService } from "./tournament.service";
 
 @Module({
   imports: [

@@ -1,16 +1,16 @@
+import { Player } from "src/player/entities/player.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  OneToMany,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   Index,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
-import { Tournament } from "./tournament.entity";
-import { Player } from "src/player/entities/player.entity";
 import { RegistrationPayment } from "./registration-payment.entity";
+import { Tournament } from "./tournament.entity";
 
 export enum RegistrationStatus {
   PENDING = "pending",

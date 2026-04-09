@@ -1,17 +1,17 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { AuthService } from "./auth.service";
-import { UserService } from "../user/user.service";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import { CollectionService } from "../collection/collection.service";
 import {
-  UnauthorizedException,
   BadRequestException,
   ConflictException,
+  UnauthorizedException,
 } from "@nestjs/common";
-import { User } from "../user/entities/user.entity";
-import { UserRole } from "src/common/enums/user";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import { Test, TestingModule } from "@nestjs/testing";
 import * as bcrypt from "bcrypt";
+import { UserRole } from "src/common/enums/user";
+import { CollectionService } from "../collection/collection.service";
+import { User } from "../user/entities/user.entity";
+import { UserService } from "../user/user.service";
+import { AuthService } from "./auth.service";
 
 jest.mock("bcrypt");
 

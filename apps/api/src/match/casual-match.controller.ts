@@ -9,10 +9,10 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { User } from "../user/entities/user.entity";
-import { SelectCasualDeckDto } from "./dto/select-casual-deck.dto";
+import { CasualMatchService } from "./casual/casual-match.service";
 import { DispatchTrainingActionDto } from "./dto/dispatch-training-action.dto";
 import { RespondTrainingPromptDto } from "./dto/respond-training-prompt.dto";
-import { CasualMatchService } from "./casual/casual-match.service";
+import { SelectCasualDeckDto } from "./dto/select-casual-deck.dto";
 
 @ApiTags("casual-matches")
 @ApiBearerAuth()

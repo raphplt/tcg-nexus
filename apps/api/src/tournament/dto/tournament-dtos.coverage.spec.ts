@@ -1,22 +1,21 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-
-import { CreateTournamentDto } from "./create-tournament.dto";
-import { TournamentQueryDto } from "./tournament-query.dto";
-import { TournamentRegistrationDto as RegistrationDtoStandalone } from "./tournament-registration.dto";
 import {
-  CreateTournamentPricingDto,
-  CreateTournamentRewardDto,
-  CreateFullTournamentDto,
-  TournamentRegistrationDto as RegistrationDtoFromTournamentDto,
-  UpdateTournamentStatusDto,
-} from "./tournament.dto";
-import {
-  TournamentType,
   TournamentStatus,
+  TournamentType,
 } from "../entities/tournament.entity";
 import { PricingType } from "../entities/tournament-pricing.entity";
 import { RewardType } from "../entities/tournament-reward.entity";
+import { CreateTournamentDto } from "./create-tournament.dto";
+import {
+  CreateFullTournamentDto,
+  CreateTournamentPricingDto,
+  CreateTournamentRewardDto,
+  TournamentRegistrationDto as RegistrationDtoFromTournamentDto,
+  UpdateTournamentStatusDto,
+} from "./tournament.dto";
+import { TournamentQueryDto } from "./tournament-query.dto";
+import { TournamentRegistrationDto as RegistrationDtoStandalone } from "./tournament-registration.dto";
 
 describe("Tournament DTO coverage", () => {
   it("should validate CreateTournamentDto with basic fields", () => {

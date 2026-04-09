@@ -1,12 +1,12 @@
+import { Type } from "class-transformer";
 import {
-  IsOptional,
-  IsEnum,
-  IsString,
-  IsNumber,
   IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
   Min,
 } from "class-validator";
-import { Type } from "class-transformer";
 import {
   TournamentStatus,
   TournamentType,

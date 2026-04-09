@@ -1,10 +1,9 @@
-import { getMetadataArgsStorage } from "typeorm";
-
-import { Deck } from "./deck.entity";
-import { User } from "src/user/entities/user.entity";
-import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
 import { Card } from "src/card/entities/card.entity";
 import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
+import { User } from "src/user/entities/user.entity";
+import { getMetadataArgsStorage } from "typeorm";
+import { Deck } from "./deck.entity";
 
 describe("Deck entity", () => {
   it("should register relations correctly", () => {

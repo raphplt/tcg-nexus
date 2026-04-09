@@ -3,20 +3,20 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { CardGame } from "../common/enums/cardGame";
-import { Tournament } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
+import { Player } from "../player/entities/player.entity";
+import { Tournament } from "../tournament/entities/tournament.entity";
 import { User } from "../user/entities/user.entity";
 import {
   GlobalSearchDto,
-  SearchResultItem,
   GlobalSearchResult,
+  SearchResultItem,
 } from "./dto/global-search.dto";
 import {
-  SuggestionsPreviewResult,
-  SuggestionsDetailResult,
-  SuggestionPreviewItem,
   SuggestionDetailItem,
+  SuggestionPreviewItem,
+  SuggestionsDetailResult,
+  SuggestionsPreviewResult,
 } from "./dto/suggestions.dto";
 
 @Injectable()
@@ -217,29 +217,34 @@ export class SearchService {
       .limit(limit)
       .getMany();
 
-    return listings.map((listing) => ({
-      id: listing.id,
-      type: "marketplace" as const,
-      title: `${listing.pokemonCard.name} - ${listing.price} ${listing.currency}`,
-      description: `${listing.cardState} • ${listing.seller.firstName} ${listing.seller.lastName} • ${listing.quantityAvailable} disponible(s)`,
-      url: `/marketplace/${listing.id}`,
-      image: listing.pokemonCard.image,
-      metadata: {
-        price: listing.price,
-        currency: listing.currency,
-        cardState: listing.cardState,
-        quantityAvailable: listing.quantityAvailable,
-        seller: {
-          id: listing.seller.id,
-          name: `${listing.seller.firstName} ${listing.seller.lastName}`,
-        },
-        pokemonCard: {
-          id: listing.pokemonCard.id,
-          name: listing.pokemonCard.name,
-          rarity: listing.pokemonCard.rarity,
-        },
-      },
-    }));
+    return listings
+      .filter((listing) => listing.pokemonCard != null)
+      .map((listing) => {
+        const card = listing.pokemonCard!;
+        return {
+          id: listing.id,
+          type: "marketplace" as const,
+          title: `${card.name} - ${listing.price} ${listing.currency}`,
+          description: `${listing.cardState} • ${listing.seller.firstName} ${listing.seller.lastName} • ${listing.quantityAvailable} disponible(s)`,
+          url: `/marketplace/${listing.id}`,
+          image: card.image,
+          metadata: {
+            price: listing.price,
+            currency: listing.currency,
+            cardState: listing.cardState,
+            quantityAvailable: listing.quantityAvailable,
+            seller: {
+              id: listing.seller.id,
+              name: `${listing.seller.firstName} ${listing.seller.lastName}`,
+            },
+            pokemonCard: {
+              id: card.id,
+              name: card.name,
+              rarity: card.rarity,
+            },
+          },
+        };
+      });
   }
 
   private calculateRelevanceScores(

@@ -1,17 +1,17 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import {
-  TournamentOrganizer,
-  OrganizerRole,
-} from "../entities/tournament-organizer.entity";
-import { Tournament } from "../entities/tournament.entity";
 import { UserRole } from "src/common/enums/user";
+import { Repository } from "typeorm";
+import { Tournament } from "../entities/tournament.entity";
+import {
+  OrganizerRole,
+  TournamentOrganizer,
+} from "../entities/tournament-organizer.entity";
 
 interface AuthenticatedRequest {
   user: {

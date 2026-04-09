@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { WebhookController } from "./webhook.controller";
 import { StripeService } from "./stripe.service";
+import { WebhookController } from "./webhook.controller";
 
 describe("WebhookController", () => {
   let controller: WebhookController;

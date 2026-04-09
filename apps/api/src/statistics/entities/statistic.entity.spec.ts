@@ -1,8 +1,7 @@
-import { getMetadataArgsStorage } from "typeorm";
-
-import { Statistics } from "./statistic.entity";
-import { Player } from "src/player/entities/player.entity";
 import { Match } from "src/match/entities/match.entity";
+import { Player } from "src/player/entities/player.entity";
+import { getMetadataArgsStorage } from "typeorm";
+import { Statistics } from "./statistic.entity";
 
 describe("Statistics entity", () => {
   it("should register relations and resolve relation types", () => {

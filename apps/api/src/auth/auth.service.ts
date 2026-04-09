@@ -13,12 +13,12 @@ import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { parseDurationToMs } from "./utils/parse-duration";
 import {
   AuthResponse,
   AuthTokens,
   JwtPayload,
 } from "./interfaces/auth.interface";
+import { parseDurationToMs } from "./utils/parse-duration";
 
 @Injectable()
 export class AuthService {

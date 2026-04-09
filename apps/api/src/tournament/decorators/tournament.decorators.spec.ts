@@ -9,8 +9,8 @@ jest.mock("@nestjs/common", () => {
 });
 
 import {
-  TournamentOrganizer,
   Tournament,
+  TournamentOrganizer,
   TournamentPlayer,
   TournamentRegistration,
 } from "./tournament.decorators";

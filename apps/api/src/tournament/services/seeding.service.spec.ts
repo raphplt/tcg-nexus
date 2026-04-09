@@ -1,6 +1,6 @@
-import { SeedingMethod, SeedingService, SeededPlayer } from "./seeding.service";
 import { Player } from "../../player/entities/player.entity";
 import { Ranking } from "../../ranking/entities/ranking.entity";
+import { SeededPlayer, SeedingMethod, SeedingService } from "./seeding.service";
 
 const mockPlayerRepository = {};
 

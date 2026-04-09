@@ -1,14 +1,14 @@
+import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { DeckService } from "./deck.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { Card } from "../card/entities/card.entity";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { DeckService } from "./deck.service";
 import { Deck } from "./entities/deck.entity";
 import { DeckShare } from "./entities/deck-share.entity";
 import { SavedDeck } from "./entities/saved-deck.entity";
-import { NotFoundException } from "@nestjs/common";
-import { PokemonCardsType } from "../common/enums/pokemonCardsType";
 
 describe("DeckService analyzeDeck", () => {
   let service: DeckService;

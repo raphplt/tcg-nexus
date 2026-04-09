@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node --import ./register-tsnode.mjs server.ts",
     "update-data": "tsx update-data.ts",
+    "update-sealed": "tsx update-sealed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -24,6 +25,7 @@
     "@aws-sdk/client-s3": "^3.978.0",
     "@types/adm-zip": "^0.5.7",
     "adm-zip": "^0.5.16",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.2.3"
   },
   "optionalDependencies": {

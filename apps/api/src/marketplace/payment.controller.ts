@@ -1,17 +1,17 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   Post,
-  Body,
   UseGuards,
-  BadRequestException,
 } from "@nestjs/common";
-import { StripeService } from "./stripe.service";
-import { CreatePaymentIntentDto } from "./dto/create-payment-intent.dto";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { User } from "src/user/entities/user.entity";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { CreatePaymentIntentDto } from "./dto/create-payment-intent.dto";
+import { StripeService } from "./stripe.service";
 
 @ApiTags("payments")
 @Controller("payments")

@@ -1,21 +1,21 @@
 import { BadRequestException } from "@nestjs/common";
-import { BracketService, BracketStructure } from "./bracket.service";
-import {
-  Tournament,
-  TournamentStatus,
-  TournamentType,
-} from "../entities/tournament.entity";
 import {
   Match,
   MatchPhase,
   MatchStatus,
 } from "../../match/entities/match.entity";
 import { Player } from "../../player/entities/player.entity";
-import {
-  TournamentRegistration,
-  RegistrationStatus,
-} from "../entities/tournament-registration.entity";
 import { Ranking } from "../../ranking/entities/ranking.entity";
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentType,
+} from "../entities/tournament.entity";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "../entities/tournament-registration.entity";
+import { BracketService, BracketStructure } from "./bracket.service";
 
 const mockTournamentRepository = {
   findOne: jest.fn(),
