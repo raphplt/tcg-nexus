@@ -9,7 +9,7 @@ Ce microservice est une application Express.js qui interagit avec l’API TCGdex
 
 ## Usage
 
-1. Démarrer le serveru:
+1. Démarrer le serveur:
 
    ```sh
    npm start
