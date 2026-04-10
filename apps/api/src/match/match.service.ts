@@ -25,6 +25,7 @@ import {
 import { TournamentType } from '../tournament/entities/tournament.entity';
 import { Ranking } from '../ranking/entities/ranking.entity';
 import { Statistics } from '../statistics/entities/statistic.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export interface MatchQueryDto {
   tournamentId?: number;
@@ -51,7 +52,8 @@ export class MatchService {
     private readonly rankingRepository: Repository<Ranking>,
     @InjectRepository(Statistics)
     private readonly statisticsRepository: Repository<Statistics>,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   // Créer un nouveau match
@@ -216,7 +218,7 @@ export class MatchService {
   async findOne(id: number): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
-      relations: ['tournament', 'playerA', 'playerB', 'winner', 'statistics']
+      relations: ['tournament', 'playerA', 'playerA.user', 'playerB', 'playerB.user', 'winner', 'winner.user', 'statistics']
     });
 
     if (!match) {
@@ -360,6 +362,10 @@ export class MatchService {
 
         // Vérifier si le tournoi peut avancer automatiquement
         await this.checkTournamentProgression(match, manager);
+
+        if (savedMatch.winner?.user?.id) {
+          this.eventEmitter.emit('challenge.action', { userId: savedMatch.winner.user.id, action: 'WIN_MATCH' });
+        }
 
         return savedMatch;
       }

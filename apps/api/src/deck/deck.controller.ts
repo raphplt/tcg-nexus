@@ -55,7 +55,7 @@ export class DeckController {
   async findOne(@Param('id') id: string, @CurrentUser() user?: User) {
     const deck = await this.deckService.findOneWithCards(+id);
     if (user?.id) {
-      this.eventEmitter.emit('action.VIEW_DECK', { userId: user.id });
+      this.eventEmitter.emit('challenge.action', { userId: user.id, action: 'VIEW_DECK' });
     }
     return deck;
   }

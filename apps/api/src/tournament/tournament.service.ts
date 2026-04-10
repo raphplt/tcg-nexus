@@ -36,6 +36,7 @@ import { RankingService } from '../ranking/ranking.service';
 import { MatchService } from '../match/match.service';
 import { MatchStatus } from '../match/entities/match.entity';
 import { UserRole } from '../common/enums/user';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class TournamentService {
@@ -55,7 +56,8 @@ export class TournamentService {
     private orchestrationService: TournamentOrchestrationService,
     private stateService: TournamentStateService,
     private rankingService: RankingService,
-    private matchService: MatchService
+    private matchService: MatchService,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   // Créer un nouveau tournoi
@@ -291,7 +293,8 @@ export class TournamentService {
     const { tournamentId, playerId, notes } = registrationDto;
     const tournament = await this.findOne(tournamentId);
     const player = await this.playerRepository.findOne({
-      where: { id: playerId }
+      where: { id: playerId },
+      relations: ['user']
     });
     if (!player) {
       throw new NotFoundException(`Joueur avec l'ID ${playerId} non trouvé`);
@@ -363,7 +366,11 @@ export class TournamentService {
       status: registrationStatus
     });
 
-    return this.registrationRepository.save(registration);
+    const savedRegistration = await this.registrationRepository.save(registration);
+    if (player.user?.id) {
+      this.eventEmitter.emit('challenge.action', { userId: player.user.id, action: 'JOIN_TOURNAMENT' });
+    }
+    return savedRegistration;
   }
 
   // Désinscrire un joueur d'un tournoi

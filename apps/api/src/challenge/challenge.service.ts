@@ -132,18 +132,16 @@ export class ChallengeService {
 
   /**
    * General event listener for actions.
-   * Dispatched like: this.eventEmitter.emit('action.ADD_CARD', { userId: 1 })
+   * Dispatched like: this.eventEmitter.emit('challenge.action', { userId: 1, action: 'ADD_CARD' })
    */
-  @OnEvent('action.*')
-  async handleAction(payload: { userId: number }, eventName: string) {
-    const actionTypeString = eventName.split('.')[1];
-    
+  @OnEvent('challenge.action')
+  async handleAction(payload: { userId: number; action: string }) {
     // Check if it's a valid action
-    if (!Object.values(ChallengeActionType).includes(actionTypeString as ChallengeActionType)) {
+    if (!Object.values(ChallengeActionType).includes(payload.action as ChallengeActionType)) {
       return;
     }
 
-    const actionType = actionTypeString as ChallengeActionType;
+    const actionType = payload.action as ChallengeActionType;
     await this.incrementProgress(payload.userId, actionType, 1);
   }
 

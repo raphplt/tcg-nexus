@@ -101,7 +101,7 @@ export class CollectionItemService {
     });
 
     const savedItem = await this.collectionItemRepo.save(item);
-    this.eventEmitter.emit('action.ADD_CARD', { userId: user.id });
+    this.eventEmitter.emit('challenge.action', { userId: user.id, action: 'ADD_CARD' });
     return savedItem;
   }
 
@@ -166,7 +166,7 @@ export class CollectionItemService {
     });
 
     const savedItem = await this.collectionItemRepo.save(item);
-    this.eventEmitter.emit('action.ADD_CARD', { userId: user.id });
+    this.eventEmitter.emit('challenge.action', { userId: user.id, action: 'ADD_CARD' });
     return savedItem;
   }
 
@@ -218,7 +218,7 @@ export class CollectionItemService {
 
     const savedItem = await this.collectionItemRepo.save(item);
     if (collection.user?.id) {
-      this.eventEmitter.emit('action.ADD_CARD', { userId: collection.user.id });
+      this.eventEmitter.emit('challenge.action', { userId: collection.user.id, action: 'ADD_CARD' });
     }
     return savedItem;
   }
