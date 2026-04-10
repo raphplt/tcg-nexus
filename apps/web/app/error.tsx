@@ -1,8 +1,8 @@
 "use client";
 
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw } from "lucide-react";
 
 export default function Error({
   error,
@@ -27,7 +27,7 @@ export default function Error({
         </div>
         <Button onClick={reset}>
           <RefreshCw className="mr-2 h-4 w-4" />
-          Reessayer
+          Réessayer
         </Button>
       </div>
     </div>
