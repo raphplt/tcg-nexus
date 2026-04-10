@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -25,16 +26,19 @@ export class SealedProductController {
   constructor(private readonly sealedProductService: SealedProductService) {}
 
   @Get()
+  @Public()
   findAll(@Query() filter: SealedProductFilterDto) {
     return this.sealedProductService.findAll(filter);
   }
 
   @Get("paginated")
+  @Public()
   findAllPaginated(@Query() filter: SealedProductFilterDto) {
     return this.sealedProductService.findAllPaginated(filter);
   }
 
   @Get(":id")
+  @Public()
   findOne(@Param("id") id: string) {
     return this.sealedProductService.findOne(id);
   }
