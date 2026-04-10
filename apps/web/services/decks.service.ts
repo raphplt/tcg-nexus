@@ -120,6 +120,10 @@ export const decksService = {
     return fetcher<DeckExportJson>(`/deck/export/${id}`);
   },
 
+  async cloneDeck(id: number): Promise<Deck> {
+    return authedFetch("POST", `/deck/${id}/clone`);
+  },
+
   async importDeckFromJson(
     data: DeckExportJson,
   ): Promise<{ deck: Deck; warnings?: string[] }> {

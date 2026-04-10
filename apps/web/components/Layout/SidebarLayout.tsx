@@ -18,8 +18,8 @@ export default function SidebarLayout({
         <TopBar />
         <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
           {children}
+          <Footer />
         </div>
-        <Footer />
       </SidebarInset>
       <Toaster />
     </SidebarProvider>

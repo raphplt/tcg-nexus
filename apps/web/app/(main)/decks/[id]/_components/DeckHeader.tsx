@@ -8,6 +8,7 @@ import {
   Download,
   Edit3,
   Layers,
+  Copy,
   Share2,
   User as UserIcon,
 } from "lucide-react";
@@ -15,14 +16,17 @@ import Image from "next/image";
 import { getCardImage } from "@/utils/images";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DeckHeaderProps {
   deck: Deck;
   isOwner: boolean;
   onShare: () => void;
   onExport: () => void;
+  onClone: () => void;
   isSharePending: boolean;
   isExportPending: boolean;
+  isClonePending: boolean;
 }
 
 export function DeckHeader({
@@ -30,14 +34,19 @@ export function DeckHeader({
   isOwner,
   onShare,
   onExport,
+  onClone,
   isSharePending,
   isExportPending,
+  isClonePending,
 }: DeckHeaderProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const coverCard =
     deck?.cards?.find((c) => c.card?.image)?.card ||
     deck?.cards?.[0]?.card ||
     undefined;
+
+  const canClone = isAuthenticated && deck.isPublic && !isOwner;
 
   return (
     <>
@@ -100,6 +109,16 @@ export function DeckHeader({
               <Download className="w-4 h-4 mr-2" />
               Exporter JSON
             </Button>
+            {canClone && (
+              <Button
+                variant="secondary"
+                onClick={onClone}
+                disabled={isClonePending}
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Cloner ce deck
+              </Button>
+            )}
             {isOwner && (
               <>
                 <Button

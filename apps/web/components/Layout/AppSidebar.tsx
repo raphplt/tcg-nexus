@@ -110,7 +110,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r-2 border-border">
-      <SidebarHeader className="border-b-2 border-border p-4 group-data-[collapsible=icon]:p-2">
+      <SidebarHeader className="h-14 border-b-2 border-border px-4 flex items-center group-data-[collapsible=icon]:px-2">
         <Link
           href="/"
           className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"

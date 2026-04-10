@@ -4,7 +4,7 @@ import Stripe from "stripe";
 
 @Injectable()
 export class StripeService implements OnModuleInit {
-  private stripe: Stripe;
+  private stripe?: Stripe;
   private readonly logger = new Logger(StripeService.name);
   private initialized = false;
 
@@ -14,9 +14,10 @@ export class StripeService implements OnModuleInit {
       this.logger.warn(
         "STRIPE_SECRET_KEY is not defined — Stripe payments will not work",
       );
+      return;
     }
-    this.stripe = new Stripe(secretKey || "");
-    this.initialized = !!secretKey;
+    this.stripe = new Stripe(secretKey);
+    this.initialized = true;
   }
 
   async onModuleInit() {
@@ -27,12 +28,13 @@ export class StripeService implements OnModuleInit {
     }
   }
 
-  private ensureInitialized() {
-    if (!this.initialized) {
+  private getStripe(): Stripe {
+    if (!this.initialized || !this.stripe) {
       throw new Error(
         "Stripe is not configured. Payment operations are unavailable.",
       );
     }
+    return this.stripe;
   }
 
   async createPaymentIntent(
@@ -40,8 +42,8 @@ export class StripeService implements OnModuleInit {
     currency: string,
     metadata: Record<string, string> = {},
   ) {
-    this.ensureInitialized();
-    return this.stripe.paymentIntents.create({
+    const stripe = this.getStripe();
+    return stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // centimes
       currency,
       metadata,
@@ -54,22 +56,22 @@ export class StripeService implements OnModuleInit {
   async retrievePaymentIntent(
     paymentIntentId: string,
   ): Promise<Stripe.PaymentIntent> {
-    this.ensureInitialized();
-    return this.stripe.paymentIntents.retrieve(paymentIntentId);
+    const stripe = this.getStripe();
+    return stripe.paymentIntents.retrieve(paymentIntentId);
   }
 
   async constructEventFromPayload(
     signature: string,
     payload: Buffer,
   ): Promise<Stripe.Event> {
-    this.ensureInitialized();
+    const stripe = this.getStripe();
     const webhookSecret = this.configService.get<string>(
       "STRIPE_WEBHOOK_SECRET",
     );
     if (!webhookSecret) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
     }
-    return this.stripe.webhooks.constructEvent(
+    return stripe.webhooks.constructEvent(
       payload,
       signature,
       webhookSecret,

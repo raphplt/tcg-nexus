@@ -18,10 +18,12 @@ import { DeckCards } from "./_components/DeckCards";
 import { DeckAnalysisCard } from "./_components/DeckAnalysis";
 import { DeckInfo } from "./_components/DeckInfo";
 import { ShareDialog } from "./_components/ShareDialog";
+import { useRouter } from "next/navigation";
 
 export default function DeckDetailsPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const router = useRouter();
   const deckId = id as string;
 
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -83,6 +85,17 @@ export default function DeckDetailsPage() {
     },
   });
 
+  const cloneMutation = useMutation({
+    mutationFn: () => decksService.cloneDeck(Number(deckId)),
+    onSuccess: (cloned) => {
+      toast.success("Deck cloné !");
+      router.push(`/decks/${cloned.id}/update`);
+    },
+    onError: () => {
+      toast.error("Impossible de cloner ce deck");
+    },
+  });
+
   const handleShare = () => {
     shareMutation.mutate();
   };
@@ -94,6 +107,10 @@ export default function DeckDetailsPage() {
   const handleAnalyze = () => {
     setAnalysisError(null);
     analyzeMutation.mutate();
+  };
+
+  const handleClone = () => {
+    cloneMutation.mutate();
   };
 
   const deck = data as Deck;
@@ -134,8 +151,10 @@ export default function DeckDetailsPage() {
             isOwner={isOwner || false}
             onShare={handleShare}
             onExport={handleExport}
+            onClone={handleClone}
             isSharePending={shareMutation.isPending}
             isExportPending={exportMutation.isPending}
+            isClonePending={cloneMutation.isPending}
           />
           <DeckStats deck={deck} />
         </Card>
