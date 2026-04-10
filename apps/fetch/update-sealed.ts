@@ -41,29 +41,161 @@ function slugify(str: string): string {
 }
 
 /**
- * Nettoie un nom de fichier pour en faire un nom de produit lisible.
- * "Collection_Illustration_Scalpereur.png" → "Collection Illustration Scalpereur"
- * "Booster2.png" → "Booster 2"
+ * Mapping exact (clé = filename sans extension ni chiffres finaux, en lowercase)
+ * → nom lisible. Toujours préfixé par le set ensuite.
  */
-function cleanProductName(filename: string, setName: string): string {
-  const withoutExt = filename.replace(/\.\w+$/, "");
-  // Séparer les underscores et camelCase
-  const cleaned = withoutExt
-    .replace(/_/g, " ")
+const TERM_MAP: Record<string, string> = {
+  booster: "Booster",
+  bundle: "Coffret Dresseur",
+  echantillon: "Échantillon",
+  echantilon: "Échantillon",
+  duopack: "Duo Pack",
+  tripack: "Tripack",
+  pack: "Pack",
+  packap: "Pack Avant-Première",
+  display: "Display",
+  minitin: "Mini Tin",
+  minitins: "Mini Tins",
+  minifolio: "Mini Portfolio",
+  tin: "Tin",
+  ting: "Tin",
+  etb: "Elite Trainer Box",
+  etbpokemon_center: "Elite Trainer Box Pokémon Center",
+  portfolio: "Portfolio",
+  portfoliojp: "Portfolio Japonais",
+  miniportfolio: "Mini Portfolio",
+  a4: "Portfolio A4",
+  a5: "Portfolio A5",
+  a4eta5: "Portfolio A4 & A5",
+  a4eta: "Portfolio A4 & A5",
+  classeur: "Classeur",
+  valisette: "Valisette",
+  pochette: "Pochette",
+  poster: "Poster",
+  album: "Album",
+  albumjp: "Album Japonais",
+  calendrier: "Calendrier",
+  deckbox: "Deck Box",
+  banniere: "Bannière",
+  coffret_premium: "Coffret Premium",
+  coffret_folio: "Coffret Portfolio",
+  coffret_poster: "Coffret Poster",
+  coffret_pikachu: "Coffret Pikachu",
+  coffret_alakazam: "Coffret Alakazam",
+  coffret_electhor: "Coffret Électhor",
+  premiumcollection: "Collection Premium",
+  collection_premium: "Collection Premium",
+  boitesurprise: "Boîte Surprise",
+  contenu: "Contenu du Coffret",
+  upc: "Ultra Premium Collection",
+  pps: "Pack Premium Spécial",
+  "1setenglish": "Set Anglais",
+  happy_meal: "McDonald's Happy Meal",
+  sw: "Starter Set",
+  dp: "Starter Set",
+  mt: "Starter Set",
+};
+
+/**
+ * Si le nom nettoyé commence par l'un de ces termes, on préfixe par le set.
+ */
+const ALWAYS_PREFIX = [
+  "booster",
+  "coffret",
+  "portfolio",
+  "elite trainer",
+  "display",
+  "mini tin",
+  "mini portfolio",
+  "tripack",
+  "duo pack",
+  "pack",
+  "starter",
+  "deck box",
+  "tin ",
+  "valisette",
+  "classeur",
+  "pochette",
+  "poster",
+  "album",
+  "échantillon",
+  "boîte",
+  "bundle",
+];
+
+/**
+ * Nettoie un nom de fichier en nom de produit lisible.
+ */
+function cleanProductName(
+  filename: string,
+  setName: string,
+  productType: string,
+): string {
+  let base = filename.replace(/\.\w+$/, "");
+
+  // Retirer préfixes parasites
+  base = base.replace(/^\d+px-/, ""); // "315px-BW1_Booster..."
+  base = base.replace(/^[A-Z]{2,4}\d*_3D_/, ""); // "BW8_3D_Booster..."
+  base = base.replace(/^PO[A-Z]{2,4}\d+_[A-Z]+\d*_/, ""); // "POBW1001_BOX3D_1_"
+  base = base.replace(/^POLL\d+_[A-Z]+_/, ""); // "POLL01_BOX3D_1_"
+  base = base.replace(/[_-](FR|EN|JP|medium)$/i, ""); // suffixes langue
+  base = base.replace(/_/g, " ").trim();
+
+  // Lookup dans le mapping exact — essayer d'abord le nom complet, puis sans chiffres finaux
+  const keyFull = base.toLowerCase().replace(/\s+/g, "");
+  const keyNoTrailingNum = keyFull.replace(/\d+$/, "");
+  const mapped =
+    TERM_MAP[keyFull] ||
+    TERM_MAP[keyNoTrailingNum] ||
+    TERM_MAP[base.toLowerCase()];
+
+  if (mapped) {
+    // Si la clé avec chiffres a matché directement, pas de suffixe
+    // Si c'est la clé sans chiffres qui a matché, ajouter le numéro
+    const exactMatch = !!TERM_MAP[keyFull];
+    const numMatch = !exactMatch ? base.match(/(\d+)$/) : null;
+    const suffix = numMatch ? ` ${numMatch[1]}` : "";
+    return `${setName} - ${mapped}${suffix}`;
+  }
+
+  // Nettoyage standard
+  let cleaned = base
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    // Séparer chiffres collés aux lettres : "Booster2" → "Booster 2"
     .replace(/([a-zA-Z])(\d)/g, "$1 $2")
+    .replace(/\s+/g, " ")
     .trim();
 
-  // Si le nom est trop court/générique, préfixer avec le nom du set
-  const generic = ["Booster", "Bundle", "Portfolio", "ETB", "Display"];
-  const isGeneric = generic.some(
-    (g) => cleaned.toLowerCase().startsWith(g.toLowerCase()),
-  );
+  cleaned = cleaned.replace(/\s*Recto$/i, "");
 
-  if (isGeneric) {
+  // Si purement numérique ou très court → nom générique basé sur le type
+  if (/^\d+$/.test(cleaned) || cleaned.length <= 3) {
+    const typeLabel =
+      {
+        booster: "Booster",
+        etb: "Elite Trainer Box",
+        box: "Coffret",
+        tin: "Tin",
+        deck: "Deck",
+        portfolio: "Portfolio",
+        display: "Display",
+        tripack: "Tripack",
+        collection_box: "Coffret Collection",
+        other: "Produit",
+      }[productType] || "Produit";
+    const suffix = /^\d+$/.test(cleaned) ? ` ${cleaned}` : "";
+    return `${setName} - ${typeLabel}${suffix}`;
+  }
+
+  // Si le nom commence par un terme générique → préfixer
+  const cleanedLower = cleaned.toLowerCase();
+  const needsPrefix =
+    ALWAYS_PREFIX.some((g) => cleanedLower.startsWith(g)) ||
+    cleaned.length <= 6;
+
+  if (needsPrefix) {
     return `${setName} - ${cleaned}`;
   }
+
   return cleaned;
 }
 
@@ -113,7 +245,11 @@ async function main() {
           id,
           pokecardexSeriesId: item.seriesId,
           setName: item.setName,
-          name: cleanProductName(item.imageFilename, item.setName),
+          name: cleanProductName(
+            item.imageFilename,
+            item.setName,
+            item.productType,
+          ),
           productType: item.productType,
           image: item.imageUrl,
           imageFilename: item.imageFilename,
