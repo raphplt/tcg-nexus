@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
 import SetCard from "@/components/Marketplace/SetCard";
 import { CurrencySelector } from "@/components/Shared/CurrencySelector";
@@ -20,10 +21,12 @@ export default function MarketplaceHomePage() {
     trendingCards,
     bestSellers,
     sets,
+    sealedProducts,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
+    loadingSealed,
   } = useMarketplaceHome();
 
   return (
@@ -177,6 +180,40 @@ export default function MarketplaceHomePage() {
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
                 Aucun vendeur pour le moment
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Produits scellés */}
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Package className="w-6 h-6 text-primary" />
+              <H2>Produits scellés</H2>
+            </div>
+            <Button variant="ghost" asChild>
+              <Link href="/marketplace/sealed">
+                Voir tout <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+          </div>
+          {loadingSealed ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-72" />
+              ))}
+            </div>
+          ) : sealedProducts && sealedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sealedProducts.slice(0, 8).map((product) => (
+                <SealedProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Aucun produit scellé pour le moment
               </CardContent>
             </Card>
           )}

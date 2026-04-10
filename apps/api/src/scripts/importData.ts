@@ -174,10 +174,8 @@ async function bootstrap() {
         for (const product of sealedProducts) {
           const count = Math.floor(Math.random() * 4);
           for (let i = 0; i < count; i++) {
-            const seller =
-              sellers[Math.floor(Math.random() * sellers.length)];
-            const price =
-              Math.round((Math.random() * 150 + 5) * 100) / 100;
+            const seller = sellers[Math.floor(Math.random() * sellers.length)];
+            const price = Math.round((Math.random() * 150 + 5) * 100) / 100;
             listings.push(
               listingRepo.create({
                 productKind: ProductKind.SEALED,
@@ -185,15 +183,10 @@ async function bootstrap() {
                 sealedProduct: product,
                 price,
                 currency:
-                  currencies[
-                    Math.floor(Math.random() * currencies.length)
-                  ],
-                quantityAvailable:
-                  Math.floor(Math.random() * 3) + 1,
+                  currencies[Math.floor(Math.random() * currencies.length)],
+                quantityAvailable: Math.floor(Math.random() * 3) + 1,
                 sealedCondition:
-                  conditions[
-                    Math.floor(Math.random() * conditions.length)
-                  ],
+                  conditions[Math.floor(Math.random() * conditions.length)],
               }),
             );
           }
@@ -209,9 +202,7 @@ async function bootstrap() {
         logWarn("Pas de produits scellés ou de vendeurs pour les listings");
       }
     } catch (err) {
-      logWarn(
-        `Listings scellés ignorés : ${(err as Error).message}`,
-      );
+      logWarn(`Listings scellés ignorés : ${(err as Error).message}`);
     }
 
     logStep("Création des decks de test...");

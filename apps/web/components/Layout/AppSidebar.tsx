@@ -1,9 +1,23 @@
 "use client";
 
-import Link from "next/link";
+import {
+  FolderHeart,
+  HelpCircle,
+  Home,
+  LayoutDashboard,
+  Library,
+  LogIn,
+  Package,
+  Shield,
+  ShoppingBag,
+  ShoppingCart,
+  Swords,
+  Trophy,
+  User,
+} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -12,24 +26,11 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import {
-  Home,
-  ShoppingBag,
-  Swords,
-  Trophy,
-  Library,
-  FolderHeart,
-  LayoutDashboard,
-  ShoppingCart,
-  HelpCircle,
-  Shield,
-  User,
-  LogIn,
-} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
   label: string;
@@ -42,6 +43,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { label: "Accueil", href: "/", icon: Home },
   { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+  { label: "Produits scellés", href: "/marketplace/sealed", icon: Package },
   { label: "Jouer", href: "/play", icon: Swords },
   { label: "Tournois", href: "/tournaments", icon: Trophy },
   { label: "Decks", href: "/decks", icon: Library },

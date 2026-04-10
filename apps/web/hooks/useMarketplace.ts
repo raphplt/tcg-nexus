@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import {
+  BestSeller,
   marketplaceService,
   PopularCard,
   TrendingCard,
-  BestSeller,
 } from "@/services/marketplace.service";
-import { sealedProductService } from "@/services/sealed-product.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { PokemonSetType, PokemonSerieType } from "@/types/cardPokemon";
-import { SealedProduct } from "@/types/sealed-product";
-import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { sealedProductService } from "@/services/sealed-product.service";
+import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
 import { PaginatedResult } from "@/types/pagination";
+import { SealedProduct } from "@/types/sealed-product";
 
 export interface FilterState {
   search: string;
