@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import SearchBar from "./SearchBar";
+import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <CurrencySelector />
         <ThemeToggle />
 
         {isAuthLoading ? (

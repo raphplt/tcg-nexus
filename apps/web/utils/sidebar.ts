@@ -41,7 +41,8 @@ const mainNavItems: NavItem[] = [
     href: "/marketplace",
     icon: ShoppingBag,
     subItems: [
-      { label: "Cartes", href: "/marketplace/cards", icon: Search },
+      { label: "Explorer", href: "/marketplace", icon: Search },
+      { label: "Cartes", href: "/marketplace/cards", icon: ShoppingBag },
       {
         label: "Produits scellés",
         href: "/marketplace/sealed",

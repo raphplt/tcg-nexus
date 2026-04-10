@@ -8,7 +8,6 @@ import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBread
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
 import SetCard from "@/components/Marketplace/SetCard";
-import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 import { H1, H2 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,9 +40,6 @@ export default function MarketplaceHomePage() {
             Découvrez, achetez et vendez vos cartes Pokémon. Trouvez les
             meilleures offres et les meilleurs vendeurs de la communauté.
           </p>
-          <div className="flex justify-center mt-4">
-            <CurrencySelector />
-          </div>
           <div className="flex flex-wrap gap-4 justify-center mt-6">
             <Button asChild size="lg">
               <Link href="/marketplace/cards">
