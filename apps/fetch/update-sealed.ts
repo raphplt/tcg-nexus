@@ -59,6 +59,7 @@ async function main() {
   }
 
   const service = new PokecardexService();
+  await service.init();
 
   console.log("Fetching pokecardex series list...");
   const series = await service.fetchSeriesList();
@@ -106,13 +107,15 @@ async function main() {
     await new Promise((r) => setTimeout(r, 500));
   }
 
+  await service.close();
+
   fs.writeFileSync(OUTPUT_FILE, JSON.stringify(records, null, 2));
   console.log(
     `\nWrote ${records.length} sealed product records to ${OUTPUT_FILE}`,
   );
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error("Update failed:", err);
   process.exit(1);
 });

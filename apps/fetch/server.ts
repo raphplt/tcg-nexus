@@ -300,6 +300,11 @@ app.get(
   },
 );
 
+// Init Puppeteer au démarrage pour les routes pokecardex
+pokecardexService.init().catch((err) => {
+  console.warn("Pokecardex browser init failed (scrape routes will retry):", err.message);
+});
+
 // Démarrage du serveur
 app.listen(port, () => {
   console.log(`Fetch from TCGdex en écoute sur le port ${port}`);

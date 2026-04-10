@@ -26,7 +26,8 @@
     "@types/adm-zip": "^0.5.7",
     "adm-zip": "^0.5.16",
     "cheerio": "^1.0.0-rc.12",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "puppeteer": "^24.40.0"
   },
   "optionalDependencies": {
     "@esbuild/darwin-arm64": "^0.27.0"
