@@ -1,15 +1,15 @@
 /**
- * Met à jour la liste des produits scellés Pokémon en scrapant pokecardex.com.
+ * Met à jour la liste des produits scellés Pokémon via Puppeteer (pokecardex.com).
  *
- * Sortie : `apps/data/sealed_products.json` — consommé par le seed côté API.
+ * Sortie : `data/sealed_products.json` — consommé par le seed côté API.
  *
- * Les images sont supposées déjà présentes dans le bucket R2 sous la clé
- * `pokecardex/{seriesId}/{filename}`. Ce script ne fait pas de re-upload.
+ * Les images sont référencées directement depuis pokecardex.com
+ * (URL absolue stockée dans le champ `image`).
  */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { PokecardexItem, PokecardexService } from "./pokecardex.service.js";
+import { PokecardexService } from "./pokecardex.service.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,17 +18,13 @@ const DATA_DIR = path.resolve(__dirname, "../../data");
 const OUTPUT_FILE = path.join(DATA_DIR, "sealed_products.json");
 
 interface SealedProductRecord {
-  /** Identifiant stable : "{seriesId}-{slug(imageFilenameWithoutExt)}" */
   id: string;
   pokecardexSeriesId: string;
-  /** Nom de la série tel qu'affiché sur pokecardex (FR) */
   setName: string;
-  /** Nom du produit (depuis l'attribut alt de l'image) */
   name: string;
   productType: string;
-  /** Chemin relatif dans R2, ex : "pokecardex/AQ/Booster_Aquapolis_Arcanin.png" */
+  /** URL absolue de l'image (pokecardex CDN) */
   image: string;
-  /** Nom de fichier brut */
   imageFilename: string;
 }
 
@@ -44,11 +40,38 @@ function slugify(str: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function buildId(item: PokecardexItem): string {
-  const ext = item.imageFilename.includes(".")
-    ? item.imageFilename.substring(0, item.imageFilename.lastIndexOf("."))
-    : item.imageFilename;
-  return `${item.seriesId.toLowerCase()}-${slugify(ext)}`;
+/**
+ * Nettoie un nom de fichier pour en faire un nom de produit lisible.
+ * "Collection_Illustration_Scalpereur.png" → "Collection Illustration Scalpereur"
+ * "Booster2.png" → "Booster 2"
+ */
+function cleanProductName(filename: string, setName: string): string {
+  const withoutExt = filename.replace(/\.\w+$/, "");
+  // Séparer les underscores et camelCase
+  const cleaned = withoutExt
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    // Séparer chiffres collés aux lettres : "Booster2" → "Booster 2"
+    .replace(/([a-zA-Z])(\d)/g, "$1 $2")
+    .trim();
+
+  // Si le nom est trop court/générique, préfixer avec le nom du set
+  const generic = ["Booster", "Bundle", "Portfolio", "ETB", "Display"];
+  const isGeneric = generic.some(
+    (g) => cleaned.toLowerCase().startsWith(g.toLowerCase()),
+  );
+
+  if (isGeneric) {
+    return `${setName} - ${cleaned}`;
+  }
+  return cleaned;
+}
+
+function buildId(seriesId: string, filename: string): string {
+  const ext = filename.includes(".")
+    ? filename.substring(0, filename.lastIndexOf("."))
+    : filename;
+  return `${seriesId.toLowerCase()}-${slugify(ext)}`;
 }
 
 async function main() {
@@ -82,7 +105,7 @@ async function main() {
       for (const item of items) {
         if (!item.imageFilename) continue;
 
-        const id = buildId(item);
+        const id = buildId(item.seriesId, item.imageFilename);
         if (seenIds.has(id)) continue;
         seenIds.add(id);
 
@@ -90,9 +113,9 @@ async function main() {
           id,
           pokecardexSeriesId: item.seriesId,
           setName: item.setName,
-          name: item.name,
+          name: cleanProductName(item.imageFilename, item.setName),
           productType: item.productType,
-          image: `pokecardex/${item.seriesId}/${item.imageFilename}`,
+          image: item.imageUrl,
           imageFilename: item.imageFilename,
         });
         added++;
