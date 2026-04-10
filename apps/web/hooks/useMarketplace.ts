@@ -5,8 +5,10 @@ import {
   TrendingCard,
   BestSeller,
 } from "@/services/marketplace.service";
+import { sealedProductService } from "@/services/sealed-product.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { PokemonSetType, PokemonSerieType } from "@/types/cardPokemon";
+import { SealedProduct } from "@/types/sealed-product";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { PaginatedResult } from "@/types/pagination";
 
@@ -59,15 +61,25 @@ export function useMarketplaceHome() {
     queryFn: () => pokemonCardService.getAllSets(20),
   });
 
+  // Récupère les produits scellés récents
+  const { data: sealedData, isLoading: loadingSealed } = useQuery<
+    PaginatedResult<SealedProduct>
+  >({
+    queryKey: ["sealed-products", "home"],
+    queryFn: () => sealedProductService.getPaginated({ limit: 8, page: 1 }),
+  });
+
   return {
     popularCards,
     trendingCards,
     bestSellers,
     sets,
+    sealedProducts: sealedData?.data,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
+    loadingSealed,
   };
 }
 

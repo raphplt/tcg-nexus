@@ -1,10 +1,17 @@
 import { stdin as input, stdout as output } from "node:process";
 import { NestFactory } from "@nestjs/core";
 import * as readline from "readline/promises";
+import { DataSource } from "typeorm";
 import { AppModule } from "../app.module";
 import { CardEffectsSyncService } from "../card/card-effects-sync.service";
+import { Currency } from "../common/enums/currency";
+import { ProductKind } from "../common/enums/product-kind";
+import { SealedCondition } from "../common/enums/sealed-condition";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { SealedProductService } from "../sealed-product/sealed-product.service";
 import { SeedService } from "../seed/seed.service";
+import { User } from "../user/entities/user.entity";
 
 function logStep(msg: string) {
   console.log(`\x1b[36m➡️  ${msg}\x1b[0m`);
@@ -145,6 +152,66 @@ async function bootstrap() {
       }
     } catch (err) {
       logWarn(`Seed produits scellés ignoré : ${(err as Error).message}`);
+    }
+
+    logStep("Création des listings de produits scellés...");
+    try {
+      const ds = app.get(DataSource);
+      const sealedProducts = await ds
+        .getRepository(SealedProduct)
+        .find({ take: 200 });
+      const sellers = await ds.getRepository(User).find();
+      if (sealedProducts.length > 0 && sellers.length > 0) {
+        const currencies = [Currency.EUR, Currency.USD, Currency.GBP];
+        const conditions = [
+          SealedCondition.SEALED,
+          SealedCondition.SEALED,
+          SealedCondition.SEALED,
+          SealedCondition.BOX_DAMAGED,
+        ];
+        const listingRepo = ds.getRepository(Listing);
+        const listings: Listing[] = [];
+        for (const product of sealedProducts) {
+          const count = Math.floor(Math.random() * 4);
+          for (let i = 0; i < count; i++) {
+            const seller =
+              sellers[Math.floor(Math.random() * sellers.length)];
+            const price =
+              Math.round((Math.random() * 150 + 5) * 100) / 100;
+            listings.push(
+              listingRepo.create({
+                productKind: ProductKind.SEALED,
+                seller,
+                sealedProduct: product,
+                price,
+                currency:
+                  currencies[
+                    Math.floor(Math.random() * currencies.length)
+                  ],
+                quantityAvailable:
+                  Math.floor(Math.random() * 3) + 1,
+                sealedCondition:
+                  conditions[
+                    Math.floor(Math.random() * conditions.length)
+                  ],
+              }),
+            );
+          }
+        }
+        const batchSize = 500;
+        for (let i = 0; i < listings.length; i += batchSize) {
+          await listingRepo.save(listings.slice(i, i + batchSize));
+        }
+        logSuccess(
+          `${listings.length} listings scellés créés pour ${sealedProducts.length} produits`,
+        );
+      } else {
+        logWarn("Pas de produits scellés ou de vendeurs pour les listings");
+      }
+    } catch (err) {
+      logWarn(
+        `Listings scellés ignorés : ${(err as Error).message}`,
+      );
     }
 
     logStep("Création des decks de test...");
