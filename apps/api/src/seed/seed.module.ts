@@ -23,6 +23,7 @@ import { Player } from "src/player/entities/player.entity";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Ranking } from "src/ranking/entities/ranking.entity";
+import { SealedProductModule } from "src/sealed-product/sealed-product.module";
 import { Statistics } from "src/statistics/entities/statistic.entity";
 import { Tournament } from "src/tournament/entities/tournament.entity";
 import { TournamentNotification } from "src/tournament/entities/tournament-notification.entity";
@@ -68,6 +69,7 @@ import { SeedService } from "./seed.service";
       Faq,
     ]),
     ConfigModule,
+    SealedProductModule,
   ],
   controllers: [SeedController],
   providers: [SeedService, SeedingService, BracketService, MatchService],
