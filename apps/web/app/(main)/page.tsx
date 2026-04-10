@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import TournamentPreview from "@/components/Home/TournamentPreview";
-import MarketplacePreview from "@/components/Home/MarketplacePreview";
-import LatestArticles from "@/components/Home/LatestArticles";
-import RandomCard from "@/components/Home/RandomCard";
-import TrendingDecks from "@/components/Home/TrendingDecks";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { LayoutDashboard, LibraryBig } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+import LatestArticles from "@/components/Home/LatestArticles";
+import MarketplacePreview from "@/components/Home/MarketplacePreview";
+import RandomCard from "@/components/Home/RandomCard";
+import SealedProductsPreview from "@/components/Home/SealedProductsPreview";
+import TournamentPreview from "@/components/Home/TournamentPreview";
+import TrendingDecks from "@/components/Home/TrendingDecks";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -102,6 +103,12 @@ const HomePage = () => {
                 <MarketplacePreview />
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mb-16">
+          <div className="card-hover">
+            <SealedProductsPreview />
           </div>
         </section>
 

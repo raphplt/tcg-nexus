@@ -1,16 +1,24 @@
 "use client";
 
 import {
+  ChevronRight,
+  Dices,
   FolderHeart,
   HelpCircle,
   Home,
+  Import,
   LayoutDashboard,
   Library,
   LogIn,
   Package,
+  PenLine,
+  Plus,
+  Search,
+  Settings,
   Shield,
   ShoppingBag,
   ShoppingCart,
+  Store,
   Swords,
   Trophy,
   User,
@@ -18,6 +26,11 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -28,50 +41,13 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  requireAuth?: boolean;
-  requireRole?: "admin";
-}
-
-const mainNavItems: NavItem[] = [
-  { label: "Accueil", href: "/", icon: Home },
-  { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
-  { label: "Produits scellés", href: "/marketplace/sealed", icon: Package },
-  { label: "Jouer", href: "/play", icon: Swords },
-  { label: "Tournois", href: "/tournaments", icon: Trophy },
-  { label: "Decks", href: "/decks", icon: Library },
-];
-
-const userNavItems: NavItem[] = [
-  {
-    label: "Collection",
-    href: "/collection",
-    icon: FolderHeart,
-    requireAuth: true,
-  },
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    requireAuth: true,
-  },
-  { label: "Panier", href: "/cart", icon: ShoppingCart, requireAuth: true },
-];
-
-const secondaryNavItems: NavItem[] = [
-  { label: "FAQ", href: "/faq", icon: HelpCircle },
-];
-
-const adminNavItems: NavItem[] = [
-  { label: "Admin", href: "/admin", icon: Shield, requireRole: "admin" },
-];
+import { NavItem, navItems } from "@/utils/sidebar";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -79,36 +55,80 @@ export function AppSidebar() {
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    return pathname === href || pathname.startsWith(`${href}/`);
   };
 
-  const renderNavItems = (items: NavItem[]) => {
-    return items
-      .filter((item) => {
-        if (item.requireAuth && !isAuthenticated) return false;
-        if (item.requireRole && user?.role !== item.requireRole) return false;
-        return true;
-      })
-      .map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton
-            asChild
-            isActive={isActive(item.href)}
-            tooltip={item.label}
-            className={
-              isActive(item.href)
-                ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-[4px_4px_0px_0px] shadow-border font-semibold"
-                : "hover:translate-x-0.5 transition-transform"
-            }
-          >
-            <Link href={item.href}>
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ));
+  const isGroupActive = (item: NavItem) => {
+    if (isActive(item.href)) return true;
+    return item.subItems?.some((sub) => isActive(sub.href)) ?? false;
   };
+
+  const activeClass =
+    "bg-sidebar-primary text-sidebar-primary-foreground shadow-[4px_4px_0px_0px] shadow-border font-semibold";
+  const inactiveClass = "hover:translate-x-0.5 transition-transform";
+
+  const renderNavItem = (item: NavItem) => {
+    if (item.subItems && item.subItems.length > 0) {
+      return (
+        <Collapsible
+          key={item.href}
+          asChild
+          defaultOpen={isGroupActive(item)}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip={item.label}
+                className={isGroupActive(item) ? activeClass : inactiveClass}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+                <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {item.subItems.map((sub) => (
+                  <SidebarMenuSubItem key={sub.href}>
+                    <SidebarMenuSubButton asChild isActive={isActive(sub.href)}>
+                      <Link href={sub.href}>
+                        <sub.icon className="h-4 w-4" />
+                        <span>{sub.label}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      );
+    }
+
+    return (
+      <SidebarMenuItem key={item.href}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive(item.href)}
+          tooltip={item.label}
+          className={isActive(item.href) ? activeClass : inactiveClass}
+        >
+          <Link href={item.href}>
+            <item.icon className="h-5 w-5" />
+            <span>{item.label}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  };
+
+  const filterItems = (items: NavItem[]) =>
+    items.filter((item) => {
+      if (item.requireAuth && !isAuthenticated) return false;
+      if (item.requireRole && user?.role !== item.requireRole) return false;
+      return true;
+    });
 
   return (
     <Sidebar collapsible="icon" className="border-r-2 border-border">
@@ -135,25 +155,40 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarMenu>{renderNavItems(mainNavItems)}</SidebarMenu>
+          <SidebarMenu>
+            {filterItems(navItems.main).map(renderNavItem)}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Découvrir</SidebarGroupLabel>
+          <SidebarMenu>
+            {filterItems(navItems.discover).map(renderNavItem)}
+          </SidebarMenu>
         </SidebarGroup>
 
         {isAuthenticated && (
           <SidebarGroup>
             <SidebarGroupLabel>Mon espace</SidebarGroupLabel>
-            <SidebarMenu>{renderNavItems(userNavItems)}</SidebarMenu>
+            <SidebarMenu>
+              {filterItems(navItems.user).map(renderNavItem)}
+            </SidebarMenu>
           </SidebarGroup>
         )}
 
         <SidebarGroup>
           <SidebarGroupLabel>Aide</SidebarGroupLabel>
-          <SidebarMenu>{renderNavItems(secondaryNavItems)}</SidebarMenu>
+          <SidebarMenu>
+            {filterItems(navItems.secondary).map(renderNavItem)}
+          </SidebarMenu>
         </SidebarGroup>
 
         {user?.role === "admin" && (
           <SidebarGroup>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
-            <SidebarMenu>{renderNavItems(adminNavItems)}</SidebarMenu>
+            <SidebarMenu>
+              {filterItems(navItems.admin).map(renderNavItem)}
+            </SidebarMenu>
           </SidebarGroup>
         )}
       </SidebarContent>
