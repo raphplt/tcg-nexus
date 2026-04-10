@@ -1,5 +1,13 @@
 import { Type } from "class-transformer";
-import { IsInt, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import {
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
+import { ProductKind } from "src/common/enums/product-kind";
 
 export class FindAllListingsQuery {
   @IsOptional()
@@ -33,6 +41,14 @@ export class FindAllListingsQuery {
   @IsOptional()
   @IsString()
   pokemonCardId?: string;
+
+  @IsOptional()
+  @IsString()
+  sealedProductId?: string;
+
+  @IsOptional()
+  @IsEnum(ProductKind)
+  productKind?: ProductKind;
 
   @IsOptional()
   @Type(() => Number)

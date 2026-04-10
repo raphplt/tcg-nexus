@@ -1,13 +1,8 @@
 "use client";
 
-import { Order, OrderStatus } from "@/types/order";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useCurrencyStore } from "@/store/currency.store";
 import Image from "next/image";
-import { getCardImage } from "@/utils/images";
 import Link from "next/link";
 import {
   Accordion,
@@ -15,6 +10,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useCurrencyStore } from "@/store/currency.store";
+import { Order, OrderStatus } from "@/types/order";
+import { getCardImage } from "@/utils/images";
 
 interface OrderListProps {
   orders: Order[];
@@ -116,24 +116,24 @@ export default function OrderList({ orders }: OrderListProps) {
                         <div className="relative w-16 h-24 flex-shrink-0">
                           <Image
                             src={getCardImage(item.listing.pokemonCard)}
-                            alt={item.listing.pokemonCard.name || "Carte"}
+                            alt={item.listing.pokemonCard?.name || "Carte"}
                             fill
                             className="object-contain rounded"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
                           <Link
-                            href={`/marketplace/cards/${item.listing.pokemonCard.id}`}
+                            href={`/marketplace/cards/${item.listing.pokemonCard?.id}`}
                             className="font-medium hover:text-primary truncate block"
                           >
-                            {item.listing.pokemonCard.name}
+                            {item.listing.pokemonCard?.name}
                           </Link>
                           <p className="text-sm text-muted-foreground">
-                            {item.listing.pokemonCard.set?.name}
+                            {item.listing.pokemonCard?.set?.name}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className="text-xs">
-                              {item.listing.cardState}
+                              {item.listing.cardState ?? ""}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
                               x{item.quantity}

@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { Player } from "src/player/entities/player.entity";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { User } from "src/user/entities/user.entity";
 import { UserCartModule } from "../user_cart/user_cart.module";
 import { CardPopularityController } from "./card-popularity.controller";
@@ -35,6 +36,7 @@ import { WebhookController } from "./webhook.controller";
       CardPopularityMetrics,
       Player,
       Card,
+      SealedProduct,
       User,
     ]),
     ConfigModule,

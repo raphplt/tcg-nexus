@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import CheckoutForm from "./_components/CheckoutForm";
-import { useCartStore, useCartTotal } from "@/store/cart.store";
-import { paymentService } from "@/services/payment.service";
-import { useCurrencyStore } from "@/store/currency.store";
+import { loadStripe } from "@stripe/stripe-js";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
+import { paymentService } from "@/services/payment.service";
+import { useCartStore, useCartTotal } from "@/store/cart.store";
+import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
+import CheckoutForm from "./_components/CheckoutForm";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -70,17 +70,17 @@ export default function CheckoutPage() {
                     <div className="relative w-16 h-24 shrink-0">
                       <Image
                         src={getCardImage(item.listing.pokemonCard)}
-                        alt={item.listing.pokemonCard.name || "Carte"}
+                        alt={item.listing.pokemonCard?.name || "Carte"}
                         fill
                         className="object-contain rounded"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">
-                        {item.listing.pokemonCard.name}
+                        {item.listing.pokemonCard?.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {item.listing.pokemonCard.set?.name}
+                        {item.listing.pokemonCard?.set?.name}
                       </p>
                       <div className="flex justify-between items-center mt-1">
                         <span className="text-sm text-muted-foreground">
