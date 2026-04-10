@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import * as readline from "readline/promises";
 import { AppModule } from "../app.module";
 import { CardEffectsSyncService } from "../card/card-effects-sync.service";
+import { SealedProductService } from "../sealed-product/sealed-product.service";
 import { SeedService } from "../seed/seed.service";
 
 function logStep(msg: string) {
@@ -44,6 +45,7 @@ async function bootstrap() {
 
   const seedService = app.get(SeedService);
   const effectsSyncService = app.get(CardEffectsSyncService);
+  const sealedProductService = app.get(SealedProductService);
 
   try {
     logStep("Voulez-vous détruire toutes les données existantes ? (oui/non)");
@@ -129,6 +131,21 @@ async function bootstrap() {
     logStep("Création des métriques de popularité...");
     await seedService.seedCardPopularityMetrics();
     logSuccess("Métriques de popularité créées !");
+
+    logStep("Import des produits scellés...");
+    try {
+      const sealedReport = await sealedProductService.seedFromJson();
+      logSuccess(
+        `Produits scellés importés : ${sealedReport.inserted} insérés, ${sealedReport.updated} mis à jour, ${sealedReport.matchedSets} sets matchés`,
+      );
+      if (sealedReport.unmatchedSetNames.length > 0) {
+        logWarn(
+          `${sealedReport.unmatchedSetNames.length} sets non matchés : ${sealedReport.unmatchedSetNames.slice(0, 5).join(", ")}...`,
+        );
+      }
+    } catch (err) {
+      logWarn(`Seed produits scellés ignoré : ${(err as Error).message}`);
+    }
 
     logStep("Création des decks de test...");
     await seedService.seedDecks();

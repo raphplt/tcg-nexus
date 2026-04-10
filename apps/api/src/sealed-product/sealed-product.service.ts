@@ -192,15 +192,21 @@ export class SealedProductService {
    * est listée dans le rapport pour review manuelle.
    */
   async seedFromJson(): Promise<SealedSeedReport> {
-    const dataPath = path.resolve(
-      __dirname,
-      "../../../../data/sealed_products.json",
-    );
-    if (!fs.existsSync(dataPath)) {
+    // Essayer plusieurs chemins possibles (dist/ vs src/, cwd différent)
+    const candidates = [
+      path.resolve(__dirname, "../../../../data/sealed_products.json"),
+      path.resolve(process.cwd(), "../../data/sealed_products.json"),
+      path.resolve(process.cwd(), "data/sealed_products.json"),
+      path.resolve(process.cwd(), "../data/sealed_products.json"),
+    ];
+    const dataPath = candidates.find((p) => fs.existsSync(p));
+    if (!dataPath) {
+      const tried = candidates.join("\n  - ");
       throw new NotFoundException(
-        `sealed_products.json not found at ${dataPath} — run \`npm run update-sealed\` in apps/fetch first.`,
+        `sealed_products.json not found. Tried:\n  - ${tried}\nRun \`npm run update-sealed\` in apps/fetch first.`,
       );
     }
+    console.log(`[SealedProduct] Seeding from ${dataPath}`);
 
     const records: SealedProductSeedRecord[] = JSON.parse(
       fs.readFileSync(dataPath, "utf-8"),
