@@ -1,4 +1,12 @@
 import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import {
   BadRequestException,
   ConflictException,
   UnauthorizedException,
@@ -194,7 +202,6 @@ describe("AuthService", () => {
 
       mockUserService.create.mockResolvedValue(newUser);
       mockJwtService.signAsync.mockResolvedValue("token");
-      mockUserService.findOne.mockResolvedValue(newUser);
 
       const result = await service.register(registerDto);
 

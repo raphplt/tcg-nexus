@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -27,18 +28,19 @@ import { PokemonCardModule } from "./pokemon-card/pokemon-card.module";
 import { PokemonSeriesModule } from "./pokemon-series/pokemon-series.module";
 import { PokemonSetModule } from "./pokemon-set/pokemon-set.module";
 import { RankingModule } from "./ranking/ranking.module";
-import { SealedProductModule } from "./sealed-product/sealed-product.module";
 import { SearchModule } from "./search/search.module";
 import { SeedModule } from "./seed/seed.module";
 import { StatisticsModule } from "./statistics/statistics.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
+import { SealedProductModule } from "./sealed-product/sealed-product.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot({ wildcard: true, delimiter: "." }),
     ThrottlerModule.forRoot({
       throttlers: [
         {

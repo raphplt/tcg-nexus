@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Deck } from "src/deck/entities/deck.entity";
 import { DataSource, EntityManager, Repository } from "typeorm";
-import { Deck } from "../deck/entities/deck.entity";
 import { Player } from "../player/entities/player.entity";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { Statistics } from "../statistics/entities/statistic.entity";
@@ -103,9 +104,10 @@ export class MatchService {
     private readonly rankingRepository: Repository<Ranking>,
     @InjectRepository(Statistics)
     private readonly statisticsRepository: Repository<Statistics>,
+    private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
-    private readonly dataSource: DataSource,
   ) {}
 
   // Créer un nouveau match
@@ -128,7 +130,6 @@ export class MatchService {
     if (!tournament) {
       throw new NotFoundException("Tournoi non trouvé");
     }
-    // Skip status check when creating matches during bracket generation
     if (
       !skipStatusCheck &&
       tournament.status !== TournamentStatus.IN_PROGRESS
@@ -138,7 +139,6 @@ export class MatchService {
       );
     }
 
-    // Vérifier que les joueurs existent et sont inscrits
     let playerA: Player | null = null;
     let playerB: Player | null = null;
 
@@ -386,7 +386,7 @@ export class MatchService {
 
         if (isForfeit) {
           match.status = MatchStatus.FORFEIT;
-          // Si forfait, on infère le vainqueur par le score fourni (ou adapte ta logique ici)
+          // Si forfait, on infère le vainqueur par le score fourni
           match.winner =
             playerAScore > playerBScore
               ? (match.playerA ?? null)
@@ -415,6 +415,13 @@ export class MatchService {
 
         // Vérifier si le tournoi peut avancer automatiquement
         await this.checkTournamentProgression(match, manager);
+
+        if (savedMatch.winner?.user?.id) {
+          this.eventEmitter.emit("challenge.action", {
+            userId: savedMatch.winner.user.id,
+            action: "WIN_MATCH",
+          });
+        }
 
         return savedMatch;
       },

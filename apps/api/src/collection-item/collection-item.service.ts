@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import {
@@ -33,6 +34,8 @@ export class CollectionItemService {
 
     @InjectRepository(SealedProduct)
     private readonly sealedProductRepo: Repository<SealedProduct>,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -103,7 +106,12 @@ export class CollectionItemService {
       quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
+    });
+    return savedItem;
   }
 
   /**
@@ -166,96 +174,12 @@ export class CollectionItemService {
       quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
-  }
-
-  /**
-   * Ajouter une carte Pokémon à une collection spécifique
-   */
-  async addToCollection(
-    collectionId: string,
-    pokemonCardId: string,
-  ): Promise<CollectionItem> {
-    // Vérifier que la collection existe
-    const collection = await this.collectionRepo.findOne({
-      where: { id: collectionId },
-      relations: ["items", "items.pokemonCard"],
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
     });
-    if (!collection) throw new NotFoundException("Collection non trouvée");
-
-    // Vérifier que la carte existe
-    const card = await this.pokemonCardRepo.findOne({
-      where: { id: pokemonCardId },
-    });
-    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
-
-    // Vérifier si la carte est déjà dans la collection
-    let item = collection.items?.find((i) => i.pokemonCard?.id === card.id);
-
-    if (item) {
-      item.quantity += 1;
-      return this.collectionItemRepo.save(item);
-    }
-
-    // Récupérer le CardState NM par défaut
-    const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStateCode.NM },
-    });
-
-    if (!defaultCardState) {
-      throw new NotFoundException(
-        "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
-      );
-    }
-
-    item = this.collectionItemRepo.create({
-      collection: collection,
-      pokemonCard: card,
-      cardState: defaultCardState,
-      quantity: 1,
-    });
-
-    return this.collectionItemRepo.save(item);
-  }
-
-  /**
-   * Ajouter un produit scellé à une collection spécifique.
-   */
-  async addSealedToCollection(
-    collectionId: string,
-    sealedProductId: string,
-    sealedCondition: SealedCondition = SealedCondition.SEALED,
-  ): Promise<CollectionItem> {
-    const collection = await this.collectionRepo.findOne({
-      where: { id: collectionId },
-      relations: ["items", "items.sealedProduct"],
-    });
-    if (!collection) throw new NotFoundException("Collection non trouvée");
-
-    const sealedProduct = await this.sealedProductRepo.findOne({
-      where: { id: sealedProductId },
-    });
-    if (!sealedProduct)
-      throw new NotFoundException("Produit scellé non trouvé");
-
-    let item = collection.items?.find(
-      (i) => i.sealedProduct?.id === sealedProduct.id,
-    );
-
-    if (item) {
-      item.quantity += 1;
-      return this.collectionItemRepo.save(item);
-    }
-
-    item = this.collectionItemRepo.create({
-      collection,
-      productKind: ProductKind.SEALED,
-      sealedProduct,
-      sealedCondition,
-      quantity: 1,
-    });
-
-    return this.collectionItemRepo.save(item);
+    return savedItem;
   }
 
   /**

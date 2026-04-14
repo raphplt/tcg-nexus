@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, LessThan, Repository } from "typeorm";
 import { UserRole } from "../common/enums/user";
@@ -56,6 +57,7 @@ export class TournamentService {
     private stateService: TournamentStateService,
     private rankingService: RankingService,
     private matchService: MatchService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   // Créer un nouveau tournoi
@@ -363,7 +365,15 @@ export class TournamentService {
       status: registrationStatus,
     });
 
-    return this.registrationRepository.save(registration);
+    const savedRegistration =
+      await this.registrationRepository.save(registration);
+    if (player.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: player.user.id,
+        action: "JOIN_TOURNAMENT",
+      });
+    }
+    return savedRegistration;
   }
 
   // Désinscrire un joueur d'un tournoi

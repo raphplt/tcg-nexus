@@ -93,6 +93,7 @@ export class UserService {
   async findById(id: number): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { id },
+      relations: ["player"],
     });
     return this.ensurePlayerProfile(user);
   }
