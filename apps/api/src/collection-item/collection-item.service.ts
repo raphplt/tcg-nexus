@@ -183,6 +183,110 @@ export class CollectionItemService {
   }
 
   /**
+   * Ajouter une carte Pokémon dans une collection spécifique (par id).
+   */
+  async addToCollection(
+    collectionId: number | string,
+    pokemonCardId: string,
+  ): Promise<CollectionItem> {
+    const collection = await this.collectionRepo.findOne({
+      where: { id: collectionId as string },
+      relations: ["items", "items.pokemonCard", "user"],
+    });
+    if (!collection) throw new NotFoundException("Collection non trouvée");
+
+    const card = await this.pokemonCardRepo.findOne({
+      where: { id: pokemonCardId },
+    });
+    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
+
+    let item = collection.items?.find((i) => i.pokemonCard?.id === card.id);
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    const defaultCardState = await this.cardStateRepo.findOne({
+      where: { code: CardStateCode.NM },
+    });
+
+    if (!defaultCardState) {
+      throw new NotFoundException(
+        "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
+      );
+    }
+
+    item = this.collectionItemRepo.create({
+      collection,
+      productKind: ProductKind.CARD,
+      pokemonCard: card,
+      cardState: defaultCardState,
+      quantity: 1,
+    });
+
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_CARD",
+      });
+    }
+    return savedItem;
+  }
+
+  /**
+   * Ajouter un produit scellé à une collection spécifique (par id).
+   */
+  async addSealedToCollection(
+    collectionId: number | string,
+    sealedProductId: string,
+    sealedCondition?: SealedCondition,
+  ): Promise<CollectionItem> {
+    const collection = await this.collectionRepo.findOne({
+      where: { id: collectionId as string },
+      relations: ["items", "items.sealedProduct", "user"],
+    });
+    if (!collection) throw new NotFoundException("Collection non trouvée");
+
+    const sealedProduct = await this.sealedProductRepo.findOne({
+      where: { id: sealedProductId },
+    });
+    if (!sealedProduct)
+      throw new NotFoundException("Produit scellé non trouvé");
+
+    const condition = sealedCondition ?? SealedCondition.SEALED;
+
+    let item = collection.items?.find(
+      (i) =>
+        i.sealedProduct?.id === sealedProduct.id &&
+        i.sealedCondition === condition,
+    );
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection,
+      productKind: ProductKind.SEALED,
+      sealedProduct,
+      sealedCondition: condition,
+      quantity: 1,
+    });
+
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_SEALED",
+      });
+    }
+    return savedItem;
+  }
+
+  /**
    * Ajouter un produit scellé à la wishlist d'un user.
    */
   async addSealedToWishlist(
