@@ -7,18 +7,21 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { CollectionService } from "src/collection/collection.service";
+import { Player } from "src/player/entities/player.entity";
+import { Repository } from "typeorm";
 import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { parseDurationToMs } from "./utils/parse-duration";
 import {
   AuthResponse,
   AuthTokens,
   JwtPayload,
 } from "./interfaces/auth.interface";
+import { parseDurationToMs } from "./utils/parse-duration";
 
 @Injectable()
 export class AuthService {
@@ -78,7 +81,13 @@ export class AuthService {
     const hydratedUser = await this.userService.findOne(user.id);
 
     return {
-      user: hydratedUser,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      },
       tokens,
     };
   }
@@ -115,7 +124,13 @@ export class AuthService {
       const hydratedUser = await this.userService.findOne(user.id);
 
       return {
-        user: hydratedUser,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
         tokens,
       };
     } catch (error) {

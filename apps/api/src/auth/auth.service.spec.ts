@@ -1,17 +1,25 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { AuthService } from "./auth.service";
-import { UserService } from "../user/user.service";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import { CollectionService } from "../collection/collection.service";
 import {
-  UnauthorizedException,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import {
   BadRequestException,
   ConflictException,
+  UnauthorizedException,
 } from "@nestjs/common";
-import { User } from "../user/entities/user.entity";
-import { UserRole } from "src/common/enums/user";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import { Test, TestingModule } from "@nestjs/testing";
 import * as bcrypt from "bcrypt";
+import { UserRole } from "src/common/enums/user";
+import { CollectionService } from "../collection/collection.service";
+import { User } from "../user/entities/user.entity";
+import { UserService } from "../user/user.service";
+import { AuthService } from "./auth.service";
 
 jest.mock("bcrypt");
 
@@ -194,7 +202,6 @@ describe("AuthService", () => {
 
       mockUserService.create.mockResolvedValue(newUser);
       mockJwtService.signAsync.mockResolvedValue("token");
-      mockUserService.findOne.mockResolvedValue(newUser);
 
       const result = await service.register(registerDto);
 

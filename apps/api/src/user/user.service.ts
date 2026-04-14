@@ -1,12 +1,12 @@
 import {
-  Injectable,
   ConflictException,
+  Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
+import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -93,6 +93,7 @@ export class UserService {
   async findById(id: number): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { id },
+      relations: ["player"],
     });
     return this.ensurePlayerProfile(user);
   }

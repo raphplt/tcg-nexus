@@ -1,10 +1,10 @@
 "use client";
 
 import {
+  type UseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
-  type UseQueryResult,
 } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -21,14 +21,15 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  type ComponentType,
+  type ReactNode,
+  Suspense,
   startTransition,
   useDeferredValue,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ComponentType,
-  type ReactNode,
 } from "react";
 import type { Socket } from "socket.io-client";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
@@ -313,6 +314,14 @@ const getDefaultPlayTab = (
 };
 
 export default function PlayPage() {
+  return (
+    <Suspense fallback={<PlayPageSkeleton />}>
+      <PlayPageContent />
+    </Suspense>
+  );
+}
+
+function PlayPageContent() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
