@@ -18,6 +18,11 @@ import { DeckCards } from "./_components/DeckCards";
 import { DeckAnalysisCard } from "./_components/DeckAnalysis";
 import { DeckInfo } from "./_components/DeckInfo";
 import { ShareDialog } from "./_components/ShareDialog";
+import { ExportDialog, ExportFormat } from "./_components/ExportDialog";
+import { DeckExportTemplate } from "./_components/DeckExportTemplate";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { useRef } from "react";
 
 export default function DeckDetailsPage() {
   const { id } = useParams();
@@ -25,9 +30,14 @@ export default function DeckDetailsPage() {
   const deckId = id as string;
 
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [includeImagesInExport, setIncludeImagesInExport] = useState(true);
   const [shareCode, setShareCode] = useState<string>("");
   const [analysis, setAnalysis] = useState<DeckAnalysis | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+  const exportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setAnalysis(null);
@@ -87,8 +97,66 @@ export default function DeckDetailsPage() {
     shareMutation.mutate();
   };
 
-  const handleExport = () => {
-    exportMutation.mutate();
+  const handleExportClick = () => {
+    setExportDialogOpen(true);
+  };
+
+  const handleExportExecute = async (
+    format: ExportFormat,
+    includeImages: boolean,
+  ) => {
+    if (format === "json") {
+      exportMutation.mutate();
+      setExportDialogOpen(false);
+      return;
+    }
+
+    setIncludeImagesInExport(includeImages);
+    setIsExporting(true);
+
+    try {
+      // Small timeout to allow the template to re-render if includeImages changed
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      if (!exportRef.current) {
+        throw new Error("Template non trouvé");
+      }
+
+      const canvas = await html2canvas(exportRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        scale: 2, // Higher quality
+        logging: false,
+      });
+
+      const fileName = `${deck.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}`;
+
+      if (format === "png") {
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = image;
+        link.download = `${fileName}.png`;
+        link.click();
+      } else if (format === "pdf") {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF({
+          orientation: "portrait",
+          unit: "px",
+          format: [canvas.width, canvas.height],
+        });
+        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+        pdf.save(`${fileName}.pdf`);
+      }
+
+      toast.success(`Deck exporté au format ${format.toUpperCase()}`);
+      setExportDialogOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de l'exportation");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleAnalyze = () => {
@@ -133,9 +201,9 @@ export default function DeckDetailsPage() {
             deck={deck}
             isOwner={isOwner || false}
             onShare={handleShare}
-            onExport={handleExport}
+            onExport={handleExportClick}
             isSharePending={shareMutation.isPending}
-            isExportPending={exportMutation.isPending}
+            isExportPending={exportMutation.isPending || isExporting}
           />
           <DeckStats deck={deck} />
         </Card>
@@ -163,6 +231,30 @@ export default function DeckDetailsPage() {
         onOpenChange={setShareDialogOpen}
         shareCode={shareCode}
       />
+
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={handleExportExecute}
+        isExporting={isExporting}
+        deckName={deck.name}
+      />
+
+      {/* Hidden export template */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-9999px",
+          left: "-9999px",
+          zIndex: -1,
+        }}
+      >
+        <DeckExportTemplate
+          ref={exportRef}
+          deck={deck}
+          includeImages={includeImagesInExport}
+        />
+      </div>
     </div>
   );
 }

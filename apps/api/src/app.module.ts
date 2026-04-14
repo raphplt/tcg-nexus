@@ -4,6 +4,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UserModule } from "./user/user.module";
 import { ConfigModule } from "@nestjs/config";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { APP_GUARD } from "@nestjs/core";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -81,7 +82,6 @@ import { DashboardModule } from "./dashboard/dashboard.module";
     DeckCardModule,
     DeckFormatModule,
     SearchModule,
-    CollectionModule,
     CollectionItemModule,
     CardStateModule,
     AiModule,

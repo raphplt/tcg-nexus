@@ -98,7 +98,7 @@ export function DeckHeader({
               disabled={isExportPending}
             >
               <Download className="w-4 h-4 mr-2" />
-              Exporter JSON
+              Exporter
             </Button>
             {isOwner && (
               <>
