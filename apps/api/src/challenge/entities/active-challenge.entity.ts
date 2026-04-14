@@ -1,16 +1,24 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Challenge } from './challenge.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from "typeorm";
+import { Challenge } from "./challenge.entity";
 
 @Entity()
 export class ActiveChallenge {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Challenge, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Challenge, { eager: true, onDelete: "CASCADE" })
   @JoinColumn()
   challenge: Challenge;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   expiresAt: Date;
 
   @CreateDateColumn()

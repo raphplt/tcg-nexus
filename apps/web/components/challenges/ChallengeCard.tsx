@@ -1,9 +1,18 @@
 "use client";
 
-import { ActiveChallengeData, challengeService } from "@/services/challenge.service";
+import {
+  ActiveChallengeData,
+  challengeService,
+} from "@/services/challenge.service";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { CheckCircle2, Gift } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,7 +23,10 @@ interface ChallengeCardProps {
   onClaimed?: (reward: number) => void;
 }
 
-export function ChallengeCard({ activeChallenge, onClaimed }: ChallengeCardProps) {
+export function ChallengeCard({
+  activeChallenge,
+  onClaimed,
+}: ChallengeCardProps) {
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimed, setClaimed] = useState(activeChallenge.isClaimed);
 
@@ -45,8 +57,12 @@ export function ChallengeCard({ activeChallenge, onClaimed }: ChallengeCardProps
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start gap-4">
           <div>
-            <CardTitle className="text-lg font-bold">{challenge.title}</CardTitle>
-            <CardDescription className="text-sm mt-1">{challenge.description}</CardDescription>
+            <CardTitle className="text-lg font-bold">
+              {challenge.title}
+            </CardTitle>
+            <CardDescription className="text-sm mt-1">
+              {challenge.description}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-1 font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full whitespace-nowrap">
             <Gift className="w-4 h-4" />
@@ -54,14 +70,16 @@ export function ChallengeCard({ activeChallenge, onClaimed }: ChallengeCardProps
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="flex flex-col gap-3 mt-2">
           {/* Progress bar area */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider">
               <span>Progress</span>
-              <span>{currentProgress} / {challenge.targetValue}</span>
+              <span>
+                {currentProgress} / {challenge.targetValue}
+              </span>
             </div>
             <Progress value={percentage} className="h-2" />
           </div>
@@ -69,7 +87,7 @@ export function ChallengeCard({ activeChallenge, onClaimed }: ChallengeCardProps
           <AnimatePresence mode="popLayout">
             {/* Buttons & Status */}
             {claimed ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-center gap-2 mt-2 p-2 bg-green-500/10 text-green-500 rounded-md font-medium"
@@ -84,8 +102,8 @@ export function ChallengeCard({ activeChallenge, onClaimed }: ChallengeCardProps
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="mt-2"
               >
-                <Button 
-                  onClick={handleClaim} 
+                <Button
+                  onClick={handleClaim}
                   disabled={isClaiming}
                   className="w-full relative shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)] animate-pulse hover:animate-none"
                 >

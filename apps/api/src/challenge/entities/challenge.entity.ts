@@ -1,5 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { ChallengeType, ChallengeActionType } from '../enums/challenge.enum';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { ChallengeType, ChallengeActionType } from "../enums/challenge.enum";
 
 @Entity()
 export class Challenge {
@@ -9,26 +15,26 @@ export class Challenge {
   @Column()
   title: string;
 
-  @Column('text')
+  @Column("text")
   description: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: ChallengeType,
-    default: ChallengeType.DAILY
+    default: ChallengeType.DAILY,
   })
   type: ChallengeType;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: ChallengeActionType,
   })
   actionType: ChallengeActionType;
 
-  @Column({ type: 'int', default: 1 })
+  @Column({ type: "int", default: 1 })
   targetValue: number;
 
-  @Column({ type: 'int', default: 50 })
+  @Column({ type: "int", default: 50 })
   rewardXp: number;
 
   @CreateDateColumn()

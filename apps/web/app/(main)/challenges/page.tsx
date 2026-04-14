@@ -1,7 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { challengeService, ChallengeResponse } from "@/services/challenge.service";
+import {
+  challengeService,
+  ChallengeResponse,
+} from "@/services/challenge.service";
 import { ChallengeCard } from "@/components/challenges/ChallengeCard";
 import { Target, CalendarDays, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,7 +38,8 @@ export default function ChallengesPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Challenges</h1>
         <p className="text-muted-foreground">
-          Complete daily and weekly challenges to earn XP and level up your player profile.
+          Complete daily and weekly challenges to earn XP and level up your
+          player profile.
         </p>
       </div>
 
@@ -50,7 +54,9 @@ export default function ChallengesPage() {
               <ChallengeCard key={entry.id} activeChallenge={entry} />
             ))
           ) : (
-            <p className="text-sm text-muted-foreground italic col-span-2">No daily challenges available right now.</p>
+            <p className="text-sm text-muted-foreground italic col-span-2">
+              No daily challenges available right now.
+            </p>
           )}
         </div>
       </div>
@@ -66,7 +72,9 @@ export default function ChallengesPage() {
               <ChallengeCard key={entry.id} activeChallenge={entry} />
             ))
           ) : (
-            <p className="text-sm text-muted-foreground italic col-span-2">No weekly challenges available right now.</p>
+            <p className="text-sm text-muted-foreground italic col-span-2">
+              No weekly challenges available right now.
+            </p>
           )}
         </div>
       </div>

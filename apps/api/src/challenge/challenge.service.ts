@@ -1,14 +1,19 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource } from "typeorm";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 
-import { Challenge } from './entities/challenge.entity';
-import { ActiveChallenge } from './entities/active-challenge.entity';
-import { UserChallenge } from './entities/user-challenge.entity';
-import { ChallengeType, ChallengeActionType } from './enums/challenge.enum';
-import { Player } from '../player/entities/player.entity';
+import { Challenge } from "./entities/challenge.entity";
+import { ActiveChallenge } from "./entities/active-challenge.entity";
+import { UserChallenge } from "./entities/user-challenge.entity";
+import { ChallengeType, ChallengeActionType } from "./enums/challenge.enum";
+import { Player } from "../player/entities/player.entity";
 
 @Injectable()
 export class ChallengeService {
@@ -33,12 +38,12 @@ export class ChallengeService {
   async getActiveChallenges(userId: number) {
     const activeDailies = await this.activeChallengeRepo.find({
       where: { challenge: { type: ChallengeType.DAILY } },
-      relations: ['challenge'],
+      relations: ["challenge"],
     });
 
     const activeWeeklies = await this.activeChallengeRepo.find({
       where: { challenge: { type: ChallengeType.WEEKLY } },
-      relations: ['challenge'],
+      relations: ["challenge"],
     });
 
     // Get user progress
@@ -47,8 +52,10 @@ export class ChallengeService {
     });
 
     const mapWithProgress = (activeList: ActiveChallenge[]) => {
-      return activeList.map(active => {
-        const userProgress = userChallenges.find(uc => uc.activeChallenge.id === active.id);
+      return activeList.map((active) => {
+        const userProgress = userChallenges.find(
+          (uc) => uc.activeChallenge.id === active.id,
+        );
         return {
           id: active.id,
           expiresAt: active.expiresAt,
@@ -71,14 +78,16 @@ export class ChallengeService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async rotateDailyChallenges() {
-    this.logger.log('Rotating DAILY challenges...');
-    await this.activeChallengeRepo.delete({ challenge: { type: ChallengeType.DAILY } });
-    
+    this.logger.log("Rotating DAILY challenges...");
+    await this.activeChallengeRepo.delete({
+      challenge: { type: ChallengeType.DAILY },
+    });
+
     // Pick 3 random daily challenges
     const dailies = await this.challengeRepo
-      .createQueryBuilder('c')
-      .where('c.type = :type', { type: ChallengeType.DAILY })
-      .orderBy('RANDOM()')
+      .createQueryBuilder("c")
+      .where("c.type = :type", { type: ChallengeType.DAILY })
+      .orderBy("RANDOM()")
       .take(3)
       .getMany();
 
@@ -88,7 +97,7 @@ export class ChallengeService {
     expiresAt.setDate(expiresAt.getDate() + 1);
     expiresAt.setHours(0, 0, 0, 0);
 
-    const activeDailies = dailies.map(challenge => {
+    const activeDailies = dailies.map((challenge) => {
       const active = new ActiveChallenge();
       active.challenge = challenge;
       active.expiresAt = expiresAt;
@@ -101,16 +110,18 @@ export class ChallengeService {
   /**
    * Admin / Cron: Rotate weekly challenges
    */
-  @Cron('0 0 * * 1') // Every Monday at 00:00
+  @Cron("0 0 * * 1") // Every Monday at 00:00
   async rotateWeeklyChallenges() {
-    this.logger.log('Rotating WEEKLY challenges...');
-    await this.activeChallengeRepo.delete({ challenge: { type: ChallengeType.WEEKLY } });
-    
+    this.logger.log("Rotating WEEKLY challenges...");
+    await this.activeChallengeRepo.delete({
+      challenge: { type: ChallengeType.WEEKLY },
+    });
+
     // Pick 2 random weekly challenges
     const weeklies = await this.challengeRepo
-      .createQueryBuilder('c')
-      .where('c.type = :type', { type: ChallengeType.WEEKLY })
-      .orderBy('RANDOM()')
+      .createQueryBuilder("c")
+      .where("c.type = :type", { type: ChallengeType.WEEKLY })
+      .orderBy("RANDOM()")
       .take(2)
       .getMany();
 
@@ -120,7 +131,7 @@ export class ChallengeService {
     expiresAt.setDate(expiresAt.getDate() + 7);
     expiresAt.setHours(0, 0, 0, 0);
 
-    const activeWeeklies = weeklies.map(challenge => {
+    const activeWeeklies = weeklies.map((challenge) => {
       const active = new ActiveChallenge();
       active.challenge = challenge;
       active.expiresAt = expiresAt;
@@ -134,10 +145,14 @@ export class ChallengeService {
    * General event listener for actions.
    * Dispatched like: this.eventEmitter.emit('challenge.action', { userId: 1, action: 'ADD_CARD' })
    */
-  @OnEvent('challenge.action')
+  @OnEvent("challenge.action")
   async handleAction(payload: { userId: number; action: string }) {
     // Check if it's a valid action
-    if (!Object.values(ChallengeActionType).includes(payload.action as ChallengeActionType)) {
+    if (
+      !Object.values(ChallengeActionType).includes(
+        payload.action as ChallengeActionType,
+      )
+    ) {
       return;
     }
 
@@ -148,11 +163,15 @@ export class ChallengeService {
   /**
    * Internal logic to increment progress
    */
-  private async incrementProgress(userId: number, actionType: ChallengeActionType, amount: number = 1) {
+  private async incrementProgress(
+    userId: number,
+    actionType: ChallengeActionType,
+    amount: number = 1,
+  ) {
     // Find active challenges of this action type
     const activeChallenges = await this.activeChallengeRepo.find({
       where: { challenge: { actionType } },
-      relations: ['challenge'],
+      relations: ["challenge"],
     });
 
     for (const active of activeChallenges) {
@@ -173,7 +192,7 @@ export class ChallengeService {
       if (userChallenge.isCompleted) continue; // Already done
 
       userChallenge.progress += amount;
-      
+
       if (userChallenge.progress >= active.challenge.targetValue) {
         userChallenge.progress = active.challenge.targetValue;
         userChallenge.isCompleted = true;
@@ -187,22 +206,25 @@ export class ChallengeService {
    * Claim XP transaction
    */
   async claimChallenge(activeChallengeId: number, userId: number) {
-    return this.dataSource.transaction(async manager => {
+    return this.dataSource.transaction(async (manager) => {
       const userChallenge = await manager.findOne(UserChallenge, {
-        where: { user: { id: userId }, activeChallenge: { id: activeChallengeId } },
-        relations: ['activeChallenge', 'activeChallenge.challenge'],
+        where: {
+          user: { id: userId },
+          activeChallenge: { id: activeChallengeId },
+        },
+        relations: ["activeChallenge", "activeChallenge.challenge"],
       });
 
       if (!userChallenge) {
-        throw new NotFoundException('Progress not found for this challenge.');
+        throw new NotFoundException("Progress not found for this challenge.");
       }
 
       if (!userChallenge.isCompleted) {
-        throw new BadRequestException('Challenge is not completed yet.');
+        throw new BadRequestException("Challenge is not completed yet.");
       }
 
       if (userChallenge.isClaimed) {
-        throw new BadRequestException('Reward already claimed.');
+        throw new BadRequestException("Reward already claimed.");
       }
 
       // Mark as claimed
@@ -211,12 +233,12 @@ export class ChallengeService {
 
       // Give XP to player
       const player = await manager.findOne(Player, {
-        where: { user: { id: userId } }
+        where: { user: { id: userId } },
       });
 
       if (player) {
         player.xp += userChallenge.activeChallenge.challenge.rewardXp;
-        
+
         // Simple level logic: 100 XP per level
         const newLevel = Math.floor(player.xp / 100) + 1;
         if (newLevel > player.level) {
@@ -226,7 +248,11 @@ export class ChallengeService {
         await manager.save(player);
       }
 
-      return { success: true, reward: userChallenge.activeChallenge.challenge.rewardXp, newTotalXp: player?.xp };
+      return {
+        success: true,
+        reward: userChallenge.activeChallenge.challenge.rewardXp,
+        newTotalXp: player?.xp,
+      };
     });
   }
 }

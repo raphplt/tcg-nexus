@@ -4,7 +4,7 @@ export interface ChallengeData {
   id: number;
   title: string;
   description: string;
-  type: 'DAILY' | 'WEEKLY';
+  type: "DAILY" | "WEEKLY";
   actionType: string;
   targetValue: number;
   rewardXp: number;
@@ -29,7 +29,13 @@ export const challengeService = {
     return authedFetch<ChallengeResponse>("GET", "/challenges/active");
   },
 
-  async claimChallenge(id: number): Promise<{ success: boolean; reward: number; newTotalXp: number }> {
-    return authedFetch<{ success: boolean; reward: number; newTotalXp: number }>("POST", `/challenges/${id}/claim`);
+  async claimChallenge(
+    id: number,
+  ): Promise<{ success: boolean; reward: number; newTotalXp: number }> {
+    return authedFetch<{
+      success: boolean;
+      reward: number;
+      newTotalXp: number;
+    }>("POST", `/challenges/${id}/claim`);
   },
 };
