@@ -115,11 +115,7 @@ export default function BracketPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             {!isFullscreen && (
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-              >
+              <Button variant="ghost" size="sm" asChild>
                 <Link href={`/tournaments/${id}`}>
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Retour
@@ -143,10 +139,7 @@ export default function BracketPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-            >
+            <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               Exporter
             </Button>
@@ -221,10 +214,7 @@ export default function BracketPage() {
                     onClick={() => setSelectedRound(round.index)}
                   >
                     Round {round.index}
-                    <Badge
-                      variant="secondary"
-                      className="ml-2"
-                    >
+                    <Badge variant="secondary" className="ml-2">
                       {round.matches.length}
                     </Badge>
                   </Button>

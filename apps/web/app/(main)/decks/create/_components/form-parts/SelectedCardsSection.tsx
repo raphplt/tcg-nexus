@@ -1,11 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs";
@@ -47,12 +42,12 @@ const PreviewGrid = ({
           className="flex items-center gap-2 p-2 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
         >
           <div className="relative w-10 h-14 shrink-0 bg-muted rounded overflow-hidden">
-              <Image
-                src={getCardImage(c.card, "low")}
-                alt={c.card?.name || "Carte"}
-                fill
-                className="object-contain"
-              />
+            <Image
+              src={getCardImage(c.card, "low")}
+              alt={c.card?.name || "Carte"}
+              fill
+              className="object-contain"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-medium truncate text-sm">
@@ -105,16 +100,10 @@ export const SelectedCardsSection: React.FC<SelectedCardsSectionProps> = ({
       <CardContent className="space-y-3 p-4 pt-2">
         <Tabs defaultValue="main">
           <TabsList className="grid grid-cols-2 h-8">
-            <TabsTrigger
-              value="main"
-              className="text-xs"
-            >
+            <TabsTrigger value="main" className="text-xs">
               Principal ({mainCount})
             </TabsTrigger>
-            <TabsTrigger
-              value="side"
-              className="text-xs"
-            >
+            <TabsTrigger value="side" className="text-xs">
               Side ({sideCount})
             </TabsTrigger>
           </TabsList>

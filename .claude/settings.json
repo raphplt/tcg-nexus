@@ -2,7 +2,6 @@
   "permissions": {
     "allow": [
       "Bash(npx shadcn@latest add progress --yes)",
-      "Bash(npx next build --webpack)",
       "Bash(npx nest build)",
       "Bash(npx next build)",
       "Bash(rtk git branch --show-current)"

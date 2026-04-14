@@ -40,9 +40,7 @@ export function useCardDetails({
     queryFn: () =>
       marketplaceService.getCardStatistics(
         cardId!,
-        currencyFilter && currencyFilter !== "all"
-          ? currencyFilter
-          : undefined,
+        currencyFilter && currencyFilter !== "all" ? currencyFilter : undefined,
         cardStateFilter && cardStateFilter !== "all"
           ? cardStateFilter
           : undefined,
@@ -114,4 +112,3 @@ export function useCardDetails({
     error: cardError || statsError || listingsError,
   };
 }
-

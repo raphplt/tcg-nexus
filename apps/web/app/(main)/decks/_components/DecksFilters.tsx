@@ -81,11 +81,7 @@ const DecksFilters = ({
           {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
         </Button>
         {isAuthenticated && (
-          <Button
-            type="button"
-            className="h-10"
-            asChild
-          >
+          <Button type="button" className="h-10" asChild>
             <Link href="/decks/create">Créer un deck</Link>
           </Button>
         )}
@@ -106,10 +102,7 @@ const DecksFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {formatOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
+                  <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -128,10 +121,7 @@ const DecksFilters = ({
               </SelectTrigger>
               <SelectContent>
                 {sortOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                  >
+                  <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
                 ))}

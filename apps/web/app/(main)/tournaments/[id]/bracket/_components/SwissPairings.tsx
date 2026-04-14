@@ -116,10 +116,7 @@ function PairingRow({
 
       <TableCell>
         {interactive && pairing.matchId && (
-          <Button
-            variant="outline"
-            size="sm"
-          >
+          <Button variant="outline" size="sm">
             Gérer
           </Button>
         )}
@@ -138,51 +135,51 @@ export function SwissPairings({
 
   const formattedPairings = Array.isArray(pairingData)
     ? pairingData.map((item, index) => {
-      // Vérifier si c'est un format SwissPairing (a tableNumber) ou Match (a id)
-      if ("tableNumber" in item) {
-        // Format SwissPairing
-        const pairing = item as {
-          playerA: Player;
-          playerB?: Player;
-          tableNumber: number;
-        };
-        return {
-          playerA: {
-            id: pairing.playerA.id,
-            name: pairing.playerA.name,
-          },
-          playerB: pairing.playerB
-            ? {
-                id: pairing.playerB.id,
-                name: pairing.playerB.name,
-              }
-            : undefined,
-          tableNumber: pairing.tableNumber,
-          matchId: undefined,
-          status: "scheduled",
-        };
-      } else {
-        // Format Match
-        const match = item as Match;
-        return {
-          playerA: match.playerA
-            ? {
-                id: match.playerA.id,
-                name: match.playerA.name,
-              }
-            : { id: 0, name: "TBD" },
-          playerB: match.playerB
-            ? {
-                id: match.playerB.id,
-                name: match.playerB.name,
-              }
-            : undefined,
-          tableNumber: index + 1,
-          matchId: match.id,
-          status: match.status,
-        };
-      }
-    })
+        // Vérifier si c'est un format SwissPairing (a tableNumber) ou Match (a id)
+        if ("tableNumber" in item) {
+          // Format SwissPairing
+          const pairing = item as {
+            playerA: Player;
+            playerB?: Player;
+            tableNumber: number;
+          };
+          return {
+            playerA: {
+              id: pairing.playerA.id,
+              name: pairing.playerA.name,
+            },
+            playerB: pairing.playerB
+              ? {
+                  id: pairing.playerB.id,
+                  name: pairing.playerB.name,
+                }
+              : undefined,
+            tableNumber: pairing.tableNumber,
+            matchId: undefined,
+            status: "scheduled",
+          };
+        } else {
+          // Format Match
+          const match = item as Match;
+          return {
+            playerA: match.playerA
+              ? {
+                  id: match.playerA.id,
+                  name: match.playerA.name,
+                }
+              : { id: 0, name: "TBD" },
+            playerB: match.playerB
+              ? {
+                  id: match.playerB.id,
+                  name: match.playerB.name,
+                }
+              : undefined,
+            tableNumber: index + 1,
+            matchId: match.id,
+            status: match.status,
+          };
+        }
+      })
     : [];
 
   const byeCount = formattedPairings.filter((p) => !p.playerB).length;

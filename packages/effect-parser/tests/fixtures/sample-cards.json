@@ -1,0 +1,56 @@
+[
+  {
+    "id": "xy7-5",
+    "name": "Viridium",
+    "category": "Pokémon",
+    "types": ["Plante"],
+    "hp": 100,
+    "stage": "De base",
+    "attacks": [
+      {
+        "name": "Sécrétion",
+        "cost": ["Plante"],
+        "damage": 20,
+        "effect": "Lancez une pièce. Si c'est face, le Pokémon Défenseur est maintenant Paralysé."
+      }
+    ]
+  },
+  {
+    "id": "test-thunder",
+    "name": "Raichu",
+    "category": "Pokémon",
+    "types": ["Électrique"],
+    "hp": 90,
+    "stage": "Niveau 1",
+    "attacks": [
+      {
+        "name": "Tonnerre",
+        "cost": ["Électrique", "Électrique", "Incolore"],
+        "damage": 100,
+        "effect": "Défaussez toutes les Énergies Électrique attachées à ce Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "swsh4-185",
+    "name": "Potion",
+    "category": "Dresseur",
+    "trainerType": "Objet",
+    "effect": "Soignez 30 dégâts de l'un de vos Pokémon."
+  },
+  {
+    "id": "test-no-effect",
+    "name": "Rattata",
+    "category": "Pokémon",
+    "types": ["Incolore"],
+    "hp": 30,
+    "stage": "De base",
+    "attacks": [
+      {
+        "name": "Charge",
+        "cost": ["Incolore"],
+        "damage": 10
+      }
+    ]
+  }
+]

@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Article } from './entities/article.entity';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Article } from "./entities/article.entity";
+import { CreateArticleDto } from "./dto/create-article.dto";
+import { UpdateArticleDto } from "./dto/update-article.dto";
 
 @Injectable()
 export class ArticleService {
   constructor(
     @InjectRepository(Article)
-    private readonly articleRepository: Repository<Article>
+    private readonly articleRepository: Repository<Article>,
   ) {}
 
   create(createArticleDto: CreateArticleDto) {
@@ -19,7 +19,7 @@ export class ArticleService {
 
   findAll() {
     return this.articleRepository.find({
-      order: { publishedAt: 'DESC', createdAt: 'DESC' }
+      order: { publishedAt: "DESC", createdAt: "DESC" },
     });
   }
 

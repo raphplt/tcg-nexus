@@ -118,7 +118,11 @@ export function TournamentHeader({
             </Button>
           )}
 
-        <Button variant="secondary" className="shadow-md" aria-label="Règlement">
+        <Button
+          variant="secondary"
+          className="shadow-md"
+          aria-label="Règlement"
+        >
           <ListChecks className="size-4 mr-2" /> Règlement
         </Button>
       </div>

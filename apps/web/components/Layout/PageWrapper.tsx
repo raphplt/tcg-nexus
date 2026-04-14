@@ -34,7 +34,7 @@ export function PageWrapper({
       className={cn(
         "min-h-[calc(100vh-3.5rem)] py-8 px-4 md:px-8",
         gradientMap[gradient],
-        className
+        className,
       )}
     >
       <div className={cn("mx-auto", maxWidthMap[maxWidth])}>{children}</div>

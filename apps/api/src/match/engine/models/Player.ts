@@ -1,0 +1,33 @@
+import { CardInGame, PokemonCardInGame } from "./Card";
+
+/** Player-level temporary effect (e.g. TRAINER_LOCK) */
+export interface PlayerEffect {
+  type: "TRAINER_LOCK";
+  lockType?: "ALL" | "ITEM" | "SUPPORTER" | "STADIUM";
+  expiresAt: { turnNumber: number; playerId: string };
+}
+
+export interface PlayerState {
+  playerId: string;
+  name: string;
+
+  // Zones
+  deck: CardInGame[]; // Represents the ordered deck
+  hand: CardInGame[];
+  discard: CardInGame[];
+  lostZone: CardInGame[];
+  prizes: CardInGame[];
+
+  // Board
+  active: PokemonCardInGame | null;
+  bench: PokemonCardInGame[]; // Up to 5 usually
+
+  // Board State modifiers
+  hasPlayedSupporterThisTurn: boolean;
+  hasRetreatedThisTurn: boolean;
+  hasAttachedEnergyThisTurn: boolean;
+  prizeCardsTaken: number;
+  mulliganCount?: number;
+  turnsTaken?: number;
+  playerEffects: PlayerEffect[];
+}

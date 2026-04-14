@@ -19,7 +19,9 @@ interface MarketStatsProps {
 
 function MarketReferencePrices({
   marketPricing,
-}: { marketPricing: CardPricing }) {
+}: {
+  marketPricing: CardPricing;
+}) {
   const { formatPrice } = useCurrencyStore();
 
   const cmPrice = getCardMarketPrice(marketPricing.cardmarket);
@@ -37,9 +39,7 @@ function MarketReferencePrices({
           <span className="text-muted-foreground text-sm">
             CardMarket (tendance)
           </span>
-          <span className="font-semibold">
-            {formatPrice(cmPrice, "EUR")}
-          </span>
+          <span className="font-semibold">{formatPrice(cmPrice, "EUR")}</span>
         </div>
       )}
       {tcgPrice != null && (
@@ -47,9 +47,7 @@ function MarketReferencePrices({
           <span className="text-muted-foreground text-sm">
             TCGPlayer (marché)
           </span>
-          <span className="font-semibold">
-            {formatPrice(tcgPrice, "USD")}
-          </span>
+          <span className="font-semibold">{formatPrice(tcgPrice, "USD")}</span>
         </div>
       )}
     </div>

@@ -4,9 +4,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mon Profil</Text>
-      <Text style={styles.subtitle}>
-        Gérez votre compte
-      </Text>
+      <Text style={styles.subtitle}>Gérez votre compte</Text>
     </View>
   );
 }

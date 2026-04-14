@@ -1,11 +1,22 @@
-import { Deck } from "@/types/Decks";
-import { Card } from "@components/ui/card";
 import { Badge } from "@components/ui/badge";
-import { Eye, Calendar, User, Layers } from "lucide-react";
-import Link from "next/link";
+import { Card } from "@components/ui/card";
+import { useSavedDeckIds, useToggleSavedDeck } from "@hooks/useSavedDecks";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import {
+  Bookmark,
+  BookmarkCheck,
+  Calendar,
+  Eye,
+  Layers,
+  User,
+} from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import type { MouseEvent } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { Deck } from "@/types/Decks";
 
 interface DeckCardProps {
   deck: Deck;
@@ -15,13 +26,58 @@ interface DeckCardProps {
 export default function DeckCard({ deck, onClick }: DeckCardProps) {
   const cards = deck.cards || [];
   const previewCards = cards.slice(0, 3);
+  const { user } = useAuth();
+  const { data: savedIds } = useSavedDeckIds();
+  const { save, remove, isPending } = useToggleSavedDeck();
+
+  const isOwner = !!user && deck.user?.id === user.id;
+  const canBookmark = !!user && !isOwner;
+  const isSaved = !!savedIds?.includes(deck.id);
+
+  const handleToggleSave = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (isPending) return;
+    if (isSaved) {
+      remove(deck.id);
+    } else {
+      save(deck.id);
+    }
+  };
 
   return (
-    <Link
-      href={`/decks/${deck.id}`}
-      onClick={onClick}
-    >
+    <Link href={`/decks/${deck.id}`} onClick={onClick}>
       <Card className="group relative overflow-hidden h-full hover:shadow-xl transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:-translate-y-1">
+        {canBookmark && (
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            disabled={isPending}
+            aria-label={
+              isSaved
+                ? "Retirer de ma bibliothèque"
+                : "Ajouter à ma bibliothèque"
+            }
+            title={
+              isSaved
+                ? "Retirer de ma bibliothèque"
+                : "Ajouter à ma bibliothèque"
+            }
+            className={cn(
+              "absolute top-3 left-3 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full border backdrop-blur-md shadow-lg transition-colors",
+              isSaved
+                ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                : "bg-background/80 text-foreground border-border/60 hover:bg-background",
+              isPending && "opacity-60 cursor-not-allowed",
+            )}
+          >
+            {isSaved ? (
+              <BookmarkCheck className="w-4 h-4" />
+            ) : (
+              <Bookmark className="w-4 h-4" />
+            )}
+          </button>
+        )}
         <div className="aspect-[16/9] relative overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
           {previewCards.length > 0 ? (
             <div className="flex gap-2 justify-center items-center h-full">

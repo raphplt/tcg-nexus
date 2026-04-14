@@ -142,8 +142,10 @@ export const adminService = {
   },
 
   async getTournaments(
-    params: PaginationParams & { status?: TournamentStatus; search?: string } =
-      {},
+    params: PaginationParams & {
+      status?: TournamentStatus;
+      search?: string;
+    } = {},
   ): Promise<PaginatedResult<Tournament>> {
     return authedFetch<PaginatedResult<Tournament>>("GET", "/tournaments", {
       params: params as any,
@@ -180,7 +182,9 @@ export const adminService = {
     return authedFetch<PokemonSerieType[]>("GET", "/pokemon-series");
   },
 
-  async createPokemonSerie(payload: PokemonSeriePayload): Promise<PokemonSerieType> {
+  async createPokemonSerie(
+    payload: PokemonSeriePayload,
+  ): Promise<PokemonSerieType> {
     return authedFetch<PokemonSerieType>("POST", "/pokemon-series", {
       data: payload,
     });
@@ -206,13 +210,11 @@ export const adminService = {
   async createPokemonSet(payload: PokemonSetPayload): Promise<PokemonSetType> {
     const { serieId, cardCount, legal, ...rest } = payload;
     const formattedCardCount =
-      cardCount &&
-      Object.values(cardCount).some((value) => value !== undefined)
+      cardCount && Object.values(cardCount).some((value) => value !== undefined)
         ? cardCount
         : undefined;
     const formattedLegal =
-      legal &&
-      (legal.standard !== undefined || legal.expanded !== undefined)
+      legal && (legal.standard !== undefined || legal.expanded !== undefined)
         ? legal
         : undefined;
 
@@ -232,13 +234,11 @@ export const adminService = {
   ): Promise<PokemonSetType> {
     const { serieId, cardCount, legal, ...rest } = payload;
     const formattedCardCount =
-      cardCount &&
-      Object.values(cardCount).some((value) => value !== undefined)
+      cardCount && Object.values(cardCount).some((value) => value !== undefined)
         ? cardCount
         : undefined;
     const formattedLegal =
-      legal &&
-      (legal.standard !== undefined || legal.expanded !== undefined)
+      legal && (legal.standard !== undefined || legal.expanded !== undefined)
         ? legal
         : undefined;
 
@@ -275,10 +275,14 @@ export const adminService = {
     );
   },
 
-  async createPokemonCard(payload: PokemonCardPayload): Promise<PokemonCardType> {
+  async createPokemonCard(
+    payload: PokemonCardPayload,
+  ): Promise<PokemonCardType> {
     const { setId, types, ...rest } = payload;
     const formattedTypes =
-      types && types.length > 0 ? types.filter(Boolean).map((t) => t.trim()) : undefined;
+      types && types.length > 0
+        ? types.filter(Boolean).map((t) => t.trim())
+        : undefined;
 
     return authedFetch<PokemonCardType>("POST", "/pokemon-card", {
       data: {
@@ -295,7 +299,9 @@ export const adminService = {
   ): Promise<PokemonCardType> {
     const { setId, types, ...rest } = payload;
     const formattedTypes =
-      types && types.length > 0 ? types.filter(Boolean).map((t) => t.trim()) : undefined;
+      types && types.length > 0
+        ? types.filter(Boolean).map((t) => t.trim())
+        : undefined;
 
     return authedFetch<PokemonCardType>("PATCH", `/pokemon-card/${id}`, {
       data: {

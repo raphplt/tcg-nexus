@@ -5,12 +5,12 @@ import {
   ManyToMany,
   OneToMany,
   OneToOne,
-  JoinColumn
-} from 'typeorm';
-import { Tournament } from 'src/tournament/entities/tournament.entity';
-import { Statistics } from 'src/statistics/entities/statistic.entity';
-import { Ranking } from 'src/ranking/entities/ranking.entity';
-import { User } from 'src/user/entities/user.entity';
+  JoinColumn,
+} from "typeorm";
+import { Tournament } from "src/tournament/entities/tournament.entity";
+import { Statistics } from "src/statistics/entities/statistic.entity";
+import { Ranking } from "src/ranking/entities/ranking.entity";
+import { User } from "src/user/entities/user.entity";
 
 @Entity()
 export class Player {
@@ -23,16 +23,34 @@ export class Player {
   @Column({ default: 1 })
   level: number;
 
-  @OneToOne(() => User, (user) => user.player)
+  @Column({ default: 0 })
+  xp: number;
+
+  @Column({ default: 1 })
+  level: number;
+
+  @OneToOne(
+    () => User,
+    (user) => user.player,
+  )
   @JoinColumn()
   user: User;
 
-  @ManyToMany(() => Tournament, (tournament) => tournament.players)
+  @ManyToMany(
+    () => Tournament,
+    (tournament) => tournament.players,
+  )
   tournaments: Tournament[];
 
-  @OneToMany(() => Statistics, (stats) => stats.player)
+  @OneToMany(
+    () => Statistics,
+    (stats) => stats.player,
+  )
   statistics: Statistics[];
 
-  @OneToMany(() => Ranking, (ranking) => ranking.player)
+  @OneToMany(
+    () => Ranking,
+    (ranking) => ranking.player,
+  )
   rankings: Ranking[];
 }

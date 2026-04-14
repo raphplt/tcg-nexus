@@ -52,7 +52,11 @@ import {
 } from "@components/ui/card";
 import { Badge } from "@components/ui/badge";
 import { Separator } from "@components/ui/separator";
-import { PokemonCardType, PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
+import {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "@/types/cardPokemon";
 import Image from "next/image";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,7 +66,9 @@ const CardForm = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  const [selectedCard, setSelectedCard] = useState<PokemonCardType | null>(null);
+  const [selectedCard, setSelectedCard] = useState<PokemonCardType | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 350);
@@ -74,7 +80,7 @@ const CardForm = () => {
 
   const filtersWithSearch = useMemo(
     () => ({ ...filters, search: debouncedSearch }),
-    [filters, debouncedSearch]
+    [filters, debouncedSearch],
   );
 
   const {
@@ -273,7 +279,8 @@ const CardForm = () => {
                 </div>
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="animate-pulse">
-                    {activeFiltersCount} filtre{activeFiltersCount > 1 ? "s" : ""} actif
+                    {activeFiltersCount} filtre
+                    {activeFiltersCount > 1 ? "s" : ""} actif
                   </Badge>
                 )}
               </div>
@@ -334,10 +341,12 @@ const CardForm = () => {
                       serieId: value === "all" ? undefined : value,
                     })
                   }
-                  options={(series as PokemonSerieType[] | undefined)?.map((s) => ({
-                    value: s.id.toString(),
-                    label: s.name,
-                  }))}
+                  options={(series as PokemonSerieType[] | undefined)?.map(
+                    (s) => ({
+                      value: s.id.toString(),
+                      label: s.name,
+                    }),
+                  )}
                 />
 
                 <FilterSelect
@@ -451,7 +460,11 @@ const CardForm = () => {
                     })}
                   </div>
                   {meta && (
-                    <PaginatedNav meta={meta} page={page} onPageChange={setPage} />
+                    <PaginatedNav
+                      meta={meta}
+                      page={page}
+                      onPageChange={setPage}
+                    />
                   )}
                 </>
               ) : (
@@ -502,7 +515,9 @@ const CardForm = () => {
                             field.onChange(e.target.valueAsNumber || 0)
                           }
                         />
-                        <span className="absolute left-3 top-3 text-muted-foreground">€</span>
+                        <span className="absolute left-3 top-3 text-muted-foreground">
+                          €
+                        </span>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -582,7 +597,8 @@ const CardForm = () => {
                         <SelectTrigger className="h-11">
                           <SelectValue placeholder="Choisissez un état">
                             {field.value
-                              ? cardStates.find((s) => s.value === field.value)?.label
+                              ? cardStates.find((s) => s.value === field.value)
+                                  ?.label
                               : "Choisissez un état"}
                           </SelectValue>
                         </SelectTrigger>
@@ -626,7 +642,11 @@ const CardForm = () => {
           <Button variant="secondary" type="button" asChild>
             <Link href="/marketplace">Annuler</Link>
           </Button>
-          <Button disabled={loading || !selectedCard} type="submit" className="min-w-[140px]">
+          <Button
+            disabled={loading || !selectedCard}
+            type="submit"
+            className="min-w-[140px]"
+          >
             {loading ? (
               <Loader2 className="animate-spin" />
             ) : (

@@ -1,15 +1,16 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Card } from './entities/card.entity';
-import { PokemonCardDetails } from './entities/pokemon-card-details.entity';
-import { CardService } from './card.service';
-import { CardController } from './card.controller';
-import { PokemonSet } from '../pokemon-set/entities/pokemon-set.entity';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { Card } from "./entities/card.entity";
+import { PokemonCardDetails } from "./entities/pokemon-card-details.entity";
+import { CardService } from "./card.service";
+import { CardController } from "./card.controller";
+import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
+import { CardEffectsSyncService } from "./card-effects-sync.service";
 
 @Module({
   imports: [TypeOrmModule.forFeature([Card, PokemonCardDetails, PokemonSet])],
   controllers: [CardController],
-  providers: [CardService],
-  exports: [CardService]
+  providers: [CardService, CardEffectsSyncService],
+  exports: [CardService, CardEffectsSyncService],
 })
 export class CardModule {}

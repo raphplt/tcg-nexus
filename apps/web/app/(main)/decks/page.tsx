@@ -1,21 +1,21 @@
 "use client";
-import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H2 } from "@components/Shared/Titles";
-
-import { useEffect, useState } from "react";
+import { Skeleton } from "@components/ui/skeleton";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { authedFetch } from "@utils/fetch";
-import { Deck } from "@/types/Decks";
+import { Library } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PageWrapper } from "@/components/Layout/PageWrapper";
+import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { decksService } from "@/services/decks.service";
+import { Deck } from "@/types/Decks";
 import { DeckFormat } from "@/types/deckFormat";
 import { PaginatedResult } from "@/types/pagination";
+import DeckCard from "./_components/DeckCard";
+import DecksFilters, { DecksFiltersTypes } from "./_components/DecksFilters";
+import SavedDecks from "./_components/SavedDecks";
 import TrendingDecks from "./_components/TrendingDecks";
 import UserDecks from "./_components/UserDecks";
-import DeckCard from "./_components/DeckCard";
-import { Skeleton } from "@components/ui/skeleton";
-import { Library } from "lucide-react";
-import DecksFilters, { DecksFiltersTypes } from "./_components/DecksFilters";
 
 export default function DecksPage() {
   const [page, setPage] = useState(1);
@@ -86,6 +86,7 @@ export default function DecksPage() {
         </div>
         <TrendingDecks />
         <UserDecks />
+        <SavedDecks />
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <H2 className="flex items-center gap-2">
@@ -107,10 +108,7 @@ export default function DecksPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-[300px] w-full rounded-xl"
-                />
+                <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
               ))}
             </div>
           ) : error ? (

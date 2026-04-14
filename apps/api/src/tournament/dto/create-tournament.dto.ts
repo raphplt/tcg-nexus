@@ -7,10 +7,10 @@ import {
   IsDate,
   IsArray,
   Min,
-  Max
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { TournamentType } from '../entities/tournament.entity';
+  Max,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { TournamentType } from "../entities/tournament.entity";
 
 export class CreateTournamentDto {
   @IsString()

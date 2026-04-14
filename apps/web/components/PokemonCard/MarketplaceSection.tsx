@@ -169,10 +169,7 @@ const MarketplaceSection: React.FC = () => {
       <CardContent>
         <div className="space-y-4">
           {mockListings.map((listing) => (
-            <Card
-              key={listing.id}
-              className="marketplace-card"
-            >
+            <Card key={listing.id} className="marketplace-card">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
@@ -260,10 +257,7 @@ const MarketplaceSection: React.FC = () => {
         </div>
 
         <div className="mt-6 text-center">
-          <Button
-            variant="outline"
-            className="w-full"
-          >
+          <Button variant="outline" className="w-full">
             Voir toutes les ventes
           </Button>
         </div>

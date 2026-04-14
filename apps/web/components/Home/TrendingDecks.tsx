@@ -50,10 +50,7 @@ const TrendingDecks = () => {
     <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
       <div className="flex items-center justify-between mb-4">
         <H2>Meilleurs Decks</H2>
-        <Link
-          href="/decks"
-          className="text-sm text-primary hover:underline"
-        >
+        <Link href="/decks" className="text-sm text-primary hover:underline">
           Voir tout
         </Link>
       </div>

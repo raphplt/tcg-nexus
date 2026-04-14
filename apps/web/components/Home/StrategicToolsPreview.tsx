@@ -20,15 +20,8 @@ const StrategicToolsPreview = () => (
         loading="eager"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-        >
-          <Link
-            href="/strategy"
-            className="flex items-center gap-2"
-          >
+        <Button asChild variant="outline" size="sm">
+          <Link href="/strategy" className="flex items-center gap-2">
             Accéder aux outils
             <ArrowRight className="mr-2 w-4 h-4" />
           </Link>

@@ -26,8 +26,6 @@ interface PokemonCardDetailProps {
 }
 
 const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
-
-
   const safeRender = (value: any): string => {
     if (typeof value === "string" || typeof value === "number") {
       return String(value);
@@ -100,17 +98,11 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   <Heart className="w-4 h-4" />
                   Ajouter aux favoris
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Ajouter à la collection
                 </Button>
-                <Button
-                  variant="secondary"
-                  className="flex items-center gap-2"
-                >
+                <Button variant="secondary" className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
                   Voir les ventes
                 </Button>
@@ -140,10 +132,7 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   </h2>
                   <div className="space-y-4">
                     {card.attacks.map((attack, index) => (
-                      <div
-                        key={index}
-                        className="attack-section"
-                      >
+                      <div key={index} className="attack-section">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="flex gap-1">
                             {attack.cost.map((energy, i) => (
@@ -186,10 +175,7 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   </h2>
                   <div className="space-y-2">
                     {card.weaknesses.map((weakness, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3"
-                      >
+                      <div key={index} className="flex items-center gap-3">
                         <Badge
                           variant="destructive"
                           className="flex items-center gap-1"

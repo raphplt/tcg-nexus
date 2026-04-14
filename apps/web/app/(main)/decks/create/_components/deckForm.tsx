@@ -288,10 +288,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
   return (
     <>
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid xl:grid-cols-3 gap-6">
             <DeckInfoSection
               form={form}
@@ -348,10 +345,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
             >
               Retour
             </Button>
-            <Button
-              type="submit"
-              disabled={loading}
-            >
+            <Button type="submit" disabled={loading}>
               {loading ? (
                 <Loader2 className="animate-spin" />
               ) : deck ? (

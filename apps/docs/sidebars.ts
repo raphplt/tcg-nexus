@@ -1,4 +1,4 @@
-import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
+import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -14,45 +14,45 @@ import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   docsSidebar: [
-    'intro',
+    "intro",
     {
-      type: 'category',
-      label: 'Prise en main',
-      items: ['guides/installation', 'guides/commands'],
+      type: "category",
+      label: "Prise en main",
+      items: ["guides/installation", "guides/commands"],
     },
     {
-      type: 'category',
-      label: 'Architecture',
-      items: ['architecture/monorepo'],
+      type: "category",
+      label: "Architecture",
+      items: ["architecture/monorepo"],
     },
     {
-      type: 'category',
-      label: 'Backend',
+      type: "category",
+      label: "Backend",
       items: [
-        'backend/api',
-        'backend/auth',
-        'backend/users',
-        'backend/tournaments',
-        'backend/marketplace',
-        'backend/cards',
-        'backend/decks',
-        'backend/collections',
+        "backend/api",
+        "backend/auth",
+        "backend/users",
+        "backend/tournaments",
+        "backend/marketplace",
+        "backend/cards",
+        "backend/decks",
+        "backend/collections",
       ],
     },
     {
-      type: 'category',
-      label: 'Front-end',
-      items: ['frontend/web'],
+      type: "category",
+      label: "Front-end",
+      items: ["frontend/web"],
     },
     {
-      type: 'category',
-      label: 'Services',
-      items: ['services/fetch'],
+      type: "category",
+      label: "Services",
+      items: ["services/fetch"],
     },
     {
-      type: 'category',
-      label: 'Ops',
-      items: ['ops/docker', 'ops/tests', 'ops/vercel'],
+      type: "category",
+      label: "Ops",
+      items: ["ops/docker", "ops/tests", "ops/vercel"],
     },
   ],
 };

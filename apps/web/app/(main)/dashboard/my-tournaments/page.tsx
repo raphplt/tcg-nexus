@@ -125,38 +125,23 @@ export default function MyTournamentsPage() {
         <TournamentStats stats={stats} />
 
         {/* Onglets par statut */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-        >
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger
-              value="active"
-              className="flex items-center gap-2"
-            >
+            <TabsTrigger value="active" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Actifs ({stats.active})
             </TabsTrigger>
-            <TabsTrigger
-              value="finished"
-              className="flex items-center gap-2"
-            >
+            <TabsTrigger value="finished" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Terminés ({stats.finished})
             </TabsTrigger>
-            <TabsTrigger
-              value="cancelled"
-              className="flex items-center gap-2"
-            >
+            <TabsTrigger value="cancelled" className="flex items-center gap-2">
               <X className="w-4 h-4" />
               Annulés ({cancelledTournaments.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent
-            value="active"
-            className="mt-6"
-          >
+          <TabsContent value="active" className="mt-6">
             <TournamentList
               tournaments={activeTournaments}
               isLoading={isLoading}
@@ -164,10 +149,7 @@ export default function MyTournamentsPage() {
             />
           </TabsContent>
 
-          <TabsContent
-            value="finished"
-            className="mt-6"
-          >
+          <TabsContent value="finished" className="mt-6">
             <TournamentList
               tournaments={finishedTournaments}
               isLoading={isLoading}
@@ -176,10 +158,7 @@ export default function MyTournamentsPage() {
             />
           </TabsContent>
 
-          <TabsContent
-            value="cancelled"
-            className="mt-6"
-          >
+          <TabsContent value="cancelled" className="mt-6">
             <TournamentList
               tournaments={cancelledTournaments}
               isLoading={isLoading}

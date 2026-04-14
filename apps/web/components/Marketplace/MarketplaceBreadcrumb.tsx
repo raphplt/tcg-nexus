@@ -39,8 +39,12 @@ export function MarketplaceBreadcrumb() {
   // Get seller name if on seller detail page
   const { data: sellerStats } = useQuery({
     queryKey: ["seller-stats", params.id ? parseInt(params.id as string) : 0],
-    queryFn: () => marketplaceService.getSellerStatistics(parseInt(params.id as string)),
-    enabled: !!params.id && pathname.includes("/sellers/") && !isNaN(parseInt(params.id as string)),
+    queryFn: () =>
+      marketplaceService.getSellerStatistics(parseInt(params.id as string)),
+    enabled:
+      !!params.id &&
+      pathname.includes("/sellers/") &&
+      !isNaN(parseInt(params.id as string)),
   });
 
   const seller = sellerStats?.seller;
@@ -53,7 +57,7 @@ export function MarketplaceBreadcrumb() {
       <BreadcrumbLink asChild>
         <Link href="/">{translations.home}</Link>
       </BreadcrumbLink>
-    </BreadcrumbItem>
+    </BreadcrumbItem>,
   );
 
   // Add Marketplace
@@ -68,7 +72,7 @@ export function MarketplaceBreadcrumb() {
             <Link href="/marketplace">{translations.marketplace}</Link>
           </BreadcrumbLink>
         )}
-      </BreadcrumbItem>
+      </BreadcrumbItem>,
     );
 
     // Add Cards if on cards pages
@@ -83,7 +87,7 @@ export function MarketplaceBreadcrumb() {
               <Link href="/marketplace/cards">{translations.cards}</Link>
             </BreadcrumbLink>
           )}
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
 
       // Add card detail if on specific card page
@@ -94,7 +98,7 @@ export function MarketplaceBreadcrumb() {
             <BreadcrumbPage>
               {card?.name || translations.cardDetail}
             </BreadcrumbPage>
-          </BreadcrumbItem>
+          </BreadcrumbItem>,
         );
       }
     }
@@ -111,7 +115,7 @@ export function MarketplaceBreadcrumb() {
               <Link href="/marketplace/sellers">{translations.sellers}</Link>
             </BreadcrumbLink>
           )}
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
 
       // Add seller detail if on specific seller page
@@ -124,7 +128,7 @@ export function MarketplaceBreadcrumb() {
                 ? `${seller.firstName} ${seller.lastName}`
                 : translations.sellerDetail}
             </BreadcrumbPage>
-          </BreadcrumbItem>
+          </BreadcrumbItem>,
         );
       }
     }
@@ -135,7 +139,7 @@ export function MarketplaceBreadcrumb() {
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="create">
           <BreadcrumbPage>{translations.create}</BreadcrumbPage>
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
     }
   }
@@ -146,4 +150,3 @@ export function MarketplaceBreadcrumb() {
     </Breadcrumb>
   );
 }
-

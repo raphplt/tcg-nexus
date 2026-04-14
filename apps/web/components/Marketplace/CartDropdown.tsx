@@ -38,15 +38,11 @@ const CartDropdown = () => {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 w-8 rounded-full p-0 relative"
-        >
+        <Button variant="ghost" className="h-8 w-8 rounded-full p-0 relative">
           <ShoppingCart className="h-4 w-4" />
           {itemsCount > 0 && (
             <Badge
               variant="destructive"
-              
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs "
             >
               {itemsCount}
@@ -81,12 +77,12 @@ const CartDropdown = () => {
                   onSelect={(e) => e.preventDefault()}
                 >
                   <div className="relative w-12 h-16 shrink-0">
-                      <Image
-                        src={getCardImage(item.listing.pokemonCard)}
-                        alt={item.listing.pokemonCard.name || "Carte"}
-                        fill
-                        className="object-contain rounded"
-                      />
+                    <Image
+                      src={getCardImage(item.listing.pokemonCard)}
+                      alt={item.listing.pokemonCard.name || "Carte"}
+                      fill
+                      className="object-contain rounded"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
@@ -124,15 +120,8 @@ const CartDropdown = () => {
                   {formatPrice(total, currency)}
                 </span>
               </div>
-              <Button
-                asChild
-                className="w-full"
-                size="sm"
-              >
-                <Link
-                  href="/cart"
-                  onClick={() => setIsOpen(false)}
-                >
+              <Button asChild className="w-full" size="sm">
+                <Link href="/cart" onClick={() => setIsOpen(false)}>
                   Voir le panier
                 </Link>
               </Button>

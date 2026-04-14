@@ -150,11 +150,7 @@ export default function PlayerDashboardPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-          >
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -190,10 +186,7 @@ export default function PlayerDashboardPage() {
 
                 {playerRanking && (
                   <div className="space-y-2">
-                    <Badge
-                      variant="outline"
-                      className="text-lg px-3 py-1"
-                    >
+                    <Badge variant="outline" className="text-lg px-3 py-1">
                       Rang #{playerRanking.rank}
                     </Badge>
                     <div className="text-sm text-muted-foreground">
@@ -277,10 +270,7 @@ export default function PlayerDashboardPage() {
                       </div>
                     )}
 
-                    <Button
-                      className="w-full"
-                      asChild
-                    >
+                    <Button className="w-full" asChild>
                       <Link href={`/tournaments/${id}/matches/${nextMatch.id}`}>
                         Voir le match
                       </Link>
@@ -368,11 +358,7 @@ export default function PlayerDashboardPage() {
                               </TableCell>
 
                               <TableCell>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  asChild
-                                >
+                                <Button variant="outline" size="sm" asChild>
                                   <Link
                                     href={`/tournaments/${id}/matches/${match.id}`}
                                   >
@@ -385,10 +371,7 @@ export default function PlayerDashboardPage() {
                         })
                     ) : (
                       <TableRow>
-                        <TableCell
-                          colSpan={6}
-                          className="text-center py-8"
-                        >
+                        <TableCell colSpan={6} className="text-center py-8">
                           <div className="text-muted-foreground">
                             <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p>Aucun match programmé pour le moment</p>
@@ -403,11 +386,7 @@ export default function PlayerDashboardPage() {
 
             {/* Liens rapides */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <Button
-                variant="outline"
-                className="h-auto p-4"
-                asChild
-              >
+              <Button variant="outline" className="h-auto p-4" asChild>
                 <Link href={`/tournaments/${id}/bracket`}>
                   <div className="text-center">
                     <Trophy className="w-6 h-6 mx-auto mb-2" />
@@ -419,11 +398,7 @@ export default function PlayerDashboardPage() {
                 </Link>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto p-4"
-                asChild
-              >
+              <Button variant="outline" className="h-auto p-4" asChild>
                 <Link href={`/tournaments/${id}/rankings`}>
                   <div className="text-center">
                     <TrendingUp className="w-6 h-6 mx-auto mb-2" />
@@ -435,11 +410,7 @@ export default function PlayerDashboardPage() {
                 </Link>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto p-4"
-                asChild
-              >
+              <Button variant="outline" className="h-auto p-4" asChild>
                 <Link href={`/tournaments/${id}/matches`}>
                   <div className="text-center">
                     <Clock className="w-6 h-6 mx-auto mb-2" />

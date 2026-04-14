@@ -77,7 +77,8 @@ export default function SellerPage() {
   }
 
   const sellerListings = listings?.data ?? [];
-  const seller = stats.seller ?? stats.listings?.[0]?.seller ?? sellerListings?.[0]?.seller;
+  const seller =
+    stats.seller ?? stats.listings?.[0]?.seller ?? sellerListings?.[0]?.seller;
 
   if (!seller) {
     return (
@@ -113,10 +114,7 @@ export default function SellerPage() {
                     {seller.firstName} {seller.lastName}
                   </H1>
                   {seller.isPro && (
-                    <Badge
-                      variant="secondary"
-                      className="text-sm"
-                    >
+                    <Badge variant="secondary" className="text-sm">
                       Vendeur Pro
                     </Badge>
                   )}
@@ -223,20 +221,14 @@ export default function SellerPage() {
                 {sellerListings.length} offre
                 {sellerListings.length > 1 ? "s" : ""}
               </Badge>
-              <ViewToggle
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
+              <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             </div>
           </div>
 
           {loadingListings ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-80"
-                />
+                <Skeleton key={i} className="h-80" />
               ))}
             </div>
           ) : sellerListings.length > 0 ? (
@@ -328,4 +320,3 @@ export default function SellerPage() {
     </div>
   );
 }
-

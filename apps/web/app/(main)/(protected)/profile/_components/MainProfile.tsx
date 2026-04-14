@@ -35,20 +35,14 @@ const MainProfile = () => {
     <div className="container mx-auto px-4 py-8 space-y-6">
       <ProfileHeader user={user} />
 
-      <Tabs
-        defaultValue="overview"
-        className="space-y-6"
-      >
+      <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
           <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
           <TabsTrigger value="tournaments">Tournois</TabsTrigger>
           <TabsTrigger value="sales">Ventes</TabsTrigger>
         </TabsList>
 
-        <TabsContent
-          value="overview"
-          className="space-y-6"
-        >
+        <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <ProfileActivity activity={dashboard?.activity} />

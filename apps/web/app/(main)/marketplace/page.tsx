@@ -31,10 +31,7 @@ export default function MarketplaceHomePage() {
       <div className="space-y-12">
         <MarketplaceBreadcrumb />
         <div className="text-center space-y-4">
-          <H1
-            className="text-4xl md:text-5xl font-bold"
-            variant="primary"
-          >
+          <H1 className="text-4xl md:text-5xl font-bold" variant="primary">
             Marketplace TCG Nexus
           </H1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -45,20 +42,13 @@ export default function MarketplaceHomePage() {
             <CurrencySelector />
           </div>
           <div className="flex flex-wrap gap-4 justify-center mt-6">
-            <Button
-              asChild
-              size="lg"
-            >
+            <Button asChild size="lg">
               <Link href="/marketplace/cards">
                 Explorer les cartes
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-            >
+            <Button asChild variant="outline" size="lg">
               <Link href="/marketplace/create">Vendre une carte</Link>
             </Button>
           </div>
@@ -71,10 +61,7 @@ export default function MarketplaceHomePage() {
               <Flame className="w-6 h-6 text-primary" />
               <H2>Cartes tendances</H2>
             </div>
-            <Button
-              variant="ghost"
-              asChild
-            >
+            <Button variant="ghost" asChild>
               <Link href="/marketplace/cards?sortBy=popularity">
                 Voir tout <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
@@ -83,10 +70,7 @@ export default function MarketplaceHomePage() {
           {loadingTrending ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-80"
-                />
+                <Skeleton key={i} className="h-80" />
               ))}
             </div>
           ) : trendingCards && trendingCards.length > 0 ? (
@@ -119,10 +103,7 @@ export default function MarketplaceHomePage() {
               <Star className="w-6 h-6 text-primary" />
               <H2>Cartes populaires</H2>
             </div>
-            <Button
-              variant="ghost"
-              asChild
-            >
+            <Button variant="ghost" asChild>
               <Link href="/marketplace/cards?sortBy=popularity">
                 Voir tout <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
@@ -131,10 +112,7 @@ export default function MarketplaceHomePage() {
           {loadingPopular ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-80"
-                />
+                <Skeleton key={i} className="h-80" />
               ))}
             </div>
           ) : popularCards && popularCards.length > 0 ? (
@@ -166,10 +144,7 @@ export default function MarketplaceHomePage() {
               <TrendingUp className="w-6 h-6 text-primary" />
               <H2>Meilleurs vendeurs</H2>
             </div>
-            <Button
-              variant="ghost"
-              asChild
-            >
+            <Button variant="ghost" asChild>
               <Link href="/marketplace/cards">
                 Voir tout <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
@@ -178,10 +153,7 @@ export default function MarketplaceHomePage() {
           {loadingSellers ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-24"
-                />
+                <Skeleton key={i} className="h-24" />
               ))}
             </div>
           ) : bestSellers && bestSellers.length > 0 ? (
@@ -211,10 +183,7 @@ export default function MarketplaceHomePage() {
               <Package className="w-6 h-6 text-primary" />
               <H2>Séries et extensions</H2>
             </div>
-            <Button
-              variant="ghost"
-              asChild
-            >
+            <Button variant="ghost" asChild>
               <Link href="/marketplace/cards">
                 Voir toutes les séries <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
@@ -223,19 +192,13 @@ export default function MarketplaceHomePage() {
           {loadingSets ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {[...Array(6)].map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="h-32"
-                />
+                <Skeleton key={i} className="h-32" />
               ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {sets?.slice(0, 12).map((set) => (
-                <SetCard
-                  key={set.id}
-                  set={set}
-                />
+                <SetCard key={set.id} set={set} />
               ))}
             </div>
           )}

@@ -60,10 +60,7 @@ const LoadingView = () => (
       <div className="flex gap-6">
         <div className="hidden lg:block w-64 space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-12 w-full rounded-lg"
-            />
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
         </div>
         <div className="flex-1 space-y-4">
@@ -128,12 +125,7 @@ export default function TournamentDetailsPage() {
 
     switch (activeTab) {
       case "overview":
-        return (
-          <TabOverview
-            tournament={tournament}
-            formatDate={formatDate}
-          />
-        );
+        return <TabOverview tournament={tournament} formatDate={formatDate} />;
       case "participants":
         return (
           <TabParticipants registrations={tournament.registrations || []} />
@@ -180,10 +172,7 @@ export default function TournamentDetailsPage() {
         />
 
         <div className="lg:hidden">
-          <MobileTabBar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+          <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
         <div className="flex gap-6">

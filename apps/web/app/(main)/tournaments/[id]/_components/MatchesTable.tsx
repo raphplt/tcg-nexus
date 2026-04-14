@@ -47,7 +47,10 @@ export function MatchesTable({ matches, formatDate }: MatchesTableProps) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground">
+            <TableCell
+              colSpan={6}
+              className="text-center text-muted-foreground"
+            >
               Aucun match planifié pour le moment.
             </TableCell>
           </TableRow>

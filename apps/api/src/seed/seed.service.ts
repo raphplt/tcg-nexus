@@ -1,79 +1,79 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
-import { PokemonSerie } from 'src/pokemon-series/entities/pokemon-serie.entity';
-import * as fs from 'fs';
-import * as path from 'path';
-import { Card } from 'src/card/entities/card.entity';
-import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { DeepPartial, Repository } from "typeorm";
+import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
+import * as fs from "fs";
+import * as path from "path";
+import { Card } from "src/card/entities/card.entity";
+import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
+import { User } from "src/user/entities/user.entity";
 import {
   Tournament,
   TournamentType,
-  TournamentStatus
-} from 'src/tournament/entities/tournament.entity';
-import { Player } from 'src/player/entities/player.entity';
-import { Ranking } from 'src/ranking/entities/ranking.entity';
+  TournamentStatus,
+} from "src/tournament/entities/tournament.entity";
+import { Player } from "src/player/entities/player.entity";
+import { Ranking } from "src/ranking/entities/ranking.entity";
 import {
   Match,
   MatchPhase,
-  MatchStatus
-} from 'src/match/entities/match.entity';
+  MatchStatus,
+} from "src/match/entities/match.entity";
 import {
   TournamentRegistration,
-  RegistrationStatus
-} from 'src/tournament/entities/tournament-registration.entity';
+  RegistrationStatus,
+} from "src/tournament/entities/tournament-registration.entity";
 import {
   TournamentReward,
-  RewardType
-} from 'src/tournament/entities/tournament-reward.entity';
+  RewardType,
+} from "src/tournament/entities/tournament-reward.entity";
 import {
   TournamentPricing,
-  PricingType
-} from 'src/tournament/entities/tournament-pricing.entity';
+  PricingType,
+} from "src/tournament/entities/tournament-pricing.entity";
 import {
   TournamentOrganizer,
-  OrganizerRole
-} from 'src/tournament/entities/tournament-organizer.entity';
+  OrganizerRole,
+} from "src/tournament/entities/tournament-organizer.entity";
 import {
   TournamentNotification,
   NotificationType,
-  NotificationStatus
-} from 'src/tournament/entities/tournament-notification.entity';
-import * as bcrypt from 'bcryptjs';
-import { Article } from 'src/article/entities/article.entity';
-import { Faq, FaqCategory } from 'src/faq/entities/faq.entity';
-import { Listing } from 'src/marketplace/entities/listing.entity';
-import { PriceHistory } from 'src/marketplace/entities/price-history.entity';
+  NotificationStatus,
+} from "src/tournament/entities/tournament-notification.entity";
+import * as bcrypt from "bcryptjs";
+import { Article } from "src/article/entities/article.entity";
+import { Faq, FaqCategory } from "src/faq/entities/faq.entity";
+import { Listing } from "src/marketplace/entities/listing.entity";
+import { PriceHistory } from "src/marketplace/entities/price-history.entity";
 import {
   CardEvent,
-  CardEventType
-} from 'src/marketplace/entities/card-event.entity';
-import { CardPopularityMetrics } from 'src/marketplace/entities/card-popularity-metrics.entity';
-import { Currency } from 'src/common/enums/currency';
-import { Deck } from 'src/deck/entities/deck.entity';
-import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
-import { DeckCardRole } from 'src/common/enums/deckCardRole';
-import { DeckFormat } from 'src/deck-format/entities/deck-format.entity';
-import { Collection } from 'src/collection/entities/collection.entity';
+  CardEventType,
+} from "src/marketplace/entities/card-event.entity";
+import { CardPopularityMetrics } from "src/marketplace/entities/card-popularity-metrics.entity";
+import { Currency } from "src/common/enums/currency";
+import { Deck } from "src/deck/entities/deck.entity";
+import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { DeckCardRole } from "src/common/enums/deckCardRole";
+import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
+import { Collection } from "src/collection/entities/collection.entity";
 import {
   CardState as CardStateEntity,
-  CardStateCode
-} from 'src/card-state/entities/card-state.entity';
+  CardStateCode,
+} from "src/card-state/entities/card-state.entity";
 import {
   SeedingService,
-  SeedingMethod
-} from 'src/tournament/services/seeding.service';
-import { BracketService } from 'src/tournament/services/bracket.service';
-import { MatchService } from 'src/match/match.service';
+  SeedingMethod,
+} from "src/tournament/services/seeding.service";
+import { BracketService } from "src/tournament/services/bracket.service";
+import { MatchService } from "src/match/match.service";
 
-import { CardState, PokemonCardsType } from 'src/common/enums/pokemonCardsType';
-import { UserRole } from 'src/common/enums/user';
-import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import { ConfigService } from '@nestjs/config';
-import { CardGame } from 'src/common/enums/cardGame';
-import { TrainerType } from 'src/common/enums/trainerType';
-import { EnergyType } from 'src/common/enums/energyType';
+import { CardState, PokemonCardsType } from "src/common/enums/pokemonCardsType";
+import { UserRole } from "src/common/enums/user";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { ConfigService } from "@nestjs/config";
+import { CardGame } from "src/common/enums/cardGame";
+import { TrainerType } from "src/common/enums/trainerType";
+import { EnergyType } from "src/common/enums/energyType";
 
 @Injectable()
 export class SeedService {
@@ -131,7 +131,7 @@ export class SeedService {
     private readonly seedingService: SeedingService,
     private readonly bracketService: BracketService,
     private readonly matchService: MatchService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -142,16 +142,16 @@ export class SeedService {
   cleanString(str: string): string {
     // Convert special characters to their ASCII equivalents or remove them
     // eslint-disable-next-line no-control-regex
-    return str.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+    return str.normalize("NFKD").replace(/[^\x00-\x7F]/g, "");
   }
 
   private normalizeForMapping(value?: string): string {
-    if (!value) return '';
+    if (!value) return "";
     return (
       value
-        .normalize('NFKD')
+        .normalize("NFKD")
         // eslint-disable-next-line no-control-regex
-        .replace(/[^\x00-\x7F]/g, '')
+        .replace(/[^\x00-\x7F]/g, "")
         .toLowerCase()
         .trim()
     );
@@ -160,13 +160,13 @@ export class SeedService {
   private mapPokemonCategory(value?: string): PokemonCardsType | undefined {
     const normalized = this.normalizeForMapping(value);
     switch (normalized) {
-      case 'pokemon':
+      case "pokemon":
         return PokemonCardsType.Pokemon;
-      case 'energie':
-      case 'energy':
+      case "energie":
+      case "energy":
         return PokemonCardsType.Energy;
-      case 'dresseur':
-      case 'trainer':
+      case "dresseur":
+      case "trainer":
         return PokemonCardsType.Trainer;
       default:
         return undefined;
@@ -176,19 +176,19 @@ export class SeedService {
   private mapTrainerType(value?: string): TrainerType | undefined {
     const normalized = this.normalizeForMapping(value);
     switch (normalized) {
-      case 'supporter':
+      case "supporter":
         return TrainerType.Supporter;
-      case 'objet':
-      case 'item':
+      case "objet":
+      case "item":
         return TrainerType.Item;
-      case 'stade':
-      case 'stadium':
+      case "stade":
+      case "stadium":
         return TrainerType.Stadium;
-      case 'outil':
-      case 'tool':
+      case "outil":
+      case "tool":
         return TrainerType.Tool;
-      case 'machine technique':
-      case 'technical machine':
+      case "machine technique":
+      case "technical machine":
         return TrainerType.TechnicalMachine;
       default:
         return undefined;
@@ -198,15 +198,15 @@ export class SeedService {
   private mapEnergyType(value?: string): EnergyType | undefined {
     const normalized = this.normalizeForMapping(value);
     switch (normalized) {
-      case 'de base':
-      case 'basic':
+      case "de base":
+      case "basic":
         return EnergyType.Basic;
-      case 'special':
-      case 'speciale':
-      case 'speciales':
-      case 'special energy':
-      case 'speciale energie':
-      case 'specialeenergie':
+      case "special":
+      case "speciale":
+      case "speciales":
+      case "special energy":
+      case "speciale energie":
+      case "specialeenergie":
         return EnergyType.Special;
       default:
         return undefined;
@@ -220,17 +220,17 @@ export class SeedService {
   async createDefaultCollections(userId: number): Promise<void> {
     await this.collectionRepository.save([
       this.collectionRepository.create({
-        name: 'Wishlist',
-        description: 'Default wishlist',
+        name: "Wishlist",
+        description: "Default wishlist",
         isPublic: false,
-        user: { id: userId } as User
+        user: { id: userId } as User,
       }),
       this.collectionRepository.create({
-        name: 'Favorites',
-        description: 'Default favorites',
+        name: "Favorites",
+        description: "Default favorites",
         isPublic: false,
-        user: { id: userId } as User
-      })
+        user: { id: userId } as User,
+      }),
     ]);
   }
 
@@ -239,18 +239,18 @@ export class SeedService {
    */
   async seedCardStates(): Promise<CardStateEntity[]> {
     const cardStatesData = [
-      { code: CardStateCode.NM, label: 'Near Mint' },
-      { code: CardStateCode.EX, label: 'Excellent' },
-      { code: CardStateCode.GD, label: 'Good' },
-      { code: CardStateCode.LP, label: 'Lightly Played' },
-      { code: CardStateCode.PL, label: 'Played' },
-      { code: CardStateCode.Poor, label: 'Poor' }
+      { code: CardStateCode.NM, label: "Near Mint" },
+      { code: CardStateCode.EX, label: "Excellent" },
+      { code: CardStateCode.GD, label: "Good" },
+      { code: CardStateCode.LP, label: "Lightly Played" },
+      { code: CardStateCode.PL, label: "Played" },
+      { code: CardStateCode.Poor, label: "Poor" },
     ];
 
     const states: CardStateEntity[] = [];
     for (const stateData of cardStatesData) {
       let state = await this.cardStateRepository.findOne({
-        where: { code: stateData.code }
+        where: { code: stateData.code },
       });
       if (!state) {
         state = this.cardStateRepository.create(stateData);
@@ -277,25 +277,25 @@ export class SeedService {
   async importPokemonSeries() {
     const dataPath = path.resolve(
       __dirname,
-      '../../../data/pokemon_series.json'
+      "../../../../data/pokemon_series.json",
     );
     if (!fs.existsSync(dataPath)) {
       console.warn(`Series file not found at ${dataPath}`);
       return [];
     }
 
-    const seriesData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    const seriesData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
     const series: PokemonSerie[] = [];
 
     for (const serieData of seriesData as DeepPartial<PokemonSerie>[]) {
       const existingSerie = await this.pokemonSerieRepository.findOne({
-        where: { name: serieData.name }
+        where: { name: serieData.name },
       });
 
       if (!existingSerie) {
         const newSerie = this.pokemonSerieRepository.create({
           ...serieData,
-          game: CardGame.Pokemon
+          game: CardGame.Pokemon,
         });
         series.push(newSerie);
       }
@@ -321,18 +321,18 @@ export class SeedService {
   async importPokemonSets() {
     const dataPath = path.resolve(
       __dirname,
-      '../../../../data/pokemon_sets.json'
+      "../../../../data/pokemon_sets.json",
     );
     if (!fs.existsSync(dataPath)) {
       console.warn(`Sets file not found at ${dataPath}`);
       return [];
     }
-    const setsData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    const setsData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
     const sets: PokemonSet[] = [];
 
     for (const setData of setsData as DeepPartial<PokemonSet>[]) {
       const existingSet = await this.pokemonSetRepository.findOne({
-        where: { name: setData.name }
+        where: { name: setData.name },
       });
 
       if (!existingSet) {
@@ -347,12 +347,12 @@ export class SeedService {
         }
 
         const serie = await this.pokemonSerieRepository.findOne({
-          where: { id: serieId as string }
+          where: { id: serieId as string },
         });
 
         if (!serie) {
           console.warn(
-            `Serie with id '${String(serieId)}' not found for set '${setData.name as string}' – skipped.`
+            `Serie with id '${String(serieId)}' not found for set '${setData.name as string}' – skipped.`,
           );
           continue;
         }
@@ -368,7 +368,7 @@ export class SeedService {
         const newSet = this.pokemonSetRepository.create({
           ...(setProps as DeepPartial<PokemonSet>),
           game: CardGame.Pokemon,
-          serie
+          serie,
         });
         sets.push(newSet);
       }
@@ -400,7 +400,7 @@ export class SeedService {
     const series = await this.importPokemonSeries();
     const sets = await this.importPokemonSets();
 
-    const dataPath = path.resolve(__dirname, '../../../../data');
+    const dataPath = path.resolve(__dirname, "../../../../data");
     // Removed the large 'cards' array to save memory
 
     // Recursively find all JSON files in dataPath that are NOT the series/sets files
@@ -412,9 +412,9 @@ export class SeedService {
           getAllFiles(filePath, fileList);
         } else {
           if (
-            file.endsWith('.json') &&
-            !file.endsWith('pokemon_series.json') &&
-            !file.endsWith('pokemon_sets.json')
+            file.endsWith(".json") &&
+            !file.endsWith("pokemon_series.json") &&
+            !file.endsWith("pokemon_sets.json")
           ) {
             fileList.push(filePath);
           }
@@ -434,7 +434,7 @@ export class SeedService {
 
     for (const filePath of cardFiles) {
       try {
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        const fileContent = fs.readFileSync(filePath, "utf-8");
         const parsedContent = JSON.parse(fileContent);
 
         const cardsData = Array.isArray(parsedContent)
@@ -447,7 +447,7 @@ export class SeedService {
             continue;
           }
           const set = await this.pokemonSetRepository.findOne({
-            where: { id: setId }
+            where: { id: setId },
           });
           if (!set) {
             continue;
@@ -455,7 +455,7 @@ export class SeedService {
 
           const name = cardData.name
             ? this.cleanString(cardData.name as string)
-            : '';
+            : "";
           const illustrator = cardData.illustrator
             ? this.cleanString(cardData.illustrator as string)
             : null;
@@ -483,7 +483,7 @@ export class SeedService {
             legal: cardData.legal,
             updated: cardData.updated,
             pricing: cardData.pricing,
-            set
+            set,
           } as DeepPartial<Card>);
 
           const details = this.pokemonCardDetailsRepository.create({
@@ -506,7 +506,7 @@ export class SeedService {
             regulationMark: cardData.regulationMark,
             trainerType: this.mapTrainerType(cardData.trainerType),
             energyType: this.mapEnergyType(cardData.energyType),
-            boosters: cardData.boosters
+            boosters: cardData.boosters,
           } as DeepPartial<PokemonCardDetails>);
 
           details.card = card;
@@ -517,7 +517,7 @@ export class SeedService {
       } catch (jsonError) {
         console.error(
           `Failed to parse JSON content for ${filePath}:`,
-          jsonError
+          jsonError,
         );
       }
 
@@ -535,9 +535,9 @@ export class SeedService {
       const width = 40;
       const filled = Math.round((width * processedFiles) / total);
       const empty = width - filled;
-      const bar = '█'.repeat(filled) + '░'.repeat(empty);
+      const bar = "█".repeat(filled) + "░".repeat(empty);
       process.stdout.write(
-        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`
+        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`,
       );
     }
 
@@ -547,7 +547,7 @@ export class SeedService {
       metricsSavedCards += cardBatch.length;
     }
 
-    process.stdout.write('\n'); // New line after progress bar
+    process.stdout.write("\n"); // New line after progress bar
     console.log(`Successfully saved a total of ${metricsSavedCards} cards.`);
 
     // Return empty cards array as we don't want to load them all back into memory
@@ -558,25 +558,33 @@ export class SeedService {
    * Seed test users (dev only)
    */
   async seedUsers() {
-    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const isProduction = this.configService.get("NODE_ENV") === "production";
     if (isProduction) {
-      console.log('⚠️  Skipping test users seed in production environment.');
+      console.log("⚠️  Skipping test users seed in production environment.");
       return [];
     }
 
     // Bypass TypeScript transpilation of dynamic import to require()
     const { faker } = await (eval('import("@faker-js/faker")') as Promise<
-      typeof import('@faker-js/faker')
+      typeof import("@faker-js/faker")
     >);
     const usersData: Array<
-      Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'refreshToken'>
+      Omit<
+        User,
+        | "id"
+        | "createdAt"
+        | "updatedAt"
+        | "refreshToken"
+        | "previousRefreshToken"
+        | "previousRefreshTokenExpiresAt"
+      >
     > = [
       {
-        email: 'test1@test.com',
-        firstName: 'Test',
-        lastName: 'User1',
-        password: 'password1',
-        avatarUrl: 'https://via.placeholder.com/150',
+        email: "test1@test.com",
+        firstName: "Test",
+        lastName: "User1",
+        password: "password1",
+        avatarUrl: "https://via.placeholder.com/150",
         role: UserRole.USER,
         isPro: false,
         isActive: true,
@@ -584,14 +592,14 @@ export class SeedService {
         preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
-        tournamentOrganizers: []
+        tournamentOrganizers: [],
       },
       {
-        email: 'test2@test.com',
-        firstName: 'Test',
-        lastName: 'User2',
-        password: 'password2',
-        avatarUrl: 'https://via.placeholder.com/150',
+        email: "test2@test.com",
+        firstName: "Test",
+        lastName: "User2",
+        password: "password2",
+        avatarUrl: "https://via.placeholder.com/150",
         role: UserRole.ADMIN,
         isPro: true,
         isActive: true,
@@ -599,14 +607,14 @@ export class SeedService {
         preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
-        tournamentOrganizers: []
+        tournamentOrganizers: [],
       },
       {
-        email: 'test3@test.com',
-        firstName: 'Test',
-        lastName: 'User3',
-        password: 'password3',
-        avatarUrl: 'https://via.placeholder.com/150',
+        email: "test3@test.com",
+        firstName: "Test",
+        lastName: "User3",
+        password: "password3",
+        avatarUrl: "https://via.placeholder.com/150",
         role: UserRole.MODERATOR,
         isPro: true,
         isActive: true,
@@ -614,8 +622,8 @@ export class SeedService {
         preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
-        tournamentOrganizers: []
-      }
+        tournamentOrganizers: [],
+      },
     ];
 
     for (let i = 4; i <= 15; i++) {
@@ -632,19 +640,19 @@ export class SeedService {
         preferredCurrency: Currency.EUR,
         decks: [],
         collections: [],
-        tournamentOrganizers: []
+        tournamentOrganizers: [],
       });
     }
     const users: User[] = [];
     for (const userData of usersData) {
       const existing = await this.userRepository.findOne({
-        where: { email: userData.email }
+        where: { email: userData.email },
       });
       if (!existing) {
         const hash = await bcrypt.hash(userData.password, 10);
         const user = this.userRepository.create({
           ...userData,
-          password: hash
+          password: hash,
         });
         users.push(user);
       }
@@ -668,7 +676,7 @@ export class SeedService {
     password: string,
     firstName: string,
     lastName: string,
-    role: UserRole = UserRole.USER
+    role: UserRole = UserRole.USER,
   ): Promise<User> {
     const existing = await this.userRepository.findOne({ where: { email } });
     if (existing) {
@@ -687,7 +695,7 @@ export class SeedService {
       emailVerified: true,
       preferredCurrency: Currency.EUR,
       decks: [],
-      collections: []
+      collections: [],
     });
 
     await this.userRepository.save(user);
@@ -700,9 +708,11 @@ export class SeedService {
    * Seed test tournaments with related entities (dev only)
    */
   async seedTournaments() {
-    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const isProduction = this.configService.get("NODE_ENV") === "production";
     if (isProduction) {
-      console.log('⚠️  Skipping test tournaments seed in production environment.');
+      console.log(
+        "⚠️  Skipping test tournaments seed in production environment.",
+      );
       return [];
     }
     // Crée quelques joueurs (réutilise si déjà existants)
@@ -714,7 +724,7 @@ export class SeedService {
     for (const user of users) {
       let player = await this.playerRepository.findOne({
         where: { user: { id: user.id } },
-        relations: ['user']
+        relations: ["user"],
       });
       if (!player) {
         player = this.playerRepository.create({ user });
@@ -737,7 +747,7 @@ export class SeedService {
         emailVerified: true,
         preferredCurrency: Currency.EUR,
         decks: [],
-        collections: []
+        collections: [],
       });
       await this.userRepository.save(newUser);
 
@@ -753,51 +763,51 @@ export class SeedService {
     const now = Date.now();
     const tournamentsData = [
       {
-        name: 'Test Tournament 1',
-        description: 'Premier tournoi de test',
-        location: 'Paris',
+        name: "Test Tournament 1",
+        description: "Premier tournoi de test",
+        location: "Paris",
         startDate: new Date(now + 24 * 60 * 60 * 1000),
         endDate: new Date(now + 2 * 24 * 60 * 60 * 1000),
         type: TournamentType.SINGLE_ELIMINATION,
         status: TournamentStatus.REGISTRATION_OPEN,
         isFinished: false,
         isPublic: true,
-        playerIndexes: [0, 1]
+        playerIndexes: [0, 1],
       },
       {
-        name: 'Test Tournament 2',
-        description: 'Deuxième tournoi de test',
-        location: 'Lyon',
+        name: "Test Tournament 2",
+        description: "Deuxième tournoi de test",
+        location: "Lyon",
         startDate: new Date(now + 3 * 24 * 60 * 60 * 1000),
         endDate: new Date(now + 5 * 24 * 60 * 60 * 1000),
         type: TournamentType.ROUND_ROBIN,
         status: TournamentStatus.IN_PROGRESS,
         isFinished: false,
         isPublic: false,
-        playerIndexes: [1, 2, 3]
+        playerIndexes: [1, 2, 3],
       },
       {
-        name: 'Test Tournament 3',
-        description: 'Troisième tournoi de test',
-        location: 'Marseille',
+        name: "Test Tournament 3",
+        description: "Troisième tournoi de test",
+        location: "Marseille",
         startDate: new Date(now + 6 * 24 * 60 * 60 * 1000),
         endDate: new Date(now + 8 * 24 * 60 * 60 * 1000),
         type: TournamentType.SWISS_SYSTEM,
         status: TournamentStatus.FINISHED,
         isFinished: true,
         isPublic: true,
-        playerIndexes: [0, 2]
-      }
+        playerIndexes: [0, 2],
+      },
     ];
 
     const user = await this.userRepository.findOne({
-      where: { email: 'test1@test.com' }
+      where: { email: "test1@test.com" },
     });
     const createdTournaments: Tournament[] = [];
 
     for (const tData of tournamentsData) {
       let tournament = await this.tournamentRepository.findOne({
-        where: { name: tData.name }
+        where: { name: tData.name },
       });
       if (!tournament) {
         tournament = this.tournamentRepository.create({
@@ -809,7 +819,7 @@ export class SeedService {
           type: tData.type,
           status: tData.status,
           isFinished: tData.isFinished,
-          isPublic: tData.isPublic
+          isPublic: tData.isPublic,
         });
         await this.tournamentRepository.save(tournament);
       }
@@ -823,16 +833,16 @@ export class SeedService {
         let registration = await this.tournamentRegistrationRepository.findOne({
           where: {
             tournament: { id: tournament.id },
-            player: { id: player.id }
+            player: { id: player.id },
           },
-          relations: ['tournament', 'player']
+          relations: ["tournament", "player"],
         });
         if (!registration) {
           registration = this.tournamentRegistrationRepository.create({
             tournament,
             player,
             status: RegistrationStatus.CONFIRMED,
-            paymentCompleted: true
+            paymentCompleted: true,
           });
           await this.tournamentRegistrationRepository.save(registration);
         }
@@ -841,15 +851,15 @@ export class SeedService {
       // Récompense
       let reward = await this.tournamentRewardRepository.findOne({
         where: { tournament: { id: tournament.id }, position: 1 },
-        relations: ['tournament']
+        relations: ["tournament"],
       });
       if (!reward) {
         reward = this.tournamentRewardRepository.create({
           tournament,
           position: 1,
-          name: 'Booster Box',
+          name: "Booster Box",
           type: RewardType.PRODUCT,
-          isActive: true
+          isActive: true,
         });
         await this.tournamentRewardRepository.save(reward);
       }
@@ -857,7 +867,7 @@ export class SeedService {
       // Pricing
       let pricing = await this.tournamentPricingRepository.findOne({
         where: { tournament: { id: tournament.id } },
-        relations: ['tournament']
+        relations: ["tournament"],
       });
       if (!pricing) {
         pricing = this.tournamentPricingRepository.create({
@@ -865,7 +875,7 @@ export class SeedService {
           type: PricingType.FREE,
           basePrice: 0,
           refundable: true,
-          refundFeePercentage: 0
+          refundFeePercentage: 0,
         });
         await this.tournamentPricingRepository.save(pricing);
       }
@@ -876,16 +886,16 @@ export class SeedService {
       if (user) {
         let organizer = await this.tournamentOrganizerRepository.findOne({
           where: { tournament: { id: tournament.id }, user: { id: user.id } },
-          relations: ['tournament']
+          relations: ["tournament"],
         });
         if (!organizer) {
           organizer = this.tournamentOrganizerRepository.create({
             tournament,
             user: user,
-            name: user.firstName + ' ' + user.lastName,
+            name: user.firstName + " " + user.lastName,
             email: user.email,
             role: OrganizerRole.OWNER,
-            isActive: true
+            isActive: true,
           });
           await this.tournamentOrganizerRepository.save(organizer);
         }
@@ -895,20 +905,20 @@ export class SeedService {
       let notification = await this.tournamentNotificationRepository.findOne({
         where: {
           tournament: { id: tournament.id },
-          type: NotificationType.TOURNAMENT_CREATED
+          type: NotificationType.TOURNAMENT_CREATED,
         },
-        relations: ['tournament']
+        relations: ["tournament"],
       });
       if (!notification) {
         notification = this.tournamentNotificationRepository.create({
           tournament,
           type: NotificationType.TOURNAMENT_CREATED,
-          title: 'Tournoi créé',
-          message: 'Le tournoi a été créé.',
+          title: "Tournoi créé",
+          message: "Le tournoi a été créé.",
           status: NotificationStatus.SENT,
           recipientCount: tData.playerIndexes.length,
           successCount: tData.playerIndexes.length,
-          failureCount: 0
+          failureCount: 0,
         });
         await this.tournamentNotificationRepository.save(notification);
       }
@@ -919,9 +929,9 @@ export class SeedService {
         let ranking = await this.rankingRepository.findOne({
           where: {
             tournament: { id: tournament.id },
-            player: { id: player.id }
+            player: { id: player.id },
           },
-          relations: ['tournament', 'player']
+          relations: ["tournament", "player"],
         });
         if (!ranking) {
           ranking = this.rankingRepository.create({
@@ -932,7 +942,7 @@ export class SeedService {
             wins: 0,
             losses: 0,
             draws: 0,
-            winRate: 0
+            winRate: 0,
           });
           await this.rankingRepository.save(ranking);
         }
@@ -946,9 +956,9 @@ export class SeedService {
           where: {
             tournament: { id: tournament.id },
             playerA: { id: playerA.id },
-            playerB: { id: playerB.id }
+            playerB: { id: playerB.id },
           },
-          relations: ['tournament', 'playerA', 'playerB']
+          relations: ["tournament", "playerA", "playerB"],
         });
         if (!match) {
           match = this.matchRepository.create({
@@ -959,7 +969,7 @@ export class SeedService {
             phase: MatchPhase.QUALIFICATION,
             status: MatchStatus.SCHEDULED,
             playerAScore: 0,
-            playerBScore: 0
+            playerBScore: 0,
           });
           await this.matchRepository.save(match);
         }
@@ -973,10 +983,10 @@ export class SeedService {
    * Seed a complete tournament with proper seeding and bracket generation
    */
   async seedCompleteTournament(
-    name: string = 'Tournoi Complet avec Seeding',
+    name: string = "Tournoi Complet avec Seeding",
     playerCount: number = 8,
     tournamentType: TournamentType = TournamentType.SINGLE_ELIMINATION,
-    seedingMethod: SeedingMethod = SeedingMethod.RANKING
+    seedingMethod: SeedingMethod = SeedingMethod.RANKING,
   ): Promise<Tournament> {
     // 1. Créer ou récupérer des utilisateurs/joueurs
     const players: Player[] = [];
@@ -997,7 +1007,7 @@ export class SeedService {
         emailVerified: true,
         preferredCurrency: Currency.EUR,
         decks: [],
-        collections: []
+        collections: [],
       });
       await this.userRepository.save(newUser);
 
@@ -1011,7 +1021,7 @@ export class SeedService {
     for (const user of users.slice(0, playerCount)) {
       let player = await this.playerRepository.findOne({
         where: { user: { id: user.id } },
-        relations: ['user']
+        relations: ["user"],
       });
       if (!player) {
         player = this.playerRepository.create({ user });
@@ -1024,7 +1034,7 @@ export class SeedService {
     const tournament = this.tournamentRepository.create({
       name,
       description: `Tournoi automatique avec ${playerCount} joueurs`,
-      location: 'Tournoi de démonstration',
+      location: "Tournoi de démonstration",
       startDate: new Date(),
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 jours
       type: tournamentType,
@@ -1032,7 +1042,7 @@ export class SeedService {
       isFinished: false,
       isPublic: true,
       minPlayers: playerCount,
-      maxPlayers: playerCount
+      maxPlayers: playerCount,
     });
     await this.tournamentRepository.save(tournament);
 
@@ -1043,7 +1053,7 @@ export class SeedService {
         player,
         status: RegistrationStatus.CONFIRMED,
         paymentCompleted: true,
-        checkedIn: true
+        checkedIn: true,
       });
       await this.tournamentRegistrationRepository.save(registration);
     }
@@ -1054,16 +1064,16 @@ export class SeedService {
       type: PricingType.FREE,
       basePrice: 0,
       refundable: true,
-      refundFeePercentage: 0
+      refundFeePercentage: 0,
     });
     await this.tournamentPricingRepository.save(pricing);
 
     const reward = this.tournamentRewardRepository.create({
       tournament,
       position: 1,
-      name: 'Trophée du Champion',
+      name: "Trophée du Champion",
       type: RewardType.PRODUCT,
-      isActive: true
+      isActive: true,
     });
     await this.tournamentRewardRepository.save(reward);
 
@@ -1072,7 +1082,7 @@ export class SeedService {
     const seededPlayers = await this.seedingService.seedPlayers(
       players,
       tournament,
-      seedingMethod
+      seedingMethod,
     );
 
     // 6. Démarrer le tournoi AVANT de générer le bracket
@@ -1082,9 +1092,9 @@ export class SeedService {
     await this.tournamentRepository.save(tournament);
 
     // 7. Générer le bracket complet (maintenant que le tournoi est IN_PROGRESS)
-    console.log('🏆 Génération du bracket...');
+    console.log("🏆 Génération du bracket...");
     const bracketStructure = await this.bracketService.generateBracket(
-      tournament.id
+      tournament.id,
     );
 
     // 8. Mettre à jour le nombre total de rounds
@@ -1101,7 +1111,7 @@ export class SeedService {
         wins: 0,
         losses: 0,
         draws: 0,
-        winRate: 0
+        winRate: 0,
       });
       await this.rankingRepository.save(ranking);
     }
@@ -1120,41 +1130,41 @@ export class SeedService {
   async seedArticles() {
     const articlesSeed = [
       {
-        title: 'Nouvelle extension Pokémon TCG : Tempête Argentée',
+        title: "Nouvelle extension Pokémon TCG : Tempête Argentée",
         image:
-          'https://images.pexels.com/photos/1716861/pexels-photo-1716861.jpeg',
-        link: 'https://www.pokemon.com/fr/actu-pokemon/nouvelle-extension-tempete-argentee/',
+          "https://images.pexels.com/photos/1716861/pexels-photo-1716861.jpeg",
+        link: "https://www.pokemon.com/fr/actu-pokemon/nouvelle-extension-tempete-argentee/",
         content:
-          'Découvrez la nouvelle extension Tempête Argentée du JCC Pokémon avec de nouvelles cartes et mécaniques de jeu.',
-        publishedAt: new Date('2024-06-01T10:00:00Z')
+          "Découvrez la nouvelle extension Tempête Argentée du JCC Pokémon avec de nouvelles cartes et mécaniques de jeu.",
+        publishedAt: new Date("2024-06-01T10:00:00Z"),
       },
       {
-        title: 'Tournoi régional de Lyon : Résultats et analyses',
+        title: "Tournoi régional de Lyon : Résultats et analyses",
         image:
-          'https://images.pexels.com/photos/8430275/pexels-photo-8430275.jpeg',
-        link: 'https://www.pokemon.com/fr/actu-pokemon/tournoi-lyon-2024/',
+          "https://images.pexels.com/photos/8430275/pexels-photo-8430275.jpeg",
+        link: "https://www.pokemon.com/fr/actu-pokemon/tournoi-lyon-2024/",
         content:
-          'Retour sur le tournoi régional de Lyon avec les decks gagnants et les moments forts de la compétition.',
-        publishedAt: new Date('2024-05-20T15:00:00Z')
+          "Retour sur le tournoi régional de Lyon avec les decks gagnants et les moments forts de la compétition.",
+        publishedAt: new Date("2024-05-20T15:00:00Z"),
       },
       {
-        title: 'Guide stratégique : Bien débuter sur Pokémon TCG Online',
+        title: "Guide stratégique : Bien débuter sur Pokémon TCG Online",
         image:
-          'https://images.pexels.com/photos/243698/pexels-photo-243698.jpeg',
-        link: 'https://www.pokemon.com/fr/strategie/guide-debutant-tcg-online/',
+          "https://images.pexels.com/photos/243698/pexels-photo-243698.jpeg",
+        link: "https://www.pokemon.com/fr/strategie/guide-debutant-tcg-online/",
         content:
-          'Nos conseils pour bien démarrer sur la plateforme Pokémon TCG Online et construire un deck efficace.',
-        publishedAt: new Date('2024-05-10T09:00:00Z')
-      }
+          "Nos conseils pour bien démarrer sur la plateforme Pokémon TCG Online et construire un deck efficace.",
+        publishedAt: new Date("2024-05-10T09:00:00Z"),
+      },
     ];
 
     for (const article of articlesSeed) {
       const exists = await this.articleRepository.findOneBy({
-        title: article.title
+        title: article.title,
       });
       if (!exists) {
         await this.articleRepository.save(
-          this.articleRepository.create(article)
+          this.articleRepository.create(article),
         );
       }
     }
@@ -1170,104 +1180,104 @@ export class SeedService {
         answer:
           "Depuis l'onglet Tournois, sélectionnez l'événement qui vous intéresse puis cliquez sur \"S'inscrire\". Vous pouvez confirmer votre participation en quelques clics et suivre votre statut d'inscription en temps réel.",
         category: FaqCategory.TOURNAMENTS,
-        order: 1
+        order: 1,
       },
       {
-        question: 'Quelles sont les différences entre les formats de tournoi ?',
+        question: "Quelles sont les différences entre les formats de tournoi ?",
         answer:
-          'Chaque tournoi précise s’il est en élimination directe, double élimination ou format suisse. Le format est indiqué sur la fiche du tournoi, avec les règles principales et le nombre de rondes prévues.',
+          "Chaque tournoi précise s’il est en élimination directe, double élimination ou format suisse. Le format est indiqué sur la fiche du tournoi, avec les règles principales et le nombre de rondes prévues.",
         category: FaqCategory.TOURNAMENTS,
-        order: 2
+        order: 2,
       },
       {
-        question: 'Comment suivre mes résultats et mon classement ?',
+        question: "Comment suivre mes résultats et mon classement ?",
         answer:
-          'Votre tableau de bord affiche vos matchs, votre classement en direct et vos statistiques par tournoi. Vous pouvez également consulter les rounds à venir et recevoir des notifications de mise à jour.',
+          "Votre tableau de bord affiche vos matchs, votre classement en direct et vos statistiques par tournoi. Vous pouvez également consulter les rounds à venir et recevoir des notifications de mise à jour.",
         category: FaqCategory.TOURNAMENTS,
-        order: 3
+        order: 3,
       },
       {
-        question: 'Comment ajouter des cartes à ma collection ?',
+        question: "Comment ajouter des cartes à ma collection ?",
         answer:
-          'Depuis la fiche d’une carte ou vos achats marketplace, utilisez le bouton “Ajouter à ma collection”. Vous pouvez aussi créer des collections privées ou publiques pour organiser vos cartes par thème.',
+          "Depuis la fiche d’une carte ou vos achats marketplace, utilisez le bouton “Ajouter à ma collection”. Vous pouvez aussi créer des collections privées ou publiques pour organiser vos cartes par thème.",
         category: FaqCategory.COLLECTION,
-        order: 4
+        order: 4,
       },
       {
-        question: 'Puis-je importer une collection existante ?',
+        question: "Puis-je importer une collection existante ?",
         answer:
           "Oui, vous pouvez importer un fichier CSV ou ajouter en masse des cartes via l'identifiant de la carte. Vérifiez que les colonnes respectent le modèle indiqué dans l'outil d'import pour éviter les erreurs.",
         category: FaqCategory.COLLECTION,
-        order: 5
+        order: 5,
       },
       {
-        question: 'Comment est estimée la valeur de ma collection ?',
+        question: "Comment est estimée la valeur de ma collection ?",
         answer:
-          'Nous agrégeons les prix récents du marketplace et des historiques pour donner une estimation moyenne par carte. Les fluctuations sont mises à jour régulièrement pour refléter le marché actuel.',
+          "Nous agrégeons les prix récents du marketplace et des historiques pour donner une estimation moyenne par carte. Les fluctuations sont mises à jour régulièrement pour refléter le marché actuel.",
         category: FaqCategory.COLLECTION,
-        order: 6
+        order: 6,
       },
       {
-        question: 'Comment mettre une carte en vente sur le marketplace ?',
+        question: "Comment mettre une carte en vente sur le marketplace ?",
         answer:
-          'Rendez-vous dans “Vendre une carte”, sélectionnez la carte, l’état, la quantité et le prix. Les frais applicables et la devise choisie sont affichés avant validation afin que vous gardiez la main sur le prix final.',
+          "Rendez-vous dans “Vendre une carte”, sélectionnez la carte, l’état, la quantité et le prix. Les frais applicables et la devise choisie sont affichés avant validation afin que vous gardiez la main sur le prix final.",
         category: FaqCategory.MARKETPLACE,
-        order: 7
+        order: 7,
       },
       {
-        question: 'Quels moyens de paiement sont proposés ?',
+        question: "Quels moyens de paiement sont proposés ?",
         answer:
-          'Les paiements sécurisés sont traités via Stripe. Les cartes bancaires les plus courantes sont acceptées et le paiement est capturé uniquement lorsque la commande est validée.',
+          "Les paiements sécurisés sont traités via Stripe. Les cartes bancaires les plus courantes sont acceptées et le paiement est capturé uniquement lorsque la commande est validée.",
         category: FaqCategory.MARKETPLACE,
-        order: 8
+        order: 8,
       },
       {
-        question: 'Que se passe-t-il si je ne reçois pas ma commande ?',
+        question: "Que se passe-t-il si je ne reçois pas ma commande ?",
         answer:
-          'Le service support peut suspendre la transaction le temps de l’enquête. Fournissez vos preuves d’expédition/réception ; un remboursement ou une re-livraison peut être proposé selon la situation.',
+          "Le service support peut suspendre la transaction le temps de l’enquête. Fournissez vos preuves d’expédition/réception ; un remboursement ou une re-livraison peut être proposé selon la situation.",
         category: FaqCategory.MARKETPLACE,
-        order: 9
+        order: 9,
       },
       {
-        question: 'Comment créer ou tester un deck ?',
+        question: "Comment créer ou tester un deck ?",
         answer:
-          'Dans l’onglet Decks, cliquez sur “Créer un deck”, choisissez un format puis ajoutez vos cartes. Le builder vérifie les limitations principales du format et calcule vos statistiques en direct.',
+          "Dans l’onglet Decks, cliquez sur “Créer un deck”, choisissez un format puis ajoutez vos cartes. Le builder vérifie les limitations principales du format et calcule vos statistiques en direct.",
         category: FaqCategory.DECKS,
-        order: 10
+        order: 10,
       },
       {
-        question: 'Puis-je partager mon deck avec la communauté ?',
+        question: "Puis-je partager mon deck avec la communauté ?",
         answer:
-          'Oui, vous pouvez publier un deck en mode public ou le partager via un lien direct. Les autres joueurs pourront l’ajouter à leurs favoris ou l’utiliser comme base pour leurs propres decks.',
+          "Oui, vous pouvez publier un deck en mode public ou le partager via un lien direct. Les autres joueurs pourront l’ajouter à leurs favoris ou l’utiliser comme base pour leurs propres decks.",
         category: FaqCategory.DECKS,
-        order: 11
+        order: 11,
       },
       {
-        question: 'Comment sécuriser mon compte ?',
+        question: "Comment sécuriser mon compte ?",
         answer:
-          'Activez l’authentification sécurisée, utilisez un mot de passe unique et surveillez vos sessions actives dans les paramètres du profil. En cas d’activité suspecte, changez immédiatement votre mot de passe.',
+          "Activez l’authentification sécurisée, utilisez un mot de passe unique et surveillez vos sessions actives dans les paramètres du profil. En cas d’activité suspecte, changez immédiatement votre mot de passe.",
         category: FaqCategory.ACCOUNT,
-        order: 12
+        order: 12,
       },
       {
-        question: 'Je n’arrive plus à me connecter, que faire ?',
+        question: "Je n’arrive plus à me connecter, que faire ?",
         answer:
-          'Utilisez le lien “Mot de passe oublié” pour réinitialiser votre accès. Si le problème persiste, contactez le support avec l’e-mail de votre compte et, si possible, une capture de l’erreur rencontrée.',
+          "Utilisez le lien “Mot de passe oublié” pour réinitialiser votre accès. Si le problème persiste, contactez le support avec l’e-mail de votre compte et, si possible, une capture de l’erreur rencontrée.",
         category: FaqCategory.ACCOUNT,
-        order: 13
-      }
+        order: 13,
+      },
     ];
 
     for (const faq of faqs) {
       const exists = await this.faqRepository.findOne({
-        where: { question: faq.question }
+        where: { question: faq.question },
       });
       if (!exists) {
         await this.faqRepository.save(this.faqRepository.create(faq));
       }
     }
 
-    return this.faqRepository.find({ order: { order: 'ASC' } });
+    return this.faqRepository.find({ order: { order: "ASC" } });
   }
 
   /**
@@ -1275,9 +1285,9 @@ export class SeedService {
    * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
   async seedListings() {
-    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const isProduction = this.configService.get("NODE_ENV") === "production";
     if (isProduction) {
-      console.log('⚠️  Skipping test listings seed in production environment.');
+      console.log("⚠️  Skipping test listings seed in production environment.");
       return;
     }
     // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
@@ -1286,7 +1296,7 @@ export class SeedService {
     const cards = await this.pokemonCardRepository.find({ take: 1500 });
 
     if (sellers.length < 1 || cards.length < 1) {
-      console.log('Pas assez de vendeurs ou de cartes pour créer des listings');
+      console.log("Pas assez de vendeurs ou de cartes pour créer des listings");
       return;
     }
 
@@ -1297,7 +1307,7 @@ export class SeedService {
       CardState.GD,
       CardState.LP,
       CardState.PL,
-      CardState.Poor
+      CardState.Poor,
     ];
 
     const listingsToCreate: Listing[] = [];
@@ -1337,7 +1347,7 @@ export class SeedService {
           currency: currency,
           quantityAvailable: quantityAvailable,
           cardState: cardState,
-          expiresAt: undefined
+          expiresAt: undefined,
         });
 
         listingsToCreate.push(listing);
@@ -1348,7 +1358,7 @@ export class SeedService {
         for (let j = 0; j < historicalEntries; j++) {
           const daysAgo = Math.floor(Math.random() * 90);
           const recordedAt = new Date(
-            now.getTime() - daysAgo * 24 * 60 * 60 * 1000
+            now.getTime() - daysAgo * 24 * 60 * 60 * 1000,
           );
 
           const priceVariation = 1 + (Math.random() - 0.5) * 0.4;
@@ -1361,7 +1371,7 @@ export class SeedService {
             currency: currency,
             cardState: cardState,
             quantityAvailable: quantityAvailable,
-            recordedAt: recordedAt
+            recordedAt: recordedAt,
           });
 
           priceHistoriesToCreate.push(priceHistory);
@@ -1374,7 +1384,7 @@ export class SeedService {
           currency: currency,
           cardState: cardState,
           quantityAvailable: quantityAvailable,
-          recordedAt: now
+          recordedAt: now,
         });
         priceHistoriesToCreate.push(currentPriceHistory);
       }
@@ -1397,21 +1407,21 @@ export class SeedService {
     }
 
     console.log(
-      `✅ ${savedCount} listings créés pour ${cards.length} cartes avec ${sellers.length} vendeurs`
+      `✅ ${savedCount} listings créés pour ${cards.length} cartes avec ${sellers.length} vendeurs`,
     );
   }
 
   async seedDeckFormats() {
     const formatsData = [
-      { type: 'Standard', startDate: '2023-07-01', endDate: '2024-06-30' },
-      { type: 'Extended', startDate: '2023-07-01', endDate: '2024-06-30' }
+      { type: "Standard", startDate: "2023-07-01", endDate: "2024-06-30" },
+      { type: "Extended", startDate: "2023-07-01", endDate: "2024-06-30" },
     ];
 
     const formats: DeckFormat[] = [];
 
     for (const f of formatsData) {
       let format = await this.formatRepository.findOne({
-        where: { type: f.type }
+        where: { type: f.type },
       });
       if (!format) {
         format = this.formatRepository.create(f);
@@ -1445,7 +1455,7 @@ export class SeedService {
         name: `Deck Demo ${i + 1}`,
         user: randomUser,
         format: randomFormat,
-        isPublic: isPublic
+        isPublic: isPublic,
       });
 
       decks.push(deck);
@@ -1463,8 +1473,8 @@ export class SeedService {
             deck,
             card: randomCard,
             qty: Math.floor(Math.random() * 3) + 1,
-            role: DeckCardRole.main
-          })
+            role: DeckCardRole.main,
+          }),
         );
       }
     }
@@ -1472,16 +1482,110 @@ export class SeedService {
   }
 
   /**
+   * Seed competitive decks from JSON preset files.
+   * Creates public decks owned by the first admin user, linked to real cards in the DB.
+   */
+  async seedCompetitiveDecks() {
+    const users = await this.userRepository.find();
+    if (users.length === 0) return;
+
+    const owner = users.find((u) => u.role === UserRole.ADMIN) ?? users[0];
+    const formats = await this.seedDeckFormats();
+    const standardFormat = formats.find((f) => f.type === "Standard");
+    if (!standardFormat) return;
+
+    const deckFiles = [
+      "deck-lanssorien.json",
+      "deck-gardevoir.json",
+      "deck-gromago.json",
+      "deck-zoroark-n.json",
+      "deck-angoliath-rosemary.json",
+      "deck-momartik-munkidori.json",
+    ];
+
+    let created = 0;
+
+    for (const filename of deckFiles) {
+      const filePath = path.join(__dirname, "data", filename);
+      if (!fs.existsSync(filePath)) {
+        console.log(`⚠️  Fichier ${filename} introuvable, ignoré.`);
+        continue;
+      }
+
+      const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+      const existing = await this.deckRepository.findOne({
+        where: { name: raw.name, user: { id: owner.id } },
+      });
+      if (existing) {
+        console.log(`⏭️  Deck "${raw.name}" existe déjà, ignoré.`);
+        continue;
+      }
+
+      const resolvedCards: { card: Card; qty: number }[] = [];
+      const notFound: string[] = [];
+
+      for (const entry of raw.cards) {
+        const card = await this.pokemonCardRepository.findOne({
+          where: { tcgDexId: entry.tcgDexId },
+        });
+        if (card) {
+          resolvedCards.push({ card, qty: entry.qty });
+        } else {
+          notFound.push(entry.tcgDexId || entry.name);
+        }
+      }
+
+      if (resolvedCards.length === 0) {
+        console.log(
+          `⚠️  Deck "${raw.name}" : aucune carte trouvée en BDD, ignoré.`,
+        );
+        continue;
+      }
+
+      const deck = this.deckRepository.create({
+        name: raw.name,
+        isPublic: true,
+        user: owner,
+        format: standardFormat,
+        coverCard: resolvedCards[0]?.card,
+      });
+      await this.deckRepository.save(deck);
+
+      const deckCards = resolvedCards.map((rc) =>
+        this.deckCardRepository.create({
+          card: rc.card,
+          qty: rc.qty,
+          role: DeckCardRole.main,
+          deck,
+        }),
+      );
+      await this.deckCardRepository.save(deckCards);
+      created++;
+
+      if (notFound.length > 0) {
+        console.log(
+          `⚠️  Deck "${raw.name}" : ${notFound.length} cartes introuvables (${notFound.slice(0, 5).join(", ")}${notFound.length > 5 ? "..." : ""})`,
+        );
+      }
+    }
+
+    console.log(`✅ ${created} deck(s) compétitif(s) créé(s).`);
+  }
+
+  /**
    * Seed card events to simulate user interactions (dev only)
    * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
    */
   async seedCardEvents() {
-    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const isProduction = this.configService.get("NODE_ENV") === "production";
     if (isProduction) {
-      console.log('⚠️  Skipping test card events seed in production environment.');
+      console.log(
+        "⚠️  Skipping test card events seed in production environment.",
+      );
       return;
     }
-    console.log('🌱 Starting card events seed...');
+    console.log("🌱 Starting card events seed...");
     const users = await this.userRepository.find();
     const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limiter à 200 cartes
 
@@ -1489,7 +1593,7 @@ export class SeedService {
 
     if (users.length < 1 || cards.length < 1) {
       console.log(
-        "Pas assez d'utilisateurs ou de cartes pour créer des événements"
+        "Pas assez d'utilisateurs ou de cartes pour créer des événements",
       );
       return;
     }
@@ -1506,7 +1610,7 @@ export class SeedService {
         // Date aléatoire dans les 90 derniers jours
         const daysAgo = Math.random() * 90;
         const createdAt = new Date(
-          now.getTime() - daysAgo * 24 * 60 * 60 * 1000
+          now.getTime() - daysAgo * 24 * 60 * 60 * 1000,
         );
 
         // Probabilité différente pour chaque type d'événement
@@ -1541,12 +1645,12 @@ export class SeedService {
             ? {
                 searchQuery:
                   card.name?.substring(0, Math.floor(Math.random() * 10) + 3) ||
-                  'pokemon',
-                resultsCount: Math.floor(Math.random() * 100) + 1
+                  "pokemon",
+                resultsCount: Math.floor(Math.random() * 100) + 1,
               }
             : eventType === CardEventType.ADD_TO_CART
               ? {
-                  listingId: Math.floor(Math.random() * 1000) + 1
+                  listingId: Math.floor(Math.random() * 1000) + 1,
                 }
               : undefined;
 
@@ -1557,9 +1661,9 @@ export class SeedService {
           sessionId: randomUser ? undefined : sessionId,
           ipAddress: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
           userAgent:
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
           context,
-          createdAt
+          createdAt,
         });
 
         eventsToCreate.push(event);
@@ -1571,7 +1675,7 @@ export class SeedService {
     let savedCount = 0;
 
     console.log(
-      `Creating ${eventsToCreate.length} events in batches of ${batchSize}...`
+      `Creating ${eventsToCreate.length} events in batches of ${batchSize}...`,
     );
 
     for (let i = 0; i < eventsToCreate.length; i += batchSize) {
@@ -1580,19 +1684,19 @@ export class SeedService {
         await this.cardEventRepository.save(batch);
         savedCount += batch.length;
         console.log(
-          `Saved batch ${Math.floor(i / batchSize) + 1}: ${savedCount}/${eventsToCreate.length} events`
+          `Saved batch ${Math.floor(i / batchSize) + 1}: ${savedCount}/${eventsToCreate.length} events`,
         );
       } catch (error) {
         console.error(
           `Error saving batch ${Math.floor(i / batchSize) + 1}:`,
-          error
+          error,
         );
         throw error;
       }
     }
 
     console.log(
-      `✅ ${savedCount} événements de cartes créés pour ${cards.length} cartes`
+      `✅ ${savedCount} événements de cartes créés pour ${cards.length} cartes`,
     );
   }
 
@@ -1602,30 +1706,32 @@ export class SeedService {
    * Note: Cette méthode nécessite que seedCardEvents() ait été appelé avant
    */
   async seedCardPopularityMetrics() {
-    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const isProduction = this.configService.get("NODE_ENV") === "production";
     if (isProduction) {
-      console.log('⚠️  Skipping test card popularity metrics seed in production environment.');
+      console.log(
+        "⚠️  Skipping test card popularity metrics seed in production environment.",
+      );
       return;
     }
-    console.log('🌱 Starting card popularity metrics seed...');
+    console.log("🌱 Starting card popularity metrics seed...");
 
     // Réduire le nombre de cartes traitées pour éviter la surcharge mémoire
     const totalCardsToProcess = 100;
     const cardBatchSize = 10;
 
     const cards = await this.pokemonCardRepository.find({
-      take: totalCardsToProcess
+      take: totalCardsToProcess,
     });
     console.log(`Found ${cards.length} cards to process for metrics`);
 
     if (cards.length === 0) {
-      console.log('Pas de cartes trouvées.');
+      console.log("Pas de cartes trouvées.");
       return;
     }
 
     // Récupérer tous les listings une seule fois (c'est généralement gérable)
     const allListings = await this.listingRepository.find({
-      relations: ['pokemonCard']
+      relations: ["pokemonCard"],
     });
     const listingsByCardId = new Map<string, Listing[]>();
     allListings.forEach((listing) => {
@@ -1644,14 +1750,14 @@ export class SeedService {
       const cardIds = cardBatch.map((c) => c.id);
 
       console.log(
-        `Processing card batch ${Math.floor(i / cardBatchSize) + 1}/${Math.ceil(cards.length / cardBatchSize)}...`
+        `Processing card batch ${Math.floor(i / cardBatchSize) + 1}/${Math.ceil(cards.length / cardBatchSize)}...`,
       );
 
       // Charger les événements UNIQUEMENT pour ce lot de cartes
       const events = await this.cardEventRepository
-        .createQueryBuilder('event')
-        .leftJoinAndSelect('event.card', 'card')
-        .where('card.id IN (:...cardIds)', { cardIds })
+        .createQueryBuilder("event")
+        .leftJoinAndSelect("event.card", "card")
+        .where("card.id IN (:...cardIds)", { cardIds })
         .getMany();
 
       if (events.length === 0) continue;
@@ -1661,7 +1767,7 @@ export class SeedService {
 
       events.forEach((event) => {
         const cardId = event.card.id;
-        const dateKey = event.createdAt.toISOString().split('T')[0];
+        const dateKey = event.createdAt.toISOString().split("T")[0];
 
         if (!eventsByCardAndDate.has(cardId)) {
           eventsByCardAndDate.set(cardId, new Map());
@@ -1687,14 +1793,14 @@ export class SeedService {
         const allCardEvents = events.filter((e) => e.card.id === cardId);
 
         for (const [dateKey, dayEvents] of dateEventsMap) {
-          const date = new Date(dateKey + 'T00:00:00.000Z');
+          const date = new Date(dateKey + "T00:00:00.000Z");
 
           const metrics = {
             views: 0,
             searches: 0,
             favorites: 0,
             addsToCart: 0,
-            sales: 0
+            sales: 0,
           };
 
           dayEvents.forEach((event) => {
@@ -1718,11 +1824,11 @@ export class SeedService {
           });
 
           const activeListings = cardListings.filter(
-            (l) => !l.expiresAt || new Date(l.expiresAt) > date
+            (l) => !l.expiresAt || new Date(l.expiresAt) > date,
           );
 
           const prices = activeListings.map((l) =>
-            parseFloat(l.price.toString())
+            parseFloat(l.price.toString()),
           );
           const listingCount = activeListings.length;
           const minPrice = prices.length > 0 ? Math.min(...prices) : null;
@@ -1732,17 +1838,17 @@ export class SeedService {
               : null;
 
           const cutoff90Days = new Date(
-            date.getTime() - 90 * 24 * 60 * 60 * 1000
+            date.getTime() - 90 * 24 * 60 * 60 * 1000,
           );
           const cutoff7Days = new Date(
-            date.getTime() - 7 * 24 * 60 * 60 * 1000
+            date.getTime() - 7 * 24 * 60 * 60 * 1000,
           );
           const cutoff30Days = new Date(
-            date.getTime() - 30 * 24 * 60 * 60 * 1000
+            date.getTime() - 30 * 24 * 60 * 60 * 1000,
           );
 
           const eventsForScore = allCardEvents.filter(
-            (e) => e.createdAt >= cutoff90Days && e.createdAt <= date
+            (e) => e.createdAt >= cutoff90Days && e.createdAt <= date,
           );
 
           const popularityScore = eventsForScore.reduce((sum, e) => {
@@ -1763,10 +1869,10 @@ export class SeedService {
           }, 0);
 
           const recentEvents = allCardEvents.filter(
-            (e) => e.createdAt >= cutoff7Days && e.createdAt <= date
+            (e) => e.createdAt >= cutoff7Days && e.createdAt <= date,
           );
           const baseEvents = allCardEvents.filter(
-            (e) => e.createdAt >= cutoff30Days && e.createdAt < cutoff7Days
+            (e) => e.createdAt >= cutoff30Days && e.createdAt < cutoff7Days,
           );
 
           const recentScore =
@@ -1827,8 +1933,8 @@ export class SeedService {
               avgPrice,
               popularityScore,
               trendScore,
-              updatedAt: date
-            } as DeepPartial<CardPopularityMetrics>)
+              updatedAt: date,
+            } as DeepPartial<CardPopularityMetrics>),
           );
         }
       }
@@ -1847,7 +1953,7 @@ export class SeedService {
     }
 
     console.log(
-      `✅ ${totalMetricsCreated} métriques de popularité créées au total.`
+      `✅ ${totalMetricsCreated} métriques de popularité créées au total.`,
     );
   }
 
@@ -1864,6 +1970,8 @@ export class SeedService {
         tournament_reward,
         tournament_pricing,
         tournament_registration,
+        online_match_session,
+        training_match_session,
         match,
         ranking,
         tournament,

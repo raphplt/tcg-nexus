@@ -3,16 +3,16 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
-  PrimaryGeneratedColumn
-} from 'typeorm';
-import { Deck } from './deck.entity';
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Deck } from "./deck.entity";
 
 @Entity()
 export class DeckShare {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Deck, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Deck, { onDelete: "CASCADE" })
   deck: Deck;
 
   @Column({ unique: true, length: 12 })
@@ -21,6 +21,6 @@ export class DeckShare {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   expiresAt: Date | null;
 }

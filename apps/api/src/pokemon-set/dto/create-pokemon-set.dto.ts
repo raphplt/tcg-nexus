@@ -3,9 +3,9 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  ValidateNested
-} from 'class-validator';
-import { Type } from 'class-transformer';
+  ValidateNested,
+} from "class-validator";
+import { Type } from "class-transformer";
 
 class SerieRefDto {
   @IsString()

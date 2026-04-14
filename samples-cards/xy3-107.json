@@ -1,0 +1,107 @@
+{
+  "category": "Pokémon",
+  "id": "xy3-107",
+  "illustrator": "Ryo Ueda",
+  "image": "https://assets.tcgdex.net/fr/xy/xy3/107",
+  "localId": "107",
+  "name": "Lucario EX",
+  "rarity": "Ultra Rare",
+  "set": {
+    "cardCount": {
+      "official": 111,
+      "total": 114
+    },
+    "id": "xy3",
+    "logo": "https://assets.tcgdex.net/fr/xy/xy3/logo",
+    "name": "Poings Furieux",
+    "symbol": "https://assets.tcgdex.net/univ/xy/xy3/symbol"
+  },
+  "variants": {
+    "firstEdition": false,
+    "holo": true,
+    "normal": true,
+    "reverse": true,
+    "wPromo": false
+  },
+  "variants_detailed": [
+    {
+      "type": "normal",
+      "size": "Standard"
+    },
+    {
+      "type": "reverse",
+      "size": "Standard"
+    },
+    {
+      "type": "holo",
+      "size": "Standard"
+    }
+  ],
+  "dexId": [448],
+  "hp": 180,
+  "types": ["Combat"],
+  "stage": "De base",
+  "suffix": "EX",
+  "attacks": [
+    {
+      "cost": ["Combat"],
+      "name": "Coup Propulsé",
+      "effect": "Les dégâts de cette attaque ne sont pas affectés par la Résistance.",
+      "damage": 30
+    },
+    {
+      "cost": ["Combat", "Combat"],
+      "name": "Tire-Bouchon Fracassant",
+      "effect": "Vous pouvez piocher des cartes jusqu'à ce que vous ayez 6 cartes en main.",
+      "damage": 60
+    },
+    {
+      "cost": ["Combat", "Combat", "Combat"],
+      "name": "Culbutopied",
+      "damage": 100
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "Psy",
+      "value": "×2"
+    }
+  ],
+  "retreat": 2,
+  "legal": {
+    "standard": false,
+    "expanded": true
+  },
+  "updated": "2025-08-16T20:39:55Z",
+  "pricing": {
+    "cardmarket": {
+      "updated": "2026-01-30T01:44:11.000Z",
+      "unit": "EUR",
+      "idProduct": 281718,
+      "avg": 6.99,
+      "low": 2,
+      "trend": 6.82,
+      "avg1": 8.5,
+      "avg7": 7.28,
+      "avg30": 8.1,
+      "avg-holo": null,
+      "low-holo": null,
+      "trend-holo": 5.15,
+      "avg1-holo": 5.75,
+      "avg7-holo": 5.95,
+      "avg30-holo": 4.89
+    },
+    "tcgplayer": {
+      "updated": "2026-01-29T20:04:55.000Z",
+      "unit": "USD",
+      "holofoil": {
+        "productId": 92290,
+        "lowPrice": 80,
+        "midPrice": 150,
+        "highPrice": 399.97,
+        "marketPrice": 148.8,
+        "directLowPrice": null
+      }
+    }
+  }
+}

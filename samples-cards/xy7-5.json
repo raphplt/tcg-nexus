@@ -1,0 +1,102 @@
+{
+  "category": "Pokémon",
+  "id": "xy7-5",
+  "illustrator": "Naoyo Kimura",
+  "image": "https://assets.tcgdex.net/fr/xy/xy7/5",
+  "localId": "5",
+  "name": "Mimigal",
+  "rarity": "Commune",
+  "set": {
+    "cardCount": {
+      "official": 98,
+      "total": 101
+    },
+    "id": "xy7",
+    "logo": "https://assets.tcgdex.net/fr/xy/xy7/logo",
+    "name": "Origines Antiques",
+    "symbol": "https://assets.tcgdex.net/univ/xy/xy7/symbol"
+  },
+  "variants": {
+    "firstEdition": false,
+    "holo": true,
+    "normal": true,
+    "reverse": true,
+    "wPromo": false
+  },
+  "variants_detailed": [
+    {
+      "type": "normal",
+      "size": "Standard"
+    },
+    {
+      "type": "reverse",
+      "size": "Standard"
+    },
+    {
+      "type": "holo",
+      "size": "Standard"
+    }
+  ],
+  "dexId": [167],
+  "hp": 50,
+  "types": ["Plante"],
+  "stage": "De base",
+  "attacks": [
+    {
+      "cost": ["Incolore"],
+      "name": "Sécrétion",
+      "effect": "Lancez une pièce. Si c'est face, le Pokémon Actif de votre adversaire est maintenant Paralysé."
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "Feu",
+      "value": "×2"
+    }
+  ],
+  "retreat": 1,
+  "legal": {
+    "standard": false,
+    "expanded": true
+  },
+  "updated": "2025-08-16T20:39:55Z",
+  "pricing": {
+    "cardmarket": {
+      "updated": "2026-01-30T01:44:11.000Z",
+      "unit": "EUR",
+      "idProduct": 284186,
+      "avg": 0.1,
+      "low": 0.02,
+      "trend": 0.02,
+      "avg1": 0.19,
+      "avg7": 0.14,
+      "avg30": 0.13,
+      "avg-holo": 0.19,
+      "low-holo": 0.09,
+      "trend-holo": 0.22,
+      "avg1-holo": 0.25,
+      "avg7-holo": 0.25,
+      "avg30-holo": 0.34
+    },
+    "tcgplayer": {
+      "updated": "2026-01-29T20:04:55.000Z",
+      "unit": "USD",
+      "normal": {
+        "productId": 101454,
+        "lowPrice": 0.04,
+        "midPrice": 0.16,
+        "highPrice": 4,
+        "marketPrice": 0.15,
+        "directLowPrice": null
+      },
+      "reverse-holofoil": {
+        "productId": 101454,
+        "lowPrice": 0.08,
+        "midPrice": 0.37,
+        "highPrice": 1.49,
+        "marketPrice": 0.38,
+        "directLowPrice": null
+      }
+    }
+  }
+}

@@ -77,9 +77,7 @@ export function ShareDialog({
                 size="icon"
                 variant="outline"
                 onClick={() =>
-                  copyToClipboard(
-                    `${origin}/decks/import?code=${shareCode}`,
-                  )
+                  copyToClipboard(`${origin}/decks/import?code=${shareCode}`)
                 }
               >
                 {copied ? (

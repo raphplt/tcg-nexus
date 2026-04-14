@@ -47,10 +47,7 @@ export default function UpdateDeckPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
-        <Alert
-          className="mx-auto max-w-3xl"
-          variant="destructive"
-        >
+        <Alert className="mx-auto max-w-3xl" variant="destructive">
           <AlertCircleIcon />
           <AlertTitle>Connexion requise.</AlertTitle>
           <AlertDescription>
@@ -72,10 +69,7 @@ export default function UpdateDeckPage() {
   if (error || !deck) {
     return (
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
-        <Alert
-          className="mx-auto max-w-3xl"
-          variant="destructive"
-        >
+        <Alert className="mx-auto max-w-3xl" variant="destructive">
           <AlertCircleIcon />
           <AlertTitle>Erreur</AlertTitle>
           <AlertDescription>
@@ -96,10 +90,7 @@ export default function UpdateDeckPage() {
         </Card>
         <Card className="shadow-xl border-border/60">
           <CardContent className="pt-6">
-            <DeckForm
-              formats={formatList}
-              deck={deck as Deck}
-            />
+            <DeckForm formats={formatList} deck={deck as Deck} />
           </CardContent>
         </Card>
       </div>

@@ -6,14 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  Users,
-  Trophy,
-  BarChart3,
-  Eye,
-  Swords,
-} from "lucide-react";
+import { ArrowLeft, Users, Trophy, BarChart3, Eye, Swords } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { useTournament } from "@/hooks/useTournament";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -63,10 +56,7 @@ export default function TournamentAdminPage() {
           <p className="text-muted-foreground">
             Impossible de charger le tournoi.
           </p>
-          <Button
-            asChild
-            className="mt-4"
-          >
+          <Button asChild className="mt-4">
             <Link href="/tournaments">Retour aux tournois</Link>
           </Button>
         </div>
@@ -90,11 +80,7 @@ export default function TournamentAdminPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-          >
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -227,10 +213,7 @@ export default function TournamentAdminPage() {
           </div>
 
           <div className="lg:col-span-3">
-            <Tabs
-              defaultValue="overview"
-              className="w-full"
-            >
+            <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger
                   value="overview"
@@ -262,10 +245,7 @@ export default function TournamentAdminPage() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent
-                value="overview"
-                className="mt-6"
-              >
+              <TabsContent value="overview" className="mt-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Informations générales</CardTitle>
@@ -347,24 +327,15 @@ export default function TournamentAdminPage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent
-                value="registrations"
-                className="mt-6"
-              >
+              <TabsContent value="registrations" className="mt-6">
                 <RegistrationManager tournamentId={tournament.id} />
               </TabsContent>
 
-              <TabsContent
-                value="matches"
-                className="mt-6"
-              >
+              <TabsContent value="matches" className="mt-6">
                 <MatchManager tournamentId={tournament.id} />
               </TabsContent>
 
-              <TabsContent
-                value="rankings"
-                className="mt-6"
-              >
+              <TabsContent value="rankings" className="mt-6">
                 <RankingsManager tournamentId={tournament.id} />
               </TabsContent>
             </Tabs>

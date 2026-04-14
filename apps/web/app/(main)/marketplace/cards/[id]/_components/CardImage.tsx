@@ -29,10 +29,7 @@ export function CardImage({ card }: CardImageProps) {
         </div>
         <div className="flex flex-wrap gap-2 justify-center mt-4">
           {card.set && (
-            <Badge
-              variant="outline"
-              className="text-sm px-3 py-1"
-            >
+            <Badge variant="outline" className="text-sm px-3 py-1">
               <Image
                 src={card.set.symbol || ""}
                 alt={card.set.name}

@@ -102,10 +102,7 @@ export const ProfileTournaments = () => {
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 bg-muted animate-pulse rounded-lg"
-            />
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       ) : tournaments.length === 0 ? (
@@ -114,10 +111,7 @@ export const ProfileTournaments = () => {
           <p className="text-muted-foreground">
             Vous n&apos;avez participé à aucun tournoi
           </p>
-          <Button
-            className="mt-4"
-            variant="outline"
-          >
+          <Button className="mt-4" variant="outline">
             Voir les tournois à venir
           </Button>
         </div>
@@ -151,10 +145,7 @@ export const ProfileTournaments = () => {
                 </div>
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-              >
+              <Button variant="ghost" size="sm">
                 Voir détails
               </Button>
             </div>

@@ -18,12 +18,7 @@ export function ThemeToggle() {
   // Éviter le scintillement lors du montage
   if (!mounted) {
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        disabled
-        className="h-9 w-9 relative"
-      >
+      <Button variant="ghost" size="icon" disabled className="h-9 w-9 relative">
         <div className="h-4 w-4" />
         <span className="sr-only">Chargement du thème...</span>
       </Button>

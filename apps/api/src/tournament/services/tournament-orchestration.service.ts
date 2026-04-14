@@ -1,28 +1,28 @@
 import {
   Injectable,
   BadRequestException,
-  NotFoundException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm';
+  NotFoundException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource, EntityManager } from "typeorm";
 import {
   Tournament,
   TournamentStatus,
-  TournamentType
-} from '../entities/tournament.entity';
+  TournamentType,
+} from "../entities/tournament.entity";
 import {
   Match,
   MatchStatus,
-  MatchPhase
-} from '../../match/entities/match.entity';
+  MatchPhase,
+} from "../../match/entities/match.entity";
 import {
   TournamentRegistration,
-  RegistrationStatus
-} from '../entities/tournament-registration.entity';
-import { BracketService } from './bracket.service';
-import { SeedingService, SeedingMethod } from './seeding.service';
-import { RankingService } from '../../ranking/ranking.service';
-import { MatchService } from '../../match/match.service';
+  RegistrationStatus,
+} from "../entities/tournament-registration.entity";
+import { BracketService } from "./bracket.service";
+import { SeedingService, SeedingMethod } from "./seeding.service";
+import { RankingService } from "../../ranking/ranking.service";
+import { MatchService } from "../../match/match.service";
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;
@@ -50,7 +50,7 @@ export class TournamentOrchestrationService {
     private seedingService: SeedingService,
     private rankingService: RankingService,
     private matchService: MatchService,
-    private dataSource: DataSource
+    private dataSource: DataSource,
   ) {}
 
   /**
@@ -58,16 +58,16 @@ export class TournamentOrchestrationService {
    */
   async startTournament(
     tournamentId: number,
-    options: StartTournamentOptions = {}
+    options: StartTournamentOptions = {},
   ): Promise<Tournament> {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
-        relations: ['registrations', 'registrations.player']
+        relations: ["registrations", "registrations.player"],
       });
 
       if (!tournament) {
-        throw new NotFoundException('Tournoi non trouvé');
+        throw new NotFoundException("Tournoi non trouvé");
       }
 
       this.validateTournamentStart(tournament, options.checkInRequired);
@@ -95,37 +95,37 @@ export class TournamentOrchestrationService {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
         relations: [
-          'matches',
-          'matches.playerA',
-          'matches.playerB',
-          'matches.winner',
-          'registrations',
-          'registrations.player'
-        ]
+          "matches",
+          "matches.playerA",
+          "matches.playerB",
+          "matches.winner",
+          "registrations",
+          "registrations.player",
+        ],
       });
 
       if (!tournament) {
-        throw new NotFoundException('Tournoi non trouvé');
+        throw new NotFoundException("Tournoi non trouvé");
       }
 
       if (tournament.status !== TournamentStatus.IN_PROGRESS) {
-        throw new BadRequestException('Le tournoi doit être en cours');
+        throw new BadRequestException("Le tournoi doit être en cours");
       }
 
       // Vérifier que tous les matches du round actuel sont terminés
       const currentRoundMatches = tournament.matches.filter(
-        (match) => match.round === tournament.currentRound
+        (match) => match.round === tournament.currentRound,
       );
 
       const unfinishedMatches = currentRoundMatches.filter(
         (match) =>
           match.status !== MatchStatus.FINISHED &&
-          match.status !== MatchStatus.FORFEIT
+          match.status !== MatchStatus.FORFEIT,
       );
 
       if (unfinishedMatches.length > 0) {
         throw new BadRequestException(
-          `${unfinishedMatches.length} match(es) du round ${tournament.currentRound} ne sont pas terminé(s)`
+          `${unfinishedMatches.length} match(es) du round ${tournament.currentRound} ne sont pas terminé(s)`,
         );
       }
 
@@ -141,7 +141,7 @@ export class TournamentOrchestrationService {
         if (newRound <= tournament.totalRounds!) {
           const swissPairings = await this.bracketService.generateSwissPairings(
             tournamentId,
-            newRound
+            newRound,
           );
 
           for (const pairing of swissPairings.pairings) {
@@ -153,7 +153,7 @@ export class TournamentOrchestrationService {
                 round: newRound,
                 phase: MatchPhase.QUALIFICATION,
                 scheduledDate: new Date(),
-                notes: `Round ${newRound} - Table ${pairing.tableNumber}`
+                notes: `Round ${newRound} - Table ${pairing.tableNumber}`,
               });
               matchesCreated++;
             }
@@ -163,7 +163,7 @@ export class TournamentOrchestrationService {
         }
       } else if (tournament.type === TournamentType.ROUND_ROBIN) {
         playersAdvanced = tournament.registrations.filter(
-          (reg) => reg.status === RegistrationStatus.CONFIRMED
+          (reg) => reg.status === RegistrationStatus.CONFIRMED,
         ).length;
       } else if (
         tournament.type === TournamentType.SINGLE_ELIMINATION ||
@@ -172,7 +172,7 @@ export class TournamentOrchestrationService {
         const result = await this.advanceEliminationRound(
           tournament,
           newRound,
-          manager
+          manager,
         );
         matchesCreated = result.matchesCreated;
         playersAdvanced = result.playersAdvanced;
@@ -195,7 +195,7 @@ export class TournamentOrchestrationService {
         newRound,
         matchesCreated,
         playersAdvanced,
-        playersEliminated
+        playersEliminated,
       };
     });
   }
@@ -206,15 +206,15 @@ export class TournamentOrchestrationService {
   async finishTournament(tournamentId: number): Promise<Tournament> {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
-        where: { id: tournamentId }
+        where: { id: tournamentId },
       });
 
       if (!tournament) {
-        throw new NotFoundException('Tournoi non trouvé');
+        throw new NotFoundException("Tournoi non trouvé");
       }
 
       if (tournament.status === TournamentStatus.FINISHED) {
-        throw new BadRequestException('Le tournoi est déjà terminé');
+        throw new BadRequestException("Le tournoi est déjà terminé");
       }
 
       void this.rankingService.updateTournamentRankings(tournamentId);
@@ -223,8 +223,8 @@ export class TournamentOrchestrationService {
       const activeRegistrations = await manager.find(TournamentRegistration, {
         where: {
           tournament: { id: tournamentId },
-          status: RegistrationStatus.CONFIRMED
-        }
+          status: RegistrationStatus.CONFIRMED,
+        },
       });
 
       for (const registration of activeRegistrations) {
@@ -247,20 +247,20 @@ export class TournamentOrchestrationService {
    */
   async cancelTournament(
     tournamentId: number,
-    reason?: string
+    reason?: string,
   ): Promise<Tournament> {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
-        where: { id: tournamentId }
+        where: { id: tournamentId },
       });
 
       if (!tournament) {
-        throw new NotFoundException('Tournoi non trouvé');
+        throw new NotFoundException("Tournoi non trouvé");
       }
 
       if (tournament.status === TournamentStatus.FINISHED) {
         throw new BadRequestException(
-          "Impossible d'annuler un tournoi terminé"
+          "Impossible d'annuler un tournoi terminé",
         );
       }
 
@@ -268,7 +268,7 @@ export class TournamentOrchestrationService {
       await manager.update(
         Match,
         { tournament: { id: tournamentId }, status: MatchStatus.SCHEDULED },
-        { status: MatchStatus.CANCELLED }
+        { status: MatchStatus.CANCELLED },
       );
 
       tournament.status = TournamentStatus.CANCELLED;
@@ -295,25 +295,25 @@ export class TournamentOrchestrationService {
   }> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
-      relations: ['matches', 'registrations']
+      relations: ["matches", "registrations"],
     });
 
     if (!tournament) {
-      throw new NotFoundException('Tournoi non trouvé');
+      throw new NotFoundException("Tournoi non trouvé");
     }
 
     const completedMatches = tournament.matches.filter(
       (match) =>
         match.status === MatchStatus.FINISHED ||
-        match.status === MatchStatus.FORFEIT
+        match.status === MatchStatus.FORFEIT,
     ).length;
 
     const eliminatedPlayers = tournament.registrations.filter(
-      (reg) => reg.eliminatedAt !== null
+      (reg) => reg.eliminatedAt !== null,
     ).length;
 
     const activePlayers = tournament.registrations.filter(
-      (reg) => reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt
+      (reg) => reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
     ).length;
 
     let progressPercentage = 0;
@@ -330,7 +330,7 @@ export class TournamentOrchestrationService {
       totalMatches: tournament.matches.length,
       activePlayers,
       eliminatedPlayers,
-      progressPercentage
+      progressPercentage,
     };
   }
 
@@ -339,17 +339,17 @@ export class TournamentOrchestrationService {
    */
   private validateTournamentStart(
     tournament: Tournament,
-    checkInRequired: boolean = false
+    checkInRequired: boolean = false,
   ): void {
     if (tournament.status !== TournamentStatus.REGISTRATION_CLOSED) {
       throw new BadRequestException(
-        'Le tournoi doit être en statut "inscriptions fermées" pour être démarré'
+        'Le tournoi doit être en statut "inscriptions fermées" pour être démarré',
       );
     }
 
     // Compter les joueurs confirmés et check-in si requis
     let eligiblePlayers = tournament.registrations.filter(
-      (reg) => reg.status === RegistrationStatus.CONFIRMED
+      (reg) => reg.status === RegistrationStatus.CONFIRMED,
     );
 
     if (checkInRequired) {
@@ -358,7 +358,7 @@ export class TournamentOrchestrationService {
 
     if (eligiblePlayers.length < (tournament.minPlayers || 2)) {
       throw new BadRequestException(
-        `Pas assez de joueurs pour démarrer le tournoi (${eligiblePlayers.length}/${tournament.minPlayers || 2})`
+        `Pas assez de joueurs pour démarrer le tournoi (${eligiblePlayers.length}/${tournament.minPlayers || 2})`,
       );
     }
 
@@ -367,7 +367,7 @@ export class TournamentOrchestrationService {
       eligiblePlayers.length > tournament.maxPlayers
     ) {
       throw new BadRequestException(
-        `Trop de joueurs pour ce tournoi (${eligiblePlayers.length}/${tournament.maxPlayers})`
+        `Trop de joueurs pour ce tournoi (${eligiblePlayers.length}/${tournament.maxPlayers})`,
       );
     }
   }
@@ -378,14 +378,14 @@ export class TournamentOrchestrationService {
   private async advanceEliminationRound(
     tournament: Tournament,
     newRound: number,
-    manager: EntityManager
+    manager: EntityManager,
   ): Promise<{
     matchesCreated: number;
     playersAdvanced: number;
     playersEliminated: number;
   }> {
     const previousRoundMatches = tournament.matches.filter(
-      (match) => match.round === newRound - 1
+      (match) => match.round === newRound - 1,
     );
 
     let matchesCreated = 0;
@@ -416,7 +416,10 @@ export class TournamentOrchestrationService {
         match.playerA?.id === winner?.id ? match.playerB : match.playerA;
       if (loser) {
         const registration = await manager.findOne(TournamentRegistration, {
-          where: { tournament: { id: tournament.id }, player: { id: loser.id } }
+          where: {
+            tournament: { id: tournament.id },
+            player: { id: loser.id },
+          },
         });
 
         if (registration && !registration.eliminatedAt) {
@@ -438,7 +441,7 @@ export class TournamentOrchestrationService {
           round: newRound,
           phase: this.getPhaseForRound(newRound, tournament.totalRounds || 0),
           scheduledDate: new Date(),
-          notes: `Round ${newRound} - Élimination`
+          notes: `Round ${newRound} - Élimination`,
         });
         matchesCreated++;
       }
@@ -462,12 +465,12 @@ export class TournamentOrchestrationService {
    */
   private isTournamentComplete(
     tournament: Tournament,
-    currentRound: number
+    currentRound: number,
   ): boolean {
     if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
       const activeRegistrations = tournament.registrations.filter(
         (reg) =>
-          reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt
+          reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
       );
       return activeRegistrations.length <= 1;
     }

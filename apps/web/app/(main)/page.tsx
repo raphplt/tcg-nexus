@@ -56,13 +56,12 @@ const HomePage = () => {
               ) : (
                 <>
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight text-foreground">
-                    La plateforme{" "}
-                    <span className="text-primary">ultime</span> pour les
-                    joueurs Pokemon TCG
+                    La plateforme <span className="text-primary">ultime</span>{" "}
+                    pour les joueurs Pokemon TCG
                   </h1>
                   <p className="text-xl text-muted-foreground max-w-xl">
-                    Gerez vos collections, participez a des tournois, achetez
-                    et vendez sur le marketplace. Tout en un seul endroit.
+                    Gerez vos collections, participez a des tournois, achetez et
+                    vendez sur le marketplace. Tout en un seul endroit.
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Button asChild size="lg" className="text-lg px-8 py-6">

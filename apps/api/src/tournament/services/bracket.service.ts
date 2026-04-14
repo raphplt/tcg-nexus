@@ -1,15 +1,15 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Tournament, TournamentType } from '../entities/tournament.entity';
-import { Match, MatchPhase } from '../../match/entities/match.entity';
-import { Player } from '../../player/entities/player.entity';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Tournament, TournamentType } from "../entities/tournament.entity";
+import { Match, MatchPhase } from "../../match/entities/match.entity";
+import { Player } from "../../player/entities/player.entity";
 import {
   TournamentRegistration,
-  RegistrationStatus
-} from '../entities/tournament-registration.entity';
-import { Ranking } from '../../ranking/entities/ranking.entity';
-import { MatchService } from '../../match/match.service';
+  RegistrationStatus,
+} from "../entities/tournament-registration.entity";
+import { Ranking } from "../../ranking/entities/ranking.entity";
+import { MatchService } from "../../match/match.service";
 
 export interface BracketNode {
   matchId?: number;
@@ -27,7 +27,7 @@ export interface BracketNode {
   };
   winnerId?: number;
   nextMatchId?: number;
-  nextSlot?: 'A' | 'B';
+  nextSlot?: "A" | "B";
   phase: MatchPhase;
 }
 
@@ -62,7 +62,7 @@ export class BracketService {
     private registrationRepository: Repository<TournamentRegistration>,
     @InjectRepository(Ranking)
     private rankingRepository: Repository<Ranking>,
-    private matchService: MatchService
+    private matchService: MatchService,
   ) {}
 
   /**
@@ -72,26 +72,26 @@ export class BracketService {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: [
-        'registrations',
-        'registrations.player',
-        'registrations.player.user'
-      ]
+        "registrations",
+        "registrations.player",
+        "registrations.player.user",
+      ],
     });
 
     if (!tournament) {
-      throw new BadRequestException('Tournoi non trouvé');
+      throw new BadRequestException("Tournoi non trouvé");
     }
 
     // Récupérer les joueurs confirmés et check-in
     const confirmedPlayers = tournament.registrations
       .filter(
-        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn
+        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn,
       )
       .map((reg) => reg.player);
 
     if (confirmedPlayers.length < (tournament.minPlayers || 2)) {
       throw new BadRequestException(
-        'Pas assez de joueurs pour démarrer le tournoi'
+        "Pas assez de joueurs pour démarrer le tournoi",
       );
     }
 
@@ -104,14 +104,14 @@ export class BracketService {
       case TournamentType.SINGLE_ELIMINATION:
         bracketStructure = this.generateSingleEliminationBracket(
           seededPlayers,
-          tournament
+          tournament,
         );
         break;
 
       case TournamentType.DOUBLE_ELIMINATION:
         bracketStructure = this.generateDoubleEliminationBracket(
           seededPlayers,
-          tournament
+          tournament,
         );
         break;
 
@@ -119,20 +119,20 @@ export class BracketService {
         bracketStructure = {
           type: TournamentType.SWISS_SYSTEM,
           totalRounds: this.calculateSwissRounds(seededPlayers.length),
-          rounds: []
+          rounds: [],
         };
         break;
 
       case TournamentType.ROUND_ROBIN:
         bracketStructure = this.generateRoundRobinBracket(
           seededPlayers,
-          tournament
+          tournament,
         );
         break;
 
       default:
         throw new BadRequestException(
-          `Type de tournoi non supporté: ${tournament.type as string}`
+          `Type de tournoi non supporté: ${tournament.type as string}`,
         );
     }
 
@@ -148,20 +148,20 @@ export class BracketService {
    */
   async generateSwissPairings(
     tournamentId: number,
-    round: number
+    round: number,
   ): Promise<SwissPairing> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: [
-        'registrations',
-        'registrations.player',
-        'registrations.player.user',
-        'rankings'
-      ]
+        "registrations",
+        "registrations.player",
+        "registrations.player.user",
+        "rankings",
+      ],
     });
 
     if (!tournament) {
-      throw new BadRequestException('Tournoi non trouvé');
+      throw new BadRequestException("Tournoi non trouvé");
     }
 
     if (tournament.type !== TournamentType.SWISS_SYSTEM) {
@@ -170,7 +170,7 @@ export class BracketService {
 
     const confirmedPlayers = tournament.registrations
       .filter(
-        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn
+        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn,
       )
       .map((reg) => reg.player);
 
@@ -203,12 +203,12 @@ export class BracketService {
     // Générer les paires en évitant les re-matchs
     const pairings = await this.createSwissPairings(
       sortedPlayers,
-      tournamentId
+      tournamentId,
     );
 
     return {
       round,
-      pairings
+      pairings,
     };
   }
 
@@ -217,7 +217,7 @@ export class BracketService {
    */
   private generateSingleEliminationBracket(
     players: Player[],
-    tournament: Tournament
+    tournament: Tournament,
   ): BracketStructure {
     const playerCount = players.length;
     const totalRounds = Math.ceil(Math.log2(playerCount));
@@ -240,7 +240,7 @@ export class BracketService {
             round < totalRounds
               ? Math.floor(matchId + position / 2)
               : undefined,
-          nextSlot: position % 2 === 0 ? 'A' : 'B'
+          nextSlot: position % 2 === 0 ? "A" : "B",
         };
 
         // Premier round : assigner les joueurs
@@ -251,16 +251,16 @@ export class BracketService {
           if (playerAIndex < players.length) {
             node.playerA = {
               id: players[playerAIndex].id,
-              name: `${players[playerAIndex].user?.firstName || ''} ${players[playerAIndex].user?.lastName || ''}`.trim(),
-              seed: playerAIndex + 1
+              name: `${players[playerAIndex].user?.firstName || ""} ${players[playerAIndex].user?.lastName || ""}`.trim(),
+              seed: playerAIndex + 1,
             };
           }
 
           if (playerBIndex < players.length) {
             node.playerB = {
               id: players[playerBIndex].id,
-              name: `${players[playerBIndex].user?.firstName || ''} ${players[playerBIndex].user?.lastName || ''}`.trim(),
-              seed: playerBIndex + 1
+              name: `${players[playerBIndex].user?.firstName || ""} ${players[playerBIndex].user?.lastName || ""}`.trim(),
+              seed: playerBIndex + 1,
             };
           }
         }
@@ -277,7 +277,7 @@ export class BracketService {
     return {
       type: TournamentType.SINGLE_ELIMINATION,
       totalRounds,
-      rounds
+      rounds,
     };
   }
 
@@ -286,7 +286,7 @@ export class BracketService {
    */
   private generateDoubleEliminationBracket(
     players: Player[],
-    tournament: Tournament
+    tournament: Tournament,
   ): BracketStructure {
     // Implémentation simplifiée - bracket winner + loser
     //TODO: Implémenter la logique complète du double elimination
@@ -304,7 +304,7 @@ export class BracketService {
    */
   private generateRoundRobinBracket(
     players: Player[],
-    tournament: Tournament
+    tournament: Tournament,
   ): BracketStructure {
     const playerCount = players.length;
     const totalRounds = playerCount - 1;
@@ -326,15 +326,15 @@ export class BracketService {
             position: match,
             playerA: {
               id: players[playerAIndex].id,
-              name: `${players[playerAIndex].user?.firstName || ''} ${players[playerAIndex].user?.lastName || ''}`.trim(),
-              seed: playerAIndex + 1
+              name: `${players[playerAIndex].user?.firstName || ""} ${players[playerAIndex].user?.lastName || ""}`.trim(),
+              seed: playerAIndex + 1,
             },
             playerB: {
               id: players[playerBIndex].id,
-              name: `${players[playerBIndex].user?.firstName || ''} ${players[playerBIndex].user?.lastName || ''}`.trim(),
-              seed: playerBIndex + 1
+              name: `${players[playerBIndex].user?.firstName || ""} ${players[playerBIndex].user?.lastName || ""}`.trim(),
+              seed: playerBIndex + 1,
             },
-            phase: MatchPhase.QUALIFICATION
+            phase: MatchPhase.QUALIFICATION,
           });
         }
       }
@@ -356,7 +356,7 @@ export class BracketService {
     return {
       type: TournamentType.ROUND_ROBIN,
       totalRounds,
-      rounds
+      rounds,
     };
   }
 
@@ -397,7 +397,7 @@ export class BracketService {
    */
   private createMatchesFromBracket(
     tournament: Tournament,
-    rounds: { index: number; matches: BracketNode[] }[]
+    rounds: { index: number; matches: BracketNode[] }[],
   ): void {
     for (const round of rounds) {
       for (const node of round.matches) {
@@ -410,7 +410,7 @@ export class BracketService {
             phase: node.phase,
             scheduledDate: new Date(tournament.startDate),
             notes: `Match généré automatiquement`,
-            skipStatusCheck: true
+            skipStatusCheck: true,
           });
         }
       }
@@ -422,16 +422,16 @@ export class BracketService {
    */
   private async createSwissPairings(
     sortedPlayers: Player[],
-    tournamentId: number
-  ): Promise<SwissPairing['pairings']> {
-    const pairings: SwissPairing['pairings'] = [];
+    tournamentId: number,
+  ): Promise<SwissPairing["pairings"]> {
+    const pairings: SwissPairing["pairings"] = [];
     const availablePlayers = [...sortedPlayers];
     let tableNumber = 1;
 
     // Récupérer les matchs précédents pour éviter les re-matchs
     const previousMatches = await this.matchRepository.find({
       where: { tournament: { id: tournamentId } },
-      relations: ['playerA', 'playerB']
+      relations: ["playerA", "playerB"],
     });
 
     const hasPlayedAgainst = (playerA: Player, playerB: Player): boolean => {
@@ -439,7 +439,8 @@ export class BracketService {
         (match) =>
           (match.playerA?.id === playerA.id &&
             match.playerB?.id === playerB.id) ||
-          (match.playerA?.id === playerB.id && match.playerB?.id === playerA.id)
+          (match.playerA?.id === playerB.id &&
+            match.playerB?.id === playerA.id),
       );
     };
 
@@ -470,7 +471,7 @@ export class BracketService {
       pairings.push({
         playerA,
         playerB,
-        tableNumber: tableNumber++
+        tableNumber: tableNumber++,
       });
     }
 
@@ -479,7 +480,7 @@ export class BracketService {
       pairings.push({
         playerA: availablePlayers[0],
         playerB: undefined, // bye
-        tableNumber: tableNumber++
+        tableNumber: tableNumber++,
       });
     }
 
@@ -493,17 +494,17 @@ export class BracketService {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: [
-        'matches',
-        'matches.playerA',
-        'matches.playerA.user',
-        'matches.playerB',
-        'matches.playerB.user',
-        'matches.winner'
-      ]
+        "matches",
+        "matches.playerA",
+        "matches.playerA.user",
+        "matches.playerB",
+        "matches.playerB.user",
+        "matches.winner",
+      ],
     });
 
     if (!tournament) {
-      throw new BadRequestException('Tournoi non trouvé');
+      throw new BadRequestException("Tournoi non trouvé");
     }
 
     const rounds: { index: number; matches: BracketNode[] }[] = [];
@@ -526,17 +527,17 @@ export class BracketService {
         playerA: match.playerA
           ? {
               id: match.playerA.id,
-              name: `${match.playerA.user?.firstName || ''} ${match.playerA.user?.lastName || ''}`.trim()
+              name: `${match.playerA.user?.firstName || ""} ${match.playerA.user?.lastName || ""}`.trim(),
             }
           : undefined,
         playerB: match.playerB
           ? {
               id: match.playerB.id,
-              name: `${match.playerB.user?.firstName || ''} ${match.playerB.user?.lastName || ''}`.trim()
+              name: `${match.playerB.user?.firstName || ""} ${match.playerB.user?.lastName || ""}`.trim(),
             }
           : undefined,
         winnerId: match.winner?.id,
-        phase: match.phase
+        phase: match.phase,
       }));
 
       rounds.push({ index: roundNumber, matches: nodes });
@@ -548,7 +549,7 @@ export class BracketService {
     return {
       type: tournament.type,
       totalRounds: tournament.totalRounds || 0,
-      rounds
+      rounds,
     };
   }
 }

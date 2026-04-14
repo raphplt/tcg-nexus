@@ -70,8 +70,8 @@ export default function CartPage() {
       toast.success("Quantité mise à jour");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors de la mise à jour de la quantité";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors de la mise à jour de la quantité";
       toast.error(errorMessage);
     } finally {
       setUpdatingItemId(null);
@@ -85,8 +85,8 @@ export default function CartPage() {
       toast.success("Article retiré du panier");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors de la suppression de l'article";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors de la suppression de l'article";
       toast.error(errorMessage);
     } finally {
       setRemovingItemId(null);
@@ -103,8 +103,8 @@ export default function CartPage() {
       toast.success("Panier vidé");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors du vidage du panier";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors du vidage du panier";
       toast.error(errorMessage);
     }
   };
@@ -118,10 +118,7 @@ export default function CartPage() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-32 w-full"
-                  />
+                  <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
             </CardContent>
@@ -211,16 +208,14 @@ export default function CartPage() {
                                 className="block"
                               >
                                 <div className="relative w-16 h-24">
-                                    <Image
-                                      src={getCardImage(
-                                        item.listing.pokemonCard,
-                                      )}
-                                      alt={
-                                        item.listing.pokemonCard.name || "Carte"
-                                      }
-                                      fill
-                                      className="object-contain rounded hover:opacity-80 transition-opacity"
-                                    />
+                                  <Image
+                                    src={getCardImage(item.listing.pokemonCard)}
+                                    alt={
+                                      item.listing.pokemonCard.name || "Carte"
+                                    }
+                                    fill
+                                    className="object-contain rounded hover:opacity-80 transition-opacity"
+                                  />
                                 </div>
                               </Link>
                             </TableCell>
