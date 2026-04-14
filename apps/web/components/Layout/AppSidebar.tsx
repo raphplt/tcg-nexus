@@ -29,6 +29,7 @@ import {
   Shield,
   User,
   LogIn,
+  Target,
 } from "lucide-react";
 
 interface NavItem {

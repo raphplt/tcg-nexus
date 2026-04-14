@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AdminUsersTable } from "@/app/(protected)/admin/_components/AdminUsersTable";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdminUsersTable } from "@/app/(main)/(protected)/admin/_components/AdminUsersTable";
 import { adminService } from "@/services/admin.service";
-import { UserRole, type User } from "@/types/auth";
+import { type User, UserRole } from "@/types/auth";
 
 vi.mock("@/services/admin.service", () => ({
   adminService: {

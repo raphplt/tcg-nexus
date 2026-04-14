@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -29,7 +30,10 @@ import { UpdateDeckDto } from "./dto/update-deck.dto";
 @ApiTags("decks")
 @Controller("deck")
 export class DeckController {
-  constructor(private readonly deckService: DeckService) {}
+  constructor(
+    private readonly deckService: DeckService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()

@@ -1,14 +1,15 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { CollectionItem } from "./entities/collection-item.entity";
-import { Collection } from "src/collection/entities/collection.entity";
 import { Card } from "src/card/entities/card.entity";
-import { User } from "src/user/entities/user.entity";
 import {
   CardState,
   CardStateCode,
 } from "src/card-state/entities/card-state.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { User } from "src/user/entities/user.entity";
+import { Repository } from "typeorm";
+import { CollectionItem } from "./entities/collection-item.entity";
 
 @Injectable()
 export class CollectionItemService {
@@ -27,6 +28,8 @@ export class CollectionItemService {
 
     @InjectRepository(CardState)
     private readonly cardStateRepo: Repository<CardState>,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -97,7 +100,12 @@ export class CollectionItemService {
       quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
+    });
+    return savedItem;
   }
 
   /**
@@ -160,7 +168,12 @@ export class CollectionItemService {
       quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
+    });
+    return savedItem;
   }
 
   /**
@@ -209,6 +222,13 @@ export class CollectionItemService {
       quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_CARD",
+      });
+    }
+    return savedItem;
   }
 }

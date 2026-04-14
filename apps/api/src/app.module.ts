@@ -38,6 +38,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
   imports: [
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot({ wildcard: true, delimiter: "." }),
     ThrottlerModule.forRoot({
       throttlers: [
         {

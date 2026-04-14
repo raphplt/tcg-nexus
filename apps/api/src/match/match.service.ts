@@ -1,31 +1,32 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource, EntityManager } from "typeorm";
-import { CreateMatchDto } from "./dto/create-match.dto";
-import { UpdateMatchDto } from "./dto/update-match.dto";
-import {
-  ReportScoreDto,
-  StartMatchDto,
-  ResetMatchDto,
-} from "./dto/match-operations.dto";
-import { Match, MatchStatus, MatchPhase } from "./entities/match.entity";
+import { Deck } from "src/deck/entities/deck.entity";
+import { DataSource, EntityManager, Repository } from "typeorm";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { Statistics } from "../statistics/entities/statistic.entity";
 import {
   Tournament,
   TournamentStatus,
+  TournamentType,
 } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
 import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
-import { TournamentType } from "../tournament/entities/tournament.entity";
-import { Ranking } from "../ranking/entities/ranking.entity";
-import { Statistics } from "../statistics/entities/statistic.entity";
-import { Deck } from "../deck/entities/deck.entity";
+import { CreateMatchDto } from "./dto/create-match.dto";
+import {
+  ReportScoreDto,
+  ResetMatchDto,
+  StartMatchDto,
+} from "./dto/match-operations.dto";
+import { UpdateMatchDto } from "./dto/update-match.dto";
+import { Match, MatchPhase, MatchStatus } from "./entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,
@@ -103,9 +104,9 @@ export class MatchService {
     private readonly rankingRepository: Repository<Ranking>,
     @InjectRepository(Statistics)
     private readonly statisticsRepository: Repository<Statistics>,
-    @InjectRepository(Deck)
-    private readonly deckRepository: Repository<Deck>,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
+    private readonly deckRepository: Repository<Deck>,
   ) {}
 
   // Créer un nouveau match
@@ -128,7 +129,6 @@ export class MatchService {
     if (!tournament) {
       throw new NotFoundException("Tournoi non trouvé");
     }
-    // Skip status check when creating matches during bracket generation
     if (
       !skipStatusCheck &&
       tournament.status !== TournamentStatus.IN_PROGRESS
@@ -138,7 +138,6 @@ export class MatchService {
       );
     }
 
-    // Vérifier que les joueurs existent et sont inscrits
     let playerA: Player | null = null;
     let playerB: Player | null = null;
 
@@ -386,7 +385,7 @@ export class MatchService {
 
         if (isForfeit) {
           match.status = MatchStatus.FORFEIT;
-          // Si forfait, on infère le vainqueur par le score fourni (ou adapte ta logique ici)
+          // Si forfait, on infère le vainqueur par le score fourni
           match.winner =
             playerAScore > playerBScore
               ? (match.playerA ?? null)
@@ -415,6 +414,13 @@ export class MatchService {
 
         // Vérifier si le tournoi peut avancer automatiquement
         await this.checkTournamentProgression(match, manager);
+
+        if (savedMatch.winner?.user?.id) {
+          this.eventEmitter.emit("challenge.action", {
+            userId: savedMatch.winner.user.id,
+            action: "WIN_MATCH",
+          });
+        }
 
         return savedMatch;
       },
