@@ -86,11 +86,7 @@ const TournamentHistoryPage = () => {
           <p className="text-muted-foreground">
             Vous devez créer un profil joueur pour consulter l&apos;historique.
           </p>
-          <Button
-            asChild
-            variant="outline"
-            className="mt-4"
-          >
+          <Button asChild variant="outline" className="mt-4">
             <Link href="/profile">Retour au profil</Link>
           </Button>
         </Card>
@@ -107,10 +103,7 @@ const TournamentHistoryPage = () => {
             Suivez vos performances et l&apos;évolution de votre ELO.
           </p>
         </div>
-        <Button
-          asChild
-          variant="outline"
-        >
+        <Button asChild variant="outline">
           <Link href="/profile">Retour au profil</Link>
         </Button>
       </div>
@@ -209,10 +202,7 @@ const TournamentHistoryPage = () => {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-20 bg-muted animate-pulse rounded-md"
-              />
+              <div key={i} className="h-20 bg-muted animate-pulse rounded-md" />
             ))}
           </div>
         ) : sortedHistory.length === 0 ? (
@@ -222,10 +212,7 @@ const TournamentHistoryPage = () => {
         ) : (
           <div className="space-y-3">
             {sortedHistory.map((item) => (
-              <TournamentHistoryRow
-                key={item.tournament.id}
-                item={item}
-              />
+              <TournamentHistoryRow key={item.tournament.id} item={item} />
             ))}
           </div>
         )}
@@ -249,7 +236,9 @@ const TournamentHistoryRow = ({ item }: { item: TournamentHistoryItem }) => {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-lg">{item.tournament.name}</span>
+            <span className="font-semibold text-lg">
+              {item.tournament.name}
+            </span>
             <Badge variant="outline">{statusLabel}</Badge>
             <Badge variant="secondary">Rang #{item.rank}</Badge>
           </div>
