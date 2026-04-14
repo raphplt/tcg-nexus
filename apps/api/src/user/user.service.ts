@@ -91,7 +91,7 @@ export class UserService {
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id },
       relations: ["player"],
     });
@@ -99,7 +99,7 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { email },
       relations: ["player"],
     });

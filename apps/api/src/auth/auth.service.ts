@@ -7,21 +7,21 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { CollectionService } from "src/collection/collection.service";
+import { Player } from "src/player/entities/player.entity";
+import { Repository } from "typeorm";
 import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
-import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Player } from "src/player/entities/player.entity";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { parseDurationToMs } from "./utils/parse-duration";
 import {
   AuthResponse,
   AuthTokens,
   JwtPayload,
 } from "./interfaces/auth.interface";
+import { parseDurationToMs } from "./utils/parse-duration";
 
 @Injectable()
 export class AuthService {
@@ -104,10 +104,6 @@ export class AuthService {
         lastName: registerDto.lastName,
         password: registerDto.password,
       });
-
-      const player = this.playerRepository.create({ user });
-      const savedPlayer = await this.playerRepository.save(player);
-      user.player = savedPlayer;
 
       await this.collectionService.create({
         name: "Wishlist",

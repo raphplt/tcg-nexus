@@ -106,6 +106,7 @@ export class MatchService {
     private readonly statisticsRepository: Repository<Statistics>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
   ) {}
 
