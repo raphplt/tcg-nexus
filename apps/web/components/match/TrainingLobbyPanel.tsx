@@ -55,23 +55,27 @@ export function TrainingLobbyPanel() {
   );
 
   useEffect(() => {
-    if (!selectedDeckId && eligibleDecks.length > 0) {
-      setSelectedDeckId(eligibleDecks[0].deckId);
+    const firstEligibleDeck = eligibleDecks[0];
+    if (!selectedDeckId && firstEligibleDeck) {
+      setSelectedDeckId(firstEligibleDeck.deckId);
     }
   }, [eligibleDecks, selectedDeckId]);
 
   useEffect(() => {
-    if (!selectedPresetId && lobbyQuery.data?.aiDeckPresets.length) {
-      setSelectedPresetId(lobbyQuery.data.aiDeckPresets[0].id);
+    const firstPreset = lobbyQuery.data?.aiDeckPresets[0];
+    if (!selectedPresetId && firstPreset) {
+      setSelectedPresetId(firstPreset.id);
     }
   }, [lobbyQuery.data?.aiDeckPresets, selectedPresetId]);
 
   useEffect(() => {
+    const firstDifficulty = lobbyQuery.data?.difficulties[0];
     if (
       lobbyQuery.data?.difficulties.length &&
-      !lobbyQuery.data.difficulties.includes(selectedDifficulty)
+      !lobbyQuery.data.difficulties.includes(selectedDifficulty) &&
+      firstDifficulty
     ) {
-      setSelectedDifficulty(lobbyQuery.data.difficulties[0]);
+      setSelectedDifficulty(firstDifficulty);
     }
   }, [lobbyQuery.data?.difficulties, selectedDifficulty]);
 

@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useRouter } from "next/navigation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FavoriteButton } from "@/components/Home/FavoritesButton";
 import { useAuth } from "@/contexts/AuthContext";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
-import { useRouter } from "next/navigation";
+import { pokemonCardService } from "@/services/pokemonCard.service";
 import { UserRole } from "@/types/auth";
 
 const toastMocks = vi.hoisted(() => ({
@@ -60,6 +60,7 @@ const authenticatedUser = {
   login: vi.fn(),
   register: vi.fn(),
   logout: vi.fn(),
+  refreshUser: vi.fn(),
 };
 
 describe("FavoriteButton", () => {

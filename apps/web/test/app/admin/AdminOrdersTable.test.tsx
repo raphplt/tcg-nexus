@@ -1,13 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AdminOrdersTable } from "@/app/(protected)/admin/_components/AdminOrdersTable";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdminOrdersTable } from "@/app/(main)/(protected)/admin/_components/AdminOrdersTable";
 import { adminService } from "@/services/admin.service";
-import { OrderStatus, type Order } from "@/types/order";
-import type { PaginatedResult } from "@/types/pagination";
 import { UserRole } from "@/types/auth";
-import { CardState, Currency } from "@/utils/enums";
 import { Rarity } from "@/types/listing";
+import { type Order, OrderStatus } from "@/types/order";
+import type { PaginatedResult } from "@/types/pagination";
+import { CardState, Currency } from "@/utils/enums";
 
 vi.mock("@/services/admin.service", () => ({
   adminService: {
