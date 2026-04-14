@@ -182,10 +182,7 @@ const SearchBar = () => {
         </button>
       </div>
 
-      <Dialog
-        open={isOpen}
-        onOpenChange={setIsOpen}
-      >
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-2xl mx-auto p-0">
           <div className="p-4">
             <DialogTitle className="sr-only">Rechercher</DialogTitle>

@@ -4,9 +4,14 @@ import {
   StartMatchDto,
   ResetMatchDto,
 } from "@/types/tournament";
+import { PlayHubResponse } from "@/types/play-hub";
 import { authedFetch, fetcher } from "@/utils/fetch";
 
 export const matchService = {
+  async getPlayHub(): Promise<PlayHubResponse> {
+    return authedFetch<PlayHubResponse>("GET", "/matches/play-hub");
+  },
+
   async getMatch(id: number): Promise<Match> {
     return fetcher<Match>(`/matches/${id}`);
   },

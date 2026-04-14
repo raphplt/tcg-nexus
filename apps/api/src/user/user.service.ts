@@ -1,56 +1,61 @@
 import {
-  Injectable,
   ConflictException,
-  NotFoundException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import * as bcrypt from "bcrypt";
+import { Player } from "src/player/entities/player.entity";
+import { Repository } from "typeorm";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { User } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    @InjectRepository(Player)
+    private playerRepository: Repository<Player>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email }
+      where: { email: createUserDto.email },
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+      throw new ConflictException("User with this email already exists");
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = this.userRepository.create({
       ...createUserDto,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    await this.ensurePlayerProfile(savedUser);
+    return this.findOne(savedUser.id);
   }
 
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
       select: [
-        'id',
-        'email',
-        'firstName',
-        'lastName',
-        'role',
-        'isActive',
-        'isPro',
-        'preferredCurrency',
-        'emailVerified',
-        'createdAt',
-        'updatedAt'
-      ]
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "isActive",
+        "isPro",
+        "preferredCurrency",
+        "emailVerified",
+        "createdAt",
+        "updatedAt",
+      ],
     });
   }
 
@@ -58,39 +63,47 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { id },
       select: [
-        'id',
-        'email',
-        'firstName',
-        'lastName',
-        'role',
-        'isActive',
-        'isPro',
-        'preferredCurrency',
-        'emailVerified',
-        'createdAt',
-        'updatedAt'
-      ]
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "avatarUrl",
+        "role",
+        "isActive",
+        "isPro",
+        "preferredCurrency",
+        "emailVerified",
+        "createdAt",
+        "updatedAt",
+      ],
+      relations: ["player"],
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException("User not found");
     }
 
-    return user;
+    const hydratedUser = await this.ensurePlayerProfile(user);
+    if (!hydratedUser) {
+      throw new NotFoundException("User not found");
+    }
+    return hydratedUser;
   }
 
   async findById(id: number): Promise<User | null> {
     return this.userRepository.findOne({
       where: { id },
-      relations: ['player']
+      relations: ["player"],
     });
+    return this.ensurePlayerProfile(user);
   }
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({
       where: { email },
-      relations: ['player']
+      relations: ["player"],
     });
+    return this.ensurePlayerProfile(user);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
@@ -98,10 +111,10 @@ export class UserService {
 
     if (updateUserDto.email && updateUserDto.email !== user.email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email }
+        where: { email: updateUserDto.email },
       });
       if (existingUser) {
-        throw new ConflictException('User with this email already exists');
+        throw new ConflictException("User with this email already exists");
       }
     }
 
@@ -113,25 +126,87 @@ export class UserService {
     return this.findOne(id);
   }
 
+  /**
+   * Met à jour le refresh token d'un utilisateur.
+   *
+   * Quand un nouveau token est fourni, l'ancien hash est conservé dans
+   * `previousRefreshToken` pendant `REFRESH_TOKEN_GRACE_WINDOW_MS` afin
+   * d'absorber les courses entre plusieurs refresh concurrents (par exemple
+   * le middleware SSR et l'intercepteur XHR qui peuvent tirer en parallèle).
+   */
   async updateRefreshToken(
     userId: number,
-    refreshToken: string | null
+    refreshToken: string | null,
   ): Promise<void> {
-    const updateData: { refreshToken?: string | null } = {};
-
-    if (refreshToken) {
-      updateData.refreshToken = await bcrypt.hash(refreshToken, 10);
-      console.log(`[UserService] Hashed refresh token for user ${userId}`);
-    } else {
-      updateData.refreshToken = null;
-      console.log(`[UserService] Clearing refresh token for user ${userId}`);
+    if (!refreshToken) {
+      await this.userRepository.update(userId, {
+        refreshToken: null,
+        previousRefreshToken: null,
+        previousRefreshTokenExpiresAt: null,
+      });
+      return;
     }
 
-    await this.userRepository.update(userId, updateData);
+    const existing = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ["id", "refreshToken"],
+    });
+
+    const hashed = await bcrypt.hash(refreshToken, 10);
+    const previousHash = existing?.refreshToken ?? null;
+    const previousExpiresAt = previousHash
+      ? new Date(Date.now() + UserService.REFRESH_TOKEN_GRACE_WINDOW_MS)
+      : null;
+
+    await this.userRepository.update(userId, {
+      refreshToken: hashed,
+      previousRefreshToken: previousHash,
+      previousRefreshTokenExpiresAt: previousExpiresAt,
+    });
   }
+
+  static readonly REFRESH_TOKEN_GRACE_WINDOW_MS = 30 * 1000;
 
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);
     await this.userRepository.remove(user);
+  }
+
+  private async ensurePlayerProfile(user: User | null): Promise<User | null> {
+    if (!user) {
+      return null;
+    }
+
+    if (user.player?.id) {
+      return user;
+    }
+
+    const existingPlayer = await this.playerRepository.findOne({
+      where: { user: { id: user.id } },
+      relations: ["user"],
+    });
+
+    if (existingPlayer) {
+      user.player = existingPlayer;
+      return user;
+    }
+
+    try {
+      const player = this.playerRepository.create({ user });
+      user.player = await this.playerRepository.save(player);
+      return user;
+    } catch (error) {
+      const concurrentPlayer = await this.playerRepository.findOne({
+        where: { user: { id: user.id } },
+        relations: ["user"],
+      });
+
+      if (concurrentPlayer) {
+        user.player = concurrentPlayer;
+        return user;
+      }
+
+      throw error;
+    }
   }
 }

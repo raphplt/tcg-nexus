@@ -1,7 +1,7 @@
-import { DeckAnalysisResponseDto } from './analyze-deck-response.dto';
+import { DeckAnalysisResponseDto } from "./analyze-deck-response.dto";
 
-describe('DeckAnalysisResponseDto', () => {
-  it('should instantiate with default structure', () => {
+describe("DeckAnalysisResponseDto", () => {
+  it("should instantiate with default structure", () => {
     const dto = new DeckAnalysisResponseDto();
     dto.deckId = 1;
     dto.totalCards = 0;

@@ -1,15 +1,15 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreatePlayerDto } from './dto/create-player.dto';
-import { UpdatePlayerDto } from './dto/update-player.dto';
-import { Player } from './entities/player.entity';
-import { Ranking } from 'src/ranking/entities/ranking.entity';
-import { TournamentStatus } from 'src/tournament/entities/tournament.entity';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Ranking } from "src/ranking/entities/ranking.entity";
+import { TournamentStatus } from "src/tournament/entities/tournament.entity";
+import { Repository } from "typeorm";
+import { CreatePlayerDto } from "./dto/create-player.dto";
+import { UpdatePlayerDto } from "./dto/update-player.dto";
+import { Player } from "./entities/player.entity";
 
 @Injectable()
 export class PlayerService {
@@ -17,7 +17,7 @@ export class PlayerService {
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     @InjectRepository(Ranking)
-    private readonly rankingRepository: Repository<Ranking>
+    private readonly rankingRepository: Repository<Ranking>,
   ) {}
 
   async create(createPlayerDto: CreatePlayerDto) {
@@ -26,17 +26,17 @@ export class PlayerService {
   }
 
   async findAll() {
-    return this.playerRepository.find({ relations: ['user'] });
+    return this.playerRepository.find({ relations: ["user"] });
   }
 
   async findOne(id: number) {
     const player = await this.playerRepository.findOne({
       where: { id },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (!player) {
-      throw new NotFoundException('Joueur non trouvé');
+      throw new NotFoundException("Joueur non trouvé");
     }
 
     return player;
@@ -57,17 +57,17 @@ export class PlayerService {
   async getTournamentHistory(playerId: number, period?: string) {
     const player = await this.playerRepository.findOne({
       where: { id: playerId },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (!player) {
-      throw new NotFoundException('Joueur non trouvé');
+      throw new NotFoundException("Joueur non trouvé");
     }
 
     const rankings = await this.rankingRepository.find({
       where: { player: { id: playerId } },
-      relations: ['tournament'],
-      order: { createdAt: 'ASC' }
+      relations: ["tournament"],
+      order: { createdAt: "ASC" },
     });
 
     const now = new Date();
@@ -93,7 +93,7 @@ export class PlayerService {
     if (pastRankings.length === 0) {
       return {
         playerId,
-        period: period || 'all',
+        period: period || "all",
         baseElo: 1000,
         history: [],
         stats: {
@@ -104,25 +104,25 @@ export class PlayerService {
           totalMatches: 0,
           winRate: 0,
           bestRank: null,
-          totalPoints: 0
-        }
+          totalPoints: 0,
+        },
       };
     }
 
     const tournamentIds = pastRankings
       .map((ranking) => ranking.tournament?.id)
-      .filter((id): id is number => typeof id === 'number');
+      .filter((id): id is number => typeof id === "number");
 
     if (tournamentIds.length === 0) {
-      throw new BadRequestException('Aucun tournoi valide trouvé');
+      throw new BadRequestException("Aucun tournoi valide trouvé");
     }
 
     const counts = await this.rankingRepository
-      .createQueryBuilder('ranking')
-      .select('ranking.tournamentId', 'tournamentId')
-      .addSelect('COUNT(*)', 'count')
-      .where('ranking.tournamentId IN (:...ids)', { ids: tournamentIds })
-      .groupBy('ranking.tournamentId')
+      .createQueryBuilder("ranking")
+      .select("ranking.tournamentId", "tournamentId")
+      .addSelect("COUNT(*)", "count")
+      .where("ranking.tournamentId IN (:...ids)", { ids: tournamentIds })
+      .groupBy("ranking.tournamentId")
       .getRawMany();
 
     const countMap = new Map<number, number>();
@@ -143,9 +143,7 @@ export class PlayerService {
     let elo = 1000;
     const history = sorted.map((ranking) => {
       const totalPlayers =
-        (ranking.tournament?.id &&
-          countMap.get(ranking.tournament.id)) ||
-        0;
+        (ranking.tournament?.id && countMap.get(ranking.tournament.id)) || 0;
       const eloBefore = elo;
       const eloDelta = this.computeEloDelta(ranking, totalPlayers);
       const eloAfter = eloBefore + eloDelta;
@@ -159,7 +157,7 @@ export class PlayerService {
           endDate: ranking.tournament?.endDate,
           location: ranking.tournament?.location,
           type: ranking.tournament?.type,
-          status: ranking.tournament?.status
+          status: ranking.tournament?.status,
         },
         rank: ranking.rank,
         points: ranking.points,
@@ -170,7 +168,7 @@ export class PlayerService {
         totalPlayers,
         eloBefore,
         eloAfter,
-        eloDelta
+        eloDelta,
       };
     });
 
@@ -190,7 +188,7 @@ export class PlayerService {
 
     return {
       playerId,
-      period: period || 'all',
+      period: period || "all",
       baseElo: 1000,
       history,
       stats: {
@@ -201,27 +199,27 @@ export class PlayerService {
         totalMatches,
         winRate,
         bestRank,
-        totalPoints
-      }
+        totalPoints,
+      },
     };
   }
 
   private resolvePeriodCutoff(period?: string, now: Date = new Date()) {
-    if (!period || period === 'all') return null;
+    if (!period || period === "all") return null;
 
     const cutoff = new Date(now);
 
     switch (period) {
-      case '1m':
-      case 'last_month':
+      case "1m":
+      case "last_month":
         cutoff.setMonth(cutoff.getMonth() - 1);
         return cutoff;
-      case '3m':
-      case '3_months':
+      case "3m":
+      case "3_months":
         cutoff.setMonth(cutoff.getMonth() - 3);
         return cutoff;
-      case '1y':
-      case 'year':
+      case "1y":
+      case "year":
         cutoff.setFullYear(cutoff.getFullYear() - 1);
         return cutoff;
       default:

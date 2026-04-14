@@ -7,6 +7,7 @@ import { ArrowRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
 import { Currency } from "@/utils/enums";
+import { getCardImage } from "@/utils/images";
 
 const MarketplacePreview = () => {
   const { popularCards, loadingPopular: isLoading } = useMarketplaceHome();
@@ -30,19 +31,13 @@ const MarketplacePreview = () => {
               className="flex items-center gap-4 flex-1 min-w-0"
             >
               <div className="flex-shrink-0">
-                {popularCard.card.image ? (
-                  <Image
-                    src={popularCard.card.image + "/low.png"}
-                    alt={popularCard.card.name || "Pokemon Card"}
-                    width={56}
-                    height={80}
-                    className="object-cover rounded border"
-                  />
-                ) : (
-                  <div className="w-14 h-20 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                    N/A
-                  </div>
-                )}
+                <Image
+                  src={getCardImage(popularCard.card, "low")}
+                  alt={popularCard.card.name || "Pokemon Card"}
+                  width={56}
+                  height={80}
+                  className="object-cover rounded border"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">
@@ -61,10 +56,7 @@ const MarketplacePreview = () => {
               </div>
             </Link>
 
-            <Button
-              variant="secondary"
-              asChild
-            >
+            <Button variant="secondary" asChild>
               <Link
                 href={`/marketplace/cards/${popularCard.card.id}`}
                 onClick={(e) => e.stopPropagation()}
@@ -76,16 +68,8 @@ const MarketplacePreview = () => {
           </div>
         ))}
       </div>
-      <Button
-        variant="outline"
-        asChild
-        size="sm"
-        className="w-full mt-4"
-      >
-        <Link
-          href="/marketplace"
-          className="flex items-center gap-2"
-        >
+      <Button variant="outline" asChild size="sm" className="w-full mt-4">
+        <Link href="/marketplace" className="flex items-center gap-2">
           Voir tous les articles
           <ArrowRight className="mr-2 w-4 h-4" />
         </Link>

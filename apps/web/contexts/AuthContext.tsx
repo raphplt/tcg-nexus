@@ -1,15 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, {
   createContext,
+  ReactNode,
   useContext,
   useEffect,
   useState,
-  ReactNode,
 } from "react";
-import { User, LoginRequest, RegisterRequest } from "@/types/auth";
 import { authService } from "@/services/auth.service";
-import { useRouter } from "next/navigation";
+import { LoginRequest, RegisterRequest, User } from "@/types/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,12 +37,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // L'intercepteur axios de secureApi tentera automatiquement un refresh
+        // sur 401 puis rejouera la requête. On n'a donc rien à faire ici :
+        // soit getProfile réussit (directement ou après refresh), soit il
+        // rejette définitivement et on est non authentifié.
         const userData = await authService.getProfile();
         setUser(userData);
-
-        if (userData && typeof window !== "undefined") {
-          authService.scheduleRefresh(Date.now() + 14 * 60 * 1000);
-        }
       } catch (error: any) {
         if (error?.response?.status !== 401) {
           console.error("Unexpected error during auth check:", error);
@@ -83,6 +84,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const userData = await authService.getProfile();
+      setUser(userData);
+    } catch (error) {
+      console.error("Failed to refresh user:", error);
+    }
+  };
+
   const logout = async () => {
     try {
       setIsLoading(true);
@@ -101,6 +111,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     register,
     logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

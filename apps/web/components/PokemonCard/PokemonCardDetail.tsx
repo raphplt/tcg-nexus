@@ -2,6 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { getCardImage } from "@/utils/images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,10 +26,6 @@ interface PokemonCardDetailProps {
 }
 
 const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
-  const fixImageUrl = (url: string) => {
-    return url.replace("tcgdx.net", "tcgdex.net");
-  };
-
   const safeRender = (value: any): string => {
     if (typeof value === "string" || typeof value === "number") {
       return String(value);
@@ -47,21 +44,13 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
       <div className="hero-gradient py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="flex justify-center">
-              <img
-                src={
-                  card.image
-                    ? fixImageUrl(card.image) + "/high.png"
-                    : "/images/Pokemon_Card_Back.png"
-                }
+            <div className="flex justify-center relative w-full h-96">
+              <Image
+                src={getCardImage(card)}
                 alt={card.name || "Carte Pokémon"}
-                className="max-w-full max-h-96 "
-                style={{ objectFit: "contain" }}
-                onError={(e) => {
-                  if (card.image) {
-                    e.currentTarget.src = fixImageUrl(card.image);
-                  }
-                }}
+                fill
+                className="object-contain"
+                priority
               />
             </div>
 
@@ -109,17 +98,11 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   <Heart className="w-4 h-4" />
                   Ajouter aux favoris
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Ajouter à la collection
                 </Button>
-                <Button
-                  variant="secondary"
-                  className="flex items-center gap-2"
-                >
+                <Button variant="secondary" className="flex items-center gap-2">
                   <ShoppingCart className="w-4 h-4" />
                   Voir les ventes
                 </Button>
@@ -149,10 +132,7 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   </h2>
                   <div className="space-y-4">
                     {card.attacks.map((attack, index) => (
-                      <div
-                        key={index}
-                        className="attack-section"
-                      >
+                      <div key={index} className="attack-section">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="flex gap-1">
                             {attack.cost.map((energy, i) => (
@@ -195,10 +175,7 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                   </h2>
                   <div className="space-y-2">
                     {card.weaknesses.map((weakness, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3"
-                      >
+                      <div key={index} className="flex items-center gap-3">
                         <Badge
                           variant="destructive"
                           className="flex items-center gap-1"

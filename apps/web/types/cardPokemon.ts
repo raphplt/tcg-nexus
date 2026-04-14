@@ -3,13 +3,60 @@ import { PokemonCardsType } from "./enums/pokemonCardsType";
 import { TrainerType } from "./enums/trainerType";
 import { Rarity } from "./listing";
 
+// TCGPlayer pricing for a single variant (normal, holofoil, reverseHolofoil, etc.)
+export interface TcgPlayerVariantPricing {
+  productId: number;
+  lowPrice: number | null;
+  midPrice: number | null;
+  highPrice: number | null;
+  marketPrice: number | null;
+  directLowPrice: number | null;
+}
+
+// TCGPlayer pricing container
+export interface TcgPlayerPricing {
+  unit: string;
+  updated: string;
+  normal?: TcgPlayerVariantPricing;
+  holofoil?: TcgPlayerVariantPricing;
+  reverseHolofoil?: TcgPlayerVariantPricing;
+  "1stEditionHolofoil"?: TcgPlayerVariantPricing;
+  "1stEditionNormal"?: TcgPlayerVariantPricing;
+}
+
+// CardMarket pricing container
+export interface CardMarketPricing {
+  unit: string;
+  updated: string;
+  idProduct: number;
+  avg: number | null;
+  avg1: number | null;
+  avg7: number | null;
+  avg30: number | null;
+  low: number | null;
+  trend: number | null;
+  "avg-holo": number | null;
+  "avg1-holo": number | null;
+  "avg7-holo": number | null;
+  "avg30-holo": number | null;
+  "low-holo": number | null;
+  "trend-holo": number | null;
+}
+
+// Combined pricing from both sources
+export interface CardPricing {
+  tcgplayer?: TcgPlayerPricing | null;
+  cardmarket?: CardMarketPricing | null;
+}
+
 export type PokemonSetType = {
   id: string;
   name: string;
   logo?: string;
   symbol?: string;
-  tcgOnline?: boolean;
+  tcgOnline?: string;
   releaseDate?: string;
+  serie?: PokemonSerieType;
   cardCount?: {
     total: number;
     official: number;
@@ -24,7 +71,7 @@ export type PokemonSetType = {
 };
 
 export type PokemonSerieType = {
-  id: number;
+  id: string;
   name: string;
   logo?: string;
 };
@@ -43,7 +90,15 @@ export type PokemonCardType = {
     reverse: boolean;
     holo: boolean;
     firstEdition: boolean;
+    wPromo?: boolean;
   };
+  variantsDetailed?: {
+    type?: string;
+    size?: string;
+    foil?: string;
+    stamp?: string;
+    subtype?: string;
+  }[];
   set: PokemonSetType;
   dexId?: number[];
   hp?: number;
@@ -57,13 +112,22 @@ export type PokemonCardType = {
     name: string;
     effect: string;
   };
+  abilities?: {
+    type?: string;
+    name?: string;
+    effect?: string;
+  }[];
   attacks?: {
     cost: string[];
     name: string;
     effect: string;
-    damage?: number;
+    damage?: number | string;
   }[];
   weaknesses?: {
+    type: string;
+    value: string;
+  }[];
+  resistances?: {
     type: string;
     value: string;
   }[];
@@ -77,4 +141,9 @@ export type PokemonCardType = {
   effect?: string;
   trainerType?: TrainerType;
   energyType?: EnergyType;
+  boosters?: {
+    id?: string;
+    name?: string;
+  }[];
+  pricing?: CardPricing;
 };

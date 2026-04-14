@@ -2,11 +2,11 @@ import { Listing } from "./listing";
 import { User } from "./auth";
 
 export enum OrderStatus {
-  PENDING = 'Pending',
-  PAID = 'Paid',
-  SHIPPED = 'Shipped',
-  CANCELLED = 'Cancelled',
-  REFUNDED = 'Refunded'
+  PENDING = "Pending",
+  PAID = "Paid",
+  SHIPPED = "Shipped",
+  CANCELLED = "Cancelled",
+  REFUNDED = "Refunded",
 }
 
 export interface OrderItem {

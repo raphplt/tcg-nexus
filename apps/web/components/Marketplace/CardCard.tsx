@@ -1,13 +1,15 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Flame, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCurrencyStore } from "@/store/currency.store";
-import { TrendingUp, TrendingDown, Minus, Star, Flame } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCurrencyStore } from "@/store/currency.store";
 import { PokemonCardType } from "@/types/cardPokemon";
+import { getCardImage } from "@/utils/images";
+import { getMarketReferencePrice } from "@/utils/price";
 
 interface CardCardProps {
   card: PokemonCardType;
@@ -34,9 +36,11 @@ export function CardCard({
   isPopular = false,
   isTrending = false,
 }: CardCardProps) {
-  const { formatPrice } = useCurrencyStore();
+  const { formatPrice, currency: userCurrency } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
-
+  const marketRef = !hasListings
+    ? getMarketReferencePrice(card.pricing, userCurrency)
+    : null;
 
   return (
     <Link href={`/marketplace/cards/${card.id}`}>
@@ -47,14 +51,10 @@ export function CardCard({
         )}
       >
         <CardHeader className="pb-3">
-          <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-muted mb-3">
+          <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg mb-3">
             <Image
-              src={
-                card.image
-                  ? card.image + "/high.png"
-                  : "/images/carte-pokemon-dos.jpg"
-              }
-              alt={""}
+              src={getCardImage(card)}
+              alt={card.name || "Pokemon Card"}
               fill
               className="object-contain group-hover:scale-105 transition-transform duration-200"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -67,7 +67,7 @@ export function CardCard({
                     className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-1"
                     title="Popularité calculée sur 90 jours"
                   >
-                    <Star className="w-3 h-3 fill-current" />⭐
+                    <Star className="w-3 h-3 fill-current" />
                   </Badge>
                 )}
                 {isTrending && (
@@ -77,7 +77,6 @@ export function CardCard({
                     title="Momentum récent (7 jours vs 30 jours)"
                   >
                     <Flame className="w-3 h-3 fill-current" />
-                    🔥
                   </Badge>
                 )}
               </div>
@@ -108,18 +107,12 @@ export function CardCard({
         <CardContent className="pt-0 mt-auto">
           <div className="flex flex-wrap gap-2 mb-3">
             {card.rarity && (
-              <Badge
-                variant="outline"
-                className="text-xs"
-              >
+              <Badge variant="outline" className="text-xs">
                 {card.rarity}
               </Badge>
             )}
             {hasListings && (
-              <Badge
-                variant="secondary"
-                className="text-xs"
-              >
+              <Badge variant="secondary" className="text-xs">
                 {listingCount} offre{listingCount > 1 ? "s" : ""}
               </Badge>
             )}
@@ -159,6 +152,15 @@ export function CardCard({
                       Moyenne: {formatPrice(avgPrice, currency)}
                     </p>
                   )}
+                </div>
+              ) : marketRef ? (
+                <div className="space-y-1">
+                  <span className="text-lg font-bold text-muted-foreground">
+                    ~{formatPrice(marketRef.price, marketRef.currency)}
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Prix de référence
+                  </p>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">Aucune offre</p>

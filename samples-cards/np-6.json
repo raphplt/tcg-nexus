@@ -1,0 +1,70 @@
+{
+  "category": "Pokémon",
+  "id": "np-6",
+  "illustrator": "Atsuko Nishida",
+  "localId": "6",
+  "name": "Poussifeu",
+  "rarity": "Commune",
+  "set": {
+    "cardCount": {
+      "official": 40,
+      "total": 40
+    },
+    "id": "np",
+    "name": "Promo Nintendo",
+    "symbol": "https://assets.tcgdex.net/univ/pop/np/symbol"
+  },
+  "variants": {
+    "firstEdition": false,
+    "holo": true,
+    "normal": true,
+    "reverse": true,
+    "wPromo": false
+  },
+  "variants_detailed": [
+    {
+      "type": "normal",
+      "size": "Standard"
+    },
+    {
+      "type": "reverse",
+      "size": "Standard"
+    },
+    {
+      "type": "holo",
+      "size": "Standard"
+    }
+  ],
+  "dexId": [255],
+  "hp": 40,
+  "types": ["Feu"],
+  "stage": "De base",
+  "attacks": [
+    {
+      "cost": ["Incolore"],
+      "name": "Picpic",
+      "damage": 10
+    },
+    {
+      "cost": ["Feu", "Incolore"],
+      "name": "Feu d'artifice",
+      "effect": "Lancez une pièce. Si c'est pile, défaussez une carte Énergie  attachée à Poussifeu.",
+      "damage": 30
+    }
+  ],
+  "weaknesses": [
+    {
+      "type": "Eau",
+      "value": "×2"
+    }
+  ],
+  "legal": {
+    "standard": false,
+    "expanded": false
+  },
+  "updated": "2026-01-24T23:11:01+01:00",
+  "pricing": {
+    "cardmarket": null,
+    "tcgplayer": null
+  }
+}

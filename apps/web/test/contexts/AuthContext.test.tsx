@@ -1,10 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useRouter } from "next/navigation";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { authService } from "@/services/auth.service";
-import { useRouter } from "next/navigation";
-import { UserRole, type User } from "@/types/auth";
+import { type User, UserRole } from "@/types/auth";
 
 vi.mock("@/services/auth.service", () => ({
   authService: {
@@ -12,7 +12,6 @@ vi.mock("@/services/auth.service", () => ({
     login: vi.fn(),
     register: vi.fn(),
     logout: vi.fn(),
-    scheduleRefresh: vi.fn(),
   },
   default: {},
 }));

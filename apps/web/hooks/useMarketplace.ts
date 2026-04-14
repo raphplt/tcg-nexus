@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { marketplaceService, PopularCard, TrendingCard, BestSeller } from "@/services/marketplace.service";
+import {
+  marketplaceService,
+  PopularCard,
+  TrendingCard,
+  BestSeller,
+} from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { PokemonSetType, PokemonSerieType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
@@ -48,10 +53,10 @@ export function useMarketplaceHome() {
     queryFn: () => marketplaceService.getBestSellers(6),
   });
 
-  // Récupère les sets
+  // Récupère les sets (limité aux 20 plus récents)
   const { data: sets, isLoading: loadingSets } = useQuery<PokemonSetType[]>({
-    queryKey: ["pokemon-sets"],
-    queryFn: () => pokemonCardService.getAllSets(),
+    queryKey: ["pokemon-sets", 20],
+    queryFn: () => pokemonCardService.getAllSets(20),
   });
 
   return {

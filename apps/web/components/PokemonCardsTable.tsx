@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 import {
   Table,
   TableBody,
@@ -281,10 +282,7 @@ export function PokemonCardsTable({
           <CardTitle>Cartes Pokemon</CardTitle>
           {/* Interface de recherche */}
           <div className="mt-4">
-            <form
-              onSubmit={handleSearchSubmit}
-              className="flex gap-2"
-            >
+            <form onSubmit={handleSearchSubmit} className="flex gap-2">
               <Input
                 type="text"
                 placeholder="Rechercher une carte..."
@@ -294,11 +292,7 @@ export function PokemonCardsTable({
               />
               <Button type="submit">Rechercher</Button>
               {isSearching && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={clearSearch}
-                >
+                <Button type="button" variant="outline" onClick={clearSearch}>
                   Effacer
                 </Button>
               )}
@@ -328,10 +322,7 @@ export function PokemonCardsTable({
         </div>
         {/* Interface de recherche */}
         <div className="mt-4">
-          <form
-            onSubmit={handleSearchSubmit}
-            className="flex gap-2"
-          >
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <Input
               type="text"
               placeholder="Rechercher une carte..."
@@ -341,11 +332,7 @@ export function PokemonCardsTable({
             />
             <Button type="submit">Rechercher</Button>
             {isSearching && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={clearSearch}
-              >
+              <Button type="button" variant="outline" onClick={clearSearch}>
                 Effacer
               </Button>
             )}
@@ -368,19 +355,13 @@ export function PokemonCardsTable({
             {currentData.data.map((card) => (
               <TableRow key={card.id}>
                 <TableCell>
-                  {card.image ? (
-                    <Image
-                      src={card.image + "/low.png"}
-                      alt={card.name || "Pokemon Card"}
-                      width={48}
-                      height={64}
-                      className="object-cover rounded"
-                    />
-                  ) : (
-                    <div className="w-12 h-16 bg-gray-200 rounded flex items-center justify-center">
-                      <span className="text-xs text-gray-500">N/A</span>
-                    </div>
-                  )}
+                  <Image
+                    src={getCardImage(card, "low")}
+                    alt={card.name || "Pokemon Card"}
+                    width={48}
+                    height={64}
+                    className="object-cover rounded"
+                  />
                 </TableCell>
                 <TableCell className="font-medium">
                   {card.name || "N/A"}

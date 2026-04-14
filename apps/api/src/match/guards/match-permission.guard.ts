@@ -3,15 +3,15 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-  NotFoundException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Match } from '../entities/match.entity';
-import { TournamentOrganizer } from '../../tournament/entities/tournament-organizer.entity';
-import { User } from '../../user/entities/user.entity';
-import { Request } from 'express';
-import { UserRole } from 'src/common/enums/user';
+  NotFoundException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Match } from "../entities/match.entity";
+import { TournamentOrganizer } from "../../tournament/entities/tournament-organizer.entity";
+import { User } from "../../user/entities/user.entity";
+import { Request } from "express";
+import { UserRole } from "src/common/enums/user";
 
 @Injectable()
 export class MatchPermissionGuard implements CanActivate {
@@ -19,7 +19,7 @@ export class MatchPermissionGuard implements CanActivate {
     @InjectRepository(Match)
     private matchRepository: Repository<Match>,
     @InjectRepository(TournamentOrganizer)
-    private organizerRepository: Repository<TournamentOrganizer>
+    private organizerRepository: Repository<TournamentOrganizer>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,7 +28,7 @@ export class MatchPermissionGuard implements CanActivate {
     const matchId = parseInt(request.params?.id);
 
     if (!user || !matchId) {
-      throw new ForbiddenException('Accès non autorisé');
+      throw new ForbiddenException("Accès non autorisé");
     }
 
     // Super admin peut tout faire
@@ -40,16 +40,16 @@ export class MatchPermissionGuard implements CanActivate {
     const match = await this.matchRepository.findOne({
       where: { id: matchId },
       relations: [
-        'tournament',
-        'playerA',
-        'playerA.user',
-        'playerB',
-        'playerB.user'
-      ]
+        "tournament",
+        "playerA",
+        "playerA.user",
+        "playerB",
+        "playerB.user",
+      ],
     });
 
     if (!match) {
-      throw new NotFoundException('Match non trouvé');
+      throw new NotFoundException("Match non trouvé");
     }
 
     // Vérifier si l'utilisateur est un organisateur du tournoi
@@ -57,8 +57,8 @@ export class MatchPermissionGuard implements CanActivate {
       where: {
         tournament: { id: match.tournament.id },
         user: { id: user.id },
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     if (organizer) {
@@ -72,19 +72,19 @@ export class MatchPermissionGuard implements CanActivate {
     if (isPlayerA || isPlayerB) {
       // Les joueurs peuvent seulement reporter des scores, pas reset
       const action = this.getActionFromRequest(request);
-      return action === 'report-score';
+      return action === "report-score";
     }
 
     throw new ForbiddenException(
-      "Vous n'avez pas les permissions pour effectuer cette action sur ce match"
+      "Vous n'avez pas les permissions pour effectuer cette action sur ce match",
     );
   }
 
   private getActionFromRequest(request: Request): string {
     const path = (request.route?.path as string) || request.url;
-    if (path?.includes('report-score')) return 'report-score';
-    if (path?.includes('reset')) return 'reset';
-    if (path?.includes('start')) return 'start';
-    return 'unknown';
+    if (path?.includes("report-score")) return "report-score";
+    if (path?.includes("reset")) return "reset";
+    if (path?.includes("start")) return "start";
+    return "unknown";
   }
 }

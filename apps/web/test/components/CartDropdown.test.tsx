@@ -130,7 +130,7 @@ describe("CartDropdown", () => {
     const totalValue =
       currencyStore.convertPrice(10, Currency.USD) * 2 +
       currencyStore.convertPrice(5, Currency.EUR) * 1;
-    
+
     // Use formatPrice from the store to get the exact formatted value
     const expectedTotal = currencyStore.formatPrice(totalValue, Currency.EUR);
     // Find the total in the price display span (text-lg font-bold)
@@ -150,7 +150,11 @@ describe("CartDropdown", () => {
         id: 2,
         listing: baseListing({
           id: 2,
-          pokemonCard: { id: "card-2", name: "Mew", set: { id: "base", name: "Base" } },
+          pokemonCard: {
+            id: "card-2",
+            name: "Mew",
+            set: { id: "base", name: "Base" },
+          },
         }),
         quantity: 1,
         createdAt: new Date(),

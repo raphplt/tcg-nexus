@@ -1,28 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PokemonCard } from '../pokemon-card/entities/pokemon-card.entity';
-import { Tournament } from '../tournament/entities/tournament.entity';
-import { Player } from '../player/entities/player.entity';
-import { Listing } from '../marketplace/entities/listing.entity';
-import { User } from '../user/entities/user.entity';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Card } from "../card/entities/card.entity";
+import { CardGame } from "../common/enums/cardGame";
+import { Tournament } from "../tournament/entities/tournament.entity";
+import { Player } from "../player/entities/player.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { User } from "../user/entities/user.entity";
 import {
   GlobalSearchDto,
   SearchResultItem,
-  GlobalSearchResult
-} from './dto/global-search.dto';
+  GlobalSearchResult,
+} from "./dto/global-search.dto";
 import {
   SuggestionsPreviewResult,
   SuggestionsDetailResult,
   SuggestionPreviewItem,
-  SuggestionDetailItem
-} from './dto/suggestions.dto';
+  SuggestionDetailItem,
+} from "./dto/suggestions.dto";
 
 @Injectable()
 export class SearchService {
   constructor(
-    @InjectRepository(PokemonCard)
-    private readonly pokemonCardRepository: Repository<PokemonCard>,
+    @InjectRepository(Card)
+    private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Tournament)
     private readonly tournamentRepository: Repository<Tournament>,
     @InjectRepository(Player)
@@ -30,18 +31,18 @@ export class SearchService {
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async globalSearch(searchDto: GlobalSearchDto): Promise<GlobalSearchResult> {
     const startTime = Date.now();
     const {
       query,
-      type = 'all',
+      type = "all",
       page = 1,
       limit = 10,
-      sortBy = 'relevance',
-      sortOrder = 'DESC'
+      sortBy = "relevance",
+      sortOrder = "DESC",
     } = searchDto;
 
     if (!query || query.trim().length < 2) {
@@ -52,7 +53,7 @@ export class SearchService {
         limit,
         totalPages: 0,
         query,
-        searchTime: Date.now() - startTime
+        searchTime: Date.now() - startTime,
       };
     }
 
@@ -61,28 +62,28 @@ export class SearchService {
     const results: SearchResultItem[] = [];
 
     // Recherche dans les cartes Pokémon
-    if (type === 'all' || type === 'cards') {
+    if (type === "all" || type === "cards") {
       const cardResults = await this.searchPokemonCards(searchTerm, limit);
       results.push(...cardResults);
     }
 
     // Recherche dans les tournois
-    if (type === 'all' || type === 'tournaments') {
+    if (type === "all" || type === "tournaments") {
       const tournamentResults = await this.searchTournaments(searchTerm, limit);
       results.push(...tournamentResults);
     }
 
     // Recherche dans les joueurs
-    if (type === 'all' || type === 'players') {
+    if (type === "all" || type === "players") {
       const playerResults = await this.searchPlayers(searchTerm, limit);
       results.push(...playerResults);
     }
 
     // Recherche dans le marketplace
-    if (type === 'all' || type === 'marketplace') {
+    if (type === "all" || type === "marketplace") {
       const marketplaceResults = await this.searchMarketplace(
         searchTerm,
-        limit
+        limit,
       );
       results.push(...marketplaceResults);
     }
@@ -102,61 +103,62 @@ export class SearchService {
       limit,
       totalPages,
       query,
-      searchTime: Date.now() - startTime
+      searchTime: Date.now() - startTime,
     };
   }
 
   private async searchPokemonCards(
     query: string,
-    limit: number
+    limit: number,
   ): Promise<SearchResultItem[]> {
     const cards = await this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.rarity ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.description ILIKE :query', { query: `%${query}%` })
-      .orWhere('set.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('card.illustrator ILIKE :query', { query: `%${query}%` })
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere(
+        "(card.name ILIKE :query OR card.rarity ILIKE :query OR pokemonDetails.description ILIKE :query OR set.name ILIKE :query OR card.illustrator ILIKE :query)",
+        { query: `%${query}%` },
+      )
       .limit(limit)
       .getMany();
 
     return cards.map((card) => ({
       id: card.id,
-      type: 'card' as const,
-      title: card.name || 'Carte sans nom',
-      description: `${card.rarity || 'Rareté inconnue'} • ${card.set?.name || 'Set inconnu'}`,
+      type: "card" as const,
+      title: card.name || "Carte sans nom",
+      description: `${card.rarity || "Rareté inconnue"} • ${card.set?.name || "Set inconnu"}`,
       url: `/pokemon/${card.id}`,
       image: card.image,
       metadata: {
         rarity: card.rarity,
         set: card.set?.name,
         illustrator: card.illustrator,
-        category: card.category,
-        hp: card.hp,
-        types: card.types
-      }
+        category: card.pokemonDetails?.category ?? card.category,
+        hp: card.pokemonDetails?.hp,
+        types: card.pokemonDetails?.types,
+      },
     }));
   }
 
   private async searchTournaments(
     query: string,
-    limit: number
+    limit: number,
   ): Promise<SearchResultItem[]> {
     const tournaments = await this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .leftJoinAndSelect('tournament.players', 'players')
-      .where('tournament.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('tournament.description ILIKE :query', { query: `%${query}%` })
-      .orWhere('tournament.location ILIKE :query', { query: `%${query}%` })
+      .createQueryBuilder("tournament")
+      .leftJoinAndSelect("tournament.players", "players")
+      .where("tournament.name ILIKE :query", { query: `%${query}%` })
+      .orWhere("tournament.description ILIKE :query", { query: `%${query}%` })
+      .orWhere("tournament.location ILIKE :query", { query: `%${query}%` })
       .limit(limit)
       .getMany();
 
     return tournaments.map((tournament) => ({
       id: tournament.id,
-      type: 'tournament' as const,
+      type: "tournament" as const,
       title: tournament.name,
-      description: `${tournament.location || 'Lieu non spécifié'} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
+      description: `${tournament.location || "Lieu non spécifié"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
       url: `/tournaments/${tournament.id}`,
       metadata: {
         status: tournament.status,
@@ -165,59 +167,59 @@ export class SearchService {
         startDate: tournament.startDate,
         endDate: tournament.endDate,
         playerCount: tournament.players?.length || 0,
-        isPublic: tournament.isPublic
-      }
+        isPublic: tournament.isPublic,
+      },
     }));
   }
 
   private async searchPlayers(
     query: string,
-    limit: number
+    limit: number,
   ): Promise<SearchResultItem[]> {
     const players = await this.playerRepository
-      .createQueryBuilder('player')
-      .leftJoinAndSelect('player.user', 'user')
-      .leftJoinAndSelect('player.tournaments', 'tournaments')
-      .where('user.firstName ILIKE :query', { query: `%${query}%` })
-      .orWhere('user.lastName ILIKE :query', { query: `%${query}%` })
-      .orWhere('user.email ILIKE :query', { query: `%${query}%` })
+      .createQueryBuilder("player")
+      .leftJoinAndSelect("player.user", "user")
+      .leftJoinAndSelect("player.tournaments", "tournaments")
+      .where("user.firstName ILIKE :query", { query: `%${query}%` })
+      .orWhere("user.lastName ILIKE :query", { query: `%${query}%` })
+      .orWhere("user.email ILIKE :query", { query: `%${query}%` })
       .limit(limit)
       .getMany();
 
     return players.map((player) => ({
       id: player.id,
-      type: 'player' as const,
+      type: "player" as const,
       title:
-        `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim(),
-      description: `${player.user?.email || ''} • ${player.tournaments?.length || 0} tournois`,
+        `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
+      description: `${player.user?.email || ""} • ${player.tournaments?.length || 0} tournois`,
       url: `/players/${player.id}`,
       metadata: {
         userId: player.user?.id,
         email: player.user?.email,
-        tournamentCount: player.tournaments?.length || 0
-      }
+        tournamentCount: player.tournaments?.length || 0,
+      },
     }));
   }
 
   private async searchMarketplace(
     query: string,
-    limit: number
+    limit: number,
   ): Promise<SearchResultItem[]> {
     const listings = await this.listingRepository
-      .createQueryBuilder('listing')
-      .leftJoinAndSelect('listing.pokemonCard', 'pokemonCard')
-      .leftJoinAndSelect('listing.seller', 'seller')
-      .leftJoinAndSelect('pokemonCard.set', 'set')
-      .where('pokemonCard.name ILIKE :query', { query: `%${query}%` })
-      .orWhere('listing.description ILIKE :query', { query: `%${query}%` })
-      .orWhere('seller.firstName ILIKE :query', { query: `%${query}%` })
-      .orWhere('seller.lastName ILIKE :query', { query: `%${query}%` })
+      .createQueryBuilder("listing")
+      .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
+      .leftJoinAndSelect("listing.seller", "seller")
+      .leftJoinAndSelect("pokemonCard.set", "set")
+      .where("pokemonCard.name ILIKE :query", { query: `%${query}%` })
+      .orWhere("listing.description ILIKE :query", { query: `%${query}%` })
+      .orWhere("seller.firstName ILIKE :query", { query: `%${query}%` })
+      .orWhere("seller.lastName ILIKE :query", { query: `%${query}%` })
       .limit(limit)
       .getMany();
 
     return listings.map((listing) => ({
       id: listing.id,
-      type: 'marketplace' as const,
+      type: "marketplace" as const,
       title: `${listing.pokemonCard.name} - ${listing.price} ${listing.currency}`,
       description: `${listing.cardState} • ${listing.seller.firstName} ${listing.seller.lastName} • ${listing.quantityAvailable} disponible(s)`,
       url: `/marketplace/${listing.id}`,
@@ -229,20 +231,20 @@ export class SearchService {
         quantityAvailable: listing.quantityAvailable,
         seller: {
           id: listing.seller.id,
-          name: `${listing.seller.firstName} ${listing.seller.lastName}`
+          name: `${listing.seller.firstName} ${listing.seller.lastName}`,
         },
         pokemonCard: {
           id: listing.pokemonCard.id,
           name: listing.pokemonCard.name,
-          rarity: listing.pokemonCard.rarity
-        }
-      }
+          rarity: listing.pokemonCard.rarity,
+        },
+      },
     }));
   }
 
   private calculateRelevanceScores(
     results: SearchResultItem[],
-    query: string
+    query: string,
   ): SearchResultItem[] {
     const queryLower = query.toLowerCase();
 
@@ -266,9 +268,9 @@ export class SearchService {
       }
 
       // Bonus pour les correspondances partielles
-      const queryWords = queryLower.split(' ');
-      const titleWords = titleLower.split(' ');
-      const descriptionWords = descriptionLower.split(' ');
+      const queryWords = queryLower.split(" ");
+      const titleWords = titleLower.split(" ");
+      const descriptionWords = descriptionLower.split(" ");
 
       queryWords.forEach((queryWord) => {
         if (titleWords.some((word) => word.includes(queryWord))) {
@@ -281,7 +283,7 @@ export class SearchService {
 
       return {
         ...result,
-        relevanceScore: score
+        relevanceScore: score,
       };
     });
   }
@@ -289,33 +291,33 @@ export class SearchService {
   private sortResults(
     results: SearchResultItem[],
     sortBy: string,
-    sortOrder: 'ASC' | 'DESC'
+    sortOrder: "ASC" | "DESC",
   ): SearchResultItem[] {
     return results.sort((a, b) => {
       let comparison = 0;
 
       switch (sortBy) {
-        case 'relevance':
+        case "relevance":
           comparison = (b.relevanceScore || 0) - (a.relevanceScore || 0);
           break;
-        case 'title':
+        case "title":
           comparison = a.title.localeCompare(b.title);
           break;
-        case 'type':
+        case "type":
           comparison = a.type.localeCompare(b.type);
           break;
         default:
           comparison = (b.relevanceScore || 0) - (a.relevanceScore || 0);
       }
 
-      return sortOrder === 'ASC' ? comparison : -comparison;
+      return sortOrder === "ASC" ? comparison : -comparison;
     });
   }
 
   // Méthode pour obtenir des suggestions de recherche (legacy)
   async getSearchSuggestions(
     query: string,
-    limit: number = 5
+    limit: number = 5,
   ): Promise<string[]> {
     if (!query || query.trim().length < 2) {
       return [];
@@ -326,19 +328,24 @@ export class SearchService {
 
     // Suggestions basées sur les noms de cartes populaires
     const popularCards = await this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('card.name', 'ASC')
+      .createQueryBuilder("card")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("card.name", "ASC")
       .limit(limit)
       .getMany();
 
-    suggestions.push(...popularCards.map((card) => card.name));
+    suggestions.push(
+      ...popularCards
+        .map((card) => card.name)
+        .filter((name): name is string => Boolean(name)),
+    );
 
     // Suggestions basées sur les tournois récents
     const recentTournaments = await this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .where('tournament.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('tournament.createdAt', 'DESC')
+      .createQueryBuilder("tournament")
+      .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("tournament.createdAt", "DESC")
       .limit(limit)
       .getMany();
 
@@ -351,13 +358,13 @@ export class SearchService {
   // Méthode pour obtenir des suggestions preview (infos essentielles)
   async getSuggestionsPreview(
     query: string,
-    limit: number = 8
+    limit: number = 8,
   ): Promise<SuggestionsPreviewResult> {
     if (!query || query.trim().length < 2) {
       return {
         suggestions: [],
         total: 0,
-        query
+        query,
       };
     }
 
@@ -366,58 +373,60 @@ export class SearchService {
 
     // Suggestions basées sur les cartes Pokémon
     const cards = await this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('card.name', 'ASC')
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("card.name", "ASC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
     suggestions.push(
       ...cards.map((card) => ({
         id: card.id,
-        type: 'card' as const,
-        title: card.name || 'Carte sans nom',
-        subtitle: card.set?.name || 'Set inconnu',
-        image: card.image
-      }))
+        type: "card" as const,
+        title: card.name || "Carte sans nom",
+        subtitle: card.set?.name || "Set inconnu",
+        image: card.image,
+      })),
     );
 
     // Suggestions basées sur les tournois
     const tournaments = await this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .where('tournament.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('tournament.createdAt', 'DESC')
+      .createQueryBuilder("tournament")
+      .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("tournament.createdAt", "DESC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
     suggestions.push(
       ...tournaments.map((tournament) => ({
         id: tournament.id,
-        type: 'tournament' as const,
+        type: "tournament" as const,
         title: tournament.name,
-        subtitle: tournament.location || 'Lieu non spécifié'
-      }))
+        subtitle: tournament.location || "Lieu non spécifié",
+      })),
     );
 
     // Suggestions basées sur les joueurs
     const players = await this.playerRepository
-      .createQueryBuilder('player')
-      .leftJoinAndSelect('player.user', 'user')
-      .where('user.firstName ILIKE :query', { query: `%${searchTerm}%` })
-      .orWhere('user.lastName ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('user.firstName', 'ASC')
+      .createQueryBuilder("player")
+      .leftJoinAndSelect("player.user", "user")
+      .where("user.firstName ILIKE :query", { query: `%${searchTerm}%` })
+      .orWhere("user.lastName ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("user.firstName", "ASC")
       .limit(Math.ceil(limit / 4))
       .getMany();
 
     suggestions.push(
       ...players.map((player) => ({
         id: player.id,
-        type: 'player' as const,
+        type: "player" as const,
         title:
-          `${player.user?.firstName || ''} ${player.user?.lastName || ''}`.trim(),
-        subtitle: player.user?.email || ''
-      }))
+          `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
+        subtitle: player.user?.email || "",
+      })),
     );
 
     // Supprimer les doublons et limiter
@@ -425,27 +434,27 @@ export class SearchService {
       .filter(
         (item, index, self) =>
           index ===
-          self.findIndex((t) => t.id === item.id && t.type === item.type)
+          self.findIndex((t) => t.id === item.id && t.type === item.type),
       )
       .slice(0, limit);
 
     return {
       suggestions: uniqueSuggestions,
       total: uniqueSuggestions.length,
-      query
+      query,
     };
   }
 
   // Méthode pour obtenir des suggestions détaillées
   async getSuggestionsDetail(
     query: string,
-    limit: number = 5
+    limit: number = 5,
   ): Promise<SuggestionsDetailResult> {
     if (!query || query.trim().length < 2) {
       return {
         suggestions: [],
         total: 0,
-        query
+        query,
       };
     }
 
@@ -454,47 +463,49 @@ export class SearchService {
 
     // Suggestions basées sur les cartes Pokémon avec détails
     const cards = await this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .leftJoinAndSelect('card.set', 'set')
-      .where('card.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('card.name', 'ASC')
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon })
+      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("card.name", "ASC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
     suggestions.push(
       ...cards.map((card) => ({
         id: card.id,
-        type: 'card' as const,
-        title: card.name || 'Carte sans nom',
-        description: `${card.rarity || 'Rareté inconnue'} • ${card.set?.name || 'Set inconnu'}`,
+        type: "card" as const,
+        title: card.name || "Carte sans nom",
+        description: `${card.rarity || "Rareté inconnue"} • ${card.set?.name || "Set inconnu"}`,
         url: `/pokemon/${card.id}`,
         image: card.image,
         metadata: {
           rarity: card.rarity,
           set: card.set?.name,
           illustrator: card.illustrator,
-          category: card.category,
-          hp: card.hp,
-          types: card.types
-        }
-      }))
+          category: card.pokemonDetails?.category ?? card.category,
+          hp: card.pokemonDetails?.hp,
+          types: card.pokemonDetails?.types,
+        },
+      })),
     );
 
     // Suggestions basées sur les tournois avec détails
     const tournaments = await this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .leftJoinAndSelect('tournament.players', 'players')
-      .where('tournament.name ILIKE :query', { query: `%${searchTerm}%` })
-      .orderBy('tournament.createdAt', 'DESC')
+      .createQueryBuilder("tournament")
+      .leftJoinAndSelect("tournament.players", "players")
+      .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .orderBy("tournament.createdAt", "DESC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
     suggestions.push(
       ...tournaments.map((tournament) => ({
         id: tournament.id,
-        type: 'tournament' as const,
+        type: "tournament" as const,
         title: tournament.name,
-        description: `${tournament.location || 'Lieu non spécifié'} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
+        description: `${tournament.location || "Lieu non spécifié"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
         url: `/tournaments/${tournament.id}`,
         metadata: {
           status: tournament.status,
@@ -503,9 +514,9 @@ export class SearchService {
           startDate: tournament.startDate,
           endDate: tournament.endDate,
           playerCount: tournament.players?.length || 0,
-          isPublic: tournament.isPublic
-        }
-      }))
+          isPublic: tournament.isPublic,
+        },
+      })),
     );
 
     // Supprimer les doublons et limiter
@@ -513,14 +524,14 @@ export class SearchService {
       .filter(
         (item, index, self) =>
           index ===
-          self.findIndex((t) => t.id === item.id && t.type === item.type)
+          self.findIndex((t) => t.id === item.id && t.type === item.type),
       )
       .slice(0, limit);
 
     return {
       suggestions: uniqueSuggestions,
       total: uniqueSuggestions.length,
-      query
+      query,
     };
   }
 }

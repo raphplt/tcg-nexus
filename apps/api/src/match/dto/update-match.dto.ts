@@ -1,7 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateMatchDto } from './create-match.dto';
-import { IsOptional, IsNumber, IsEnum, Min } from 'class-validator';
-import { MatchStatus } from '../entities/match.entity';
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateMatchDto } from "./create-match.dto";
+import { IsOptional, IsNumber, IsEnum, Min } from "class-validator";
+import { MatchStatus } from "../entities/match.entity";
 
 export class UpdateMatchDto extends PartialType(CreateMatchDto) {
   @IsOptional()

@@ -4,9 +4,9 @@ import {
   IsEnum,
   IsString,
   Min,
-  IsBoolean
-} from 'class-validator';
-import { MatchStatus } from '../entities/match.entity';
+  IsBoolean,
+} from "class-validator";
+import { MatchStatus } from "../entities/match.entity";
 
 export class ReportScoreDto {
   @IsNumber()

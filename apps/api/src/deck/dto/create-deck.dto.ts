@@ -5,10 +5,10 @@ import {
   IsNotEmpty,
   IsString,
   IsUUID,
-  ValidateNested
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { DeckCardRole } from '../../common/enums/deckCardRole';
+  ValidateNested,
+} from "class-validator";
+import { Type } from "class-transformer";
+import { DeckCardRole } from "../../common/enums/deckCardRole";
 
 class DeckCardInputDto {
   @IsUUID()

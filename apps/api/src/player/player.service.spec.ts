@@ -1,21 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { PlayerService } from './player.service';
-import { Player } from './entities/player.entity';
-import { Ranking } from 'src/ranking/entities/ranking.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Ranking } from "src/ranking/entities/ranking.entity";
+import { Player } from "./entities/player.entity";
+import { PlayerService } from "./player.service";
 
-describe('PlayerService', () => {
+describe("PlayerService", () => {
   let service: PlayerService;
   const playerRepo = {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
-    remove: jest.fn()
+    remove: jest.fn(),
   };
   const rankingRepo = {
     find: jest.fn(),
-    createQueryBuilder: jest.fn()
+    createQueryBuilder: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -23,19 +23,19 @@ describe('PlayerService', () => {
       providers: [
         PlayerService,
         { provide: getRepositoryToken(Player), useValue: playerRepo },
-        { provide: getRepositoryToken(Ranking), useValue: rankingRepo }
-      ]
+        { provide: getRepositoryToken(Ranking), useValue: rankingRepo },
+      ],
     }).compile();
 
     service = module.get<PlayerService>(PlayerService);
     jest.clearAllMocks();
   });
 
-  it('returns empty history when no rankings', async () => {
+  it("returns empty history when no rankings", async () => {
     playerRepo.findOne.mockResolvedValue({ id: 1, user: { id: 1 } });
     rankingRepo.find.mockResolvedValue([]);
 
-    const result = await service.getTournamentHistory(1, 'all');
+    const result = await service.getTournamentHistory(1, "all");
 
     expect(result.playerId).toBe(1);
     expect(result.history).toHaveLength(0);

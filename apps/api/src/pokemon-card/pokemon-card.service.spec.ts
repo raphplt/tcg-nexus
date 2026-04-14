@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PokemonCardService } from './pokemon-card.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { PokemonCard } from './entities/pokemon-card.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { PokemonCardService } from "./pokemon-card.service";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Card } from "src/card/entities/card.entity";
+import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 
-describe('PokemonCardService', () => {
+describe("PokemonCardService", () => {
   let service: PokemonCardService;
 
   const mockRepository = {
@@ -23,8 +24,12 @@ describe('PokemonCardService', () => {
       orderBy: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
       getOne: jest.fn(),
-      getMany: jest.fn()
-    }))
+      getMany: jest.fn(),
+    })),
+  };
+  const mockDetailsRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -32,16 +37,20 @@ describe('PokemonCardService', () => {
       providers: [
         PokemonCardService,
         {
-          provide: getRepositoryToken(PokemonCard),
-          useValue: mockRepository
-        }
-      ]
+          provide: getRepositoryToken(Card),
+          useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(PokemonCardDetails),
+          useValue: mockDetailsRepository,
+        },
+      ],
     }).compile();
 
     service = module.get<PokemonCardService>(PokemonCardService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 });

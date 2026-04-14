@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -20,8 +20,10 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import Image from "next/image";
+import { getCardImage } from "@/utils/images";
 
 const CartDropdown = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const { cart, isLoading, fetchCart, removeItem } = useCartStore();
   const { formatPrice, currency } = useCurrencyStore();
   const itemsCount = useCartItemsCount();
@@ -34,17 +36,14 @@ const CartDropdown = () => {
   const cartItems = cart?.cartItems || [];
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 w-8 rounded-full p-0 relative"
-        >
+        <Button variant="ghost" className="h-8 w-8 rounded-full p-0 relative">
           <ShoppingCart className="h-4 w-4" />
           {itemsCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs "
             >
               {itemsCount}
             </Badge>
@@ -77,19 +76,13 @@ const CartDropdown = () => {
                   className="flex items-start gap-3 p-3 cursor-default"
                   onSelect={(e) => e.preventDefault()}
                 >
-                  <div className="relative w-12 h-16 flex-shrink-0">
-                    {item.listing.pokemonCard.image ? (
-                      <Image
-                        src={item.listing.pokemonCard.image + "/high.png"}
-                        alt={item.listing.pokemonCard.name || "Carte"}
-                        fill
-                        className="object-contain rounded"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted rounded flex items-center justify-center text-xs">
-                        No Image
-                      </div>
-                    )}
+                  <div className="relative w-12 h-16 shrink-0">
+                    <Image
+                      src={getCardImage(item.listing.pokemonCard)}
+                      alt={item.listing.pokemonCard.name || "Carte"}
+                      fill
+                      className="object-contain rounded"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
@@ -108,7 +101,7 @@ const CartDropdown = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 flex-shrink-0"
+                    className="h-6 w-6 shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeItem(item.id);
@@ -127,14 +120,11 @@ const CartDropdown = () => {
                   {formatPrice(total, currency)}
                 </span>
               </div>
-              <Link href="/cart">
-                <Button
-                  className="w-full"
-                  size="sm"
-                >
+              <Button asChild className="w-full" size="sm">
+                <Link href="/cart" onClick={() => setIsOpen(false)}>
                   Voir le panier
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </>
         )}

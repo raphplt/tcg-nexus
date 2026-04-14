@@ -1,6 +1,6 @@
 export interface SuggestionPreviewItem {
   id: string | number;
-  type: 'card' | 'tournament' | 'player' | 'marketplace';
+  type: "card" | "tournament" | "player" | "marketplace";
   title: string;
   subtitle?: string;
   image?: string;
@@ -8,7 +8,7 @@ export interface SuggestionPreviewItem {
 
 export interface SuggestionDetailItem {
   id: string | number;
-  type: 'card' | 'tournament' | 'player' | 'marketplace';
+  type: "card" | "tournament" | "player" | "marketplace";
   title: string;
   description: string;
   url: string;

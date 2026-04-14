@@ -36,7 +36,7 @@ export function SellerCard({
       <Card
         className={cn(
           "group hover:shadow-lg transition-all duration-200 cursor-pointer",
-          className
+          className,
         )}
       >
         <CardContent className="p-4">
@@ -79,4 +79,3 @@ export function SellerCard({
     </Link>
   );
 }
-

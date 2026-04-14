@@ -51,16 +51,8 @@ const TournamentPreview = () => {
           </div>
         ) : null}
       </div>
-      <Button
-        variant="outline"
-        asChild
-        size="sm"
-        className="w-full mt-4"
-      >
-        <Link
-          href="/tournaments"
-          className="flex items-center gap-2"
-        >
+      <Button variant="outline" asChild size="sm" className="w-full mt-4">
+        <Link href="/tournaments" className="flex items-center gap-2">
           Voir tous les tournois
           <ArrowRight className="mr-2 w-4 h-4" />
         </Link>
