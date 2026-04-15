@@ -126,26 +126,51 @@ export default function DeckDetailsPage() {
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
-        scale: 2, // Higher quality
+        scale: 3, // Premium quality
         logging: false,
+        onclone: (clonedDoc) => {
+          Array.from(clonedDoc.styleSheets).forEach((sheet) => {
+            try {
+              for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+                const rule = sheet.cssRules[i];
+                if (
+                  rule.cssText.includes("oklch(") ||
+                  rule.cssText.includes("lab(")
+                ) {
+                  sheet.deleteRule(i);
+                }
+              }
+            } catch (e) {
+              // Ignore cross-origin stylesheet errors
+            }
+          });
+        },
       });
 
       const fileName = `${deck.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}`;
 
       if (format === "png") {
-        const image = canvas.toDataURL("image/png");
+        const image = canvas.toDataURL("image/png", 1.0);
         const link = document.createElement("a");
         link.href = image;
         link.download = `${fileName}.png`;
         link.click();
       } else if (format === "pdf") {
-        const imgData = canvas.toDataURL("image/png");
+        const imgData = canvas.toDataURL("image/png", 1.0);
+        
+        // A4 proportions: 210mm x 297mm
         const pdf = new jsPDF({
           orientation: "portrait",
-          unit: "px",
-          format: [canvas.width, canvas.height],
+          unit: "mm",
+          format: "a4",
         });
-        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        // Add image with small top margin
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         pdf.save(`${fileName}.pdf`);
       }
 

@@ -37,58 +37,98 @@ export const DeckExportTemplate = forwardRef<HTMLDivElement, DeckExportTemplateP
     return (
       <div 
         ref={ref} 
-        className="p-8 bg-white text-black font-sans" 
-        style={{ width: "800px", minHeight: "1100px" }}
+        data-export-root
+        className="p-10 bg-slate-950 text-white font-sans" 
+        style={{ 
+          width: "1000px", // Wider for a nice grid
+          minHeight: "800px",
+          "--background": "#020617",
+          "--foreground": "#ffffff",
+        } as React.CSSProperties}
       >
-        {/* Header */}
-        <div className="border-b-2 border-primary pb-4 mb-6">
-          <h1 className="text-3xl font-bold uppercase tracking-tight">{deck.name}</h1>
-          <div className="flex justify-between items-center mt-2 text-sm text-gray-600">
-            <div className="flex gap-4">
-              <span><strong>Format:</strong> {deck.format?.type}</span>
-              <span><strong>Auteur:</strong> {deck.user?.firstName} {deck.user?.lastName}</span>
+        <style dangerouslySetInnerHTML={{ __html: `
+          [data-export-root], [data-export-root] * {
+            --background: #020617 !important;
+            --foreground: #ffffff !important;
+            background-color: transparent;
+            color: #ffffff !important;
+          }
+          .card-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+          }
+          .card-container {
+            position: relative;
+            aspect-ratio: 2.5/3.5;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background: #1e293b;
+          }
+          .card-qty-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 10;
+          }
+          .deck-title {
+            font-size: 32px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            margin-bottom: 30px;
+            padding-left: 0;
+          }
+        ` }} />
+
+        <div className="deck-title">
+          {deck.name}
+          <div className="text-sm font-medium opacity-50 mt-1 uppercase tracking-widest">
+            {deck.format?.type} • {totalMain} CARTES
+          </div>
+        </div>
+
+        <div className="card-grid">
+          {mainCards.map((deckCard) => (
+            <div key={deckCard.id} className="card-container">
+              <img
+                src={getCardImage(deckCard.card, "high")}
+                alt={deckCard.card?.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="card-qty-badge">×{deckCard.qty}</div>
             </div>
-            <span>{new Date().toLocaleDateString("fr-FR")}</span>
-          </div>
+          ))}
         </div>
 
-        {/* Stats Summary */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-100 p-3 rounded text-center">
-            <div className="text-sm text-gray-500 uppercase">Total</div>
-            <div className="text-xl font-bold">{totalMain}</div>
+        {sideCards.length > 0 && (
+          <div className="mt-16">
+            <div className="text-xl font-black uppercase mb-6 opacity-30 tracking-tighter">Reserve / Side Deck</div>
+            <div className="card-grid">
+              {sideCards.map((deckCard) => (
+                <div key={deckCard.id} className="card-container opacity-80">
+                  <img
+                    src={getCardImage(deckCard.card, "high")}
+                    alt={deckCard.card?.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="card-qty-badge">×{deckCard.qty}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="bg-gray-100 p-3 rounded text-center">
-            <div className="text-sm text-gray-500 uppercase">Pokémon</div>
-            <div className="text-xl font-bold">{pokemonCards.reduce((acc, c) => acc + c.qty, 0)}</div>
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-center">
-            <div className="text-sm text-gray-500 uppercase">Dresseurs</div>
-            <div className="text-xl font-bold">{trainerCards.reduce((acc, c) => acc + c.qty, 0)}</div>
-          </div>
-          <div className="bg-gray-100 p-3 rounded text-center">
-            <div className="text-sm text-gray-500 uppercase">Energies</div>
-            <div className="text-xl font-bold">{energyCards.reduce((acc, c) => acc + c.qty, 0)}</div>
-          </div>
-        </div>
+        )}
 
-        {/* Layout: 2 columns for card lists */}
-        <div className="grid grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <CategorySection title="Pokémon" cards={pokemonCards} includeImages={includeImages} />
-            <CategorySection title="Energies" cards={energyCards} includeImages={includeImages} />
-          </div>
-          <div className="space-y-6">
-            <CategorySection title="Dresseurs" cards={trainerCards} includeImages={includeImages} />
-            {otherCards.length > 0 && <CategorySection title="Autres" cards={otherCards} includeImages={includeImages} />}
-            {sideCards.length > 0 && <CategorySection title="Reserve (Side)" cards={sideCards} includeImages={includeImages} />}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-12 pt-4 border-t text-xs text-gray-400 flex justify-between">
-          <div>Généré via TCG Nexus - Votre plateforme TCG</div>
-          <div>https://tcg-nexus.org</div>
+        <div className="mt-16 pt-8 border-t border-white/10 text-right text-xs font-bold uppercase tracking-widest opacity-30">
+          Generated via TCG Nexus
         </div>
       </div>
     );
@@ -96,49 +136,3 @@ export const DeckExportTemplate = forwardRef<HTMLDivElement, DeckExportTemplateP
 );
 
 DeckExportTemplate.displayName = "DeckExportTemplate";
-
-function CategorySection({ 
-  title, 
-  cards, 
-  includeImages 
-}: { 
-  title: string; 
-  cards: any[]; 
-  includeImages: boolean 
-}) {
-  if (cards.length === 0) return null;
-
-  const total = cards.reduce((acc, c) => acc + c.qty, 0);
-
-  return (
-    <div>
-      <h2 className="text-lg font-bold border-b mb-3 flex justify-between">
-        <span>{title}</span>
-        <span className="text-gray-400 font-normal">{total}</span>
-      </h2>
-      <div className="space-y-2">
-        {cards.map((deckCard) => (
-          <div key={deckCard.id} className="flex items-center gap-2">
-            <div className="font-bold w-6 text-right shrink-0">{deckCard.qty}x</div>
-            {includeImages && (
-              <div className="w-8 h-11 relative bg-gray-100 rounded overflow-hidden shrink-0 border">
-                <img
-                  src={getCardImage(deckCard.card, "low")}
-                  alt=""
-                  className="object-contain w-full h-full"
-                />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{deckCard.card?.name}</div>
-              <div className="text-[10px] text-gray-500 flex gap-2">
-                <span>{deckCard.card?.set?.name}</span>
-                <span>{deckCard.card?.set?.id}-{deckCard.card?.localId}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

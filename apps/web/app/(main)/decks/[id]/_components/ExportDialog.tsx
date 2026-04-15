@@ -17,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FileDown, Image as ImageIcon, FileJson, Loader2 } from "lucide-react";
 
@@ -39,10 +38,8 @@ export function ExportDialog({
   deckName,
 }: ExportDialogProps) {
   const [format, setFormat] = useState<ExportFormat>("pdf");
-  const [includeImages, setIncludeImages] = useState(true);
-
   const handleExport = () => {
-    onExport(format, includeImages);
+    onExport(format, true);
   };
 
   return (
@@ -88,26 +85,6 @@ export function ExportDialog({
             </Select>
           </div>
 
-          {(format === "pdf" || format === "png") && (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="include-images"
-                checked={includeImages}
-                onCheckedChange={(checked) => setIncludeImages(!!checked)}
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label
-                  htmlFor="include-images"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Inclure les images des cartes
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  L'exportation peut prendre plus de temps avec les images.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
