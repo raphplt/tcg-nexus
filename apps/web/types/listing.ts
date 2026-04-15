@@ -2,11 +2,7 @@ import { CardState } from "@/utils/enums";
 import { Currency } from "@/store/currency.store";
 import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
-import {
-  ProductKind,
-  SealedCondition,
-  SealedProduct,
-} from "./sealed-product";
+import { ProductKind, SealedCondition, SealedProduct } from "./sealed-product";
 
 export interface Listing {
   id: number;

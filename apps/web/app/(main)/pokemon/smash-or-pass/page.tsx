@@ -69,8 +69,7 @@ function usePokemonSets() {
   });
 }
 
-const wait = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function FilterSelect({
   label,
@@ -102,11 +101,7 @@ function FilterSelect({
   );
 }
 
-function SwipeOverlay({
-  direction,
-}: {
-  direction: "left" | "right" | null;
-}) {
+function SwipeOverlay({ direction }: { direction: "left" | "right" | null }) {
   if (!direction) return null;
 
   return (
@@ -245,9 +240,7 @@ export default function PokemonMatchPage() {
   const { data: series = [] } = usePokemonSeries();
   const { data: sets = [] } = usePokemonSets();
 
-  const [direction, setDirection] = useState<"left" | "right" | null>(
-    null,
-  );
+  const [direction, setDirection] = useState<"left" | "right" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedSerie, setSelectedSerie] = useState("None");
   const [selectedRarity, setSelectedRarity] = useState<string>("None");
@@ -277,8 +270,7 @@ export default function PokemonMatchPage() {
           label: "Série",
           value:
             sets.find(
-              (set: PokemonSetType) =>
-                set.id.toString() === selectedSet,
+              (set: PokemonSetType) => set.id.toString() === selectedSet,
             )?.name ?? selectedSet,
         }
       : null,
@@ -326,10 +318,7 @@ export default function PokemonMatchPage() {
         try {
           await pokemonCardService.addToWishlist(user.id, card.id);
         } catch (error) {
-          console.error(
-            "Erreur lors de l'ajout à la wishlist :",
-            error,
-          );
+          console.error("Erreur lors de l'ajout à la wishlist :", error);
         }
       }
 
@@ -385,9 +374,7 @@ export default function PokemonMatchPage() {
                 <Heart className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <H1 className="text-lg! sm:text-xl!">
-                  Smash or Pass
-                </H1>
+                <H1 className="text-lg! sm:text-xl!">Smash or Pass</H1>
                 <p className="text-[11px] text-muted-foreground sm:text-xs">
                   Swipe pour ajouter à ta wishlist
                 </p>
@@ -403,10 +390,7 @@ export default function PokemonMatchPage() {
                   {activeFilters.length > 1 ? "s" : ""}
                 </Badge>
               )}
-              <Dialog
-                open={isFiltersOpen}
-                onOpenChange={setIsFiltersOpen}
-              >
+              <Dialog open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
@@ -423,8 +407,8 @@ export default function PokemonMatchPage() {
                       Affiner la découverte
                     </DialogTitle>
                     <DialogDescription>
-                      Choisis un bloc, une rareté ou une série pour
-                      filtrer les cartes.
+                      Choisis un bloc, une rareté ou une série pour filtrer les
+                      cartes.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
@@ -434,14 +418,9 @@ export default function PokemonMatchPage() {
                       placeholder="Choisir un bloc"
                       onValueChange={setSelectedSerie}
                     >
-                      <SelectItem value="None">
-                        Aucun filtre
-                      </SelectItem>
+                      <SelectItem value="None">Aucun filtre</SelectItem>
                       {series.map((serie: PokemonSerieType) => (
-                        <SelectItem
-                          key={serie.id}
-                          value={serie.id.toString()}
-                        >
+                        <SelectItem key={serie.id} value={serie.id.toString()}>
                           {serie.name}
                         </SelectItem>
                       ))}
@@ -453,9 +432,7 @@ export default function PokemonMatchPage() {
                       placeholder="Choisir une rareté"
                       onValueChange={setSelectedRarity}
                     >
-                      <SelectItem value="None">
-                        Aucun filtre
-                      </SelectItem>
+                      <SelectItem value="None">Aucun filtre</SelectItem>
                       {Object.values(PokemonRarity).map((rarity) => (
                         <SelectItem key={rarity} value={rarity}>
                           {rarity}
@@ -469,14 +446,9 @@ export default function PokemonMatchPage() {
                       placeholder="Choisir une série"
                       onValueChange={setSelectedSet}
                     >
-                      <SelectItem value="None">
-                        Aucun filtre
-                      </SelectItem>
+                      <SelectItem value="None">Aucun filtre</SelectItem>
                       {sets.map((set: PokemonSetType) => (
-                        <SelectItem
-                          key={set.id}
-                          value={set.id.toString()}
-                        >
+                        <SelectItem key={set.id} value={set.id.toString()}>
                           {set.name}
                         </SelectItem>
                       ))}

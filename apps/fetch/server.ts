@@ -302,7 +302,10 @@ app.get(
 
 // Init Puppeteer au démarrage pour les routes pokecardex
 pokecardexService.init().catch((err) => {
-  console.warn("Pokecardex browser init failed (scrape routes will retry):", err.message);
+  console.warn(
+    "Pokecardex browser init failed (scrape routes will retry):",
+    err.message,
+  );
 });
 
 // Démarrage du serveur
