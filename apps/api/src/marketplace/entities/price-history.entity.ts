@@ -1,15 +1,15 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  JoinColumn,
-  Index,
-} from "typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { Currency } from "src/common/enums/currency";
 import { CardState } from "src/common/enums/pokemonCardsType";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 @Index(["pokemonCard", "recordedAt"])

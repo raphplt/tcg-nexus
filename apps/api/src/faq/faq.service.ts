@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Faq } from "./entities/faq.entity";
 import { GetFaqDto } from "./dto/get-faq.dto";
+import { Faq } from "./entities/faq.entity";
 
 @Injectable()
 export class FaqService {

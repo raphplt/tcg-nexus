@@ -1,38 +1,42 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Injectable,
   Logger,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, MoreThan, FindOptionsWhere, DataSource } from "typeorm";
-import { Listing } from "./entities/listing.entity";
-import { PriceHistory } from "./entities/price-history.entity";
-import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { UpdateListingDto } from "./dto/update-marketplace.dto";
-import { User } from "../user/entities/user.entity";
-import { PaginationHelper, PaginatedResult } from "../helpers/pagination";
-import { Card } from "../card/entities/card.entity";
-import { Order, OrderStatus } from "./entities/order.entity";
 import { UserRole } from "src/common/enums/user";
-import { CreateOrderDto } from "./dto/create-order.dto";
-import { StripeService } from "./stripe.service";
+import { DataSource, FindOptionsWhere, MoreThan, Repository } from "typeorm";
+import { Card } from "../card/entities/card.entity";
+import { Currency } from "../common/enums/currency";
+import { ProductKind } from "../common/enums/product-kind";
+import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
+import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
 import { CardPopularityService } from "./card-popularity.service";
+import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
+import { CreateListingDto } from "./dto/create-marketplace.dto";
+import { CreateOrderDto } from "./dto/create-order.dto";
+import { UpdateListingDto } from "./dto/update-marketplace.dto";
+import { CardEventType } from "./entities/card-event.entity";
+import { Listing } from "./entities/listing.entity";
+import { Order, OrderStatus } from "./entities/order.entity";
+import { OrderItem } from "./entities/order-item.entity";
 import {
-  PaymentTransaction,
   PaymentMethod,
   PaymentStatus,
+  PaymentTransaction,
 } from "./entities/payment-transaction.entity";
-import { OrderItem } from "./entities/order-item.entity";
-import { CardEventType } from "./entities/card-event.entity";
-import { Currency } from "../common/enums/currency";
-import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
+import { PriceHistory } from "./entities/price-history.entity";
+import { StripeService } from "./stripe.service";
 
 export interface FindAllListingsParams {
   sellerId?: number;
   pokemonCardId?: string;
+  sealedProductId?: string;
+  productKind?: ProductKind;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -179,12 +183,14 @@ export class MarketplaceService {
       // Clear cart
       await this.userCartService.clearCart(user.id);
 
-      // Emit sale events for popularity tracking (fire-and-forget)
+      // Emit sale events for popularity tracking (fire-and-forget, cards only)
       for (const item of cart.cartItems) {
+        const cardId = item.listing.pokemonCard?.id;
+        if (!cardId) continue;
         this.cardPopularityService
           .recordEvent(
             {
-              cardId: item.listing.pokemonCard?.id,
+              cardId,
               eventType: CardEventType.SALE,
               context: { listingId: item.listing.id },
             },
@@ -229,19 +235,51 @@ export class MarketplaceService {
   }
 
   async create(createListingDto: CreateListingDto, user: User) {
-    if (!createListingDto.pokemonCardId) {
-      throw new BadRequestException("pokemonCardId is required");
+    const productKind = createListingDto.productKind ?? ProductKind.CARD;
+
+    if (productKind === ProductKind.CARD) {
+      if (!createListingDto.pokemonCardId) {
+        throw new BadRequestException(
+          "pokemonCardId is required for card listings",
+        );
+      }
+      if (!createListingDto.cardState) {
+        throw new BadRequestException(
+          "cardState is required for card listings",
+        );
+      }
+    } else {
+      if (!createListingDto.sealedProductId) {
+        throw new BadRequestException(
+          "sealedProductId is required for sealed listings",
+        );
+      }
     }
+
+    const {
+      pokemonCardId,
+      sealedProductId,
+      productKind: _kind,
+      ...rest
+    } = createListingDto;
+
     const listing = this.listingRepository.create({
-      ...createListingDto,
+      ...rest,
+      productKind,
       seller: user,
-      pokemonCard: { id: createListingDto.pokemonCardId },
+      pokemonCard: pokemonCardId ? ({ id: pokemonCardId } as Card) : null,
+      sealedProduct:
+        productKind === ProductKind.SEALED && sealedProductId
+          ? ({ id: sealedProductId } as SealedProduct)
+          : null,
     });
     const savedListing = await this.listingRepository.save(listing);
 
-    // Load full relations for price history
-    const listingWithRelations = await this.findOne(savedListing.id);
-    await this.recordPriceHistory(listingWithRelations);
+    // Load full relations for price history (skip pour les sealed pour l'instant)
+    if (productKind === ProductKind.CARD) {
+      const listingWithRelations = await this.findOne(savedListing.id);
+      await this.recordPriceHistory(listingWithRelations);
+    }
 
     return savedListing;
   }
@@ -252,6 +290,8 @@ export class MarketplaceService {
     const {
       sellerId,
       pokemonCardId,
+      sealedProductId,
+      productKind,
       page = 1,
       limit = 20,
       sortBy = "createdAt",
@@ -268,6 +308,8 @@ export class MarketplaceService {
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
+      .leftJoinAndSelect("listing.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
       .where("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
         now: new Date(),
       })
@@ -276,8 +318,14 @@ export class MarketplaceService {
     if (sellerId) {
       qb.andWhere("seller.id = :sellerId", { sellerId });
     }
+    if (productKind) {
+      qb.andWhere("listing.productKind = :productKind", { productKind });
+    }
     if (pokemonCardId) {
       qb.andWhere("pokemonCard.id = :pokemonCardId", { pokemonCardId });
+    }
+    if (sealedProductId) {
+      qb.andWhere("sealedProduct.id = :sealedProductId", { sealedProductId });
     }
     if (cardState) {
       qb.andWhere("listing.cardState = :cardState", { cardState });
@@ -320,6 +368,8 @@ export class MarketplaceService {
         "pokemonCard",
         "pokemonCard.set",
         "pokemonCard.set.serie",
+        "sealedProduct",
+        "sealedProduct.pokemonSet",
       ],
     });
     if (!listing) throw new NotFoundException("Listing not found");
@@ -779,14 +829,16 @@ export class MarketplaceService {
   }
 
   /**
-   * Record price history when listing is created/updated
+   * Record price history when listing is created/updated.
+   * Sealed listings ne sont pas trackés pour l'instant.
    */
   async recordPriceHistory(listing: Listing): Promise<void> {
+    if (!listing.pokemonCard) return;
     const priceHistory = this.priceHistoryRepository.create({
       pokemonCard: listing.pokemonCard,
       price: listing.price,
       currency: listing.currency,
-      cardState: listing.cardState,
+      cardState: listing.cardState ?? undefined,
       quantityAvailable: listing.quantityAvailable,
     });
     await this.priceHistoryRepository.save(priceHistory);

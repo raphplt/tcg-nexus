@@ -1,7 +1,8 @@
 import { Card } from "src/card/entities/card.entity";
-import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
-import { Entity, Column, PrimaryColumn, ManyToOne, OneToMany } from "typeorm";
 import { CardGame } from "src/common/enums/cardGame";
+import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
 
 /**
  * Objet embarqué pour le nombre de cartes dans le set
@@ -88,4 +89,10 @@ export class PokemonSet {
     },
   )
   cards: Card[];
+
+  @OneToMany(
+    () => SealedProduct,
+    (sealedProduct) => sealedProduct.pokemonSet,
+  )
+  sealedProducts: SealedProduct[];
 }

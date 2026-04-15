@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Player } from "../../player/entities/player.entity";
-import { Tournament } from "../entities/tournament.entity";
 import { Ranking } from "../../ranking/entities/ranking.entity";
+import { Tournament } from "../entities/tournament.entity";
 
 export enum SeedingMethod {
   RANDOM = "random",

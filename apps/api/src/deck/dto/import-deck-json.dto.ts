@@ -1,3 +1,5 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
@@ -9,9 +11,7 @@ import {
   Min,
   ValidateNested,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { DeckCardRole } from "../../common/enums/deckCardRole";
-import { ApiProperty } from "@nestjs/swagger";
 
 class ImportDeckCardDto {
   @ApiProperty({ example: "swsh4-185" })

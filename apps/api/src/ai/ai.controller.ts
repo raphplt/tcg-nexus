@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { AiService } from "./ai.service";
 import { AnalyzeDeckDto } from "./dto/analyze-deck.dto";
 

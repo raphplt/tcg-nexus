@@ -1,11 +1,11 @@
 "use client";
 
+import { ArrowLeft, ArrowRight, Eye, PenSquare } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { adminService, AdminOrderFilters } from "@/services/admin.service";
-import { Order, OrderStatus } from "@/types/order";
-import { PaginatedResult } from "@/types/pagination";
+import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -30,11 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { toast } from "react-hot-toast";
-import { Spinner } from "@/components/ui/spinner";
-import { ArrowLeft, ArrowRight, Eye, PenSquare } from "lucide-react";
+import { AdminOrderFilters, adminService } from "@/services/admin.service";
+import { Order, OrderStatus } from "@/types/order";
+import { PaginatedResult } from "@/types/pagination";
 
 const statusOptions = Object.values(OrderStatus);
 
@@ -307,10 +307,10 @@ export function AdminOrdersTable() {
                                     {selectedOrder.orderItems.map((item) => (
                                       <TableRow key={item.id}>
                                         <TableCell>
-                                          {item.listing.pokemonCard.name}
+                                          {item.listing.pokemonCard?.name}
                                         </TableCell>
                                         <TableCell>
-                                          {item.listing.cardState}
+                                          {item.listing.cardState ?? ""}
                                         </TableCell>
                                         <TableCell>{item.quantity}</TableCell>
                                         <TableCell>

@@ -1,11 +1,11 @@
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ThrottlerGuard } from "@nestjs/throttler";
+import { CollectionService } from "../collection/collection.service";
+import { UserService } from "../user/user.service";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { UserService } from "../user/user.service";
-import { JwtService } from "@nestjs/jwt";
-import { ConfigService } from "@nestjs/config";
-import { CollectionService } from "../collection/collection.service";
-import { ThrottlerGuard } from "@nestjs/throttler";
 
 describe("AuthController", () => {
   let controller: AuthController;

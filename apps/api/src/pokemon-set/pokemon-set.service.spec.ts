@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { PokemonSetService } from "./pokemon-set.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { PokemonSet } from "./entities/pokemon-set.entity";
+import { PokemonSetService } from "./pokemon-set.service";
 
 describe("PokemonSetService", () => {
   let service: PokemonSetService;

@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
-import { Tournament } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
+import { Player } from "../player/entities/player.entity";
+import { Tournament } from "../tournament/entities/tournament.entity";
 import { User } from "../user/entities/user.entity";
 import { SearchController } from "./search.controller";
 import { SearchService } from "./search.service";

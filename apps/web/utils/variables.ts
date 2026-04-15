@@ -1,5 +1,12 @@
 export const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+/**
+ * Base URL du CDN Cloudflare R2 hébergeant les images de produits scellés.
+ * Le bucket `poke-ventory` est mappé sur `https://cdn.tcg-nexus.org`.
+ */
+export const NEXT_PUBLIC_SEALED_CDN_URL =
+  process.env.NEXT_PUBLIC_SEALED_CDN_URL || "https://cdn.tcg-nexus.org";
+
 export const cardStates = [
   { label: "Near Mint", value: "NM" },
   { label: "Excellent", value: "EX" },

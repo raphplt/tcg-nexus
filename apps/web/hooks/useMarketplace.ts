@@ -1,14 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
+import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import {
+  BestSeller,
   marketplaceService,
   PopularCard,
   TrendingCard,
-  BestSeller,
 } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { PokemonSetType, PokemonSerieType } from "@/types/cardPokemon";
-import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { sealedProductService } from "@/services/sealed-product.service";
+import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
 import { PaginatedResult } from "@/types/pagination";
+import { SealedProduct } from "@/types/sealed-product";
 
 export interface FilterState {
   search: string;
@@ -59,15 +61,25 @@ export function useMarketplaceHome() {
     queryFn: () => pokemonCardService.getAllSets(20),
   });
 
+  // Récupère les produits scellés récents
+  const { data: sealedData, isLoading: loadingSealed } = useQuery<
+    PaginatedResult<SealedProduct>
+  >({
+    queryKey: ["sealed-products", "home"],
+    queryFn: () => sealedProductService.getPaginated({ limit: 8, page: 1 }),
+  });
+
   return {
     popularCards,
     trendingCards,
     bestSellers,
     sets,
+    sealedProducts: sealedData?.data,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
+    loadingSealed,
   };
 }
 

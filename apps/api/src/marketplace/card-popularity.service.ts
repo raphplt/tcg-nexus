@@ -1,13 +1,13 @@
-import { Injectable, Logger, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, Between, LessThanOrEqual } from "typeorm";
 import { createHash } from "crypto";
+import { Card } from "src/card/entities/card.entity";
+import { Between, LessThanOrEqual, Repository } from "typeorm";
+import { CreateCardEventDto } from "./dto/card-popularity.dto";
 import { CardEvent, CardEventType } from "./entities/card-event.entity";
 import { CardPopularityMetrics } from "./entities/card-popularity-metrics.entity";
-import { Card } from "src/card/entities/card.entity";
 import { Listing } from "./entities/listing.entity";
 import { Order } from "./entities/order.entity";
-import { CreateCardEventDto } from "./dto/card-popularity.dto";
 
 @Injectable()
 export class CardPopularityService {

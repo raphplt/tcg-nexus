@@ -1,15 +1,15 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Collection } from "./entities/collection.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { User } from "../user/entities/user.entity";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
-import { User } from "../user/entities/user.entity";
+import { Collection } from "./entities/collection.entity";
 
 @Injectable()
 export class CollectionService {

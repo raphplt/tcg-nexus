@@ -1,6 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,10 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useParams, usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { marketplaceService } from "@/services/marketplace.service";
+import { pokemonCardService } from "@/services/pokemonCard.service";
 
 // Translations
 const translations = {
@@ -20,6 +20,8 @@ const translations = {
   marketplace: "Marketplace",
   cards: "Cartes",
   cardDetail: "Détail de la carte",
+  sealed: "Produits scellés",
+  sealedDetail: "Détail produit",
   sellers: "Vendeurs",
   sellerDetail: "Profil vendeur",
   create: "Créer une vente",
@@ -98,6 +100,31 @@ export function MarketplaceBreadcrumb() {
             <BreadcrumbPage>
               {card?.name || translations.cardDetail}
             </BreadcrumbPage>
+          </BreadcrumbItem>,
+        );
+      }
+    }
+
+    // Add Sealed products if on sealed pages
+    if (pathname.startsWith("/marketplace/sealed")) {
+      breadcrumbs.push(
+        <BreadcrumbSeparator key="sep-2" />,
+        <BreadcrumbItem key="sealed">
+          {pathname === "/marketplace/sealed" ? (
+            <BreadcrumbPage>{translations.sealed}</BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink asChild>
+              <Link href="/marketplace/sealed">{translations.sealed}</Link>
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>,
+      );
+
+      if (pathname.match(/^\/marketplace\/sealed\/[^/]+$/)) {
+        breadcrumbs.push(
+          <BreadcrumbSeparator key="sep-3" />,
+          <BreadcrumbItem key="sealed-detail">
+            <BreadcrumbPage>{translations.sealedDetail}</BreadcrumbPage>
           </BreadcrumbItem>,
         );
       }

@@ -1,16 +1,16 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { IsNull, Repository } from "typeorm";
+import { Match, MatchStatus } from "../../match/entities/match.entity";
 import {
   Tournament,
   TournamentStatus,
   TournamentType,
 } from "../entities/tournament.entity";
 import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../entities/tournament-registration.entity";
-import { Match, MatchStatus } from "../../match/entities/match.entity";
 
 export interface StateTransitionRule {
   from: TournamentStatus;

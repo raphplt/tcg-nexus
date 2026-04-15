@@ -1,24 +1,24 @@
 import {
-  Controller,
-  Post,
   Body,
+  Controller,
   Get,
-  Query,
-  UseGuards,
-  Req,
   Ip,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { ThrottlerGuard } from "@nestjs/throttler";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
+import { Public } from "src/auth/decorators/public.decorator";
+import { User } from "src/user/entities/user.entity";
 import { CardPopularityService } from "./card-popularity.service";
 import {
   CreateCardEventDto,
   GetPopularCardsQueryDto,
   GetTrendingCardsQueryDto,
 } from "./dto/card-popularity.dto";
-import { Public } from "src/auth/decorators/public.decorator";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { User } from "src/user/entities/user.entity";
 
 @ApiTags("marketplace")
 @Controller("marketplace")

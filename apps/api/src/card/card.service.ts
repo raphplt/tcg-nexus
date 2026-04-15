@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Card } from "./entities/card.entity";
-import { PaginationHelper, PaginatedResult } from "../helpers/pagination";
 import { CardGame } from "../common/enums/cardGame";
+import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { Card } from "./entities/card.entity";
 
 @Injectable()
 export class CardService {

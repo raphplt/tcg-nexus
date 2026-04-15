@@ -1,23 +1,23 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  ManyToMany,
-  JoinTable,
-  OneToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from "typeorm";
 import { Match } from "src/match/entities/match.entity";
 import { Player } from "src/player/entities/player.entity";
 import { Ranking } from "src/ranking/entities/ranking.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { TournamentNotification } from "./tournament-notification.entity";
+import { TournamentOrganizer } from "./tournament-organizer.entity";
+import { TournamentPricing } from "./tournament-pricing.entity";
 import { TournamentRegistration } from "./tournament-registration.entity";
 import { TournamentReward } from "./tournament-reward.entity";
-import { TournamentPricing } from "./tournament-pricing.entity";
-import { TournamentOrganizer } from "./tournament-organizer.entity";
-import { TournamentNotification } from "./tournament-notification.entity";
 
 export enum TournamentType {
   SINGLE_ELIMINATION = "single_elimination",

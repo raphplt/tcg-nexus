@@ -1,6 +1,6 @@
-import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { Entity, Column, PrimaryColumn, OneToMany } from "typeorm";
 import { CardGame } from "src/common/enums/cardGame";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class PokemonSerie {

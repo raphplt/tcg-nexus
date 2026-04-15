@@ -1,13 +1,13 @@
+import { User } from "src/user/entities/user.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { Tournament } from "./tournament.entity";
-import { User } from "src/user/entities/user.entity";
 
 export enum OrganizerRole {
   OWNER = "owner",

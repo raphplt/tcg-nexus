@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { DeckFormatService } from "./deck-format.service";
-import { DeckFormatController } from "./deck-format.controller";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { DeckFormatController } from "./deck-format.controller";
+import { DeckFormatService } from "./deck-format.service";
 import { DeckFormat } from "./entities/deck-format.entity";
 
 @Module({

@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { CardGame } from "src/common/enums/cardGame";
 import { Repository } from "typeorm";
 import { CreatePokemonSeryDto } from "./dto/create-pokemon-sery.dto";
 import { UpdatePokemonSeryDto } from "./dto/update-pokemon-sery.dto";
 import { PokemonSerie } from "./entities/pokemon-serie.entity";
-import { CardGame } from "src/common/enums/cardGame";
 
 @Injectable()
 export class PokemonSeriesService {

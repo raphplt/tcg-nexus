@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ShoppingCart, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,16 +14,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Trash2 } from "lucide-react";
 import {
-  useCartStore,
   useCartItemsCount,
+  useCartStore,
   useCartTotal,
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
-import Image from "next/image";
 import { getCardImage } from "@/utils/images";
 
 const CartDropdown = () => {
@@ -79,14 +79,14 @@ const CartDropdown = () => {
                   <div className="relative w-12 h-16 shrink-0">
                     <Image
                       src={getCardImage(item.listing.pokemonCard)}
-                      alt={item.listing.pokemonCard.name || "Carte"}
+                      alt={item.listing.pokemonCard?.name || "Carte"}
                       fill
                       className="object-contain rounded"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {item.listing.pokemonCard.name || "Carte inconnue"}
+                      {item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Quantité: {item.quantity}

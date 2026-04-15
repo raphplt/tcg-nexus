@@ -1,27 +1,27 @@
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { MatchService } from "./match.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Match, MatchStatus, MatchPhase } from "./entities/match.entity";
+import { UserRole } from "src/common/enums/user";
+import { DataSource } from "typeorm";
+import { Deck } from "../deck/entities/deck.entity";
+import { Player } from "../player/entities/player.entity";
+import { Ranking } from "../ranking/entities/ranking.entity";
+import { Statistics } from "../statistics/entities/statistic.entity";
 import {
   Tournament,
   TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
 import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
-import { Ranking } from "../ranking/entities/ranking.entity";
-import { Statistics } from "../statistics/entities/statistic.entity";
-import { DataSource } from "typeorm";
-import { NotFoundException, BadRequestException } from "@nestjs/common";
-import { UserRole } from "src/common/enums/user";
-import { Deck } from "../deck/entities/deck.entity";
+import { Match, MatchPhase, MatchStatus } from "./entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,
 } from "./entities/online-match-session.entity";
+import { MatchService } from "./match.service";
 
 describe("MatchService", () => {
   let service: MatchService;

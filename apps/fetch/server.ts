@@ -1,5 +1,6 @@
-import express, { Request, Response } from "express";
 import TCGdex from "@tcgdex/sdk";
+import express, { Request, Response } from "express";
+import { PokecardexService } from "./pokecardex.service";
 
 class TcgDexService {
   private tcgdex: TCGdex;
@@ -175,6 +176,7 @@ class TcgDexService {
 const app = express();
 const port = process.env.PORT || 3005;
 const tcgDexService = new TcgDexService();
+const pokecardexService = new PokecardexService();
 
 // Route pour récupérer une carte par son ID
 app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
@@ -273,6 +275,37 @@ app.get("/tcgdex/cardsDetailed", async (req: Request, res: Response) => {
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Pokecardex — liste de toutes les séries
+app.get("/pokecardex/series", async (_req: Request, res: Response) => {
+  try {
+    const series = await pokecardexService.fetchSeriesList();
+    res.json(series);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Pokecardex — items scellés d'une série
+app.get(
+  "/pokecardex/series/:id/sealed",
+  async (req: Request, res: Response) => {
+    try {
+      const items = await pokecardexService.scrapeSeriesItems(req.params.id);
+      res.json(items);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
+
+// Init Puppeteer au démarrage pour les routes pokecardex
+pokecardexService.init().catch((err) => {
+  console.warn(
+    "Pokecardex browser init failed (scrape routes will retry):",
+    err.message,
+  );
 });
 
 // Démarrage du serveur

@@ -3,12 +3,6 @@ import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/utils/constants";
 
 type AuthCheckResult = {
   authenticated: boolean;
-  /**
-   * Set-Cookie headers renvoyés par l'API quand un refresh a réussi côté
-   * serveur. Le proxy doit les attacher au NextResponse pour que le navigateur
-   * reçoive les nouveaux tokens — sans ça, le client garde son ancien access
-   * token expiré et la prochaine requête XHR repart en 401.
-   */
   refreshedCookies?: string[];
 };
 
@@ -42,11 +36,6 @@ function buildCookieHeader(request: NextRequest): string {
   return parts.join("; ");
 }
 
-/**
- * Récupère les Set-Cookie d'une réponse fetch sous forme de tableau, en gérant
- * la différence entre `Headers.getSetCookie()` (Node récent / Edge) et le
- * fallback `headers.raw()` ou parsing manuel.
- */
 function extractSetCookies(response: Response): string[] {
   const headers = response.headers as Headers & {
     getSetCookie?: () => string[];
@@ -56,10 +45,7 @@ function extractSetCookies(response: Response): string[] {
     return headers.getSetCookie();
   }
 
-  // Fallback : on lit les valeurs séparées via l'itérateur. Note: en
-  // environnement Node sans support natif, plusieurs Set-Cookie peuvent être
-  // joints par une virgule, ce qui est ambigu. C'est rare en pratique sur les
-  // runtimes Next.js modernes, mais on ne casse pas pour autant.
+  // Fallback
   const result: string[] = [];
   headers.forEach((value, key) => {
     if (key.toLowerCase() === "set-cookie") {
@@ -75,9 +61,6 @@ async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
     const cookies = buildCookieHeader(request);
 
     if (!cookies || !cookies.includes("accessToken")) {
-      // Pas d'access token mais peut-être un refresh token (cas du cookie de
-      // session expiré côté browser après la fermeture de l'onglet) → on tente
-      // quand même un refresh si l'utilisateur a un refreshToken.
       if (cookies && cookies.includes("refreshToken")) {
         return await tryRefreshAndProfile(API_BASE_URL, cookies);
       }
@@ -107,11 +90,6 @@ async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
   }
 }
 
-/**
- * Tente un refresh côté serveur et, en cas de succès, revérifie le profil avec
- * les nouveaux cookies. Retourne les Set-Cookie pour qu'ils soient propagés au
- * NextResponse.
- */
 async function tryRefreshAndProfile(
   API_BASE_URL: string,
   originalCookies: string,
@@ -131,8 +109,6 @@ async function tryRefreshAndProfile(
 
     const refreshedCookies = extractSetCookies(refreshResponse);
 
-    // Important : on vérifie que le refresh donne bien accès au profil avec
-    // les NOUVEAUX cookies. Sinon on signalerait un faux positif.
     const newCookieHeader = mergeCookieHeader(
       originalCookies,
       refreshedCookies,
@@ -160,10 +136,6 @@ async function tryRefreshAndProfile(
   }
 }
 
-/**
- * Reconstruit un header Cookie en remplaçant les valeurs d'accessToken /
- * refreshToken par celles renvoyées dans les Set-Cookie du refresh response.
- */
 function mergeCookieHeader(
   originalCookieHeader: string,
   setCookieHeaders: string[],
@@ -177,7 +149,6 @@ function mergeCookieHeader(
   }
 
   for (const setCookie of setCookieHeaders) {
-    // Format: "name=value; Path=/; HttpOnly; ..."
     const firstSegment = setCookie.split(";")[0];
     if (!firstSegment) continue;
     const eqIndex = firstSegment.indexOf("=");
@@ -192,10 +163,6 @@ function mergeCookieHeader(
     .join("; ");
 }
 
-/**
- * Applique les Set-Cookie venus du refresh à un NextResponse pour que le
- * navigateur reçoive les nouveaux tokens.
- */
 function applyRefreshedCookies(
   response: NextResponse,
   refreshedCookies: string[] | undefined,

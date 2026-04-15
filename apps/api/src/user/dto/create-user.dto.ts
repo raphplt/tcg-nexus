@@ -1,10 +1,10 @@
 import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  IsEnum,
   IsBoolean,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
 } from "class-validator";
 import { UserRole } from "src/common/enums/user";
 

@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from "@nestjs/common";
-import { RankingService } from "./ranking.service";
+import { ApiTags } from "@nestjs/swagger";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
-import { ApiTags } from "@nestjs/swagger";
+import { RankingService } from "./ranking.service";
 
 @ApiTags("ranking")
 @Controller("ranking")

@@ -1,14 +1,18 @@
-import { Controller, Post, Query, Body } from "@nestjs/common";
-import { SeedService } from "./seed.service";
-import { ApiTags, ApiQuery, ApiBody } from "@nestjs/swagger";
+import { Body, Controller, Post, Query } from "@nestjs/common";
+import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { UserRole } from "src/common/enums/user";
+import { SealedProductService } from "src/sealed-product/sealed-product.service";
 import { TournamentType } from "src/tournament/entities/tournament.entity";
 import { SeedingMethod } from "src/tournament/services/seeding.service";
-import { UserRole } from "src/common/enums/user";
+import { SeedService } from "./seed.service";
 
 @ApiTags("seed")
 @Controller("seed")
 export class SeedController {
-  constructor(private readonly seedService: SeedService) {}
+  constructor(
+    private readonly seedService: SeedService,
+    private readonly sealedProductService: SealedProductService,
+  ) {}
 
   @Post("importSeries")
   importSeries() {
@@ -24,7 +28,10 @@ export class SeedController {
     await this.seedService.seedListings();
     await this.seedService.seedCardEvents();
     await this.seedService.seedCardPopularityMetrics();
-    return { users, tournaments, faqs };
+    const sealedReport = await this.sealedProductService
+      .seedFromJson()
+      .catch((err) => ({ error: err.message }));
+    return { users, tournaments, faqs, sealedReport };
   }
 
   @Post("create-user")

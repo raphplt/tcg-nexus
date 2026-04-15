@@ -1,21 +1,21 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToOne,
-  OneToMany,
-} from "typeorm";
 import { Exclude } from "class-transformer";
-import { Player } from "src/player/entities/player.entity";
-import { Deck } from "src/deck/entities/deck.entity";
-import { Collection } from "src/collection/entities/collection.entity";
-import { UserRole } from "src/common/enums/user";
-import { Currency } from "src/common/enums/currency";
-import { UserCart } from "src/user_cart/entities/user_cart.entity";
-import { TournamentOrganizer } from "src/tournament/entities";
 import { UserBadge } from "src/badge/entities/user-badge.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { Currency } from "src/common/enums/currency";
+import { UserRole } from "src/common/enums/user";
+import { Deck } from "src/deck/entities/deck.entity";
+import { Player } from "src/player/entities/player.entity";
+import { TournamentOrganizer } from "src/tournament/entities";
+import { UserCart } from "src/user_cart/entities/user_cart.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 @Entity()
 export class User {

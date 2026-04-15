@@ -1,14 +1,14 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-} from "typeorm";
-import { Tournament } from "src/tournament/entities/tournament.entity";
 import { Player } from "src/player/entities/player.entity";
+import { Tournament } from "src/tournament/entities/tournament.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 
 @Entity()
 @Index(["tournament", "player"], { unique: true }) // Un joueur ne peut avoir qu'un seul classement par tournoi

@@ -1,10 +1,9 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ValidationPipe, ClassSerializerInterceptor } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";
+import { NestFactory, Reflector } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import * as dotenv from "dotenv";
+import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/http-exception.filter";
 
 dotenv.config();

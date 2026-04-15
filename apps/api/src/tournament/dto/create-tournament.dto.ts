@@ -1,15 +1,15 @@
+import { Type } from "class-transformer";
 import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsNumber,
+  IsArray,
   IsBoolean,
   IsDate,
-  IsArray,
-  Min,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
   Max,
+  Min,
 } from "class-validator";
-import { Type } from "class-transformer";
 import { TournamentType } from "../entities/tournament.entity";
 
 export class CreateTournamentDto {

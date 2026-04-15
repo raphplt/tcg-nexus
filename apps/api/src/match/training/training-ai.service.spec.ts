@@ -8,8 +8,8 @@ import {
 } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
 import { TrainingDifficulty } from "../entities/training-match-session.entity";
-import { TRAINING_AI_PLAYER_ID } from "./training-match.types";
 import { TrainingAiService } from "./training-ai.service";
+import { TRAINING_AI_PLAYER_ID } from "./training-match.types";
 
 const HUMAN_PLAYER_ID = "12";
 

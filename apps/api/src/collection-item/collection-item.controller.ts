@@ -1,6 +1,7 @@
-import { Controller, Post, Param, Body } from "@nestjs/common";
-import { CollectionItemService } from "./collection-item.service";
+import { Body, Controller, Param, Post } from "@nestjs/common";
 import { Public } from "src/auth/decorators/public.decorator";
+import { SealedCondition } from "src/common/enums/sealed-condition";
+import { CollectionItemService } from "./collection-item.service";
 
 @Controller("collection-item")
 export class CollectionItemController {
@@ -33,6 +34,32 @@ export class CollectionItemController {
     return this.collectionItemService.addToCollection(
       collectionId,
       pokemonCardId,
+    );
+  }
+
+  @Post("collection/:collectionId/sealed")
+  @Public()
+  async addSealedToCollection(
+    @Param("collectionId") collectionId: string,
+    @Body("sealedProductId") sealedProductId: string,
+    @Body("sealedCondition") sealedCondition?: SealedCondition,
+  ) {
+    return this.collectionItemService.addSealedToCollection(
+      collectionId,
+      sealedProductId,
+      sealedCondition,
+    );
+  }
+
+  @Post("wishlist/:userId/sealed")
+  @Public()
+  async addSealedToWishlist(
+    @Param("userId") userId: string,
+    @Body("sealedProductId") sealedProductId: string,
+  ) {
+    return this.collectionItemService.addSealedToWishlist(
+      userId,
+      sealedProductId,
     );
   }
 }

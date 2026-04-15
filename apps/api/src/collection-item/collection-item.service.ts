@@ -7,6 +7,9 @@ import {
   CardStateCode,
 } from "src/card-state/entities/card-state.entity";
 import { Collection } from "src/collection/entities/collection.entity";
+import { ProductKind } from "src/common/enums/product-kind";
+import { SealedCondition } from "src/common/enums/sealed-condition";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { User } from "src/user/entities/user.entity";
 import { Repository } from "typeorm";
 import { CollectionItem } from "./entities/collection-item.entity";
@@ -28,6 +31,9 @@ export class CollectionItemService {
 
     @InjectRepository(CardState)
     private readonly cardStateRepo: Repository<CardState>,
+
+    @InjectRepository(SealedProduct)
+    private readonly sealedProductRepo: Repository<SealedProduct>,
 
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -75,7 +81,7 @@ export class CollectionItemService {
     }
 
     // Vérifier si la carte est déjà dans la wishlist
-    let item = wishlist.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = wishlist.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
@@ -143,7 +149,7 @@ export class CollectionItemService {
     }
 
     // Vérifier si la carte est déjà dans les Favorites
-    let item = favorites.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = favorites.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
@@ -177,34 +183,30 @@ export class CollectionItemService {
   }
 
   /**
-   * Ajouter une carte Pokémon à une collection spécifique
+   * Ajouter une carte Pokémon dans une collection spécifique (par id).
    */
   async addToCollection(
-    collectionId: string,
+    collectionId: number | string,
     pokemonCardId: string,
   ): Promise<CollectionItem> {
-    // Vérifier que la collection existe
     const collection = await this.collectionRepo.findOne({
-      where: { id: collectionId },
-      relations: ["items", "items.pokemonCard"],
+      where: { id: collectionId as string },
+      relations: ["items", "items.pokemonCard", "user"],
     });
     if (!collection) throw new NotFoundException("Collection non trouvée");
 
-    // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
     if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
 
-    // Vérifier si la carte est déjà dans la collection
-    let item = collection.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = collection.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
       return this.collectionItemRepo.save(item);
     }
 
-    // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
       where: { code: CardStateCode.NM },
     });
@@ -216,7 +218,8 @@ export class CollectionItemService {
     }
 
     item = this.collectionItemRepo.create({
-      collection: collection,
+      collection,
+      productKind: ProductKind.CARD,
       pokemonCard: card,
       cardState: defaultCardState,
       quantity: 1,
@@ -230,5 +233,107 @@ export class CollectionItemService {
       });
     }
     return savedItem;
+  }
+
+  /**
+   * Ajouter un produit scellé à une collection spécifique (par id).
+   */
+  async addSealedToCollection(
+    collectionId: number | string,
+    sealedProductId: string,
+    sealedCondition?: SealedCondition,
+  ): Promise<CollectionItem> {
+    const collection = await this.collectionRepo.findOne({
+      where: { id: collectionId as string },
+      relations: ["items", "items.sealedProduct", "user"],
+    });
+    if (!collection) throw new NotFoundException("Collection non trouvée");
+
+    const sealedProduct = await this.sealedProductRepo.findOne({
+      where: { id: sealedProductId },
+    });
+    if (!sealedProduct)
+      throw new NotFoundException("Produit scellé non trouvé");
+
+    const condition = sealedCondition ?? SealedCondition.SEALED;
+
+    let item = collection.items?.find(
+      (i) =>
+        i.sealedProduct?.id === sealedProduct.id &&
+        i.sealedCondition === condition,
+    );
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection,
+      productKind: ProductKind.SEALED,
+      sealedProduct,
+      sealedCondition: condition,
+      quantity: 1,
+    });
+
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_SEALED",
+      });
+    }
+    return savedItem;
+  }
+
+  /**
+   * Ajouter un produit scellé à la wishlist d'un user.
+   */
+  async addSealedToWishlist(
+    userId: number | string,
+    sealedProductId: string,
+  ): Promise<CollectionItem> {
+    const userIdNum = typeof userId === "string" ? Number(userId) : userId;
+
+    const user = await this.userRepo.findOne({ where: { id: userIdNum } });
+    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+
+    const sealedProduct = await this.sealedProductRepo.findOne({
+      where: { id: sealedProductId },
+    });
+    if (!sealedProduct)
+      throw new NotFoundException("Produit scellé non trouvé");
+
+    const wishlist = await this.collectionRepo.findOne({
+      where: {
+        user: { id: userIdNum },
+        name: "Wishlist",
+      },
+      relations: ["items", "items.sealedProduct"],
+    });
+    if (!wishlist) {
+      throw new NotFoundException(
+        "Collection Wishlist non trouvée. Vérifiez les collections par défaut.",
+      );
+    }
+
+    let item = wishlist.items?.find(
+      (i) => i.sealedProduct?.id === sealedProduct.id,
+    );
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection: wishlist,
+      productKind: ProductKind.SEALED,
+      sealedProduct,
+      sealedCondition: SealedCondition.SEALED,
+      quantity: 1,
+    });
+
+    return this.collectionItemRepo.save(item);
   }
 }

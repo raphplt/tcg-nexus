@@ -1,6 +1,6 @@
 import { TrainingDifficulty } from "./entities/training-match-session.entity";
-import { TrainingMatchController } from "./training-match.controller";
 import { TrainingMatchService } from "./training/training-match.service";
+import { TrainingMatchController } from "./training-match.controller";
 
 describe("TrainingMatchController", () => {
   let controller: TrainingMatchController;

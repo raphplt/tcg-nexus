@@ -1,17 +1,17 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
 } from "@nestjs/common";
-import { PokemonSeriesService } from "./pokemon-series.service";
-import { CreatePokemonSeryDto } from "./dto/create-pokemon-sery.dto";
-import { UpdatePokemonSeryDto } from "./dto/update-pokemon-sery.dto";
 import { ApiTags } from "@nestjs/swagger";
 import { Public } from "src/auth/decorators/public.decorator";
+import { CreatePokemonSeryDto } from "./dto/create-pokemon-sery.dto";
+import { UpdatePokemonSeryDto } from "./dto/update-pokemon-sery.dto";
+import { PokemonSeriesService } from "./pokemon-series.service";
 
 @ApiTags("pokemon-series")
 @Controller("pokemon-series")

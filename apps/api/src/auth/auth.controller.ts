@@ -1,29 +1,29 @@
 import {
-  Controller,
-  Post,
   Body,
-  UseGuards,
+  Controller,
   HttpCode,
   HttpStatus,
-  Res,
+  Post,
   Request,
+  Res,
   UnauthorizedException,
+  UseGuards,
+  UseGuards as UseGuardsDecorator,
 } from "@nestjs/common";
-import { AuthService } from "./auth.service";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
+import type { CookieOptions } from "express";
+import { Request as ExpressRequest, Response } from "express";
+import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
+import { AuthService } from "./auth.service";
+import { CurrentUser } from "./decorators/current-user.decorator";
+import { Public } from "./decorators/public.decorator";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
-import { CurrentUser } from "./decorators/current-user.decorator";
-import { User } from "../user/entities/user.entity";
-import { Response, Request as ExpressRequest } from "express";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
-import { Public } from "./decorators/public.decorator";
-import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
-import { UseGuards as UseGuardsDecorator } from "@nestjs/common";
-import type { CookieOptions } from "express";
+import { LocalAuthGuard } from "./guards/local-auth.guard";
 
 const isProduction = process.env.NODE_ENV === "production";
 

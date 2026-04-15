@@ -1,9 +1,9 @@
+import { CasualMatchSessionStatus } from "../entities/casual-match-session.entity";
 import {
   EligibleDeckSummary,
   OnlineMatchLogEntry,
   SanitizedGameState,
 } from "../online/online-match.types";
-import { CasualMatchSessionStatus } from "../entities/casual-match-session.entity";
 
 export type CasualMatchSlot = "playerA" | "playerB";
 

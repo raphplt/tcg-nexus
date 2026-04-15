@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { DeckFormatService } from "./deck-format.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { DeckFormatService } from "./deck-format.service";
 import { DeckFormat } from "./entities/deck-format.entity";
 
 describe("DeckFormatService", () => {

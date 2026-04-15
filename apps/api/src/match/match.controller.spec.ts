@@ -1,6 +1,6 @@
+import { MatchPhase, MatchStatus } from "./entities/match.entity";
 import { MatchController } from "./match.controller";
 import { MatchService } from "./match.service";
-import { MatchPhase, MatchStatus } from "./entities/match.entity";
 
 describe("MatchController", () => {
   let controller: MatchController;

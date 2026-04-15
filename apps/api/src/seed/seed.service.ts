@@ -1,79 +1,78 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeepPartial, Repository } from "typeorm";
-import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
+import * as bcrypt from "bcryptjs";
 import * as fs from "fs";
 import * as path from "path";
+import { Article } from "src/article/entities/article.entity";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
-import { User } from "src/user/entities/user.entity";
 import {
-  Tournament,
-  TournamentType,
-  TournamentStatus,
-} from "src/tournament/entities/tournament.entity";
-import { Player } from "src/player/entities/player.entity";
-import { Ranking } from "src/ranking/entities/ranking.entity";
-import {
-  Match,
-  MatchPhase,
-  MatchStatus,
-} from "src/match/entities/match.entity";
-import {
-  TournamentRegistration,
-  RegistrationStatus,
-} from "src/tournament/entities/tournament-registration.entity";
-import {
-  TournamentReward,
-  RewardType,
-} from "src/tournament/entities/tournament-reward.entity";
-import {
-  TournamentPricing,
-  PricingType,
-} from "src/tournament/entities/tournament-pricing.entity";
-import {
-  TournamentOrganizer,
-  OrganizerRole,
-} from "src/tournament/entities/tournament-organizer.entity";
-import {
-  TournamentNotification,
-  NotificationType,
-  NotificationStatus,
-} from "src/tournament/entities/tournament-notification.entity";
-import * as bcrypt from "bcryptjs";
-import { Article } from "src/article/entities/article.entity";
+  CardStateCode,
+  CardState as CardStateEntity,
+} from "src/card-state/entities/card-state.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { CardGame } from "src/common/enums/cardGame";
+import { Currency } from "src/common/enums/currency";
+import { DeckCardRole } from "src/common/enums/deckCardRole";
+import { EnergyType } from "src/common/enums/energyType";
+import { CardState, PokemonCardsType } from "src/common/enums/pokemonCardsType";
+import { TrainerType } from "src/common/enums/trainerType";
+import { UserRole } from "src/common/enums/user";
+import { Deck } from "src/deck/entities/deck.entity";
+import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
 import { Faq, FaqCategory } from "src/faq/entities/faq.entity";
-import { Listing } from "src/marketplace/entities/listing.entity";
-import { PriceHistory } from "src/marketplace/entities/price-history.entity";
 import {
   CardEvent,
   CardEventType,
 } from "src/marketplace/entities/card-event.entity";
 import { CardPopularityMetrics } from "src/marketplace/entities/card-popularity-metrics.entity";
-import { Currency } from "src/common/enums/currency";
-import { Deck } from "src/deck/entities/deck.entity";
-import { DeckCard } from "src/deck-card/entities/deck-card.entity";
-import { DeckCardRole } from "src/common/enums/deckCardRole";
-import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
-import { Collection } from "src/collection/entities/collection.entity";
+import { Listing } from "src/marketplace/entities/listing.entity";
+import { PriceHistory } from "src/marketplace/entities/price-history.entity";
 import {
-  CardState as CardStateEntity,
-  CardStateCode,
-} from "src/card-state/entities/card-state.entity";
-import {
-  SeedingService,
-  SeedingMethod,
-} from "src/tournament/services/seeding.service";
-import { BracketService } from "src/tournament/services/bracket.service";
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "src/match/entities/match.entity";
 import { MatchService } from "src/match/match.service";
-
-import { CardState, PokemonCardsType } from "src/common/enums/pokemonCardsType";
-import { UserRole } from "src/common/enums/user";
+import { Player } from "src/player/entities/player.entity";
+import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { ConfigService } from "@nestjs/config";
-import { CardGame } from "src/common/enums/cardGame";
-import { TrainerType } from "src/common/enums/trainerType";
-import { EnergyType } from "src/common/enums/energyType";
+import { Ranking } from "src/ranking/entities/ranking.entity";
+import {
+  Tournament,
+  TournamentStatus,
+  TournamentType,
+} from "src/tournament/entities/tournament.entity";
+import {
+  NotificationStatus,
+  NotificationType,
+  TournamentNotification,
+} from "src/tournament/entities/tournament-notification.entity";
+import {
+  OrganizerRole,
+  TournamentOrganizer,
+} from "src/tournament/entities/tournament-organizer.entity";
+import {
+  PricingType,
+  TournamentPricing,
+} from "src/tournament/entities/tournament-pricing.entity";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "src/tournament/entities/tournament-registration.entity";
+import {
+  RewardType,
+  TournamentReward,
+} from "src/tournament/entities/tournament-reward.entity";
+import { BracketService } from "src/tournament/services/bracket.service";
+import {
+  SeedingMethod,
+  SeedingService,
+} from "src/tournament/services/seeding.service";
+import { User } from "src/user/entities/user.entity";
+import { DeepPartial, Repository } from "typeorm";
 
 @Injectable()
 export class SeedService {
@@ -1735,7 +1734,8 @@ export class SeedService {
     });
     const listingsByCardId = new Map<string, Listing[]>();
     allListings.forEach((listing) => {
-      const cardId = listing.pokemonCard.id;
+      const cardId = listing.pokemonCard?.id;
+      if (!cardId) return;
       if (!listingsByCardId.has(cardId)) {
         listingsByCardId.set(cardId, []);
       }

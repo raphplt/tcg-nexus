@@ -1,18 +1,18 @@
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsNumber,
-  IsBoolean,
-  IsDate,
-  IsArray,
-  Min,
-  Max,
-} from "class-validator";
 import { Type } from "class-transformer";
 import {
-  TournamentType,
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from "class-validator";
+import {
   TournamentStatus,
+  TournamentType,
 } from "../entities/tournament.entity";
 import { PricingType } from "../entities/tournament-pricing.entity";
 import { RewardType } from "../entities/tournament-reward.entity";

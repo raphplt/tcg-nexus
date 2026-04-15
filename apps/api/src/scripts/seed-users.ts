@@ -1,7 +1,7 @@
 import { NestFactory } from "@nestjs/core";
+import { UserRole } from "src/common/enums/user";
 import { AppModule } from "../app.module";
 import { UserService } from "../user/user.service";
-import { UserRole } from "src/common/enums/user";
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);

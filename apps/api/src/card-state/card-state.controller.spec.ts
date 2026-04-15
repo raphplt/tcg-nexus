@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import { CardStateController } from "./card-state.controller";
 import { CardStateService } from "./card-state.service";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { CardState } from "./entities/card-state.entity";
 
 describe("CardStateController", () => {

@@ -1,4 +1,4 @@
-import { SelectQueryBuilder, ObjectLiteral } from "typeorm";
+import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
 export interface PaginatedResult<T> {
   data: T[];

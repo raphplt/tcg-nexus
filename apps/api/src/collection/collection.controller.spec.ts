@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import { CollectionController } from "./collection.controller";
 import { CollectionService } from "./collection.service";
-import { getRepositoryToken } from "@nestjs/typeorm";
 import { Collection } from "./entities/collection.entity";
 
 describe("CollectionController", () => {

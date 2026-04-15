@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { GlobalSearchDto } from "./dto/global-search.dto";
 import { SearchController } from "./search.controller";
 import { SearchService } from "./search.service";
-import { GlobalSearchDto } from "./dto/global-search.dto";
 
 describe("SearchController", () => {
   let controller: SearchController;

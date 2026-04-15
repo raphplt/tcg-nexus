@@ -1,31 +1,31 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
-  Query,
-  Patch,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from "@nestjs/common";
-import { ThrottlerGuard, Throttle } from "@nestjs/throttler";
-import { MarketplaceService } from "./marketplace.service";
+import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
+import { Public } from "src/auth/decorators/public.decorator";
+import { UserRole } from "src/common/enums/user";
+import { User } from "src/user/entities/user.entity";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { FindAllListingsQuery } from "./dto/ind-all-listings-query.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
-import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { Roles } from "../auth/decorators/roles.decorator";
-import { User } from "src/user/entities/user.entity";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { ApiTags, ApiBearerAuth, ApiQuery } from "@nestjs/swagger";
-import { Public } from "src/auth/decorators/public.decorator";
-import { UserRole } from "src/common/enums/user";
+import { MarketplaceService } from "./marketplace.service";
 
 @ApiTags("marketplace")
 @Controller("marketplace")
@@ -33,10 +33,9 @@ import { UserRole } from "src/common/enums/user";
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("listings")
-  @Roles("pro")
   createListing(
     @Body() createListingDto: CreateListingDto,
     @CurrentUser() user: User,

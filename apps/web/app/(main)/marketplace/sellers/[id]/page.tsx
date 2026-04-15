@@ -1,13 +1,22 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { marketplaceService } from "@/services/marketplace.service";
+import {
+  MessageCircle,
+  Package,
+  ShoppingBag,
+  Star,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { CardCard } from "@/components/Marketplace/CardCard";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { ViewToggle } from "@/components/Marketplace/ViewToggle";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { H1, H2 } from "@/components/Shared/Titles";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -17,20 +26,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { H1, H2 } from "@/components/Shared/Titles";
-import { formatPrice } from "@/utils/price";
-import {
-  ShoppingBag,
-  TrendingUp,
-  Star,
-  Package,
-  MessageCircle,
-} from "lucide-react";
-import Link from "next/link";
-import { formatPrice as formatPriceUtil } from "@/utils/price";
-import { getCardStateColor } from "../../utils";
-import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { useViewMode } from "@/hooks/useViewMode";
+import { marketplaceService } from "@/services/marketplace.service";
+import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
+import { getCardStateColor } from "../../utils";
 
 export default function SellerPage() {
   const { id } = useParams();
@@ -234,15 +233,18 @@ export default function SellerPage() {
           ) : sellerListings.length > 0 ? (
             viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {sellerListings.map((listing) => (
-                  <CardCard
-                    key={listing.id}
-                    card={listing.pokemonCard}
-                    minPrice={parseFloat(listing.price.toString())}
-                    listingCount={listing.quantityAvailable}
-                    currency={listing.currency}
-                  />
-                ))}
+                {sellerListings.map((listing) => {
+                  if (!listing.pokemonCard) return null;
+                  return (
+                    <CardCard
+                      key={listing.id}
+                      card={listing.pokemonCard}
+                      minPrice={parseFloat(listing.price.toString())}
+                      listingCount={listing.quantityAvailable}
+                      currency={listing.currency}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <Card>
@@ -263,23 +265,25 @@ export default function SellerPage() {
                         <TableRow key={listing.id}>
                           <TableCell>
                             <Link
-                              href={`/marketplace/cards/${listing.pokemonCard.id}`}
+                              href={`/marketplace/cards/${listing.pokemonCard?.id}`}
                               className="hover:text-primary transition-colors font-medium"
                             >
-                              {listing.pokemonCard.name}
+                              {listing.pokemonCard?.name}
                             </Link>
-                            {listing.pokemonCard.set && (
+                            {listing.pokemonCard?.set && (
                               <div className="text-xs text-muted-foreground">
-                                {listing.pokemonCard.set.name}
+                                {listing.pokemonCard?.set.name}
                               </div>
                             )}
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className={getCardStateColor(listing.cardState)}
+                              className={getCardStateColor(
+                                listing.cardState ?? "",
+                              )}
                             >
-                              {listing.cardState}
+                              {listing.cardState ?? ""}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-semibold">

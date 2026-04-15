@@ -1,13 +1,13 @@
 import {
-  EligibleDeckSummary,
-  OnlineMatchLogEntry,
-  SanitizedGameState,
-} from "../online/online-match.types";
-import {
   TrainingDifficulty,
   TrainingMatchSessionStatus,
   TrainingMatchWinnerSide,
 } from "../entities/training-match-session.entity";
+import {
+  EligibleDeckSummary,
+  OnlineMatchLogEntry,
+  SanitizedGameState,
+} from "../online/online-match.types";
 
 export const TRAINING_AI_PLAYER_ID = "training-ai";
 

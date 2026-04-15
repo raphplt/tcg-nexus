@@ -1,10 +1,10 @@
 import {
+  IsBoolean,
+  IsEnum,
   IsNumber,
   IsOptional,
-  IsEnum,
   IsString,
   Min,
-  IsBoolean,
 } from "class-validator";
 import { MatchStatus } from "../entities/match.entity";
 

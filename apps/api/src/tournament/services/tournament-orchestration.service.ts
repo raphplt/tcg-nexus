@@ -1,28 +1,28 @@
 import {
-  Injectable,
   BadRequestException,
+  Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource, EntityManager } from "typeorm";
+import { DataSource, EntityManager, Repository } from "typeorm";
+import {
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "../../match/entities/match.entity";
+import { MatchService } from "../../match/match.service";
+import { RankingService } from "../../ranking/ranking.service";
 import {
   Tournament,
   TournamentStatus,
   TournamentType,
 } from "../entities/tournament.entity";
 import {
-  Match,
-  MatchStatus,
-  MatchPhase,
-} from "../../match/entities/match.entity";
-import {
-  TournamentRegistration,
   RegistrationStatus,
+  TournamentRegistration,
 } from "../entities/tournament-registration.entity";
 import { BracketService } from "./bracket.service";
-import { SeedingService, SeedingMethod } from "./seeding.service";
-import { RankingService } from "../../ranking/ranking.service";
-import { MatchService } from "../../match/match.service";
+import { SeedingMethod, SeedingService } from "./seeding.service";
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;

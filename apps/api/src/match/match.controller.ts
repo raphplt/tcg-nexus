@@ -1,31 +1,31 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
-  UseGuards,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from "@nestjs/common";
-import { MatchQueryDto, MatchService } from "./match.service";
-import { CreateMatchDto } from "./dto/create-match.dto";
-import { UpdateMatchDto } from "./dto/update-match.dto";
-import {
-  ReportScoreDto,
-  StartMatchDto,
-  ResetMatchDto,
-} from "./dto/match-operations.dto";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
-import { MatchPermissionGuard } from "./guards/match-permission.guard";
-import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { User } from "../user/entities/user.entity";
+import { CreateMatchDto } from "./dto/create-match.dto";
+import {
+  ReportScoreDto,
+  ResetMatchDto,
+  StartMatchDto,
+} from "./dto/match-operations.dto";
+import { UpdateMatchDto } from "./dto/update-match.dto";
+import { MatchPermissionGuard } from "./guards/match-permission.guard";
+import { MatchQueryDto, MatchService } from "./match.service";
 
 @ApiTags("matches")
 @ApiBearerAuth()

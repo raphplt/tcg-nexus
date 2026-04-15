@@ -1,6 +1,6 @@
 import { UnauthorizedException } from "@nestjs/common";
-import { LocalStrategy } from "./local.strategy";
 import { AuthService } from "../auth.service";
+import { LocalStrategy } from "./local.strategy";
 
 describe("LocalStrategy", () => {
   const mockAuthService = {

@@ -14,11 +14,11 @@ import { Server, Socket } from "socket.io";
 import { JwtPayload } from "../auth/interfaces/auth.interface";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
+import { CasualMatchService } from "./casual/casual-match.service";
+import { MatchmakingService } from "./casual/matchmaking.service";
 import { PlayerAction } from "./engine/actions/Action";
 import { PromptResponse } from "./engine/models/Prompt";
 import { MatchOnlineService } from "./online/match-online.service";
-import { CasualMatchService } from "./casual/casual-match.service";
-import { MatchmakingService } from "./casual/matchmaking.service";
 
 type AuthenticatedSocket = Socket & {
   data: Socket["data"] & {

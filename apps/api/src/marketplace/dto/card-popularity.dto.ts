@@ -1,14 +1,14 @@
+import { Transform } from "class-transformer";
 import {
+  IsBoolean,
   IsEnum,
+  IsInt,
+  IsObject,
+  IsOptional,
   IsString,
   IsUUID,
-  IsOptional,
-  IsObject,
-  IsInt,
   Min,
-  IsBoolean,
 } from "class-validator";
-import { Transform } from "class-transformer";
 import { CardEventType } from "../entities/card-event.entity";
 
 export class CreateCardEventDto {

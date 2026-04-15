@@ -1,5 +1,5 @@
-import { OnlinePlaySupportService } from "./online-play-support.service";
 import { CardCategory } from "../engine/models/enums";
+import { OnlinePlaySupportService } from "./online-play-support.service";
 
 describe("OnlinePlaySupportService", () => {
   let service: OnlinePlaySupportService;

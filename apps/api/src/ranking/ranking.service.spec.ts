@@ -1,16 +1,16 @@
+import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { RankingService } from "./ranking.service";
-import { Ranking } from "./entities/ranking.entity";
+import { Match } from "../match/entities/match.entity";
+import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
-import { Player } from "../player/entities/player.entity";
-import { Match } from "../match/entities/match.entity";
-import { NotFoundException } from "@nestjs/common";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
+import { Ranking } from "./entities/ranking.entity";
+import { RankingService } from "./ranking.service";
 
 describe("RankingService", () => {
   let service: RankingService;

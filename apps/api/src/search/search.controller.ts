@@ -1,11 +1,11 @@
 import { Controller, Get, Query, ValidationPipe } from "@nestjs/common";
-import { SearchService } from "./search.service";
+import { Public } from "src/auth/decorators/public.decorator";
 import { GlobalSearchDto, GlobalSearchResult } from "./dto/global-search.dto";
 import {
-  SuggestionsPreviewResult,
   SuggestionsDetailResult,
+  SuggestionsPreviewResult,
 } from "./dto/suggestions.dto";
-import { Public } from "src/auth/decorators/public.decorator";
+import { SearchService } from "./search.service";
 
 @Controller("search")
 export class SearchController {
