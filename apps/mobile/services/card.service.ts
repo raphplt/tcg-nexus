@@ -99,6 +99,11 @@ export const cardService = {
     searchCache.clear();
   },
 
+  async getCardById(cardId: string): Promise<CardSearchResult> {
+    const response = await api.get<CardSearchResult>(`/cards/${cardId}`);
+    return response.data;
+  },
+
   async searchCards(search: string): Promise<CardSearchResult[]> {
     const query = search.trim();
     if (!query) {

@@ -1,0 +1,539 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Modal,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { CollectionCard } from "@/components/CollectionCard";
+import { useAuth } from "@/contexts/AuthProvider";
+import {
+  collectionService,
+  type CreateCollectionPayload,
+} from "@/services/collection.service";
+import { toast } from "@/store/useToastStore";
+import type { UserCollection } from "@/types";
+import { getApiErrorMessage } from "@/utils/apiError";
+
+const getTotalCards = (collection: UserCollection): number =>
+  (collection.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+export default function CollectionScreen() {
+  const { user } = useAuth();
+  const [collections, setCollections] = useState<UserCollection[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionDescription, setNewCollectionDescription] = useState("");
+  const [newCollectionIsPublic, setNewCollectionIsPublic] = useState(false);
+
+  const loadCollections = useCallback(async (refresh = false) => {
+    if (!user?.id) {
+      setCollections([]);
+      setIsLoading(false);
+      return;
+    }
+
+    if (refresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
+    try {
+      const data = await collectionService.getMyCollections();
+      setCollections(data);
+    } catch (error) {
+      toast.showError(getApiErrorMessage(error));
+    } finally {
+      if (refresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    void loadCollections();
+  }, [loadCollections]);
+
+  const totalCards = useMemo(
+    () => collections.reduce((sum, collection) => sum + getTotalCards(collection), 0),
+    [collections],
+  );
+
+  const rarityStats = useMemo(() => {
+    const map = new Map<string, number>();
+
+    for (const collection of collections) {
+      for (const item of collection.items || []) {
+        const rarity = item.pokemonCard?.rarity || "Inconnue";
+        const quantity = Number(item.quantity || 0);
+        map.set(rarity, (map.get(rarity) || 0) + quantity);
+      }
+    }
+
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+  }, [collections]);
+
+  const handleCreateCollection = async () => {
+    const name = newCollectionName.trim();
+    if (!name) {
+      toast.showError("Le nom de collection est requis.");
+      return;
+    }
+
+    const payload: CreateCollectionPayload = {
+      name,
+      description: newCollectionDescription.trim() || undefined,
+      isPublic: newCollectionIsPublic,
+      userId: user?.id,
+    };
+
+    setIsCreating(true);
+
+    try {
+      await collectionService.createCollection(payload);
+      toast.showSuccess("Collection creee.");
+      setIsCreateModalVisible(false);
+      setNewCollectionName("");
+      setNewCollectionDescription("");
+      setNewCollectionIsPublic(false);
+      await loadCollections();
+    } catch (error) {
+      toast.showError(getApiErrorMessage(error));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteCollection = (collection: UserCollection) => {
+    Alert.alert(
+      "Supprimer la collection",
+      `Confirmer la suppression de \"${collection.name}\" ?`,
+      [
+        {
+          style: "cancel",
+          text: "Annuler",
+        },
+        {
+          style: "destructive",
+          text: "Supprimer",
+          onPress: async () => {
+            try {
+              await collectionService.deleteCollection(collection.id);
+              toast.showSuccess("Collection supprimee.");
+              await loadCollections(true);
+            } catch (error) {
+              toast.showError(getApiErrorMessage(error));
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const renderHeader = () => (
+    <View style={styles.headerBlock}>
+      <View style={styles.titleRow}>
+        <View>
+          <Text style={styles.eyebrow}>COLLECTIONS</Text>
+          <Text style={styles.title}>Ma collection</Text>
+        </View>
+
+        <Pressable
+          onPress={() => {
+            router.push("/scan");
+          }}
+          style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
+        >
+          <Ionicons color="#fff8f3" name="scan" size={16} />
+          <Text style={styles.scanButtonText}>Scanner</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.statsCard}>
+        <Text style={styles.statsTitle}>{collections.length} collections</Text>
+        <Text style={styles.statsSubtitle}>{totalCards} cartes au total</Text>
+
+        {rarityStats.length > 0 ? (
+          <Text style={styles.statsMeta}>
+            Raretés: {rarityStats.map(([rarity, count]) => `${rarity} (${count})`).join(" • ")}
+          </Text>
+        ) : (
+          <Text style={styles.statsMeta}>Ajoute des cartes pour voir tes stats.</Text>
+        )}
+      </View>
+
+      <Pressable
+        onPress={() => setIsCreateModalVisible(true)}
+        style={({ pressed }) => [styles.createButton, pressed && styles.createButtonPressed]}
+      >
+        <Ionicons color="#fff8f3" name="add-circle-outline" size={18} />
+        <Text style={styles.createButtonText}>Nouvelle collection</Text>
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        contentContainerStyle={styles.listContent}
+        data={collections}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Aucune collection pour le moment</Text>
+              <Text style={styles.emptyText}>
+                Cree ta premiere collection ou scanne une carte pour demarrer.
+              </Text>
+
+              <View style={styles.emptyActionsRow}>
+                <Pressable
+                  onPress={() => setIsCreateModalVisible(true)}
+                  style={({ pressed }) => [
+                    styles.emptyPrimaryAction,
+                    pressed && styles.emptyPrimaryActionPressed,
+                  ]}
+                >
+                  <Text style={styles.emptyPrimaryActionText}>Creer</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    router.push("/scan");
+                  }}
+                  style={({ pressed }) => [
+                    styles.emptySecondaryAction,
+                    pressed && styles.emptySecondaryActionPressed,
+                  ]}
+                >
+                  <Text style={styles.emptySecondaryActionText}>Scanner une carte</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null
+        }
+        ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl
+            onRefresh={() => {
+              void loadCollections(true);
+            }}
+            refreshing={isRefreshing}
+            tintColor="#15233b"
+          />
+        }
+        renderItem={({ item }) => (
+          <CollectionCard
+            collection={item}
+            onDelete={handleDeleteCollection}
+            onPress={(collection) => {
+              router.push(`/collection/${collection.id}`);
+            }}
+          />
+        )}
+      />
+
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setIsCreateModalVisible(false)}
+        transparent
+        visible={isCreateModalVisible}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Nouvelle collection</Text>
+
+            <TextInput
+              onChangeText={setNewCollectionName}
+              placeholder="Nom de la collection"
+              placeholderTextColor="#8992a3"
+              style={styles.modalInput}
+              value={newCollectionName}
+            />
+
+            <TextInput
+              multiline
+              numberOfLines={3}
+              onChangeText={setNewCollectionDescription}
+              placeholder="Description (optionnelle)"
+              placeholderTextColor="#8992a3"
+              style={[styles.modalInput, styles.modalTextArea]}
+              value={newCollectionDescription}
+            />
+
+            <View style={styles.modalSwitchRow}>
+              <Text style={styles.modalSwitchLabel}>Collection publique</Text>
+              <Switch
+                onValueChange={setNewCollectionIsPublic}
+                trackColor={{ false: "#d7dce5", true: "#d95f4d" }}
+                value={newCollectionIsPublic}
+              />
+            </View>
+
+            <View style={styles.modalActionsRow}>
+              <Pressable
+                onPress={() => setIsCreateModalVisible(false)}
+                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalCancelPressed]}
+              >
+                <Text style={styles.modalCancelText}>Annuler</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  void handleCreateCollection();
+                }}
+                style={({ pressed }) => [
+                  styles.modalConfirm,
+                  (pressed || isCreating) && styles.modalConfirmPressed,
+                ]}
+              >
+                <Text style={styles.modalConfirmText}>
+                  {isCreating ? "Creation..." : "Creer"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f7f1e8",
+    flex: 1,
+  },
+  createButton: {
+    alignItems: "center",
+    backgroundColor: "#15233b",
+    borderRadius: 14,
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    width: 174,
+  },
+  createButtonPressed: {
+    opacity: 0.85,
+  },
+  createButtonText: {
+    color: "#fff8f3",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  emptyActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+  emptyPrimaryAction: {
+    backgroundColor: "#15233b",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  emptyPrimaryActionPressed: {
+    opacity: 0.8,
+  },
+  emptyPrimaryActionText: {
+    color: "#fff8f3",
+    fontWeight: "700",
+  },
+  emptySecondaryAction: {
+    backgroundColor: "#fff",
+    borderColor: "#15233b",
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  emptySecondaryActionPressed: {
+    opacity: 0.8,
+  },
+  emptySecondaryActionText: {
+    color: "#15233b",
+    fontWeight: "700",
+  },
+  emptyState: {
+    alignItems: "center",
+    backgroundColor: "#fffdf9",
+    borderColor: "#eadfd3",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 8,
+    padding: 18,
+  },
+  emptyText: {
+    color: "#687183",
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  emptyTitle: {
+    color: "#15233b",
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  eyebrow: {
+    color: "#d95f4d",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.6,
+    marginBottom: 6,
+  },
+  headerBlock: {
+    marginBottom: 10,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 28,
+  },
+  modalActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "flex-end",
+    marginTop: 16,
+  },
+  modalBackdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 16,
+  },
+  modalCancel: {
+    backgroundColor: "#f2f3f7",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  modalCancelPressed: {
+    opacity: 0.8,
+  },
+  modalCancelText: {
+    color: "#1d293d",
+    fontWeight: "700",
+  },
+  modalCard: {
+    backgroundColor: "#fffdf9",
+    borderRadius: 16,
+    padding: 16,
+    width: "100%",
+  },
+  modalConfirm: {
+    backgroundColor: "#15233b",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  modalConfirmPressed: {
+    opacity: 0.8,
+  },
+  modalConfirmText: {
+    color: "#fff8f3",
+    fontWeight: "700",
+  },
+  modalInput: {
+    backgroundColor: "#f6f7fa",
+    borderColor: "#e4e8ef",
+    borderRadius: 10,
+    borderWidth: 1,
+    color: "#15233b",
+    fontSize: 15,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  modalSwitchLabel: {
+    color: "#15233b",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  modalSwitchRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  modalTextArea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  modalTitle: {
+    color: "#15233b",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  scanButton: {
+    alignItems: "center",
+    backgroundColor: "#15233b",
+    borderRadius: 14,
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  scanButtonPressed: {
+    opacity: 0.86,
+  },
+  scanButtonText: {
+    color: "#fff8f3",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  statsCard: {
+    backgroundColor: "#fffdf9",
+    borderColor: "#eadfd3",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 10,
+    padding: 14,
+  },
+  statsMeta: {
+    color: "#687183",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  statsSubtitle: {
+    color: "#244f80",
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  statsTitle: {
+    color: "#15233b",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  title: {
+    color: "#15233b",
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+});
