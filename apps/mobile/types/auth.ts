@@ -42,6 +42,10 @@ export interface RefreshResponse {
   accessTokenExpiresAt?: number;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;

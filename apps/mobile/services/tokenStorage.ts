@@ -6,9 +6,12 @@ const ACCESS_TOKEN_KEY = "tcg-nexus.access-token";
 const REFRESH_TOKEN_KEY = "tcg-nexus.refresh-token";
 const ACCESS_TOKEN_EXPIRES_AT_KEY = "tcg-nexus.access-token-expires-at";
 const REMEMBER_ME_KEY = "tcg-nexus.remember-me";
+const SESSION_EXPIRES_AT_KEY = "tcg-nexus.session-expires-at";
 const SECURE_STORE_OPTIONS = {
   keychainService: "tcg-nexus-auth",
 };
+const SHORT_SESSION_MS = 15 * 60 * 1000;
+const LONG_SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 
 const isWeb = Platform.OS === "web";
 
@@ -50,13 +53,13 @@ export const saveAuthTokens = async (tokens: AuthTokens): Promise<void> => {
 };
 
 export const getStoredTokens = async (): Promise<AuthTokens | null> => {
-  const [accessToken, refreshToken, rawAccessTokenExpiresAt] = await Promise.all(
-    [
+  const [accessToken, refreshToken, rawAccessTokenExpiresAt, rawSessionExpiresAt] =
+    await Promise.all([
       getItem(ACCESS_TOKEN_KEY),
       getItem(REFRESH_TOKEN_KEY),
       getItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
-    ],
-  );
+      getItem(SESSION_EXPIRES_AT_KEY),
+    ]);
 
   if (!accessToken || !refreshToken || !rawAccessTokenExpiresAt) {
     return null;
@@ -65,6 +68,20 @@ export const getStoredTokens = async (): Promise<AuthTokens | null> => {
   const accessTokenExpiresAt = Number(rawAccessTokenExpiresAt);
   if (!Number.isFinite(accessTokenExpiresAt)) {
     return null;
+  }
+
+  if (rawSessionExpiresAt) {
+    const sessionExpiresAt = Number(rawSessionExpiresAt);
+    if (!Number.isFinite(sessionExpiresAt) || sessionExpiresAt <= Date.now()) {
+      await Promise.all([
+        deleteItem(ACCESS_TOKEN_KEY),
+        deleteItem(REFRESH_TOKEN_KEY),
+        deleteItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
+        deleteItem(REMEMBER_ME_KEY),
+        deleteItem(SESSION_EXPIRES_AT_KEY),
+      ]);
+      return null;
+    }
   }
 
   return {
@@ -80,6 +97,13 @@ export const saveRememberMePreference = async (
   await setItem(REMEMBER_ME_KEY, rememberMe ? "true" : "false");
 };
 
+export const saveSessionExpiration = async (
+  rememberMe: boolean,
+): Promise<void> => {
+  const ttl = rememberMe ? LONG_SESSION_MS : SHORT_SESSION_MS;
+  await setItem(SESSION_EXPIRES_AT_KEY, String(Date.now() + ttl));
+};
+
 export const getRememberMePreference = async (): Promise<boolean> => {
   const value = await getItem(REMEMBER_ME_KEY);
   return value === "true";
@@ -91,5 +115,6 @@ export const clearAuthStorage = async (): Promise<void> => {
     deleteItem(REFRESH_TOKEN_KEY),
     deleteItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
     deleteItem(REMEMBER_ME_KEY),
+    deleteItem(SESSION_EXPIRES_AT_KEY),
   ]);
 };

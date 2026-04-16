@@ -167,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       await storeLogout();
       setIsLoading(false);
-      router.replace("/auth/login");
+      router.replace("/login");
     }
   };
 

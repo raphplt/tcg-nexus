@@ -1,17 +1,17 @@
-import { Redirect, Slot } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 
-export default function ProtectedLayout() {
+export default function AuthLayout() {
   const { isAuthenticated, isHydrated } = useAuth();
 
   if (!isHydrated) {
     return <LoadingScreen />;
   }
 
-  if (!isAuthenticated) {
-    return <Redirect href="/login" />;
+  if (isAuthenticated) {
+    return <Redirect href="/" />;
   }
 
-  return <Slot />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
