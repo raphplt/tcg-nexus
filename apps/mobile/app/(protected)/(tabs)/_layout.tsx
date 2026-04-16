@@ -60,6 +60,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="collection/[id]"
+        options={{
+          href: null,
+          title: "Collection",
+        }}
+      />
+      <Tabs.Screen
         name="marketplace"
         options={{
           tabBarIcon: ({ color, size }) => (
