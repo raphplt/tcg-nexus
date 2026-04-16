@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, Repository } from "typeorm";
 import {
@@ -51,6 +52,7 @@ export class TournamentOrchestrationService {
     private rankingService: RankingService,
     private matchService: MatchService,
     private dataSource: DataSource,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -80,6 +82,15 @@ export class TournamentOrchestrationService {
       tournament.totalRounds = bracketStructure.totalRounds;
 
       await manager.save(tournament);
+
+      const userIds = tournament.registrations
+        .map((reg) => reg.player.user?.id)
+        .filter((id): id is number => id !== undefined);
+
+      this.eventEmitter.emit("tournament.started", {
+        userIds,
+        tournamentName: tournament.name,
+      });
 
       void this.rankingService.updateTournamentRankings(tournamentId);
 
@@ -238,7 +249,20 @@ export class TournamentOrchestrationService {
       tournament.status = TournamentStatus.FINISHED;
       tournament.isFinished = true;
 
-      return manager.save(tournament);
+      const savedTournament = await manager.save(tournament);
+
+      const rankings = await this.rankingService.getTournamentRankings(tournamentId);
+      const results = rankings.map((r, index) => ({
+        userId: r.player.user?.id,
+        rank: index + 1,
+      })).filter(r => r.userId !== undefined);
+
+      this.eventEmitter.emit("tournament.finished", {
+        results,
+        tournamentName: tournament.name,
+      });
+
+      return savedTournament;
     });
   }
 

@@ -211,6 +211,23 @@ export class MatchService {
     const match = this.matchRepository.create(matchData);
 
     const savedMatch = await this.matchRepository.save(match);
+
+    if (savedMatch.playerA?.user?.id) {
+      this.eventEmitter.emit("match.assigned", {
+        userId: savedMatch.playerA.user.id,
+        tournamentName: savedMatch.tournament.name,
+        opponentName: this.getPlayerDisplayName(savedMatch.playerB),
+      });
+    }
+
+    if (savedMatch.playerB?.user?.id) {
+      this.eventEmitter.emit("match.assigned", {
+        userId: savedMatch.playerB.user.id,
+        tournamentName: savedMatch.tournament.name,
+        opponentName: this.getPlayerDisplayName(savedMatch.playerA),
+      });
+    }
+
     return this.ensureOnlineSession(savedMatch);
   }
 

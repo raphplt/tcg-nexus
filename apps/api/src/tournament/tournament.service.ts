@@ -693,7 +693,16 @@ export class TournamentService {
     }
 
     registration.status = RegistrationStatus.CONFIRMED;
-    return this.registrationRepository.save(registration);
+    const savedRegistration = await this.registrationRepository.save(registration);
+
+    if (savedRegistration.player?.user?.id) {
+      this.eventEmitter.emit("tournament.registration.confirmed", {
+        userId: savedRegistration.player.user.id,
+        tournamentName: savedRegistration.tournament.name,
+      });
+    }
+
+    return savedRegistration;
   }
 
   /**

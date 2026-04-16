@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, LogOut, Settings, Shield } from "lucide-react";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 export const AuthHeader = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -45,6 +46,7 @@ export const AuthHeader = () => {
 
         <div className="flex items-center space-x-4">
           <ThemeToggle />
+          {isAuthenticated && <NotificationBell />}
 
           {isAuthenticated && user ? (
             <DropdownMenu>

@@ -35,6 +35,7 @@ import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { SealedProductModule } from "./sealed-product/sealed-product.module";
+import { NotificationModule } from "./notification/notification.module";
 
 @Module({
   imports: [
@@ -92,6 +93,7 @@ import { SealedProductModule } from "./sealed-product/sealed-product.module";
     BadgeModule,
     DashboardModule,
     SealedProductModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
