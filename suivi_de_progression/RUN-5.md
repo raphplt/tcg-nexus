@@ -4,7 +4,7 @@
 
 - Numéro et date du RUN : 5 – 2026-02-27
 - Durée prévue : ~4 semaines
-- Équipe active : `@raphplt`, `@soldrix`, `@Jounayd`, `@aymardl`
+- Équipe active : `@raphplt`, `@soldrix`, `@Jounayd`, `@aymardl`, `@peron_h`
 - Objectifs globaux du RUN :
   - Terminer les **issues en cours du RUN 4** (carry-over).
   - Développer les fonctionnalités de **Gamification** (badges, défis, classement ELO).
@@ -61,7 +61,7 @@
 | #114 | Tableau de bord utilisateur (stats personnelles) | P1 | Feature | @soldrix |
 | #108 | Système de recommandations de cartes pour collection | P1 | IA, Collection | @raphplt |
 | #109 | Export de deck au format PDF/Image | P2 | Collection | @aymardl |
-| #119 | Système de tickets support/aide | P2 | Support | @Jounayd |
+| #119 | Système de tickets support/aide | P2 | Support | @peron_h |
 
 ## 5. Nouveaux tickets à créer
 
