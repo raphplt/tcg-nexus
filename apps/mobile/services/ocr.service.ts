@@ -1,160 +1,263 @@
-import axios from "axios";
+import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
+import { Image } from "react-native";
+import type { OcrParsedResult, ProcessedImagePayload } from "@/types";
 
-export interface OcrResult {
-  rawText: string;
-  name?: string;
-  localId?: string;
-  denominator?: string;
-}
+const GOOGLE_VISION_URL = "https://vision.googleapis.com/v1/images:annotate";
 
-const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate";
+const STOPWORDS = new Set([
+  "hp",
+  "pokemon",
+  "trainer",
+  "energy",
+  "basic",
+  "stage",
+  "ability",
+  "attack",
+]);
 
-// Mock data for fallback testing
-const MOCK_OCR_RESPONSES = [
-  {
-    rawText: "Terracool\nSTAGE 1\n60 HP\n025/198\nIllus. Tika Matsuno\n© 2023 Pokémon",
-    name: "Terracool",
-    localId: "025",
-    denominator: "198",
-  },
-  {
-    rawText: "Gardevoir-ex\n280 HP\n086/198\nIllus. N-DESIGN Inc.\n© 2023 Pokémon",
-    name: "Gardevoir-ex",
-    localId: "086",
-    denominator: "198",
-  },
-  {
-    rawText: "Tarsal\n60 HP\n058/078\nIllus. Saya Tsuruta\n© 2023 Pokémon",
-    name: "Tarsal",
-    localId: "058",
-    denominator: "078",
-  },
-];
+const normalize = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-let mockIndex = 0;
+const getImageSize = (
+  uri: string,
+): Promise<{ width: number; height: number }> =>
+  new Promise((resolve, reject) => {
+    Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
+  });
 
-// Parse name and ID from raw OCR text
-export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+const parseSetMetadata = (
+  text: string,
+): {
+  setCode?: string;
+  setNumber?: string;
+  setTotal?: string;
+  setName?: string;
+} => {
+  const setCodeMatch = text.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
 
-  let localId: string | undefined;
-  let denominator: string | undefined;
-  let name: string | undefined;
+  let setName: string | undefined;
+  const setNameMatch = text.match(
+    /(\d{1,3}\s*\/\s*\d{1,3})\s*[—\-]\s*([A-Za-z0-9À-ÿ'\- ]{3,})/,
+  );
 
-  // Extract card number (e.g. 025/198)
-  const setNumberRegex = /\b(\d{1,3})\s*[\/\u2044]\s*(\d{1,3})\b/;
-  for (const line of lines) {
-    const match = line.match(setNumberRegex);
-    if (match) {
-      localId = match[1];
-      denominator = match[2];
-      break;
-    }
+  if (setNameMatch?.[2]) {
+    setName = setNameMatch[2].trim();
   }
 
-  // Extract card name, filtering out metadata keywords
-  const excludedKeywords = [
-    "stage",
-    "hp",
-    "evolve",
-    "no.",
-    "illus",
-    "pokemon",
-    "pokémon",
-    "nintendo",
-    "creatures",
-    "game freak",
-    "weakness",
-    "resistance",
-    "retreat",
-    "trainer",
-    "dresseur",
-    "energy",
-    "énergie",
-    "item",
-    "objet",
-    "supporter",
-    "stadium",
-    "stade",
-    "basic",
-    "de base",
-  ];
-
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
-    
-    if (excludedKeywords.some((keyword) => lowerLine.includes(keyword))) {
-      continue;
-    }
-
-    if (/^[^a-zA-Z]+$/.test(line)) {
-      continue;
-    }
-
-    if (/^[a-zA-Z\s\-\'\’]+$/.test(line) && line.length > 2 && line.length < 30) {
-      name = line;
-      break;
-    }
+  if (!setCodeMatch) {
+    return { setName };
   }
 
-  return { name, localId, denominator };
-}
+  return {
+    setCode: `${setCodeMatch[1]}/${setCodeMatch[2]}`,
+    setNumber: setCodeMatch[1],
+    setTotal: setCodeMatch[2],
+    setName,
+  };
+};
 
-// Send image to Google Cloud Vision or run fallback mock
-export async function performOcr(base64Image: string): Promise<OcrResult> {
-  const apiKey = process.env.EXPO_PUBLIC_VISION_API_KEY;
+const pickCardName = (lines: string[]): string | undefined => {
+  const candidate = lines.find((line) => {
+    const normalized = normalize(line).toLowerCase();
 
+    if (normalized.length < 3) {
+      return false;
+    }
+
+    if (/\d{1,3}\s*\/\s*\d{1,3}/.test(normalized)) {
+      return false;
+    }
+
+    if (STOPWORDS.has(normalized)) {
+      return false;
+    }
+
+    return /[a-zA-ZÀ-ÿ]/.test(normalized);
+  });
+
+  return candidate?.trim();
+};
+
+const buildSearchHints = (
+  cardName: string | undefined,
+  metadata: ReturnType<typeof parseSetMetadata>,
+): string[] => {
+  const hints = new Set<string>();
+
+  if (cardName && metadata.setCode) {
+    hints.add(`${cardName} ${metadata.setCode}`);
+  }
+
+  if (cardName) {
+    hints.add(cardName);
+  }
+
+  if (metadata.setCode) {
+    hints.add(metadata.setCode);
+  }
+
+  if (metadata.setNumber) {
+    hints.add(metadata.setNumber);
+  }
+
+  if (metadata.setName) {
+    hints.add(metadata.setName);
+  }
+
+  return Array.from(hints).filter(Boolean);
+};
+
+const extractTextFromGoogleVision = async (
+  base64Image: string,
+): Promise<string> => {
+  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY?.trim();
   if (!apiKey) {
-    console.warn(
-      "[OCR Service] EXPO_PUBLIC_VISION_API_KEY not configured. Using mock data."
+    throw new Error(
+      "EXPO_PUBLIC_GOOGLE_VISION_API_KEY manquant. Configure une cle OCR pour activer le scan.",
     );
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    const mock = (MOCK_OCR_RESPONSES[mockIndex] || MOCK_OCR_RESPONSES[0]) as OcrResult;
-    mockIndex = (mockIndex + 1) % MOCK_OCR_RESPONSES.length;
-    return mock;
   }
 
-  try {
-    const response = await axios.post(
-      `${VISION_API_URL}?key=${apiKey}`,
-      {
-        requests: [
-          {
-            image: {
-              content: base64Image,
-            },
-            features: [
-              {
-                type: "TEXT_DETECTION",
-              },
-            ],
+  const response = await fetch(`${GOOGLE_VISION_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      requests: [
+        {
+          image: {
+            content: base64Image,
           },
-        ],
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
+          features: [{ type: "TEXT_DETECTION", maxResults: 1 }],
         },
-      }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `OCR Google Vision indisponible (${response.status}): ${body}`,
+    );
+  }
+
+  const payload = await response.json();
+  const text =
+    payload?.responses?.[0]?.fullTextAnnotation?.text ||
+    payload?.responses?.[0]?.textAnnotations?.[0]?.description ||
+    "";
+
+  if (!text.trim()) {
+    throw new Error("Aucun texte detecte sur l'image scannee.");
+  }
+
+  return text;
+};
+
+const extractTextFromCustomOcrApi = async (
+  base64Image: string,
+): Promise<string> => {
+  const apiUrl = process.env.EXPO_PUBLIC_OCR_API_URL?.trim();
+  if (!apiUrl) {
+    return extractTextFromGoogleVision(base64Image);
+  }
+
+  const apiToken = process.env.EXPO_PUBLIC_OCR_API_TOKEN?.trim();
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+    },
+    body: JSON.stringify({
+      imageBase64: base64Image,
+      mimeType: "image/jpeg",
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Service OCR indisponible (${response.status}): ${body}`);
+  }
+
+  const payload = await response.json();
+  const text = payload?.text || payload?.fullText || payload?.rawText || "";
+
+  if (!String(text).trim()) {
+    throw new Error("Le service OCR n'a retourne aucun texte exploitable.");
+  }
+
+  return String(text);
+};
+
+export const ocrService = {
+  async optimizeImage(uri: string): Promise<ProcessedImagePayload> {
+    const { width, height } = await getImageSize(uri);
+
+    const cropWidth = Math.floor(width * 0.9);
+    const cropHeight = Math.floor(height * 0.72);
+    const originX = Math.max(0, Math.floor((width - cropWidth) / 2));
+    const originY = Math.max(0, Math.floor((height - cropHeight) / 2));
+
+    const optimized = await manipulateAsync(
+      uri,
+      [
+        {
+          crop: {
+            originX,
+            originY,
+            width: cropWidth,
+            height: cropHeight,
+          },
+        },
+        {
+          resize: {
+            width: 1200,
+          },
+        },
+      ],
+      {
+        base64: true,
+        compress: 0.68,
+        format: SaveFormat.JPEG,
+      },
     );
 
-    const annotations = response.data.responses?.[0]?.textAnnotations;
-    const rawText = annotations?.[0]?.description ?? "";
-
-    if (!rawText) {
-      return { rawText: "" };
+    if (!optimized.base64) {
+      throw new Error("Impossible d'encoder l'image scannee pour l'OCR.");
     }
 
-    const parsed = parseOcrText(rawText);
+    return {
+      optimizedUri: optimized.uri,
+      base64: optimized.base64,
+    };
+  },
+
+  async readCardText(base64Image: string): Promise<OcrParsedResult> {
+    const rawText = await extractTextFromCustomOcrApi(base64Image);
+    const lines = rawText
+      .split(/\r?\n/)
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .slice(0, 24);
+
+    const cardName = pickCardName(lines);
+    const metadata = parseSetMetadata(rawText);
+
     return {
       rawText,
-      ...parsed,
+      lines,
+      cardName,
+      setCode: metadata.setCode,
+      setNumber: metadata.setNumber,
+      setTotal: metadata.setTotal,
+      setName: metadata.setName,
+      searchHints: buildSearchHints(cardName, metadata),
     };
-  } catch (error) {
-    console.error("[OCR Service] Erreur lors de l'appel à Google Vision API:", error);
-    throw new Error("Impossible d'analyser l'image (erreur réseau ou API)");
-  }
-}
+  },
+};

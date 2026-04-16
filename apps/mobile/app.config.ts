@@ -21,12 +21,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.tcgnexus.app",
+    infoPlist: {
+      NSCameraUsageDescription:
+        "La camera est necessaire pour scanner vos cartes Pokemon et les ajouter a votre collection.",
+    },
   },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#f7f1e8",
     },
+    permissions: ["CAMERA"],
     package: "com.tcgnexus.app",
   },
   web: {
@@ -34,7 +39,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     output: "static",
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router", "expo-secure-store"],
+  plugins: [
+    "expo-router",
+    "expo-secure-store",
+    [
+      "expo-camera",
+      {
+        cameraPermission:
+          "Autoriser TCG Nexus a utiliser la camera pour scanner vos cartes.",
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: false,
   },

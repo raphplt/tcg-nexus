@@ -1,16 +1,27 @@
-import { StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { router } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function CollectionScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.eyebrow}>COLLECTION</Text>
-        <Text style={styles.title}>Zone protegee</Text>
+        <Text style={styles.title}>Scanner et ajouter rapidement</Text>
         <Text style={styles.subtitle}>
-          Cet ecran ne devient accessible qu&apos;avec une session valide.
-          L&apos;auth guard du groupe `(protected)` empeche l&apos;acces anonyme.
+          Lance le scan OCR depuis ce bouton pour reconnaitre une carte,
+          choisir une collection cible et l&apos;ajouter automatiquement.
         </Text>
       </View>
+
+      <Pressable
+        onPress={() => {
+          router.push("/scan");
+        }}
+        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+      >
+        <Ionicons color="#fff8f3" name="scan" size={24} />
+      </Pressable>
     </View>
   );
 }
@@ -28,6 +39,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
+  },
+  fab: {
+    alignItems: "center",
+    backgroundColor: "#15233b",
+    borderRadius: 28,
+    bottom: 24,
+    height: 56,
+    justifyContent: "center",
+    position: "absolute",
+    right: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    width: 56,
+  },
+  fabPressed: {
+    opacity: 0.8,
   },
   eyebrow: {
     color: "#d95f4d",

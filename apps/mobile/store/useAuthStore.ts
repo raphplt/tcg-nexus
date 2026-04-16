@@ -3,6 +3,7 @@ import {
   clearAuthStorage,
   saveAuthTokens,
   saveRememberMePreference,
+  saveSessionExpiration,
 } from "@/services/tokenStorage";
 import type { AuthTokens, User } from "@/types";
 
@@ -47,6 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async ({ rememberMe = false, tokens, user }) => {
     await saveAuthTokens(tokens);
     await saveRememberMePreference(rememberMe);
+    await saveSessionExpiration(rememberMe);
 
     set({
       isAuthenticated: true,
@@ -78,8 +80,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
+    const nextRememberMe =
+      typeof options?.rememberMe === "boolean"
+        ? options.rememberMe
+        : get().rememberMe;
+
     if (options?.persist !== false) {
       await saveAuthTokens(tokens);
+      await saveSessionExpiration(nextRememberMe);
     }
 
     if (typeof options?.rememberMe === "boolean") {
@@ -87,10 +95,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     const currentUser = get().user;
-    const nextRememberMe =
-      typeof options?.rememberMe === "boolean"
-        ? options.rememberMe
-        : get().rememberMe;
 
     set({
       isAuthenticated: getAuthenticationState(currentUser, tokens),

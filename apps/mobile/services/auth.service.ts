@@ -1,5 +1,6 @@
 import type {
   AuthSessionResponse,
+  ForgotPasswordRequest,
   LoginRequest,
   RefreshResponse,
   RegisterRequest,
@@ -128,5 +129,20 @@ export const authService = {
 
   async getProfile(options?: RequestOptions): Promise<User> {
     return this.profile(options);
+  },
+
+  async requestPasswordReset(
+    payload: ForgotPasswordRequest,
+    options?: RequestOptions,
+  ): Promise<void> {
+    const requestConfig: AppAxiosRequestConfig<ForgotPasswordRequest> = {
+      skipErrorToast: options?.skipErrorToast,
+    };
+
+    await api.post(
+      "/auth/forgot-password",
+      payload,
+      requestConfig,
+    );
   },
 };
