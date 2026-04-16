@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -118,6 +119,7 @@ export class AuthController {
     );
     res.json({
       user: result.user,
+      tokens: result.tokens,
       accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
     });
     return;
@@ -149,6 +151,7 @@ export class AuthController {
     );
     res.json({
       user: result.user,
+      tokens: result.tokens,
       accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
     });
     return;
@@ -159,6 +162,7 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 300 } })
   @ApiBearerAuth()
   @Post("refresh")
+  @Public()
   @HttpCode(HttpStatus.OK)
   async refreshTokens(
     @CurrentUser() user: User,
@@ -188,6 +192,7 @@ export class AuthController {
     );
     res.json({
       success: true,
+      tokens,
       accessTokenExpiresAt: tokens.accessTokenExpiresAt,
     });
     return;
@@ -215,6 +220,13 @@ export class AuthController {
   @ApiBearerAuth()
   @Post("profile")
   @HttpCode(HttpStatus.OK)
+  getProfilePost(@CurrentUser() user: User) {
+    return this.userService.findOne(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get("profile")
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }

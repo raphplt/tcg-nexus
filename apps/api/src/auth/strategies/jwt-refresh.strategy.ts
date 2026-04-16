@@ -7,6 +7,34 @@ import { User } from "../../user/entities/user.entity";
 import { UserService } from "../../user/user.service";
 import { JwtPayload } from "../interfaces/auth.interface";
 
+const extractRefreshToken = (req: Request): string | null => {
+  if (!req) {
+    return null;
+  }
+
+  const cookieToken = req.cookies?.refreshToken as string | undefined;
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  const headerToken = req.headers["x-refresh-token"];
+  if (typeof headerToken === "string" && headerToken.length > 0) {
+    return headerToken;
+  }
+
+  const authHeaderToken = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+  if (authHeaderToken) {
+    return authHeaderToken;
+  }
+
+  const bodyToken = req.body?.refreshToken;
+  if (typeof bodyToken === "string" && bodyToken.length > 0) {
+    return bodyToken;
+  }
+
+  return null;
+};
+
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
@@ -26,12 +54,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
 
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: Request) => {
-          if (req && req.cookies) {
-            return (req.cookies["refreshToken"] as string) || null;
-          }
-          return null;
-        },
+        extractRefreshToken,
       ]),
       ignoreExpiration: false,
       secretOrKey: refreshSecret,
@@ -43,9 +66,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     req: Request,
     payload: JwtPayload,
   ): Promise<User & { refreshToken?: string }> {
-    const refreshToken: string | undefined = req.cookies?.refreshToken as
-      | string
-      | undefined;
+    const refreshToken = extractRefreshToken(req) ?? undefined;
     const user = await this.userService.findById(payload.sub);
 
     if (!user || !user.isActive) {
