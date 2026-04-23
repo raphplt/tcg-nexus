@@ -10,7 +10,7 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
 import { PaginatedResult } from "@/types/pagination";
-import { SealedProduct } from "@/types/sealed-product";
+import type { SealedProduct } from "@/types/sealed-product";
 
 export interface FilterState {
   search: string;
@@ -61,12 +61,20 @@ export function useMarketplaceHome() {
     queryFn: () => pokemonCardService.getAllSets(20),
   });
 
-  // Récupère les produits scellés récents
-  const { data: sealedData, isLoading: loadingSealed } = useQuery<
-    PaginatedResult<SealedProduct>
+  // Récupère les produits scellés récents (par createdAt desc)
+  const { data: recentSealed, isLoading: loadingRecentSealed } = useQuery<
+    SealedProduct[]
   >({
-    queryKey: ["sealed-products", "home"],
-    queryFn: () => sealedProductService.getPaginated({ limit: 8, page: 1 }),
+    queryKey: ["sealed-products", "recent", 8],
+    queryFn: () => sealedProductService.getRecent(8),
+  });
+
+  // Récupère les produits scellés populaires (par score d'événements)
+  const { data: popularSealed, isLoading: loadingPopularSealed } = useQuery<
+    SealedProduct[]
+  >({
+    queryKey: ["sealed-products", "popular", 8],
+    queryFn: () => sealedProductService.getPopular(8),
   });
 
   return {
@@ -74,12 +82,14 @@ export function useMarketplaceHome() {
     trendingCards,
     bestSellers,
     sets,
-    sealedProducts: sealedData?.data,
+    sealedProducts: recentSealed,
+    popularSealed,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
-    loadingSealed,
+    loadingSealed: loadingRecentSealed,
+    loadingPopularSealed,
   };
 }
 

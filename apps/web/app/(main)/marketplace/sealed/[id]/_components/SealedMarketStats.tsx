@@ -3,8 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrencyStore } from "@/store/currency.store";
 import { SealedProductStatistics } from "@/services/sealed-product.service";
+import { useCurrencyStore } from "@/store/currency.store";
 
 interface SealedMarketStatsProps {
   stats?: SealedProductStatistics;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
+import { SealedProductsPreview } from "@/components/Marketplace/SealedProductsPreview";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
 import SetCard from "@/components/Marketplace/SetCard";
 import { H1, H2 } from "@/components/Shared/Titles";
@@ -20,12 +20,10 @@ export default function MarketplaceHomePage() {
     trendingCards,
     bestSellers,
     sets,
-    sealedProducts,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
-    loadingSealed,
   } = useMarketplaceHome();
 
   return (
