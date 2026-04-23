@@ -1,6 +1,6 @@
 import { CardState } from "@/utils/enums";
 
-export const getCardStateColor = (cardState: string) => {
+export const getCardStateColor = (cardState: string | null | undefined) => {
   switch (cardState) {
     case CardState.NM:
     case "NM":

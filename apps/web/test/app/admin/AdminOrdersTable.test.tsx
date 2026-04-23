@@ -6,6 +6,7 @@ import { adminService } from "@/services/admin.service";
 import { UserRole } from "@/types/auth";
 import { Rarity } from "@/types/listing";
 import { type Order, OrderStatus } from "@/types/order";
+import { ProductKind } from "@/types/sealed-product";
 import type { PaginatedResult } from "@/types/pagination";
 import { CardState, Currency } from "@/utils/enums";
 
@@ -54,6 +55,7 @@ const sampleOrder: Order = {
           lastName: "Seller",
           role: UserRole.USER,
         },
+        productKind: ProductKind.CARD,
         pokemonCard: {
           id: "card-1",
           name: "Pikachu",

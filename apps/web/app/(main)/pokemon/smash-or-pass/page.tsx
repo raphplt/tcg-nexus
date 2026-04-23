@@ -355,7 +355,7 @@ export default function PokemonMatchPage() {
       {/* Background image */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <Image
-          src={BG_IMAGES[bgIndex]}
+          src={BG_IMAGES[bgIndex] ?? BG_IMAGES[0] ?? ""}
           alt=""
           fill
           className="object-cover"
