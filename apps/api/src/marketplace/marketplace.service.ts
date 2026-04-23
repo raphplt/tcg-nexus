@@ -275,11 +275,8 @@ export class MarketplaceService {
     });
     const savedListing = await this.listingRepository.save(listing);
 
-    // Load full relations for price history (skip pour les sealed pour l'instant)
-    if (productKind === ProductKind.CARD) {
-      const listingWithRelations = await this.findOne(savedListing.id);
-      await this.recordPriceHistory(listingWithRelations);
-    }
+    const listingWithRelations = await this.findOne(savedListing.id);
+    await this.recordPriceHistory(listingWithRelations);
 
     return savedListing;
   }
@@ -830,15 +827,17 @@ export class MarketplaceService {
 
   /**
    * Record price history when listing is created/updated.
-   * Sealed listings ne sont pas trackés pour l'instant.
+   * Supporte les listings card ET sealed (l'un des deux est renseigné).
    */
   async recordPriceHistory(listing: Listing): Promise<void> {
-    if (!listing.pokemonCard) return;
+    if (!listing.pokemonCard && !listing.sealedProduct) return;
     const priceHistory = this.priceHistoryRepository.create({
-      pokemonCard: listing.pokemonCard,
+      pokemonCard: listing.pokemonCard ?? null,
+      sealedProduct: listing.sealedProduct ?? null,
       price: listing.price,
       currency: listing.currency,
       cardState: listing.cardState ?? undefined,
+      sealedCondition: listing.sealedCondition ?? undefined,
       quantityAvailable: listing.quantityAvailable,
     });
     await this.priceHistoryRepository.save(priceHistory);

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -37,10 +39,32 @@ export class SealedProductController {
     return this.sealedProductService.findAllPaginated(filter);
   }
 
+  @Get("recent")
+  @Public()
+  findRecent(
+    @Query("limit", new DefaultValuePipe(8), ParseIntPipe) limit: number,
+  ) {
+    return this.sealedProductService.findRecent(limit);
+  }
+
+  @Get("popular")
+  @Public()
+  findPopular(
+    @Query("limit", new DefaultValuePipe(8), ParseIntPipe) limit: number,
+  ) {
+    return this.sealedProductService.findPopular(limit);
+  }
+
   @Get(":id")
   @Public()
   findOne(@Param("id") id: string) {
     return this.sealedProductService.findOne(id);
+  }
+
+  @Get(":id/stats")
+  @Public()
+  getStatistics(@Param("id") id: string) {
+    return this.sealedProductService.getStatistics(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
