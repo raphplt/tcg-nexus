@@ -1,9 +1,4 @@
-import {
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-} from "class-validator";
+import { IsEnum, IsObject, IsOptional, IsString } from "class-validator";
 import { SealedEventType } from "../entities/sealed-event.entity";
 
 export class CreateSealedEventDto {

@@ -65,10 +65,7 @@ export default function SealedProductDetailPage({ params }: PageProps) {
 
     const quantity = Math.max(
       1,
-      Math.min(
-        quantitiesByListing[listing.id] ?? 1,
-        listing.quantityAvailable,
-      ),
+      Math.min(quantitiesByListing[listing.id] ?? 1, listing.quantityAvailable),
     );
 
     setAddingToListingId(listing.id);

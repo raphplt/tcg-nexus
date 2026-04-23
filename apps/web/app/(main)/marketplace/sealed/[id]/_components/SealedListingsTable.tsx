@@ -99,9 +99,7 @@ export function SealedListingsTable({
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={outOfStock ? "destructive" : "secondary"}
-                      >
+                      <Badge variant={outOfStock ? "destructive" : "secondary"}>
                         {listing.quantityAvailable}
                       </Badge>
                     </TableCell>
