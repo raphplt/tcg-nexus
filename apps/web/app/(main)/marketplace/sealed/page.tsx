@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
