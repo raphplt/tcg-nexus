@@ -22,7 +22,7 @@ export default function Error({
         <div className="space-y-2">
           <h1 className="text-3xl font-bold font-heading">Erreur inattendue</h1>
           <p className="text-muted-foreground">
-            Quelque chose s&apos;est mal passe. Veuillez reessayer.
+            Quelque chose s&apos;est mal passé. Veuillez réessayer.
           </p>
         </div>
         <Button onClick={reset}>
