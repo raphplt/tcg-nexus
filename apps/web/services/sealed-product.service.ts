@@ -76,7 +76,7 @@ export const sealedProductService = {
   async getListings(
     sealedProductId: string,
   ): Promise<PaginatedResult<Listing>> {
-    return fetcher<PaginatedResult<Listing>>("/listings", {
+    return fetcher<PaginatedResult<Listing>>("/marketplace/listings", {
       params: { sealedProductId, productKind: "sealed" },
     });
   },
