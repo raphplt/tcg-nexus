@@ -177,6 +177,12 @@ export class MarketplaceController {
     return this.marketplaceService.getCardStatistics(id, currency, cardState);
   }
 
+  @Get("cards/:id/external-offers")
+  @Public()
+  getExternalOffers(@Param("id") id: string) {
+    return this.marketplaceService.getExternalOffers(id);
+  }
+
   @Get("best-sellers")
   @Public()
   @ApiQuery({ name: "limit", required: false, type: Number })

@@ -13,8 +13,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import toast from "react-hot-toast";
 import { CardImage } from "./_components/CardImage";
 import { CardInfo } from "./_components/CardInfo";
-import { MarketStats } from "./_components/MarketStats";
+import { ExternalOffers } from "./_components/ExternalOffers";
 import { ListingsTable } from "./_components/ListingsTable";
+import { MarketStats } from "./_components/MarketStats";
 
 export default function CardDetailPage() {
   const { id } = useParams();
@@ -108,6 +109,7 @@ export default function CardDetailPage() {
                 marketPricing={stats.marketPricing || card?.pricing}
               />
             )}
+            <ExternalOffers cardId={id as string} />
           </div>
         </div>
 

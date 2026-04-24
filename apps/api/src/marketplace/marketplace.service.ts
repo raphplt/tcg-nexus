@@ -29,8 +29,13 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import {
+  ExternalOfferDto,
+  ExternalOfferSource,
+  ExternalOffersResponseDto,
+} from "./dto/external-offer.dto";
 import { PriceHistory } from "./entities/price-history.entity";
-import { ExternalPricingService } from "./pricing";
+import { ExternalPricingService, getCardMarketPrice, getTcgPlayerPrice } from "./pricing";
 import { StripeService } from "./stripe.service";
 
 export interface FindAllListingsParams {
@@ -558,6 +563,69 @@ export class MarketplaceService {
       })),
       marketPricing,
     };
+  }
+
+  /**
+   * Construit la liste des offres externes affichables à côté des listings
+   * internes. Aucun appel réseau à l'exécution : tout est dérivé du pricing
+   * en cache (rafraîchi par `ExternalPricingService`). eBay est un simple lien
+   * de recherche (pas d'API publique ouverte pour les listings actifs).
+   */
+  async getExternalOffers(cardId: string): Promise<ExternalOffersResponseDto> {
+    const card = await this.pokemonCardRepository.findOne({
+      where: { id: cardId },
+      select: ["id", "name", "pricing"],
+    });
+    if (!card) return { offers: [] };
+
+    const pricing =
+      (await this.externalPricingService
+        .getOrRefresh(cardId)
+        .catch(() => null)) ?? card.pricing ?? null;
+
+    const offers: ExternalOfferDto[] = [];
+
+    const cmPrice = getCardMarketPrice(pricing?.cardmarket);
+    const cmId = pricing?.cardmarket?.idProduct;
+    if (cmId) {
+      offers.push({
+        source: ExternalOfferSource.CARDMARKET,
+        price: cmPrice,
+        currency: cmPrice != null ? "EUR" : null,
+        url: `https://www.cardmarket.com/en/Pokemon/Products/Singles/redirect?idProduct=${cmId}`,
+        updated: pricing?.cardmarket?.updated ?? null,
+      });
+    }
+
+    const tcgPrice = getTcgPlayerPrice(pricing?.tcgplayer);
+    if (tcgPrice != null && card.name) {
+      offers.push({
+        source: ExternalOfferSource.TCGPLAYER,
+        price: tcgPrice,
+        currency: "USD",
+        url: `https://www.tcgplayer.com/search/pokemon/product?q=${encodeURIComponent(card.name)}`,
+        updated: pricing?.tcgplayer?.updated ?? null,
+      });
+    }
+
+    if (card.name) {
+      offers.push({
+        source: ExternalOfferSource.EBAY,
+        price: null,
+        currency: null,
+        url: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(`${card.name} pokemon card`)}&_sop=15`,
+        updated: null,
+      });
+    }
+
+    offers.sort((a, b) => {
+      if (a.price == null && b.price == null) return 0;
+      if (a.price == null) return 1;
+      if (b.price == null) return -1;
+      return a.price - b.price;
+    });
+
+    return { offers };
   }
 
   async getPopularCards(limit: number = 10) {

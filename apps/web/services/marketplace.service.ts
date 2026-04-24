@@ -28,6 +28,20 @@ export interface CardMarketplaceQueryParams extends PaginationParams {
   sortOrder?: "ASC" | "DESC";
 }
 
+export type ExternalOfferSource = "cardmarket" | "tcgplayer" | "ebay";
+
+export interface ExternalOffer {
+  source: ExternalOfferSource;
+  price: number | null;
+  currency: string | null;
+  url: string;
+  updated: string | null;
+}
+
+export interface ExternalOffersResponse {
+  offers: ExternalOffer[];
+}
+
 export interface CardStatistics {
   cardId: string;
   totalListings: number;
@@ -153,6 +167,15 @@ export const marketplaceService = {
     return fetcher<CardStatistics>(`/marketplace/cards/${cardId}/stats`, {
       params,
     });
+  },
+
+  /**
+   * Récupère les offres externes (CardMarket / TCGPlayer / eBay) pour une carte
+   */
+  async getExternalOffers(cardId: string): Promise<ExternalOffersResponse> {
+    return fetcher<ExternalOffersResponse>(
+      `/marketplace/cards/${cardId}/external-offers`,
+    );
   },
 
   /**
