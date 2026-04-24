@@ -28,7 +28,7 @@ export class PaymentController {
     @Body() createPaymentIntentDto: CreatePaymentIntentDto,
     @CurrentUser() user: User,
   ) {
-    // Recalculate amount server-side from the user's cart
+    // recalculer le montant côté serveur pour éviter les manipulations côté client
     const cart = await this.userCartService.findCartByUserId(user.id);
     if (!cart || cart.cartItems.length === 0) {
       throw new BadRequestException("Cart is empty");
@@ -39,7 +39,7 @@ export class PaymentController {
       serverAmount += Number(item.listing.price) * item.quantity;
     }
 
-    // Determine currency from cart items (all items must share the same currency)
+    // TODO : gérer les différentes devises
     const currencies = [
       ...new Set(cart.cartItems.map((item) => item.listing.currency)),
     ];

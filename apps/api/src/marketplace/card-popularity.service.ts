@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { createHash } from "crypto";
 import { Card } from "src/card/entities/card.entity";
+import { hashIpAddress } from "src/common/utils";
 import { Between, LessThanOrEqual, Repository } from "typeorm";
 import { CreateCardEventDto } from "./dto/card-popularity.dto";
 import { CardEvent, CardEventType } from "./entities/card-event.entity";
@@ -13,7 +13,7 @@ import { Order } from "./entities/order.entity";
 export class CardPopularityService {
   private readonly logger = new Logger(CardPopularityService.name);
 
-  // Poids pour le calcul du popularity_score
+  // Poids
   private readonly EVENT_WEIGHTS = {
     [CardEventType.VIEW]: 1,
     [CardEventType.SEARCH]: 2,
@@ -22,7 +22,7 @@ export class CardPopularityService {
     [CardEventType.SALE]: 50,
   };
 
-  // Fenêtres de temps (en jours)
+  // Fenêtres de temps
   private readonly POPULARITY_WINDOW_DAYS = parseInt(
     process.env.POPULARITY_WINDOW_DAYS || "90",
     10,
@@ -67,10 +67,7 @@ export class CardPopularityService {
       throw new BadRequestException("Card not found");
     }
 
-    // Hash IP address for GDPR compliance
-    const hashedIp = ipAddress
-      ? createHash("sha256").update(ipAddress).digest("hex").substring(0, 16)
-      : undefined;
+    const hashedIp = hashIpAddress(ipAddress);
 
     const event = this.cardEventRepository.create({
       card: { id: dto.cardId },
@@ -99,7 +96,7 @@ export class CardPopularityService {
       `Aggregating metrics for ${date.toISOString().split("T")[0]}`,
     );
 
-    // Récupérer toutes les cartes qui ont eu des événements ce jour-là
+    // cartes avec des énvénements ce jour-là
     const cardsWithEvents = await this.cardEventRepository
       .createQueryBuilder("event")
       .select("DISTINCT event.card.id", "cardId")
@@ -133,7 +130,6 @@ export class CardPopularityService {
 
     if (!card) return;
 
-    // Compter les événements par type
     const events = await this.cardEventRepository
       .createQueryBuilder("event")
       .select("event.eventType", "type")
@@ -175,7 +171,7 @@ export class CardPopularityService {
       }
     });
 
-    // Use SQL aggregates instead of loading all listings into memory
+    // récupérer les données de listing pour la carte ce jour-là
     const listingStats = await this.listingRepository
       .createQueryBuilder("listing")
       .select("COUNT(listing.id)", "listingCount")
@@ -196,11 +192,10 @@ export class CardPopularityService {
       ? parseFloat(listingStats.avgPrice)
       : null;
 
-    // Calculer les scores
+    // calcul des scores
     const popularityScore = await this.calculatePopularityScore(cardId);
     const trendScore = await this.calculateTrendScore(cardId);
 
-    // Sauvegarder ou mettre à jour les métriques
     const dateOnly = new Date(startDate);
     dateOnly.setHours(0, 0, 0, 0);
 
@@ -257,7 +252,7 @@ export class CardPopularityService {
   }
 
   /**
-   * Calcule le trend_score via SQL aggregation
+   * Calcule le trend_score
    */
   private async calculateTrendScore(cardId: string): Promise<number> {
     const now = new Date();
@@ -270,7 +265,6 @@ export class CardPopularityService {
       baseWindowStart.getDate() - this.TREND_BASE_WINDOW_DAYS,
     );
 
-    // Single query with CASE to split recent vs base window
     const results = await this.cardEventRepository
       .createQueryBuilder("event")
       .select("event.eventType", "eventType")
@@ -294,6 +288,7 @@ export class CardPopularityService {
         count: string;
       }>();
 
+    // calcul des moyennes quotidiennes pour les deux fenêtres
     let recentScore = 0;
     let baseScore = 0;
     results.forEach(({ eventType, window, count }) => {
@@ -311,6 +306,7 @@ export class CardPopularityService {
       return recentDailyAvg > 0 ? 100 : 0;
     }
 
+    // ratio de croissance
     const growthRatio = ((recentDailyAvg - baseDailyAvg) / baseDailyAvg) * 100;
 
     const listingCount = await this.listingRepository.count({
@@ -338,7 +334,7 @@ export class CardPopularityService {
       take: limit * 2,
     });
 
-    // Grouper par carte et prendre le score le plus récent
+    // groupe par carte et prendre le score le plus récent
     const cardMap = new Map<string, CardPopularityMetrics>();
 
     metrics.forEach((metric) => {
@@ -394,7 +390,6 @@ export class CardPopularityService {
 
     const metrics = await query.getMany();
 
-    // Grouper par carte et prendre le score le plus récent
     const cardMap = new Map<string, CardPopularityMetrics>();
 
     metrics.forEach((metric) => {
@@ -410,7 +405,7 @@ export class CardPopularityService {
       (a, b) => b.trendScore - a.trendScore,
     );
 
-    // Exclure les top populaires (pour ne pas avoir de doublons dans les résultats)
+    // exclure les top populaires pour éviter les doublons
     if (excludePopular) {
       const popularCards = await this.getPopularCards(limit);
       const popularCardIds = new Set(popularCards.map((c) => c.card.id));

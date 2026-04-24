@@ -34,10 +34,6 @@ export class Listing {
   @JoinColumn({ name: "seller_id" })
   seller: User;
 
-  /**
-   * Discriminator. Exactement un de `pokemonCard` / `sealedProduct` doit être
-   * renseigné selon la valeur de ce champ.
-   */
   @Column({ type: "enum", enum: ProductKind, default: ProductKind.CARD })
   productKind: ProductKind;
 
@@ -58,11 +54,11 @@ export class Listing {
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
 
-  /** État de la carte. Nullable pour les listings de produits scellés. */
+  /** État de la carte.  */
   @Column({ type: "enum", enum: CardState, nullable: true })
   cardState?: CardState | null;
 
-  /** État du produit scellé. Nullable pour les listings de cartes. */
+  /** État du produit scellé. */
   @Column({ type: "enum", enum: SealedCondition, nullable: true })
   sealedCondition?: SealedCondition | null;
 

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "crypto";
+import { hashIpAddress } from "src/common/utils";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { Repository } from "typeorm";
 import { CreateSealedEventDto } from "./dto/sealed-event.dto";
@@ -32,10 +33,7 @@ export class SealedEventService {
       throw new BadRequestException("Sealed product not found");
     }
 
-    // Hash IP pour conformité RGPD (même pattern que CardPopularityService)
-    const hashedIp = ipAddress
-      ? createHash("sha256").update(ipAddress).digest("hex").substring(0, 16)
-      : undefined;
+    const hashedIp = hashIpAddress(ipAddress);
 
     const event = this.sealedEventRepository.create({
       sealedProduct: { id: dto.sealedProductId } as SealedProduct,

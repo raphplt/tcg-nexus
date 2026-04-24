@@ -177,7 +177,6 @@ export class MarketplaceController {
     return this.marketplaceService.getCardStatistics(id, currency, cardState);
   }
 
-  // Meilleurs vendeurs
   @Get("best-sellers")
   @Public()
   @ApiQuery({ name: "limit", required: false, type: Number })
@@ -185,7 +184,6 @@ export class MarketplaceController {
     return this.marketplaceService.getBestSellers(limit ? +limit : 10);
   }
 
-  // Vendeurs
   @Get("sellers/:id")
   @Public()
   getSellerStatistics(@Param("id", ParseIntPipe) id: number) {

@@ -10,7 +10,6 @@ export class CardPopularityScheduler {
 
   /**
    * Exécute l'agrégation quotidienne des métriques
-   * Tous les jours à 3h du matin (heure creuse)
    */
   @Cron("0 3 * * *", {
     name: "aggregate-daily-metrics",
@@ -21,7 +20,6 @@ export class CardPopularityScheduler {
     const startTime = Date.now();
 
     try {
-      // Agrégation pour le jour précédent
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
@@ -32,15 +30,17 @@ export class CardPopularityScheduler {
         `Daily metrics aggregation completed successfully in ${duration}ms`,
       );
     } catch (error) {
-      this.logger.error(
-        `Error during daily metrics aggregation: ${error.message}`,
-        error.stack,
-      );
+      if (error instanceof Error) {
+        this.logger.error(
+          `Error during daily metrics aggregation: ${error.message}`,
+          error.stack,
+        );
+      }
     }
   }
 
   /**
-   * Permet de déclencher manuellement l'agrégation (pour tests ou récupération)
+   * Déclenchement manuel
    */
   async triggerAggregation(targetDate?: Date) {
     this.logger.log("Manual aggregation triggered");

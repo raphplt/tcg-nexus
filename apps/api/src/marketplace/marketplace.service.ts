@@ -74,7 +74,7 @@ export class MarketplaceService {
   private readonly logger = new Logger(MarketplaceService.name);
 
   async createOrder(createOrderDto: CreateOrderDto, user: User) {
-    // 1. Verify Stripe PaymentIntent before anything else
+    // vérifier le paiement avec Stripe
     const paymentIntent = await this.stripeService.retrievePaymentIntent(
       createOrderDto.paymentIntentId,
     );
@@ -84,20 +84,21 @@ export class MarketplaceService {
       );
     }
 
-    // 2. Load cart with fresh listing data
+    // vérifier que le panier n'est pas vide
     const cart = await this.userCartService.findCartByUserId(user.id);
     if (!cart || cart.cartItems.length === 0) {
       throw new BadRequestException("Cart is empty");
     }
 
-    // 3. Self-purchase check
+    // vérifier que l'utilisateur ne tente pas d'acheter ses propres annonces
     for (const item of cart.cartItems) {
       if (item.listing.seller && item.listing.seller.id === user.id) {
         throw new BadRequestException("You cannot purchase your own listing");
       }
     }
 
-    // 4. Determine currency from cart items
+    // vérifier que toutes les annonces utilisent la même devise
+    // TODO : à améliorer pour autoriser les paiements multi-devises
     const currencies = [
       ...new Set(cart.cartItems.map((item) => item.listing.currency)),
     ];
@@ -108,7 +109,8 @@ export class MarketplaceService {
     }
     const orderCurrency = currencies[0];
 
-    // 5. Recalculate total server-side and verify against Stripe amount
+    // recalculer le montant total pour éviter les manipulations côté client
+    // TODO : à améliorer pour gérer les promotions, codes de réduction, etc.
     let totalAmount = 0;
     for (const item of cart.cartItems) {
       totalAmount += Number(item.listing.price) * item.quantity;
@@ -122,10 +124,10 @@ export class MarketplaceService {
       throw new BadRequestException("Payment amount does not match cart total");
     }
 
-    // 6. Execute order creation inside a transaction
+    // transaction pour garantir la cohérence des données
     return this.dataSource.transaction(async (manager) => {
-      // Re-verify stock with pessimistic lock to prevent race conditions
       for (const item of cart.cartItems) {
+        // éviter les race conditions
         const freshListing = await manager.findOne(Listing, {
           where: { id: item.listing.id },
           lock: { mode: "pessimistic_write" },
@@ -144,7 +146,7 @@ export class MarketplaceService {
         }
       }
 
-      // Create Order
+      // création de la commande
       const order = manager.create(Order, {
         buyer: user,
         totalAmount,
@@ -160,7 +162,7 @@ export class MarketplaceService {
       });
       const savedOrder = await manager.save(Order, order);
 
-      // Create Payment Transaction
+      // création de la transaction de paiement
       const payment = manager.create(PaymentTransaction, {
         order: savedOrder,
         method: PaymentMethod.CREDIT_CARD,
@@ -170,7 +172,7 @@ export class MarketplaceService {
       });
       await manager.save(PaymentTransaction, payment);
 
-      // Decrement stock
+      // décrémenter le stock
       for (const item of cart.cartItems) {
         await manager.decrement(
           Listing,
@@ -180,10 +182,10 @@ export class MarketplaceService {
         );
       }
 
-      // Clear cart
+      // vider le panier
       await this.userCartService.clearCart(user.id);
 
-      // Emit sale events for popularity tracking (fire-and-forget, cards only)
+      // enregistrer les événements de popularité des cartes vendues
       for (const item of cart.cartItems) {
         const cardId = item.listing.pokemonCard?.id;
         if (!cardId) continue;
@@ -207,6 +209,7 @@ export class MarketplaceService {
 
   async findAllOrders(params: AdminOrderQueryDto) {
     const { page = 1, limit = 20, status, buyerId, sellerId } = params;
+    // construire la requête de base avec les jointures nécessaires
     const qb = this.orderRepository
       .createQueryBuilder("order")
       .leftJoinAndSelect("order.buyer", "buyer")
@@ -281,6 +284,7 @@ export class MarketplaceService {
     return savedListing;
   }
 
+  //TODO : à refacto
   async findAll(
     params: FindAllListingsParams = {},
   ): Promise<PaginatedResult<Listing>> {
@@ -299,6 +303,7 @@ export class MarketplaceService {
       priceMin,
       priceMax,
     } = params;
+
     const qb = this.listingRepository
       .createQueryBuilder("listing")
       .leftJoinAndSelect("listing.seller", "seller")
@@ -457,21 +462,16 @@ export class MarketplaceService {
     );
   }
 
-  /**
-   * Get card statistics including price history, min/max/avg prices
-   */
   async getCardStatistics(
     cardId: string,
     currency?: string,
     cardState?: string,
   ) {
-    // Fetch card market pricing
     const card = await this.pokemonCardRepository.findOne({
       where: { id: cardId },
       select: ["id", "pricing"],
     });
 
-    // Use SQL aggregates instead of loading all listings into memory
     const statsQb = this.listingRepository
       .createQueryBuilder("listing")
       .select("COUNT(listing.id)", "totalListings")
@@ -548,10 +548,8 @@ export class MarketplaceService {
     };
   }
 
-  /**
-   * Get popular cards (most listed/viewed)
-   */
   async getPopularCards(limit: number = 10) {
+    //TODO : refacto ?
     const cards = await this.listingRepository
       .createQueryBuilder("listing")
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
@@ -601,9 +599,6 @@ export class MarketplaceService {
     }));
   }
 
-  /**
-   * Get trending cards (based on recent listings)
-   */
   async getTrendingCards(limit: number = 10, days: number = 7) {
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - days);
@@ -656,10 +651,6 @@ export class MarketplaceService {
     }));
   }
 
-  /**
-   * Get best sellers (users with most sales)
-   * Falls back to sellers with most active listings if no sales found
-   */
   async getBestSellers(limit: number = 10) {
     const sellersFromOrders = await this.orderRepository
       .createQueryBuilder("order")
@@ -763,9 +754,6 @@ export class MarketplaceService {
     return allSellers;
   }
 
-  /**
-   * Get seller statistics
-   */
   async getSellerStatistics(sellerId: number) {
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },
@@ -825,10 +813,6 @@ export class MarketplaceService {
     };
   }
 
-  /**
-   * Record price history when listing is created/updated.
-   * Supporte les listings card ET sealed (l'un des deux est renseigné).
-   */
   async recordPriceHistory(listing: Listing): Promise<void> {
     if (!listing.pokemonCard && !listing.sealedProduct) return;
     const priceHistory = this.priceHistoryRepository.create({
@@ -843,9 +827,6 @@ export class MarketplaceService {
     await this.priceHistoryRepository.save(priceHistory);
   }
 
-  /**
-   * Get all available cards with marketplace data
-   */
   async getCardsWithMarketplaceData(params: {
     page?: number;
     limit?: number;
@@ -948,22 +929,17 @@ export class MarketplaceService {
       });
     }
 
-    // Sorting with safeguards
+    //TODO : refacto pour éviter les répétitions et gérer plus proprement les champs calculés
     if (sortBy === "price") {
       qb.orderBy("min_price", sortOrder);
     } else if (sortBy === "popularity") {
       qb.orderBy("listing_count", "DESC");
     } else if (sortBy === "localId") {
-      // For localId, sort as text but it will work for numeric strings
-      // Since we added it to GROUP BY, we can reference it directly
       qb.orderBy("card.localId", sortOrder);
-      // Add secondary sort by name for consistency
       qb.addOrderBy("card.name", "ASC");
     } else if (sortBy === "name" || sortBy === "rarity") {
-      // Safe fields that are in GROUP BY
       qb.orderBy(`card.${sortBy}`, sortOrder);
     } else {
-      // Fallback to name if sortBy is not recognized
       qb.orderBy("card.name", sortOrder);
     }
 
@@ -1032,9 +1008,6 @@ export class MarketplaceService {
     return this.orderRepository.save(order);
   }
 
-  /**
-   * Handle Stripe payment_intent.succeeded webhook
-   */
   async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
     const payment = await this.paymentTransactionRepository.findOne({
       where: { transactionId: paymentIntentId },
@@ -1059,9 +1032,6 @@ export class MarketplaceService {
     }
   }
 
-  /**
-   * Handle Stripe payment_intent.payment_failed webhook
-   */
   async handlePaymentFailed(paymentIntentId: string): Promise<void> {
     const payment = await this.paymentTransactionRepository.findOne({
       where: { transactionId: paymentIntentId },
@@ -1082,14 +1052,10 @@ export class MarketplaceService {
       payment.order.status = OrderStatus.CANCELLED;
       await this.orderRepository.save(payment.order);
 
-      // Restore stock for cancelled order
       await this.restoreOrderStock(payment.order);
     }
   }
 
-  /**
-   * Handle Stripe charge.refunded webhook
-   */
   async handlePaymentRefunded(paymentIntentId: string): Promise<void> {
     const payment = await this.paymentTransactionRepository.findOne({
       where: { transactionId: paymentIntentId },
@@ -1110,14 +1076,10 @@ export class MarketplaceService {
       payment.order.status = OrderStatus.REFUNDED;
       await this.orderRepository.save(payment.order);
 
-      // Restore stock for refunded order
       await this.restoreOrderStock(payment.order);
     }
   }
 
-  /**
-   * Restore listing stock when an order is cancelled or refunded
-   */
   private async restoreOrderStock(order: Order): Promise<void> {
     if (!order.orderItems) return;
 

@@ -39,6 +39,7 @@ import { MatchService } from "src/match/match.service";
 import { Player } from "src/player/entities/player.entity";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { getMarketReferencePrice } from "src/marketplace/pricing/price-reference.util";
 import { Ranking } from "src/ranking/entities/ranking.entity";
 import {
   Tournament,
@@ -1281,7 +1282,9 @@ export class SeedService {
 
   /**
    * Seed test listings (dev only)
-   * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
+   * Génère des offres dont les prix s'alignent sur les tendances CardMarket
+   * / TCGPlayer importées dans `Card.pricing`, pour refléter un marché crédible.
+   * Les cartes sans prix de référence reçoivent moins d'offres.
    */
   async seedListings() {
     const isProduction = this.configService.get("NODE_ENV") === "production";
@@ -1289,9 +1292,7 @@ export class SeedService {
       console.log("⚠️  Skipping test listings seed in production environment.");
       return;
     }
-    // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
     const sellers = await this.userRepository.find();
-    // Limiter à 1500 cartes pour éviter les performances trop longues
     const cards = await this.pokemonCardRepository.find({ take: 1500 });
 
     if (sellers.length < 1 || cards.length < 1) {
@@ -1299,7 +1300,6 @@ export class SeedService {
       return;
     }
 
-    const currencies = [Currency.EUR, Currency.USD, Currency.GBP];
     const cardStates = [
       CardState.NM,
       CardState.EX,
@@ -1312,102 +1312,119 @@ export class SeedService {
     const listingsToCreate: Listing[] = [];
     const priceHistoriesToCreate: PriceHistory[] = [];
     const now = new Date();
+    let cardsWithListings = 0;
 
-    // Pour chaque carte, créer entre 0 et 5 listings (au lieu de 20)
     for (const card of cards) {
-      // Nombre aléatoire de listings pour cette carte (entre 0 et 5)
-      const listingCount = Math.floor(Math.random() * 6);
+      const reference = getMarketReferencePrice(card.pricing);
+      // Couverture élevée pour les cartes ayant un prix de référence,
+      // faible pour les autres (état « aucune offre » reste possible).
+      const listingCount = reference
+        ? 1 + Math.floor(Math.random() * 4) // 1-4
+        : Math.floor(Math.random() * 3); // 0-2
+
+      if (listingCount === 0) continue;
+      cardsWithListings++;
+
+      const currency =
+        reference?.currency === "USD" ? Currency.USD : Currency.EUR;
+      const basePrice = reference?.price ?? 1 + Math.random() * 4;
 
       for (let i = 0; i < listingCount; i++) {
-        // Sélectionner un vendeur aléatoire
-        const randomSeller =
-          sellers[Math.floor(Math.random() * sellers.length)];
-
-        // Générer un prix aléatoire entre 0.50 et 100.00
-        const basePrice = Math.random() * 99.5 + 0.5;
-        const price = Math.round(basePrice * 100) / 100;
-
-        // Sélectionner une devise aléatoire
-        const currency =
-          currencies[Math.floor(Math.random() * currencies.length)];
-
-        // Sélectionner un état aléatoire
+        const seller = sellers[Math.floor(Math.random() * sellers.length)];
+        const price = this.generateListingPrice(basePrice);
         const cardState =
           cardStates[Math.floor(Math.random() * cardStates.length)];
-
-        // Quantité disponible entre 1 et 5
         const quantityAvailable = Math.floor(Math.random() * 5) + 1;
 
-        // Créer le listing
-        const listing = this.listingRepository.create({
-          seller: randomSeller,
-          pokemonCard: card,
-          price: price,
-          currency: currency,
-          quantityAvailable: quantityAvailable,
-          cardState: cardState,
-          expiresAt: undefined,
-        });
-
-        listingsToCreate.push(listing);
-
-        // Créer seulement 1-2 entrées d'historique au lieu de 1-5
-        const historicalEntries = Math.floor(Math.random() * 2) + 1;
-
-        for (let j = 0; j < historicalEntries; j++) {
-          const daysAgo = Math.floor(Math.random() * 90);
-          const recordedAt = new Date(
-            now.getTime() - daysAgo * 24 * 60 * 60 * 1000,
-          );
-
-          const priceVariation = 1 + (Math.random() - 0.5) * 0.4;
-          const historicalPrice =
-            Math.round(price * priceVariation * 100) / 100;
-
-          const priceHistory = this.priceHistoryRepository.create({
+        listingsToCreate.push(
+          this.listingRepository.create({
+            seller,
             pokemonCard: card,
-            price: historicalPrice,
-            currency: currency,
-            cardState: cardState,
-            quantityAvailable: quantityAvailable,
-            recordedAt: recordedAt,
-          });
+            price,
+            currency,
+            quantityAvailable,
+            cardState,
+            expiresAt: undefined,
+          }),
+        );
 
-          priceHistoriesToCreate.push(priceHistory);
-        }
-
-        // Enregistrer aussi le prix actuel dans l'historique
-        const currentPriceHistory = this.priceHistoryRepository.create({
-          pokemonCard: card,
-          price: price,
-          currency: currency,
-          cardState: cardState,
-          quantityAvailable: quantityAvailable,
-          recordedAt: now,
-        });
-        priceHistoriesToCreate.push(currentPriceHistory);
+        priceHistoriesToCreate.push(
+          ...this.buildSeedPriceHistory(card, basePrice, currency, cardState, quantityAvailable, now),
+        );
       }
     }
 
-    // Sauvegarder en batch (par lots de 500 pour éviter les problèmes de mémoire)
     const batchSize = 500;
     let savedCount = 0;
-
     for (let i = 0; i < listingsToCreate.length; i += batchSize) {
       const batch = listingsToCreate.slice(i, i + batchSize);
       await this.listingRepository.save(batch);
       savedCount += batch.length;
     }
-
-    // Sauvegarder l'historique de prix en batch
     for (let i = 0; i < priceHistoriesToCreate.length; i += batchSize) {
       const batch = priceHistoriesToCreate.slice(i, i + batchSize);
       await this.priceHistoryRepository.save(batch);
     }
 
     console.log(
-      `✅ ${savedCount} listings créés pour ${cards.length} cartes avec ${sellers.length} vendeurs`,
+      `✅ ${savedCount} listings créés pour ${cardsWithListings}/${cards.length} cartes avec ${sellers.length} vendeurs`,
     );
+  }
+
+  /**
+   * Applique une variation ±15% autour du prix de référence et arrondit
+   * à 2 décimales. Plancher à 0.10 pour rester plausible.
+   */
+  private generateListingPrice(basePrice: number): number {
+    const raw = basePrice * (0.85 + Math.random() * 0.3);
+    return Math.max(0.1, Math.round(raw * 100) / 100);
+  }
+
+  /**
+   * Génère 1 point courant + 1-2 points passés (jusqu'à 90 jours) autour du
+   * prix de référence avec une dérive ±10%, pour produire une courbe crédible.
+   */
+  private buildSeedPriceHistory(
+    card: Card,
+    basePrice: number,
+    currency: Currency,
+    cardState: CardState,
+    quantityAvailable: number,
+    now: Date,
+  ): PriceHistory[] {
+    const history: PriceHistory[] = [];
+    const historicalEntries = 1 + Math.floor(Math.random() * 2);
+
+    for (let j = 0; j < historicalEntries; j++) {
+      const daysAgo = Math.floor(Math.random() * 90);
+      const recordedAt = new Date(now.getTime() - daysAgo * 86400_000);
+      const variation = 0.9 + Math.random() * 0.2;
+      const price = Math.round(basePrice * variation * 100) / 100;
+
+      history.push(
+        this.priceHistoryRepository.create({
+          pokemonCard: card,
+          price,
+          currency,
+          cardState,
+          quantityAvailable,
+          recordedAt,
+        }),
+      );
+    }
+
+    history.push(
+      this.priceHistoryRepository.create({
+        pokemonCard: card,
+        price: Math.round(basePrice * 100) / 100,
+        currency,
+        cardState,
+        quantityAvailable,
+        recordedAt: now,
+      }),
+    );
+
+    return history;
   }
 
   async seedDeckFormats() {
