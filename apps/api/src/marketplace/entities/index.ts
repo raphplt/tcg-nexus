@@ -7,3 +7,4 @@ export * from "./order-item.entity";
 export * from "./payment-transaction.entity";
 export * from "./price-history.entity";
 export * from "./sealed-event.entity";
+export * from "./review.entity";

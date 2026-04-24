@@ -68,6 +68,9 @@ export class Listing {
   @Column({ nullable: true, default: Languages.FR })
   language?: Languages;
 
+  @Column({ type: "boolean", default: false })
+  isSuspiciousPrice: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

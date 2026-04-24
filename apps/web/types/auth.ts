@@ -12,6 +12,8 @@ export interface User {
   emailVerified?: boolean;
   player?: Player;
   preferredCurrency?: string;
+  avgRating?: number;
+  totalReviews?: number;
   createdAt: Date;
 }
 

@@ -13,6 +13,7 @@ import { useParams } from "next/navigation";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { ViewToggle } from "@/components/Marketplace/ViewToggle";
+import { SellerRatingBadge } from "@/components/Marketplace/SellerRatingBadge";
 import { H1, H2 } from "@/components/Shared/Titles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +53,7 @@ export default function SellerPage() {
 
   if (loadingStats || !sellerId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
         <div className="max-w-7xl mx-auto space-y-8">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
@@ -63,7 +64,7 @@ export default function SellerPage() {
 
   if (!stats) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
@@ -81,7 +82,7 @@ export default function SellerPage() {
 
   if (!seller) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
@@ -94,7 +95,7 @@ export default function SellerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-8 px-4">
+    <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
         <MarketplaceBreadcrumb />
         <Card>
@@ -127,6 +128,13 @@ export default function SellerPage() {
                       })
                     : "récemment"}
                 </p>
+                <div className="mt-2">
+                  <SellerRatingBadge
+                    avgRating={stats.avgRating || 0}
+                    totalReviews={stats.totalReviews || 0}
+                    size="md"
+                  />
+                </div>
               </div>
               <div className="flex gap-2">
                 {seller.email && (

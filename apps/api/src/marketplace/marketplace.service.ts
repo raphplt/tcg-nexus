@@ -19,6 +19,7 @@ import { CardPopularityService } from "./card-popularity.service";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { CreateOrderDto } from "./dto/create-order.dto";
+import { CreateReviewDto } from "./dto/create-review.dto";
 import {
   ExternalOfferDto,
   ExternalOfferSource,
@@ -29,6 +30,7 @@ import { CardEventType } from "./entities/card-event.entity";
 import { Listing } from "./entities/listing.entity";
 import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
+import { Review } from "./entities/review.entity";
 import {
   PaymentMethod,
   PaymentStatus,
@@ -75,6 +77,8 @@ export class MarketplaceService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Review)
+    private readonly reviewRepository: Repository<Review>,
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
@@ -150,6 +154,12 @@ export class MarketplaceService {
           );
         }
 
+        if (freshListing.expiresAt && new Date(freshListing.expiresAt) < new Date()) {
+          throw new BadRequestException(
+            `Listing for "${item.listing.pokemonCard?.name || "item"}" has expired`,
+          );
+        }
+
         if (freshListing.quantityAvailable < item.quantity) {
           throw new BadRequestException(
             `Not enough quantity for "${item.listing.pokemonCard?.name || "item"}". Available: ${freshListing.quantityAvailable}, Requested: ${item.quantity}`,
@@ -218,6 +228,70 @@ export class MarketplaceService {
     });
   }
 
+  async createReview(createReviewDto: CreateReviewDto, user: User) {
+    const { orderId, rating, comment } = createReviewDto;
+
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, buyer: { id: user.id } },
+      relations: ["buyer", "orderItems", "orderItems.listing", "orderItems.listing.seller"],
+    });
+
+    if (!order) {
+      throw new NotFoundException("Order not found or you are not the buyer");
+    }
+
+    if (order.status !== OrderStatus.PAID && order.status !== OrderStatus.SHIPPED) {
+      throw new BadRequestException("You can only review paid or shipped orders");
+    }
+
+    const existingReview = await this.reviewRepository.findOne({
+      where: { order: { id: orderId }, buyer: { id: user.id } },
+    });
+
+    if (existingReview) {
+      throw new BadRequestException("You have already reviewed this order");
+    }
+
+    const seller = order.orderItems[0]?.listing?.seller;
+    if (!seller) {
+      throw new BadRequestException("No seller found for this order");
+    }
+
+    const review = this.reviewRepository.create({
+      buyer: user,
+      seller,
+      order,
+      rating,
+      comment,
+    });
+
+    const savedReview = await this.reviewRepository.save(review);
+
+    // Update seller's avgRating and totalReviews
+    const allReviews = await this.reviewRepository.find({
+      where: { seller: { id: seller.id } },
+    });
+    
+    const totalReviews = allReviews.length;
+    const avgRating = totalReviews > 0 
+      ? allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews 
+      : 0;
+
+    seller.totalReviews = totalReviews;
+    seller.avgRating = Math.round(avgRating * 10) / 10;
+    await this.userRepository.save(seller);
+
+    return savedReview;
+  }
+
+  async getSellerReviews(sellerId: number) {
+    return this.reviewRepository.find({
+      where: { seller: { id: sellerId } },
+      relations: ["buyer"],
+      order: { createdAt: "DESC" },
+    });
+  }
+
   async findAllOrders(params: AdminOrderQueryDto) {
     const { page = 1, limit = 20, status, buyerId, sellerId } = params;
     // construire la requête de base avec les jointures nécessaires
@@ -277,9 +351,26 @@ export class MarketplaceService {
       ...rest
     } = createListingDto;
 
+    let isSuspiciousPrice = false;
+    if (productKind === ProductKind.CARD && pokemonCardId) {
+      try {
+        const pricing = await this.externalPricingService.getOrRefresh(pokemonCardId);
+        const cmPrice = getCardMarketPrice(pricing?.cardmarket);
+        
+        if (cmPrice != null) {
+          if (rest.price < 0.1 * cmPrice || rest.price > 10 * cmPrice) {
+            isSuspiciousPrice = true;
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Failed to check pricing for ${pokemonCardId}: ${err}`);
+      }
+    }
+
     const listing = this.listingRepository.create({
       ...rest,
       productKind,
+      isSuspiciousPrice,
       seller: user,
       pokemonCard: pokemonCardId ? ({ id: pokemonCardId } as Card) : null,
       sealedProduct:
@@ -883,6 +974,15 @@ export class MarketplaceService {
     );
     const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
 
+    const reviews = await this.reviewRepository.find({
+      where: { seller: { id: sellerId } },
+    });
+
+    const totalReviews = reviews.length;
+    const avgRating = totalReviews > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
+
     return {
       sellerId,
       seller,
@@ -893,6 +993,8 @@ export class MarketplaceService {
       totalSales: orders.length,
       totalRevenue: Math.round(totalRevenue * 100) / 100,
       avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+      avgRating: Math.round(avgRating * 10) / 10,
+      totalReviews,
       listings: listings.slice(0, 20), // Return recent listings
     };
   }

@@ -23,6 +23,7 @@ import { getCardStateColor } from "../../../utils";
 import { cardStates } from "@/utils/variables";
 import { Loader2, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { SellerRatingBadge } from "@/components/Marketplace/SellerRatingBadge";
 
 interface ListingsTableProps {
   listings: any[];
@@ -114,9 +115,18 @@ export function ListingsTable({
                           {listing.seller.lastName[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <span>
-                        {listing.seller.firstName} {listing.seller.lastName}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {listing.seller.firstName} {listing.seller.lastName}
+                        </span>
+                        {listing.seller.avgRating !== undefined && (
+                          <SellerRatingBadge
+                            avgRating={listing.seller.avgRating}
+                            totalReviews={listing.seller.totalReviews}
+                            size="sm"
+                          />
+                        )}
+                      </div>
                     </Link>
                   </TableCell>
                   <TableCell>
@@ -128,7 +138,19 @@ export function ListingsTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="font-semibold">
-                    {formatPrice(listing.price, listing.currency)}
+                    <div className="flex flex-col">
+                      <span>{formatPrice(listing.price, listing.currency)}</span>
+                      {listing.isSuspiciousPrice && (
+                        <Badge variant="destructive" className="mt-1 text-[10px] px-1 py-0 w-fit">
+                          Prix suspect
+                        </Badge>
+                      )}
+                      {listing.expiresAt && new Date(listing.expiresAt).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 && (
+                        <Badge variant="secondary" className="mt-1 text-[10px] px-1 py-0 w-fit">
+                          Expire bientôt
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{listing.quantityAvailable}</TableCell>
                   <TableCell>

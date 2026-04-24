@@ -18,6 +18,7 @@ import {
   PaymentTransaction,
   PriceHistory,
   SealedEvent,
+  Review,
 } from "./entities";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
@@ -32,6 +33,8 @@ import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
 import { WebhookController } from "./webhook.controller";
 
+import { ListingLifecycleScheduler } from "./listing-lifecycle.scheduler";
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -43,6 +46,7 @@ import { WebhookController } from "./webhook.controller";
       CardEvent,
       CardPopularityMetrics,
       SealedEvent,
+      Review,
       Player,
       Card,
       SealedProduct,
@@ -67,6 +71,7 @@ import { WebhookController } from "./webhook.controller";
     PricingCache,
     ExternalPricingService,
     ExternalPricingScheduler,
+    ListingLifecycleScheduler,
   ],
   exports: [MarketplaceService, SealedEventService, ExternalPricingService],
 })

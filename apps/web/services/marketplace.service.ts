@@ -93,6 +93,8 @@ export interface SellerStatistics {
   totalSales: number;
   totalRevenue: number;
   avgOrderValue: number;
+  avgRating: number;
+  totalReviews: number;
   listings: Listing[];
 }
 

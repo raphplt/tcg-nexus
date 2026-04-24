@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsString,
   Min,
+  Max,
 } from "class-validator";
 import { CardState } from "src/common/enums/pokemonCardsType";
 import { ProductKind } from "src/common/enums/product-kind";
@@ -32,7 +33,8 @@ export class CreateListingDto {
   sealedProductId?: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
-  @IsPositive()
+  @Min(0.01)
+  @Max(50000)
   price: number;
 
   @IsEnum(Currency)
@@ -41,6 +43,7 @@ export class CreateListingDto {
   @IsOptional()
   @IsInt()
   @Min(1)
+  @Max(100)
   quantityAvailable?: number;
 
   @IsOptional()

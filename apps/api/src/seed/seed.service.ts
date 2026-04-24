@@ -577,6 +577,8 @@ export class SeedService {
         | "refreshToken"
         | "previousRefreshToken"
         | "previousRefreshTokenExpiresAt"
+        | "avgRating"
+        | "totalReviews"
       >
     > = [
       {

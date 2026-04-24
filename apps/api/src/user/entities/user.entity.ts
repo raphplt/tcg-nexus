@@ -73,6 +73,12 @@ export class User {
   @Exclude()
   previousRefreshTokenExpiresAt: Date | null;
 
+  @Column({ type: "decimal", precision: 3, scale: 2, default: 0 })
+  avgRating: number;
+
+  @Column({ type: "int", default: 0 })
+  totalReviews: number;
+
   // Relations
   @OneToOne(
     () => Player,

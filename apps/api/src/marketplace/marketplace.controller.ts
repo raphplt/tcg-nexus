@@ -22,6 +22,7 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { CreateOrderDto } from "./dto/create-order.dto";
+import { CreateReviewDto } from "./dto/create-review.dto";
 import { FindAllListingsQuery } from "./dto/ind-all-listings-query.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
@@ -35,6 +36,7 @@ export class MarketplaceController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post("listings")
   createListing(
     @Body() createListingDto: CreateListingDto,
@@ -200,5 +202,21 @@ export class MarketplaceController {
   @Public()
   getSellerListings(@Param("id", ParseIntPipe) id: number) {
     return this.marketplaceService.findBySellerId(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("reviews")
+  createReview(
+    @Body() createReviewDto: CreateReviewDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.marketplaceService.createReview(createReviewDto, user);
+  }
+
+  @Get("sellers/:id/reviews")
+  @Public()
+  getSellerReviews(@Param("id", ParseIntPipe) id: number) {
+    return this.marketplaceService.getSellerReviews(id);
   }
 }
