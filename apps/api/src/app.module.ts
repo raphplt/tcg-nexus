@@ -28,13 +28,13 @@ import { PokemonCardModule } from "./pokemon-card/pokemon-card.module";
 import { PokemonSeriesModule } from "./pokemon-series/pokemon-series.module";
 import { PokemonSetModule } from "./pokemon-set/pokemon-set.module";
 import { RankingModule } from "./ranking/ranking.module";
+import { SealedProductModule } from "./sealed-product/sealed-product.module";
 import { SearchModule } from "./search/search.module";
 import { SeedModule } from "./seed/seed.module";
 import { StatisticsModule } from "./statistics/statistics.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
-import { SealedProductModule } from "./sealed-product/sealed-product.module";
 
 @Module({
   imports: [
@@ -57,7 +57,9 @@ import { SealedProductModule } from "./sealed-product/sealed-product.module";
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize:
+        process.env.DATABASE_SYNCHRONIZE === "true" ||
+        process.env.NODE_ENV !== "production",
       ssl:
         process.env.NODE_ENV === "production" &&
         process.env.DATABASE_SSL !== "false"

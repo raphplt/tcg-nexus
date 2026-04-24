@@ -26,3 +26,25 @@ export function useSealedProductListings(id: string | undefined) {
     enabled: !!id,
   });
 }
+
+export function useSealedProductStatistics(id: string | undefined) {
+  return useQuery({
+    queryKey: ["sealed-products", id, "stats"],
+    queryFn: () => sealedProductService.getStatistics(id!),
+    enabled: !!id,
+  });
+}
+
+export function useRecentSealedProducts(limit: number = 8) {
+  return useQuery({
+    queryKey: ["sealed-products", "recent", limit],
+    queryFn: () => sealedProductService.getRecent(limit),
+  });
+}
+
+export function usePopularSealedProducts(limit: number = 8) {
+  return useQuery({
+    queryKey: ["sealed-products", "popular", limit],
+    queryFn: () => sealedProductService.getPopular(limit),
+  });
+}

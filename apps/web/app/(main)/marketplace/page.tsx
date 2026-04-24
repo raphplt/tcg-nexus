@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
+import { SealedProductsPreview } from "@/components/Marketplace/SealedProductsPreview";
 import { SellerCard } from "@/components/Marketplace/SellerCard";
 import SetCard from "@/components/Marketplace/SetCard";
 import { H1, H2 } from "@/components/Shared/Titles";
@@ -20,12 +20,10 @@ export default function MarketplaceHomePage() {
     trendingCards,
     bestSellers,
     sets,
-    sealedProducts,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
-    loadingSealed,
   } = useMarketplaceHome();
 
   return (
@@ -181,39 +179,45 @@ export default function MarketplaceHomePage() {
           )}
         </section>
 
-        {/* Produits scellés */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Package className="w-6 h-6 text-primary" />
-              <H2>Produits scellés</H2>
-            </div>
-            <Button variant="ghost" asChild>
-              <Link href="/marketplace/sealed">
-                Voir tout <ArrowRight className="ml-2 w-4 h-4" />
-              </Link>
-            </Button>
+        {/* Bannière Produits scellés */}
+        <div className="relative overflow-hidden rounded-2xl border bg-linear-to-r from-primary/20 via-secondary/20 to-primary/10 p-8 md:p-10">
+          <div className="absolute -right-8 -top-8 opacity-10">
+            <Package className="w-48 h-48" />
           </div>
-          {loadingSealed ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-72" />
-              ))}
+          <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wide">
+                <Package className="w-4 h-4" />
+                Marketplace scellé
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold">
+                Boosters, displays, ETB & decks préconstruits
+              </h3>
+              <p className="text-muted-foreground">
+                Toute la collection de produits scellés, avec prix du marché et
+                historique. Achetez auprès de vendeurs de confiance ou mettez
+                vos propres produits en vente.
+              </p>
             </div>
-          ) : sealedProducts && sealedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {sealedProducts.slice(0, 8).map((product) => (
-                <SealedProductCard key={product.id} product={product} />
-              ))}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button asChild size="lg">
+                <Link href="/marketplace/sealed">
+                  Parcourir les scellés
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link href="/marketplace/sealed?sortBy=popularity">
+                  <Star className="mr-2 w-4 h-4" />
+                  Populaires
+                </Link>
+              </Button>
             </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                Aucun produit scellé pour le moment
-              </CardContent>
-            </Card>
-          )}
-        </section>
+          </div>
+        </div>
+
+        {/* Produits scellés (toggle populaires/récents) */}
+        <SealedProductsPreview defaultMode="popular" limit={8} />
 
         {/* Sets */}
         <section>

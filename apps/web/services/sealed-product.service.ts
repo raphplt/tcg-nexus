@@ -7,10 +7,36 @@ import {
 } from "@/types/sealed-product";
 import { authedFetch, fetcher } from "@/utils/fetch";
 
+export enum SealedSortBy {
+  RECENT = "recent",
+  POPULARITY = "popularity",
+  PRICE_ASC = "priceAsc",
+  PRICE_DESC = "priceDesc",
+  NAME = "name",
+}
+
 export interface SealedProductFilters extends PaginationParams {
   setId?: string;
+  seriesId?: string;
   productType?: SealedProductType;
   search?: string;
+  priceMin?: number;
+  priceMax?: number;
+  sortBy?: SealedSortBy;
+}
+
+export interface SealedProductStatistics {
+  sealedProductId: string;
+  totalListings: number;
+  totalStock: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+  avgPrice: number | null;
+  priceHistory: Array<{
+    price: number;
+    currency: string;
+    recordedAt: Date | string;
+  }>;
 }
 
 export const sealedProductService = {
@@ -29,6 +55,22 @@ export const sealedProductService = {
 
   async getById(id: string): Promise<SealedProduct> {
     return fetcher<SealedProduct>(`/sealed-products/${id}`);
+  },
+
+  async getRecent(limit: number = 8): Promise<SealedProduct[]> {
+    return fetcher<SealedProduct[]>("/sealed-products/recent", {
+      params: { limit },
+    });
+  },
+
+  async getPopular(limit: number = 8): Promise<SealedProduct[]> {
+    return fetcher<SealedProduct[]>("/sealed-products/popular", {
+      params: { limit },
+    });
+  },
+
+  async getStatistics(id: string): Promise<SealedProductStatistics> {
+    return fetcher<SealedProductStatistics>(`/sealed-products/${id}/stats`);
   },
 
   async getListings(

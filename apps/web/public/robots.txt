@@ -1,2 +1,8 @@
-User-agent: *s
+User-agent: *
+Allow: /
 Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/
+
+Sitemap: https://tcg-nexus.org/sitemap.xml

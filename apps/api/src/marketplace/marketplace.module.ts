@@ -17,10 +17,13 @@ import {
   OrderItem,
   PaymentTransaction,
   PriceHistory,
+  SealedEvent,
 } from "./entities";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
 import { PaymentController } from "./payment.controller";
+import { SealedEventController } from "./sealed-event.controller";
+import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
 import { WebhookController } from "./webhook.controller";
 
@@ -34,6 +37,7 @@ import { WebhookController } from "./webhook.controller";
       PriceHistory,
       CardEvent,
       CardPopularityMetrics,
+      SealedEvent,
       Player,
       Card,
       SealedProduct,
@@ -45,6 +49,7 @@ import { WebhookController } from "./webhook.controller";
   controllers: [
     MarketplaceController,
     CardPopularityController,
+    SealedEventController,
     PaymentController,
     WebhookController,
   ],
@@ -52,8 +57,9 @@ import { WebhookController } from "./webhook.controller";
     MarketplaceService,
     CardPopularityService,
     CardPopularityScheduler,
+    SealedEventService,
     StripeService,
   ],
-  exports: [MarketplaceService],
+  exports: [MarketplaceService, SealedEventService],
 })
 export class MarketplaceModule {}
