@@ -117,7 +117,13 @@ describe("secureApi — intercepteur de refresh", () => {
         const error = Object.assign(new Error("401"), {
           isAxiosError: true,
           config,
-          response: { status: 401, data: {}, statusText: "", headers: {}, config },
+          response: {
+            status: 401,
+            data: {},
+            statusText: "",
+            headers: {},
+            config,
+          },
         });
         throw error;
       }
@@ -161,7 +167,13 @@ describe("secureApi — intercepteur de refresh", () => {
         const error = Object.assign(new Error("Bad credentials"), {
           isAxiosError: true,
           config,
-          response: { status: 401, data: {}, statusText: "", headers: {}, config },
+          response: {
+            status: 401,
+            data: {},
+            statusText: "",
+            headers: {},
+            config,
+          },
         });
         throw error;
       }
@@ -195,7 +207,13 @@ describe("secureApi — intercepteur de refresh", () => {
         const error = Object.assign(new Error("Refresh failed"), {
           isAxiosError: true,
           config,
-          response: { status: 401, data: {}, statusText: "", headers: {}, config },
+          response: {
+            status: 401,
+            data: {},
+            statusText: "",
+            headers: {},
+            config,
+          },
         });
         throw error;
       }
@@ -203,7 +221,13 @@ describe("secureApi — intercepteur de refresh", () => {
       const error = Object.assign(new Error("401"), {
         isAxiosError: true,
         config,
-        response: { status: 401, data: {}, statusText: "", headers: {}, config },
+        response: {
+          status: 401,
+          data: {},
+          statusText: "",
+          headers: {},
+          config,
+        },
       });
       throw error;
     };

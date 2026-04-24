@@ -16,8 +16,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://tcg-nexus.org";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tcg-nexus.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

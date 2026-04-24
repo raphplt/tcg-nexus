@@ -16,10 +16,7 @@ import { useSearchKeyboard } from "@/hooks/useSearchKeyboard";
 import type { SearchResultItem } from "@/services/search.service";
 import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
-import {
-  getSearchItemIcon,
-  SearchItemButton,
-} from "./SearchItemButton";
+import { getSearchItemIcon, SearchItemButton } from "./SearchItemButton";
 
 const FALLBACK_SHORTCUTS = [
   { query: "Pikachu", label: "Cartes populaires", icon: Hash },
@@ -98,12 +95,18 @@ const SearchBar = () => {
           aria-label="Ouvrir la recherche globale (Ctrl+K)"
           className="flex items-center gap-2 bg-card rounded-md p-2 border border-border hover:border-primary transition-all duration-300 w-full max-w-md cursor-pointer"
         >
-          <SearchIcon className="text-muted-foreground size-4" aria-hidden="true" />
+          <SearchIcon
+            className="text-muted-foreground size-4"
+            aria-hidden="true"
+          />
           <p className="text-muted-foreground text-sm">
             Tapez / pour rechercher
           </p>
           <div className="ml-auto flex items-center gap-1">
-            <Command className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+            <Command
+              className="w-3 h-3 text-muted-foreground"
+              aria-hidden="true"
+            />
             <span className="text-xs text-muted-foreground">K</span>
           </div>
         </button>
@@ -115,7 +118,10 @@ const SearchBar = () => {
             <DialogTitle className="sr-only">Rechercher</DialogTitle>
 
             <div className="flex items-center gap-2 mb-4">
-              <Search className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Search
+                className="w-4 h-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
                 ref={inputRef}
                 placeholder="Rechercher des cartes, tournois, joueurs..."
@@ -171,7 +177,10 @@ function SearchResultsSection({
         aria-live="polite"
         className="text-center py-8 text-muted-foreground"
       >
-        <Search className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" aria-hidden="true" />
+        <Search
+          className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse"
+          aria-hidden="true"
+        />
         <p>Recherche en cours...</p>
       </div>
     );
@@ -180,14 +189,21 @@ function SearchResultsSection({
   if (results.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <Search className="w-8 h-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
+        <Search
+          className="w-8 h-8 mx-auto mb-2 opacity-50"
+          aria-hidden="true"
+        />
         <p>Aucun résultat trouvé pour « {query} »</p>
       </div>
     );
   }
 
   return (
-    <ul className="space-y-1" role="listbox" aria-label="Résultats de recherche">
+    <ul
+      className="space-y-1"
+      role="listbox"
+      aria-label="Résultats de recherche"
+    >
       {results.map((result, index) => (
         <li key={result.id}>
           <SearchItemButton
@@ -210,7 +226,13 @@ function SearchSuggestionsSection({
   onPickSuggestion,
   onPickShortcut,
 }: {
-  suggestions: { id: string | number; type: "card" | "tournament" | "player" | "marketplace"; title: string; subtitle?: string; image?: string }[];
+  suggestions: {
+    id: string | number;
+    type: "card" | "tournament" | "player" | "marketplace";
+    title: string;
+    subtitle?: string;
+    image?: string;
+  }[];
   selectedIndex: number;
   onPickSuggestion: (title: string) => void;
   onPickShortcut: (q: string) => void;
@@ -221,7 +243,11 @@ function SearchSuggestionsSection({
         Suggestions populaires
       </div>
       {suggestions.length > 0 ? (
-        <ul className="space-y-1" role="listbox" aria-label="Suggestions populaires">
+        <ul
+          className="space-y-1"
+          role="listbox"
+          aria-label="Suggestions populaires"
+        >
           {suggestions.map((suggestion, index) => (
             <li key={`${suggestion.type}-${suggestion.id}`}>
               <SearchItemButton
@@ -244,7 +270,10 @@ function SearchSuggestionsSection({
               onClick={() => onPickShortcut(query)}
               className="flex items-center gap-2 p-2 rounded-md hover:bg-accent/50 text-left"
             >
-              <Icon className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Icon
+                className="w-4 h-4 text-muted-foreground"
+                aria-hidden="true"
+              />
               <span className="text-sm">{label}</span>
             </button>
           ))}

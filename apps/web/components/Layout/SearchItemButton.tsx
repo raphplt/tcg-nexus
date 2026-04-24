@@ -9,11 +9,7 @@ import {
 import Image from "next/image";
 import type { ReactElement } from "react";
 
-export type SearchItemType =
-  | "card"
-  | "tournament"
-  | "player"
-  | "marketplace";
+export type SearchItemType = "card" | "tournament" | "player" | "marketplace";
 
 type SearchItemButtonProps = {
   type: SearchItemType;
@@ -53,9 +49,7 @@ export function SearchItemButton({
       onClick={onClick}
       aria-selected={selected}
       className={`w-full flex items-center gap-3 p-3 rounded-md text-left transition-colors ${
-        selected
-          ? "bg-accent text-accent-foreground"
-          : "hover:bg-accent/50"
+        selected ? "bg-accent text-accent-foreground" : "hover:bg-accent/50"
       }`}
     >
       <div className="text-muted-foreground" aria-hidden="true">

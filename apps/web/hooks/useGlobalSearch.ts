@@ -53,8 +53,6 @@ export function useGlobalSearch({
   return {
     results: hasQuery ? (resultsQuery.data?.results ?? []) : [],
     suggestions: hasQuery ? [] : (suggestionsQuery.data?.suggestions ?? []),
-    isLoading: hasQuery
-      ? resultsQuery.isFetching
-      : suggestionsQuery.isFetching,
+    isLoading: hasQuery ? resultsQuery.isFetching : suggestionsQuery.isFetching,
   };
 }
