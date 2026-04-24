@@ -30,6 +30,7 @@ import {
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
+import { ExternalPricingService } from "./pricing";
 import { StripeService } from "./stripe.service";
 
 export interface FindAllListingsParams {
@@ -68,6 +69,7 @@ export class MarketplaceService {
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
+    private readonly externalPricingService: ExternalPricingService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -467,6 +469,13 @@ export class MarketplaceService {
     currency?: string,
     cardState?: string,
   ) {
+    // Lance le refresh externe en parallèle des stats listings pour masquer
+    // la latence TCGdex. `getOrRefresh` retombe sur le pricing existant en
+    // cas d'échec, donc jamais bloquant.
+    const marketPricingPromise = this.externalPricingService
+      .getOrRefresh(cardId)
+      .catch(() => null);
+
     const card = await this.pokemonCardRepository.findOne({
       where: { id: cardId },
       select: ["id", "pricing"],
@@ -495,6 +504,7 @@ export class MarketplaceService {
     const totalListings = parseInt(stats.totalListings, 10) || 0;
 
     if (totalListings === 0) {
+      const marketPricing = (await marketPricingPromise) ?? card?.pricing ?? null;
       return {
         cardId,
         totalListings: 0,
@@ -503,7 +513,7 @@ export class MarketplaceService {
         avgPrice: null,
         currency: currency || null,
         priceHistory: [],
-        marketPricing: card?.pricing || null,
+        marketPricing,
       };
     }
 
@@ -532,6 +542,8 @@ export class MarketplaceService {
       take: 100,
     });
 
+    const marketPricing = (await marketPricingPromise) ?? card?.pricing ?? null;
+
     return {
       cardId,
       totalListings,
@@ -544,7 +556,7 @@ export class MarketplaceService {
         currency: h.currency,
         recordedAt: h.recordedAt,
       })),
-      marketPricing: card?.pricing || null,
+      marketPricing,
     };
   }
 

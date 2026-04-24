@@ -22,6 +22,11 @@ import {
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
 import { PaymentController } from "./payment.controller";
+import {
+  ExternalPricingScheduler,
+  ExternalPricingService,
+  PricingCache,
+} from "./pricing";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
@@ -59,7 +64,10 @@ import { WebhookController } from "./webhook.controller";
     CardPopularityScheduler,
     SealedEventService,
     StripeService,
+    PricingCache,
+    ExternalPricingService,
+    ExternalPricingScheduler,
   ],
-  exports: [MarketplaceService, SealedEventService],
+  exports: [MarketplaceService, SealedEventService, ExternalPricingService],
 })
 export class MarketplaceModule {}

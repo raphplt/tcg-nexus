@@ -30,6 +30,7 @@ import {
 import { CardPopularityMetrics } from "src/marketplace/entities/card-popularity-metrics.entity";
 import { Listing } from "src/marketplace/entities/listing.entity";
 import { PriceHistory } from "src/marketplace/entities/price-history.entity";
+import { getMarketReferencePrice } from "src/marketplace/pricing/price-reference.util";
 import {
   Match,
   MatchPhase,
@@ -39,7 +40,6 @@ import { MatchService } from "src/match/match.service";
 import { Player } from "src/player/entities/player.entity";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { getMarketReferencePrice } from "src/marketplace/pricing/price-reference.util";
 import { Ranking } from "src/ranking/entities/ranking.entity";
 import {
   Tournament,

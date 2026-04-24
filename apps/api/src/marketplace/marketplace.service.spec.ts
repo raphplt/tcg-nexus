@@ -20,6 +20,7 @@ import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { MarketplaceService } from "./marketplace.service";
+import { ExternalPricingService } from "./pricing";
 import { StripeService } from "./stripe.service";
 
 describe("MarketplaceService", () => {
@@ -129,6 +130,13 @@ describe("MarketplaceService", () => {
         { provide: getRepositoryToken(OrderItem), useValue: mockOrderItemRepo },
         { provide: StripeService, useValue: mockStripeService },
         { provide: UserCartService, useValue: mockUserCartService },
+        {
+          provide: ExternalPricingService,
+          useValue: {
+            getOrRefresh: jest.fn().mockResolvedValue(null),
+            isStale: jest.fn().mockReturnValue(false),
+          },
+        },
       ],
     }).compile();
 

@@ -1,6 +1,7 @@
 import { Card } from "src/card/entities/card.entity";
 import { Currency } from "src/common/enums/currency";
 import { CardState } from "src/common/enums/pokemonCardsType";
+import { PriceSource } from "src/common/enums/price-source";
 import { SealedCondition } from "src/common/enums/sealed-condition";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import {
@@ -46,6 +47,13 @@ export class PriceHistory {
 
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
+
+  /**
+   * Origine du prix enregistré : offre interne ou snapshot d'une source
+   * externe (CardMarket, TCGPlayer). Permet de filtrer les courbes côté front.
+   */
+  @Column({ type: "enum", enum: PriceSource, default: PriceSource.LISTING })
+  source: PriceSource;
 
   @CreateDateColumn()
   recordedAt: Date;
