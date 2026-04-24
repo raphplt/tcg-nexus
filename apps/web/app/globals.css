@@ -394,21 +394,6 @@ body {
     left: 100%;
   }
 
-  /* Energy cost circles */
-  .energy-cost {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    font-size: 10px;
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  }
-
   /* Attack section styling */
   .attack-section {
     position: relative;
