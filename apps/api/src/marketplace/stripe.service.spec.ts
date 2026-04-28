@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 import { StripeService } from "./stripe.service";
@@ -23,12 +24,13 @@ describe("StripeService", () => {
 
   it("should warn when secret missing", () => {
     const warnSpy = jest
-      .spyOn((StripeService as any).prototype, "logger", "get")
-      .mockReturnValue({ warn: jest.fn(), error: jest.fn() });
+      .spyOn(Logger.prototype, "warn")
+      .mockImplementation(() => undefined);
 
     (configService.get as jest.Mock).mockReturnValueOnce(undefined);
     const service = new StripeService(configService);
     expect(service).toBeDefined();
+    expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
 

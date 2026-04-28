@@ -4,6 +4,9 @@
   "sourceRoot": "src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "assets": ["common/data/*.zip"]
+    "assets": [
+      "common/data/*.zip",
+      "mail/templates/*.hbs"
+    ]
   }
 }

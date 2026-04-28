@@ -19,8 +19,11 @@ const mockRepo = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
+    setParameter: jest.fn().mockReturnThis(),
     groupBy: jest.fn().mockReturnThis(),
+    addGroupBy: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
+    getRawOne: jest.fn().mockResolvedValue(undefined),
     getMany: jest.fn().mockResolvedValue([]),
     orderBy: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
@@ -89,10 +92,12 @@ describe("CardPopularityService", () => {
   });
 
   it("should calculate popularity score", async () => {
-    cardEventRepo.find.mockResolvedValue([
-      { eventType: CardEventType.VIEW },
-      { eventType: CardEventType.ADD_TO_CART },
+    const qb = cardEventRepo.createQueryBuilder();
+    qb.getRawMany.mockResolvedValue([
+      { eventType: CardEventType.VIEW, count: "3" },
+      { eventType: CardEventType.ADD_TO_CART, count: "2" },
     ]);
+    cardEventRepo.createQueryBuilder.mockReturnValue(qb);
     const score = await (service as any).calculatePopularityScore("c1");
     expect(score).toBeGreaterThan(0);
   });
@@ -151,10 +156,13 @@ describe("CardPopularityService", () => {
     ]);
     cardEventRepo.createQueryBuilder.mockReturnValue(eventQb);
 
-    listingRepo.find.mockResolvedValue([
-      { price: 10, expiresAt: null },
-      { price: 20, expiresAt: new Date(end.getTime() + 1000) },
-    ]);
+    const listingQb = listingRepo.createQueryBuilder();
+    listingQb.getRawOne.mockResolvedValue({
+      listingCount: "2",
+      minPrice: "10",
+      avgPrice: "15",
+    });
+    listingRepo.createQueryBuilder.mockReturnValue(listingQb);
 
     jest.spyOn(service as any, "calculatePopularityScore").mockResolvedValue(5);
     jest.spyOn(service as any, "calculateTrendScore").mockResolvedValue(10);
@@ -178,20 +186,23 @@ describe("CardPopularityService", () => {
   });
 
   it("should compute trend score with zero base", async () => {
-    cardEventRepo.find.mockResolvedValueOnce([
-      { eventType: CardEventType.VIEW },
+    const qb = cardEventRepo.createQueryBuilder();
+    qb.getRawMany.mockResolvedValue([
+      { eventType: CardEventType.VIEW, window: "recent", count: "1" },
     ]);
-    cardEventRepo.find.mockResolvedValueOnce([]);
-    listingRepo.count.mockResolvedValue(10);
+    cardEventRepo.createQueryBuilder.mockReturnValue(qb);
 
     const score = await (service as any).calculateTrendScore("card1");
     expect(score).toBe(100);
   });
 
   it("should compute trend score with listing penalty", async () => {
-    cardEventRepo.find
-      .mockResolvedValueOnce([{ eventType: CardEventType.VIEW }]) // recent
-      .mockResolvedValueOnce([{ eventType: CardEventType.VIEW }]); // base
+    const qb = cardEventRepo.createQueryBuilder();
+    qb.getRawMany.mockResolvedValue([
+      { eventType: CardEventType.VIEW, window: "recent", count: "1" },
+      { eventType: CardEventType.VIEW, window: "base", count: "1" },
+    ]);
+    cardEventRepo.createQueryBuilder.mockReturnValue(qb);
     listingRepo.count.mockResolvedValue(200);
 
     const score = await (service as any).calculateTrendScore("card1");

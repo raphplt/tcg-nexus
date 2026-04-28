@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
@@ -84,6 +85,8 @@ describe("MatchService", () => {
     tournaments: [],
     statistics: [],
     rankings: [],
+    xp: 0,
+    level: 1,
   };
 
   const mockPlayerB: Player = { ...mockPlayerA, id: 2 };
@@ -184,6 +187,10 @@ describe("MatchService", () => {
         },
         { provide: getRepositoryToken(Deck), useValue: mockDeckRepository },
         { provide: DataSource, useValue: mockDataSource },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn(), emitAsync: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -548,7 +555,10 @@ describe("MatchService", () => {
       const playHubQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
         getMany: jest
           .fn()

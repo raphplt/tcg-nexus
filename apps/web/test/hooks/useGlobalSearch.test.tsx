@@ -33,6 +33,8 @@ const suggestionsPayload = {
       subtitle: "Base set",
     },
   ],
+  total: 1,
+  query: "",
 };
 
 const resultsPayload = {
