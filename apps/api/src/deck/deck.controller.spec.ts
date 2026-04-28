@@ -1,3 +1,4 @@
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { DeckController } from "./deck.controller";
 import { DeckService } from "./deck.service";
@@ -29,6 +30,10 @@ describe("DeckController", () => {
         {
           provide: DeckService,
           useValue: deckService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn(), emitAsync: jest.fn() },
         },
       ],
     }).compile();

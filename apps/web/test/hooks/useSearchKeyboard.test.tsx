@@ -3,20 +3,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSearchKeyboard } from "@/hooks/useSearchKeyboard";
 
 type Handlers = {
-  onOpen: ReturnType<typeof vi.fn>;
-  onClose: ReturnType<typeof vi.fn>;
-  onSelect: ReturnType<typeof vi.fn>;
-  onSelectedIndexChange: ReturnType<typeof vi.fn>;
+  onOpen: ReturnType<typeof vi.fn<() => void>>;
+  onClose: ReturnType<typeof vi.fn<() => void>>;
+  onSelect: ReturnType<typeof vi.fn<(index: number) => void>>;
+  onSelectedIndexChange: ReturnType<typeof vi.fn<(index: number) => void>>;
 };
 
 const setup = (
   overrides: Partial<Parameters<typeof useSearchKeyboard>[0]> = {},
 ) => {
   const handlers: Handlers = {
-    onOpen: vi.fn(),
-    onClose: vi.fn(),
-    onSelect: vi.fn(),
-    onSelectedIndexChange: vi.fn(),
+    onOpen: vi.fn<() => void>(),
+    onClose: vi.fn<() => void>(),
+    onSelect: vi.fn<(index: number) => void>(),
+    onSelectedIndexChange: vi.fn<(index: number) => void>(),
   };
 
   renderHook(() =>

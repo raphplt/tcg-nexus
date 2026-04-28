@@ -55,6 +55,9 @@ jest.mock("@nestjs/swagger", () => {
     ApiProperty: () => () => {},
     ApiPropertyOptional: () => () => {},
     PartialType: (cls: any) => cls,
+    OmitType: (cls: any) => cls,
+    PickType: (cls: any) => cls,
+    IntersectionType: (cls: any) => cls,
   };
 });
 

@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { UserRole } from "../common/enums/user";
@@ -158,6 +159,10 @@ describe("TournamentService", () => {
         {
           provide: MatchService,
           useValue: mockMatchService,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn(), emitAsync: jest.fn() },
         },
       ],
     }).compile();
