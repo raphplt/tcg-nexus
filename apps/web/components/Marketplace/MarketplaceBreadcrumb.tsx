@@ -1,6 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useParams, usePathname } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,10 +11,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useParams, usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { pokemonCardService } from "@/services/pokemonCard.service";
 import { marketplaceService } from "@/services/marketplace.service";
+import { pokemonCardService } from "@/services/pokemonCard.service";
 
 // Translations
 const translations = {
@@ -20,6 +20,8 @@ const translations = {
   marketplace: "Marketplace",
   cards: "Cartes",
   cardDetail: "Détail de la carte",
+  sealed: "Produits scellés",
+  sealedDetail: "Détail produit",
   sellers: "Vendeurs",
   sellerDetail: "Profil vendeur",
   create: "Créer une vente",
@@ -39,8 +41,12 @@ export function MarketplaceBreadcrumb() {
   // Get seller name if on seller detail page
   const { data: sellerStats } = useQuery({
     queryKey: ["seller-stats", params.id ? parseInt(params.id as string) : 0],
-    queryFn: () => marketplaceService.getSellerStatistics(parseInt(params.id as string)),
-    enabled: !!params.id && pathname.includes("/sellers/") && !isNaN(parseInt(params.id as string)),
+    queryFn: () =>
+      marketplaceService.getSellerStatistics(parseInt(params.id as string)),
+    enabled:
+      !!params.id &&
+      pathname.includes("/sellers/") &&
+      !isNaN(parseInt(params.id as string)),
   });
 
   const seller = sellerStats?.seller;
@@ -53,7 +59,7 @@ export function MarketplaceBreadcrumb() {
       <BreadcrumbLink asChild>
         <Link href="/">{translations.home}</Link>
       </BreadcrumbLink>
-    </BreadcrumbItem>
+    </BreadcrumbItem>,
   );
 
   // Add Marketplace
@@ -68,7 +74,7 @@ export function MarketplaceBreadcrumb() {
             <Link href="/marketplace">{translations.marketplace}</Link>
           </BreadcrumbLink>
         )}
-      </BreadcrumbItem>
+      </BreadcrumbItem>,
     );
 
     // Add Cards if on cards pages
@@ -83,7 +89,7 @@ export function MarketplaceBreadcrumb() {
               <Link href="/marketplace/cards">{translations.cards}</Link>
             </BreadcrumbLink>
           )}
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
 
       // Add card detail if on specific card page
@@ -94,7 +100,32 @@ export function MarketplaceBreadcrumb() {
             <BreadcrumbPage>
               {card?.name || translations.cardDetail}
             </BreadcrumbPage>
-          </BreadcrumbItem>
+          </BreadcrumbItem>,
+        );
+      }
+    }
+
+    // Add Sealed products if on sealed pages
+    if (pathname.startsWith("/marketplace/sealed")) {
+      breadcrumbs.push(
+        <BreadcrumbSeparator key="sep-2" />,
+        <BreadcrumbItem key="sealed">
+          {pathname === "/marketplace/sealed" ? (
+            <BreadcrumbPage>{translations.sealed}</BreadcrumbPage>
+          ) : (
+            <BreadcrumbLink asChild>
+              <Link href="/marketplace/sealed">{translations.sealed}</Link>
+            </BreadcrumbLink>
+          )}
+        </BreadcrumbItem>,
+      );
+
+      if (pathname.match(/^\/marketplace\/sealed\/[^/]+$/)) {
+        breadcrumbs.push(
+          <BreadcrumbSeparator key="sep-3" />,
+          <BreadcrumbItem key="sealed-detail">
+            <BreadcrumbPage>{translations.sealedDetail}</BreadcrumbPage>
+          </BreadcrumbItem>,
         );
       }
     }
@@ -111,7 +142,7 @@ export function MarketplaceBreadcrumb() {
               <Link href="/marketplace/sellers">{translations.sellers}</Link>
             </BreadcrumbLink>
           )}
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
 
       // Add seller detail if on specific seller page
@@ -124,7 +155,7 @@ export function MarketplaceBreadcrumb() {
                 ? `${seller.firstName} ${seller.lastName}`
                 : translations.sellerDetail}
             </BreadcrumbPage>
-          </BreadcrumbItem>
+          </BreadcrumbItem>,
         );
       }
     }
@@ -135,7 +166,7 @@ export function MarketplaceBreadcrumb() {
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="create">
           <BreadcrumbPage>{translations.create}</BreadcrumbPage>
-        </BreadcrumbItem>
+        </BreadcrumbItem>,
       );
     }
   }
@@ -146,4 +177,3 @@ export function MarketplaceBreadcrumb() {
     </Breadcrumb>
   );
 }
-

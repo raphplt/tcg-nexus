@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsNumber } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateCollectionDto {
   @IsString()

@@ -1,4 +1,4 @@
-import { SelectQueryBuilder, ObjectLiteral } from 'typeorm';
+import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -30,7 +30,7 @@ export class PaginationHelper {
     const page = Math.max(1, params.page || this.DEFAULT_PAGE);
     const limit = Math.min(
       Math.max(1, params.limit || this.DEFAULT_LIMIT),
-      this.MAX_LIMIT
+      this.MAX_LIMIT,
     );
 
     return { page, limit };
@@ -44,7 +44,7 @@ export class PaginationHelper {
     data: T[],
     totalItems: number,
     page: number,
-    limit: number
+    limit: number,
   ): PaginatedResult<T> {
     const totalPages = Math.ceil(totalItems / limit);
     const itemCount = data.length;
@@ -58,8 +58,8 @@ export class PaginationHelper {
         totalPages,
         currentPage: page,
         hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
-      }
+        hasPreviousPage: page > 1,
+      },
     };
   }
 
@@ -80,7 +80,7 @@ export class PaginationHelper {
     queryBuilder: SelectQueryBuilder<T>,
     params: PaginationParams = {},
     sortBy?: string,
-    sortOrder: 'ASC' | 'DESC' = 'ASC'
+    sortOrder: "ASC" | "DESC" = "ASC",
   ): Promise<PaginatedResult<T>> {
     const { page, limit } = this.validateParams(params);
     if (sortBy) {

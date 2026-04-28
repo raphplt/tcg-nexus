@@ -4,12 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertTriangle,
-  BarChart3,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
+import { AlertTriangle, BarChart3, Loader2, Sparkles } from "lucide-react";
 
 interface DeckAnalysisProps {
   analysis: DeckAnalysis | null;

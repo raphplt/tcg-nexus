@@ -44,20 +44,14 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
 }) => (
   <div className="space-y-1.5">
     <Label>{label}</Label>
-    <Select
-      value={value}
-      onValueChange={onChange}
-    >
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Tout afficher</SelectItem>
         {options?.map((opt) => (
-          <SelectItem
-            key={opt.value}
-            value={opt.value}
-          >
+          <SelectItem key={opt.value} value={opt.value}>
             {opt.label}
           </SelectItem>
         ))}

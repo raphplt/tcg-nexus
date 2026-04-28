@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { CreateStatisticDto } from './dto/create-statistic.dto';
-import { UpdateStatisticDto } from './dto/update-statistic.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateStatisticDto } from "./dto/create-statistic.dto";
+import { UpdateStatisticDto } from "./dto/update-statistic.dto";
 
 @Injectable()
 export class StatisticsService {
   create(_createStatisticDto: CreateStatisticDto) {
-    return 'This action adds a new statistic';
+    return "This action adds a new statistic";
   }
 
   findAll() {

@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { SearchService } from './search.service';
-import { Card } from '../card/entities/card.entity';
-import { Tournament } from '../tournament/entities/tournament.entity';
-import { Player } from '../player/entities/player.entity';
-import { Listing } from '../marketplace/entities/listing.entity';
-import { User } from '../user/entities/user.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { Card } from "../card/entities/card.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { Player } from "../player/entities/player.entity";
+import { Tournament } from "../tournament/entities/tournament.entity";
+import { User } from "../user/entities/user.entity";
+import { SearchService } from "./search.service";
 
 const createMockRepo = () => {
   const qb: any = {
@@ -15,18 +15,18 @@ const createMockRepo = () => {
     orWhere: jest.fn().mockReturnThis(),
     setParameters: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
-    getMany: jest.fn().mockResolvedValue([])
+    getMany: jest.fn().mockResolvedValue([]),
   };
   return {
     qb,
     repo: {
       createQueryBuilder: jest.fn(() => qb),
-      find: jest.fn()
-    }
+      find: jest.fn(),
+    },
   };
 };
 
-describe('SearchService', () => {
+describe("SearchService", () => {
   let service: SearchService;
   let cardMock: ReturnType<typeof createMockRepo>;
   let tournamentMock: ReturnType<typeof createMockRepo>;
@@ -47,40 +47,40 @@ describe('SearchService', () => {
         { provide: getRepositoryToken(Card), useValue: cardMock.repo },
         {
           provide: getRepositoryToken(Tournament),
-          useValue: tournamentMock.repo
+          useValue: tournamentMock.repo,
         },
         { provide: getRepositoryToken(Player), useValue: playerMock.repo },
         { provide: getRepositoryToken(Listing), useValue: listingMock.repo },
-        { provide: getRepositoryToken(User), useValue: userMock.repo }
-      ]
+        { provide: getRepositoryToken(User), useValue: userMock.repo },
+      ],
     }).compile();
 
     service = module.get<SearchService>(SearchService);
   });
 
-  it('should return empty results when query too short', async () => {
-    const res = await service.globalSearch({ query: 'a' } as any);
+  it("should return empty results when query too short", async () => {
+    const res = await service.globalSearch({ query: "a" } as any);
     expect(res.total).toBe(0);
   });
 
-  it('should search multiple categories', async () => {
-    cardMock.qb.getMany.mockResolvedValue([{ id: 'c1', name: 'Pika' }]);
-    tournamentMock.qb.getMany.mockResolvedValue([{ id: 1, name: 'Cup' }]);
-    playerMock.qb.getMany.mockResolvedValue([{ id: 2, nickname: 'Ash' }]);
+  it("should search multiple categories", async () => {
+    cardMock.qb.getMany.mockResolvedValue([{ id: "c1", name: "Pika" }]);
+    tournamentMock.qb.getMany.mockResolvedValue([{ id: 1, name: "Cup" }]);
+    playerMock.qb.getMany.mockResolvedValue([{ id: 2, nickname: "Ash" }]);
     listingMock.qb.getMany.mockResolvedValue([
       {
         id: 3,
-        title: 'Card',
+        title: "Card",
         price: 10,
-        currency: 'EUR',
-        cardState: 'Mint',
+        currency: "EUR",
+        cardState: "Mint",
         quantityAvailable: 1,
-        pokemonCard: { name: 'Pikachu', image: 'img.png' },
-        seller: { firstName: 'John', lastName: 'Doe' }
-      }
+        pokemonCard: { name: "Pikachu", image: "img.png" },
+        seller: { firstName: "John", lastName: "Doe" },
+      },
     ]);
 
-    const res = await service.globalSearch({ query: 'pi', limit: 5 } as any);
+    const res = await service.globalSearch({ query: "pi", limit: 5 } as any);
     expect(res.results.length).toBeGreaterThan(0);
   });
 });

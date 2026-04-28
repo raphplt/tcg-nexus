@@ -58,11 +58,7 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
             <FormItem>
               <FormLabel>Nom du deck</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Nom du deck"
-                  className="h-11"
-                />
+                <Input {...field} placeholder="Nom du deck" className="h-11" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -86,10 +82,7 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
                 </FormControl>
                 <SelectContent>
                   {formats.map((v: any) => (
-                    <SelectItem
-                      key={v.id}
-                      value={v.id.toString()}
-                    >
+                    <SelectItem key={v.id} value={v.id.toString()}>
                       {v.type}
                     </SelectItem>
                   ))}

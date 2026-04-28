@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Trash2,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { getCardStateColor } from "@/app/(main)/marketplace/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -16,24 +28,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ShoppingCart,
-  Trash2,
-  Plus,
-  Minus,
-  X,
-  AlertCircle,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useCurrencyStore } from "@/store/currency.store";
-import {
+  useCartItemsCount,
   useCartStore,
   useCartTotal,
-  useCartItemsCount,
 } from "@/store/cart.store";
-import { getCardStateColor } from "@/app/(main)/marketplace/utils";
+import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import toast from "react-hot-toast";
 
 export default function CartPage() {
   const router = useRouter();
@@ -70,8 +70,8 @@ export default function CartPage() {
       toast.success("Quantité mise à jour");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors de la mise à jour de la quantité";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors de la mise à jour de la quantité";
       toast.error(errorMessage);
     } finally {
       setUpdatingItemId(null);
@@ -85,8 +85,8 @@ export default function CartPage() {
       toast.success("Article retiré du panier");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors de la suppression de l'article";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors de la suppression de l'article";
       toast.error(errorMessage);
     } finally {
       setRemovingItemId(null);
@@ -103,8 +103,8 @@ export default function CartPage() {
       toast.success("Panier vidé");
     } catch (error: unknown) {
       const errorMessage =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Erreur lors du vidage du panier";
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Erreur lors du vidage du panier";
       toast.error(errorMessage);
     }
   };
@@ -118,10 +118,7 @@ export default function CartPage() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-32 w-full"
-                  />
+                  <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
             </CardContent>
@@ -207,35 +204,33 @@ export default function CartPage() {
                           <TableRow key={item.id}>
                             <TableCell>
                               <Link
-                                href={`/marketplace/cards/${item.listing.pokemonCard.id}`}
+                                href={`/marketplace/cards/${item.listing.pokemonCard?.id}`}
                                 className="block"
                               >
                                 <div className="relative w-16 h-24">
-                                    <Image
-                                      src={getCardImage(
-                                        item.listing.pokemonCard,
-                                      )}
-                                      alt={
-                                        item.listing.pokemonCard.name || "Carte"
-                                      }
-                                      fill
-                                      className="object-contain rounded hover:opacity-80 transition-opacity"
-                                    />
+                                  <Image
+                                    src={getCardImage(item.listing.pokemonCard)}
+                                    alt={
+                                      item.listing.pokemonCard?.name || "Carte"
+                                    }
+                                    fill
+                                    className="object-contain rounded hover:opacity-80 transition-opacity"
+                                  />
                                 </div>
                               </Link>
                             </TableCell>
                             <TableCell>
                               <div>
                                 <Link
-                                  href={`/marketplace/cards/${item.listing.pokemonCard.id}`}
+                                  href={`/marketplace/cards/${item.listing.pokemonCard?.id}`}
                                   className="font-medium hover:text-primary transition-colors"
                                 >
-                                  {item.listing.pokemonCard.name ||
+                                  {item.listing.pokemonCard?.name ||
                                     "Carte inconnue"}
                                 </Link>
-                                {item.listing.pokemonCard.set && (
+                                {item.listing.pokemonCard?.set && (
                                   <p className="text-sm text-muted-foreground">
-                                    {item.listing.pokemonCard.set.name}
+                                    {item.listing.pokemonCard?.set.name}
                                   </p>
                                 )}
                               </div>
@@ -244,10 +239,10 @@ export default function CartPage() {
                               <Badge
                                 variant="outline"
                                 className={getCardStateColor(
-                                  item.listing.cardState,
+                                  item.listing.cardState ?? "",
                                 )}
                               >
-                                {item.listing.cardState}
+                                {item.listing.cardState ?? ""}
                               </Badge>
                             </TableCell>
                             <TableCell>

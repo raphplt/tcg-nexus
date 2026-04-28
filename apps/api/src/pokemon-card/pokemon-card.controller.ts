@@ -1,24 +1,24 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query
-} from '@nestjs/common';
-import { PokemonCardService } from './pokemon-card.service';
-import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
-import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { Roles } from 'src/auth/decorators/roles.decorator';
-import { ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/auth/decorators/public.decorator';
-import { UserRole } from 'src/common/enums/user';
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { Public } from "src/auth/decorators/public.decorator";
+import { Roles } from "src/auth/decorators/roles.decorator";
+import { UserRole } from "src/common/enums/user";
+import { PaginationDto } from "../common/dto/pagination.dto";
+import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
+import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
+import { PokemonCardService } from "./pokemon-card.service";
 
-@ApiTags('pokemon-card')
-@Controller('pokemon-card')
+@ApiTags("pokemon-card")
+@Controller("pokemon-card")
 export class PokemonCardController {
   constructor(private readonly pokemonCardService: PokemonCardService) {}
 
@@ -34,48 +34,48 @@ export class PokemonCardController {
   }
 
   @Public()
-  @Get('paginated')
+  @Get("paginated")
   findAllPaginated(@Query() paginationDto: PaginationDto) {
     return this.pokemonCardService.findAllPaginated(
       paginationDto.page,
-      paginationDto.limit
+      paginationDto.limit,
     );
   }
 
   @Public()
-  @Get('search/:search')
-  findBySearch(@Param('search') search: string) {
+  @Get("search/:search")
+  findBySearch(@Param("search") search: string) {
     return this.pokemonCardService.findBySearch(search);
   }
 
-  @Get('random')
+  @Get("random")
   @Public()
   findRandom(
-    @Query('serieId') serieId?: string,
-    @Query('rarity') rarity?: string,
-    @Query('set') set?: string
+    @Query("serieId") serieId?: string,
+    @Query("rarity") rarity?: string,
+    @Query("set") set?: string,
   ) {
     return this.pokemonCardService.findRandom(serieId, rarity, set);
   }
 
-  @Get(':id')
+  @Get(":id")
   @Public()
-  findOne(@Param('id') id: string) {
+  findOne(@Param("id") id: string) {
     return this.pokemonCardService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(":id")
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   update(
-    @Param('id') id: string,
-    @Body() updatePokemonCardDto: UpdatePokemonCardDto
+    @Param("id") id: string,
+    @Body() updatePokemonCardDto: UpdatePokemonCardDto,
   ) {
     return this.pokemonCardService.update(id, updatePokemonCardDto);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
-  remove(@Param('id') id: string) {
+  remove(@Param("id") id: string) {
     return this.pokemonCardService.remove(id);
   }
 }

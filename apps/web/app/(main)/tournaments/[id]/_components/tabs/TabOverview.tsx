@@ -59,14 +59,8 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <InfoItem
-              label="Début"
-              value={formatDate(tournament.startDate)}
-            />
-            <InfoItem
-              label="Fin"
-              value={formatDate(tournament.endDate)}
-            />
+            <InfoItem label="Début" value={formatDate(tournament.startDate)} />
+            <InfoItem label="Fin" value={formatDate(tournament.endDate)} />
             <InfoItem
               label="Date limite d'inscription"
               value={formatDate(tournament.registrationDeadline)}

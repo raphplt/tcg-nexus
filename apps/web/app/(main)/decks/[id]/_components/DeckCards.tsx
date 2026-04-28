@@ -33,18 +33,18 @@ const CardGrid = ({
           key={deckCard.id}
           className="rounded-lg border bg-card hover:shadow-md transition-shadow overflow-hidden"
         >
-          <div className="relative h-40 bg-muted/40">
+          <div
+            className="relative bg-muted/40"
+            style={{ aspectRatio: "245/337" }}
+          >
             <Image
               src={getCardImage(deckCard.card, "low")}
               alt={deckCard.card?.name || "Carte"}
               fill
-              className="object-cover"
+              className="object-contain"
             />
             <Badge className="absolute top-2 left-2">x{deckCard.qty}</Badge>
-            <Badge
-              variant="secondary"
-              className="absolute top-2 right-2"
-            >
+            <Badge variant="secondary" className="absolute top-2 right-2">
               {deckCard.role === "side" ? "Side" : "Main"}
             </Badge>
           </div>
@@ -83,12 +83,12 @@ function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
               className="flex items-center gap-3 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
             >
               <div className="relative w-12 h-16 shrink-0 bg-muted rounded overflow-hidden">
-                  <Image
-                    src={getCardImage(deckCard.card, "low")}
-                    alt={deckCard.card?.name || "Carte"}
-                    fill
-                    className="object-contain"
-                  />
+                <Image
+                  src={getCardImage(deckCard.card, "low")}
+                  alt={deckCard.card?.name || "Carte"}
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">
@@ -153,31 +153,16 @@ export function DeckCards({ deck }: DeckCardsProps) {
               <CardGrid cards={mainCards} />
             </TabsContent>
             <TabsContent value="side">
-              <CardGrid
-                cards={sideCards}
-                emptyLabel="Aucune carte side"
-              />
+              <CardGrid cards={sideCards} emptyLabel="Aucune carte side" />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      <CardSection
-        title="Pokémon"
-        cards={pokemonCards}
-      />
-      <CardSection
-        title="Dresseurs"
-        cards={trainerCards}
-      />
-      <CardSection
-        title="Energies"
-        cards={energyCards}
-      />
-      <CardSection
-        title="Autres"
-        cards={otherCards}
-      />
+      <CardSection title="Pokémon" cards={pokemonCards} />
+      <CardSection title="Dresseurs" cards={trainerCards} />
+      <CardSection title="Energies" cards={energyCards} />
+      <CardSection title="Autres" cards={otherCards} />
     </div>
   );
 }

@@ -1,15 +1,15 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Collection } from './entities/collection.entity';
-import { CollectionItem } from '../collection-item/entities/collection-item.entity';
-import { CreateCollectionDto } from './dto/create-collection.dto';
-import { UpdateCollectionDto } from './dto/update-collection.dto';
-import { User } from '../user/entities/user.entity';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { User } from "../user/entities/user.entity";
+import { CreateCollectionDto } from "./dto/create-collection.dto";
+import { UpdateCollectionDto } from "./dto/update-collection.dto";
+import { Collection } from "./entities/collection.entity";
 
 @Injectable()
 export class CollectionService {
@@ -17,36 +17,36 @@ export class CollectionService {
     @InjectRepository(Collection)
     private collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
-    private collectionItemRepository: Repository<CollectionItem>
+    private collectionItemRepository: Repository<CollectionItem>,
   ) {}
 
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.find({
       select: [
-        'id',
-        'name',
-        'description',
-        'created_at',
-        'updated_at',
-        'user',
-        'isPublic'
+        "id",
+        "name",
+        "description",
+        "created_at",
+        "updated_at",
+        "user",
+        "isPublic",
       ],
       where: { isPublic: true },
-      relations: ['user']
+      relations: ["user"],
     });
   }
 
   async findByUserId(userId: string): Promise<Collection[]> {
     return await this.collectionRepository.find({
       where: { user: { id: Number(userId) } },
-      relations: ['user', 'items']
+      relations: ["user", "items"],
     });
   }
 
   async findOneById(id: string): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
-      relations: ['items', 'user']
+      relations: ["items", "user"],
     });
     if (!collection) {
       throw new NotFoundException(`Collection with id ${id} not found`);
@@ -58,7 +58,7 @@ export class CollectionService {
     const collection = this.collectionRepository.create({
       name: createCollectionDto.name,
       description: createCollectionDto.description,
-      isPublic: createCollectionDto.isPublic || false
+      isPublic: createCollectionDto.isPublic || false,
     });
     collection.user = { id: Number(createCollectionDto.userId) } as User;
     return await this.collectionRepository.save(collection);
@@ -67,11 +67,11 @@ export class CollectionService {
   async update(
     id: string,
     updateCollectionDto: UpdateCollectionDto,
-    userId: number
+    userId: number,
   ): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (!collection) {
@@ -80,7 +80,7 @@ export class CollectionService {
 
     if (collection.user.id !== userId) {
       throw new ForbiddenException(
-        'Vous ne pouvez modifier que vos propres collections'
+        "Vous ne pouvez modifier que vos propres collections",
       );
     }
 
@@ -92,7 +92,7 @@ export class CollectionService {
   async delete(id: string, userId: number): Promise<void> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (!collection) {
@@ -101,7 +101,7 @@ export class CollectionService {
 
     if (collection.user.id !== userId) {
       throw new ForbiddenException(
-        'Vous ne pouvez supprimer que vos propres collections'
+        "Vous ne pouvez supprimer que vos propres collections",
       );
     }
 
@@ -110,7 +110,7 @@ export class CollectionService {
 
   async findAllPaginated(
     page: number,
-    limit: number
+    limit: number,
   ): Promise<{
     collections: Collection[];
     total: number;
@@ -121,17 +121,17 @@ export class CollectionService {
 
     const [collections, total] = await this.collectionRepository.findAndCount({
       where: { isPublic: true },
-      relations: ['user'],
+      relations: ["user"],
       skip,
       take: limit,
-      order: { created_at: 'DESC' }
+      order: { created_at: "DESC" },
     });
 
     return {
       collections,
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -140,8 +140,8 @@ export class CollectionService {
     page: number = 1,
     limit: number = 10,
     search?: string,
-    sortBy: string = 'added_at',
-    sortOrder: 'ASC' | 'DESC' = 'DESC'
+    sortBy: string = "added_at",
+    sortOrder: "ASC" | "DESC" = "DESC",
   ): Promise<{
     data: CollectionItem[];
     meta: {
@@ -156,11 +156,11 @@ export class CollectionService {
   }> {
     // Vérifier que la collection existe
     const collection = await this.collectionRepository.findOne({
-      where: { id: collectionId }
+      where: { id: collectionId },
     });
     if (!collection) {
       throw new NotFoundException(
-        `Collection with id ${collectionId} not found`
+        `Collection with id ${collectionId} not found`,
       );
     }
 
@@ -168,32 +168,32 @@ export class CollectionService {
 
     // Construire la query avec recherche
     const queryBuilder = this.collectionItemRepository
-      .createQueryBuilder('item')
-      .leftJoinAndSelect('item.pokemonCard', 'pokemonCard')
-      .leftJoinAndSelect('item.cardState', 'cardState')
-      .leftJoinAndSelect('pokemonCard.set', 'set')
-      .where('item.collection.id = :collectionId', { collectionId });
+      .createQueryBuilder("item")
+      .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
+      .leftJoinAndSelect("item.cardState", "cardState")
+      .leftJoinAndSelect("pokemonCard.set", "set")
+      .where("item.collection.id = :collectionId", { collectionId });
 
     // Ajouter la recherche si fournie
     if (search) {
       queryBuilder.andWhere(
-        '(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)',
-        { search: `%${search}%` }
+        "(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)",
+        { search: `%${search}%` },
       );
     }
 
     // Trier
     const validSortBy = [
-      'added_at',
-      'quantity',
-      'pokemonCard.name',
-      'pokemonCard.rarity'
+      "added_at",
+      "quantity",
+      "pokemonCard.name",
+      "pokemonCard.rarity",
     ];
-    const sortField = validSortBy.includes(sortBy) ? sortBy : 'added_at';
+    const sortField = validSortBy.includes(sortBy) ? sortBy : "added_at";
 
     if (
-      sortField === 'pokemonCard.name' ||
-      sortField === 'pokemonCard.rarity'
+      sortField === "pokemonCard.name" ||
+      sortField === "pokemonCard.rarity"
     ) {
       queryBuilder.orderBy(sortField, sortOrder);
     } else {
@@ -217,8 +217,8 @@ export class CollectionService {
         totalPages,
         currentPage: page,
         hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
-      }
+        hasPreviousPage: page > 1,
+      },
     };
   }
 }

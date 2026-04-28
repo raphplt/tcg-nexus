@@ -1,9 +1,5 @@
 import { Match } from "@/types/tournament";
-import {
-  TournamentFormat,
-  TournamentStatus,
-  TournamentType,
-} from "@/utils/tournaments";
+import { TournamentStatus, TournamentType } from "@/utils/tournaments";
 import z from "zod";
 
 export const statusColor: Record<
@@ -72,7 +68,6 @@ export const formSchema = z
     startDate: z.string().min(1, "Date de début requise"),
     endDate: z.string().min(1, "Date de fin requise"),
     registrationDeadline: z.string().optional(),
-    format: z.nativeEnum(TournamentFormat),
     type: z.nativeEnum(TournamentType),
     status: z.nativeEnum(TournamentStatus).optional(),
     isFinished: z.boolean().optional(),

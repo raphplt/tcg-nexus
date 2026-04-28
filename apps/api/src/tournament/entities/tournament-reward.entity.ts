@@ -1,19 +1,19 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn
-} from 'typeorm';
-import { Tournament } from './tournament.entity';
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { Tournament } from "./tournament.entity";
 
 export enum RewardType {
-  CASH = 'cash',
-  PRODUCT = 'product',
-  POINTS = 'points',
-  TITLE = 'title',
-  OTHER = 'other'
+  CASH = "cash",
+  PRODUCT = "product",
+  POINTS = "points",
+  TITLE = "title",
+  OTHER = "other",
 }
 
 @Entity()
@@ -21,9 +21,13 @@ export class TournamentReward {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, (tournament) => tournament.rewards, {
-    onDelete: 'CASCADE'
-  })
+  @ManyToOne(
+    () => Tournament,
+    (tournament) => tournament.rewards,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   tournament: Tournament;
 
   @Column()
@@ -32,16 +36,16 @@ export class TournamentReward {
   @Column()
   name: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   description: string;
 
   @Column({
-    type: 'enum',
-    enum: RewardType
+    type: "enum",
+    enum: RewardType,
   })
   type: RewardType;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   cashValue: number;
 
   @Column({ nullable: true })
@@ -50,7 +54,7 @@ export class TournamentReward {
   @Column({ nullable: true })
   productBrand: string;
 
-  @Column({ type: 'integer', nullable: true })
+  @Column({ type: "integer", nullable: true })
   pointsValue: number;
 
   @Column({ nullable: true })

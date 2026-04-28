@@ -1,33 +1,35 @@
+import { Player } from "src/player/entities/player.entity";
+import { Statistics } from "src/statistics/entities/statistic.entity";
+import { Tournament } from "src/tournament/entities/tournament.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  OneToMany,
   Column,
   CreateDateColumn,
-  UpdateDateColumn
-} from 'typeorm';
-import { Tournament } from 'src/tournament/entities/tournament.entity';
-import { Player } from 'src/player/entities/player.entity';
-import { Statistics } from 'src/statistics/entities/statistic.entity';
+  Entity,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { OnlineMatchSession } from "./online-match-session.entity";
 
 export enum MatchStatus {
-  SCHEDULED = 'scheduled',
-  IN_PROGRESS = 'in_progress',
-  FINISHED = 'finished',
-  CANCELLED = 'cancelled',
-  FORFEIT = 'forfeit'
+  SCHEDULED = "scheduled",
+  IN_PROGRESS = "in_progress",
+  FINISHED = "finished",
+  CANCELLED = "cancelled",
+  FORFEIT = "forfeit",
 }
 
 export enum MatchPhase {
-  QUALIFICATION = 'qualification',
-  ROUND_OF_64 = 'round_of_64',
-  ROUND_OF_32 = 'round_of_32',
-  ROUND_OF_16 = 'round_of_16',
-  QUARTER_FINAL = 'quarter_final',
-  SEMI_FINAL = 'semi_final',
-  THIRD_PLACE = 'third_place',
-  FINAL = 'final'
+  QUALIFICATION = "qualification",
+  ROUND_OF_64 = "round_of_64",
+  ROUND_OF_32 = "round_of_32",
+  ROUND_OF_16 = "round_of_16",
+  QUARTER_FINAL = "quarter_final",
+  SEMI_FINAL = "semi_final",
+  THIRD_PLACE = "third_place",
+  FINAL = "final",
 }
 
 @Entity()
@@ -35,9 +37,13 @@ export class Match {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, (tournament) => tournament.matches, {
-    onDelete: 'CASCADE'
-  })
+  @ManyToOne(
+    () => Tournament,
+    (tournament) => tournament.matches,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   tournament: Tournament;
 
   @ManyToOne(() => Player, { nullable: true })
@@ -53,16 +59,16 @@ export class Match {
   round: number;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: MatchPhase,
-    default: MatchPhase.QUALIFICATION
+    default: MatchPhase.QUALIFICATION,
   })
   phase: MatchPhase;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: MatchStatus,
-    default: MatchStatus.SCHEDULED
+    default: MatchStatus.SCHEDULED,
   })
   status: MatchStatus;
 
@@ -90,6 +96,19 @@ export class Match {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Statistics, (stats) => stats.match, { cascade: true })
+  @OneToMany(
+    () => Statistics,
+    (stats) => stats.match,
+    { cascade: true },
+  )
   statistics: Statistics[];
+
+  @OneToOne(
+    () => OnlineMatchSession,
+    (session) => session.match,
+    {
+      nullable: true,
+    },
+  )
+  onlineSession?: OnlineMatchSession | null;
 }

@@ -2,26 +2,51 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { CollectionService } from "src/collection/collection.service";
+import { Player } from "src/player/entities/player.entity";
+import { Repository } from "typeorm";
 import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
-import { AuthResponse, JwtPayload } from "./interfaces/auth.interface";
+import {
+  AuthResponse,
+  AuthTokens,
+  JwtPayload,
+} from "./interfaces/auth.interface";
+import { parseDurationToMs } from "./utils/parse-duration";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private collectionService: CollectionService,
   ) {}
+
+  /** Durée de vie du access token, exposée pour permettre au controller d'aligner la maxAge des cookies. */
+  getAccessTokenTtlMs(): number {
+    return parseDurationToMs(
+      this.configService.get<string>("JWT_EXPIRES_IN") || "15m",
+    );
+  }
+
+  /** Durée de vie du refresh token, idem. */
+  getRefreshTokenTtlMs(): number {
+    return parseDurationToMs(
+      this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") || "30d",
+    );
+  }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findByEmail(email);
@@ -53,6 +78,7 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
     await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
+    const hydratedUser = await this.userService.findOne(user.id);
 
     return {
       user: {
@@ -95,6 +121,7 @@ export class AuthService {
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
+      const hydratedUser = await this.userService.findOne(user.id);
 
       return {
         user: {
@@ -117,27 +144,48 @@ export class AuthService {
   async refreshTokens(
     userId: number,
     refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  ): Promise<AuthTokens> {
     const user = await this.userService.findById(userId);
 
-    if (!user || !user.refreshToken) {
+    if (!user) {
       throw new UnauthorizedException("Access denied");
     }
 
-    try {
-      const refreshTokenMatches = await bcrypt.compare(
-        refreshToken,
-        user.refreshToken,
-      );
+    const matchesCurrent = user.refreshToken
+      ? await this.safeBcryptCompare(
+          refreshToken,
+          user.refreshToken,
+          user.id,
+          "current",
+        )
+      : false;
 
-      if (!refreshTokenMatches) {
-        throw new UnauthorizedException("Access denied");
-      }
-    } catch (error) {
-      console.error(
-        `[AuthService] Error verifying refresh token for user ${userId}:`,
-        error,
+    let matchesPrevious = false;
+    if (
+      !matchesCurrent &&
+      user.previousRefreshToken &&
+      user.previousRefreshTokenExpiresAt &&
+      user.previousRefreshTokenExpiresAt.getTime() > Date.now()
+    ) {
+      matchesPrevious = await this.safeBcryptCompare(
+        refreshToken,
+        user.previousRefreshToken,
+        user.id,
+        "previous",
       );
+    }
+
+    if (!matchesCurrent && !matchesPrevious) {
+      // Soit le user n'a aucun token stocké (déconnecté), soit le token fourni
+      // ne correspond ni au token actif ni au token précédent encore en grâce.
+      // Dans le second cas on suspecte un replay/vol : on invalide totalement
+      // la session pour forcer une réauthentification propre.
+      if (user.refreshToken) {
+        this.logger.warn(
+          `Refresh token mismatch for user ${user.id} — invalidating all sessions (possible replay).`,
+        );
+        await this.userService.updateRefreshToken(user.id, null);
+      }
       throw new UnauthorizedException("Access denied");
     }
 
@@ -151,9 +199,25 @@ export class AuthService {
     await this.userService.updateRefreshToken(userId, null);
   }
 
-  private async generateTokens(
-    user: User,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  private async safeBcryptCompare(
+    plain: string,
+    hash: string,
+    userId: number,
+    label: "current" | "previous",
+  ): Promise<boolean> {
+    try {
+      return await bcrypt.compare(plain, hash);
+    } catch (error) {
+      this.logger.error(
+        `Error verifying ${label} refresh token for user ${userId}: ${
+          (error as Error).message
+        }`,
+      );
+      return false;
+    }
+  }
+
+  private async generateTokens(user: User): Promise<AuthTokens> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -166,7 +230,7 @@ export class AuthService {
     const accessTokenExpiry =
       this.configService.get<string>("JWT_EXPIRES_IN") || "15m";
     const refreshTokenExpiry =
-      this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") || "7d";
+      this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") || "30d";
 
     if (!jwtSecret) {
       throw new Error("JWT_SECRET must be defined in environment variables");
@@ -194,9 +258,13 @@ export class AuthService {
       },
     );
 
+    const accessTokenExpiresAt =
+      Date.now() + parseDurationToMs(accessTokenExpiry);
+
     return {
       accessToken,
       refreshToken,
+      accessTokenExpiresAt,
     };
   }
 }

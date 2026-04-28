@@ -59,8 +59,12 @@ export const ProfileStats = ({ tournaments, badges }: ProfileStatsProps) => {
 
             {tournaments.bestRank && (
               <div className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                <span className="text-muted-foreground">Meilleur classement</span>
-                <span className="font-bold text-lg">#{tournaments.bestRank}</span>
+                <span className="text-muted-foreground">
+                  Meilleur classement
+                </span>
+                <span className="font-bold text-lg">
+                  #{tournaments.bestRank}
+                </span>
               </div>
             )}
           </div>

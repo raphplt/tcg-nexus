@@ -68,6 +68,18 @@ export const remotePatterns: RemotePattern[] = [
   },
   {
     protocol: "https",
+    hostname: "www.pokecardex.com",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
+    hostname: "pokecardex.b-cdn.net",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
     hostname: "assets.tcgdex.net",
     port: "",
     pathname: "/**",

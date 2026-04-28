@@ -42,7 +42,10 @@ export function RankingsTable({ rankings }: RankingsTableProps) {
           ))
         ) : (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground">
+            <TableCell
+              colSpan={6}
+              className="text-center text-muted-foreground"
+            >
               Le classement n&apos;est pas encore disponible.
             </TableCell>
           </TableRow>

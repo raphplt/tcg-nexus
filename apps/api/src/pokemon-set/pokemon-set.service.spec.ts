@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PokemonSetService } from './pokemon-set.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { PokemonSet } from './entities/pokemon-set.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { PokemonSet } from "./entities/pokemon-set.entity";
+import { PokemonSetService } from "./pokemon-set.service";
 
-describe('PokemonSetService', () => {
+describe("PokemonSetService", () => {
   let service: PokemonSetService;
 
   const mockRepository = {
@@ -19,8 +19,8 @@ describe('PokemonSetService', () => {
       where: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
-      getMany: jest.fn().mockResolvedValue([{ id: 'a' }, { id: 'b' }])
-    }))
+      getMany: jest.fn().mockResolvedValue([{ id: "a" }, { id: "b" }]),
+    })),
   };
 
   beforeEach(async () => {
@@ -29,65 +29,65 @@ describe('PokemonSetService', () => {
         PokemonSetService,
         {
           provide: getRepositoryToken(PokemonSet),
-          useValue: mockRepository
-        }
-      ]
+          useValue: mockRepository,
+        },
+      ],
     }).compile();
 
     service = module.get<PokemonSetService>(PokemonSetService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  it('should create pokemon set', async () => {
-    const dto = { id: 'base', name: 'Base' } as any;
+  it("should create pokemon set", async () => {
+    const dto = { id: "base", name: "Base" } as any;
     mockRepository.create.mockReturnValue(dto);
-    mockRepository.save.mockResolvedValue({ id: 'base' });
+    mockRepository.save.mockResolvedValue({ id: "base" });
 
-    await expect(service.create(dto)).resolves.toEqual({ id: 'base' });
+    await expect(service.create(dto)).resolves.toEqual({ id: "base" });
     expect(mockRepository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ ...dto, game: 'POKEMON' })
+      expect.objectContaining({ ...dto, game: "POKEMON" }),
     );
   });
 
-  it('should find all ordered by releaseDate desc', async () => {
+  it("should find all ordered by releaseDate desc", async () => {
     await expect(service.findAll()).resolves.toHaveLength(2);
-    expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('set');
+    expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith("set");
   });
 
-  it('should find one by id', async () => {
-    mockRepository.findOne.mockResolvedValue({ id: '123' });
-    await expect(service.findOne('123')).resolves.toEqual({ id: '123' });
+  it("should find one by id", async () => {
+    mockRepository.findOne.mockResolvedValue({ id: "123" });
+    await expect(service.findOne("123")).resolves.toEqual({ id: "123" });
   });
 
-  it('should throw when pokemon set missing', async () => {
+  it("should throw when pokemon set missing", async () => {
     mockRepository.findOne.mockResolvedValue(null);
-    await expect(service.findOne('missing')).rejects.toThrow(
-      'PokemonSet with id missing not found'
+    await expect(service.findOne("missing")).rejects.toThrow(
+      "PokemonSet with id missing not found",
     );
   });
 
-  it('should update and return updated set', async () => {
-    const existing = { id: '123', name: 'Old' };
-    const updateDto = { name: 'Updated' };
+  it("should update and return updated set", async () => {
+    const existing = { id: "123", name: "Old" };
+    const updateDto = { name: "Updated" };
     mockRepository.findOne.mockResolvedValue(existing);
     mockRepository.save.mockResolvedValue({ ...existing, ...updateDto });
 
-    await expect(service.update('123', updateDto as any)).resolves.toEqual({
-      id: '123',
-      name: 'Updated'
+    await expect(service.update("123", updateDto as any)).resolves.toEqual({
+      id: "123",
+      name: "Updated",
     });
     expect(mockRepository.merge).toHaveBeenCalledWith(existing, updateDto);
     expect(mockRepository.save).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'Updated' })
+      expect.objectContaining({ name: "Updated" }),
     );
   });
 
-  it('should remove pokemon set', async () => {
+  it("should remove pokemon set", async () => {
     mockRepository.delete.mockResolvedValue({ affected: 1 });
-    await expect(service.remove('7')).resolves.toBeUndefined();
-    expect(mockRepository.delete).toHaveBeenCalledWith('7');
+    await expect(service.remove("7")).resolves.toBeUndefined();
+    expect(mockRepository.delete).toHaveBeenCalledWith("7");
   });
 });

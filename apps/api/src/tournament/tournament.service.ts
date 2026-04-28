@@ -1,41 +1,42 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
-  BadRequestException,
-  ConflictException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, LessThan } from 'typeorm';
-import { CreateTournamentDto } from './dto/create-tournament.dto';
-import { UpdateTournamentDto } from './dto/update-tournament.dto';
-import { TournamentQueryDto } from './dto/tournament-query.dto';
-import { UpdateTournamentStatusDto } from './dto/update-tournament-status.dto';
-import { TournamentRegistrationDto } from './dto/tournament-registration.dto';
+} from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { InjectRepository } from "@nestjs/typeorm";
+import { In, LessThan, Repository } from "typeorm";
+import { UserRole } from "../common/enums/user";
+import { PaginationHelper } from "../helpers/pagination";
+import { UpdateMatchDto } from "../match/dto/update-match.dto";
+import { MatchStatus } from "../match/entities/match.entity";
+import { MatchService } from "../match/match.service";
+import { Player } from "../player/entities/player.entity";
+import { RankingService } from "../ranking/ranking.service";
+import { User } from "../user/entities/user.entity";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { TournamentQueryDto } from "./dto/tournament-query.dto";
+import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
+import { UpdateTournamentDto } from "./dto/update-tournament.dto";
+import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
 import {
   Tournament,
   TournamentStatus,
-  TournamentType
-} from './entities/tournament.entity';
+  TournamentType,
+} from "./entities/tournament.entity";
 import {
-  TournamentRegistration,
-  RegistrationStatus
-} from './entities/tournament-registration.entity';
-import {
+  OrganizerRole,
   TournamentOrganizer,
-  OrganizerRole
-} from './entities/tournament-organizer.entity';
-import { Player } from '../player/entities/player.entity';
-import { User } from '../user/entities/user.entity';
-import { PaginationHelper } from '../helpers/pagination';
-import { BracketService } from './services/bracket.service';
-import { UpdateMatchDto } from '../match/dto/update-match.dto';
-import { SeedingService, SeedingMethod } from './services/seeding.service';
-import { TournamentOrchestrationService } from './services/tournament-orchestration.service';
-import { TournamentStateService } from './services/tournament-state.service';
-import { RankingService } from '../ranking/ranking.service';
-import { MatchService } from '../match/match.service';
-import { MatchStatus } from '../match/entities/match.entity';
-import { UserRole } from '../common/enums/user';
+} from "./entities/tournament-organizer.entity";
+import {
+  RegistrationStatus,
+  TournamentRegistration,
+} from "./entities/tournament-registration.entity";
+import { BracketService } from "./services/bracket.service";
+import { SeedingMethod, SeedingService } from "./services/seeding.service";
+import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
+import { TournamentStateService } from "./services/tournament-state.service";
 
 @Injectable()
 export class TournamentService {
@@ -55,19 +56,20 @@ export class TournamentService {
     private orchestrationService: TournamentOrchestrationService,
     private stateService: TournamentStateService,
     private rankingService: RankingService,
-    private matchService: MatchService
+    private matchService: MatchService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   // Créer un nouveau tournoi
   async create(
     createTournamentDto: CreateTournamentDto,
-    userId: number
+    userId: number,
   ): Promise<Tournament> {
     const tournament = this.tournamentRepository.create(createTournamentDto);
     // Validation des dates
     if (tournament.startDate >= tournament.endDate) {
       throw new BadRequestException(
-        'La date de début doit être antérieure à la date de fin'
+        "La date de début doit être antérieure à la date de fin",
       );
     }
 
@@ -76,7 +78,7 @@ export class TournamentService {
       tournament.registrationDeadline >= tournament.startDate
     ) {
       throw new BadRequestException(
-        "La date limite d'inscription doit être antérieure à la date de début"
+        "La date limite d'inscription doit être antérieure à la date de début",
       );
     }
 
@@ -87,7 +89,7 @@ export class TournamentService {
       tournament.minPlayers > tournament.maxPlayers
     ) {
       throw new BadRequestException(
-        'Le nombre minimum de joueurs ne peut pas être supérieur au maximum'
+        "Le nombre minimum de joueurs ne peut pas être supérieur au maximum",
       );
     }
 
@@ -97,7 +99,7 @@ export class TournamentService {
     // Créer l'organisateur propriétaire
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
+      throw new NotFoundException("Utilisateur non trouvé");
     }
 
     const organizer = this.organizerRepository.create({
@@ -106,7 +108,7 @@ export class TournamentService {
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       role: OrganizerRole.OWNER,
-      isActive: true
+      isActive: true,
     });
 
     await this.organizerRepository.save(organizer);
@@ -126,52 +128,52 @@ export class TournamentService {
       startDateTo,
       page = 1,
       limit = 10,
-      sortBy = 'startDate',
-      sortOrder = 'ASC'
+      sortBy = "startDate",
+      sortOrder = "ASC",
     } = query;
 
     const queryBuilder = this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .leftJoinAndSelect('tournament.players', 'players')
-      .leftJoinAndSelect('tournament.registrations', 'registrations')
-      .leftJoinAndSelect('tournament.pricing', 'pricing')
-      .leftJoinAndSelect('tournament.rewards', 'rewards')
-      .leftJoinAndSelect('tournament.organizers', 'organizers');
+      .createQueryBuilder("tournament")
+      .leftJoinAndSelect("tournament.players", "players")
+      .leftJoinAndSelect("tournament.registrations", "registrations")
+      .leftJoinAndSelect("tournament.pricing", "pricing")
+      .leftJoinAndSelect("tournament.rewards", "rewards")
+      .leftJoinAndSelect("tournament.organizers", "organizers");
 
     // Filtres de recherche
     if (search) {
       queryBuilder.andWhere(
-        '(tournament.name ILIKE :search OR tournament.description ILIKE :search)',
-        { search: `%${search}%` }
+        "(tournament.name ILIKE :search OR tournament.description ILIKE :search)",
+        { search: `%${search}%` },
       );
     }
 
     if (status) {
-      queryBuilder.andWhere('tournament.status = :status', { status });
+      queryBuilder.andWhere("tournament.status = :status", { status });
     }
 
     if (type) {
-      queryBuilder.andWhere('tournament.type = :type', { type });
+      queryBuilder.andWhere("tournament.type = :type", { type });
     }
 
     if (location) {
-      queryBuilder.andWhere('tournament.location ILIKE :location', {
-        location: `%${location}%`
+      queryBuilder.andWhere("tournament.location ILIKE :location", {
+        location: `%${location}%`,
       });
     }
 
     if (isPublic !== undefined) {
-      queryBuilder.andWhere('tournament.isPublic = :isPublic', { isPublic });
+      queryBuilder.andWhere("tournament.isPublic = :isPublic", { isPublic });
     }
 
     if (startDateFrom) {
-      queryBuilder.andWhere('tournament.startDate >= :startDateFrom', {
-        startDateFrom
+      queryBuilder.andWhere("tournament.startDate >= :startDateFrom", {
+        startDateFrom,
       });
     }
     if (startDateTo) {
-      queryBuilder.andWhere('tournament.startDate <= :startDateTo', {
-        startDateTo
+      queryBuilder.andWhere("tournament.startDate <= :startDateTo", {
+        startDateTo,
       });
     }
 
@@ -180,7 +182,7 @@ export class TournamentService {
       queryBuilder,
       { page, limit },
       sortBy ? `tournament.${sortBy}` : undefined,
-      sortOrder
+      sortOrder,
     );
   }
 
@@ -189,24 +191,24 @@ export class TournamentService {
     const tournament = await this.tournamentRepository.findOne({
       where: { id },
       relations: [
-        'players',
-        'players.user',
-        'matches',
-        'matches.playerA',
-        'matches.playerA.user',
-        'matches.playerB',
-        'matches.playerB.user',
-        'rankings',
-        'rankings.player',
-        'rankings.player.user',
-        'registrations',
-        'registrations.player',
-        'registrations.player.user',
-        'rewards',
-        'pricing',
-        'organizers',
-        'notifications'
-      ]
+        "players",
+        "players.user",
+        "matches",
+        "matches.playerA",
+        "matches.playerA.user",
+        "matches.playerB",
+        "matches.playerB.user",
+        "rankings",
+        "rankings.player",
+        "rankings.player.user",
+        "registrations",
+        "registrations.player",
+        "registrations.player.user",
+        "rewards",
+        "pricing",
+        "organizers",
+        "notifications",
+      ],
     });
 
     if (!tournament) {
@@ -219,7 +221,7 @@ export class TournamentService {
   // Mettre à jour un tournoi
   async update(
     id: number,
-    updateTournamentDto: UpdateTournamentDto
+    updateTournamentDto: UpdateTournamentDto,
   ): Promise<Tournament> {
     const tournament = await this.findOne(id);
 
@@ -229,7 +231,7 @@ export class TournamentService {
       tournament.status === TournamentStatus.FINISHED
     ) {
       throw new BadRequestException(
-        'Impossible de modifier un tournoi en cours ou terminé'
+        "Impossible de modifier un tournoi en cours ou terminé",
       );
     }
 
@@ -237,7 +239,7 @@ export class TournamentService {
     if (updateTournamentDto.startDate && updateTournamentDto.endDate) {
       if (updateTournamentDto.startDate >= updateTournamentDto.endDate) {
         throw new BadRequestException(
-          'La date de début doit être antérieure à la date de fin'
+          "La date de début doit être antérieure à la date de fin",
         );
       }
     }
@@ -256,7 +258,7 @@ export class TournamentService {
 
     if (!isAdminOrModerator && tournament.status !== TournamentStatus.DRAFT) {
       throw new BadRequestException(
-        'Seuls les tournois en brouillon peuvent être supprimés'
+        "Seuls les tournois en brouillon peuvent être supprimés",
       );
     }
 
@@ -266,7 +268,7 @@ export class TournamentService {
   // Mettre à jour le statut d'un tournoi
   async updateStatus(
     id: number,
-    updateStatusDto: UpdateTournamentStatusDto
+    updateStatusDto: UpdateTournamentStatusDto,
   ): Promise<Tournament> {
     const { status } = updateStatusDto;
 
@@ -286,12 +288,12 @@ export class TournamentService {
 
   // Inscrire un joueur à un tournoi
   async registerPlayer(
-    registrationDto: TournamentRegistrationDto
+    registrationDto: TournamentRegistrationDto,
   ): Promise<TournamentRegistration> {
     const { tournamentId, playerId, notes } = registrationDto;
     const tournament = await this.findOne(tournamentId);
     const player = await this.playerRepository.findOne({
-      where: { id: playerId }
+      where: { id: playerId },
     });
     if (!player) {
       throw new NotFoundException(`Joueur avec l'ID ${playerId} non trouvé`);
@@ -299,7 +301,7 @@ export class TournamentService {
 
     // Vérifications d'inscription
     if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
-      throw new BadRequestException('Les inscriptions ne sont pas ouvertes');
+      throw new BadRequestException("Les inscriptions ne sont pas ouvertes");
     }
 
     // Vérifier la date limite d'inscription
@@ -309,7 +311,7 @@ export class TournamentService {
 
     if (isLateRegistration && !tournament.allowLateRegistration) {
       throw new BadRequestException(
-        "La date limite d'inscription est dépassée et les inscriptions tardives ne sont pas autorisées"
+        "La date limite d'inscription est dépassée et les inscriptions tardives ne sont pas autorisées",
       );
     }
 
@@ -317,20 +319,20 @@ export class TournamentService {
     const confirmedRegistrations = await this.registrationRepository.count({
       where: {
         tournament: { id: tournamentId },
-        status: RegistrationStatus.CONFIRMED
-      }
+        status: RegistrationStatus.CONFIRMED,
+      },
     });
 
     if (
       tournament.maxPlayers &&
       confirmedRegistrations >= tournament.maxPlayers
     ) {
-      throw new BadRequestException('Le tournoi est complet');
+      throw new BadRequestException("Le tournoi est complet");
     }
 
     // Vérifier si le joueur n'est pas déjà inscrit
     const existingRegistration = await this.registrationRepository.findOne({
-      where: { tournament: { id: tournamentId }, player: { id: playerId } }
+      where: { tournament: { id: tournamentId }, player: { id: playerId } },
     });
 
     if (existingRegistration) {
@@ -339,11 +341,11 @@ export class TournamentService {
         existingRegistration.status = tournament.requiresApproval
           ? RegistrationStatus.PENDING
           : RegistrationStatus.CONFIRMED;
-        existingRegistration.notes = notes ?? ''; // Ensure notes is never undefined
+        existingRegistration.notes = notes ?? ""; // Ensure notes is never undefined
         existingRegistration.registeredAt = new Date();
         return this.registrationRepository.save(existingRegistration);
       } else {
-        throw new ConflictException('Le joueur est déjà inscrit à ce tournoi');
+        throw new ConflictException("Le joueur est déjà inscrit à ce tournoi");
       }
     }
 
@@ -360,16 +362,24 @@ export class TournamentService {
       player,
       notes,
       registeredAt: new Date(),
-      status: registrationStatus
+      status: registrationStatus,
     });
 
-    return this.registrationRepository.save(registration);
+    const savedRegistration =
+      await this.registrationRepository.save(registration);
+    if (player.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: player.user.id,
+        action: "JOIN_TOURNAMENT",
+      });
+    }
+    return savedRegistration;
   }
 
   // Désinscrire un joueur d'un tournoi
   async unregisterPlayer(
     tournamentId: number,
-    playerId: number
+    playerId: number,
   ): Promise<void> {
     const tournament = await this.findOne(tournamentId);
 
@@ -378,20 +388,20 @@ export class TournamentService {
       tournament.status === TournamentStatus.FINISHED
     ) {
       throw new BadRequestException(
-        "Impossible de se désinscrire d'un tournoi en cours ou terminé"
+        "Impossible de se désinscrire d'un tournoi en cours ou terminé",
       );
     }
 
     const registration = await this.registrationRepository.findOne({
-      where: { tournament: { id: tournamentId }, player: { id: playerId } }
+      where: { tournament: { id: tournamentId }, player: { id: playerId } },
     });
 
     if (!registration) {
-      throw new NotFoundException('Inscription non trouvée');
+      throw new NotFoundException("Inscription non trouvée");
     }
 
     if (registration.status === RegistrationStatus.CANCELLED) {
-      throw new BadRequestException('Cette inscription est déjà annulée');
+      throw new BadRequestException("Cette inscription est déjà annulée");
     }
 
     registration.status = RegistrationStatus.CANCELLED;
@@ -403,22 +413,22 @@ export class TournamentService {
     const {
       page = 1,
       limit = 10,
-      sortBy = 'startDate',
-      sortOrder = 'DESC'
+      sortBy = "startDate",
+      sortOrder = "DESC",
     } = query;
 
     const queryBuilder = this.tournamentRepository
-      .createQueryBuilder('tournament')
-      .leftJoin('tournament.players', 'player')
-      .leftJoinAndSelect('tournament.pricing', 'pricing')
-      .leftJoinAndSelect('tournament.rewards', 'rewards')
-      .where('player.id = :playerId', { playerId });
+      .createQueryBuilder("tournament")
+      .leftJoin("tournament.players", "player")
+      .leftJoinAndSelect("tournament.pricing", "pricing")
+      .leftJoinAndSelect("tournament.rewards", "rewards")
+      .where("player.id = :playerId", { playerId });
 
     return PaginationHelper.paginateQueryBuilder(
       queryBuilder,
       { page, limit },
       sortBy ? `tournament.${sortBy}` : undefined,
-      sortOrder
+      sortOrder,
     );
   }
 
@@ -430,12 +440,12 @@ export class TournamentService {
         isPublic: true,
         status: In([
           TournamentStatus.REGISTRATION_OPEN,
-          TournamentStatus.REGISTRATION_CLOSED
-        ])
+          TournamentStatus.REGISTRATION_CLOSED,
+        ]),
       },
-      order: { startDate: 'ASC' },
+      order: { startDate: "ASC" },
       take: limit,
-      relations: ['pricing', 'rewards']
+      relations: ["pricing", "rewards"],
     });
   }
 
@@ -444,11 +454,11 @@ export class TournamentService {
     return this.tournamentRepository.find({
       where: {
         startDate: LessThan(new Date()),
-        isPublic: true
+        isPublic: true,
       },
-      order: { startDate: 'DESC' },
+      order: { startDate: "DESC" },
       take: limit,
-      relations: ['pricing', 'rewards']
+      relations: ["pricing", "rewards"],
     });
   }
 
@@ -467,44 +477,44 @@ export class TournamentService {
       registrations: {
         confirmed:
           tournament.registrations?.filter(
-            (reg) => reg.status === RegistrationStatus.CONFIRMED
+            (reg) => reg.status === RegistrationStatus.CONFIRMED,
           ).length || 0,
         pending:
           tournament.registrations?.filter(
-            (reg) => reg.status === RegistrationStatus.PENDING
+            (reg) => reg.status === RegistrationStatus.PENDING,
           ).length || 0,
         cancelled:
           tournament.registrations?.filter(
-            (reg) => reg.status === RegistrationStatus.CANCELLED
-          ).length || 0
-      }
+            (reg) => reg.status === RegistrationStatus.CANCELLED,
+          ).length || 0,
+      },
     };
 
     return stats;
   }
 
   private getValidStatusTransitions(
-    currentStatus: TournamentStatus
+    currentStatus: TournamentStatus,
   ): TournamentStatus[] {
     const transitions = {
       [TournamentStatus.DRAFT]: [
         TournamentStatus.REGISTRATION_OPEN,
-        TournamentStatus.CANCELLED
+        TournamentStatus.CANCELLED,
       ],
       [TournamentStatus.REGISTRATION_OPEN]: [
         TournamentStatus.REGISTRATION_CLOSED,
-        TournamentStatus.CANCELLED
+        TournamentStatus.CANCELLED,
       ],
       [TournamentStatus.REGISTRATION_CLOSED]: [
         TournamentStatus.IN_PROGRESS,
-        TournamentStatus.CANCELLED
+        TournamentStatus.CANCELLED,
       ],
       [TournamentStatus.IN_PROGRESS]: [
         TournamentStatus.FINISHED,
-        TournamentStatus.CANCELLED
+        TournamentStatus.CANCELLED,
       ],
       [TournamentStatus.FINISHED]: [],
-      [TournamentStatus.CANCELLED]: []
+      [TournamentStatus.CANCELLED]: [],
     };
 
     return transitions[currentStatus] || [];
@@ -515,13 +525,13 @@ export class TournamentService {
    */
   async startTournament(
     tournamentId: number,
-    options?: { seedingMethod?: string; checkInRequired?: boolean }
+    options?: { seedingMethod?: string; checkInRequired?: boolean },
   ) {
     const seedingMethod =
       (options?.seedingMethod as SeedingMethod) || SeedingMethod.RANDOM;
     return this.orchestrationService.startTournament(tournamentId, {
       seedingMethod,
-      checkInRequired: options?.checkInRequired
+      checkInRequired: options?.checkInRequired,
     });
   }
 
@@ -563,7 +573,7 @@ export class TournamentService {
     if (tournament.type === TournamentType.SWISS_SYSTEM) {
       return this.bracketService.generateSwissPairings(
         tournamentId,
-        targetRound
+        targetRound,
       );
     } else {
       return this.matchService.getMatchesByRound(tournamentId, targetRound);
@@ -589,12 +599,12 @@ export class TournamentService {
    */
   getTournamentMatches(
     tournamentId: number,
-    filters?: { round?: number; status?: string }
+    filters?: { round?: number; status?: string },
   ) {
     return this.matchService.findAll({
       tournamentId,
       round: filters?.round,
-      status: filters?.status as MatchStatus
+      status: filters?.status as MatchStatus,
     });
   }
 
@@ -605,11 +615,11 @@ export class TournamentService {
     const match = await this.matchService.findOne(matchId);
 
     if (!match) {
-      throw new NotFoundException('Match non trouvé');
+      throw new NotFoundException("Match non trouvé");
     }
 
     if (match.tournament?.id !== tournamentId) {
-      throw new NotFoundException('Match non trouvé dans ce tournoi');
+      throw new NotFoundException("Match non trouvé dans ce tournoi");
     }
 
     return match;
@@ -625,7 +635,7 @@ export class TournamentService {
       playerAScore?: number;
       playerBScore?: number;
       status?: string;
-    }
+    },
   ) {
     // Vérifier que le match appartient bien au tournoi
     await this.getTournamentMatch(tournamentId, matchId);
@@ -639,16 +649,16 @@ export class TournamentService {
    */
   async getTournamentRegistrations(tournamentId: number, status?: string) {
     const queryBuilder = this.registrationRepository
-      .createQueryBuilder('registration')
-      .leftJoinAndSelect('registration.player', 'player')
-      .leftJoinAndSelect('registration.payments', 'payments')
-      .where('registration.tournament.id = :tournamentId', { tournamentId });
+      .createQueryBuilder("registration")
+      .leftJoinAndSelect("registration.player", "player")
+      .leftJoinAndSelect("registration.payments", "payments")
+      .where("registration.tournament.id = :tournamentId", { tournamentId });
 
     if (status) {
-      queryBuilder.andWhere('registration.status = :status', { status });
+      queryBuilder.andWhere("registration.status = :status", { status });
     }
 
-    return queryBuilder.orderBy('registration.registeredAt', 'ASC').getMany();
+    return queryBuilder.orderBy("registration.registeredAt", "ASC").getMany();
   }
 
   /**
@@ -657,29 +667,29 @@ export class TournamentService {
   async confirmRegistration(tournamentId: number, registrationId: number) {
     const registration = await this.registrationRepository.findOne({
       where: { id: registrationId, tournament: { id: tournamentId } },
-      relations: ['tournament', 'player']
+      relations: ["tournament", "player"],
     });
 
     if (!registration) {
-      throw new NotFoundException('Inscription non trouvée');
+      throw new NotFoundException("Inscription non trouvée");
     }
 
     if (registration.status === RegistrationStatus.CONFIRMED) {
-      throw new BadRequestException('Cette inscription est déjà confirmée');
+      throw new BadRequestException("Cette inscription est déjà confirmée");
     }
 
     const confirmedCount = await this.registrationRepository.count({
       where: {
         tournament: { id: tournamentId },
-        status: RegistrationStatus.CONFIRMED
-      }
+        status: RegistrationStatus.CONFIRMED,
+      },
     });
 
     if (
       registration.tournament.maxPlayers &&
       confirmedCount >= registration.tournament.maxPlayers
     ) {
-      throw new BadRequestException('Le tournoi est complet');
+      throw new BadRequestException("Le tournoi est complet");
     }
 
     registration.status = RegistrationStatus.CONFIRMED;
@@ -692,14 +702,14 @@ export class TournamentService {
   async cancelRegistration(
     tournamentId: number,
     registrationId: number,
-    reason?: string
+    reason?: string,
   ) {
     const registration = await this.registrationRepository.findOne({
-      where: { id: registrationId, tournament: { id: tournamentId } }
+      where: { id: registrationId, tournament: { id: tournamentId } },
     });
 
     if (!registration) {
-      throw new NotFoundException('Inscription non trouvée');
+      throw new NotFoundException("Inscription non trouvée");
     }
 
     registration.status = RegistrationStatus.CANCELLED;
@@ -716,32 +726,32 @@ export class TournamentService {
   async checkInPlayer(
     tournamentId: number,
     registrationId: number,
-    userId: number
+    userId: number,
   ) {
     const registration = await this.registrationRepository.findOne({
       where: { id: registrationId, tournament: { id: tournamentId } },
-      relations: ['player', 'player.user']
+      relations: ["player", "player.user"],
     });
 
     if (!registration) {
-      throw new NotFoundException('Inscription non trouvée');
+      throw new NotFoundException("Inscription non trouvée");
     }
 
     // Vérifier que l'utilisateur peut faire le check-in
     if (registration.player.user?.id !== userId) {
       throw new BadRequestException(
-        'Vous ne pouvez faire le check-in que pour votre propre inscription'
+        "Vous ne pouvez faire le check-in que pour votre propre inscription",
       );
     }
 
     if (registration.status !== RegistrationStatus.CONFIRMED) {
       throw new BadRequestException(
-        "L'inscription doit être confirmée pour faire le check-in"
+        "L'inscription doit être confirmée pour faire le check-in",
       );
     }
 
     if (registration.checkedIn) {
-      throw new BadRequestException('Check-in déjà effectué');
+      throw new BadRequestException("Check-in déjà effectué");
     }
 
     registration.checkedIn = true;
@@ -753,7 +763,7 @@ export class TournamentService {
   // Remplir un tournoi avec des joueurs aléatoires (admin only)
   async fillWithRandomPlayers(
     tournamentId: number,
-    count: number = 8
+    count: number = 8,
   ): Promise<{
     registeredCount: number;
     registrations: TournamentRegistration[];
@@ -763,33 +773,33 @@ export class TournamentService {
     // Vérifier que les inscriptions sont ouvertes
     if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
       throw new BadRequestException(
-        'Les inscriptions doivent être ouvertes pour remplir le tournoi'
+        "Les inscriptions doivent être ouvertes pour remplir le tournoi",
       );
     }
 
     // Récupérer les joueurs déjà inscrits
     const existingRegistrations = await this.registrationRepository.find({
       where: { tournament: { id: tournamentId } },
-      relations: ['player']
+      relations: ["player"],
     });
     const existingPlayerIds = existingRegistrations.map((r) => r.player.id);
 
     // Récupérer des joueurs disponibles (qui ne sont pas déjà inscrits)
     const queryBuilder = this.playerRepository
-      .createQueryBuilder('player')
-      .leftJoinAndSelect('player.user', 'user')
-      .where('user.isActive = :isActive', { isActive: true });
+      .createQueryBuilder("player")
+      .leftJoinAndSelect("player.user", "user")
+      .where("user.isActive = :isActive", { isActive: true });
 
     if (existingPlayerIds.length > 0) {
-      queryBuilder.andWhere('player.id NOT IN (:...existingPlayerIds)', {
-        existingPlayerIds
+      queryBuilder.andWhere("player.id NOT IN (:...existingPlayerIds)", {
+        existingPlayerIds,
       });
     }
 
     const availablePlayers = await queryBuilder.take(count).getMany();
 
     if (availablePlayers.length === 0) {
-      throw new BadRequestException('Aucun joueur disponible pour inscription');
+      throw new BadRequestException("Aucun joueur disponible pour inscription");
     }
 
     // Calculer combien de places sont disponibles
@@ -799,7 +809,7 @@ export class TournamentService {
 
     const playersToRegister = availablePlayers.slice(
       0,
-      Math.min(count, availableSlots)
+      Math.min(count, availableSlots),
     );
 
     // Créer les inscriptions avec check-in automatique
@@ -808,11 +818,11 @@ export class TournamentService {
       const registration = this.registrationRepository.create({
         tournament,
         player,
-        notes: 'Inscription automatique (admin)',
+        notes: "Inscription automatique (admin)",
         registeredAt: new Date(),
         status: RegistrationStatus.CONFIRMED,
         checkedIn: true,
-        checkedInAt: new Date()
+        checkedInAt: new Date(),
       });
       const savedRegistration =
         await this.registrationRepository.save(registration);
@@ -821,7 +831,7 @@ export class TournamentService {
 
     return {
       registeredCount: registrations.length,
-      registrations
+      registrations,
     };
   }
 
@@ -833,8 +843,8 @@ export class TournamentService {
       where: {
         tournament: { id: tournamentId },
         status: RegistrationStatus.CONFIRMED,
-        checkedIn: false
-      }
+        checkedIn: false,
+      },
     });
 
     const now = new Date();
@@ -845,7 +855,7 @@ export class TournamentService {
     }
 
     return {
-      checkedInCount: registrations.length
+      checkedInCount: registrations.length,
     };
   }
 }

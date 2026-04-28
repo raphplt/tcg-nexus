@@ -1,17 +1,17 @@
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsEnum,
   IsInt,
-  IsOptional,
   IsObject,
+  IsOptional,
   IsString,
-  ValidateNested
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { PokemonCardsType } from 'src/common/enums/pokemonCardsType';
-import { EnergyType } from 'src/common/enums/energyType';
-import { TrainerType } from 'src/common/enums/trainerType';
-import { CardPricingData } from 'src/card/entities/card.entity';
+  ValidateNested,
+} from "class-validator";
+import { CardPricingData } from "src/card/entities/card.entity";
+import { EnergyType } from "src/common/enums/energyType";
+import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
+import { TrainerType } from "src/common/enums/trainerType";
 
 class SetRefDto {
   @IsString()

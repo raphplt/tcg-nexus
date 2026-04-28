@@ -1,5 +1,13 @@
-import { IsInt, IsOptional, IsString, Min, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type } from "class-transformer";
+import {
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
+import { ProductKind } from "src/common/enums/product-kind";
 
 export class FindAllListingsQuery {
   @IsOptional()
@@ -35,6 +43,14 @@ export class FindAllListingsQuery {
   pokemonCardId?: string;
 
   @IsOptional()
+  @IsString()
+  sealedProductId?: string;
+
+  @IsOptional()
+  @IsEnum(ProductKind)
+  productKind?: ProductKind;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -48,9 +64,9 @@ export class FindAllListingsQuery {
 
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = "createdAt";
 
   @IsOptional()
   @IsString()
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }

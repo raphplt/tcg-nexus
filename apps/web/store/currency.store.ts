@@ -35,7 +35,7 @@ export const useCurrencyStore = create<CurrencyState>()(
       setCurrency: (currency) => set({ currency }),
       convertPrice: (price: number, fromCurrency: string) => {
         const targetCurrency = get().currency;
-        
+
         // Si la devise source est la même que la cible, pas de conversion
         if (fromCurrency === targetCurrency) return price;
 
@@ -59,6 +59,6 @@ export const useCurrencyStore = create<CurrencyState>()(
     }),
     {
       name: "currency-storage",
-    }
-  )
+    },
+  ),
 );

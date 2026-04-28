@@ -2,15 +2,20 @@ import { CardState } from "@/utils/enums";
 import { Currency } from "@/store/currency.store";
 import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
+import { ProductKind, SealedCondition, SealedProduct } from "./sealed-product";
 
 export interface Listing {
   id: number;
   seller: User;
-  pokemonCard: PokemonCardType;
+  productKind: ProductKind;
+  pokemonCard?: PokemonCardType | null;
+  sealedProduct?: SealedProduct | null;
   price: number;
   currency: Currency;
   quantityAvailable: number;
-  cardState: CardState;
+  cardState?: CardState | null;
+  sealedCondition?: SealedCondition | null;
+  description?: string;
   createdAt: Date;
   expiresAt: Date;
 }

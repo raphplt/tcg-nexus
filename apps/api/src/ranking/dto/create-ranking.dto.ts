@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class CreateRankingDto {
   @IsNumber()

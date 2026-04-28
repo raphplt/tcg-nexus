@@ -1,38 +1,38 @@
+import { Match } from "src/match/entities/match.entity";
+import { Player } from "src/player/entities/player.entity";
+import { Ranking } from "src/ranking/entities/ranking.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  OneToMany,
-  ManyToMany,
-  JoinTable,
-  OneToOne,
-  JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn
-} from 'typeorm';
-import { Match } from 'src/match/entities/match.entity';
-import { Player } from 'src/player/entities/player.entity';
-import { Ranking } from 'src/ranking/entities/ranking.entity';
-import { TournamentRegistration } from './tournament-registration.entity';
-import { TournamentReward } from './tournament-reward.entity';
-import { TournamentPricing } from './tournament-pricing.entity';
-import { TournamentOrganizer } from './tournament-organizer.entity';
-import { TournamentNotification } from './tournament-notification.entity';
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { TournamentNotification } from "./tournament-notification.entity";
+import { TournamentOrganizer } from "./tournament-organizer.entity";
+import { TournamentPricing } from "./tournament-pricing.entity";
+import { TournamentRegistration } from "./tournament-registration.entity";
+import { TournamentReward } from "./tournament-reward.entity";
 
 export enum TournamentType {
-  SINGLE_ELIMINATION = 'single_elimination',
-  DOUBLE_ELIMINATION = 'double_elimination',
-  SWISS_SYSTEM = 'swiss_system',
-  ROUND_ROBIN = 'round_robin'
+  SINGLE_ELIMINATION = "single_elimination",
+  DOUBLE_ELIMINATION = "double_elimination",
+  SWISS_SYSTEM = "swiss_system",
+  ROUND_ROBIN = "round_robin",
 }
 
 export enum TournamentStatus {
-  DRAFT = 'draft',
-  REGISTRATION_OPEN = 'registration_open',
-  REGISTRATION_CLOSED = 'registration_closed',
-  IN_PROGRESS = 'in_progress',
-  FINISHED = 'finished',
-  CANCELLED = 'cancelled'
+  DRAFT = "draft",
+  REGISTRATION_OPEN = "registration_open",
+  REGISTRATION_CLOSED = "registration_closed",
+  IN_PROGRESS = "in_progress",
+  FINISHED = "finished",
+  CANCELLED = "cancelled",
 }
 
 @Entity()
@@ -43,29 +43,29 @@ export class Tournament {
   @Column()
   name: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   description: string;
 
   @Column({ nullable: true })
   location: string;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   startDate: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   endDate: Date;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: TournamentType,
-    default: TournamentType.SINGLE_ELIMINATION
+    default: TournamentType.SINGLE_ELIMINATION,
   })
   type: TournamentType;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: TournamentStatus,
-    default: TournamentStatus.DRAFT
+    default: TournamentStatus.DRAFT,
   })
   status: TournamentStatus;
 
@@ -84,7 +84,7 @@ export class Tournament {
   @Column({ default: 0, nullable: true })
   totalRounds?: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   registrationDeadline?: Date;
 
   @Column({ default: true, nullable: true })
@@ -93,10 +93,10 @@ export class Tournament {
   @Column({ default: false })
   requiresApproval: boolean;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   rules: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   additionalInfo: string;
 
   @Column({ nullable: true })
@@ -105,7 +105,7 @@ export class Tournament {
   @Column({ nullable: true })
   ageRestrictionMax: number;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column({ type: "simple-array", nullable: true })
   allowedFormats: string[];
 
   @Column({ default: true })
@@ -117,49 +117,72 @@ export class Tournament {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => Match, (match) => match.tournament, { cascade: true })
+  @OneToMany(
+    () => Match,
+    (match) => match.tournament,
+    { cascade: true },
+  )
   matches: Match[];
 
-  @ManyToMany(() => Player, (player) => player.tournaments)
+  @ManyToMany(
+    () => Player,
+    (player) => player.tournaments,
+  )
   @JoinTable({
-    name: 'tournament_players',
-    joinColumn: { name: 'tournament_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'player_id', referencedColumnName: 'id' }
+    name: "tournament_players",
+    joinColumn: { name: "tournament_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "player_id", referencedColumnName: "id" },
   })
   players: Player[];
 
-  @OneToMany(() => Ranking, (ranking) => ranking.tournament, { cascade: true })
+  @OneToMany(
+    () => Ranking,
+    (ranking) => ranking.tournament,
+    { cascade: true },
+  )
   rankings: Ranking[];
 
   @OneToMany(
     () => TournamentRegistration,
     (registration) => registration.tournament,
-    { cascade: true }
+    { cascade: true },
   )
   registrations: TournamentRegistration[];
 
-  @OneToMany(() => TournamentReward, (reward) => reward.tournament, {
-    cascade: true
-  })
+  @OneToMany(
+    () => TournamentReward,
+    (reward) => reward.tournament,
+    {
+      cascade: true,
+    },
+  )
   rewards: TournamentReward[];
 
-  @OneToOne(() => TournamentPricing, (pricing) => pricing.tournament, {
-    cascade: true
-  })
+  @OneToOne(
+    () => TournamentPricing,
+    (pricing) => pricing.tournament,
+    {
+      cascade: true,
+    },
+  )
   @JoinColumn()
   pricing: TournamentPricing;
 
-  @OneToMany(() => TournamentOrganizer, (organizer) => organizer.tournament, {
-    cascade: true
-  })
+  @OneToMany(
+    () => TournamentOrganizer,
+    (organizer) => organizer.tournament,
+    {
+      cascade: true,
+    },
+  )
   organizers: TournamentOrganizer[];
 
   @OneToMany(
     () => TournamentNotification,
     (notification) => notification.tournament,
     {
-      cascade: true
-    }
+      cascade: true,
+    },
   )
   notifications: TournamentNotification[];
 }

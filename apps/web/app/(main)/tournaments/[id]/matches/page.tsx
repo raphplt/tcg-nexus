@@ -154,11 +154,7 @@ export default function MatchesPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-          >
+          <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour au tournoi
@@ -175,10 +171,7 @@ export default function MatchesPage() {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            asChild
-          >
+          <Button variant="outline" asChild>
             <Link href={`/tournaments/${id}/bracket`}>
               <Trophy className="w-4 h-4 mr-2" />
               Voir le bracket
@@ -262,10 +255,7 @@ export default function MatchesPage() {
                   <SelectContent>
                     <SelectItem value="">Tous les rounds</SelectItem>
                     {rounds.map((round) => (
-                      <SelectItem
-                        key={round}
-                        value={round.toString()}
-                      >
+                      <SelectItem key={round} value={round.toString()}>
                         Round {round}
                       </SelectItem>
                     ))}
@@ -400,11 +390,7 @@ export default function MatchesPage() {
                           className="flex gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                          >
+                          <Button variant="outline" size="sm" asChild>
                             <Link
                               href={`/tournaments/${id}/matches/${match.id}`}
                             >
@@ -443,10 +429,7 @@ export default function MatchesPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center py-8"
-                    >
+                    <TableCell colSpan={8} className="text-center py-8">
                       <div className="text-muted-foreground">
                         <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>Aucun match trouvé avec ces filtres</p>

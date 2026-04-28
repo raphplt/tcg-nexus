@@ -74,10 +74,7 @@ export default function AdminPage() {
           </Card>
         </div>
 
-        <Tabs
-          defaultValue="orders"
-          className="space-y-4"
-        >
+        <Tabs defaultValue="orders" className="space-y-4">
           <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full">
             <TabsTrigger value="orders">Ventes</TabsTrigger>
             <TabsTrigger value="users">Utilisateurs</TabsTrigger>

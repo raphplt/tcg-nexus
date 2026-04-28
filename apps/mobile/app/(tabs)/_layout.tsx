@@ -4,7 +4,15 @@ import type { ComponentProps } from "react";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
-function TabIcon({ name, color, size }: { name: IconName; color: string; size: number }) {
+function TabIcon({
+  name,
+  color,
+  size,
+}: {
+  name: IconName;
+  color: string;
+  size: number;
+}) {
   return <Ionicons name={name} size={size} color={color} />;
 }
 

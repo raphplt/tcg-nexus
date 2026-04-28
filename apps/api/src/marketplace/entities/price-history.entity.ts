@@ -1,37 +1,50 @@
+import { Card } from "src/card/entities/card.entity";
+import { Currency } from "src/common/enums/currency";
+import { CardState } from "src/common/enums/pokemonCardsType";
+import { SealedCondition } from "src/common/enums/sealed-condition";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
+  Entity,
+  Index,
   JoinColumn,
-  Index
-} from 'typeorm';
-import { Card } from 'src/card/entities/card.entity';
-import { Currency } from 'src/common/enums/currency';
-import { CardState } from 'src/common/enums/pokemonCardsType';
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
-@Index(['pokemonCard', 'recordedAt'])
-@Index(['pokemonCard', 'cardState', 'currency'])
+@Index(["pokemonCard", "recordedAt"])
+@Index(["pokemonCard", "cardState", "currency"])
+@Index(["sealedProduct", "recordedAt"])
 export class PriceHistory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Card, { nullable: false, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'card_id' })
-  pokemonCard: Card;
+  /**
+   * Soit `pokemonCard`, soit `sealedProduct` est renseigné (jamais les deux).
+   */
+  @ManyToOne(() => Card, { nullable: true, onDelete: "CASCADE" })
+  @JoinColumn({ name: "card_id" })
+  pokemonCard?: Card | null;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @ManyToOne(() => SealedProduct, { nullable: true, onDelete: "CASCADE" })
+  @JoinColumn({ name: "sealed_product_id" })
+  sealedProduct?: SealedProduct | null;
+
+  @Column("decimal", { precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'enum', enum: Currency })
+  @Column({ type: "enum", enum: Currency })
   currency: Currency;
 
-  @Column({ type: 'enum', enum: CardState, nullable: true })
+  @Column({ type: "enum", enum: CardState, nullable: true })
   cardState?: CardState;
 
-  @Column({ type: 'int', default: 1 })
+  @Column({ type: "enum", enum: SealedCondition, nullable: true })
+  sealedCondition?: SealedCondition;
+
+  @Column({ type: "int", default: 1 })
   quantityAvailable: number;
 
   @CreateDateColumn()

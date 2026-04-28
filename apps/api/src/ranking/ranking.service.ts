@@ -1,15 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateRankingDto } from './dto/create-ranking.dto';
-import { UpdateRankingDto } from './dto/update-ranking.dto';
-import { Ranking } from './entities/ranking.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Match } from "../match/entities/match.entity";
+import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
-  TournamentType
-} from '../tournament/entities/tournament.entity';
-import { Player } from '../player/entities/player.entity';
-import { Match } from '../match/entities/match.entity';
+  TournamentType,
+} from "../tournament/entities/tournament.entity";
+import { CreateRankingDto } from "./dto/create-ranking.dto";
+import { UpdateRankingDto } from "./dto/update-ranking.dto";
+import { Ranking } from "./entities/ranking.entity";
 
 export interface RankingCalculationResult {
   playerId: number;
@@ -34,7 +34,7 @@ export class RankingService {
     @InjectRepository(Player)
     private playerRepository: Repository<Player>,
     @InjectRepository(Match)
-    private matchRepository: Repository<Match>
+    private matchRepository: Repository<Match>,
   ) {}
 
   /**
@@ -44,23 +44,23 @@ export class RankingService {
     const { tournamentId, playerId, ...rankingData } = createRankingDto;
 
     const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId }
+      where: { id: tournamentId },
     });
     if (!tournament) {
-      throw new NotFoundException('Tournoi non trouvé');
+      throw new NotFoundException("Tournoi non trouvé");
     }
 
     const player = await this.playerRepository.findOne({
-      where: { id: playerId }
+      where: { id: playerId },
     });
     if (!player) {
-      throw new NotFoundException('Joueur non trouvé');
+      throw new NotFoundException("Joueur non trouvé");
     }
 
     const ranking = this.rankingRepository.create({
       tournament,
       player,
-      ...rankingData
+      ...rankingData,
     });
 
     return this.rankingRepository.save(ranking);
@@ -71,13 +71,13 @@ export class RankingService {
    */
   async findAll(tournamentId?: number): Promise<Ranking[]> {
     const queryBuilder = this.rankingRepository
-      .createQueryBuilder('ranking')
-      .leftJoinAndSelect('ranking.tournament', 'tournament')
-      .leftJoinAndSelect('ranking.player', 'player')
-      .orderBy('ranking.rank', 'ASC');
+      .createQueryBuilder("ranking")
+      .leftJoinAndSelect("ranking.tournament", "tournament")
+      .leftJoinAndSelect("ranking.player", "player")
+      .orderBy("ranking.rank", "ASC");
 
     if (tournamentId) {
-      queryBuilder.where('tournament.id = :tournamentId', { tournamentId });
+      queryBuilder.where("tournament.id = :tournamentId", { tournamentId });
     }
 
     return queryBuilder.getMany();
@@ -89,7 +89,7 @@ export class RankingService {
   async findOne(id: number): Promise<Ranking> {
     const ranking = await this.rankingRepository.findOne({
       where: { id },
-      relations: ['tournament', 'player']
+      relations: ["tournament", "player"],
     });
 
     if (!ranking) {
@@ -104,7 +104,7 @@ export class RankingService {
    */
   async update(
     id: number,
-    updateRankingDto: UpdateRankingDto
+    updateRankingDto: UpdateRankingDto,
   ): Promise<Ranking> {
     const ranking = await this.findOne(id);
     Object.assign(ranking, updateRankingDto);
@@ -125,12 +125,12 @@ export class RankingService {
   async getTournamentRankings(tournamentId: number): Promise<Ranking[]> {
     return this.rankingRepository.find({
       where: { tournament: { id: tournamentId } },
-      relations: ['player'],
+      relations: ["player"],
       order: {
-        points: 'DESC',
-        winRate: 'DESC',
-        wins: 'DESC'
-      }
+        points: "DESC",
+        winRate: "DESC",
+        wins: "DESC",
+      },
     });
   }
 
@@ -141,15 +141,15 @@ export class RankingService {
     const tournament = await this.tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: [
-        'matches',
-        'matches.playerA',
-        'matches.playerB',
-        'matches.winner'
-      ]
+        "matches",
+        "matches.playerA",
+        "matches.playerB",
+        "matches.winner",
+      ],
     });
 
     if (!tournament) {
-      throw new NotFoundException('Tournoi non trouvé');
+      throw new NotFoundException("Tournoi non trouvé");
     }
 
     const playerStats = this.calculatePlayerStatistics(tournament);
@@ -158,7 +158,7 @@ export class RankingService {
 
     for (const [playerId, stats] of playerStats.entries()) {
       let ranking = await this.rankingRepository.findOne({
-        where: { tournament: { id: tournamentId }, player: { id: playerId } }
+        where: { tournament: { id: tournamentId }, player: { id: playerId } },
       });
 
       if (!ranking) {
@@ -170,7 +170,7 @@ export class RankingService {
           wins: 0,
           losses: 0,
           draws: 0,
-          winRate: 0
+          winRate: 0,
         });
       }
 
@@ -205,7 +205,7 @@ export class RankingService {
    * Calcule les statistiques des joueurs d'un tournoi
    */
   private calculatePlayerStatistics(
-    tournament: Tournament
+    tournament: Tournament,
   ): Map<number, RankingCalculationResult> {
     const playerStats = new Map<number, RankingCalculationResult>();
     const pointsSystem = this.getPointsSystem(tournament.type);
@@ -227,8 +227,8 @@ export class RankingService {
         winRate: 0,
         tieBreaks: {
           opponentWinRate: 0,
-          gameWinRate: 0
-        }
+          gameWinRate: 0,
+        },
       });
     });
 
@@ -301,11 +301,11 @@ export class RankingService {
    */
   async getPlayerRanking(
     tournamentId: number,
-    playerId: number
+    playerId: number,
   ): Promise<Ranking | null> {
     return this.rankingRepository.findOne({
       where: { tournament: { id: tournamentId }, player: { id: playerId } },
-      relations: ['tournament', 'player']
+      relations: ["tournament", "player"],
     });
   }
 
@@ -314,11 +314,11 @@ export class RankingService {
    */
   async getFinalRankings(tournamentId: number): Promise<Ranking[]> {
     const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId }
+      where: { id: tournamentId },
     });
 
     if (!tournament) {
-      throw new NotFoundException('Tournoi non trouvé');
+      throw new NotFoundException("Tournoi non trouvé");
     }
 
     return this.getTournamentRankings(tournamentId);
@@ -329,11 +329,11 @@ export class RankingService {
    */
   async calculateTieBreakers(
     tournamentId: number,
-    playerIds: number[]
+    playerIds: number[],
   ): Promise<Map<number, { opponentWinRate: number; gameWinRate: number }>> {
     const matches = await this.matchRepository.find({
       where: { tournament: { id: tournamentId } },
-      relations: ['playerA', 'playerB', 'winner']
+      relations: ["playerA", "playerB", "winner"],
     });
 
     const tieBreakers = new Map();
@@ -341,7 +341,7 @@ export class RankingService {
     for (const playerId of playerIds) {
       const playerMatches = matches.filter(
         (match) =>
-          match.playerA?.id === playerId || match.playerB?.id === playerId
+          match.playerA?.id === playerId || match.playerB?.id === playerId,
       );
 
       let opponentWinRateSum = 0;
@@ -360,11 +360,11 @@ export class RankingService {
         const opponentMatches = matches.filter(
           (m) =>
             m.finishedAt &&
-            (m.playerA?.id === opponent.id || m.playerB?.id === opponent.id)
+            (m.playerA?.id === opponent.id || m.playerB?.id === opponent.id),
         );
 
         const opponentWins = opponentMatches.filter(
-          (m) => m.winner?.id === opponent.id
+          (m) => m.winner?.id === opponent.id,
         ).length;
         const opponentTotal = opponentMatches.length;
         const opponentWinRate =
@@ -387,7 +387,7 @@ export class RankingService {
       tieBreakers.set(playerId, {
         opponentWinRate:
           opponentCount > 0 ? opponentWinRateSum / opponentCount : 0,
-        gameWinRate: totalGames > 0 ? gameWins / totalGames : 0
+        gameWinRate: totalGames > 0 ? gameWins / totalGames : 0,
       });
     }
 

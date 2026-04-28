@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Award,
@@ -93,9 +88,10 @@ export function BadgesWidget({ data }: BadgesWidgetProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     {(() => {
-                      const IconComp =
-                        ICON_MAP[data.nextBadge.icon] ?? Award;
-                      return <IconComp className="h-3.5 w-3.5 text-muted-foreground" />;
+                      const IconComp = ICON_MAP[data.nextBadge.icon] ?? Award;
+                      return (
+                        <IconComp className="h-3.5 w-3.5 text-muted-foreground" />
+                      );
                     })()}
                     <span className="text-xs font-medium">
                       {data.nextBadge.name}

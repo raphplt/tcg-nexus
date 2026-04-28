@@ -1,23 +1,23 @@
+import { Exclude } from "class-transformer";
+import { UserBadge } from "src/badge/entities/user-badge.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { Currency } from "src/common/enums/currency";
+import { UserRole } from "src/common/enums/user";
+import { Deck } from "src/deck/entities/deck.entity";
+import { Player } from "src/player/entities/player.entity";
+import { TournamentOrganizer } from "src/tournament/entities";
+import { UserCart } from "src/user_cart/entities/user_cart.entity";
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
+  OneToMany,
   OneToOne,
-  OneToMany
-} from 'typeorm';
-import { Exclude } from 'class-transformer';
-import { Player } from 'src/player/entities/player.entity';
-import { Deck } from 'src/deck/entities/deck.entity';
-import { Collection } from 'src/collection/entities/collection.entity';
-import { UserRole } from 'src/common/enums/user';
-import { Currency } from 'src/common/enums/currency';
-import { UserCart } from 'src/user_cart/entities/user_cart.entity';
-import { TournamentOrganizer } from 'src/tournament/entities';
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
 import {SupportTicket} from "../../support-ticket/entities/support-ticket.entity";
 import {SupportMessage} from "../../support-message/entities/support-message.entity";
-import { UserBadge } from 'src/badge/entities/user-badge.entity';
 
 @Entity()
 export class User {
@@ -41,16 +41,16 @@ export class User {
   avatarUrl: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: UserRole,
-    default: UserRole.USER
+    default: UserRole.USER,
   })
   role: UserRole;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: Currency,
-    default: Currency.EUR
+    default: Currency.EUR,
   })
   preferredCurrency: Currency;
 
@@ -63,32 +63,61 @@ export class User {
   @Column({ default: false })
   emailVerified: boolean;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: "varchar", nullable: true })
   @Exclude()
   refreshToken: string | null;
 
+  @Column({ type: "varchar", nullable: true })
+  @Exclude()
+  previousRefreshToken: string | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  @Exclude()
+  previousRefreshTokenExpiresAt: Date | null;
+
   // Relations
-  @OneToOne(() => Player, (player) => player.user, { nullable: true })
+  @OneToOne(
+    () => Player,
+    (player) => player.user,
+    { nullable: true },
+  )
   player?: Player;
 
-  @OneToMany(() => Deck, (deck) => deck.user)
+  @OneToMany(
+    () => Deck,
+    (deck) => deck.user,
+  )
   decks?: Deck[];
 
-  @OneToMany(() => Collection, (collection) => collection.user)
+  @OneToMany(
+    () => Collection,
+    (collection) => collection.user,
+  )
   collections?: Collection[];
 
-  @OneToOne(() => UserCart, (userCart) => userCart.user)
+  @OneToOne(
+    () => UserCart,
+    (userCart) => userCart.user,
+  )
   userCart?: UserCart;
 
-  @OneToMany(() => TournamentOrganizer, (organizer) => organizer.user)
+  @OneToMany(
+    () => TournamentOrganizer,
+    (organizer) => organizer.user,
+  )
   tournamentOrganizers: TournamentOrganizer[];
+
 
   @OneToMany(() => SupportTicket, (supportTicket) => supportTicket.user)
   supportTickets?: SupportTicket[];
 
   @OneToMany(() => SupportMessage, (supportMessage) => supportMessage.user)
   supportMessages?: SupportMessage[];
-  @OneToMany(() => UserBadge, (userBadge) => userBadge.user)
+
+  @OneToMany(
+    () => UserBadge,
+    (userBadge) => userBadge.user,
+  )
   userBadges?: UserBadge[];
 
   // Dates

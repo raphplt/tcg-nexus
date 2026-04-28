@@ -36,7 +36,7 @@ const TournamentPreview = () => {
               className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:shadow-md transition group"
             >
               <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-white font-bold">
-                {String.fromCharCode(65 + i)}
+                {tournament.name.charAt(0).toUpperCase() || "T"}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{tournament.name}</div>
@@ -51,16 +51,8 @@ const TournamentPreview = () => {
           </div>
         ) : null}
       </div>
-      <Button
-        variant="outline"
-        asChild
-        size="sm"
-        className="w-full mt-4"
-      >
-        <Link
-          href="/tournaments"
-          className="flex items-center gap-2"
-        >
+      <Button variant="outline" asChild size="sm" className="w-full mt-4">
+        <Link href="/tournaments" className="flex items-center gap-2">
           Voir tous les tournois
           <ArrowRight className="mr-2 w-4 h-4" />
         </Link>

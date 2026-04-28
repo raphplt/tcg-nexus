@@ -1,17 +1,17 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
-  ForbiddenException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { UserRole } from "src/common/enums/user";
+import { Repository } from "typeorm";
+import { Tournament } from "../entities/tournament.entity";
 import {
+  OrganizerRole,
   TournamentOrganizer,
-  OrganizerRole
-} from '../entities/tournament-organizer.entity';
-import { Tournament } from '../entities/tournament.entity';
-import { UserRole } from 'src/common/enums/user';
+} from "../entities/tournament-organizer.entity";
 
 interface AuthenticatedRequest {
   user: {
@@ -32,7 +32,7 @@ export class TournamentOwnerGuard implements CanActivate {
     @InjectRepository(TournamentOrganizer)
     private organizerRepository: Repository<TournamentOrganizer>,
     @InjectRepository(Tournament)
-    private tournamentRepository: Repository<Tournament>
+    private tournamentRepository: Repository<Tournament>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -41,7 +41,7 @@ export class TournamentOwnerGuard implements CanActivate {
     const tournamentId = request.params.id || request.params.tournamentId;
 
     if (!user || !tournamentId) {
-      throw new ForbiddenException('Utilisateur ou ID de tournoi manquant');
+      throw new ForbiddenException("Utilisateur ou ID de tournoi manquant");
     }
 
     if (user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR) {
@@ -50,11 +50,11 @@ export class TournamentOwnerGuard implements CanActivate {
 
     // Vérifier que le tournoi existe
     const tournament = await this.tournamentRepository.findOne({
-      where: { id: parseInt(tournamentId) }
+      where: { id: parseInt(tournamentId) },
     });
 
     if (!tournament) {
-      throw new ForbiddenException('Tournoi non trouvé');
+      throw new ForbiddenException("Tournoi non trouvé");
     }
 
     // Vérifier si l'utilisateur est propriétaire du tournoi
@@ -63,13 +63,13 @@ export class TournamentOwnerGuard implements CanActivate {
         tournament: { id: parseInt(tournamentId) },
         user: { id: user.id },
         role: OrganizerRole.OWNER,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     if (!organizer) {
       throw new ForbiddenException(
-        "Vous n'êtes pas propriétaire de ce tournoi"
+        "Vous n'êtes pas propriétaire de ce tournoi",
       );
     }
 

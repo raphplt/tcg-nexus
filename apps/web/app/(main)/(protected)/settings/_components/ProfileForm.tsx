@@ -51,7 +51,9 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
       toast.success("Profil mis à jour avec succès");
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+        error instanceof Error
+          ? error.message
+          : "Erreur lors de la mise à jour";
       toast.error(message);
     }
   };
@@ -102,7 +104,11 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="votre@email.com" {...field} />
+                  <Input
+                    type="email"
+                    placeholder="votre@email.com"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -68,10 +68,7 @@ function BracketMatchComponent({
             </span>
           </div>
           {match.matchId && (
-            <Badge
-              variant="outline"
-              className="text-xs"
-            >
+            <Badge variant="outline" className="text-xs">
               #{match.matchId}
             </Badge>
           )}
@@ -144,24 +141,15 @@ function BracketMatchComponent({
         {/* Status */}
         <div className="mt-2 text-center">
           {match.winnerId ? (
-            <Badge
-              variant="default"
-              className="text-xs"
-            >
+            <Badge variant="default" className="text-xs">
               Terminé
             </Badge>
           ) : match.playerA && match.playerB ? (
-            <Badge
-              variant="secondary"
-              className="text-xs"
-            >
+            <Badge variant="secondary" className="text-xs">
               En attente
             </Badge>
           ) : (
-            <Badge
-              variant="outline"
-              className="text-xs"
-            >
+            <Badge variant="outline" className="text-xs">
               À venir
             </Badge>
           )}
@@ -188,10 +176,7 @@ export function EliminationBracket({
     <div className="bracket-container overflow-x-auto pb-4">
       <div className="flex gap-8 min-w-max">
         {bracket.rounds.map((round, roundIndex) => (
-          <div
-            key={round.index}
-            className="bracket-round shrink-0"
-          >
+          <div key={round.index} className="bracket-round shrink-0">
             <div className="text-center mb-4">
               <h3 className="font-semibold text-lg">
                 {round.index === bracket.totalRounds
@@ -202,10 +187,7 @@ export function EliminationBracket({
                       ? "Quarts de finale"
                       : `Round ${round.index}`}
               </h3>
-              <Badge
-                variant="outline"
-                className="mt-1"
-              >
+              <Badge variant="outline" className="mt-1">
                 {round.matches.length} match
                 {round.matches.length > 1 ? "es" : ""}
               </Badge>

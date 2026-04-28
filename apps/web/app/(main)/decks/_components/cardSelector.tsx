@@ -115,15 +115,9 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
   };
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-between"
-        >
+        <Button variant="outline" className="w-full justify-between">
           {selectedCard ? selectedCard.name : "Sélectionner une carte"}
         </Button>
       </PopoverTrigger>
@@ -133,10 +127,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
           value={input}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
-        <div
-          className="max-h-60 overflow-y-auto mt-2"
-          onScroll={handleScroll}
-        >
+        <div className="max-h-60 overflow-y-auto mt-2" onScroll={handleScroll}>
           {cards.map((card) => (
             <div
               key={card.id}
@@ -162,10 +153,7 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
               className="w-20"
               onChange={(e) => setQty(Number(e.target.value))}
             />
-            <Select
-              defaultValue={role}
-              onValueChange={setRole}
-            >
+            <Select defaultValue={role} onValueChange={setRole}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Choisir" />
               </SelectTrigger>

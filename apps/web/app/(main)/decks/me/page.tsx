@@ -68,10 +68,7 @@ export default function MyDecksPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
-        <Alert
-          variant="destructive"
-          className="mx-auto max-w-3xl"
-        >
+        <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
           <AlertTitle>Connexion requise.</AlertTitle>
           <AlertDescription>
@@ -84,10 +81,7 @@ export default function MyDecksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
-        <H1
-          className="text-center mb-2"
-          variant="primary"
-        >
+        <H1 className="text-center mb-2" variant="primary">
           Mes decks
         </H1>
         <DecksFilters
@@ -113,11 +107,7 @@ export default function MyDecksPage() {
           />
         </div>
         {data && (
-          <PaginatedNav
-            meta={data.meta}
-            page={page}
-            onPageChange={setPage}
-          />
+          <PaginatedNav meta={data.meta} page={page} onPageChange={setPage} />
         )}
       </div>
     </div>

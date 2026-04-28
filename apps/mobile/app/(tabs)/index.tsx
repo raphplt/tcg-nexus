@@ -4,9 +4,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>TCG Nexus</Text>
-      <Text style={styles.subtitle}>
-        Bienvenue sur l'application mobile
-      </Text>
+      <Text style={styles.subtitle}>Bienvenue sur l'application mobile</Text>
     </View>
   );
 }

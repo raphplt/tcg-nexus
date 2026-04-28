@@ -1,30 +1,30 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn
-} from 'typeorm';
-import { TournamentRegistration } from './tournament-registration.entity';
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { TournamentRegistration } from "./tournament-registration.entity";
 
 export enum PaymentMethod {
-  CASH = 'cash',
-  CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer',
-  PAYPAL = 'paypal',
-  STRIPE = 'stripe',
-  OTHER = 'other'
+  CASH = "cash",
+  CARD = "card",
+  BANK_TRANSFER = "bank_transfer",
+  PAYPAL = "paypal",
+  STRIPE = "stripe",
+  OTHER = "other",
 }
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
-  PARTIALLY_REFUNDED = 'partially_refunded'
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
+  REFUNDED = "refunded",
+  PARTIALLY_REFUNDED = "partially_refunded",
 }
 
 @Entity()
@@ -36,24 +36,24 @@ export class RegistrationPayment {
     () => TournamentRegistration,
     (registration) => registration.payments,
     {
-      onDelete: 'CASCADE'
-    }
+      onDelete: "CASCADE",
+    },
   )
   registration: TournamentRegistration;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: "decimal", precision: 10, scale: 2 })
   amount: number;
 
   @Column({
-    type: 'enum',
-    enum: PaymentMethod
+    type: "enum",
+    enum: PaymentMethod,
   })
   method: PaymentMethod;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: PaymentStatus,
-    default: PaymentStatus.PENDING
+    default: PaymentStatus.PENDING,
   })
   status: PaymentStatus;
 
@@ -63,19 +63,19 @@ export class RegistrationPayment {
   @Column({ nullable: true })
   paymentIntentId: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   paidAt: Date;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   refundedAmount: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: "timestamp", nullable: true })
   refundedAt: Date;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   notes: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: "text", nullable: true })
   failureReason: string;
 
   @CreateDateColumn()

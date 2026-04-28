@@ -1,33 +1,36 @@
 import {
+  BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
-  ForbiddenException
-} from '@nestjs/common';
-import { CreateDeckDto } from './dto/create-deck.dto';
-import { UpdateDeckDto } from './dto/update-deck.dto';
-import { PaginationHelper } from '../helpers/pagination';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Deck } from './entities/deck.entity';
-import { DeckCard } from '../deck-card/entities/deck-card.entity';
-import { User } from '../user/entities/user.entity';
-import { Card } from '../card/entities/card.entity';
-import { DeckFormat } from '../deck-format/entities/deck-format.entity';
-import { DeckCardRole } from '../common/enums/deckCardRole';
-import { UserRole } from 'src/common/enums/user';
-import { DeckShare } from './entities/deck-share.entity';
-import { ShareDeckDto } from './dto/share-deck.dto';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { UserRole } from "src/common/enums/user";
+import { Repository } from "typeorm";
+import { Card } from "../card/entities/card.entity";
+import { DeckCardRole } from "../common/enums/deckCardRole";
+import { PokemonCardsType } from "../common/enums/pokemonCardsType";
+import { DeckCard } from "../deck-card/entities/deck-card.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
+import { PaginationHelper } from "../helpers/pagination";
+import { User } from "../user/entities/user.entity";
 import {
   AnalyzeDeckResultDto,
-  MissingCardSuggestionDto
-} from './dto/analyze-deck-result.dto';
-import { PokemonCardsType } from '../common/enums/pokemonCardsType';
+  MissingCardSuggestionDto,
+} from "./dto/analyze-deck-result.dto";
+import { CreateDeckDto } from "./dto/create-deck.dto";
+import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
+import { ShareDeckDto } from "./dto/share-deck.dto";
+import { UpdateDeckDto } from "./dto/update-deck.dto";
+import { Deck } from "./entities/deck.entity";
+import { DeckShare } from "./entities/deck-share.entity";
+import { SavedDeck } from "./entities/saved-deck.entity";
 export interface FindAllDecksParams {
   formatId?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
   search?: string;
 }
 
@@ -43,11 +46,13 @@ export class DeckService {
     @InjectRepository(Deck)
     private readonly decksRepository: Repository<Deck>,
     @InjectRepository(DeckShare)
-    private readonly deckShareRepo: Repository<DeckShare>
+    private readonly deckShareRepo: Repository<DeckShare>,
+    @InjectRepository(SavedDeck)
+    private readonly savedDeckRepo: Repository<SavedDeck>,
   ) {}
   async createDeck(user: User, dto: CreateDeckDto) {
     const format = await this.formatRepo.findOneBy({ id: dto.formatId });
-    if (!format) throw new NotFoundException('Format introuvable');
+    if (!format) throw new NotFoundException("Format introuvable");
 
     const deck = this.decksRepository.create({
       name: dto.deckName,
@@ -58,7 +63,7 @@ export class DeckService {
         dto.cards.length > 0
           ? (await this.cardRepo.findOneBy({ id: dto.cards[0].cardId })) ||
             undefined
-          : undefined
+          : undefined,
     });
 
     await this.decksRepository.save(deck);
@@ -73,7 +78,7 @@ export class DeckService {
         card: cardEntity,
         qty: carte.qty,
         role: carte.role,
-        deck: deck
+        deck: deck,
       });
       cards.push(deckCard);
     }
@@ -81,7 +86,7 @@ export class DeckService {
     await this.deckCardRepo.save(cards);
     return await this.decksRepository.findOne({
       where: { id: deck.id },
-      relations: ['cards', 'cards.card', 'cards.card.pokemonDetails']
+      relations: ["cards", "cards.card", "cards.card.pokemonDetails"],
     });
   }
 
@@ -90,35 +95,35 @@ export class DeckService {
       formatId = 0,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-      search
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      search,
     } = params;
     const qb = this.decksRepository
-      .createQueryBuilder('deck')
-      .leftJoinAndSelect('deck.user', 'user')
-      .leftJoinAndSelect('deck.format', 'format')
-      .leftJoinAndSelect('deck.coverCard', 'coverCard')
-      .leftJoinAndSelect('coverCard.pokemonDetails', 'coverCardDetails')
-      .leftJoinAndSelect('deck.cards', 'cards')
-      .leftJoinAndSelect('cards.card', 'card')
-      .leftJoinAndSelect('card.pokemonDetails', 'cardDetails')
-      .andWhere('deck.isPublic = true');
+      .createQueryBuilder("deck")
+      .leftJoinAndSelect("deck.user", "user")
+      .leftJoinAndSelect("deck.format", "format")
+      .leftJoinAndSelect("deck.coverCard", "coverCard")
+      .leftJoinAndSelect("coverCard.pokemonDetails", "coverCardDetails")
+      .leftJoinAndSelect("deck.cards", "cards")
+      .leftJoinAndSelect("cards.card", "card")
+      .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
+      .andWhere("deck.isPublic = true");
     if (formatId !== 0) {
-      qb.andWhere('format.id = :formatId', { formatId });
+      qb.andWhere("format.id = :formatId", { formatId });
     }
     if (search) {
-      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
-        search: `%${search}%`
+      qb.andWhere("LOWER(deck.name) LIKE LOWER(:search)", {
+        search: `%${search}%`,
       });
     }
     const orderColumn =
-      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
+      sortBy === "format.type" ? "format.type" : `deck.${sortBy}`;
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
       orderColumn,
-      sortOrder
+      sortOrder,
     );
   }
 
@@ -127,61 +132,61 @@ export class DeckService {
       formatId = 0,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
-      search
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      search,
     } = params;
     const qb = this.decksRepository
-      .createQueryBuilder('deck')
-      .leftJoinAndSelect('deck.user', 'user')
-      .leftJoinAndSelect('deck.format', 'format')
-      .leftJoinAndSelect('deck.coverCard', 'coverCard')
-      .leftJoinAndSelect('coverCard.pokemonDetails', 'coverCardDetails')
-      .leftJoinAndSelect('deck.cards', 'cards')
-      .leftJoinAndSelect('cards.card', 'card')
-      .leftJoinAndSelect('card.pokemonDetails', 'cardDetails')
-      .andWhere('user.id = :userId', { userId: user.id });
+      .createQueryBuilder("deck")
+      .leftJoinAndSelect("deck.user", "user")
+      .leftJoinAndSelect("deck.format", "format")
+      .leftJoinAndSelect("deck.coverCard", "coverCard")
+      .leftJoinAndSelect("coverCard.pokemonDetails", "coverCardDetails")
+      .leftJoinAndSelect("deck.cards", "cards")
+      .leftJoinAndSelect("cards.card", "card")
+      .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
+      .andWhere("user.id = :userId", { userId: user.id });
     if (formatId !== 0) {
-      qb.andWhere('format.id = :formatId', { formatId });
+      qb.andWhere("format.id = :formatId", { formatId });
     }
     if (search) {
-      qb.andWhere('LOWER(deck.name) LIKE LOWER(:search)', {
-        search: `%${search}%`
+      qb.andWhere("LOWER(deck.name) LIKE LOWER(:search)", {
+        search: `%${search}%`,
       });
     }
     const orderColumn =
-      sortBy === 'format.type' ? 'format.type' : `deck.${sortBy}`;
+      sortBy === "format.type" ? "format.type" : `deck.${sortBy}`;
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
       orderColumn,
-      sortOrder
+      sortOrder,
     );
   }
   async findOneWithCards(id: number): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },
       relations: [
-        'user',
-        'format',
-        'cards',
-        'cards.card',
-        'cards.card.pokemonDetails',
-        'coverCard',
-        'coverCard.pokemonDetails'
-      ]
+        "user",
+        "format",
+        "cards",
+        "cards.card",
+        "cards.card.pokemonDetails",
+        "coverCard",
+        "coverCard.pokemonDetails",
+      ],
     });
-    if (!deck) throw new NotFoundException('Deck not found');
+    if (!deck) throw new NotFoundException("Deck not found");
     return deck;
   }
 
   async analyzeDeck(id: number): Promise<AnalyzeDeckResultDto> {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: ['cards', 'cards.card', 'cards.card.pokemonDetails']
+      relations: ["cards", "cards.card", "cards.card.pokemonDetails"],
     });
 
-    if (!deck) throw new NotFoundException('Deck not found');
+    if (!deck) throw new NotFoundException("Deck not found");
 
     const cards = deck.cards || [];
     const totalCards = cards.reduce((sum, card) => sum + (card.qty || 0), 0);
@@ -198,24 +203,24 @@ export class DeckService {
       if (!card) return;
 
       card.pokemonDetails?.types?.forEach((type) =>
-        typeMap.set(type, (typeMap.get(type) || 0) + quantity)
+        typeMap.set(type, (typeMap.get(type) || 0) + quantity),
       );
 
       const categoryLabel =
-        card.pokemonDetails?.category || card.category || 'Unknown';
-      const normalizedCategory = categoryLabel.toLowerCase().replace('é', 'e');
+        card.pokemonDetails?.category || card.category || "Unknown";
+      const normalizedCategory = categoryLabel.toLowerCase().replace("é", "e");
 
       let mappedCategory = categoryLabel;
-      if (normalizedCategory === 'pokemon')
+      if (normalizedCategory === "pokemon")
         mappedCategory = PokemonCardsType.Pokemon;
-      if (normalizedCategory === 'energy' || normalizedCategory === 'energie')
+      if (normalizedCategory === "energy" || normalizedCategory === "energie")
         mappedCategory = PokemonCardsType.Energy;
-      if (normalizedCategory === 'trainer' || normalizedCategory === 'dresseur')
+      if (normalizedCategory === "trainer" || normalizedCategory === "dresseur")
         mappedCategory = PokemonCardsType.Trainer;
 
       categoryMap.set(
         mappedCategory,
-        (categoryMap.get(mappedCategory) || 0) + quantity
+        (categoryMap.get(mappedCategory) || 0) + quantity,
       );
 
       card.pokemonDetails?.attacks?.forEach((attack) => {
@@ -229,11 +234,11 @@ export class DeckService {
     const typeDistribution = this.mapToDistribution(typeMap, totalCards);
     const categoryDistribution = this.mapToDistribution(
       categoryMap,
-      totalCards
+      totalCards,
     );
     const attackCostDistribution = this.mapCostDistribution(
       attackCostMap,
-      totalAttackCount
+      totalAttackCount,
     );
 
     const pokemonCount = categoryMap.get(PokemonCardsType.Pokemon) || 0;
@@ -253,14 +258,14 @@ export class DeckService {
         (deckCard) =>
           deckCard.qty > 4 &&
           deckCard.card?.pokemonDetails?.category !== PokemonCardsType.Energy &&
-          !deckCard.card?.name?.toLowerCase().includes('energy') &&
-          !deckCard.card?.name?.toLowerCase().includes('energie') &&
-          !deckCard.card?.name?.toLowerCase().includes('énergie')
+          !deckCard.card?.name?.toLowerCase().includes("energy") &&
+          !deckCard.card?.name?.toLowerCase().includes("energie") &&
+          !deckCard.card?.name?.toLowerCase().includes("énergie"),
       )
       .map((deckCard) => ({
         cardId: deckCard.card.id,
-        cardName: deckCard.card.name || 'Carte inconnue',
-        qty: deckCard.qty
+        cardName: deckCard.card.name || "Carte inconnue",
+        qty: deckCard.qty,
       }));
 
     const warnings: string[] = [];
@@ -274,7 +279,7 @@ export class DeckService {
 
     if (duplicates.length) {
       warnings.push(
-        'Certaines cartes dépassent la limite autorisée (maximum 4 exemplaires hors énergies).'
+        "Certaines cartes dépassent la limite autorisée (maximum 4 exemplaires hors énergies).",
       );
     }
 
@@ -284,12 +289,12 @@ export class DeckService {
       totalCards,
       averageEnergyCost,
       warnings,
-      suggestions
+      suggestions,
     );
 
     if (trainerCount < 10) {
       suggestions.push(
-        'Ajoutez des cartes Dresseur pour stabiliser le deck (recommandé: 10+).'
+        "Ajoutez des cartes Dresseur pour stabiliser le deck (recommandé: 10+).",
       );
     }
 
@@ -299,12 +304,12 @@ export class DeckService {
           .slice(0, 3)
           .map((d) => d.label)
           .join(
-            ', '
-          )}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`
+            ", ",
+          )}), concentrez-vous sur 1 à 2 types principaux pour plus de constance.`,
       );
     } else if (typeDistribution.length === 1 && energyCount > 0) {
       suggestions.push(
-        `Renforcez le type ${typeDistribution[0].label} avec des cartes de support compatibles.`
+        `Renforcez le type ${typeDistribution[0].label} avec des cartes de support compatibles.`,
       );
     }
 
@@ -314,7 +319,7 @@ export class DeckService {
       trainerCount,
       totalCards,
       typeDistribution,
-      averageEnergyCost
+      averageEnergyCost,
     });
 
     return {
@@ -331,17 +336,17 @@ export class DeckService {
       duplicates,
       warnings,
       suggestions,
-      missingCards
+      missingCards,
     };
   }
 
   async updateDeck(deckId: number, user: User, dto: UpdateDeckDto) {
     const deck = await this.decksRepository.findOne({
       where: { id: deckId, user: { id: user.id } },
-      relations: ['cards']
+      relations: ["cards"],
     });
 
-    if (!deck) throw new NotFoundException('Deck introuvable');
+    if (!deck) throw new NotFoundException("Deck introuvable");
 
     if (dto.deckName) {
       deck.name = dto.deckName;
@@ -351,7 +356,7 @@ export class DeckService {
     }
     if (dto.formatId) {
       const format = await this.formatRepo.findOneBy({ id: dto.formatId });
-      if (!format) throw new NotFoundException('Format introuvable');
+      if (!format) throw new NotFoundException("Format introuvable");
       if (format) {
         deck.format = format;
       }
@@ -374,7 +379,7 @@ export class DeckService {
           card: cardEntity,
           qty: carte.qty,
           role: carte.role as DeckCardRole,
-          deck: deck
+          deck: deck,
         });
         cards.push(deckCard);
       }
@@ -403,7 +408,7 @@ export class DeckService {
 
     return this.decksRepository.findOne({
       where: { id: deck.id },
-      relations: ['cards', 'cards.card']
+      relations: ["cards", "cards.card"],
     });
   }
 
@@ -416,18 +421,18 @@ export class DeckService {
   async cloneDeck(id: number, user: User): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },
-      relations: ['user', 'format', 'cards', 'cards.card']
+      relations: ["user", "format", "cards", "cards.card"],
     });
-    if (!deck) throw new NotFoundException('Deck not found');
+    if (!deck) throw new NotFoundException("Deck not found");
     if (deck.user.id !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('Not allowed to clone this deck');
+      throw new ForbiddenException("Not allowed to clone this deck");
     }
 
     const cloned = this.decksRepository.create({
       name: `${deck.name} (copy)`,
       isPublic: deck.isPublic,
       user,
-      format: deck.format
+      format: deck.format,
     });
     const saved = await this.decksRepository.save(cloned);
     if (deck.cards?.length) {
@@ -436,8 +441,8 @@ export class DeckService {
           deck: { id: saved.id },
           card: { id: dc.card.id },
           qty: dc.qty,
-          role: dc.role
-        })
+          role: dc.role,
+        }),
       );
       await this.deckCardRepo.save(clonedCards);
     }
@@ -445,13 +450,114 @@ export class DeckService {
   }
 
   async incrementViews(id: number) {
-    await this.decksRepository.increment({ id }, 'views', 1);
-    return { message: 'View incremented' };
+    await this.decksRepository.increment({ id }, "views", 1);
+    return { message: "View incremented" };
+  }
+
+  async saveDeckToLibrary(deckId: number, user: User) {
+    const deck = await this.decksRepository.findOne({
+      where: { id: deckId },
+      relations: ["user"],
+    });
+    if (!deck) throw new NotFoundException("Deck introuvable");
+    if (deck.user?.id === user.id) {
+      throw new BadRequestException(
+        "Vous ne pouvez pas ajouter votre propre deck à votre bibliothèque",
+      );
+    }
+    if (!deck.isPublic) {
+      throw new ForbiddenException("Ce deck n'est pas public");
+    }
+
+    const existing = await this.savedDeckRepo.findOne({
+      where: { user: { id: user.id }, deck: { id: deckId } },
+    });
+    if (existing) {
+      return { saved: true, alreadySaved: true };
+    }
+
+    const savedDeck = this.savedDeckRepo.create({ user, deck });
+    await this.savedDeckRepo.save(savedDeck);
+    return { saved: true, alreadySaved: false };
+  }
+
+  async removeDeckFromLibrary(deckId: number, user: User) {
+    const result = await this.savedDeckRepo.delete({
+      user: { id: user.id },
+      deck: { id: deckId },
+    });
+    if (!result.affected) {
+      throw new NotFoundException("Ce deck n'est pas dans votre bibliothèque");
+    }
+    return { saved: false };
+  }
+
+  async findSavedDecks(user: User, params: FindAllDecksParams = {}) {
+    const {
+      formatId = 0,
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
+      search,
+    } = params;
+
+    const qb = this.savedDeckRepo
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .leftJoinAndSelect("savedDeck.deck", "deck")
+      .leftJoinAndSelect("deck.user", "user")
+      .leftJoinAndSelect("deck.format", "format")
+      .leftJoinAndSelect("deck.coverCard", "coverCard")
+      .leftJoinAndSelect("coverCard.pokemonDetails", "coverCardDetails")
+      .leftJoinAndSelect("deck.cards", "cards")
+      .leftJoinAndSelect("cards.card", "card")
+      .leftJoinAndSelect("card.pokemonDetails", "cardDetails")
+      .where("savedUser.id = :userId", { userId: user.id });
+
+    if (formatId !== 0) {
+      qb.andWhere("format.id = :formatId", { formatId });
+    }
+    if (search) {
+      qb.andWhere("LOWER(deck.name) LIKE LOWER(:search)", {
+        search: `%${search}%`,
+      });
+    }
+
+    const orderColumn =
+      sortBy === "format.type"
+        ? "format.type"
+        : sortBy === "createdAt"
+          ? "savedDeck.createdAt"
+          : `deck.${sortBy}`;
+
+    const paginated = await PaginationHelper.paginateQueryBuilder(
+      qb,
+      { page, limit },
+      orderColumn,
+      sortOrder,
+    );
+
+    return {
+      data: paginated.data.map((entry) => entry.deck),
+      meta: paginated.meta,
+    };
+  }
+
+  async findSavedDeckIds(user: User): Promise<number[]> {
+    const rows = await this.savedDeckRepo
+      .createQueryBuilder("savedDeck")
+      .innerJoin("savedDeck.user", "savedUser")
+      .innerJoin("savedDeck.deck", "deck")
+      .select("deck.id", "deckId")
+      .where("savedUser.id = :userId", { userId: user.id })
+      .getRawMany<{ deckId: number }>();
+    return rows.map((r) => Number(r.deckId));
   }
 
   private generateShareCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
     for (let i = 0; i < 8; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -461,13 +567,13 @@ export class DeckService {
   async shareDeck(
     id: number,
     user: User,
-    dto?: ShareDeckDto
+    dto?: ShareDeckDto,
   ): Promise<{ code: string }> {
     const deck = await this.decksRepository.findOne({
-      where: { id, user: { id: user.id } }
+      where: { id, user: { id: user.id } },
     });
 
-    if (!deck) throw new NotFoundException('Deck not found');
+    if (!deck) throw new NotFoundException("Deck not found");
 
     let code = this.generateShareCode();
     let exists = true;
@@ -483,7 +589,7 @@ export class DeckService {
     const deckShare = this.deckShareRepo.create({
       deck,
       code,
-      expiresAt: dto?.expiresAt ? new Date(dto.expiresAt) : null
+      expiresAt: dto?.expiresAt ? new Date(dto.expiresAt) : null,
     });
 
     await this.deckShareRepo.save(deckShare);
@@ -493,14 +599,14 @@ export class DeckService {
   async importDeck(code: string, user: User): Promise<Deck> {
     const deckShare = await this.deckShareRepo.findOne({
       where: { code },
-      relations: ['deck', 'deck.format', 'deck.cards', 'deck.cards.card']
+      relations: ["deck", "deck.format", "deck.cards", "deck.cards.card"],
     });
 
-    if (!deckShare) throw new NotFoundException('Code de partage invalide');
+    if (!deckShare) throw new NotFoundException("Code de partage invalide");
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException('Ce code de partage a expiré');
+      throw new NotFoundException("Ce code de partage a expiré");
     }
 
     const sourceDeck = deckShare.deck;
@@ -509,7 +615,7 @@ export class DeckService {
       name: sourceDeck.name,
       isPublic: false,
       user,
-      format: sourceDeck.format
+      format: sourceDeck.format,
     });
     const saved = await this.decksRepository.save(cloned);
 
@@ -519,8 +625,8 @@ export class DeckService {
           deck: { id: saved.id },
           card: { id: dc.card.id },
           qty: dc.qty,
-          role: dc.role
-        })
+          role: dc.role,
+        }),
       );
       await this.deckCardRepo.save(clonedCards);
     }
@@ -532,19 +638,19 @@ export class DeckService {
     const deckShare = await this.deckShareRepo.findOne({
       where: { code },
       relations: [
-        'deck',
-        'deck.format',
-        'deck.cards',
-        'deck.cards.card',
-        'deck.user'
-      ]
+        "deck",
+        "deck.format",
+        "deck.cards",
+        "deck.cards.card",
+        "deck.user",
+      ],
     });
 
-    if (!deckShare) throw new NotFoundException('Code de partage invalide');
+    if (!deckShare) throw new NotFoundException("Code de partage invalide");
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException('Ce code de partage a expiré');
+      throw new NotFoundException("Ce code de partage a expiré");
     }
 
     return deckShare.deck;
@@ -552,26 +658,26 @@ export class DeckService {
 
   private mapToDistribution(
     map: Map<string, number>,
-    total: number
+    total: number,
   ): { label: string; count: number; percentage: number }[] {
     return Array.from(map.entries())
       .map(([label, count]) => ({
         label,
         count,
-        percentage: total ? Math.round((count / total) * 100) : 0
+        percentage: total ? Math.round((count / total) * 100) : 0,
       }))
       .sort((a, b) => b.count - a.count);
   }
 
   private mapCostDistribution(
     map: Map<number, number>,
-    total: number
+    total: number,
   ): { cost: number; count: number; percentage: number }[] {
     return Array.from(map.entries())
       .map(([cost, count]) => ({
         cost,
         count,
-        percentage: total ? Math.round((count / total) * 100) : 0
+        percentage: total ? Math.round((count / total) * 100) : 0,
       }))
       .sort((a, b) => a.cost - b.cost);
   }
@@ -582,7 +688,7 @@ export class DeckService {
     totalCards: number,
     averageEnergyCost: number,
     warnings: string[],
-    suggestions: string[]
+    suggestions: string[],
   ) {
     if (!totalCards) return;
 
@@ -590,27 +696,27 @@ export class DeckService {
 
     if (energyRatio < 0.25) {
       warnings.push(
-        "Pas assez d'énergies pour alimenter les attaques (vise 25-35% du deck)."
+        "Pas assez d'énergies pour alimenter les attaques (vise 25-35% du deck).",
       );
       suggestions.push(
-        'Ajoutez plusieurs cartes énergie pour sécuriser vos sorties.'
+        "Ajoutez plusieurs cartes énergie pour sécuriser vos sorties.",
       );
     } else if (energyRatio > 0.45) {
       warnings.push("Beaucoup d'energies detectees, risque de mains mortes.");
       suggestions.push(
-        'Réduisez légèrement les énergies au profit de Dresseurs ou Pokémon clés.'
+        "Réduisez légèrement les énergies au profit de Dresseurs ou Pokémon clés.",
       );
     }
 
     if (pokemonCount > 0 && energyCount === 0) {
       warnings.push(
-        'Aucune énergie détectée alors que des Pokémon sont présents.'
+        "Aucune énergie détectée alors que des Pokémon sont présents.",
       );
     }
 
     if (averageEnergyCost > 3 && energyRatio < 0.35) {
       suggestions.push(
-        "Les attaques coûtent cher ; ajoutez de l'accélération d'énergie ou augmentez légèrement le nombre d'énergies."
+        "Les attaques coûtent cher ; ajoutez de l'accélération d'énergie ou augmentez légèrement le nombre d'énergies.",
       );
     }
   }
@@ -621,7 +727,7 @@ export class DeckService {
     trainerCount,
     totalCards,
     typeDistribution,
-    averageEnergyCost
+    averageEnergyCost,
   }: {
     energyCount: number;
     pokemonCount: number;
@@ -634,23 +740,23 @@ export class DeckService {
 
     const targetEnergy = Math.max(
       10,
-      Math.round(Math.max(totalCards * 0.25, pokemonCount * 0.4))
+      Math.round(Math.max(totalCards * 0.25, pokemonCount * 0.4)),
     );
     if (energyCount < targetEnergy) {
       suggestions.push({
-        label: 'Énergies',
+        label: "Énergies",
         reason:
-          'Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.',
-        recommendedQty: targetEnergy - energyCount
+          "Ajoutez des énergies pour suivre le rythme de vos Pokémon principaux.",
+        recommendedQty: targetEnergy - energyCount,
       });
     }
 
     if (trainerCount < 12) {
       suggestions.push({
-        label: 'Dresseurs de pioche',
+        label: "Dresseurs de pioche",
         reason:
-          'Renforcez la consistance avec davantage de supporters / dresseurs utilitaires.',
-        recommendedQty: 12 - trainerCount
+          "Renforcez la consistance avec davantage de supporters / dresseurs utilitaires.",
+        recommendedQty: 12 - trainerCount,
       });
     }
 
@@ -659,7 +765,7 @@ export class DeckService {
       suggestions.push({
         label: `Support ${mainType.label}`,
         reason: `Ajoutez 1-2 cartes qui profitent spécifiquement au type ${mainType.label}.`,
-        recommendedQty: 2
+        recommendedQty: 2,
       });
     }
 
@@ -667,8 +773,8 @@ export class DeckService {
       suggestions.push({
         label: "Accélération d'énergie",
         reason:
-          'Vos coûts moyens sont élevés : prévoyez des cartes qui mettent des énergies en jeu ou réduisent ces coûts.',
-        recommendedQty: 2
+          "Vos coûts moyens sont élevés : prévoyez des cartes qui mettent des énergies en jeu ou réduisent ces coûts.",
+        recommendedQty: 2,
       });
     }
 
@@ -680,5 +786,78 @@ export class DeckService {
     });
 
     return Array.from(uniqueSuggestions.values());
+  }
+
+  async exportDeck(id: number) {
+    const deck = await this.decksRepository.findOne({
+      where: { id },
+      relations: ["format", "cards", "cards.card", "cards.card.pokemonDetails"],
+    });
+    if (!deck) throw new NotFoundException("Deck introuvable");
+
+    return {
+      name: deck.name,
+      format: deck.format?.type || "Standard",
+      cards: (deck.cards || []).map((dc) => ({
+        tcgDexId: dc.card?.tcgDexId || dc.card?.id,
+        name: dc.card?.name || "Carte inconnue",
+        qty: dc.qty,
+        role: dc.role,
+      })),
+    };
+  }
+
+  async importDeckFromJson(user: User, dto: ImportDeckJsonDto) {
+    const format = await this.formatRepo.findOneBy({ type: dto.format });
+    if (!format) {
+      throw new BadRequestException(
+        `Format "${dto.format}" introuvable. Formats disponibles : vérifiez la liste des formats.`,
+      );
+    }
+
+    const resolvedCards: { card: Card; qty: number; role: DeckCardRole }[] = [];
+    const notFound: string[] = [];
+
+    for (const entry of dto.cards) {
+      const card = await this.cardRepo.findOneBy({ tcgDexId: entry.tcgDexId });
+      if (!card) {
+        notFound.push(entry.tcgDexId);
+        continue;
+      }
+      resolvedCards.push({ card, qty: entry.qty, role: entry.role });
+    }
+
+    if (resolvedCards.length === 0) {
+      throw new BadRequestException(
+        `Aucune carte trouvée dans la base. Identifiants introuvables : ${notFound.join(", ")}`,
+      );
+    }
+
+    const deck = this.decksRepository.create({
+      name: dto.name,
+      isPublic: dto.isPublic ?? false,
+      user,
+      format,
+      coverCard: resolvedCards[0]?.card || undefined,
+    });
+    await this.decksRepository.save(deck);
+
+    const deckCards = resolvedCards.map((rc) =>
+      this.deckCardRepo.create({
+        card: rc.card,
+        qty: rc.qty,
+        role: rc.role,
+        deck,
+      }),
+    );
+    await this.deckCardRepo.save(deckCards);
+
+    const result = await this.findOneWithCards(deck.id);
+    return {
+      deck: result,
+      ...(notFound.length > 0 && {
+        warnings: [`Cartes introuvables (ignorées) : ${notFound.join(", ")}`],
+      }),
+    };
   }
 }

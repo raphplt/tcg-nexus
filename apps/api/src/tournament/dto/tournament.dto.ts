@@ -1,21 +1,21 @@
+import { Type } from "class-transformer";
 import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsNumber,
+  IsArray,
   IsBoolean,
   IsDate,
-  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
   Min,
-  Max
-} from 'class-validator';
-import { Type } from 'class-transformer';
+} from "class-validator";
 import {
+  TournamentStatus,
   TournamentType,
-  TournamentStatus
-} from '../entities/tournament.entity';
-import { PricingType } from '../entities/tournament-pricing.entity';
-import { RewardType } from '../entities/tournament-reward.entity';
+} from "../entities/tournament.entity";
+import { PricingType } from "../entities/tournament-pricing.entity";
+import { RewardType } from "../entities/tournament-reward.entity";
 
 export class CreateTournamentDto {
   @IsString()

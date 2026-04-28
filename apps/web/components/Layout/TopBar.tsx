@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import SearchBar from "./SearchBar";
+import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export function TopBar() {
   const showUserMenu = !isAuthLoading && isAuthenticated && user;
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b-2 border-border bg-background/95 backdrop-blur-md px-4">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b-2 border-border bg-background/95 backdrop-blur-md px-4 sticky top-0 w-full z-40">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-2 h-4" />
 
@@ -57,6 +58,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <CurrencySelector />
         <ThemeToggle />
 
         {isAuthLoading ? (
@@ -66,7 +68,12 @@ export function TopBar() {
             <Button asChild size="sm">
               <Link href="/auth/login">Se connecter</Link>
             </Button>
-            <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
               <Link href="/auth/register">S&apos;inscrire</Link>
             </Button>
           </div>

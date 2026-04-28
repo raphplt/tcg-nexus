@@ -1,10 +1,10 @@
 import {
-  IsOptional,
-  IsNumber,
   IsArray,
+  IsNumber,
+  IsOptional,
   IsString,
-  ValidateIf
-} from 'class-validator';
+  ValidateIf,
+} from "class-validator";
 
 export class AnalyzeDeckDto {
   @IsOptional()

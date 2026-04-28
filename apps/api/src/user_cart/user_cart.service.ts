@@ -1,16 +1,16 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserCart } from './entities/user_cart.entity';
-import { CartItem } from './entities/cart-item.entity';
-import { Listing } from 'src/marketplace/entities/listing.entity';
-import { CreateCartItemDto } from './dto/create-cart-item.dto';
-import { UpdateCartItemDto } from './dto/update-cart-item.dto';
-import { User } from 'src/user/entities/user.entity';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Listing } from "src/marketplace/entities/listing.entity";
+import { User } from "src/user/entities/user.entity";
+import { Repository } from "typeorm";
+import { CreateCartItemDto } from "./dto/create-cart-item.dto";
+import { UpdateCartItemDto } from "./dto/update-cart-item.dto";
+import { CartItem } from "./entities/cart-item.entity";
+import { UserCart } from "./entities/user_cart.entity";
 
 @Injectable()
 export class UserCartService {
@@ -20,7 +20,7 @@ export class UserCartService {
     @InjectRepository(CartItem)
     private cartItemRepository: Repository<CartItem>,
     @InjectRepository(Listing)
-    private listingRepository: Repository<Listing>
+    private listingRepository: Repository<Listing>,
   ) {}
 
   /**
@@ -29,12 +29,12 @@ export class UserCartService {
   async findOrCreateCart(userId: number): Promise<UserCart> {
     let cart = await this.userCartRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['user']
+      relations: ["user"],
     });
 
     if (!cart) {
       cart = this.userCartRepository.create({
-        user: { id: userId } as User
+        user: { id: userId } as User,
       });
       cart = await this.userCartRepository.save(cart);
     }
@@ -49,12 +49,12 @@ export class UserCartService {
     const cart = await this.userCartRepository.findOne({
       where: { user: { id: userId } },
       relations: [
-        'user',
-        'cartItems',
-        'cartItems.listing',
-        'cartItems.listing.pokemonCard',
-        'cartItems.listing.seller'
-      ]
+        "user",
+        "cartItems",
+        "cartItems.listing",
+        "cartItems.listing.pokemonCard",
+        "cartItems.listing.seller",
+      ],
     });
 
     if (!cart) {
@@ -71,11 +71,11 @@ export class UserCartService {
     const cart = await this.userCartRepository.findOne({
       where: { id },
       relations: [
-        'user',
-        'cartItems',
-        'cartItems.listing',
-        'cartItems.listing.pokemonCard'
-      ]
+        "user",
+        "cartItems",
+        "cartItems.listing",
+        "cartItems.listing.pokemonCard",
+      ],
     });
 
     if (!cart) {
@@ -84,7 +84,7 @@ export class UserCartService {
 
     // Vérifier que le panier appartient à l'utilisateur si userId est fourni
     if (userId !== undefined && cart.user.id !== userId) {
-      throw new BadRequestException('You can only access your own cart');
+      throw new BadRequestException("You can only access your own cart");
     }
 
     return cart;
@@ -95,29 +95,29 @@ export class UserCartService {
    */
   async addItemToCart(
     userId: number,
-    createCartItemDto: CreateCartItemDto
+    createCartItemDto: CreateCartItemDto,
   ): Promise<CartItem> {
     // Vérifier que le listing existe
     const listing = await this.listingRepository.findOne({
       where: { id: createCartItemDto.listingId },
-      relations: ['seller']
+      relations: ["seller"],
     });
 
     if (!listing) {
       throw new NotFoundException(
-        `Listing with id ${createCartItemDto.listingId} not found`
+        `Listing with id ${createCartItemDto.listingId} not found`,
       );
     }
 
     // Vérifier que l'utilisateur n'achète pas sa propre annonce
     if (listing.seller.id === userId) {
-      throw new BadRequestException('You cannot add your own listing to cart');
+      throw new BadRequestException("You cannot add your own listing to cart");
     }
 
     // Vérifier la disponibilité
     if (listing.quantityAvailable < createCartItemDto.quantity) {
       throw new BadRequestException(
-        `Not enough quantity available. Available: ${listing.quantityAvailable}, Requested: ${createCartItemDto.quantity}`
+        `Not enough quantity available. Available: ${listing.quantityAvailable}, Requested: ${createCartItemDto.quantity}`,
       );
     }
 
@@ -128,8 +128,8 @@ export class UserCartService {
     const existingItem = await this.cartItemRepository.findOne({
       where: {
         cart: { id: cart.id },
-        listing: { id: createCartItemDto.listingId }
-      }
+        listing: { id: createCartItemDto.listingId },
+      },
     });
 
     if (existingItem) {
@@ -138,7 +138,7 @@ export class UserCartService {
 
       if (listing.quantityAvailable < newQuantity) {
         throw new BadRequestException(
-          `Not enough quantity available. Available: ${listing.quantityAvailable}, Total requested: ${newQuantity}`
+          `Not enough quantity available. Available: ${listing.quantityAvailable}, Total requested: ${newQuantity}`,
         );
       }
 
@@ -150,7 +150,7 @@ export class UserCartService {
     const cartItem = this.cartItemRepository.create({
       cart,
       listing,
-      quantity: createCartItemDto.quantity
+      quantity: createCartItemDto.quantity,
     });
 
     return this.cartItemRepository.save(cartItem);
@@ -162,11 +162,11 @@ export class UserCartService {
   async updateCartItem(
     userId: number,
     itemId: number,
-    updateCartItemDto: UpdateCartItemDto
+    updateCartItemDto: UpdateCartItemDto,
   ): Promise<CartItem> {
     const cartItem = await this.cartItemRepository.findOne({
       where: { id: itemId },
-      relations: ['cart', 'cart.user', 'listing']
+      relations: ["cart", "cart.user", "listing"],
     });
 
     if (!cartItem) {
@@ -176,7 +176,7 @@ export class UserCartService {
     // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
-        'You can only update items in your own cart'
+        "You can only update items in your own cart",
       );
     }
 
@@ -185,7 +185,7 @@ export class UserCartService {
       // Vérifier la disponibilité
       if (cartItem.listing.quantityAvailable < updateCartItemDto.quantity) {
         throw new BadRequestException(
-          `Not enough quantity available. Available: ${cartItem.listing.quantityAvailable}, Requested: ${updateCartItemDto.quantity}`
+          `Not enough quantity available. Available: ${cartItem.listing.quantityAvailable}, Requested: ${updateCartItemDto.quantity}`,
         );
       }
 
@@ -201,7 +201,7 @@ export class UserCartService {
   async removeItemFromCart(userId: number, itemId: number): Promise<void> {
     const cartItem = await this.cartItemRepository.findOne({
       where: { id: itemId },
-      relations: ['cart', 'cart.user']
+      relations: ["cart", "cart.user"],
     });
 
     if (!cartItem) {
@@ -211,7 +211,7 @@ export class UserCartService {
     // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
-        'You can only remove items from your own cart'
+        "You can only remove items from your own cart",
       );
     }
 
@@ -224,7 +224,7 @@ export class UserCartService {
   async clearCart(userId: number): Promise<void> {
     const cart = await this.userCartRepository.findOne({
       where: { user: { id: userId } },
-      relations: ['cartItems']
+      relations: ["cartItems"],
     });
 
     if (!cart) {

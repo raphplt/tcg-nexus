@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Card } from 'src/card/entities/card.entity';
-import { PokemonCardDetails } from 'src/card/entities/pokemon-card-details.entity';
-import { CreatePokemonCardDto } from './dto/create-pokemon-card.dto';
-import { UpdatePokemonCardDto } from './dto/update-pokemon-card.dto';
-import { PaginationHelper, PaginatedResult } from '../helpers/pagination';
-import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import { CardGame } from 'src/common/enums/cardGame';
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Card } from "src/card/entities/card.entity";
+import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
+import { CardGame } from "src/common/enums/cardGame";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { Repository } from "typeorm";
+import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
+import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
 
 @Injectable()
 export class PokemonCardService {
@@ -15,7 +15,7 @@ export class PokemonCardService {
     @InjectRepository(Card)
     private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(PokemonCardDetails)
-    private readonly pokemonCardDetailsRepository: Repository<PokemonCardDetails>
+    private readonly pokemonCardDetailsRepository: Repository<PokemonCardDetails>,
   ) {}
 
   private toPokemonCardResponse(card: Card) {
@@ -53,14 +53,14 @@ export class PokemonCardService {
       regulationMark: details?.regulationMark,
       trainerType: details?.trainerType,
       energyType: details?.energyType,
-      boosters: details?.boosters
+      boosters: details?.boosters,
     };
   }
 
   private async findOneEntity(id: string): Promise<Card> {
     const card = await this.pokemonCardRepository.findOne({
       where: { id, game: CardGame.Pokemon },
-      relations: ['set', 'pokemonDetails']
+      relations: ["set", "pokemonDetails"],
     });
     if (!card) {
       throw new Error(`Card with id ${id} not found`);
@@ -69,7 +69,7 @@ export class PokemonCardService {
   }
 
   async create(
-    createPokemonCardDto: CreatePokemonCardDto
+    createPokemonCardDto: CreatePokemonCardDto,
   ): Promise<Record<string, any>> {
     const {
       set,
@@ -105,7 +105,7 @@ export class PokemonCardService {
         ? ({ id: set.id } as PokemonSet)
         : setId
           ? ({ id: setId } as PokemonSet)
-          : undefined
+          : undefined,
     });
 
     const details = this.pokemonCardDetailsRepository.create({
@@ -128,7 +128,7 @@ export class PokemonCardService {
       regulationMark,
       trainerType,
       energyType,
-      boosters
+      boosters,
     });
 
     details.card = newCard;
@@ -140,7 +140,7 @@ export class PokemonCardService {
   async findAll(): Promise<Record<string, any>[]> {
     const cards = await this.pokemonCardRepository.find({
       where: { game: CardGame.Pokemon },
-      relations: ['set', 'pokemonDetails']
+      relations: ["set", "pokemonDetails"],
     });
     return cards.map((card) => this.toPokemonCardResponse(card));
   }
@@ -152,18 +152,18 @@ export class PokemonCardService {
 
   async findBySearch(search: string): Promise<Record<string, any>[]> {
     const qb = this.pokemonCardRepository
-      .createQueryBuilder('card')
-      .leftJoinAndSelect('card.set', 'set')
-      .leftJoinAndSelect('card.pokemonDetails', 'pokemonDetails')
-      .where('card.game = :game', { game: CardGame.Pokemon });
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon });
 
     if (!search) {
       return [];
     }
 
     qb.andWhere(
-      '(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)',
-      { search: `%${search}%` }
+      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
+      { search: `%${search}%` },
     );
 
     const cards = await qb.getMany();
@@ -172,7 +172,7 @@ export class PokemonCardService {
 
   async update(
     id: string,
-    updatePokemonCardDto: UpdatePokemonCardDto
+    updatePokemonCardDto: UpdatePokemonCardDto,
   ): Promise<Record<string, any>> {
     const card = await this.findOneEntity(id);
     // Associer un set via son id si fourni
@@ -211,12 +211,12 @@ export class PokemonCardService {
     this.pokemonCardRepository.merge(card, {
       ...baseFields,
       category: category ?? card.category,
-      set: card.set
+      set: card.set,
     });
 
     if (!card.pokemonDetails) {
       card.pokemonDetails = this.pokemonCardDetailsRepository.create({
-        card
+        card,
       });
     }
 
@@ -240,7 +240,7 @@ export class PokemonCardService {
       regulationMark,
       trainerType,
       energyType,
-      boosters
+      boosters,
     });
     const savedCard = await this.pokemonCardRepository.save(card);
     return this.toPokemonCardResponse(savedCard);
@@ -252,29 +252,29 @@ export class PokemonCardService {
 
   async findAllPaginated(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PaginatedResult<Record<string, any>>> {
     const { page: validPage, limit: validLimit } =
       PaginationHelper.validateParams({
         page,
-        limit
+        limit,
       });
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
     const [data, totalItems] = await this.pokemonCardRepository.findAndCount({
-      relations: ['set', 'pokemonDetails'],
+      relations: ["set", "pokemonDetails"],
       where: { game: CardGame.Pokemon },
       skip: offset,
       take: validLimit,
-      order: { name: 'ASC' }
+      order: { name: "ASC" },
     });
 
     return PaginationHelper.createPaginatedResult(
       data.map((card) => this.toPokemonCardResponse(card)),
       totalItems,
       validPage,
-      validLimit
+      validLimit,
     );
   }
 
@@ -293,28 +293,28 @@ export class PokemonCardService {
   async findRandom(
     serieId?: string,
     rarity?: string,
-    setId?: string
+    setId?: string,
   ): Promise<Record<string, any> | null> {
     const qb = this.pokemonCardRepository
-      .createQueryBuilder('pokemonCard')
-      .leftJoinAndSelect('pokemonCard.set', 'pokemonSet')
-      .leftJoin('pokemonSet.serie', 'pokemonSerie')
-      .leftJoinAndSelect('pokemonCard.pokemonDetails', 'pokemonDetails')
-      .where('pokemonCard.game = :game', { game: CardGame.Pokemon });
+      .createQueryBuilder("pokemonCard")
+      .leftJoinAndSelect("pokemonCard.set", "pokemonSet")
+      .leftJoin("pokemonSet.serie", "pokemonSerie")
+      .leftJoinAndSelect("pokemonCard.pokemonDetails", "pokemonDetails")
+      .where("pokemonCard.game = :game", { game: CardGame.Pokemon });
 
-    if (serieId && serieId.trim() !== '') {
-      qb.andWhere('pokemonSerie.id = :serieId', { serieId });
+    if (serieId && serieId.trim() !== "") {
+      qb.andWhere("pokemonSerie.id = :serieId", { serieId });
     }
 
-    if (rarity && rarity.trim() !== '') {
-      qb.andWhere('pokemonCard.rarity = :rarity', { rarity });
+    if (rarity && rarity.trim() !== "") {
+      qb.andWhere("pokemonCard.rarity = :rarity", { rarity });
     }
 
-    if (setId && setId.trim() !== '') {
-      qb.andWhere('pokemonSet.id = :setId', { setId });
+    if (setId && setId.trim() !== "") {
+      qb.andWhere("pokemonSet.id = :setId", { setId });
     }
 
-    const card = await qb.orderBy('RANDOM()').limit(1).getOne();
+    const card = await qb.orderBy("RANDOM()").limit(1).getOne();
     return card ? this.toPokemonCardResponse(card) : null;
   }
 }

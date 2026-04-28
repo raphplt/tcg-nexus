@@ -1,14 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { DeckFormatController } from './deck-format.controller';
-import { DeckFormatService } from './deck-format.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { DeckFormat } from './entities/deck-format.entity';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { DeckFormatController } from "./deck-format.controller";
+import { DeckFormatService } from "./deck-format.service";
+import { DeckFormat } from "./entities/deck-format.entity";
 
-describe('DeckFormatController', () => {
+describe("DeckFormatController", () => {
   let controller: DeckFormatController;
 
   const mockDeckFormatService = {
-    findAll: jest.fn()
+    findAll: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -17,19 +17,19 @@ describe('DeckFormatController', () => {
       providers: [
         {
           provide: DeckFormatService,
-          useValue: mockDeckFormatService
+          useValue: mockDeckFormatService,
         },
         {
           provide: getRepositoryToken(DeckFormat),
-          useValue: {}
-        }
-      ]
+          useValue: {},
+        },
+      ],
     }).compile();
 
     controller = module.get<DeckFormatController>(DeckFormatController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 });

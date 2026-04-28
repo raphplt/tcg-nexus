@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  adminService,
-  PokemonCardPayload,
-} from "@/services/admin.service";
+import { adminService, PokemonCardPayload } from "@/services/admin.service";
 import { PokemonCardType, PokemonSetType } from "@/types/cardPokemon";
 import { PaginatedResult } from "@/types/pagination";
 import { PokemonCardsType } from "@/types/enums/pokemonCardsType";
@@ -90,13 +87,17 @@ const defaultCardForm: CardFormState = {
 export function AdminPokemonCardsTable() {
   const [cardsData, setCardsData] =
     useState<PaginatedResult<PokemonCardType> | null>(null);
-  const [searchResults, setSearchResults] = useState<PokemonCardType[] | null>(null);
+  const [searchResults, setSearchResults] = useState<PokemonCardType[] | null>(
+    null,
+  );
   const [sets, setSets] = useState<PokemonSetType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<PokemonCardType | null>(null);
-  const [cardToDelete, setCardToDelete] = useState<PokemonCardType | null>(null);
+  const [cardToDelete, setCardToDelete] = useState<PokemonCardType | null>(
+    null,
+  );
   const [form, setForm] = useState<CardFormState>(defaultCardForm);
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,7 +115,10 @@ export function AdminPokemonCardsTable() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await adminService.getPokemonCards({ page: pageParam, limit: 10 });
+      const data = await adminService.getPokemonCards({
+        page: pageParam,
+        limit: 10,
+      });
       setCardsData(data);
       setPage(pageParam);
     } catch (err) {
@@ -213,12 +217,13 @@ export function AdminPokemonCardsTable() {
       localId: form.localId || undefined,
       rarity: form.rarity || undefined,
       image: form.image || undefined,
-      category: form.category
-        ? (form.category as PokemonCardsType)
-        : undefined,
+      category: form.category ? (form.category as PokemonCardsType) : undefined,
       hp: form.hp ? Number.parseInt(form.hp, 10) : undefined,
       types: form.types
-        ? form.types.split(",").map((t) => t.trim()).filter(Boolean)
+        ? form.types
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
         : undefined,
       illustrator: form.illustrator || undefined,
       description: form.description || undefined,
@@ -269,7 +274,7 @@ export function AdminPokemonCardsTable() {
   };
 
   const cards = useMemo(
-    () => (searchResults ? searchResults : cardsData?.data ?? []),
+    () => (searchResults ? searchResults : (cardsData?.data ?? [])),
     [cardsData, searchResults],
   );
 
@@ -330,7 +335,9 @@ export function AdminPokemonCardsTable() {
                 cards.map((card) => (
                   <TableRow key={card.id}>
                     <TableCell className="font-semibold">{card.name}</TableCell>
-                    <TableCell className="font-mono text-xs">{card.localId}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {card.localId}
+                    </TableCell>
                     <TableCell>{card.set?.name ?? "-"}</TableCell>
                     <TableCell>
                       {card.rarity ? (
@@ -416,7 +423,9 @@ export function AdminPokemonCardsTable() {
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? "Modifier la carte" : "Nouvelle carte"}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Modifier la carte" : "Nouvelle carte"}
+            </DialogTitle>
             <DialogDescription>
               Renseignez les données principales de la carte.
             </DialogDescription>
@@ -480,7 +489,8 @@ export function AdminPokemonCardsTable() {
                 onValueChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    category: value === "none" ? "" : (value as PokemonCardsType),
+                    category:
+                      value === "none" ? "" : (value as PokemonCardsType),
                   }))
                 }
               >
@@ -509,7 +519,9 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-types">Types (séparés par des virgules)</Label>
+              <Label htmlFor="card-types">
+                Types (séparés par des virgules)
+              </Label>
               <Input
                 id="card-types"
                 value={form.types}
@@ -534,7 +546,10 @@ export function AdminPokemonCardsTable() {
                 id="card-illustrator"
                 value={form.illustrator}
                 onChange={(event) =>
-                  setForm((prev) => ({ ...prev, illustrator: event.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    illustrator: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -617,7 +632,10 @@ export function AdminPokemonCardsTable() {
               id="card-description"
               value={form.description}
               onChange={(event) =>
-                setForm((prev) => ({ ...prev, description: event.target.value }))
+                setForm((prev) => ({
+                  ...prev,
+                  description: event.target.value,
+                }))
               }
             />
           </div>
@@ -626,7 +644,9 @@ export function AdminPokemonCardsTable() {
             <Button variant="outline" onClick={() => setOpenModal(false)}>
               Annuler
             </Button>
-            <Button onClick={saveCard}>{editing ? "Mettre à jour" : "Créer"}</Button>
+            <Button onClick={saveCard}>
+              {editing ? "Mettre à jour" : "Créer"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

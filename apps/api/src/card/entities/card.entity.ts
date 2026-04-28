@@ -1,16 +1,16 @@
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
+import { CardGame } from "src/common/enums/cardGame";
+import { DeckCard } from "src/deck-card/entities/deck-card.entity";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import {
-  Entity,
   Column,
+  Entity,
   ManyToOne,
-  PrimaryGeneratedColumn,
   OneToMany,
-  OneToOne
-} from 'typeorm';
-import { CardGame } from 'src/common/enums/cardGame';
-import { PokemonSet } from 'src/pokemon-set/entities/pokemon-set.entity';
-import { DeckCard } from 'src/deck-card/entities/deck-card.entity';
-import { CollectionItem } from 'src/collection-item/entities/collection-item.entity';
-import { PokemonCardDetails } from './pokemon-card-details.entity';
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { PokemonCardDetails } from "./pokemon-card-details.entity";
 
 export type CardVariants = {
   normal?: boolean;
@@ -44,8 +44,8 @@ export type TcgPlayerPricing = {
   normal?: TcgPlayerVariantPricing;
   holofoil?: TcgPlayerVariantPricing;
   reverseHolofoil?: TcgPlayerVariantPricing;
-  '1stEditionHolofoil'?: TcgPlayerVariantPricing;
-  '1stEditionNormal'?: TcgPlayerVariantPricing;
+  "1stEditionHolofoil"?: TcgPlayerVariantPricing;
+  "1stEditionNormal"?: TcgPlayerVariantPricing;
 };
 
 export type CardMarketPricing = {
@@ -58,12 +58,12 @@ export type CardMarketPricing = {
   avg30: number | null;
   low: number | null;
   trend: number | null;
-  'avg-holo': number | null;
-  'avg1-holo': number | null;
-  'avg7-holo': number | null;
-  'avg30-holo': number | null;
-  'low-holo': number | null;
-  'trend-holo': number | null;
+  "avg-holo": number | null;
+  "avg1-holo": number | null;
+  "avg7-holo": number | null;
+  "avg30-holo": number | null;
+  "low-holo": number | null;
+  "trend-holo": number | null;
 };
 
 export type CardPricingData = {
@@ -71,12 +71,12 @@ export type CardPricingData = {
   cardmarket?: CardMarketPricing | null;
 };
 
-@Entity('card')
+@Entity("card")
 export class Card {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: 'enum', enum: CardGame, default: CardGame.Pokemon })
+  @Column({ type: "enum", enum: CardGame, default: CardGame.Pokemon })
   game: CardGame;
 
   @Column({ nullable: true })
@@ -100,16 +100,19 @@ export class Card {
   @Column({ nullable: true })
   rarity?: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   variants?: CardVariants;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   variantsDetailed?: CardVariantDetail[];
 
-  @ManyToOne(() => PokemonSet, (pokemonSet) => pokemonSet.cards)
+  @ManyToOne(
+    () => PokemonSet,
+    (pokemonSet) => pokemonSet.cards,
+  )
   set: PokemonSet;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   legal?: {
     standard: boolean;
     expanded: boolean;
@@ -118,20 +121,27 @@ export class Card {
   @Column({ nullable: true })
   updated?: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   pricing?: CardPricingData;
 
-  @OneToOne(() => PokemonCardDetails, (details) => details.card, {
-    cascade: true
-  })
+  @OneToOne(
+    () => PokemonCardDetails,
+    (details) => details.card,
+    {
+      cascade: true,
+    },
+  )
   pokemonDetails?: PokemonCardDetails;
 
-  @OneToMany(() => DeckCard, (deckCard) => deckCard.card)
+  @OneToMany(
+    () => DeckCard,
+    (deckCard) => deckCard.card,
+  )
   deckCards: DeckCard[];
 
   @OneToMany(
     () => CollectionItem,
-    (collectionItem) => collectionItem.pokemonCard
+    (collectionItem) => collectionItem.pokemonCard,
   )
   collectionItems: CollectionItem[];
 }

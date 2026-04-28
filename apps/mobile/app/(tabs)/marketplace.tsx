@@ -4,9 +4,7 @@ export default function MarketplaceScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Marketplace</Text>
-      <Text style={styles.subtitle}>
-        Achetez et vendez vos cartes
-      </Text>
+      <Text style={styles.subtitle}>Achetez et vendez vos cartes</Text>
     </View>
   );
 }

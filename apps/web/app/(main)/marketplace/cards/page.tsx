@@ -166,7 +166,7 @@ function MarketplaceCardsContent() {
     (filters.priceMin !== undefined ? 1 : 0) +
     (filters.priceMax !== undefined ? 1 : 0);
 
-    // console.log('cards', data?.data);
+  // console.log('cards', data?.data);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
@@ -175,10 +175,7 @@ function MarketplaceCardsContent() {
           <MarketplaceBreadcrumb />
         </div>
         <div className="mb-8">
-          <H1
-            className="text-center mb-2"
-            variant="primary"
-          >
+          <H1 className="text-center mb-2" variant="primary">
             Catalogue de cartes
           </H1>
           <p className="text-center text-muted-foreground text-lg">
@@ -200,10 +197,7 @@ function MarketplaceCardsContent() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
-              <Skeleton
-                key={i}
-                className="h-80"
-              />
+              <Skeleton key={i} className="h-80" />
             ))}
           </div>
         ) : error ? (
@@ -220,10 +214,7 @@ function MarketplaceCardsContent() {
                 {data.meta.totalItems > 1 ? "s" : ""} trouvée
                 {data.meta.totalItems > 1 ? "s" : ""}
               </span>
-              <ViewToggle
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
+              <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             </div>
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
@@ -277,4 +268,3 @@ function MarketplaceCardsContent() {
     </div>
   );
 }
-

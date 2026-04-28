@@ -1,16 +1,16 @@
+import { Type } from "class-transformer";
 import {
-  IsOptional,
-  IsEnum,
-  IsString,
-  IsNumber,
   IsBoolean,
-  Min
-} from 'class-validator';
-import { Type } from 'class-transformer';
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
 import {
   TournamentStatus,
-  TournamentType
-} from '../entities/tournament.entity';
+  TournamentType,
+} from "../entities/tournament.entity";
 
 export class TournamentQueryDto {
   @IsOptional()
@@ -55,9 +55,9 @@ export class TournamentQueryDto {
 
   @IsOptional()
   @IsString()
-  sortBy?: string = 'startDate';
+  sortBy?: string = "startDate";
 
   @IsOptional()
   @IsString()
-  sortOrder?: 'ASC' | 'DESC' = 'ASC';
+  sortOrder?: "ASC" | "DESC" = "ASC";
 }

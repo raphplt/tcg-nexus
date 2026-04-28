@@ -55,7 +55,9 @@ export function AdminPokemonSeriesTable() {
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [editing, setEditing] = useState<PokemonSerieType | null>(null);
-  const [serieToDelete, setSerieToDelete] = useState<PokemonSerieType | null>(null);
+  const [serieToDelete, setSerieToDelete] = useState<PokemonSerieType | null>(
+    null,
+  );
   const [form, setForm] = useState<SerieFormState>(defaultForm);
 
   const loadSeries = async () => {
@@ -178,11 +180,17 @@ export function AdminPokemonSeriesTable() {
               {!isLoading &&
                 series.map((serie) => (
                   <TableRow key={serie.id}>
-                    <TableCell className="font-mono text-xs">{serie.id}</TableCell>
-                    <TableCell className="font-semibold">{serie.name}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {serie.id}
+                    </TableCell>
+                    <TableCell className="font-semibold">
+                      {serie.name}
+                    </TableCell>
                     <TableCell>
                       {serie.logo ? (
-                        <span className="text-blue-600 underline">{serie.logo}</span>
+                        <span className="text-blue-600 underline">
+                          {serie.logo}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground text-sm">-</span>
                       )}

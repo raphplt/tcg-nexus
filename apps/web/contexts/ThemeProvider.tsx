@@ -75,20 +75,14 @@ export function ThemeProvider({
   // Pendant l'hydratation, ne pas rendre le contenu pour éviter les différences
   if (!mounted) {
     return (
-      <ThemeProviderContext.Provider
-        {...props}
-        value={value}
-      >
+      <ThemeProviderContext.Provider {...props} value={value}>
         {children}
       </ThemeProviderContext.Provider>
     );
   }
 
   return (
-    <ThemeProviderContext.Provider
-      {...props}
-      value={value}
-    >
+    <ThemeProviderContext.Provider {...props} value={value}>
       {children}
     </ThemeProviderContext.Provider>
   );

@@ -216,10 +216,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-6"
-          >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Interface de score */}
             <div className="grid grid-cols-3 gap-4 items-center">
               {/* Joueur A */}
@@ -294,14 +291,8 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
             {/* Options supplémentaires */}
             <div className="space-y-4 pt-4 border-t">
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="forfeit"
-                  {...register("isForfeit")}
-                />
-                <Label
-                  htmlFor="forfeit"
-                  className="flex items-center gap-2"
-                >
+                <Switch id="forfeit" {...register("isForfeit")} />
+                <Label htmlFor="forfeit" className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-orange-500" />
                   Match par forfait
                 </Label>
@@ -329,11 +320,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 </Button>
               </AlertDialogTrigger>
 
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => reset()}
-              >
+              <Button type="button" variant="outline" onClick={() => reset()}>
                 Reset
               </Button>
             </div>
@@ -342,10 +329,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
       </Card>
 
       {/* Confirmation Modal */}
-      <AlertDialog
-        open={showConfirmation}
-        onOpenChange={setShowConfirmation}
-      >
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer le résultat</AlertDialogTitle>
@@ -392,10 +376,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmSubmit}
-              disabled={isReporting}
-            >
+            <AlertDialogAction onClick={confirmSubmit} disabled={isReporting}>
               {isReporting ? "Enregistrement..." : "Confirmer"}
             </AlertDialogAction>
           </AlertDialogFooter>

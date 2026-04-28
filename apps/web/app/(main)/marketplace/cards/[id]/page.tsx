@@ -83,10 +83,7 @@ export default function CardDetailPage() {
 
   if (!card) {
     return (
-      <Alert
-        variant="destructive"
-        className="max-w-2xl mx-auto mt-12"
-      >
+      <Alert variant="destructive" className="max-w-2xl mx-auto mt-12">
         <AlertTitle>Erreur</AlertTitle>
         <AlertDescription>
           Carte non trouvée. Veuillez réessayer plus tard.

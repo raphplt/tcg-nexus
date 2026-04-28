@@ -279,15 +279,9 @@ export function TournamentBracket({
       <div className="overflow-x-auto pb-4">
         <div className="flex gap-8 min-w-max p-4">
           {matchesByRound.map(({ round, matches: roundMatches }) => (
-            <div
-              key={round}
-              className="flex flex-col"
-            >
+            <div key={round} className="flex flex-col">
               <div className="text-center mb-4">
-                <Badge
-                  variant="secondary"
-                  className="text-sm font-medium"
-                >
+                <Badge variant="secondary" className="text-sm font-medium">
                   {getRoundName(round, totalRounds)}
                 </Badge>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -303,10 +297,7 @@ export function TournamentBracket({
                 }}
               >
                 {roundMatches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="flex items-center"
-                  >
+                  <div key={match.id} className="flex items-center">
                     <MatchCard
                       match={match}
                       isAdmin={isAdmin}
@@ -376,16 +367,10 @@ export function TournamentBracket({
           )}
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedMatch(null)}
-            >
+            <Button variant="outline" onClick={() => setSelectedMatch(null)}>
               Annuler
             </Button>
-            <Button
-              onClick={handleSaveScore}
-              disabled={isSubmitting}
-            >
+            <Button onClick={handleSaveScore} disabled={isSubmitting}>
               {isSubmitting ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </DialogFooter>

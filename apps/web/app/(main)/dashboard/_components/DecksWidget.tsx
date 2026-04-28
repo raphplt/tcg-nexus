@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SquareStack, Plus, Eye } from "lucide-react";
 import type { DashboardDecksData } from "@/types/dashboard";
 
@@ -25,9 +20,7 @@ export function DecksWidget({ data }: DecksWidgetProps) {
         {isEmpty ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <SquareStack className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
-              Aucun deck créé
-            </p>
+            <p className="text-sm text-muted-foreground">Aucun deck créé</p>
             <Link
               href="/decks/create"
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"

@@ -1,20 +1,20 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  OneToMany
-} from 'typeorm';
-import { UserBadge } from './user-badge.entity';
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { UserBadge } from "./user-badge.entity";
 
 export enum BadgeCategory {
-  COLLECTION = 'collection',
-  TOURNAMENT = 'tournament',
-  DECK = 'deck',
-  MARKETPLACE = 'marketplace'
+  COLLECTION = "collection",
+  TOURNAMENT = "tournament",
+  DECK = "deck",
+  MARKETPLACE = "marketplace",
 }
 
-@Entity('badge')
+@Entity("badge")
 export class Badge {
   @PrimaryGeneratedColumn()
   id: number;
@@ -31,13 +31,16 @@ export class Badge {
   @Column()
   icon: string;
 
-  @Column({ type: 'enum', enum: BadgeCategory })
+  @Column({ type: "enum", enum: BadgeCategory })
   category: BadgeCategory;
 
-  @Column({ type: 'int' })
+  @Column({ type: "int" })
   threshold: number;
 
-  @OneToMany(() => UserBadge, (userBadge) => userBadge.badge)
+  @OneToMany(
+    () => UserBadge,
+    (userBadge) => userBadge.badge,
+  )
   userBadges: UserBadge[];
 
   @CreateDateColumn()

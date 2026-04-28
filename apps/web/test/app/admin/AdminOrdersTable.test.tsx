@@ -1,13 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AdminOrdersTable } from "@/app/(protected)/admin/_components/AdminOrdersTable";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AdminOrdersTable } from "@/app/(main)/(protected)/admin/_components/AdminOrdersTable";
 import { adminService } from "@/services/admin.service";
-import { OrderStatus, type Order } from "@/types/order";
-import type { PaginatedResult } from "@/types/pagination";
 import { UserRole } from "@/types/auth";
-import { CardState, Currency } from "@/utils/enums";
 import { Rarity } from "@/types/listing";
+import { type Order, OrderStatus } from "@/types/order";
+import { ProductKind } from "@/types/sealed-product";
+import type { PaginatedResult } from "@/types/pagination";
+import { CardState, Currency } from "@/utils/enums";
 
 vi.mock("@/services/admin.service", () => ({
   adminService: {
@@ -54,6 +55,7 @@ const sampleOrder: Order = {
           lastName: "Seller",
           role: UserRole.USER,
         },
+        productKind: ProductKind.CARD,
         pokemonCard: {
           id: "card-1",
           name: "Pikachu",
@@ -104,9 +106,7 @@ describe("AdminOrdersTable", () => {
     render(<AdminOrdersTable />);
 
     await waitFor(() =>
-      expect(
-        screen.getByText(/Ada Lovelace/i),
-      ).toBeInTheDocument(),
+      expect(screen.getByText(/Ada Lovelace/i)).toBeInTheDocument(),
     );
 
     expect(mockedGetOrders).toHaveBeenCalled();
@@ -116,9 +116,7 @@ describe("AdminOrdersTable", () => {
     );
     await screen.findByText(/Pikachu/);
     // Use getAllByText since the amount appears multiple times in the dialog
-    expect(
-      screen.getAllByText(/120\.00\s*EUR/i).length,
-    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(/120\.00\s*EUR/i).length).toBeGreaterThan(0);
   });
 
   it("met à jour le statut d'une commande", async () => {
@@ -131,9 +129,11 @@ describe("AdminOrdersTable", () => {
     );
 
     // Verify the dialog is open and contains the update button
-    const updateButton = await screen.findByRole("button", { name: /Mettre à jour/i });
+    const updateButton = await screen.findByRole("button", {
+      name: /Mettre à jour/i,
+    });
     expect(updateButton).toBeInTheDocument();
-    
+
     // Click the update button (uses current status from modal state)
     await userEvent.click(updateButton);
 

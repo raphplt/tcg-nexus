@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import TournamentPreview from "@/components/Home/TournamentPreview";
-import MarketplacePreview from "@/components/Home/MarketplacePreview";
-import LatestArticles from "@/components/Home/LatestArticles";
-import RandomCard from "@/components/Home/RandomCard";
-import TrendingDecks from "@/components/Home/TrendingDecks";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { LayoutDashboard, LibraryBig } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+import LatestArticles from "@/components/Home/LatestArticles";
+import MarketplacePreview from "@/components/Home/MarketplacePreview";
+import RandomCard from "@/components/Home/RandomCard";
+import SealedProductsPreview from "@/components/Home/SealedProductsPreview";
+import TournamentPreview from "@/components/Home/TournamentPreview";
+import TrendingDecks from "@/components/Home/TrendingDecks";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -56,13 +57,12 @@ const HomePage = () => {
               ) : (
                 <>
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight text-foreground">
-                    La plateforme{" "}
-                    <span className="text-primary">ultime</span> pour les
-                    joueurs Pokemon TCG
+                    La plateforme <span className="text-primary">ultime</span>{" "}
+                    pour les joueurs Pokemon TCG
                   </h1>
                   <p className="text-xl text-muted-foreground max-w-xl">
-                    Gerez vos collections, participez a des tournois, achetez
-                    et vendez sur le marketplace. Tout en un seul endroit.
+                    Gerez vos collections, participez a des tournois, achetez et
+                    vendez sur le marketplace. Tout en un seul endroit.
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Button asChild size="lg" className="text-lg px-8 py-6">
@@ -103,6 +103,12 @@ const HomePage = () => {
                 <MarketplacePreview />
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="mb-16">
+          <div className="card-hover">
+            <SealedProductsPreview />
           </div>
         </section>
 

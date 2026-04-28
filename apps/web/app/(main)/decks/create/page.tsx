@@ -42,10 +42,7 @@ export default function CreateDeckPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
-        <Alert
-          variant="destructive"
-          className="mx-auto max-w-3xl"
-        >
+        <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
           <AlertTitle>Connexion requise.</AlertTitle>
           <AlertDescription>

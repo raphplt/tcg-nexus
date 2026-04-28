@@ -19,7 +19,9 @@ export default function OrdersPage() {
         setOrders(data);
       } catch (err) {
         console.error("Failed to fetch orders", err);
-        setError("Impossible de charger vos commandes. Veuillez réessayer plus tard.");
+        setError(
+          "Impossible de charger vos commandes. Veuillez réessayer plus tard.",
+        );
       } finally {
         setIsLoading(false);
       }

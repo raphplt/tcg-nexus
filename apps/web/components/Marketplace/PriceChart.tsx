@@ -116,15 +116,9 @@ export function PriceChart({
       </CardHeader>
       <CardContent>
         <div className="text-primary">
-          <ResponsiveContainer
-            width="100%"
-            height={300}
-          >
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                className="stroke-muted"
-              />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="date"
                 className="text-xs"

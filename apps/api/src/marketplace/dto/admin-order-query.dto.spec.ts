@@ -1,17 +1,16 @@
-import { plainToInstance } from 'class-transformer';
-import { validateSync } from 'class-validator';
+import { plainToInstance } from "class-transformer";
+import { validateSync } from "class-validator";
+import { OrderStatus } from "../entities/order.entity";
+import { AdminOrderQueryDto } from "./admin-order-query.dto";
 
-import { AdminOrderQueryDto } from './admin-order-query.dto';
-import { OrderStatus } from '../entities/order.entity';
-
-describe('AdminOrderQueryDto', () => {
-  it('transforms and validates numeric fields', () => {
+describe("AdminOrderQueryDto", () => {
+  it("transforms and validates numeric fields", () => {
     const dto = plainToInstance(AdminOrderQueryDto, {
-      page: '2',
-      limit: '5',
+      page: "2",
+      limit: "5",
       status: OrderStatus.PAID,
-      buyerId: '10',
-      sellerId: '20'
+      buyerId: "10",
+      sellerId: "20",
     });
 
     expect(validateSync(dto)).toHaveLength(0);

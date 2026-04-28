@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CollectionItem } from './entities/collection-item.entity';
-import { Collection } from 'src/collection/entities/collection.entity';
-import { Card } from 'src/card/entities/card.entity';
-import { User } from 'src/user/entities/user.entity';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Card } from "src/card/entities/card.entity";
 import {
   CardState,
-  CardStateCode
-} from 'src/card-state/entities/card-state.entity';
+  CardStateCode,
+} from "src/card-state/entities/card-state.entity";
+import { Collection } from "src/collection/entities/collection.entity";
+import { ProductKind } from "src/common/enums/product-kind";
+import { SealedCondition } from "src/common/enums/sealed-condition";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
+import { User } from "src/user/entities/user.entity";
+import { Repository } from "typeorm";
+import { CollectionItem } from "./entities/collection-item.entity";
 
 @Injectable()
 export class CollectionItemService {
@@ -26,7 +30,12 @@ export class CollectionItemService {
     private readonly userRepo: Repository<User>,
 
     @InjectRepository(CardState)
-    private readonly cardStateRepo: Repository<CardState>
+    private readonly cardStateRepo: Repository<CardState>,
+
+    @InjectRepository(SealedProduct)
+    private readonly sealedProductRepo: Repository<SealedProduct>,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -34,45 +43,45 @@ export class CollectionItemService {
    */
   async addToWishlist(
     userId: number | string,
-    pokemonCardId: string
+    pokemonCardId: string,
   ): Promise<CollectionItem> {
-    const userIdNum = typeof userId === 'string' ? Number(userId) : userId;
+    const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
     // Vérifier que l'utilisateur existe
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    if (!user) throw new NotFoundException("Utilisateur non trouvé");
 
     // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
-      where: { id: pokemonCardId }
+      where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
+    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
 
     // Récupérer la wishlist existante (insensible à la casse)
     let wishlist = await this.collectionRepo.findOne({
       where: {
         user: { id: userIdNum },
-        name: 'Wishlist' // Utiliser le nom avec majuscule pour cohérence
+        name: "Wishlist", // Utiliser le nom avec majuscule pour cohérence
       },
-      relations: ['items', 'items.pokemonCard']
+      relations: ["items", "items.pokemonCard"],
     });
 
     if (!wishlist) {
       // Créer une wishlist uniquement si elle n'existe vraiment pas (cela ne devrait pas arriver)
       console.warn(
-        `Aucune wishlist trouvée pour l'utilisateur ${userIdNum}. Création d'une wishlist d'urgence.`
+        `Aucune wishlist trouvée pour l'utilisateur ${userIdNum}. Création d'une wishlist d'urgence.`,
       );
       wishlist = this.collectionRepo.create({
-        name: 'Wishlist',
-        description: 'Default wishlist (auto-generated)',
+        name: "Wishlist",
+        description: "Default wishlist (auto-generated)",
         user,
-        isPublic: false
+        isPublic: false,
       });
       wishlist = await this.collectionRepo.save(wishlist);
     }
 
     // Vérifier si la carte est déjà dans la wishlist
-    let item = wishlist.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = wishlist.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
@@ -81,12 +90,12 @@ export class CollectionItemService {
 
     // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStateCode.NM }
+      where: { code: CardStateCode.NM },
     });
 
     if (!defaultCardState) {
       throw new NotFoundException(
-        "CardState NM non trouvé. Veuillez d'abord seed les CardState."
+        "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
       );
     }
 
@@ -94,10 +103,15 @@ export class CollectionItemService {
       collection: wishlist,
       pokemonCard: card,
       cardState: defaultCardState,
-      quantity: 1
+      quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
+    });
+    return savedItem;
   }
 
   /**
@@ -105,37 +119,37 @@ export class CollectionItemService {
    */
   async addToFavorites(
     userId: number | string,
-    pokemonCardId: string
+    pokemonCardId: string,
   ): Promise<CollectionItem> {
-    const userIdNum = typeof userId === 'string' ? Number(userId) : userId;
+    const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
     // Vérifier que l'utilisateur existe
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    if (!user) throw new NotFoundException("Utilisateur non trouvé");
 
     // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
-      where: { id: pokemonCardId }
+      where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
+    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
 
     // Récupérer les Favorites
     const favorites = await this.collectionRepo.findOne({
       where: {
         user: { id: userIdNum },
-        name: 'Favorites'
+        name: "Favorites",
       },
-      relations: ['items', 'items.pokemonCard']
+      relations: ["items", "items.pokemonCard"],
     });
 
     if (!favorites) {
       throw new NotFoundException(
-        'Collection Favorites non trouvée. Vérifiez que les collections par défaut sont créées.'
+        "Collection Favorites non trouvée. Vérifiez que les collections par défaut sont créées.",
       );
     }
 
     // Vérifier si la carte est déjà dans les Favorites
-    let item = favorites.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = favorites.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
@@ -144,12 +158,12 @@ export class CollectionItemService {
 
     // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStateCode.NM }
+      where: { code: CardStateCode.NM },
     });
 
     if (!defaultCardState) {
       throw new NotFoundException(
-        "CardState NM non trouvé. Veuillez d'abord seed les CardState."
+        "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
       );
     }
 
@@ -157,56 +171,167 @@ export class CollectionItemService {
       collection: favorites,
       pokemonCard: card,
       cardState: defaultCardState,
-      quantity: 1
+      quantity: 1,
     });
 
-    return this.collectionItemRepo.save(item);
+    const savedItem = await this.collectionItemRepo.save(item);
+    this.eventEmitter.emit("challenge.action", {
+      userId: user.id,
+      action: "ADD_CARD",
+    });
+    return savedItem;
   }
 
   /**
-   * Ajouter une carte Pokémon à une collection spécifique
+   * Ajouter une carte Pokémon dans une collection spécifique (par id).
    */
   async addToCollection(
-    collectionId: string,
-    pokemonCardId: string
+    collectionId: number | string,
+    pokemonCardId: string,
   ): Promise<CollectionItem> {
-    // Vérifier que la collection existe
     const collection = await this.collectionRepo.findOne({
-      where: { id: collectionId },
-      relations: ['items', 'items.pokemonCard']
+      where: { id: collectionId as string },
+      relations: ["items", "items.pokemonCard", "user"],
     });
-    if (!collection) throw new NotFoundException('Collection non trouvée');
+    if (!collection) throw new NotFoundException("Collection non trouvée");
 
-    // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
-      where: { id: pokemonCardId }
+      where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException('Carte Pokémon non trouvée');
+    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
 
-    // Vérifier si la carte est déjà dans la collection
-    let item = collection.items?.find((i) => i.pokemonCard.id === card.id);
+    let item = collection.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
       item.quantity += 1;
       return this.collectionItemRepo.save(item);
     }
 
-    // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStateCode.NM }
+      where: { code: CardStateCode.NM },
     });
 
     if (!defaultCardState) {
       throw new NotFoundException(
-        "CardState NM non trouvé. Veuillez d'abord seed les CardState."
+        "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
       );
     }
 
     item = this.collectionItemRepo.create({
-      collection: collection,
+      collection,
+      productKind: ProductKind.CARD,
       pokemonCard: card,
       cardState: defaultCardState,
-      quantity: 1
+      quantity: 1,
+    });
+
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_CARD",
+      });
+    }
+    return savedItem;
+  }
+
+  /**
+   * Ajouter un produit scellé à une collection spécifique (par id).
+   */
+  async addSealedToCollection(
+    collectionId: number | string,
+    sealedProductId: string,
+    sealedCondition?: SealedCondition,
+  ): Promise<CollectionItem> {
+    const collection = await this.collectionRepo.findOne({
+      where: { id: collectionId as string },
+      relations: ["items", "items.sealedProduct", "user"],
+    });
+    if (!collection) throw new NotFoundException("Collection non trouvée");
+
+    const sealedProduct = await this.sealedProductRepo.findOne({
+      where: { id: sealedProductId },
+    });
+    if (!sealedProduct)
+      throw new NotFoundException("Produit scellé non trouvé");
+
+    const condition = sealedCondition ?? SealedCondition.SEALED;
+
+    let item = collection.items?.find(
+      (i) =>
+        i.sealedProduct?.id === sealedProduct.id &&
+        i.sealedCondition === condition,
+    );
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection,
+      productKind: ProductKind.SEALED,
+      sealedProduct,
+      sealedCondition: condition,
+      quantity: 1,
+    });
+
+    const savedItem = await this.collectionItemRepo.save(item);
+    if (collection.user?.id) {
+      this.eventEmitter.emit("challenge.action", {
+        userId: collection.user.id,
+        action: "ADD_SEALED",
+      });
+    }
+    return savedItem;
+  }
+
+  /**
+   * Ajouter un produit scellé à la wishlist d'un user.
+   */
+  async addSealedToWishlist(
+    userId: number | string,
+    sealedProductId: string,
+  ): Promise<CollectionItem> {
+    const userIdNum = typeof userId === "string" ? Number(userId) : userId;
+
+    const user = await this.userRepo.findOne({ where: { id: userIdNum } });
+    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+
+    const sealedProduct = await this.sealedProductRepo.findOne({
+      where: { id: sealedProductId },
+    });
+    if (!sealedProduct)
+      throw new NotFoundException("Produit scellé non trouvé");
+
+    const wishlist = await this.collectionRepo.findOne({
+      where: {
+        user: { id: userIdNum },
+        name: "Wishlist",
+      },
+      relations: ["items", "items.sealedProduct"],
+    });
+    if (!wishlist) {
+      throw new NotFoundException(
+        "Collection Wishlist non trouvée. Vérifiez les collections par défaut.",
+      );
+    }
+
+    let item = wishlist.items?.find(
+      (i) => i.sealedProduct?.id === sealedProduct.id,
+    );
+
+    if (item) {
+      item.quantity += 1;
+      return this.collectionItemRepo.save(item);
+    }
+
+    item = this.collectionItemRepo.create({
+      collection: wishlist,
+      productKind: ProductKind.SEALED,
+      sealedProduct,
+      sealedCondition: SealedCondition.SEALED,
+      quantity: 1,
     });
 
     return this.collectionItemRepo.save(item);

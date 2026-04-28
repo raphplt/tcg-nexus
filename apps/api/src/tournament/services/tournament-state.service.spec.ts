@@ -1,33 +1,33 @@
-import { BadRequestException } from '@nestjs/common';
-import { TournamentStateService } from './tournament-state.service';
+import { BadRequestException } from "@nestjs/common";
+import { Match, MatchStatus } from "../../match/entities/match.entity";
 import {
   Tournament,
   TournamentStatus,
-  TournamentType
-} from '../entities/tournament.entity';
+  TournamentType,
+} from "../entities/tournament.entity";
 import {
+  RegistrationStatus,
   TournamentRegistration,
-  RegistrationStatus
-} from '../entities/tournament-registration.entity';
-import { Match, MatchStatus } from '../../match/entities/match.entity';
+} from "../entities/tournament-registration.entity";
+import { TournamentStateService } from "./tournament-state.service";
 
 const mockTournamentRepository = {
-  findOne: jest.fn()
+  findOne: jest.fn(),
 };
 const mockRegistrationRepository = {
   find: jest.fn(),
-  count: jest.fn()
+  count: jest.fn(),
 };
 const mockMatchRepository = {
-  count: jest.fn()
+  count: jest.fn(),
 };
 
 const tournamentBase = (): Tournament =>
   ({
     id: 1,
-    name: 'T',
-    description: '',
-    location: '',
+    name: "T",
+    description: "",
+    location: "",
     startDate: new Date(),
     endDate: new Date(),
     status: TournamentStatus.DRAFT,
@@ -42,10 +42,10 @@ const tournamentBase = (): Tournament =>
     rewards: [],
     pricing: {} as any,
     organizers: [],
-    rankings: []
+    rankings: [],
   }) as unknown as Tournament;
 
-describe('TournamentStateService', () => {
+describe("TournamentStateService", () => {
   let service: TournamentStateService;
 
   beforeEach(() => {
@@ -53,21 +53,21 @@ describe('TournamentStateService', () => {
     service = new TournamentStateService(
       mockTournamentRepository as any,
       mockRegistrationRepository as any,
-      mockMatchRepository as any
+      mockMatchRepository as any,
     );
   });
 
-  describe('validateStateTransition', () => {
-    it('returns not found when tournament missing', async () => {
+  describe("validateStateTransition", () => {
+    it("returns not found when tournament missing", async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
       const result = await service.validateStateTransition(
         1,
-        TournamentStatus.IN_PROGRESS
+        TournamentStatus.IN_PROGRESS,
       );
       expect(result.canTransition).toBe(false);
     });
 
-    it('validates allowed transition with warnings', async () => {
+    it("validates allowed transition with warnings", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.REGISTRATION_CLOSED;
       t.minPlayers = 1;
@@ -77,8 +77,8 @@ describe('TournamentStateService', () => {
       t.registrations = [
         {
           status: RegistrationStatus.CONFIRMED,
-          checkedIn: true
-        } as TournamentRegistration
+          checkedIn: true,
+        } as TournamentRegistration,
       ];
       t.matches = [{ round: 1, status: MatchStatus.FINISHED } as Match];
       mockTournamentRepository.findOne.mockResolvedValue(t);
@@ -86,12 +86,12 @@ describe('TournamentStateService', () => {
       mockMatchRepository.count.mockResolvedValue(0);
       const result = await service.validateStateTransition(
         1,
-        TournamentStatus.IN_PROGRESS
+        TournamentStatus.IN_PROGRESS,
       );
       expect(result.canTransition).toBe(true);
     });
 
-    it('adds warning when tournament is almost full', async () => {
+    it("adds warning when tournament is almost full", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.REGISTRATION_CLOSED;
       t.maxPlayers = 10;
@@ -101,18 +101,18 @@ describe('TournamentStateService', () => {
       // Satisfy transition conditions
       mockRegistrationRepository.count.mockResolvedValue(9);
       mockRegistrationRepository.find.mockResolvedValue([
-        { status: RegistrationStatus.CONFIRMED, checkedIn: true } as any
+        { status: RegistrationStatus.CONFIRMED, checkedIn: true } as any,
       ]);
 
       const result = await service.validateStateTransition(
         1,
-        TournamentStatus.IN_PROGRESS
+        TournamentStatus.IN_PROGRESS,
       );
       expect(result.canTransition).toBe(true);
-      expect(result.warnings).toContain('Le tournoi est presque complet');
+      expect(result.warnings).toContain("Le tournoi est presque complet");
     });
 
-    it('fails DRAFT -> REGISTRATION_OPEN when required fields are missing', async () => {
+    it("fails DRAFT -> REGISTRATION_OPEN when required fields are missing", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.DRAFT;
       t.registrationDeadline = undefined as any;
@@ -121,43 +121,43 @@ describe('TournamentStateService', () => {
 
       const result = await service.validateStateTransition(
         1,
-        TournamentStatus.REGISTRATION_OPEN
+        TournamentStatus.REGISTRATION_OPEN,
       );
       expect(result.canTransition).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
-    it('rejects invalid transition', async () => {
+    it("rejects invalid transition", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.DRAFT;
       mockTournamentRepository.findOne.mockResolvedValue(t);
       const result = await service.validateStateTransition(
         1,
-        TournamentStatus.FINISHED
+        TournamentStatus.FINISHED,
       );
       expect(result.canTransition).toBe(false);
     });
   });
 
-  describe('transitionState', () => {
-    it('throws when validation fails', async () => {
-      jest.spyOn(service, 'validateStateTransition').mockResolvedValue({
+  describe("transitionState", () => {
+    it("throws when validation fails", async () => {
+      jest.spyOn(service, "validateStateTransition").mockResolvedValue({
         canTransition: false,
-        errors: ['bad'],
-        warnings: []
+        errors: ["bad"],
+        warnings: [],
       });
       await expect(
-        service.transitionState(1, TournamentStatus.FINISHED)
+        service.transitionState(1, TournamentStatus.FINISHED),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('changes state and executes actions', async () => {
+    it("changes state and executes actions", async () => {
       const t = tournamentBase();
       mockTournamentRepository.findOne.mockResolvedValue(t);
-      jest.spyOn(service, 'validateStateTransition').mockResolvedValue({
+      jest.spyOn(service, "validateStateTransition").mockResolvedValue({
         canTransition: true,
         errors: [],
-        warnings: []
+        warnings: [],
       });
       mockTournamentRepository.findOne.mockResolvedValueOnce(t);
       const saved = { ...t, status: TournamentStatus.FINISHED };
@@ -168,33 +168,33 @@ describe('TournamentStateService', () => {
       const result = await service.transitionState(
         1,
         TournamentStatus.FINISHED,
-        'end'
+        "end",
       );
       expect(result.status).toBe(TournamentStatus.FINISHED);
     });
 
-    it('throws if tournament is missing after successful validation', async () => {
-      jest.spyOn(service, 'validateStateTransition').mockResolvedValue({
+    it("throws if tournament is missing after successful validation", async () => {
+      jest.spyOn(service, "validateStateTransition").mockResolvedValue({
         canTransition: true,
         errors: [],
-        warnings: []
+        warnings: [],
       });
       mockTournamentRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.transitionState(1, TournamentStatus.CANCELLED)
+        service.transitionState(1, TournamentStatus.CANCELLED),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('appends cancellation reason during CANCELLED transition', async () => {
+    it("appends cancellation reason during CANCELLED transition", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.REGISTRATION_OPEN;
-      t.additionalInfo = 'Some info';
+      t.additionalInfo = "Some info";
 
-      jest.spyOn(service, 'validateStateTransition').mockResolvedValue({
+      jest.spyOn(service, "validateStateTransition").mockResolvedValue({
         canTransition: true,
         errors: [],
-        warnings: []
+        warnings: [],
       });
 
       mockTournamentRepository.findOne.mockResolvedValueOnce(t);
@@ -205,59 +205,59 @@ describe('TournamentStateService', () => {
       const result = await service.transitionState(
         1,
         TournamentStatus.CANCELLED,
-        'because'
+        "because",
       );
       expect(result.status).toBe(TournamentStatus.CANCELLED);
-      expect(result.additionalInfo).toContain('Annulé: because');
+      expect(result.additionalInfo).toContain("Annulé: because");
     });
   });
 
-  describe('getStateHistory', () => {
-    it('returns available transitions and descriptions', async () => {
+  describe("getStateHistory", () => {
+    it("returns available transitions and descriptions", async () => {
       const t = tournamentBase();
       t.status = TournamentStatus.DRAFT;
       mockTournamentRepository.findOne.mockResolvedValue(t);
       const history = await service.getStateHistory(1);
       expect(history.availableTransitions.length).toBeGreaterThan(0);
       expect(
-        history.transitionDescriptions[history.availableTransitions[0]]
+        history.transitionDescriptions[history.availableTransitions[0]],
       ).toBeDefined();
     });
 
-    it('throws when tournament not found', async () => {
+    it("throws when tournament not found", async () => {
       mockTournamentRepository.findOne.mockResolvedValue(null);
       await expect(service.getStateHistory(2)).rejects.toThrow(
-        BadRequestException
+        BadRequestException,
       );
     });
   });
 
-  describe('helper behaviors', () => {
-    it('considers check-in requirement when checking players', async () => {
+  describe("helper behaviors", () => {
+    it("considers check-in requirement when checking players", async () => {
       const t = tournamentBase();
-      t.additionalInfo = 'check-in-required';
+      t.additionalInfo = "check-in-required";
       mockRegistrationRepository.find.mockResolvedValue([
-        { status: RegistrationStatus.CONFIRMED, checkedIn: false } as any
+        { status: RegistrationStatus.CONFIRMED, checkedIn: false } as any,
       ]);
       const result = await (service as any).allRequiredPlayersCheckedIn(t);
       expect(result).toBe(false);
     });
 
-    it('returns true for check-in when not required', async () => {
+    it("returns true for check-in when not required", async () => {
       const t = tournamentBase();
-      t.additionalInfo = '';
+      t.additionalInfo = "";
       const result = await (service as any).allRequiredPlayersCheckedIn(t);
       expect(result).toBe(true);
     });
 
-    it('allMatchesCompleted returns false when scheduled matches remain', async () => {
+    it("allMatchesCompleted returns false when scheduled matches remain", async () => {
       const t = tournamentBase();
       mockMatchRepository.count.mockResolvedValue(1);
       const result = await (service as any).allMatchesCompleted(t);
       expect(result).toBe(false);
     });
 
-    it('isLastRoundCompleted returns false when current/total rounds are missing', async () => {
+    it("isLastRoundCompleted returns false when current/total rounds are missing", async () => {
       const t = tournamentBase();
       t.currentRound = undefined as any;
       t.totalRounds = undefined as any;
@@ -268,12 +268,12 @@ describe('TournamentStateService', () => {
     it('returns "Transition inconnue" for unknown transition description', () => {
       const desc = service.getTransitionDescription(
         TournamentStatus.FINISHED,
-        TournamentStatus.REGISTRATION_OPEN
+        TournamentStatus.REGISTRATION_OPEN,
       );
-      expect(desc).toBe('Transition inconnue');
+      expect(desc).toBe("Transition inconnue");
     });
 
-    it('verifies last round completion for elimination', async () => {
+    it("verifies last round completion for elimination", async () => {
       const t = tournamentBase();
       t.type = TournamentType.SINGLE_ELIMINATION;
       t.currentRound = 1;

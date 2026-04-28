@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,15 +98,15 @@ export const ProfileTournaments = () => {
           <Trophy className="w-5 h-5 text-primary" />
           <h2 className="text-xl font-semibold">Mes tournois</h2>
         </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/profile/tournament-history">Historique ELO</Link>
+        </Button>
       </div>
 
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-24 bg-muted animate-pulse rounded-lg"
-            />
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       ) : tournaments.length === 0 ? (
@@ -114,10 +115,7 @@ export const ProfileTournaments = () => {
           <p className="text-muted-foreground">
             Vous n&apos;avez participé à aucun tournoi
           </p>
-          <Button
-            className="mt-4"
-            variant="outline"
-          >
+          <Button className="mt-4" variant="outline">
             Voir les tournois à venir
           </Button>
         </div>
@@ -151,10 +149,7 @@ export const ProfileTournaments = () => {
                 </div>
               </div>
 
-              <Button
-                variant="ghost"
-                size="sm"
-              >
+              <Button variant="ghost" size="sm">
                 Voir détails
               </Button>
             </div>

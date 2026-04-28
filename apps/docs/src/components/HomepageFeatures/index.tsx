@@ -1,18 +1,18 @@
-import type {ReactNode} from 'react';
-import clsx from 'clsx';
-import Heading from '@theme/Heading';
-import styles from './styles.module.css';
+import type { ReactNode } from "react";
+import clsx from "clsx";
+import Heading from "@theme/Heading";
+import styles from "./styles.module.css";
 
 type FeatureItem = {
   title: string;
-  Svg: React.ComponentType<React.ComponentProps<'svg'>>;
+  Svg: React.ComponentType<React.ComponentProps<"svg">>;
   description: ReactNode;
 };
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Monorepo unifié',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: "Monorepo unifié",
+    Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
     description: (
       <>
         Next.js, NestJS, microservice TCGdex et librairies partagées orchestrés
@@ -21,8 +21,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Back-end prêt à l’emploi',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: "Back-end prêt à l’emploi",
+    Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
     description: (
       <>
         API NestJS avec Swagger, validation, guards JWT et scripts de seed pour
@@ -31,8 +31,8 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Ops simplifiés',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: "Ops simplifiés",
+    Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
     description: (
       <>
         Démarrage rapide en Docker ou en local, commandes centralisées et guides
@@ -42,9 +42,9 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({ title, Svg, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className={clsx("col col--4")}>
       <div className="text--center">
         <Svg className={styles.featureSvg} role="img" />
       </div>
