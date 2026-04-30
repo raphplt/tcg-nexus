@@ -6,6 +6,7 @@ import { Card } from "../card/entities/card.entity";
 import { Deck } from "../deck/entities/deck.entity";
 import { SavedDeck } from "../deck/entities/saved-deck.entity";
 import { Player } from "../player/entities/player.entity";
+import { RankingModule } from "../ranking/ranking.module";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { Statistics } from "../statistics/entities/statistic.entity";
 import { Tournament } from "../tournament/entities/tournament.entity";
@@ -34,6 +35,7 @@ import { TrainingMatchController } from "./training-match.controller";
   imports: [
     ConfigModule,
     AuthModule,
+    RankingModule,
     TypeOrmModule.forFeature([
       Match,
       OnlineMatchSession,

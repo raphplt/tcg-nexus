@@ -15,7 +15,6 @@ export enum SeedingMethod {
 export interface SeededPlayer extends Player {
   seed: number;
   ranking?: number;
-  elo?: number;
   score?: number;
 }
 
@@ -155,9 +154,26 @@ export class SeedingService {
    * Seeding basé sur l'ELO (si implémenté)
    */
   private async eloBasedSeeding(players: Player[]): Promise<SeededPlayer[]> {
-    // TODO: Implémenter quand le système ELO sera disponible
-    // Pour l'instant, utilise le ranking
-    return this.rankingBasedSeeding(players);
+    // Fetch fresh player data with elo scores
+    const playerIds = players.map((p) => p.id);
+    const freshPlayers = await this.playerRepository.findByIds(playerIds);
+
+    const eloMap = new Map<number, number>();
+    freshPlayers.forEach((p) => eloMap.set(p.id, p.elo ?? 1000));
+
+    const playersWithElo = players.map((player) => ({
+      ...player,
+      elo: eloMap.get(player.id) ?? 1000,
+      seed: 0,
+    }));
+
+    // Sort by ELO descending
+    playersWithElo.sort((a, b) => (b.elo ?? 1000) - (a.elo ?? 1000));
+
+    return playersWithElo.map((player, index) => ({
+      ...player,
+      seed: index + 1,
+    }));
   }
 
   /**

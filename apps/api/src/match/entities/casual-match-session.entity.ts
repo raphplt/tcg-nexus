@@ -36,6 +36,9 @@ export class CasualMatchSession {
   @Column({ type: "bigint" })
   seed: string;
 
+  @Column({ default: false })
+  isRanked: boolean;
+
   @Column({ type: "int", nullable: true })
   playerADeckId: number | null;
 

@@ -7,7 +7,6 @@ COPY apps/api/package*.json /app/apps/api/
 RUN npm ci --workspace=api
 
 COPY apps/api /app/apps/api
-COPY apps/data /app/apps/data
 COPY data /app/data
 
 WORKDIR /app/apps/api

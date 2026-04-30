@@ -393,4 +393,61 @@ export class RankingService {
 
     return tieBreakers;
   }
+
+  // ── ELO Calculation for Ranked Matches ────────────────────
+
+  private static readonly ELO_K = 32;
+
+  /**
+   * Updates ELO for both players after a ranked match.
+   * @param winnerUserId  User ID of the winner
+   * @param loserUserId   User ID of the loser
+   * @param isDraw        If true, both players get 0.5 instead of 1/0
+   */
+  async updateElo(
+    winnerUserId: number,
+    loserUserId: number,
+    isDraw: boolean = false,
+  ): Promise<{ winnerElo: number; loserElo: number }> {
+    const [winnerPlayer, loserPlayer] = await Promise.all([
+      this.playerRepository.findOne({
+        where: { user: { id: winnerUserId } },
+      }),
+      this.playerRepository.findOne({
+        where: { user: { id: loserUserId } },
+      }),
+    ]);
+
+    if (!winnerPlayer || !loserPlayer) {
+      throw new NotFoundException("Player profile not found for ELO update");
+    }
+
+    const winnerElo = winnerPlayer.elo ?? 1000;
+    const loserElo = loserPlayer.elo ?? 1000;
+
+    const expectedWinner =
+      1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+    const expectedLoser =
+      1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
+
+    const K = RankingService.ELO_K;
+
+    if (isDraw) {
+      winnerPlayer.elo = Math.round(winnerElo + K * (0.5 - expectedWinner));
+      loserPlayer.elo = Math.round(loserElo + K * (0.5 - expectedLoser));
+    } else {
+      winnerPlayer.elo = Math.round(winnerElo + K * (1 - expectedWinner));
+      loserPlayer.elo = Math.round(loserElo + K * (0 - expectedLoser));
+    }
+
+    await Promise.all([
+      this.playerRepository.save(winnerPlayer),
+      this.playerRepository.save(loserPlayer),
+    ]);
+
+    return {
+      winnerElo: winnerPlayer.elo,
+      loserElo: loserPlayer.elo,
+    };
+  }
 }

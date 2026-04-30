@@ -77,9 +77,72 @@ export class MatchOnlineService {
     matchId: number,
     user: User,
   ): Promise<OnlineMatchSessionView> {
-    const { match, slot } = await this.loadMatchForUser(matchId, user.id);
-    const session = await this.findOrCreateSession(match);
-    return this.buildSessionView(match, session, slot);
+    try {
+      const { match, slot } = await this.loadMatchForUser(matchId, user.id);
+      const session = await this.findOrCreateSession(match);
+      return this.buildSessionView(match, session, slot);
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        // Spectator mode: return a read-only view
+        return this.buildSpectatorView(matchId);
+      }
+      throw error;
+    }
+  }
+
+  private async buildSpectatorView(
+    matchId: number,
+  ): Promise<OnlineMatchSessionView> {
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId },
+      relations: [
+        "playerA",
+        "playerA.user",
+        "playerB",
+        "playerB.user",
+        "onlineSession",
+      ],
+    });
+
+    if (!match) {
+      throw new NotFoundException("Match not found");
+    }
+
+    const session = match.onlineSession;
+    if (!session) {
+      throw new NotFoundException("No online session for this match");
+    }
+
+    // Use playerA's ID as viewer to get a neutral state (no hands revealed)
+    const spectatorViewerId = this.getEnginePlayerId(match, "playerA");
+    let gameState: OnlineMatchSessionView["gameState"] = null;
+    if (session.serializedState) {
+      const engine = new GameEngine(
+        session.serializedState as unknown as GameState,
+      );
+      const sanitized = engine.getSanitizedState(spectatorViewerId);
+      // Remove the hand for spectator view (they should not see any player's hand)
+      if (sanitized.players) {
+        for (const pid of Object.keys(sanitized.players)) {
+          (sanitized.players as any)[pid].hand = undefined;
+        }
+      }
+      gameState = sanitized as OnlineMatchSessionView["gameState"];
+    }
+
+    return {
+      matchId: match.id,
+      sessionId: session.id ?? null,
+      status: session.status,
+      slot: "spectator" as any,
+      enginePlayerId: null as any,
+      selectedDeckId: null,
+      opponentDeckReady: true,
+      gameState,
+      recentLog: (session.eventLog || []).slice(
+        -25,
+      ) as unknown as OnlineMatchLogEntry[],
+    };
   }
 
   async upsertSession(
@@ -207,6 +270,57 @@ export class MatchOnlineService {
       events,
       roomState: this.buildRoomState(match, session),
       sessionView: await this.buildSessionView(match, session, slot),
+    };
+  }
+
+  async autoForfeit(matchId: number): Promise<{
+    events: any[];
+    roomState: Record<string, ReturnType<GameEngine["getSanitizedState"]>>;
+  }> {
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId },
+      relations: ["playerA", "playerB", "onlineSession"],
+    });
+
+    if (!match) {
+      throw new NotFoundException("Match not found");
+    }
+
+    const session = await this.requireActiveSession(match);
+    const engine = new GameEngine(
+      session.serializedState as unknown as GameState,
+    );
+
+    const state = engine.getState();
+    const activePlayerId = state.activePlayerId;
+
+    if (!activePlayerId) {
+      return { events: [], roomState: this.buildRoomState(match, session) };
+    }
+
+    const action: PlayerAction = {
+      playerId: activePlayerId,
+      type: "SURRENDER" as any,
+    };
+
+    const events = engine.dispatch(action);
+
+    await this.persistEngineResult(
+      match,
+      session,
+      engine,
+      events,
+      activePlayerId,
+      {
+        type: "PLAYER_ACTION",
+        action,
+        reason: "AUTO_FORFEIT_TIMEOUT",
+      },
+    );
+
+    return {
+      events,
+      roomState: this.buildRoomState(match, session),
     };
   }
 

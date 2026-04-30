@@ -1,10 +1,18 @@
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { DeckAnalysis } from "@/types/deck-analysis";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, BarChart3, Loader2, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  BarChart3,
+  ExternalLink,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 
 interface DeckAnalysisProps {
   analysis: DeckAnalysis | null;
@@ -185,6 +193,9 @@ export function DeckAnalysisCard({
   error,
   onAnalyze,
 }: DeckAnalysisProps) {
+  const { id } = useParams();
+  const deckId = id as string;
+
   return (
     <Card className="border-primary/20 shadow-sm">
       <CardHeader className="flex flex-col gap-2">
@@ -205,6 +216,17 @@ export function DeckAnalysisCard({
         <p className="text-sm text-muted-foreground">
           Obtenez des recommandations rapides sur l'équilibre de ce deck.
         </p>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="w-full justify-center"
+        >
+          <Link href={`/decks/${deckId}/analysis`}>
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Voir l'analyse complète
+          </Link>
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (

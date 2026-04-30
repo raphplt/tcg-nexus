@@ -81,7 +81,10 @@ describe("MatchService", () => {
 
   const mockPlayerA: Player = {
     id: 1,
-    user: mockUser, // Name is derived from User
+    xp: 0,
+    level: 1,
+    elo: 1000,
+    user: mockUser,
     tournaments: [],
     statistics: [],
     rankings: [],
