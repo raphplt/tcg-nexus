@@ -88,8 +88,6 @@ describe("MatchService", () => {
     tournaments: [],
     statistics: [],
     rankings: [],
-    xp: 0,
-    level: 1,
   };
 
   const mockPlayerB: Player = { ...mockPlayerA, id: 2 };
