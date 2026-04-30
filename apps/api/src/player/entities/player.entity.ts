@@ -23,6 +23,9 @@ export class Player {
   @Column({ default: 1 })
   level: number;
 
+  @Column({ default: 1000 })
+  elo: number;
+
   @OneToOne(
     () => User,
     (user) => user.player,

@@ -11,6 +11,7 @@ import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
 import { User } from "../../user/entities/user.entity";
+import { RankingService } from "../../ranking/ranking.service";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
@@ -42,6 +43,7 @@ export class CasualMatchService {
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
+    private readonly rankingService: RankingService,
   ) {}
 
   async getLobby(user: User): Promise<CasualLobbyView> {
@@ -90,6 +92,7 @@ export class CasualMatchService {
   async createSession(
     playerAUser: User,
     playerBUser: User,
+    isRanked: boolean = false,
   ): Promise<CasualMatchSession> {
     const seed = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
 
@@ -102,6 +105,7 @@ export class CasualMatchService {
       playerBDeckId: null,
       winnerUserId: null,
       endedReason: null,
+      isRanked,
       serializedState: null,
       eventLog: [],
     });
@@ -322,6 +326,7 @@ export class CasualMatchService {
         : Boolean(session.playerBDeckId),
       turnNumber,
       awaitingPlayerAction,
+      isRanked: session.isRanked,
       updatedAt: session.updatedAt.toISOString(),
       createdAt: session.createdAt.toISOString(),
     };
@@ -360,6 +365,7 @@ export class CasualMatchService {
       opponentName: this.getDisplayName(opponent),
       winnerUserId: session.winnerUserId,
       endedReason: session.endedReason,
+      isRanked: session.isRanked,
       gameState,
       recentLog: (session.eventLog || []).slice(
         -25,
@@ -374,6 +380,19 @@ export class CasualMatchService {
       session.status = CasualMatchSessionStatus.FINISHED;
       session.winnerUserId = Number(state.winnerId) || null;
       session.endedReason = state.winnerReason;
+
+      // Trigger ELO update for ranked matches (fire-and-forget)
+      if (session.isRanked && session.winnerUserId) {
+        const loserId =
+          session.playerA.id === session.winnerUserId
+            ? session.playerB.id
+            : session.playerA.id;
+        this.rankingService
+          .updateElo(session.winnerUserId, loserId)
+          .catch((err) =>
+            console.error("Failed to update ELO after ranked match", err),
+          );
+      }
       return;
     }
 

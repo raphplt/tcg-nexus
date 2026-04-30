@@ -122,17 +122,27 @@ export class GameEngine {
       throw new Error("Setup must be resolved through prompts");
     }
 
-    if (this.state.pendingPrompt) {
+    if (
+      this.state.activePlayerId !== action.playerId &&
+      action.type !== "SURRENDER"
+    ) {
+      throw new Error("Not your turn");
+    }
+
+    if (this.state.pendingPrompt && action.type !== "SURRENDER") {
       throw new Error(
         "A prompt must be resolved before playing another action",
       );
     }
 
-    if (this.state.activePlayerId !== action.playerId) {
-      throw new Error("Not your turn");
-    }
-
     switch (action.type) {
+      case "SURRENDER":
+        this.finishGame(
+          this.getOpponentId(action.playerId),
+          GameFinishedReason.Forfeit,
+          events,
+        );
+        break;
       case "PLAY_POKEMON_TO_BENCH":
         this.playPokemonToBench(action as PlayPokemonAction, events);
         break;
@@ -1513,7 +1523,17 @@ export class GameEngine {
       | "AFTER_CHECKUP_PROMOTION",
   ) {
     for (const playerId of this.state.playerIds) {
-      const activePokemon = this.state.players[playerId].active;
+      const player = this.state.players[playerId];
+
+      const knockedOutBench = player.bench.filter(
+        (p) => p.damageCounters >= p.baseCard.hp,
+      );
+      for (const pokemon of knockedOutBench) {
+        this.knockOutBenchPokemon(playerId, pokemon.instanceId, events);
+        if (this.state.gamePhase === GamePhase.Finished) return;
+      }
+
+      const activePokemon = player.active;
       if (!activePokemon) {
         continue;
       }
@@ -1531,6 +1551,54 @@ export class GameEngine {
     }
   }
 
+  private knockOutBenchPokemon(
+    playerId: string,
+    instanceId: string,
+    events: any[],
+  ) {
+    const player = this.state.players[playerId];
+    const index = player.bench.findIndex((p) => p.instanceId === instanceId);
+    if (index === -1) return;
+    const [knockedOutPokemon] = player.bench.splice(index, 1);
+
+    const discardCards = [
+      ...knockedOutPokemon.attachedEvolutions.map((p) => ({
+        instanceId: p.instanceId,
+        ownerId: p.ownerId,
+        baseCard: p.baseCard,
+      })),
+      {
+        instanceId: knockedOutPokemon.instanceId,
+        ownerId: knockedOutPokemon.ownerId,
+        baseCard: knockedOutPokemon.baseCard,
+      },
+      ...knockedOutPokemon.attachedTools.map((t) => ({
+        instanceId: t.instanceId,
+        ownerId: t.ownerId,
+        baseCard: t.baseCard,
+      })),
+      ...knockedOutPokemon.attachedEnergies.map((e) => ({
+        instanceId: e.instanceId,
+        ownerId: e.ownerId,
+        baseCard: e.baseCard,
+      })),
+    ];
+    player.discard.push(...discardCards);
+
+    events.push({
+      type: "POKEMON_KNOCKED_OUT",
+      playerId,
+      targetInstanceId: knockedOutPokemon.instanceId,
+    });
+
+    const opponentId = this.getOpponentId(playerId);
+    const staticPrizes = knockedOutPokemon.baseCard.prizeCards || 1;
+    const extraPrizes = this.state.pendingExtraPrizes[opponentId] ?? 0;
+    this.state.pendingExtraPrizes[opponentId] = 0;
+
+    this.takePrizeCards(opponentId, staticPrizes + extraPrizes, events);
+  }
+
   private knockOutActivePokemon(
     playerId: string,
     events: any[],
@@ -1546,12 +1614,29 @@ export class GameEngine {
     }
 
     player.active = null;
-    player.discard.push(
-      ...knockedOutPokemon.attachedEvolutions,
-      knockedOutPokemon,
-      ...knockedOutPokemon.attachedTools,
-      ...knockedOutPokemon.attachedEnergies,
-    );
+    const discardCards = [
+      ...knockedOutPokemon.attachedEvolutions.map((p) => ({
+        instanceId: p.instanceId,
+        ownerId: p.ownerId,
+        baseCard: p.baseCard,
+      })),
+      {
+        instanceId: knockedOutPokemon.instanceId,
+        ownerId: knockedOutPokemon.ownerId,
+        baseCard: knockedOutPokemon.baseCard,
+      },
+      ...knockedOutPokemon.attachedTools.map((t) => ({
+        instanceId: t.instanceId,
+        ownerId: t.ownerId,
+        baseCard: t.baseCard,
+      })),
+      ...knockedOutPokemon.attachedEnergies.map((e) => ({
+        instanceId: e.instanceId,
+        ownerId: e.ownerId,
+        baseCard: e.baseCard,
+      })),
+    ];
+    player.discard.push(...discardCards);
 
     events.push({
       type: "POKEMON_KNOCKED_OUT",

@@ -35,6 +35,7 @@ export class MatchmakingService {
   async joinQueue(
     userId: number,
     deckId: number,
+    isRanked: boolean = false,
   ): Promise<MatchmakingResult | null> {
     if (this.queue.has(userId)) {
       this.queue.delete(userId);
@@ -53,6 +54,7 @@ export class MatchmakingService {
       userName,
       deckId,
       joinedAt: Date.now(),
+      isRanked,
     });
 
     this.logger.log(
@@ -81,10 +83,10 @@ export class MatchmakingService {
       return null;
     }
 
-    // Find the first other player in the queue
+    // Find the first other player in the queue with matching ranked mode
     let opponent: QueueEntry | null = null;
     for (const [uid, entry] of this.queue) {
-      if (uid !== requesterId) {
+      if (uid !== requesterId && entry.isRanked === requesterEntry.isRanked) {
         opponent = entry;
         break;
       }
@@ -107,9 +109,11 @@ export class MatchmakingService {
       this.userRepository.findOneOrFail({ where: { id: opponent.userId } }),
     ]);
 
+    const isRanked = requesterEntry.isRanked && opponent.isRanked;
     const session = await this.casualMatchService.createSession(
       playerAUser,
       playerBUser,
+      isRanked,
     );
 
     // Auto-select decks since both players chose one when joining the queue

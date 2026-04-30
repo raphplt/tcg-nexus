@@ -7,6 +7,7 @@ export enum ActionType {
   RETREAT = "RETREAT",
   END_TURN = "END_TURN",
   PASS = "PASS", // e.g. when asked to do something optional
+  SURRENDER = "SURRENDER",
 }
 
 export interface PlayerAction {
@@ -59,3 +60,8 @@ export interface RetreatAction extends PlayerAction {
     discardedEnergyInstanceIds: string[];
   };
 }
+
+export interface SurrenderAction extends PlayerAction {
+  type: ActionType.SURRENDER;
+}
+

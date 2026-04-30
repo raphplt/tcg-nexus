@@ -41,6 +41,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
+  private inactivityTimers = new Map<number, NodeJS.Timeout>();
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -61,9 +63,41 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (client.data.user) {
       this.matchmakingService.leaveQueue(client.data.user.id);
     }
+    const matchId = client.data.currentMatchId;
+    if (matchId) {
+      this.startInactivityTimer(matchId);
+    }
+
     client.data.currentMatchId = undefined;
     client.data.currentCasualSessionId = undefined;
     client.data.enginePlayerId = undefined;
+  }
+
+  private startInactivityTimer(matchId: number) {
+    if (this.inactivityTimers.has(matchId)) {
+      clearTimeout(this.inactivityTimers.get(matchId));
+    }
+
+    const timer = setTimeout(async () => {
+      this.inactivityTimers.delete(matchId);
+      try {
+        const result = await this.matchOnlineService.autoForfeit(matchId);
+        if (result.events.length > 0) {
+          await this.broadcastMatchState(matchId, result.events);
+        }
+      } catch (e) {
+        // match might already be finished or no longer valid
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    this.inactivityTimers.set(matchId, timer);
+  }
+
+  private clearInactivityTimer(matchId: number) {
+    if (this.inactivityTimers.has(matchId)) {
+      clearTimeout(this.inactivityTimers.get(matchId));
+      this.inactivityTimers.delete(matchId);
+    }
   }
 
   // ── Tournament match events ──
@@ -79,18 +113,26 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       user as User,
     );
     const roomId = this.getRoomId(Number(data.matchId));
+    const isSpectator = sessionView.slot === ("spectator" as any);
 
     client.join(roomId);
     client.data.currentMatchId = Number(data.matchId);
-    client.data.enginePlayerId = sessionView.enginePlayerId;
+    client.data.enginePlayerId = isSpectator
+      ? null
+      : sessionView.enginePlayerId;
 
     client.emit("session_view", sessionView);
     client.emit("state_update", sessionView.gameState);
 
+    // Only clear inactivity timer for actual players reconnecting
+    if (!isSpectator) {
+      this.clearInactivityTimer(Number(data.matchId));
+    }
+
     return {
-      status: "joined",
+      status: isSpectator ? "spectating" : "joined",
       matchId: Number(data.matchId),
-      enginePlayerId: sessionView.enginePlayerId,
+      enginePlayerId: isSpectator ? null : sessionView.enginePlayerId,
     };
   }
 
@@ -144,7 +186,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage("matchmaking_join")
   async handleMatchmakingJoin(
-    @MessageBody() data: { deckId: number },
+    @MessageBody() data: { deckId: number; isRanked?: boolean },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
@@ -159,6 +201,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const result = await this.matchmakingService.joinQueue(
         user.id,
         Number(data.deckId),
+        Boolean(data.isRanked),
       );
 
       if (result) {
