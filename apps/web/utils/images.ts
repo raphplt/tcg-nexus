@@ -68,6 +68,12 @@ export const remotePatterns: RemotePattern[] = [
   },
   {
     protocol: "https",
+    hostname: "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev",
+    port: "",
+    pathname: "/**",
+  },
+  {
+    protocol: "https",
     hostname: "www.pokecardex.com",
     port: "",
     pathname: "/**",
