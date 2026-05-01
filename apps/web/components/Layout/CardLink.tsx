@@ -10,11 +10,8 @@ type CardLinkProps = {
 
 const CardLink = ({ title, description, link, icon }: CardLinkProps) => {
   return (
-    <a
-      href={link}
-      className="block w-full md:w-1/4 transition-transform hover:scale-105"
-    >
-      <Card className="h-full bg-opacity-50 bg-background backdrop-blur-md cursor-pointer hover:shadow-lg transition-shadow">
+    <a href={link} className="block w-full md:w-1/4">
+      <Card className="card-hover h-full cursor-pointer">
         <CardHeader className="flex flex-row items-center gap-2 mb-4">
           {icon}
           <h2 className="text-2xl font-bold text-center">{title}</h2>

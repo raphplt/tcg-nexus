@@ -5,7 +5,7 @@ import { myCollection } from "./homeMocks";
 import Image from "next/image";
 
 const MyCollection = () => (
-  <Card className="bg-card rounded-xl shadow p-6 mt-8">
+  <Card className="p-6 mt-8">
     <H2 className="mb-4">Ma collection</H2>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {myCollection.map((card, i) => (

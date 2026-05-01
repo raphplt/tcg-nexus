@@ -35,7 +35,7 @@ const LatestArticles = () => {
   });
 
   return (
-    <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
+    <Card className="p-6 mt-8">
       <H2 className="mb-4">Derniers articles</H2>
       {isLoading && <div>Chargement...</div>}
       {error && (
@@ -50,7 +50,7 @@ const LatestArticles = () => {
             href={article.link || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded-lg overflow-hidden border bg-background shadow hover:shadow-lg hover:scale-[1.02] transition group"
+            className="card-hover block rounded-md overflow-hidden border bg-background group"
           >
             <div className="relative h-32 w-full">
               {article.image ? (

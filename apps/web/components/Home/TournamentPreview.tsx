@@ -15,7 +15,7 @@ const TournamentPreview = () => {
   });
 
   return (
-    <Card className="bg-card rounded-xl shadow p-6">
+    <Card className="p-6">
       <H2 className="mb-4">Derniers tournois</H2>
       {isLoading && (
         <div className="flex items-center justify-center py-8 text-muted-foreground">

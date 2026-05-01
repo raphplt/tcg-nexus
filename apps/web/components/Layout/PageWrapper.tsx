@@ -17,9 +17,9 @@ const maxWidthMap: Record<string, string> = {
 };
 
 const gradientMap: Record<string, string> = {
-  primary: "bg-linear-to-br from-primary/10 via-secondary/5 to-secondary/20",
-  secondary: "bg-linear-to-br from-secondary/10 to-primary/10",
-  muted: "bg-linear-to-br from-muted via-background to-accent/20",
+  primary: "page-bg",
+  secondary: "page-bg",
+  muted: "page-bg",
   none: "",
 };
 

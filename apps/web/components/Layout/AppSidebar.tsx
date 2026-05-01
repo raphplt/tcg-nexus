@@ -64,8 +64,8 @@ export function AppSidebar() {
   };
 
   const activeClass =
-    "bg-sidebar-primary text-sidebar-primary-foreground shadow-[4px_4px_0px_0px] shadow-border font-semibold";
-  const inactiveClass = "hover:translate-x-0.5 transition-transform";
+    "bg-sidebar-primary text-sidebar-primary-foreground font-semibold";
+  const inactiveClass = "transition-colors";
 
   const renderNavItem = (item: NavItem) => {
     if (item.subItems && item.subItems.length > 0) {
@@ -131,8 +131,8 @@ export function AppSidebar() {
     });
 
   return (
-    <Sidebar collapsible="icon" className="border-r-2 border-border">
-      <SidebarHeader className="border-b-2 border-border p-4 group-data-[collapsible=icon]:p-2">
+    <Sidebar collapsible="icon" className="border-r border-border">
+      <SidebarHeader className="border-b border-border p-4 group-data-[collapsible=icon]:p-2">
         <Link
           href="/"
           className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0"
@@ -193,7 +193,7 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t-2 border-border">
+      <SidebarFooter className="border-t border-border">
         {isAuthenticated && user ? (
           <SidebarMenu>
             <SidebarMenuItem>
