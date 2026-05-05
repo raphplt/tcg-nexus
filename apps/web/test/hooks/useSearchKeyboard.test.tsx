@@ -2,21 +2,23 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSearchKeyboard } from "@/hooks/useSearchKeyboard";
 
+import type { Mock } from "vitest";
+
 type Handlers = {
-  onOpen: ReturnType<typeof vi.fn<() => void>>;
-  onClose: ReturnType<typeof vi.fn<() => void>>;
-  onSelect: ReturnType<typeof vi.fn<(index: number) => void>>;
-  onSelectedIndexChange: ReturnType<typeof vi.fn<(index: number) => void>>;
+  onOpen: Mock;
+  onClose: Mock;
+  onSelect: Mock;
+  onSelectedIndexChange: Mock;
 };
 
 const setup = (
   overrides: Partial<Parameters<typeof useSearchKeyboard>[0]> = {},
 ) => {
   const handlers: Handlers = {
-    onOpen: vi.fn<() => void>(),
-    onClose: vi.fn<() => void>(),
-    onSelect: vi.fn<(index: number) => void>(),
-    onSelectedIndexChange: vi.fn<(index: number) => void>(),
+    onOpen: vi.fn(),
+    onClose: vi.fn(),
+    onSelect: vi.fn(),
+    onSelectedIndexChange: vi.fn(),
   };
 
   renderHook(() =>

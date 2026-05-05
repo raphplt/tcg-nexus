@@ -7,7 +7,7 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 const StrategicToolsPreview = () => (
-  <Card className="bg-card rounded-xl shadow p-6">
+  <Card className="p-6">
     <H2 className="mb-4">Outils stratégiques</H2>
     <div className="relative h-32 rounded-lg overflow-hidden mb-4 border bg-background group">
       <Image

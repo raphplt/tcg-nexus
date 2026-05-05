@@ -104,9 +104,7 @@ export function TournamentHeroBanner({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-primary/10 via-background to-secondary/10 border">
-      <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,transparent,black)]" />
-
+    <div className="panel-hero relative overflow-hidden">
       <div className="relative p-6 md:p-8">
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Badge variant="outline" className={`${statusColor} font-medium`}>
@@ -142,7 +140,6 @@ export function TournamentHeroBanner({
               size="lg"
               disabled={!registrationOpen || !user}
               onClick={onRegister}
-              className="shadow-lg"
             >
               {registrationOpen
                 ? "S'inscrire au tournoi"
@@ -212,21 +209,21 @@ export function TournamentHeroBanner({
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-6 max-w-md">
-          <Card className="bg-background/50 backdrop-blur">
+          <Card className="surface-muted">
             <CardContent className="p-3 text-center">
               <Users className="size-5 mx-auto mb-1 text-primary" />
               <p className="text-lg font-bold">{participantCount}</p>
               <p className="text-xs text-muted-foreground">/ {maxPlayers}</p>
             </CardContent>
           </Card>
-          <Card className="bg-background/50 backdrop-blur">
+          <Card className="surface-muted">
             <CardContent className="p-3 text-center">
               <Swords className="size-5 mx-auto mb-1 text-primary" />
               <p className="text-lg font-bold">{matchesCount}</p>
               <p className="text-xs text-muted-foreground">matches</p>
             </CardContent>
           </Card>
-          <Card className="bg-background/50 backdrop-blur">
+          <Card className="surface-muted">
             <CardContent className="p-3 text-center">
               <Trophy className="size-5 mx-auto mb-1 text-primary" />
               <p className="text-lg font-bold">

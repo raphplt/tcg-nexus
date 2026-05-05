@@ -12,7 +12,7 @@ export default function SidebarLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <SidebarInset className="min-w-0">
         <TopBar />

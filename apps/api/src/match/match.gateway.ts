@@ -78,17 +78,20 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
       clearTimeout(this.inactivityTimers.get(matchId));
     }
 
-    const timer = setTimeout(async () => {
-      this.inactivityTimers.delete(matchId);
-      try {
-        const result = await this.matchOnlineService.autoForfeit(matchId);
-        if (result.events.length > 0) {
-          await this.broadcastMatchState(matchId, result.events);
+    const timer = setTimeout(
+      async () => {
+        this.inactivityTimers.delete(matchId);
+        try {
+          const result = await this.matchOnlineService.autoForfeit(matchId);
+          if (result.events.length > 0) {
+            await this.broadcastMatchState(matchId, result.events);
+          }
+        } catch (e) {
+          // match might already be finished or no longer valid
         }
-      } catch (e) {
-        // match might already be finished or no longer valid
-      }
-    }, 5 * 60 * 1000); // 5 minutes
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
 
     this.inactivityTimers.set(matchId, timer);
   }

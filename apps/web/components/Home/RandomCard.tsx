@@ -101,7 +101,7 @@ const RandomCard = () => {
   };
 
   return (
-    <Card className="bg-card rounded-xl shadow p-6 flex flex-col items-center">
+    <Card className="p-6 flex flex-col items-center">
       <H2 className="mb-4">Carte au hasard</H2>
       {isLoading && <div>Chargement...</div>}
       {error && (

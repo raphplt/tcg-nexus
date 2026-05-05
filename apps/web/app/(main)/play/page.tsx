@@ -525,12 +525,12 @@ function PlayPageContent() {
               <h1 className="text-3xl font-black leading-tight">
                 Votre compte n’est pas encore prêt pour le jeu en ligne.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-600">
+              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 Il manque encore un profil joueur exploitable pour ouvrir vos
                 tables et lancer des parties.
               </p>
             </div>
-            <Button asChild className="rounded-full">
+            <Button asChild className="">
               <Link href="/profile">
                 Ouvrir mon profil
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -581,7 +581,7 @@ function PlayPageContent() {
               >
                 <span>{tab.label}</span>
                 {tabCounts[tab.id] > 0 ? (
-                  <span className="ml-2 rounded-full bg-slate-900/8 px-2 py-0.5 text-xs text-slate-500">
+                  <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                     {tabCounts[tab.id]}
                   </span>
                 ) : null}
@@ -634,26 +634,22 @@ function PlayHeader({
   secondaryMetricsLoading: boolean;
 }) {
   return (
-    <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play border-slate-200/70">
+    <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play border-border">
       <CardContent className="space-y-5 p-5 md:p-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Jouer
             </p>
-            <h1 className="text-3xl font-black leading-tight text-slate-950 md:text-[2.5rem]">
+            <h1 className="text-3xl font-black leading-tight text-foreground md:text-[2.5rem]">
               Jouer
             </h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
+            <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
               Tournois, entraînement et duel en ligne.
             </p>
           </div>
 
-          <Button
-            asChild
-            variant="outline"
-            className="rounded-full border-slate-200 bg-white/80 backdrop-blur-sm"
-          >
+          <Button asChild variant="outline" className="">
             <Link href="/decks/me">
               Gérer mes decks
               <Layers3 className="ml-2 h-4 w-4" />
@@ -701,18 +697,18 @@ function HeaderMetric({
 }) {
   return (
     <div className="tcg-play-stat flex min-w-[180px] flex-1 items-center gap-3 px-4 py-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/85 text-slate-700 shadow-sm">
+      <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted text-foreground">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0 space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {label}
         </p>
         <div className="flex items-end gap-2">
-          <p className="text-2xl font-black leading-none text-slate-950">
+          <p className="text-2xl font-black leading-none text-foreground">
             {value}
           </p>
-          <p className="pb-0.5 text-sm text-slate-500">{detail}</p>
+          <p className="pb-0.5 text-sm text-muted-foreground">{detail}</p>
         </div>
       </div>
     </div>
@@ -733,10 +729,10 @@ function PlayResumeStrip({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
             En cours
           </p>
-          <h2 className="text-2xl font-black text-slate-950">À reprendre</h2>
+          <h2 className="text-2xl font-black text-foreground">À reprendre</h2>
         </div>
         {isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Actualisation...
           </div>
@@ -752,7 +748,7 @@ function PlayResumeStrip({
       ) : isLoading ? (
         <div className="grid gap-4 xl:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-44 rounded-3xl" />
+            <Skeleton key={index} className="h-44" />
           ))}
         </div>
       ) : (
@@ -782,15 +778,17 @@ function ResumeCard({ item }: { item: ResumeItem }) {
             {item.statusLabel}
           </Badge>
           <div className="space-y-1">
-            <h3 className="text-xl font-bold leading-tight text-slate-950">
+            <h3 className="text-xl font-bold leading-tight text-foreground">
               {item.title}
             </h3>
-            <p className="text-sm leading-6 text-slate-600">{item.subtitle}</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {item.subtitle}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Clock3 className="h-4 w-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock3 className="h-4 w-4 text-muted-foreground" />
           <span>
             {item.updatedAt
               ? `Dernière activité ${formatPlayDate(item.updatedAt)}`
@@ -798,11 +796,11 @@ function ResumeCard({ item }: { item: ResumeItem }) {
           </span>
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-200/70 pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
             {getResumeContextLabel(item.kind)}
           </p>
-          <Button asChild size="sm" className="rounded-full">
+          <Button asChild size="sm" className="">
             <Link href={item.href}>
               {item.actionLabel}
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -852,18 +850,18 @@ function PlayTournamentTab({
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
               Matches
             </p>
-            <h2 className="text-2xl font-black text-slate-950">Tournois</h2>
-            <p className="max-w-2xl text-sm leading-6 text-slate-600">
+            <h2 className="text-2xl font-black text-foreground">Tournois</h2>
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
               Consultez vos matches par statut.
             </p>
           </div>
           <div className="relative w-full max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Rechercher un tournoi, un adversaire ou un match"
-              className="h-11 rounded-full border-slate-200 bg-slate-50 pl-9 shadow-none"
+              className="h-11 rounded-full border-border bg-muted pl-9 shadow-none"
             />
           </div>
         </div>
@@ -961,8 +959,8 @@ function MatchSection({
   return (
     <section className="space-y-3">
       <div className="space-y-1">
-        <h3 className="text-lg font-bold text-slate-950">{title}</h3>
-        <p className="text-sm leading-6 text-slate-500">{description}</p>
+        <h3 className="text-lg font-bold text-foreground">{title}</h3>
+        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       <div className="space-y-3">{children}</div>
     </section>
@@ -981,26 +979,26 @@ function PlayerMatchCard({
   return (
     <Card
       className={cn(
-        "tcg-surface tcg-surface--hover border-slate-200/80",
-        compact && "bg-slate-50/70",
+        "tcg-surface tcg-surface--hover border-border",
+        compact && "bg-muted/40",
       )}
     >
       <CardContent className={cn("space-y-4", compact ? "p-4" : "p-5")}>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {record.match.tournamentName}
             </p>
             <div className="space-y-1">
               <h3
                 className={cn(
-                  "font-bold leading-tight text-slate-950",
+                  "font-bold leading-tight text-foreground",
                   compact ? "text-lg" : "text-2xl",
                 )}
               >
                 vs {record.opponentName}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 {formatPhase(record.match.phase)} • Round {record.match.round}
               </p>
             </div>
@@ -1011,9 +1009,9 @@ function PlayerMatchCard({
           </Badge>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5">
-            <Clock3 className="h-4 w-4 text-slate-400" />
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5">
+            <Clock3 className="h-4 w-4 text-muted-foreground" />
             <span>
               {activity.label} {activity.value}
             </span>
@@ -1027,14 +1025,12 @@ function PlayerMatchCard({
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200/70 pt-3">
-          <p className="text-xs text-slate-500">Match #{record.match.id}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+          <p className="text-xs text-muted-foreground">
+            Match #{record.match.id}
+          </p>
           <div className="flex flex-wrap gap-3">
-            <Button
-              asChild
-              size={compact ? "sm" : "default"}
-              className="rounded-full"
-            >
+            <Button asChild size={compact ? "sm" : "default"} className="">
               <Link
                 href={`/tournaments/${record.match.tournamentId}/matches/${record.match.id}`}
               >
@@ -1046,7 +1042,7 @@ function PlayerMatchCard({
               asChild
               variant="outline"
               size={compact ? "sm" : "default"}
-              className="rounded-full"
+              className=""
             >
               <Link href={`/tournaments/${record.match.tournamentId}`}>
                 Voir le tournoi
@@ -1172,7 +1168,7 @@ function PlayTrainingTab({
 
   return (
     <div className="space-y-5">
-      <Card className="tcg-surface border-slate-200/80">
+      <Card className="tcg-surface border-border">
         <CardContent className="space-y-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
@@ -1180,10 +1176,10 @@ function PlayTrainingTab({
                 IA
               </p>
               <div className="space-y-1">
-                <h2 className="text-2xl font-black text-slate-950">
+                <h2 className="text-2xl font-black text-foreground">
                   Entraînement
                 </h2>
-                <p className="max-w-3xl text-sm leading-6 text-slate-600">
+                <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
                   Sélectionnez un deck, un adversaire IA et une difficulté.
                 </p>
               </div>
@@ -1200,14 +1196,14 @@ function PlayTrainingTab({
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Deck joueur
                   </p>
                   <Select
                     value={selectedDeckId?.toString() ?? ""}
                     onValueChange={(value) => setSelectedDeckId(Number(value))}
                   >
-                    <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-slate-50 shadow-none">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue placeholder="Choisir un deck" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1224,14 +1220,14 @@ function PlayTrainingTab({
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Preset IA
                   </p>
                   <Select
                     value={selectedPresetId}
                     onValueChange={setSelectedPresetId}
                   >
-                    <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-slate-50 shadow-none">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue placeholder="Choisir un preset" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1245,7 +1241,7 @@ function PlayTrainingTab({
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Difficulté
                   </p>
                   <Select
@@ -1254,7 +1250,7 @@ function PlayTrainingTab({
                       setSelectedDifficulty(value as TrainingDifficulty)
                     }
                   >
-                    <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-slate-50 shadow-none">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue placeholder="Choisir un niveau" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1270,30 +1266,30 @@ function PlayTrainingTab({
 
               <div className="tcg-note-card flex flex-col justify-between gap-4 p-4">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-slate-600">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Preset sélectionné
                     </p>
                   </div>
                   {selectedPreset ? (
                     <div className="space-y-1">
-                      <p className="font-semibold text-slate-950">
+                      <p className="font-semibold text-foreground">
                         {selectedPreset.name}
                       </p>
-                      <p className="text-sm leading-6 text-slate-500">
+                      <p className="text-sm leading-6 text-muted-foreground">
                         {selectedPreset.cardCount} cartes supportées.
                       </p>
                     </div>
                   ) : (
-                    <p className="text-sm leading-6 text-slate-500">
+                    <p className="text-sm leading-6 text-muted-foreground">
                       Choisissez un preset pour lancer la partie.
                     </p>
                   )}
                 </div>
 
                 <Button
-                  className="w-full rounded-full"
+                  className="w-full"
                   disabled={
                     createSessionMutation.isPending ||
                     !selectedDeckId ||
@@ -1319,7 +1315,7 @@ function PlayTrainingTab({
             <PlaySoftState
               message="Aucun deck compatible pour l’entraînement."
               action={
-                <Button asChild className="rounded-full">
+                <Button asChild className="">
                   <Link href="/decks/me">
                     Ouvrir mes decks
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -1336,10 +1332,10 @@ function PlayTrainingTab({
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Sessions
                 </p>
-                <h3 className="mt-1 text-xl font-bold text-slate-950">
+                <h3 className="mt-1 text-xl font-bold text-foreground">
                   Entraînement
                 </h3>
               </div>
@@ -1368,8 +1364,8 @@ function PlayTrainingTab({
           <Card className="tcg-surface">
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4 text-slate-500" />
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <Bot className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Incompatibilités
                 </p>
               </div>
@@ -1379,16 +1375,16 @@ function PlayTrainingTab({
                     key={deck.deckId}
                     className="tcg-note-card space-y-2 p-4"
                   >
-                    <p className="font-semibold text-slate-950">
+                    <p className="font-semibold text-foreground">
                       {deck.deckName}
                     </p>
-                    <p className="text-sm leading-6 text-slate-500">
+                    <p className="text-sm leading-6 text-muted-foreground">
                       {deck.reasons[0]?.message || "Deck non supporté."}
                     </p>
                   </div>
                 ))}
               </div>
-              <Button asChild variant="outline" className="w-full rounded-full">
+              <Button asChild variant="outline" className="w-full">
                 <Link href="/decks/me">
                   Corriger mes decks
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -1407,10 +1403,10 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-semibold text-slate-950">
+          <p className="font-semibold text-foreground">
             {session.aiDeckPresetName}
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             IA {difficultyLabels[session.aiDifficulty]} • Tour{" "}
             {session.turnNumber}
           </p>
@@ -1420,9 +1416,9 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
         </Badge>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <span>Mise à jour {formatPlayDate(session.updatedAt)}</span>
-        <Button asChild variant="outline" className="rounded-full">
+        <Button asChild variant="outline" className="">
           <Link href={`/play/training/${session.sessionId}`}>
             Continuer
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -1604,10 +1600,10 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Sessions
                 </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-950">
+                <h2 className="mt-1 text-2xl font-black text-foreground">
                   Duel
                 </h2>
               </div>
@@ -1626,7 +1622,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
         </Card>
       ) : null}
 
-      <Card className="tcg-surface border-slate-200/80">
+      <Card className="tcg-surface border-border">
         <CardContent className="space-y-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
@@ -1636,16 +1632,16 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 </p>
                 <Badge variant="outline">En ligne</Badge>
               </div>
-              <h2 className="text-2xl font-black leading-tight text-slate-950">
+              <h2 className="text-2xl font-black leading-tight text-foreground">
                 Recherche de partie
               </h2>
-              <p className="max-w-2xl text-sm leading-6 text-slate-600">
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                 Sélectionnez un deck pour lancer un match en ligne.
               </p>
             </div>
 
             {mmStatus === "queued" ? (
-              <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
+              <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
                 {isConnected ? "Connecté" : "Connexion..."}
               </div>
             ) : null}
@@ -1654,19 +1650,19 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
           {lastError ? <InlineErrorMessage message={lastError} /> : null}
 
           {mmStatus === "matched" ? (
-            <div className="space-y-3 rounded-3xl border border-emerald-500/20 bg-emerald-500/8 p-5 text-center">
+            <div className="space-y-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-5 text-center">
               <div className="flex items-center justify-center gap-3 text-emerald-700">
                 <Users className="h-5 w-5" />
                 <span className="text-lg font-bold">Adversaire trouvé</span>
               </div>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Ouverture de la partie...
               </p>
               <Loader2 className="mx-auto h-5 w-5 animate-spin text-emerald-700" />
             </div>
           ) : mmStatus === "queued" ? (
             <div className="space-y-4">
-              <div className="rounded-3xl border border-amber-500/20 bg-amber-500/8 p-5 text-amber-700">
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/8 p-5 text-amber-700">
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <div className="space-y-1">
@@ -1684,7 +1680,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
 
               <Button
                 variant="outline"
-                className="w-full rounded-full"
+                className="w-full"
                 onClick={handleLeaveQueue}
               >
                 Annuler
@@ -1694,14 +1690,14 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
             <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] md:items-end">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Votre deck
                   </p>
                   <Select
                     value={selectedDeckId?.toString() ?? ""}
                     onValueChange={(value) => setSelectedDeckId(Number(value))}
                   >
-                    <SelectTrigger className="h-11 w-full rounded-2xl border-slate-200 bg-slate-50 shadow-none">
+                    <SelectTrigger className="h-11 w-full">
                       <SelectValue placeholder="Choisir un deck" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1725,7 +1721,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
               </div>
 
               <Button
-                className="w-full rounded-full"
+                className="w-full"
                 disabled={!selectedDeckId}
                 onClick={() => void handleJoinQueue()}
               >
@@ -1737,7 +1733,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
             <PlaySoftState
               message="Aucun deck compatible pour le duel en ligne."
               action={
-                <Button asChild variant="outline" className="rounded-full">
+                <Button asChild variant="outline" className="">
                   <Link href="/decks/me">
                     Gérer mes decks
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -1757,10 +1753,10 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <p className="font-semibold text-slate-950">
+          <p className="font-semibold text-foreground">
             vs {session.opponentName}
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Duel 1v1 • Tour {session.turnNumber}
           </p>
         </div>
@@ -1769,9 +1765,9 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
         </Badge>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <span>Mise à jour {formatPlayDate(session.updatedAt)}</span>
-        <Button asChild variant="outline" className="rounded-full">
+        <Button asChild variant="outline" className="">
           <Link href={`/play/casual/${session.sessionId}`}>
             Continuer
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -1786,14 +1782,14 @@ function PlayModeLoadingShell({ label }: { label: string }) {
   return (
     <Card className="tcg-surface">
       <CardContent className="space-y-4 p-6">
-        <div className="flex items-center gap-3 text-sm text-slate-500">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           {label}
         </div>
         <div className="grid gap-3">
-          <Skeleton className="h-14 rounded-2xl" />
-          <Skeleton className="h-14 rounded-2xl" />
-          <Skeleton className="h-24 rounded-3xl" />
+          <Skeleton className="h-14" />
+          <Skeleton className="h-14" />
+          <Skeleton className="h-24" />
         </div>
       </CardContent>
     </Card>
@@ -1811,7 +1807,7 @@ function PlayErrorState({
     <Card className="tcg-surface border-destructive/30">
       <CardContent className="space-y-4 p-6">
         <p className="text-sm leading-6 text-destructive">{message}</p>
-        <Button variant="outline" className="rounded-full" onClick={onRetry}>
+        <Button variant="outline" className="" onClick={onRetry}>
           Réessayer
         </Button>
       </CardContent>
@@ -1821,7 +1817,7 @@ function PlayErrorState({
 
 function InlineErrorMessage({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+    <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
       {message}
     </div>
   );
@@ -1840,17 +1836,10 @@ function PlaySoftState({
     <div
       className={cn(
         "tcg-empty-state space-y-4 px-5 py-6 text-center text-sm",
-        tone === "dark" && "border-slate-700 bg-slate-900 text-slate-300",
+        tone === "dark" && "panel-hero-dark",
       )}
     >
-      <p
-        className={cn(
-          "leading-6",
-          tone === "dark" ? "text-slate-300" : "text-slate-500",
-        )}
-      >
-        {message}
-      </p>
+      <p className={cn("leading-6", "text-muted-foreground")}>{message}</p>
       {action ? <div className="flex justify-center">{action}</div> : null}
     </div>
   );
@@ -1862,28 +1851,23 @@ function PlayGuestPage() {
       <div className="grid gap-6">
         <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play">
           <CardContent className="space-y-6 p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Jouer
             </p>
             <div className="space-y-4">
               <h1 className="max-w-3xl text-4xl font-black leading-tight">
                 Connectez-vous pour jouer
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-600">
+              <p className="max-w-2xl text-base leading-7 text-muted-foreground">
                 Retrouvez vos matches de tournoi, lancez une partie
                 d’entraînement ou cherchez un duel en ligne.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-full px-6">
+              <Button asChild size="lg" className="px-6">
                 <Link href="/auth/login">Se connecter</Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="rounded-full px-6"
-              >
+              <Button asChild size="lg" variant="outline" className="px-6">
                 <Link href="/auth/register">Créer un compte</Link>
               </Button>
             </div>
@@ -1924,12 +1908,12 @@ function GuestModeTile({
   return (
     <Card className="tcg-surface">
       <CardContent className="space-y-4 p-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+        <div className="flex h-11 w-11 items-center justify-center rounded-md bg-primary/10">
           <Icon className="h-5 w-5 text-primary" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-bold text-slate-950">{title}</h2>
-          <p className="text-sm leading-6 text-slate-600">{text}</p>
+          <h2 className="text-xl font-bold text-foreground">{title}</h2>
+          <p className="text-sm leading-6 text-muted-foreground">{text}</p>
         </div>
       </CardContent>
     </Card>
@@ -1945,7 +1929,7 @@ function PlayPageSkeleton() {
           <Skeleton className="h-8 w-64 rounded-full" />
           <div className="grid gap-4 xl:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-40 rounded-3xl" />
+              <Skeleton key={index} className="h-40" />
             ))}
           </div>
         </div>
@@ -1959,7 +1943,7 @@ function PlayPageSkeleton() {
 function getResumeBadgeClass(kind: ResumeKind) {
   switch (kind) {
     case "tournament_live":
-      return "bg-slate-950 text-white hover:bg-slate-950";
+      return "bg-foreground text-background hover:bg-foreground";
     case "tournament_ready":
       return "bg-primary/15 text-primary hover:bg-primary/15";
     case "training_awaiting":
@@ -1971,7 +1955,7 @@ function getResumeBadgeClass(kind: ResumeKind) {
     case "duel_active":
       return "bg-sky-500/10 text-sky-700 hover:bg-sky-500/10";
     default:
-      return "bg-slate-200 text-slate-700 hover:bg-slate-200";
+      return "bg-muted text-foreground hover:bg-muted";
   }
 }
 
@@ -1979,13 +1963,13 @@ function getResumeCardClass(kind: ResumeKind) {
   switch (kind) {
     case "tournament_live":
     case "tournament_ready":
-      return "bg-linear-to-br from-white to-orange-50/80";
+      return "bg-card";
     case "training_awaiting":
     case "training_active":
-      return "bg-linear-to-br from-white to-emerald-50/80";
+      return "bg-card";
     case "duel_awaiting":
     case "duel_active":
-      return "bg-linear-to-br from-white to-sky-50/80";
+      return "bg-card";
     default:
       return "";
   }
