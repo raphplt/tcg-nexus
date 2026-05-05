@@ -1,81 +1,95 @@
 import React from "react";
-import { H2 } from "../Shared/Titles";
-import { Card } from "../ui/card";
-import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { ArrowRight, Image as ImageIcon, Calendar } from "lucide-react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
-interface Article {
-  id: number;
-  title: string;
-  image?: string | null;
-  link?: string | null;
-  content?: string | null;
-  publishedAt?: string | null;
-}
+import { articleService } from "@/services/article.service";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-const fetchArticles = async (): Promise<Article[]> => {
-  const res = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001")
-    }/articles`,
-  );
-  if (!res.ok) throw new Error("Erreur lors du chargement des articles");
-  return res.json();
-};
-
-const LatestArticles = () => {
+export const LatestArticles = () => {
   const {
     data: articles,
     isLoading,
     error,
-  } = useQuery<Article[]>({
+  } = useQuery({
     queryKey: ["articles", "latest"],
-    queryFn: fetchArticles,
+    queryFn: () => articleService.getAll(),
   });
 
-  return (
-    <Card className="p-6 mt-8">
-      <H2 className="mb-4">Derniers articles</H2>
-      {isLoading && <div>Chargement...</div>}
-      {error && (
-        <div className="text-red-500">
-          Erreur lors du chargement des articles.
+  const latestArticles = articles?.slice(0, 3) || [];
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-48 flex items-center justify-center rounded-xl border border-border/50 bg-muted/20">
+        <div className="animate-pulse flex flex-col items-center gap-3">
+          <div className="h-6 w-32 bg-muted-foreground/20 rounded"></div>
+          <div className="h-4 w-48 bg-muted-foreground/10 rounded"></div>
         </div>
-      )}
-      <div className="flex flex-col gap-4">
-        {articles?.map((article) => (
-          <a
-            key={article.id}
-            href={article.link || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card-hover block rounded-md overflow-hidden border bg-background group"
-          >
-            <div className="relative h-32 w-full">
-              {article.image ? (
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform"
-                  style={{ objectFit: "cover" }}
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-500">
-                  Pas d'image
-                </div>
-              )}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                <span className="text-white font-semibold text-sm drop-shadow">
-                  {article.title.slice(0, 50)}...
-                </span>
+      </div>
+    );
+  }
+
+  if (error || latestArticles.length === 0) {
+    return null; // On ne montre rien s'il n'y a pas d'article sur la home
+  }
+
+  return (
+    <div className="space-y-6 mt-12 mb-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">Actualités</h2>
+          <p className="text-muted-foreground text-sm mt-1">Les dernières annonces de la communauté</p>
+        </div>
+        <Link href="/news">
+          <Button variant="ghost" className="hidden sm:flex gap-2 text-muted-foreground hover:text-foreground">
+            Voir tout
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {latestArticles.map((article) => (
+          <Link key={article.id} href={`/news/${article.id}`} className="block group">
+            <Card className="h-full overflow-hidden border-border/50 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:shadow-md hover:border-primary/30">
+              <div className="relative h-40 w-full bg-muted/30 overflow-hidden">
+                {article.image ? (
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground/30" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
               </div>
-            </div>
-          </a>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(article.publishedAt || article.createdAt), "d MMM yyyy", { locale: fr })}
+                </div>
+                <h3 className="font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                  {article.title}
+                </h3>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
-    </Card>
+      
+      <Button variant="outline" className="w-full sm:hidden gap-2" asChild>
+        <Link href="/news">
+          Voir toutes les actualités
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
   );
 };
 

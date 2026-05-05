@@ -1,0 +1,59 @@
+
+> web@0.1.0 check-types
+> tsc --noEmit
+
+.next/types/app/(main)/(protected)/admin/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/(protected)/cart/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/(protected)/orders/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/(protected)/profile/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/(protected)/settings/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/challenges/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/collection/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/collection/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/dashboard/my-tournaments/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/dashboard/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/[id]/update/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/create/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/import/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/me/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/decks/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/faq/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/cards/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/cards/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/checkout/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/create/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/orders/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/orders/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/sealed/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/sealed/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/marketplace/sellers/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/play/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/pokemon/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/pokemon/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/pokemon/smash-or-pass/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/admin/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/bracket/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/matches/[matchId]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/matches/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/player/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/[id]/rankings/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/create/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(main)/tournaments/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(match)/layout.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(match)/play/casual/[sessionId]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(match)/play/training/[sessionId]/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/(protected)/profile/tournament-history/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/auth/layout.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/auth/login/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+.next/types/app/auth/register/page.ts(5,15): error TS2305: Module '"next/dist/build/segment-config/app/app-segment-config.js"' has no exported member 'PrefetchForTypeCheckInternal'.
+npm error Lifecycle script `check-types` failed with error:
+npm error code 2
+npm error path /Users/lucasaymard/Documents/tcgnexustestraph/apps/web
+npm error workspace web@0.1.0
+npm error location /Users/lucasaymard/Documents/tcgnexustestraph/apps/web
+npm error command failed
+npm error command sh -c tsc --noEmit

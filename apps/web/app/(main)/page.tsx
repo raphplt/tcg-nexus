@@ -112,8 +112,11 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section className="mb-16">
           <TrendingDecks />
+        </section>
+
+        <section>
           <LatestArticles />
         </section>
       </main>
