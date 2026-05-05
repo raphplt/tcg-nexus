@@ -64,4 +64,3 @@ export interface RetreatAction extends PlayerAction {
 export interface SurrenderAction extends PlayerAction {
   type: ActionType.SURRENDER;
 }
-

@@ -425,10 +425,8 @@ export class RankingService {
     const winnerElo = winnerPlayer.elo ?? 1000;
     const loserElo = loserPlayer.elo ?? 1000;
 
-    const expectedWinner =
-      1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
-    const expectedLoser =
-      1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
+    const expectedWinner = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+    const expectedLoser = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
 
     const K = RankingService.ELO_K;
 

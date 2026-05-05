@@ -649,11 +649,7 @@ function PlayHeader({
             </p>
           </div>
 
-          <Button
-            asChild
-            variant="outline"
-            className=""
-          >
+          <Button asChild variant="outline" className="">
             <Link href="/decks/me">
               Gérer mes decks
               <Layers3 className="ml-2 h-4 w-4" />
@@ -785,7 +781,9 @@ function ResumeCard({ item }: { item: ResumeItem }) {
             <h3 className="text-xl font-bold leading-tight text-foreground">
               {item.title}
             </h3>
-            <p className="text-sm leading-6 text-muted-foreground">{item.subtitle}</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              {item.subtitle}
+            </p>
           </div>
         </div>
 
@@ -1028,13 +1026,11 @@ function PlayerMatchCard({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-          <p className="text-xs text-muted-foreground">Match #{record.match.id}</p>
+          <p className="text-xs text-muted-foreground">
+            Match #{record.match.id}
+          </p>
           <div className="flex flex-wrap gap-3">
-            <Button
-              asChild
-              size={compact ? "sm" : "default"}
-              className=""
-            >
+            <Button asChild size={compact ? "sm" : "default"} className="">
               <Link
                 href={`/tournaments/${record.match.tournamentId}/matches/${record.match.id}`}
               >
@@ -1843,14 +1839,7 @@ function PlaySoftState({
         tone === "dark" && "panel-hero-dark",
       )}
     >
-      <p
-        className={cn(
-          "leading-6",
-          "text-muted-foreground",
-        )}
-      >
-        {message}
-      </p>
+      <p className={cn("leading-6", "text-muted-foreground")}>{message}</p>
       {action ? <div className="flex justify-center">{action}</div> : null}
     </div>
   );
@@ -1878,12 +1867,7 @@ function PlayGuestPage() {
               <Button asChild size="lg" className="px-6">
                 <Link href="/auth/login">Se connecter</Link>
               </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="px-6"
-              >
+              <Button asChild size="lg" variant="outline" className="px-6">
                 <Link href="/auth/register">Créer un compte</Link>
               </Button>
             </div>

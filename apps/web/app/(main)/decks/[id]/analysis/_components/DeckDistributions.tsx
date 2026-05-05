@@ -31,9 +31,7 @@ export function DeckDistributions({ analysis }: DeckDistributionsProps) {
         </CardHeader>
         <CardContent>
           {analysis.typeDistribution.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Aucun type détecté.
-            </p>
+            <p className="text-sm text-muted-foreground">Aucun type détecté.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {analysis.typeDistribution.map((entry) => (
