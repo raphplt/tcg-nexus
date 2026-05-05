@@ -76,6 +76,11 @@ export function MatchmakingPanel() {
     const socket = io(`${socketBaseUrl}/match`, {
       transports: ["websocket"],
       withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
     socketRef.current = socket;
 

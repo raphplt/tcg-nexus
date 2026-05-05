@@ -139,7 +139,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       }
       onDispatchAction={(action) => actionMutation.mutate(action)}
       onRespondPrompt={(response) => promptMutation.mutate(response)}
-      onForfeit={() => actionMutation.mutate({ type: "FORFEIT" })}
+      onForfeit={() => actionMutation.mutate({ type: "SURRENDER" })}
     />
   );
 }

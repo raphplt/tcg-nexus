@@ -378,17 +378,23 @@ export class CasualMatchService {
 
     if (state.gamePhase === GamePhase.Finished && state.winnerId) {
       session.status = CasualMatchSessionStatus.FINISHED;
-      session.winnerUserId = Number(state.winnerId) || null;
+
+      // state.winnerId is an engine player id (Player.id), not a User.id.
+      // Resolve back to the User.id by matching against playerIds[0]/playerIds[1].
+      const isPlayerAWinner = state.winnerId === state.playerIds[0];
+      const winnerUserId = isPlayerAWinner
+        ? session.playerA.id
+        : session.playerB.id;
+      const loserUserId = isPlayerAWinner
+        ? session.playerB.id
+        : session.playerA.id;
+
+      session.winnerUserId = winnerUserId;
       session.endedReason = state.winnerReason;
 
-      // Trigger ELO update for ranked matches (fire-and-forget)
-      if (session.isRanked && session.winnerUserId) {
-        const loserId =
-          session.playerA.id === session.winnerUserId
-            ? session.playerB.id
-            : session.playerA.id;
+      if (session.isRanked) {
         this.rankingService
-          .updateElo(session.winnerUserId, loserId)
+          .updateElo(winnerUserId, loserUserId)
           .catch((err) =>
             console.error("Failed to update ELO after ranked match", err),
           );
