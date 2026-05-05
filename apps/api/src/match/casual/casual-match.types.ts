@@ -51,4 +51,5 @@ export interface QueueEntry {
   deckId: number;
   joinedAt: number;
   isRanked: boolean;
+  elo: number;
 }

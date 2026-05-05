@@ -13,9 +13,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { EloBadge } from "@/components/match/EloBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -23,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { casualMatchService } from "@/services/casual-match.service";
 import type {
   CasualLobbyView,
@@ -37,6 +40,7 @@ export function MatchmakingPanel() {
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
+  const [isRanked, setIsRanked] = useState(false);
   const [mmStatus, setMmStatus] = useState<MatchmakingStatus>("idle");
   const [queueSize, setQueueSize] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -135,7 +139,10 @@ export function MatchmakingPanel() {
     setLastError(null);
     const socket = socketRef.current || connectSocket();
     if (socket) {
-      socket.emit("matchmaking_join", { deckId: selectedDeckId });
+      socket.emit("matchmaking_join", {
+        deckId: selectedDeckId,
+        isRanked,
+      });
       setMmStatus("queued");
     }
   };
@@ -192,6 +199,7 @@ export function MatchmakingPanel() {
             <Badge className="border-0 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20">
               En ligne
             </Badge>
+            <EloBadge className="border-slate-600 text-slate-300" />
           </div>
           {mmStatus !== "idle" && (
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -282,12 +290,30 @@ export function MatchmakingPanel() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex items-center justify-between rounded-2xl border border-slate-700 bg-slate-800/40 px-4 py-3">
+                  <div className="space-y-0.5">
+                    <Label
+                      htmlFor="ranked-toggle"
+                      className="text-sm font-semibold text-white"
+                    >
+                      Match classé
+                    </Label>
+                    <p className="text-xs text-slate-400">
+                      Affecte votre ELO. Adversaires de niveau similaire.
+                    </p>
+                  </div>
+                  <Switch
+                    id="ranked-toggle"
+                    checked={isRanked}
+                    onCheckedChange={setIsRanked}
+                  />
+                </div>
                 <Button
                   className="w-full rounded-full"
                   disabled={!selectedDeckId}
                   onClick={handleJoinQueue}
                 >
-                  Chercher un adversaire
+                  {isRanked ? "Chercher un match classé" : "Chercher un adversaire"}
                   <Swords className="ml-2 h-4 w-4" />
                 </Button>
               </>

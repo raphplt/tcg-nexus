@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import {
@@ -37,7 +41,9 @@ type AuthenticatedSocket = Socket & {
   namespace: "/match",
 })
 @Injectable()
-export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MatchGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
   @WebSocketServer()
   server: Server;
 
@@ -60,6 +66,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly casualMatchService: CasualMatchService,
     private readonly matchmakingService: MatchmakingService,
   ) {}
+
+  onModuleInit() {
+    this.matchmakingService.registerMatchFoundHandler((result) =>
+      this.notifyMatchFound(
+        result.playerAUserId,
+        result.playerBUserId,
+        result.session.id,
+      ),
+    );
+  }
 
   async handleConnection(client: AuthenticatedSocket) {
     try {

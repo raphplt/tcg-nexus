@@ -10,8 +10,8 @@ import { In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
-import { User } from "../../user/entities/user.entity";
 import { RankingService } from "../../ranking/ranking.service";
+import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
@@ -394,7 +394,9 @@ export class CasualMatchService {
 
       if (session.isRanked) {
         this.rankingService
-          .updateElo(winnerUserId, loserUserId)
+          .updateEloWithHistory(winnerUserId, loserUserId, {
+            casualSessionId: session.id,
+          })
           .catch((err) =>
             console.error("Failed to update ELO after ranked match", err),
           );

@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -1434,6 +1436,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   const socketRef = useRef<Socket | null>(null);
   const socketPromiseRef = useRef<Promise<Socket | null> | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
+  const [isRanked, setIsRanked] = useState(false);
   const [mmStatus, setMmStatus] = useState<MatchmakingStatus>("idle");
   const [queueSize, setQueueSize] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -1570,7 +1573,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
     const socket = socketRef.current || (await connectSocket());
 
     if (socket) {
-      socket.emit("matchmaking_join", { deckId: selectedDeckId });
+      socket.emit("matchmaking_join", { deckId: selectedDeckId, isRanked });
       setMmStatus("queued");
     }
   };
@@ -1718,6 +1721,25 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                   </Select>
                 </div>
 
+                <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2">
+                  <div className="space-y-0.5">
+                    <Label
+                      htmlFor="play-ranked-toggle"
+                      className="text-sm font-semibold"
+                    >
+                      Match classé
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Affecte votre ELO. Adversaires de niveau similaire.
+                    </p>
+                  </div>
+                  <Switch
+                    id="play-ranked-toggle"
+                    checked={isRanked}
+                    onCheckedChange={setIsRanked}
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary">BO1</Badge>
                   <Badge variant="secondary">Standard</Badge>
@@ -1730,7 +1752,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 disabled={!selectedDeckId}
                 onClick={() => void handleJoinQueue()}
               >
-                Lancer la recherche
+                {isRanked ? "Lancer un match classé" : "Lancer la recherche"}
                 <Swords className="ml-2 h-4 w-4" />
               </Button>
             </div>

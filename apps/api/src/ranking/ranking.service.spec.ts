@@ -9,6 +9,7 @@ import {
 } from "../tournament/entities/tournament.entity";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
+import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
 import { RankingService } from "./ranking.service";
 
@@ -47,6 +48,18 @@ describe("RankingService", () => {
     find: jest.fn(),
   };
 
+  const mockRankedHistoryRepo = {
+    create: jest.fn((dto) => dto),
+    save: jest.fn((dto) => Promise.resolve(dto)),
+    createQueryBuilder: jest.fn(() => ({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue([]),
+    })),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -58,6 +71,10 @@ describe("RankingService", () => {
         },
         { provide: getRepositoryToken(Player), useValue: mockPlayerRepo },
         { provide: getRepositoryToken(Match), useValue: mockMatchRepo },
+        {
+          provide: getRepositoryToken(RankedMatchHistory),
+          useValue: mockRankedHistoryRepo,
+        },
       ],
     }).compile();
 

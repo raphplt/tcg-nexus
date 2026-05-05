@@ -7,8 +7,10 @@ import {
   Tournament,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
+import { User } from "../user/entities/user.entity";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
+import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
 
 export interface RankingCalculationResult {
@@ -35,6 +37,8 @@ export class RankingService {
     private playerRepository: Repository<Player>,
     @InjectRepository(Match)
     private matchRepository: Repository<Match>,
+    @InjectRepository(RankedMatchHistory)
+    private rankedHistoryRepository: Repository<RankedMatchHistory>,
   ) {}
 
   /**
@@ -447,5 +451,74 @@ export class RankingService {
       winnerElo: winnerPlayer.elo,
       loserElo: loserPlayer.elo,
     };
+  }
+
+  /**
+   * Same as updateElo but also persists a RankedMatchHistory row for audits and
+   * progression graphs. Source identifies whether the match came from the
+   * casual/ranked queue or a tournament bracket.
+   */
+  async updateEloWithHistory(
+    winnerUserId: number,
+    loserUserId: number,
+    source: { casualSessionId?: number; matchId?: number },
+    isDraw: boolean = false,
+  ): Promise<{ winnerElo: number; loserElo: number; delta: number }> {
+    const [winnerPlayer, loserPlayer] = await Promise.all([
+      this.playerRepository.findOne({
+        where: { user: { id: winnerUserId } },
+      }),
+      this.playerRepository.findOne({
+        where: { user: { id: loserUserId } },
+      }),
+    ]);
+
+    if (!winnerPlayer || !loserPlayer) {
+      throw new NotFoundException("Player profile not found for ELO update");
+    }
+
+    const winnerEloBefore = winnerPlayer.elo ?? 1000;
+    const loserEloBefore = loserPlayer.elo ?? 1000;
+
+    const result = await this.updateElo(winnerUserId, loserUserId, isDraw);
+
+    const delta = result.winnerElo - winnerEloBefore;
+
+    const history = this.rankedHistoryRepository.create({
+      casualSessionId: source.casualSessionId ?? null,
+      matchId: source.matchId ?? null,
+      winner: { id: winnerUserId } as User,
+      loser: { id: loserUserId } as User,
+      winnerEloBefore,
+      winnerEloAfter: result.winnerElo,
+      loserEloBefore,
+      loserEloAfter: result.loserElo,
+      delta,
+      isDraw,
+    });
+    await this.rankedHistoryRepository.save(history);
+
+    return { ...result, delta };
+  }
+
+  async getEloForUser(userId: number): Promise<number> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    return player?.elo ?? 1000;
+  }
+
+  async getRecentEloHistory(
+    userId: number,
+    limit: number = 20,
+  ): Promise<RankedMatchHistory[]> {
+    return this.rankedHistoryRepository
+      .createQueryBuilder("history")
+      .leftJoinAndSelect("history.winner", "winner")
+      .leftJoinAndSelect("history.loser", "loser")
+      .where("winner.id = :userId OR loser.id = :userId", { userId })
+      .orderBy("history.createdAt", "DESC")
+      .limit(limit)
+      .getMany();
   }
 }
