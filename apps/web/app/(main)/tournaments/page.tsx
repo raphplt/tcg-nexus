@@ -217,7 +217,7 @@ export default function TournamentsPage() {
                   Découvrez les tournois à venir et rejoignez les bonnes tables
                   au bon moment.
                 </H1>
-                <p className="max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
+                <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
                   Retrouvez les inscriptions ouvertes, les événements en cours
                   et les accès aux matches depuis un parcours plus direct.
                 </p>
@@ -228,28 +228,17 @@ export default function TournamentsPage() {
                   size="lg"
                   onClick={() => router.push("/tournaments/create")}
                   disabled={!user?.isPro}
-                  className="rounded-full px-6"
                 >
                   Créer un tournoi
                   <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full px-6"
-                >
+                <Button asChild size="lg" variant="outline">
                   <Link href="#listing">
                     Explorer le calendrier
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="ghost"
-                  className="rounded-full px-4"
-                >
+                <Button asChild size="lg" variant="ghost">
                   <Link href="/play">
                     Aller à Jouer
                     <Swords className="ml-2 h-4 w-4" />
@@ -299,7 +288,7 @@ export default function TournamentsPage() {
             <Card className="tcg-surface tcg-surface--dark">
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+                  <span className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                     À la une
                   </span>
                   <Badge className="border-0 bg-white/10 text-white hover:bg-white/10">
@@ -310,13 +299,13 @@ export default function TournamentsPage() {
                 {spotlightTournament ? (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         {formatDate(spotlightTournament.startDate)}
                       </p>
                       <h2 className="text-2xl font-bold leading-tight">
                         {spotlightTournament.name}
                       </h2>
-                      <p className="text-sm leading-6 text-slate-300">
+                      <p className="text-sm leading-6 text-muted-foreground">
                         {spotlightTournament.description ||
                           "Le prochain rendez-vous à suivre ou à rejoindre dans la scène tournoi."}
                       </p>
@@ -342,11 +331,7 @@ export default function TournamentsPage() {
                       </Badge>
                     </div>
 
-                    <Button
-                      asChild
-                      variant="secondary"
-                      className="w-full rounded-full"
-                    >
+                    <Button asChild variant="secondary" className="w-full">
                       <Link href={`/tournaments/${spotlightTournament.id}`}>
                         Ouvrir la fiche tournoi
                         <ChevronRight className="ml-2 h-4 w-4" />
@@ -358,7 +343,7 @@ export default function TournamentsPage() {
                     <p className="text-lg font-semibold">
                       Aucun tournoi à mettre en avant
                     </p>
-                    <p className="text-sm text-slate-300">
+                    <p className="text-sm text-muted-foreground">
                       Crée un nouvel événement ou ouvre les inscriptions pour
                       faire remonter le prochain rendez-vous.
                     </p>
@@ -405,7 +390,7 @@ export default function TournamentsPage() {
               {loadingUpcoming ? (
                 <div className="space-y-3">
                   {Array.from({ length: 3 }).map((_, index) => (
-                    <Skeleton key={index} className="h-24 w-full rounded-2xl" />
+                    <Skeleton key={index} className="h-24 w-full" />
                   ))}
                 </div>
               ) : upcomingError ? (
@@ -434,10 +419,7 @@ export default function TournamentsPage() {
                 {loadingPast ? (
                   <div className="space-y-3">
                     {Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton
-                        key={index}
-                        className="h-20 w-full rounded-2xl"
-                      />
+                      <Skeleton key={index} className="h-20 w-full" />
                     ))}
                   </div>
                 ) : pastError ? (
@@ -456,19 +438,19 @@ export default function TournamentsPage() {
 
             <Card className="tcg-surface tcg-surface--highlight">
               <CardContent className="space-y-4 p-6">
-                <Badge className="w-fit rounded-full border-0 bg-primary/10 text-primary hover:bg-primary/10">
+                <Badge className="w-fit border-0 bg-primary/10 text-primary hover:bg-primary/10">
                   Jeu en ligne
                 </Badge>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold leading-tight">
                     Retrouvez vos parties au même endroit.
                   </h3>
-                  <p className="text-sm leading-6 text-slate-600">
+                  <p className="text-sm leading-6 text-muted-foreground">
                     La page `Jouer` rassemble les matches attribués au joueur et
                     l’accès direct au plateau en ligne.
                   </p>
                 </div>
-                <Button asChild className="rounded-full">
+                <Button asChild>
                   <Link href="/play">
                     Ouvrir le hub de jeu
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -486,7 +468,7 @@ export default function TournamentsPage() {
               title="Explorer les tournois"
               description="Recherchez par nom, statut ou lieu pour trouver rapidement le bon événement."
             />
-            <Badge className="rounded-full border-0 bg-slate-900 text-white hover:bg-slate-900">
+            <Badge className="border-0 bg-foreground text-background hover:bg-foreground">
               {totalTournaments} tournois
             </Badge>
           </div>
@@ -506,7 +488,7 @@ export default function TournamentsPage() {
           {isLoading ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="h-72 w-full rounded-3xl" />
+                <Skeleton key={index} className="h-72 w-full" />
               ))}
             </div>
           ) : error ? (
@@ -540,11 +522,7 @@ export default function TournamentsPage() {
                   Élargissez la recherche ou réinitialisez les filtres pour
                   retrouver les événements disponibles.
                 </p>
-                <Button
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={resetFilters}
-                >
+                <Button variant="outline" onClick={resetFilters}>
                   Réinitialiser les filtres
                 </Button>
               </CardContent>
@@ -571,11 +549,11 @@ function OverviewMetric({
 }) {
   return (
     <div className="tcg-metric-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{detail}</p>
+      <p className="mt-2 text-3xl font-black text-foreground">{value}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
     </div>
   );
 }
@@ -591,11 +569,11 @@ function QuickNote({
 }) {
   return (
     <div className="tcg-note-card p-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
         <Icon className="h-4 w-4 text-primary" />
         {title}
       </div>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
     </div>
   );
 }
@@ -611,14 +589,14 @@ function MiniStat({
 }) {
   return (
     <div className="tcg-note-card flex items-center gap-4 p-4">
-      <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+      <div className="rounded-md bg-primary/10 p-3 text-primary">
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </p>
-        <p className="text-base font-semibold text-slate-900">{value}</p>
+        <p className="text-base font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -640,7 +618,7 @@ function SectionHeading({
       </p>
       <div className="space-y-1">
         <H2 className="text-2xl font-black">{title}</H2>
-        <p className="max-w-2xl text-sm leading-6 text-slate-600">
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
           {description}
         </p>
       </div>
@@ -655,20 +633,18 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
       className="tcg-surface tcg-surface--hover group flex flex-col gap-3 px-5 py-4 md:flex-row md:items-center md:justify-between"
     >
       <div className="flex items-start gap-4">
-        <div className="min-w-24 rounded-2xl bg-slate-950 px-3 py-2 text-center text-slate-50">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-            Date
-          </p>
+        <div className="min-w-24 rounded-md bg-foreground px-3 py-2 text-center text-background">
+          <p className="text-xs uppercase tracking-[0.18em] opacity-70">Date</p>
           <p className="mt-1 text-sm font-semibold">
             {formatDate(tournament.startDate)}
           </p>
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-slate-950">
+          <h3 className="text-lg font-semibold text-foreground">
             {tournament.name}
           </h3>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-4 w-4 text-primary" />
               {tournament.location || "Lieu à confirmer"}
@@ -691,7 +667,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
         >
           {getTournamentStatusLabel(tournament.status)}
         </Badge>
-        <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:text-slate-950" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />
       </div>
     </Link>
   );
@@ -704,10 +680,10 @@ function ResultRow({ tournament }: { tournament: Tournament }) {
       className="tcg-surface tcg-surface--hover group flex items-center justify-between px-4 py-4"
     >
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {formatDate(tournament.endDate || tournament.startDate)}
         </p>
-        <p className="mt-1 font-semibold text-slate-950">{tournament.name}</p>
+        <p className="mt-1 font-semibold text-foreground">{tournament.name}</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -720,7 +696,7 @@ function ResultRow({ tournament }: { tournament: Tournament }) {
         >
           {getTournamentStatusLabel(tournament.status)}
         </Badge>
-        <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:text-slate-950" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground transition group-hover:text-foreground" />
       </div>
     </Link>
   );
@@ -742,10 +718,10 @@ function TournamentBrowseCard({
       <CardContent className="space-y-5 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {formatDate(tournament.startDate)}
             </p>
-            <h3 className="mt-2 text-xl font-bold leading-tight text-slate-950">
+            <h3 className="mt-2 text-xl font-bold leading-tight text-foreground">
               {tournament.name}
             </h3>
           </div>
@@ -769,13 +745,13 @@ function TournamentBrowseCard({
           </Badge>
         </div>
 
-        <p className="min-h-16 text-sm leading-6 text-slate-600">
+        <p className="min-h-16 text-sm leading-6 text-muted-foreground">
           {tournament.description ||
             "Toutes les informations essentielles du tournoi, de l'inscription jusqu'aux matches en ligne."}
         </p>
 
         <div className="flex flex-wrap gap-3">
-          <Button asChild className="rounded-full">
+          <Button asChild>
             <Link href={`/tournaments/${tournament.id}`}>
               Voir le tournoi
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -783,7 +759,6 @@ function TournamentBrowseCard({
           </Button>
           <Button
             variant="outline"
-            className="rounded-full"
             onClick={onRegister}
             disabled={!canRegister || isRegistering}
           >
@@ -797,7 +772,7 @@ function TournamentBrowseCard({
 
 function SoftEmptyState({ message }: { message: string }) {
   return (
-    <div className="tcg-empty-state px-5 py-8 text-center text-sm text-slate-500">
+    <div className="tcg-empty-state px-5 py-8 text-center text-sm text-muted-foreground">
       {message}
     </div>
   );

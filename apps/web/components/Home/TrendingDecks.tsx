@@ -22,7 +22,7 @@ const TrendingDecks = () => {
 
   if (isLoading) {
     return (
-      <Card className="bg-card rounded-xl shadow p-6 mt-8">
+      <Card className="p-6 mt-8">
         <div className="flex items-center justify-between mb-4">
           <H2>Derniers Decks</H2>
         </div>
@@ -47,7 +47,7 @@ const TrendingDecks = () => {
   const decks = data?.data || [];
 
   return (
-    <Card className="bg-card rounded-xl shadow p-6 mt-8 card-hover">
+    <Card className="p-6 mt-8">
       <div className="flex items-center justify-between mb-4">
         <H2>Meilleurs Decks</H2>
         <Link href="/decks" className="text-sm text-primary hover:underline">

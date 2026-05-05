@@ -74,10 +74,7 @@ export default function DeckAnalysisPage() {
                 <Skeleton className="h-4 w-40 mt-1" />
               ) : deckTyped ? (
                 <p className="text-sm text-muted-foreground">
-                  <Link
-                    href={`/decks/${deckId}`}
-                    className="hover:underline"
-                  >
+                  <Link href={`/decks/${deckId}`} className="hover:underline">
                     {deckTyped.name}
                   </Link>
                 </p>

@@ -25,12 +25,7 @@ export function DeckScoresPanel({ summary }: DeckScoresPanelProps) {
   const tone = scoreTone(summary.global);
 
   return (
-    <Card
-      className={cn(
-        "border-primary/20 shadow-sm ring-2",
-        toneRing[tone],
-      )}
-    >
+    <Card className={cn("border-primary/20 shadow-sm ring-2", toneRing[tone])}>
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <div>

@@ -2,153 +2,177 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================================
+   DESIGN TOKENS — Source of truth.
+   Pour modifier le look global du site, changez les valeurs ici.
+   ============================================================================ */
+
 :root {
+  /* --- Couleurs surfaces & texte --- */
   --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
+  --foreground: oklch(0.15 0 0);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
+  --card-foreground: oklch(0.15 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+
+  /* --- Palette de marque (conservée) --- */
   --primary: oklch(0.5117 0.18 28.58);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.4395 0.09 235.07);
   --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.999 0.0045 261.12);
-  --muted-foreground: oklch(0.3211 0 0);
-  --accent: oklch(0.65 0.12 240.37);
-  --accent-foreground: oklch(0 0 0);
+  --accent: oklch(0.96 0.01 240);
+  --accent-foreground: oklch(0.15 0 0);
+
+  /* --- Couleurs sémantiques --- */
+  --muted: oklch(0.97 0.005 261);
+  --muted-foreground: oklch(0.45 0 0);
   --destructive: oklch(0.5772 0.2104 27.33);
   --destructive-foreground: oklch(1 0 0);
   --warning: oklch(0.75 0.15 75);
   --warning-foreground: oklch(0.2 0.05 30);
   --success: oklch(0.6 0.15 145);
   --success-foreground: oklch(1 0 0);
-  --border: oklch(0 0 0);
-  --input: oklch(0 0 0);
+
+  /* --- Bordures (adoucies, plus de noir pur) --- */
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.92 0 0);
   --ring: oklch(0.5117 0.18 28.58);
+
+  /* --- Charts --- */
   --chart-1: oklch(0.5117 0.18 28.58);
   --chart-2: oklch(0.4395 0.09 235.07);
   --chart-3: oklch(0.65 0.12 240.37);
   --chart-4: oklch(0.68 0.15 142.4953);
   --chart-5: oklch(0.5931 0.18 328.3634);
-  --sidebar: oklch(0.999 0.0045 261.12);
-  --sidebar-foreground: oklch(0 0 0);
+
+  /* --- Sidebar --- */
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.15 0 0);
   --sidebar-primary: oklch(0.5117 0.18 28.58);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.65 0.12 240.37);
-  --sidebar-accent-foreground: oklch(0 0 0);
-  --sidebar-border: oklch(0 0 0);
+  --sidebar-accent: oklch(0.96 0.005 240);
+  --sidebar-accent-foreground: oklch(0.15 0 0);
+  --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.5117 0.18 28.58);
+
+  /* --- Typographie --- */
   --font-sans: var(--font-inter, "Inter", sans-serif);
   --font-heading: var(--font-space-grotesk, "Space Grotesk", sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
-  --radius: 0px;
-  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
-  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
+
+  /* --- Radius (soft moderne — Linear/Vercel) --- */
+  --radius: 0.5rem; /* 8px — base */
+
+  /* --- Shadows (soft, blur subtil) --- */
+  --shadow-2xs: 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
   --shadow-sm:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
-  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
+    0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 2px 4px -1px hsl(0 0% 0% / 1);
+    0 4px 8px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
   --shadow-lg:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 4px 6px -1px hsl(0 0% 0% / 1);
+    0 12px 24px -8px rgba(15, 23, 42, 0.12),
+    0 4px 8px -4px rgba(15, 23, 42, 0.06);
   --shadow-xl:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 0% / 1);
-  --tcg-page-soft: linear-gradient(
+    0 24px 48px -12px rgba(15, 23, 42, 0.16),
+    0 8px 16px -8px rgba(15, 23, 42, 0.08);
+  --shadow-2xl: 0 32px 64px -16px rgba(15, 23, 42, 0.2);
+
+  /* --- Surfaces sémantiques (utilisées par les classes .surface, .panel-*, etc.) --- */
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.98 0.005 261);
+  --surface-elevated: oklch(1 0 0);
+  --surface-border: oklch(0.92 0 0);
+
+  /* --- Page backgrounds --- */
+  --page-bg: oklch(0.99 0 0);
+  --page-bg-soft: linear-gradient(
     180deg,
-    #f8fafc 0%,
-    #ffffff 35%,
-    #fff7ed 100%
+    oklch(0.99 0 0) 0%,
+    oklch(1 0 0) 100%
   );
-  --tcg-page-tournaments:
-    radial-gradient(
-      circle at top left,
-      rgba(234, 88, 12, 0.18),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(14, 165, 233, 0.12),
-      transparent 26%
-    ),
-    linear-gradient(180deg, #fff8f4 0%, #ffffff 42%, #f8fafc 100%);
-  --tcg-page-play:
-    radial-gradient(
-      circle at top left,
-      rgba(249, 115, 22, 0.16),
-      transparent 26%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(14, 165, 233, 0.14),
-      transparent 24%
-    ),
-    linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #fff7ed 100%);
-  --tcg-surface-radius-lg: 28px;
-  --tcg-surface-radius-xl: 32px;
-  --tcg-surface-shadow-soft: 0 18px 60px -50px rgba(15, 23, 42, 0.7);
-  --tcg-surface-shadow-panel: 0 24px 70px -55px rgba(15, 23, 42, 0.8);
-  --tcg-surface-shadow-hero: 0 28px 80px -60px rgba(15, 23, 42, 0.85);
-  --tcg-surface-shadow-hover: 0 28px 80px -58px rgba(15, 23, 42, 0.95);
 }
 
 .dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0.3211 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.3211 0 0);
-  --popover-foreground: oklch(1 0 0);
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.17 0 0);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.17 0 0);
+  --popover-foreground: oklch(0.98 0 0);
+
   --primary: oklch(0.5117 0.18 28.58);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.4395 0.09 235.07);
   --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.25 0.005 261.12);
-  --muted-foreground: oklch(0.9 0 0);
-  --accent: oklch(0.65 0.12 240.37);
-  --accent-foreground: oklch(0 0 0);
+  --accent: oklch(0.25 0 0);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.7 0 0);
   --destructive: oklch(0.65 0.2 25);
   --destructive-foreground: oklch(1 0 0);
   --warning: oklch(0.8 0.13 80);
   --warning-foreground: oklch(0.2 0.05 30);
   --success: oklch(0.7 0.13 150);
   --success-foreground: oklch(0 0 0);
-  --border: oklch(1 0 0);
-  --input: oklch(1 0 0);
+
+  --border: oklch(0.27 0 0);
+  --input: oklch(0.27 0 0);
   --ring: oklch(0.5117 0.18 28.58);
+
   --chart-1: oklch(0.5117 0.18 28.58);
   --chart-2: oklch(0.4395 0.09 235.07);
   --chart-3: oklch(0.65 0.12 240.37);
   --chart-4: oklch(0.68 0.15 142.8504);
   --chart-5: oklch(0.5931 0.18 328.0714);
-  --sidebar: oklch(0 0 0);
-  --sidebar-foreground: oklch(1 0 0);
+
+  --sidebar: oklch(0.13 0 0);
+  --sidebar-foreground: oklch(0.98 0 0);
   --sidebar-primary: oklch(0.5117 0.18 28.58);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.65 0.12 240.37);
-  --sidebar-accent-foreground: oklch(0 0 0);
-  --sidebar-border: oklch(1 0 0);
+  --sidebar-accent: oklch(0.25 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.27 0 0);
   --sidebar-ring: oklch(0.5117 0.18 28.58);
+
+  --surface: oklch(0.17 0 0);
+  --surface-muted: oklch(0.2 0 0);
+  --surface-elevated: oklch(0.21 0 0);
+  --surface-border: oklch(0.27 0 0);
+
+  --page-bg: oklch(0.13 0 0);
+  --page-bg-soft: linear-gradient(
+    180deg,
+    oklch(0.13 0 0) 0%,
+    oklch(0.15 0 0) 100%
+  );
+
+  --shadow-2xs: 0 1px 1px rgba(0, 0, 0, 0.25);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:
+    0 4px 8px -2px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg:
+    0 12px 24px -8px rgba(0, 0, 0, 0.5), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl:
+    0 24px 48px -12px rgba(0, 0, 0, 0.6), 0 8px 16px -8px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 32px 64px -16px rgba(0, 0, 0, 0.7);
+
   --font-sans: var(--font-inter, "Inter", sans-serif);
   --font-heading: var(--font-space-grotesk, "Space Grotesk", sans-serif);
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: Space Mono, monospace;
-  --radius: 0px;
-  --shadow-2xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
-  --shadow-xs: 4px 4px 0px 0px hsl(0 0% 0% / 0.5);
-  --shadow-sm:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
-  --shadow: 4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 1px 2px -1px hsl(0 0% 0% / 1);
-  --shadow-md:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 2px 4px -1px hsl(0 0% 0% / 1);
-  --shadow-lg:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 4px 6px -1px hsl(0 0% 0% / 1);
-  --shadow-xl:
-    4px 4px 0px 0px hsl(0 0% 0% / 1), 4px 8px 10px -1px hsl(0 0% 0% / 1);
-  --shadow-2xl: 4px 4px 0px 0px hsl(0 0% 100% / 1);
 }
+
+/* ============================================================================
+   BRIDGE TAILWIND — expose les tokens aux classes utilitaires (rounded-md,
+   shadow-sm, bg-card, etc.). Modifier les vars ci-dessus suffit à propager.
+   ============================================================================ */
 
 @theme inline {
   --color-background: var(--background);
@@ -193,6 +217,7 @@
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
+  /* Radius scale — rounded-sm (4px), rounded-md (6px), rounded-lg (8px), rounded-xl (12px) */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -247,39 +272,341 @@ body {
       color 0.2s ease;
   }
 
-  /* Improved focus styles */
   *:focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
-  /* Better scrollbar styling */
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
   }
-
   ::-webkit-scrollbar-track {
-    background: var(--color-muted);
+    background: transparent;
   }
-
   ::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 4px;
+    border-radius: 9999px;
   }
-
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-muted-foreground);
   }
+}
 
-  /* Grid pattern for hero section */
+/* ============================================================================
+   CLASSES SÉMANTIQUES — utilisez-les dans les pages plutôt que de hardcoder
+   rounded-lg / shadow-md / bg-card / border. Pour changer le look global,
+   modifiez les tokens ci-dessus ou les définitions ci-dessous.
+   ============================================================================ */
+
+@layer components {
+  /* --- Liens --- */
+  .link-style {
+    @apply text-foreground hover:text-foreground/80 transition-colors duration-200 hover:underline underline-offset-4;
+  }
+
+  /* --- Page backgrounds --- */
+  .page-bg {
+    background: var(--page-bg);
+    min-height: 100%;
+  }
+
+  .page-bg-soft {
+    background: var(--page-bg-soft);
+    min-height: 100%;
+  }
+
+  /* --- Surfaces (cartes, panels) ---
+     .surface           : carte standard
+     .surface-muted     : variante secondaire (sections d'info)
+     .surface-elevated  : popover, modal, dropdown
+     .surface-hover     : ajoute un état au survol (à combiner)
+     .panel-hero        : grand container de tête de page
+     .panel-hero-dark   : variante CTA fond sombre
+  */
+  .surface {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .surface-muted {
+    background: var(--surface-muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+  }
+
+  .surface-elevated {
+    background: var(--surface-elevated);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+
+  .surface-hover {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .surface-hover:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--color-foreground) 18%,
+      var(--surface-border)
+    );
+    box-shadow: var(--shadow-md);
+  }
+
+  .panel-hero {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .panel-hero-dark {
+    background: oklch(0.15 0 0);
+    color: oklch(0.98 0 0);
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: var(--shadow-md);
+    /* Sur fond sombre, on adapte les tokens texte pour rester lisible */
+    --foreground: oklch(0.98 0 0);
+    --muted-foreground: oklch(0.72 0 0);
+    --border: oklch(0.3 0 0);
+  }
+
+  .dark .panel-hero-dark {
+    background: oklch(0.1 0 0);
+  }
+
+  /* --- Stat cards (KPIs, métriques) --- */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+
+  /* --- Tablist (onglets pillule) --- */
+  .tablist {
+    background: var(--muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+  }
+
+  .tab {
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--muted-foreground);
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .tab[data-state="active"] {
+    background: var(--surface);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+
+  /* --- Chips / Badges arrondis --- */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--muted);
+    color: var(--muted-foreground);
+    border-radius: 9999px;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .chip:hover {
+    background: color-mix(in srgb, var(--muted) 70%, var(--foreground) 8%);
+  }
+
+  .chip-active {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  /* --- Empty state --- */
+  .empty-state {
+    border: 1px dashed var(--surface-border);
+    border-radius: var(--radius);
+    background: var(--surface-muted);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  /* --- Note card (encart info) --- */
+  .note-card {
+    background: var(--surface-muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  /* ==========================================================================
+     COMPATIBILITÉ — anciennes classes tcg-* normalisées sur les nouveaux
+     tokens. Conservées pour ne pas casser les pages existantes.
+     ========================================================================== */
+
+  .tcg-page--soft,
+  .tcg-page--tournaments,
+  .tcg-page--play {
+    background: var(--page-bg);
+    min-height: 100%;
+  }
+
+  .tcg-surface {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .tcg-surface--hero,
+  .tcg-surface--hero-tournaments,
+  .tcg-surface--hero-play {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tcg-surface--dark {
+    background: oklch(0.15 0 0);
+    color: white;
+    border-radius: calc(var(--radius) + 4px);
+    box-shadow: var(--shadow-md);
+    /* Sur fond sombre, on adapte les tokens texte pour rester lisible */
+    --foreground: oklch(0.98 0 0);
+    --muted-foreground: oklch(0.72 0 0);
+    --border: oklch(0.3 0 0);
+  }
+
+  .tcg-surface--soft {
+    background: var(--surface-muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+  }
+
+  .tcg-surface--highlight {
+    background: var(--surface);
+    border: 1px solid
+      color-mix(in srgb, var(--color-primary) 20%, var(--surface-border));
+    border-radius: var(--radius);
+  }
+
+  .tcg-surface--hover {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+
+  .tcg-surface--hover:hover {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 32%,
+      var(--surface-border)
+    );
+    box-shadow: var(--shadow-md);
+  }
+
+  .tcg-metric-card,
+  .tcg-play-stat {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+  }
+
+  .tcg-play-tablist {
+    background: var(--muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 0.25rem;
+  }
+
+  .tcg-play-tab {
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--muted-foreground);
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .tcg-play-tab[data-state="active"] {
+    background: var(--surface);
+    color: var(--foreground);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .tcg-note-card {
+    background: var(--surface-muted);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .tcg-empty-state {
+    border: 1px dashed var(--surface-border);
+    border-radius: var(--radius);
+    background: var(--surface-muted);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .tcg-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--muted);
+    color: var(--muted-foreground);
+    border-radius: 9999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition:
+      background-color 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .tcg-filter-chip:hover {
+    background: color-mix(in srgb, var(--muted) 70%, var(--foreground) 8%);
+  }
+
+  .tcg-filter-chip--active {
+    background: var(--foreground);
+    color: var(--background);
+  }
+}
+
+/* ============================================================================
+   ANIMATIONS & EFFETS UTILITAIRES
+   ============================================================================ */
+
+@layer base {
   .bg-grid-pattern {
     background-image:
-      linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+      linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
     background-size: 20px 20px;
   }
 
-  /* Smooth animations */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out;
   }
@@ -308,55 +635,20 @@ body {
     }
   }
 
-  /* Card hover effects - Brutalist style */
+  /* Card hover (soft moderne) */
   .card-hover {
-    transition: all 0.1s ease;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
   }
 
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 8px 8px 0px 0px hsl(0 0% 0% / 1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
 
-  /* Homepage gradient backgrounds */
-  .homepage-gradient {
-    background: linear-gradient(
-      135deg,
-      var(--color-muted) 0%,
-      var(--color-background) 50%,
-      var(--color-accent) 100%
-    );
-  }
-
-  .hero-gradient {
-    background: linear-gradient(
-      90deg,
-      var(--color-primary) 0%,
-      var(--color-background) 50%,
-      var(--color-secondary) 100%
-    );
-  }
-
-  /* Dark mode adjustments for gradients */
-  .dark .homepage-gradient {
-    background: linear-gradient(
-      135deg,
-      var(--color-muted) 0%,
-      var(--color-background) 50%,
-      var(--color-accent) 100%
-    );
-  }
-
-  .dark .hero-gradient {
-    background: linear-gradient(
-      90deg,
-      var(--color-primary) 0%,
-      var(--color-background) 50%,
-      var(--color-secondary) 100%
-    );
-  }
-
-  /* Pokemon card specific styles */
+  /* Pokemon card image hover */
   .pokemon-card-image {
     transition:
       transform 0.3s ease,
@@ -364,11 +656,11 @@ body {
   }
 
   .pokemon-card-image:hover {
-    transform: scale(1.05);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transform: scale(1.03);
+    box-shadow: var(--shadow-lg);
   }
 
-  /* Type badges with better styling */
+  /* Type badge shimmer */
   .type-badge {
     position: relative;
     overflow: hidden;
@@ -394,50 +686,45 @@ body {
     left: 100%;
   }
 
-  /* Attack section styling */
-  .attack-section {
-    position: relative;
-    padding-left: 16px;
-    border-left: 4px solid var(--color-primary);
-    background: linear-gradient(
-      90deg,
-      rgba(var(--color-primary), 0.05) 0%,
-      transparent 100%
-    );
-    border-radius: 0 8px 8px 0;
-  }
-
-  /* Marketplace card hover effects */
+  /* Marketplace card */
   .marketplace-card {
-    transition: all 0.2s ease;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
     border: 1px solid var(--color-border);
+    border-radius: var(--radius);
   }
 
   .marketplace-card:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 32%,
+      var(--surface-border)
+    );
+    box-shadow: var(--shadow-md);
   }
 
-  /* Seller rating stars */
+  /* Rating star */
   .rating-star {
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
   }
 
   /* Price trend indicators */
   .trend-up {
-    color: #10b981;
+    color: var(--color-success);
   }
 
   .trend-down {
-    color: #ef4444;
+    color: var(--color-destructive);
   }
 
   .trend-stable {
-    color: #6b7280;
+    color: var(--color-muted-foreground);
   }
 
-  /* Loading animation for card image */
+  /* Card image loading shimmer */
   .card-image-loading {
     background: linear-gradient(
       90deg,
@@ -458,34 +745,7 @@ body {
     }
   }
 
-  /* Collection page specific styles */
-  .collection-card-preview {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .collection-card-preview::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(var(--color-primary), 0.1) 0%,
-      rgba(var(--color-secondary), 0.1) 50%,
-      rgba(var(--color-accent), 0.1) 100%
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .collection-card:hover .collection-card-preview::before {
-    opacity: 1;
-  }
-
-  /* Card preview placeholder styles */
+  /* Card preview placeholder */
   .card-preview-placeholder {
     background: linear-gradient(
       45deg,
@@ -508,7 +768,7 @@ body {
     }
   }
 
-  /* Enhanced button hover effects */
+  /* Discovery button shimmer */
   .discovery-button {
     position: relative;
     overflow: hidden;
@@ -534,15 +794,13 @@ body {
     left: 100%;
   }
 
-  /* Search input enhancements */
+  /* Search input focus */
   .search-input {
-    transition: all 0.3s ease;
-    position: relative;
+    transition: all 0.2s ease;
   }
 
   .search-input:focus {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-sm);
   }
 
   /* Empty state animation */
@@ -567,28 +825,28 @@ body {
   }
 
   .collection-grid-item:nth-child(1) {
-    animation-delay: 0.1s;
+    animation-delay: 0.05s;
   }
   .collection-grid-item:nth-child(2) {
-    animation-delay: 0.2s;
+    animation-delay: 0.1s;
   }
   .collection-grid-item:nth-child(3) {
-    animation-delay: 0.3s;
+    animation-delay: 0.15s;
   }
   .collection-grid-item:nth-child(4) {
-    animation-delay: 0.4s;
+    animation-delay: 0.2s;
   }
   .collection-grid-item:nth-child(5) {
-    animation-delay: 0.5s;
+    animation-delay: 0.25s;
   }
   .collection-grid-item:nth-child(6) {
-    animation-delay: 0.6s;
+    animation-delay: 0.3s;
   }
   .collection-grid-item:nth-child(7) {
-    animation-delay: 0.7s;
+    animation-delay: 0.35s;
   }
   .collection-grid-item:nth-child(8) {
-    animation-delay: 0.8s;
+    animation-delay: 0.4s;
   }
 
   @keyframes fadeInUp {
@@ -602,7 +860,7 @@ body {
     }
   }
 
-  /* Responsive adjustments */
+  /* Mobile adjustments */
   @media (max-width: 768px) {
     .pokemon-card-image:hover {
       transform: none;
@@ -619,224 +877,6 @@ body {
     .discovery-button::before {
       display: none;
     }
-  }
-}
-
-@layer components {
-  .link-style {
-    @apply text-foreground hover:text-foreground/80 transition-all duration-300 hover:underline underline-offset-4;
-  }
-
-  .tcg-page--soft {
-    background: var(--tcg-page-soft);
-  }
-
-  .tcg-page--tournaments {
-    background: var(--tcg-page-tournaments);
-  }
-
-  .tcg-page--play {
-    background: var(--tcg-page-play);
-  }
-
-  .tcg-surface {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-    border-radius: var(--tcg-surface-radius-lg);
-    box-shadow: var(--tcg-surface-shadow-panel);
-  }
-
-  .tcg-surface--hero {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-    border-radius: var(--tcg-surface-radius-xl);
-    box-shadow: var(--tcg-surface-shadow-hero);
-  }
-
-  .tcg-surface--hero > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .tcg-surface--hero-tournaments {
-    background: linear-gradient(
-      120deg,
-      rgba(255, 255, 255, 0.94) 0%,
-      rgba(255, 247, 237, 0.95) 52%,
-      rgba(255, 255, 255, 0.88) 100%
-    );
-  }
-
-  .tcg-surface--hero-tournaments::before {
-    content: "";
-    position: absolute;
-    top: -5rem;
-    right: -2rem;
-    width: 14rem;
-    height: 14rem;
-    border-radius: 9999px;
-    background: rgba(251, 146, 60, 0.24);
-    filter: blur(48px);
-    z-index: 0;
-  }
-
-  .tcg-surface--hero-tournaments::after {
-    content: "";
-    position: absolute;
-    left: -1rem;
-    bottom: -1rem;
-    width: 12rem;
-    height: 9rem;
-    background: linear-gradient(135deg, rgba(251, 146, 60, 0.16), transparent);
-    z-index: 0;
-  }
-
-  .tcg-surface--hero-play {
-    background: linear-gradient(
-      140deg,
-      rgba(255, 255, 255, 0.95) 0%,
-      rgba(255, 247, 237, 0.94) 55%,
-      rgba(255, 255, 255, 0.9) 100%
-    );
-  }
-
-  .tcg-surface--hero-play::before {
-    content: "";
-    position: absolute;
-    top: -4rem;
-    left: 2rem;
-    width: 11rem;
-    height: 11rem;
-    border-radius: 9999px;
-    background: rgba(251, 146, 60, 0.22);
-    filter: blur(48px);
-    z-index: 0;
-  }
-
-  .tcg-surface--hero-play::after {
-    content: "";
-    position: absolute;
-    right: -2rem;
-    bottom: -2rem;
-    width: 12rem;
-    height: 12rem;
-    border-radius: 9999px;
-    background: rgba(125, 211, 252, 0.24);
-    filter: blur(54px);
-    z-index: 0;
-  }
-
-  .tcg-surface--dark {
-    background: #020617;
-    color: white;
-    box-shadow: var(--tcg-surface-shadow-hero);
-  }
-
-  .tcg-surface--soft {
-    background: rgba(255, 255, 255, 0.82);
-    box-shadow: var(--tcg-surface-shadow-soft);
-  }
-
-  .tcg-surface--highlight {
-    background: linear-gradient(
-      135deg,
-      rgba(254, 215, 170, 0.42),
-      rgba(255, 255, 255, 0.92) 58%,
-      rgba(191, 219, 254, 0.28)
-    );
-    border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
-  }
-
-  .tcg-surface--hover {
-    transition:
-      transform 0.18s ease,
-      box-shadow 0.18s ease,
-      border-color 0.18s ease;
-  }
-
-  .tcg-surface--hover:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
-    box-shadow: var(--tcg-surface-shadow-hover);
-  }
-
-  .tcg-metric-card {
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.25);
-    border-radius: 1rem;
-  }
-
-  .tcg-play-stat {
-    background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.76) 0%,
-      rgba(255, 255, 255, 0.58) 100%
-    );
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 1.25rem;
-    box-shadow: 0 18px 32px -28px rgba(15, 23, 42, 0.35);
-    backdrop-filter: blur(12px);
-  }
-
-  .tcg-play-tablist {
-    background: rgba(248, 250, 252, 0.86);
-    border: 1px solid rgba(226, 232, 240, 0.92);
-    border-radius: 1.25rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  }
-
-  .tcg-play-tab {
-    border-radius: 0.95rem;
-    color: rgb(71, 85, 105);
-    transition:
-      background-color 0.18s ease,
-      color 0.18s ease,
-      box-shadow 0.18s ease,
-      transform 0.18s ease;
-  }
-
-  .tcg-play-tab[data-state="active"] {
-    background: rgba(255, 255, 255, 0.96);
-    color: rgb(15, 23, 42);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.85),
-      0 12px 24px -22px rgba(15, 23, 42, 0.5);
-  }
-
-  .tcg-note-card {
-    background: rgba(248, 250, 252, 0.86);
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 1rem;
-  }
-
-  .tcg-empty-state {
-    border: 1px dashed rgba(148, 163, 184, 0.45);
-    border-radius: 1.5rem;
-    background: rgba(248, 250, 252, 0.92);
-  }
-
-  .tcg-filter-chip {
-    background: rgb(241, 245, 249);
-    color: rgb(71, 85, 105);
-    border-radius: 9999px;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition:
-      background-color 0.18s ease,
-      color 0.18s ease,
-      box-shadow 0.18s ease;
-  }
-
-  .tcg-filter-chip:hover {
-    background: rgb(226, 232, 240);
-  }
-
-  .tcg-filter-chip--active {
-    background: rgb(15, 23, 42);
-    color: white;
-    box-shadow: 0 10px 30px -20px rgba(15, 23, 42, 0.8);
   }
 }
 
