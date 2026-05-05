@@ -2,11 +2,13 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSearchKeyboard } from "@/hooks/useSearchKeyboard";
 
+import type { Mock } from "vitest";
+
 type Handlers = {
-  onOpen: ReturnType<typeof vi.fn>;
-  onClose: ReturnType<typeof vi.fn>;
-  onSelect: ReturnType<typeof vi.fn>;
-  onSelectedIndexChange: ReturnType<typeof vi.fn>;
+  onOpen: Mock;
+  onClose: Mock;
+  onSelect: Mock;
+  onSelectedIndexChange: Mock;
 };
 
 const setup = (
