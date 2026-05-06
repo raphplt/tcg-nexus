@@ -143,6 +143,7 @@ describe("UserCartService", () => {
           "cartItems",
           "cartItems.listing",
           "cartItems.listing.pokemonCard",
+          "cartItems.listing.seller",
         ],
       });
     });

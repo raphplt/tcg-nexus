@@ -11,6 +11,7 @@ export const PROTECTED_ROUTES = [
   "/tournaments/admin",
   "/admin",
   "/settings",
+  "/support",
 ];
 
 // Routes d'authentification (rediriger si déjà connecté)

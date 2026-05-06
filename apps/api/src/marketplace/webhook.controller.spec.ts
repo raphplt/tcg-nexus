@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { MarketplaceService } from "./marketplace.service";
 import { StripeService } from "./stripe.service";
 import { WebhookController } from "./webhook.controller";
 
@@ -8,11 +9,19 @@ describe("WebhookController", () => {
   const stripeService = {
     constructEventFromPayload: jest.fn(),
   } as unknown as StripeService;
+  const marketplaceService = {
+    handleStripeEvent: jest.fn(),
+    handlePaymentSucceeded: jest.fn(),
+    handlePaymentFailed: jest.fn(),
+  } as unknown as MarketplaceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WebhookController],
-      providers: [{ provide: StripeService, useValue: stripeService }],
+      providers: [
+        { provide: StripeService, useValue: stripeService },
+        { provide: MarketplaceService, useValue: marketplaceService },
+      ],
     }).compile();
 
     controller = module.get<WebhookController>(WebhookController);

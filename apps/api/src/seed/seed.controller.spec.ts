@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { SealedProductService } from "../sealed-product/sealed-product.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
@@ -23,6 +24,12 @@ describe("SeedController", () => {
         {
           provide: SeedService,
           useValue: mockService,
+        },
+        {
+          provide: SealedProductService,
+          useValue: {
+            seedFromJson: jest.fn().mockResolvedValue(undefined),
+          },
         },
       ],
     }).compile();

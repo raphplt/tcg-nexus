@@ -5,12 +5,14 @@ import {
 } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
 import { CardState } from "../common/enums/pokemonCardsType";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { CardPopularityService } from "./card-popularity.service";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
@@ -43,8 +45,10 @@ describe("MarketplaceService", () => {
   const createMockQb = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
+    innerJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
+    setParameter: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
@@ -58,6 +62,8 @@ describe("MarketplaceService", () => {
     limit: jest.fn().mockReturnThis(),
     having: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
+    getRawOne: jest.fn().mockResolvedValue(undefined),
+    getCount: jest.fn().mockResolvedValue(0),
   });
 
   beforeEach(async () => {
@@ -67,7 +73,9 @@ describe("MarketplaceService", () => {
       save: jest.fn(),
       findOne: jest.fn(),
       delete: jest.fn(),
+      softRemove: jest.fn(),
       find: jest.fn(),
+      count: jest.fn(),
       createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
@@ -109,6 +117,31 @@ describe("MarketplaceService", () => {
       clearCart: jest.fn(),
     };
 
+    const mockUserRepo = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+    };
+
+    const mockCardPopularityService = {
+      recordEvent: jest.fn(),
+    };
+
+    const mockDataSource = {
+      transaction: jest.fn((cb: any) => cb({ save: jest.fn() })),
+      createQueryRunner: jest.fn(() => ({
+        connect: jest.fn(),
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        rollbackTransaction: jest.fn(),
+        release: jest.fn(),
+        manager: {
+          save: jest.fn(),
+          findOne: jest.fn(),
+          create: jest.fn(),
+        },
+      })),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarketplaceService,
@@ -127,8 +160,14 @@ describe("MarketplaceService", () => {
           useValue: mockPaymentTransactionRepo,
         },
         { provide: getRepositoryToken(OrderItem), useValue: mockOrderItemRepo },
+        { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: StripeService, useValue: mockStripeService },
         { provide: UserCartService, useValue: mockUserCartService },
+        {
+          provide: CardPopularityService,
+          useValue: mockCardPopularityService,
+        },
+        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
@@ -152,23 +191,47 @@ describe("MarketplaceService", () => {
       shippingAddress: "123 Main St",
     };
 
+    const buildManager = (
+      freshListing: any,
+      savedOrder: any = { id: 1 },
+    ) => ({
+      findOne: jest.fn().mockResolvedValue(freshListing),
+      create: jest.fn().mockReturnValue({}),
+      save: jest.fn().mockImplementation(async (entity, value) =>
+        entity === Order ? savedOrder : value,
+      ),
+      decrement: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockStripeService.retrievePaymentIntent.mockResolvedValue({
+        status: "succeeded",
+        amount: 2000,
+        currency: "usd",
+      });
+    });
+
     it("should create an order successfully", async () => {
+      const listing = {
+        id: 1,
+        price: 10,
+        quantityAvailable: 5,
+        currency: Currency.USD,
+      };
       const cart = {
-        cartItems: [
-          {
-            listing: { id: 1, price: 10, quantityAvailable: 5 },
-            quantity: 2,
-          },
-        ],
+        cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
-      orderRepo.create.mockReturnValue({});
-      orderRepo.save.mockResolvedValue({ id: 1 });
+
+      const manager = buildManager({ ...listing });
+      (service as any).dataSource.transaction.mockImplementation((cb: any) =>
+        cb(manager),
+      );
 
       const result = await service.createOrder(dto, user);
 
       expect(result).toEqual({ id: 1 });
-      expect(orderRepo.save).toHaveBeenCalled();
+      expect(manager.save).toHaveBeenCalled();
       expect(userCartService.clearCart).toHaveBeenCalledWith(user.id);
     });
 
@@ -180,15 +243,22 @@ describe("MarketplaceService", () => {
     });
 
     it("should throw BadRequestException if insufficient quantity", async () => {
+      const listing = {
+        id: 1,
+        price: 10,
+        quantityAvailable: 1,
+        currency: Currency.USD,
+      };
       const cart = {
-        cartItems: [
-          {
-            listing: { id: 1, price: 10, quantityAvailable: 1 },
-            quantity: 2,
-          },
-        ],
+        cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
+
+      const manager = buildManager({ ...listing });
+      (service as any).dataSource.transaction.mockImplementation((cb: any) =>
+        cb(manager),
+      );
+
       await expect(service.createOrder(dto, user)).rejects.toThrow(
         BadRequestException,
       );
@@ -261,15 +331,17 @@ describe("MarketplaceService", () => {
     });
 
     it("allows owner", async () => {
-      listingRepo.findOne.mockResolvedValue({ ...listing });
+      const found = { ...listing };
+      listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
-      expect(listingRepo.delete).toHaveBeenCalledWith(10);
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
     });
 
     it("allows admin", async () => {
-      listingRepo.findOne.mockResolvedValue({ ...listing });
+      const found = { ...listing };
+      listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, admin);
-      expect(listingRepo.delete).toHaveBeenCalledWith(10);
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
     });
   });
 
@@ -386,11 +458,12 @@ describe("MarketplaceService", () => {
   describe("getCardStatistics", () => {
     it("calculates average, min, max correctly", async () => {
       const qb = createMockQb();
-      qb.getMany.mockResolvedValue([
-        { price: 10, currency: "USD" },
-        { price: 20, currency: "USD" },
-        { price: 30, currency: "USD" },
-      ]);
+      qb.getRawOne.mockResolvedValue({
+        totalListings: "3",
+        minPrice: "10",
+        maxPrice: "30",
+        avgPrice: "20",
+      });
       mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([
         { price: 15, recordedAt: new Date() },
@@ -407,7 +480,12 @@ describe("MarketplaceService", () => {
 
     it("handles empty listings", async () => {
       const qb = createMockQb();
-      qb.getMany.mockResolvedValue([]);
+      qb.getRawOne.mockResolvedValue({
+        totalListings: "0",
+        minPrice: null,
+        maxPrice: null,
+        avgPrice: null,
+      });
       mockListingRepo.createQueryBuilder.mockReturnValue(qb);
 
       const stats = await service.getCardStatistics("c1");
@@ -417,7 +495,12 @@ describe("MarketplaceService", () => {
 
     it("applies currency and cardState filters", async () => {
       const qb = createMockQb();
-      qb.getMany.mockResolvedValue([{ price: 5, currency: "EUR" }]);
+      qb.getRawOne.mockResolvedValue({
+        totalListings: "1",
+        minPrice: "5",
+        maxPrice: "5",
+        avgPrice: "5",
+      });
       mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([]);
 
@@ -543,6 +626,13 @@ describe("MarketplaceService", () => {
 
   describe("getSellerStatistics", () => {
     it("calculates seller stats", async () => {
+      const userRepo = (service as any).userRepository;
+      userRepo.findOne.mockResolvedValue({
+        id: 1,
+        username: "alice",
+        firstName: "Alice",
+        lastName: "Doe",
+      });
       listingRepo.find.mockResolvedValue([
         { id: 1, expiresAt: new Date(Date.now() + 10000) },
       ]);

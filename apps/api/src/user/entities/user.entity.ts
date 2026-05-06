@@ -16,6 +16,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import {SupportTicket} from "../../support-ticket/entities/support-ticket.entity";
+import {SupportMessage} from "../../support-message/entities/support-message.entity";
 
 @Entity()
 export class User {
@@ -104,6 +106,13 @@ export class User {
     (organizer) => organizer.user,
   )
   tournamentOrganizers: TournamentOrganizer[];
+
+
+  @OneToMany(() => SupportTicket, (supportTicket) => supportTicket.user)
+  supportTickets?: SupportTicket[];
+
+  @OneToMany(() => SupportMessage, (supportMessage) => supportMessage.user)
+  supportMessages?: SupportMessage[];
 
   @OneToMany(
     () => UserBadge,
