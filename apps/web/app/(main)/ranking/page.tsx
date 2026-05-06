@@ -273,40 +273,20 @@ export default function RankingPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3">
-                {PERIODS.map((p) => (
-                  <Button
-                    key={p.value}
-                    size="sm"
-                    variant={period === p.value ? "default" : "outline"}
-                    onClick={() => {
-                      setPeriod(p.value);
-                      setPage(1);
-                    }}
-                  >
-                    {p.label}
-                  </Button>
-                ))}
-              </div>
-              <div className="w-px h-6 bg-border" />
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">Format :</span>
-                <select 
-                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  onChange={(e) => {
-                    // Logic to handle format change can be added here
-                    // setFormat(e.target.value);
+            <div className="flex flex-wrap items-center gap-3">
+              {PERIODS.map((p) => (
+                <Button
+                  key={p.value}
+                  size="sm"
+                  variant={period === p.value ? "default" : "outline"}
+                  onClick={() => {
+                    setPeriod(p.value);
                     setPage(1);
                   }}
-                  defaultValue="standard"
                 >
-                  <option value="all">Tous les formats</option>
-                  <option value="standard">Standard</option>
-                  <option value="expanded">Étendu</option>
-                  <option value="glc">Gym Leader Challenge</option>
-                </select>
-              </div>
+                  {p.label}
+                </Button>
+              ))}
             </div>
 
             {/* Current user summary */}

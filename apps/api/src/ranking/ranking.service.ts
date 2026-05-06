@@ -58,7 +58,6 @@ export class RankingService {
     page: number = 1,
     limit: number = 20,
     period: string = "all-time",
-    format?: string,
   ): Promise<{
     data: GlobalRankingPlayer[];
     total: number;
@@ -131,7 +130,6 @@ export class RankingService {
   async getMyRankingPosition(
     userId: number,
     period: string = "all-time",
-    format?: string,
   ): Promise<GlobalRankingPlayer> {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },
