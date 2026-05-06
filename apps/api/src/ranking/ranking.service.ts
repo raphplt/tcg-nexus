@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Match } from "../match/entities/match.entity";
+import { LessThan, MoreThan, Repository } from "typeorm";
+import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
@@ -12,6 +12,16 @@ import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
 import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
+import { TournamentStatus } from "../tournament/entities/tournament.entity";
+
+export interface GlobalRankingPlayer {
+  rank: number;
+  userId: number;
+  pseudo: string;
+  avatarUrl: string | null;
+  score: number;
+  tendency: "up" | "down" | "equal";
+}
 
 export interface RankingCalculationResult {
   playerId: number;
@@ -40,6 +50,143 @@ export class RankingService {
     @InjectRepository(RankedMatchHistory)
     private rankedHistoryRepository: Repository<RankedMatchHistory>,
   ) {}
+
+  /**
+   * Récupère le classement global avec pagination et filtres
+   */
+  async getGlobalRanking(
+    page: number = 1,
+    limit: number = 20,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<{
+    data: GlobalRankingPlayer[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    let tendencyDate = new Date();
+    if (period === "week") {
+      tendencyDate.setDate(tendencyDate.getDate() - 7);
+    } else if (period === "month") {
+      tendencyDate.setMonth(tendencyDate.getMonth() - 1);
+    } else {
+      tendencyDate.setDate(tendencyDate.getDate() - 30);
+    }
+
+    const [players, total] = await this.playerRepository.findAndCount({
+      relations: ["user"],
+      order: { elo: "DESC", id: "ASC" },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const data = await Promise.all(
+      players.map(async (player, index) => {
+        const rank = (page - 1) * limit + index + 1;
+
+        const { sum: winnerSum } = await this.rankedHistoryRepository
+          .createQueryBuilder("history")
+          .select("SUM(history.delta)", "sum")
+          .where("history.winnerId = :userId", { userId: player.user.id })
+          .andWhere("history.createdAt >= :date", { date: tendencyDate })
+          .getRawOne();
+
+        const { sum: loserSum } = await this.rankedHistoryRepository
+          .createQueryBuilder("history")
+          .select("SUM(history.delta)", "sum")
+          .where("history.loserId = :userId", { userId: player.user.id })
+          .andWhere("history.createdAt >= :date", { date: tendencyDate })
+          .getRawOne();
+
+        const delta = (Number(winnerSum) || 0) - (Number(loserSum) || 0);
+        let tendency: "up" | "down" | "equal" = "equal";
+        if (delta > 0) tendency = "up";
+        if (delta < 0) tendency = "down";
+
+        return {
+          rank,
+          userId: player.user.id,
+          pseudo: player.user.firstName
+            ? `${player.user.firstName} ${player.user.lastName}`.trim()
+            : player.user.email,
+          avatarUrl: player.user.avatarUrl || null,
+          score: player.elo,
+          tendency,
+        };
+      }),
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
+  }
+
+  /**
+   * Récupère la position d'un utilisateur dans le classement global
+   */
+  async getMyRankingPosition(
+    userId: number,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<GlobalRankingPlayer> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["user"],
+    });
+
+    if (!player) {
+      throw new NotFoundException("Joueur non trouvé");
+    }
+
+    const higherEloCount = await this.playerRepository.count({
+      where: { elo: MoreThan(player.elo) },
+    });
+
+    const sameEloCount = await this.playerRepository.count({
+      where: { elo: player.elo, id: LessThan(player.id) },
+    });
+
+    const rank = higherEloCount + sameEloCount + 1;
+
+    let tendencyDate = new Date();
+    if (period === "week") tendencyDate.setDate(tendencyDate.getDate() - 7);
+    else if (period === "month") tendencyDate.setMonth(tendencyDate.getMonth() - 1);
+    else tendencyDate.setDate(tendencyDate.getDate() - 30);
+
+    const { sum: winnerSum } = await this.rankedHistoryRepository
+      .createQueryBuilder("history")
+      .select("SUM(history.delta)", "sum")
+      .where("history.winnerId = :userId", { userId: player.user.id })
+      .andWhere("history.createdAt >= :date", { date: tendencyDate })
+      .getRawOne();
+
+    const { sum: loserSum } = await this.rankedHistoryRepository
+      .createQueryBuilder("history")
+      .select("SUM(history.delta)", "sum")
+      .where("history.loserId = :userId", { userId: player.user.id })
+      .andWhere("history.createdAt >= :date", { date: tendencyDate })
+      .getRawOne();
+
+    const delta = (Number(winnerSum) || 0) - (Number(loserSum) || 0);
+    let tendency: "up" | "down" | "equal" = "equal";
+    if (delta > 0) tendency = "up";
+    if (delta < 0) tendency = "down";
+
+    return {
+      rank,
+      userId: player.user.id,
+      pseudo: player.user.firstName
+        ? `${player.user.firstName} ${player.user.lastName}`.trim()
+        : player.user.email,
+      avatarUrl: player.user.avatarUrl || null,
+      score: player.elo,
+      tendency,
+    };
+  }
 
   /**
    * Crée un nouveau ranking
@@ -202,7 +349,80 @@ export class RankingService {
     // Sauvegarder
     await this.rankingRepository.save(rankings);
 
+    // Mettre à jour l'ELO si le tournoi est terminé
+    if (tournament.status === TournamentStatus.FINISHED || tournament.isFinished) {
+      await this.processTournamentMatchesForElo(tournamentId);
+    }
+
     return rankings;
+  }
+
+  /**
+   * Calcule et met à jour le score ELO après chaque tournoi terminé
+   */
+  async processTournamentMatchesForElo(tournamentId: number): Promise<void> {
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+      relations: [
+        "matches",
+        "matches.playerA",
+        "matches.playerA.user",
+        "matches.playerB",
+        "matches.playerB.user",
+        "matches.winner",
+        "matches.winner.user",
+      ],
+    });
+
+    if (!tournament) return;
+
+    const sortedMatches = tournament.matches
+      .filter((m) => m.status === MatchStatus.FINISHED)
+      .sort((a, b) => {
+        if (a.round !== b.round) return a.round - b.round;
+        return a.id - b.id;
+      });
+
+    for (const match of sortedMatches) {
+      const existingHistory = await this.rankedHistoryRepository.findOne({
+        where: { matchId: match.id },
+      });
+
+      if (!existingHistory && match.playerA?.user && match.playerB?.user) {
+        let winnerUserId: number | undefined;
+        let loserUserId: number | undefined;
+        let isDraw = false;
+
+        if (match.winner?.user) {
+          winnerUserId = match.winner.user.id;
+          loserUserId =
+            match.playerA.user.id === match.winner.user.id
+              ? match.playerB.user.id
+              : match.playerA.user.id;
+        } else {
+          isDraw = true;
+          // For draw, order doesn't really matter for ELO formula
+          winnerUserId = match.playerA.user.id;
+          loserUserId = match.playerB.user.id;
+        }
+
+        if (winnerUserId && loserUserId) {
+          try {
+            await this.updateEloWithHistory(
+              winnerUserId,
+              loserUserId,
+              { matchId: match.id },
+              isDraw,
+            );
+          } catch (error) {
+            console.error(
+              `Failed to update ELO for tournament match ${match.id}`,
+              error,
+            );
+          }
+        }
+      }
+    }
   }
 
   /**
