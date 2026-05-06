@@ -8,6 +8,7 @@ import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
 import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { PublicUserDto } from "./dto/public-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
 
@@ -104,6 +105,17 @@ export class UserService {
       relations: ["player"],
     });
     return this.ensurePlayerProfile(user);
+  }
+
+  async findPublicProfile(id: number): Promise<PublicUserDto> {
+    const user = await this.userRepository.findOne({
+      where: { id, isActive: true },
+      relations: ["player"],
+    });
+    if (!user || !user.isActive) {
+      throw new NotFoundException("User not found");
+    }
+    return PublicUserDto.fromEntities(user, user.player ?? null);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {

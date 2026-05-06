@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,6 +25,21 @@ const getPlayerName = (player: any): string => {
     return `${player.user.firstName} ${player.user.lastName}`;
   }
   return player.name || `Joueur #${player.id}`;
+};
+
+const PlayerName = ({ player }: { player: any }) => {
+  const name = getPlayerName(player);
+  if (player?.user?.id) {
+    return (
+      <Link
+        href={`/users/${player.user.id}`}
+        className="hover:text-primary hover:underline transition-colors"
+      >
+        {name}
+      </Link>
+    );
+  }
+  return <>{name}</>;
 };
 
 export function TabRankings({ rankings }: TabRankingsProps) {
@@ -111,7 +127,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       #{actualRank}
                     </Badge>
                     <h3 className="font-semibold text-lg mt-2">
-                      {getPlayerName(ranking.player)}
+                      <PlayerName player={ranking.player} />
                     </h3>
                     <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
                       <div>
@@ -201,7 +217,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {getPlayerName(ranking.player)}
+                      <PlayerName player={ranking.player} />
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="secondary" className="font-bold">

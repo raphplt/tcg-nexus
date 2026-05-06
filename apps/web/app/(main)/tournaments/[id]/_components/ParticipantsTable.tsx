@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -40,11 +41,18 @@ export function ParticipantsTable({ participants }: ParticipantsTableProps) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-medium">
-                      {p.user
-                        ? `${p.user.firstName} ${p.user.lastName}`
-                        : p.name || `Joueur #${p.id}`}
-                    </span>
+                    {p.user?.id ? (
+                      <Link
+                        href={`/users/${p.user.id}`}
+                        className="font-medium hover:text-primary hover:underline transition-colors"
+                      >
+                        {p.user.firstName} {p.user.lastName}
+                      </Link>
+                    ) : (
+                      <span className="font-medium">
+                        {p.name || `Joueur #${p.id}`}
+                      </span>
+                    )}
                     <span className="text-xs text-muted-foreground sm:hidden">
                       #{p.id}
                     </span>

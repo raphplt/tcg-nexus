@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -167,9 +168,18 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">
-                              {getDisplayName(registration)}
-                            </p>
+                            {registration.player?.user?.id ? (
+                              <Link
+                                href={`/users/${registration.player.user.id}`}
+                                className="font-medium hover:text-primary hover:underline transition-colors"
+                              >
+                                {getDisplayName(registration)}
+                              </Link>
+                            ) : (
+                              <p className="font-medium">
+                                {getDisplayName(registration)}
+                              </p>
+                            )}
                             <p className="text-xs text-muted-foreground sm:hidden">
                               {registration.player?.user?.email || "-"}
                             </p>
