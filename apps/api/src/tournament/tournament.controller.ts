@@ -236,6 +236,14 @@ export class TournamentController {
     return this.tournamentService.getTournamentMatches(id, { round, status });
   }
 
+  @Get(":id/matches/me")
+  getMyPendingTournamentMatch(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.tournamentService.getMyPendingMatch(id, user.id);
+  }
+
   @Public()
   @Get(":id/matches/:matchId")
   getTournamentMatch(

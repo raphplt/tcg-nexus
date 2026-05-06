@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +15,12 @@ import {
   Trophy,
   Target,
   Grid3X3,
+  Swords,
 } from "lucide-react";
 import { H1 } from "@/components/Shared/Titles";
 import { useTournament } from "@/hooks/useTournament";
 import { useBracket } from "@/hooks/useBracket";
+import { tournamentService } from "@/services/tournament.service";
 import { EliminationBracket } from "./_components/EliminationBracket";
 import { SwissPairings } from "./_components/SwissPairings";
 import Link from "next/link";
@@ -44,6 +47,13 @@ export default function BracketPage() {
     isRoundRobin,
     isElimination,
   } = useBracket(id as string);
+
+  const { data: myMatch } = useQuery({
+    queryKey: ["tournament", id, "matches", "me"],
+    queryFn: () => tournamentService.getMyPendingMatch(id as string),
+    enabled: Boolean(id),
+    refetchInterval: 15_000,
+  });
 
   const isLoading = tournamentLoading || bracketLoading;
 
@@ -157,6 +167,34 @@ export default function BracketPage() {
             </Button>
           </div>
         </div>
+
+        {/* Mon match en cours */}
+        {myMatch && (
+          <Card className="mb-6 border-primary/40 bg-primary/5">
+            <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <Swords className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">
+                    Tu as un match en attente — Round {myMatch.round}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {myMatch.status === "in_progress"
+                      ? "Reprends la partie en cours"
+                      : "Lance ta partie online"}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() =>
+                  router.push(`/tournaments/${id}/matches/${myMatch.matchId}`)
+                }
+              >
+                Rejoindre mon match
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Contenu du bracket */}
         <Card className="min-h-[600px]">

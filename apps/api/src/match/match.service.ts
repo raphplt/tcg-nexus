@@ -492,6 +492,30 @@ export class MatchService {
     });
   }
 
+  /** First scheduled/in-progress match for the given player in a tournament, with onlineSession. */
+  async findPendingTournamentMatchForPlayer(
+    tournamentId: number,
+    playerId: number,
+  ): Promise<Match | null> {
+    return this.matchRepository
+      .createQueryBuilder("match")
+      .leftJoinAndSelect("match.playerA", "playerA")
+      .leftJoinAndSelect("playerA.user", "playerAUser")
+      .leftJoinAndSelect("match.playerB", "playerB")
+      .leftJoinAndSelect("playerB.user", "playerBUser")
+      .leftJoinAndSelect("match.onlineSession", "onlineSession")
+      .where("match.tournamentId = :tournamentId", { tournamentId })
+      .andWhere("match.status IN (:...statuses)", {
+        statuses: [MatchStatus.SCHEDULED, MatchStatus.IN_PROGRESS],
+      })
+      .andWhere("(playerA.id = :playerId OR playerB.id = :playerId)", {
+        playerId,
+      })
+      .orderBy("match.round", "ASC")
+      .addOrderBy("match.phase", "ASC")
+      .getOne();
+  }
+
   async getPlayHub(userId: number): Promise<PlayHubResponse> {
     const player = await this.playerRepository.findOne({
       where: { user: { id: userId } },

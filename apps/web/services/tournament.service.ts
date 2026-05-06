@@ -18,6 +18,16 @@ export interface TournamentQueryParams extends PaginationParams {
   sortOrder?: "ASC" | "DESC";
 }
 
+export interface MyPendingTournamentMatch {
+  matchId: number;
+  round: number;
+  phase: string;
+  status: string;
+  playerA: { id: number; name: string | null } | null;
+  playerB: { id: number; name: string | null } | null;
+  onlineSession: { id: number; status: string } | null;
+}
+
 export const tournamentService = {
   /**
    * Récupère un tournoi par son ID
@@ -50,6 +60,18 @@ export const tournamentService = {
     return authedFetch<Match>(
       "GET",
       `/tournaments/${tournamentId}/matches/${matchId}`,
+    );
+  },
+
+  /**
+   * Returns the user's currently pending match in this tournament, or null.
+   */
+  async getMyPendingMatch(
+    tournamentId: number | string,
+  ): Promise<MyPendingTournamentMatch | null> {
+    return authedFetch<MyPendingTournamentMatch | null>(
+      "GET",
+      `/tournaments/${tournamentId}/matches/me`,
     );
   },
 
