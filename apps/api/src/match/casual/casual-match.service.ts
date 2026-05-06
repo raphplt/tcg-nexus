@@ -379,8 +379,6 @@ export class CasualMatchService {
     if (state.gamePhase === GamePhase.Finished && state.winnerId) {
       session.status = CasualMatchSessionStatus.FINISHED;
 
-      // state.winnerId is an engine player id (Player.id), not a User.id.
-      // Resolve back to the User.id by matching against playerIds[0]/playerIds[1].
       const isPlayerAWinner = state.winnerId === state.playerIds[0];
       const winnerUserId = isPlayerAWinner
         ? session.playerA.id
@@ -423,11 +421,6 @@ export class CasualMatchService {
       return player && player.playerId === pid;
     });
 
-    // Engine player IDs are player entity IDs (from Player table), not user IDs.
-    // We need to look them up. For the casual system, the engine player IDs
-    // are set during createInitialGameState from the Player entity ID.
-    // Since we have 2 players, their IDs in engine are their Player entity IDs.
-    // The first player in playerIds corresponds to playerA, second to playerB.
     return slot === "playerA" ? state.playerIds[0] : state.playerIds[1];
   }
 
