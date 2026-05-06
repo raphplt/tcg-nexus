@@ -448,9 +448,7 @@ export class MatchGateway
       user.id,
     );
     if (wasEmpty && graceCancelled) {
-      this.server
-        .to(roomId)
-        .emit("opponent_reconnected", { userId: user.id });
+      this.server.to(roomId).emit("opponent_reconnected", { userId: user.id });
     }
 
     return {

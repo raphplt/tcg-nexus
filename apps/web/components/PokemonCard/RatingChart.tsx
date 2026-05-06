@@ -58,10 +58,7 @@ const RatingChart: React.FC<RatingChartProps> = ({ cardName }) => {
                   borderRadius: "6px",
                   fontSize: "12px",
                 }}
-                formatter={(value: any) => [
-                  `${value ?? 0}/5`,
-                  "Cote",
-                ]}
+                formatter={(value: any) => [`${value ?? 0}/5`, "Cote"]}
                 labelStyle={{ color: "#374151" }}
               />
               <Line

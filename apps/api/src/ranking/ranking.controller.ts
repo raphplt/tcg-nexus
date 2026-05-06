@@ -52,9 +52,8 @@ export class RankingController {
               ? "loss"
               : "draw",
         opponentId:
-          h.winner?.id === user.id ? h.loser?.id : h.winner?.id ?? null,
-        eloAfter:
-          h.winner?.id === user.id ? h.winnerEloAfter : h.loserEloAfter,
+          h.winner?.id === user.id ? h.loser?.id : (h.winner?.id ?? null),
+        eloAfter: h.winner?.id === user.id ? h.winnerEloAfter : h.loserEloAfter,
       })),
     };
   }

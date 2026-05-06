@@ -323,7 +323,10 @@ export default function GameBoard({ matchId }: GameBoardProps) {
           )}
           {isConnected ? "Temps réel connecté" : "Reconnexion..."}
           {opponentDisconnected ? (
-            <Badge variant="outline" className="border-amber-500 text-amber-500">
+            <Badge
+              variant="outline"
+              className="border-amber-500 text-amber-500"
+            >
               Adversaire déconnecté
             </Badge>
           ) : null}

@@ -313,7 +313,9 @@ export function MatchmakingPanel() {
                   disabled={!selectedDeckId}
                   onClick={handleJoinQueue}
                 >
-                  {isRanked ? "Chercher un match classé" : "Chercher un adversaire"}
+                  {isRanked
+                    ? "Chercher un match classé"
+                    : "Chercher un adversaire"}
                   <Swords className="ml-2 h-4 w-4" />
                 </Button>
               </>
