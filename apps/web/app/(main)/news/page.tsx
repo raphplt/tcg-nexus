@@ -13,6 +13,13 @@ import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { articleService } from "@/services/article.service";
 import { useAuth } from "@/contexts/AuthContext";
 
+const stripHtml = (html?: string) => {
+  if (!html) return "";
+  if (typeof window === "undefined") return html.replace(/<[^>]+>/g, "");
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+};
+
 export default function NewsPage() {
   const { user } = useAuth();
   const isPro = user?.isPro || user?.role === "admin";
@@ -25,12 +32,6 @@ export default function NewsPage() {
     queryKey: ["articles"],
     queryFn: () => articleService.getAll(),
   });
-
-  const stripHtml = (html?: string) => {
-    if (!html) return "";
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.body.textContent || "";
-  };
 
   return (
     <PageWrapper gradient="muted" maxWidth="xl">
@@ -56,9 +57,21 @@ export default function NewsPage() {
         </header>
 
         {isLoading ? (
-          <div className="flex justify-center items-center py-20 text-muted-foreground">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-3">Chargement des actualités...</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="flex flex-col overflow-hidden border-border/50">
+                <div className="h-48 w-full bg-muted/50 animate-pulse" />
+                <CardHeader className="p-5 pb-3 space-y-3">
+                  <div className="h-4 w-24 bg-muted/60 animate-pulse rounded" />
+                  <div className="h-6 w-3/4 bg-muted/60 animate-pulse rounded" />
+                </CardHeader>
+                <CardContent className="p-5 pt-0 space-y-2">
+                  <div className="h-3 w-full bg-muted/40 animate-pulse rounded" />
+                  <div className="h-3 w-5/6 bg-muted/40 animate-pulse rounded" />
+                  <div className="h-3 w-4/6 bg-muted/40 animate-pulse rounded" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : error ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-destructive text-center">

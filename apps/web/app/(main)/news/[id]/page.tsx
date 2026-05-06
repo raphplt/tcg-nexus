@@ -100,9 +100,10 @@ export default function ArticleDetailPage() {
           </div>
         )}
 
-        <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl p-6 md:p-10 shadow-sm mt-8">
+        <div className="bg-card/40 backdrop-blur-sm border border-border/40 rounded-2xl p-6 md:p-10 shadow-sm mt-8 relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-secondary/50 to-transparent rounded-t-2xl opacity-50" />
           <div 
-            className="prose prose-neutral dark:prose-invert max-w-none text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-headings:font-semibold"
+            className="prose prose-neutral dark:prose-invert max-w-none text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-headings:font-semibold prose-img:rounded-xl prose-img:shadow-sm"
             dangerouslySetInnerHTML={{ __html: article.content || '' }}
           />
         </div>

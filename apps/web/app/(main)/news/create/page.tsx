@@ -106,15 +106,15 @@ export default function CreateArticlePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">Image de couverture (URL R2 ou externe)</Label>
+              <Label htmlFor="image">Image de couverture</Label>
               <div className="flex gap-2">
                 <Input 
                   id="image" 
-                  placeholder="https://cdn.tcg-nexus.org/..." 
+                  placeholder="Collez l'URL de l'image (ex: https://cdn.tcg-nexus.org/...)" 
                   {...register("image")} 
-                  className={errors.image ? "border-destructive focus-visible:ring-destructive" : ""}
+                  className={errors.image ? "border-destructive focus-visible:ring-destructive flex-1" : "flex-1"}
                 />
-                <Button type="button" variant="outline" className="shrink-0 gap-2" disabled title="Bientôt disponible">
+                <Button type="button" variant="secondary" className="shrink-0 gap-2 cursor-not-allowed opacity-50" title="Bientôt disponible">
                   <UploadCloud className="h-4 w-4" />
                   <span className="hidden sm:inline">Uploader</span>
                 </Button>
@@ -122,7 +122,9 @@ export default function CreateArticlePage() {
               {errors.image && (
                 <p className="text-sm text-destructive mt-1">{errors.image.message}</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">L&apos;upload direct vers R2 sera bientôt disponible. Pour le moment, utilisez une URL publique.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                En attendant l'intégration du module d'upload, veuillez fournir un lien direct vers une image.
+              </p>
             </div>
 
             <div className="space-y-2">
