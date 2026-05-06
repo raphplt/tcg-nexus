@@ -33,8 +33,10 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     gameState,
     recentEvents,
     isConnected,
+    opponentDisconnected,
     lastError,
     setConnectionStatus,
+    setOpponentDisconnected,
     setSessionView,
     setGameState,
     appendRealtimeEvents,
@@ -110,6 +112,11 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     const socket = io(`${socketBaseUrl}/match`, {
       transports: ["websocket"],
       withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
     socketRef.current = socket;
 
@@ -139,10 +146,20 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       setError(payload.message);
     });
 
+    socket.on("opponent_disconnected", () => {
+      setOpponentDisconnected(true);
+    });
+
+    socket.on("opponent_reconnected", () => {
+      setOpponentDisconnected(false);
+    });
+
     return () => {
+      socket.emit("leave_match", { matchId });
       socket.disconnect();
       socketRef.current = null;
       setConnectionStatus(false);
+      setOpponentDisconnected(false);
     };
   }, [
     appendRealtimeEvents,
@@ -152,6 +169,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     setConnectionStatus,
     setError,
     setGameState,
+    setOpponentDisconnected,
     setSessionView,
     socketBaseUrl,
   ]);
@@ -304,6 +322,14 @@ export default function GameBoard({ matchId }: GameBoardProps) {
             <WifiOff className="h-4 w-4 text-amber-500" />
           )}
           {isConnected ? "Temps réel connecté" : "Reconnexion..."}
+          {opponentDisconnected ? (
+            <Badge
+              variant="outline"
+              className="border-amber-500 text-amber-500"
+            >
+              Adversaire déconnecté
+            </Badge>
+          ) : null}
         </div>
       }
       onDispatchAction={emitAction}

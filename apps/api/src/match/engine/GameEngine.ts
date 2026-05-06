@@ -1357,9 +1357,25 @@ export class GameEngine {
     evolutionCard.specialConditions = [];
     evolutionCard.temporaryEffects = [];
     evolutionCard.turnsInPlay = 0;
+    // Snapshot the previous stage with only static identity fields. Live state
+    // (energies, tools, damage, conditions, effects) belongs to the top card,
+    // and KO/return-to-hand only reads instanceId/ownerId/baseCard from layers.
+    const previousStageSnapshot: PokemonCardInGame = {
+      instanceId: targetPokemon.instanceId,
+      ownerId: targetPokemon.ownerId,
+      baseCard: targetPokemon.baseCard,
+      damageCounters: 0,
+      specialConditions: [],
+      attachedEnergies: [],
+      attachedTools: [],
+      attachedEvolutions: [],
+      turnsInPlay: 0,
+      temporaryEffects: [],
+      usedOncePerGameAttacks: [],
+    };
     evolutionCard.attachedEvolutions = [
       ...targetPokemon.attachedEvolutions,
-      targetPokemon,
+      previousStageSnapshot,
     ];
 
     player.hand.splice(cardIndex, 1);
@@ -2685,10 +2701,13 @@ export class GameEngine {
       baseCard: pokemon.baseCard,
     });
 
-    // The Pokemon reverts to the previous stage underneath
+    // The Pokemon reverts to the previous stage underneath. Per official rules,
+    // when a Pokemon devolves all Special Conditions and effects from attacks
+    // or Abilities are removed (damage counters and energies are kept).
     pokemon.instanceId = previousStage.instanceId;
     pokemon.baseCard = previousStage.baseCard;
     pokemon.specialConditions = [];
+    pokemon.temporaryEffects = [];
 
     events.push({
       type: "DEVOLVED",

@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  Injectable,
+  OnModuleInit,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import {
@@ -37,11 +41,23 @@ type AuthenticatedSocket = Socket & {
   namespace: "/match",
 })
 @Injectable()
-export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MatchGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
   @WebSocketServer()
   server: Server;
 
+  private static readonly DISCONNECT_GRACE_MS = 30_000;
+  private static readonly INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+
   private inactivityTimers = new Map<number, NodeJS.Timeout>();
+  // Per-match per-user set of live socket ids. Lets us distinguish "user has
+  // another tab still open" from "user is truly gone" before notifying opponent.
+  private matchSockets = new Map<number, Map<number, Set<string>>>();
+  private casualSockets = new Map<number, Map<number, Set<string>>>();
+  // Short grace timers armed when a user goes to 0 sockets. Keyed
+  // `match:<id>:<userId>` / `casual:<id>:<userId>`.
+  private graceTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -50,6 +66,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly casualMatchService: CasualMatchService,
     private readonly matchmakingService: MatchmakingService,
   ) {}
+
+  onModuleInit() {
+    this.matchmakingService.registerMatchFoundHandler((result) =>
+      this.notifyMatchFound(
+        result.playerAUserId,
+        result.playerBUserId,
+        result.session.id,
+      ),
+    );
+  }
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
@@ -60,12 +86,35 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: AuthenticatedSocket) {
-    if (client.data.user) {
-      this.matchmakingService.leaveQueue(client.data.user.id);
+    const user = client.data.user;
+    if (user) {
+      this.matchmakingService.leaveQueue(user.id);
     }
+
     const matchId = client.data.currentMatchId;
-    if (matchId) {
-      this.startInactivityTimer(matchId);
+    if (matchId && user) {
+      const remaining = this.removeUserSocket(
+        this.matchSockets,
+        matchId,
+        user.id,
+        client.id,
+      );
+      if (remaining === 0) {
+        this.armMatchDisconnectGrace(matchId, user.id);
+      }
+    }
+
+    const casualId = client.data.currentCasualSessionId;
+    if (casualId && user) {
+      const remaining = this.removeUserSocket(
+        this.casualSockets,
+        casualId,
+        user.id,
+        client.id,
+      );
+      if (remaining === 0) {
+        this.armCasualDisconnectGrace(casualId, user.id);
+      }
     }
 
     client.data.currentMatchId = undefined;
@@ -73,25 +122,111 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.data.enginePlayerId = undefined;
   }
 
+  private addUserSocket(
+    bucket: Map<number, Map<number, Set<string>>>,
+    scopeId: number,
+    userId: number,
+    socketId: string,
+  ): { wasEmpty: boolean } {
+    let perUser = bucket.get(scopeId);
+    if (!perUser) {
+      perUser = new Map();
+      bucket.set(scopeId, perUser);
+    }
+    let sockets = perUser.get(userId);
+    const wasEmpty = !sockets || sockets.size === 0;
+    if (!sockets) {
+      sockets = new Set();
+      perUser.set(userId, sockets);
+    }
+    sockets.add(socketId);
+    return { wasEmpty };
+  }
+
+  private removeUserSocket(
+    bucket: Map<number, Map<number, Set<string>>>,
+    scopeId: number,
+    userId: number,
+    socketId: string,
+  ): number {
+    const perUser = bucket.get(scopeId);
+    if (!perUser) return 0;
+    const sockets = perUser.get(userId);
+    if (!sockets) return 0;
+    sockets.delete(socketId);
+    if (sockets.size === 0) {
+      perUser.delete(userId);
+    }
+    if (perUser.size === 0) {
+      bucket.delete(scopeId);
+    }
+    return sockets.size;
+  }
+
+  private graceKey(scope: "match" | "casual", id: number, userId: number) {
+    return `${scope}:${id}:${userId}`;
+  }
+
+  private armMatchDisconnectGrace(matchId: number, userId: number) {
+    const key = this.graceKey("match", matchId, userId);
+    if (this.graceTimers.has(key)) return;
+    const timer = setTimeout(() => {
+      this.graceTimers.delete(key);
+      // Confirm user is still gone (could have reconnected after timer was set).
+      const remaining = this.matchSockets.get(matchId)?.get(userId)?.size ?? 0;
+      if (remaining > 0) return;
+      this.server
+        .to(this.getRoomId(matchId))
+        .emit("opponent_disconnected", { userId });
+      this.startInactivityTimer(matchId);
+    }, MatchGateway.DISCONNECT_GRACE_MS);
+    this.graceTimers.set(key, timer);
+  }
+
+  private armCasualDisconnectGrace(sessionId: number, userId: number) {
+    const key = this.graceKey("casual", sessionId, userId);
+    if (this.graceTimers.has(key)) return;
+    const timer = setTimeout(() => {
+      this.graceTimers.delete(key);
+      const remaining =
+        this.casualSockets.get(sessionId)?.get(userId)?.size ?? 0;
+      if (remaining > 0) return;
+      this.server
+        .to(this.getCasualRoomId(sessionId))
+        .emit("opponent_disconnected", { userId });
+    }, MatchGateway.DISCONNECT_GRACE_MS);
+    this.graceTimers.set(key, timer);
+  }
+
+  private cancelDisconnectGrace(
+    scope: "match" | "casual",
+    id: number,
+    userId: number,
+  ): boolean {
+    const key = this.graceKey(scope, id, userId);
+    const timer = this.graceTimers.get(key);
+    if (!timer) return false;
+    clearTimeout(timer);
+    this.graceTimers.delete(key);
+    return true;
+  }
+
   private startInactivityTimer(matchId: number) {
     if (this.inactivityTimers.has(matchId)) {
       clearTimeout(this.inactivityTimers.get(matchId));
     }
 
-    const timer = setTimeout(
-      async () => {
-        this.inactivityTimers.delete(matchId);
-        try {
-          const result = await this.matchOnlineService.autoForfeit(matchId);
-          if (result.events.length > 0) {
-            await this.broadcastMatchState(matchId, result.events);
-          }
-        } catch (e) {
-          // match might already be finished or no longer valid
+    const timer = setTimeout(async () => {
+      this.inactivityTimers.delete(matchId);
+      try {
+        const result = await this.matchOnlineService.autoForfeit(matchId);
+        if (result.events.length > 0) {
+          await this.broadcastMatchState(matchId, result.events);
         }
-      },
-      5 * 60 * 1000,
-    ); // 5 minutes
+      } catch (e) {
+        // match might already be finished or no longer valid
+      }
+    }, MatchGateway.INACTIVITY_TIMEOUT_MS);
 
     this.inactivityTimers.set(matchId, timer);
   }
@@ -111,15 +246,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
+    const matchId = Number(data.matchId);
     const sessionView = await this.matchOnlineService.getSessionView(
-      Number(data.matchId),
+      matchId,
       user as User,
     );
-    const roomId = this.getRoomId(Number(data.matchId));
+    const roomId = this.getRoomId(matchId);
     const isSpectator = sessionView.slot === ("spectator" as any);
 
     client.join(roomId);
-    client.data.currentMatchId = Number(data.matchId);
+    client.data.currentMatchId = matchId;
     client.data.enginePlayerId = isSpectator
       ? null
       : sessionView.enginePlayerId;
@@ -127,16 +263,57 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.emit("session_view", sessionView);
     client.emit("state_update", sessionView.gameState);
 
-    // Only clear inactivity timer for actual players reconnecting
     if (!isSpectator) {
-      this.clearInactivityTimer(Number(data.matchId));
+      const { wasEmpty } = this.addUserSocket(
+        this.matchSockets,
+        matchId,
+        user.id,
+        client.id,
+      );
+      // Reconnection path: cancel any pending grace + auto-forfeit, notify room.
+      const graceCancelled = this.cancelDisconnectGrace(
+        "match",
+        matchId,
+        user.id,
+      );
+      this.clearInactivityTimer(matchId);
+      if (wasEmpty && graceCancelled) {
+        this.server
+          .to(roomId)
+          .emit("opponent_reconnected", { userId: user.id });
+      }
     }
 
     return {
       status: isSpectator ? "spectating" : "joined",
-      matchId: Number(data.matchId),
+      matchId,
       enginePlayerId: isSpectator ? null : sessionView.enginePlayerId,
     };
+  }
+
+  @SubscribeMessage("leave_match")
+  async handleLeaveMatch(
+    @MessageBody() data: { matchId: number },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    const user = this.requireSocketUser(client);
+    const matchId = Number(data.matchId);
+    const roomId = this.getRoomId(matchId);
+    client.leave(roomId);
+    if (client.data.currentMatchId === matchId) {
+      client.data.currentMatchId = undefined;
+      client.data.enginePlayerId = undefined;
+    }
+    const remaining = this.removeUserSocket(
+      this.matchSockets,
+      matchId,
+      user.id,
+      client.id,
+    );
+    if (remaining === 0) {
+      this.armMatchDisconnectGrace(matchId, user.id);
+    }
+    return { status: "left" };
   }
 
   @SubscribeMessage("dispatch_action")
@@ -245,24 +422,65 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
+    const sessionId = Number(data.sessionId);
     const sessionView = await this.casualMatchService.getSessionView(
-      Number(data.sessionId),
+      sessionId,
       user as User,
     );
-    const roomId = this.getCasualRoomId(Number(data.sessionId));
+    const roomId = this.getCasualRoomId(sessionId);
 
     client.join(roomId);
-    client.data.currentCasualSessionId = Number(data.sessionId);
+    client.data.currentCasualSessionId = sessionId;
     client.data.enginePlayerId = sessionView.enginePlayerId;
 
     client.emit("casual_session_view", sessionView);
     client.emit("casual_state_update", sessionView.gameState);
 
+    const { wasEmpty } = this.addUserSocket(
+      this.casualSockets,
+      sessionId,
+      user.id,
+      client.id,
+    );
+    const graceCancelled = this.cancelDisconnectGrace(
+      "casual",
+      sessionId,
+      user.id,
+    );
+    if (wasEmpty && graceCancelled) {
+      this.server.to(roomId).emit("opponent_reconnected", { userId: user.id });
+    }
+
     return {
       status: "joined",
-      sessionId: Number(data.sessionId),
+      sessionId,
       enginePlayerId: sessionView.enginePlayerId,
     };
+  }
+
+  @SubscribeMessage("casual_leave")
+  async handleCasualLeave(
+    @MessageBody() data: { sessionId: number },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    const user = this.requireSocketUser(client);
+    const sessionId = Number(data.sessionId);
+    const roomId = this.getCasualRoomId(sessionId);
+    client.leave(roomId);
+    if (client.data.currentCasualSessionId === sessionId) {
+      client.data.currentCasualSessionId = undefined;
+      client.data.enginePlayerId = undefined;
+    }
+    const remaining = this.removeUserSocket(
+      this.casualSockets,
+      sessionId,
+      user.id,
+      client.id,
+    );
+    if (remaining === 0) {
+      this.armCasualDisconnectGrace(sessionId, user.id);
+    }
+    return { status: "left" };
   }
 
   @SubscribeMessage("casual_dispatch_action")

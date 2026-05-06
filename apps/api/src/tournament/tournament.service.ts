@@ -609,6 +609,47 @@ export class TournamentService {
   }
 
   /**
+   * Returns the user's currently pending match in the given tournament, if any.
+   */
+  async getMyPendingMatch(tournamentId: number, userId: number) {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!player) {
+      return null;
+    }
+
+    const match = await this.matchService.findPendingTournamentMatchForPlayer(
+      tournamentId,
+      player.id,
+    );
+
+    if (!match) {
+      return null;
+    }
+
+    return {
+      matchId: match.id,
+      round: match.round,
+      phase: match.phase,
+      status: match.status,
+      playerA: match.playerA
+        ? { id: match.playerA.id, name: match.playerA.user?.email ?? null }
+        : null,
+      playerB: match.playerB
+        ? { id: match.playerB.id, name: match.playerB.user?.email ?? null }
+        : null,
+      onlineSession: match.onlineSession
+        ? {
+            id: match.onlineSession.id,
+            status: match.onlineSession.status,
+          }
+        : null,
+    };
+  }
+
+  /**
    * Récupère un match spécifique d'un tournoi
    */
   async getTournamentMatch(tournamentId: number, matchId: number) {

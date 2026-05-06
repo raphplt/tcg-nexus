@@ -12,8 +12,10 @@ interface MatchStoreState {
   gameState: SanitizedGameState | null;
   recentEvents: OnlineMatchLogEntry[];
   isConnected: boolean;
+  opponentDisconnected: boolean;
   lastError: string | null;
   setConnectionStatus: (status: boolean) => void;
+  setOpponentDisconnected: (disconnected: boolean) => void;
   setSessionView: (sessionView: OnlineMatchSessionView | null) => void;
   setGameState: (gameState: SanitizedGameState | null) => void;
   appendRealtimeEvents: (events: Record<string, unknown>[]) => void;
@@ -28,12 +30,15 @@ const initialState = {
   gameState: null,
   recentEvents: [],
   isConnected: false,
+  opponentDisconnected: false,
   lastError: null,
 };
 
 export const useMatchStore = create<MatchStoreState>((set) => ({
   ...initialState,
   setConnectionStatus: (status) => set({ isConnected: status }),
+  setOpponentDisconnected: (disconnected) =>
+    set({ opponentDisconnected: disconnected }),
   setSessionView: (sessionView) =>
     set({
       matchId: sessionView?.matchId ?? null,

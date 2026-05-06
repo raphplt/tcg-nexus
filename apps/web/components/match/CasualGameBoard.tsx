@@ -35,6 +35,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   const [gameState, setGameState] = useState<SanitizedGameState | null>(null);
   const [recentEvents, setRecentEvents] = useState<OnlineMatchLogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
 
   const sessionQuery = useQuery({
@@ -74,6 +75,11 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
     const socket = io(`${socketBaseUrl}/match`, {
       transports: ["websocket"],
       withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
     socketRef.current = socket;
 
@@ -112,10 +118,15 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       setLastError(payload.message);
     });
 
+    socket.on("opponent_disconnected", () => setOpponentDisconnected(true));
+    socket.on("opponent_reconnected", () => setOpponentDisconnected(false));
+
     return () => {
+      socket.emit("casual_leave", { sessionId });
       socket.disconnect();
       socketRef.current = null;
       setIsConnected(false);
+      setOpponentDisconnected(false);
     };
   }, [sessionId, sessionQuery.data?.status, socketBaseUrl, queryClient]);
 
@@ -220,6 +231,14 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
             <WifiOff className="h-4 w-4 text-amber-500" />
           )}
           {isConnected ? "Temps réel connecté" : "Reconnexion..."}
+          {opponentDisconnected ? (
+            <Badge
+              variant="outline"
+              className="border-amber-500 text-amber-500"
+            >
+              Adversaire déconnecté
+            </Badge>
+          ) : null}
         </div>
       }
       introCard={
@@ -262,7 +281,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       }
       onDispatchAction={emitAction}
       onRespondPrompt={emitPromptResponse}
-      onForfeit={() => emitAction({ type: "FORFEIT" })}
+      onForfeit={() => emitAction({ type: "SURRENDER" })}
     />
   );
 }

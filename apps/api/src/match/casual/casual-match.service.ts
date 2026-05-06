@@ -10,8 +10,8 @@ import { In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
-import { User } from "../../user/entities/user.entity";
 import { RankingService } from "../../ranking/ranking.service";
+import { User } from "../../user/entities/user.entity";
 import { PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
@@ -378,17 +378,23 @@ export class CasualMatchService {
 
     if (state.gamePhase === GamePhase.Finished && state.winnerId) {
       session.status = CasualMatchSessionStatus.FINISHED;
-      session.winnerUserId = Number(state.winnerId) || null;
+
+      const isPlayerAWinner = state.winnerId === state.playerIds[0];
+      const winnerUserId = isPlayerAWinner
+        ? session.playerA.id
+        : session.playerB.id;
+      const loserUserId = isPlayerAWinner
+        ? session.playerB.id
+        : session.playerA.id;
+
+      session.winnerUserId = winnerUserId;
       session.endedReason = state.winnerReason;
 
-      // Trigger ELO update for ranked matches (fire-and-forget)
-      if (session.isRanked && session.winnerUserId) {
-        const loserId =
-          session.playerA.id === session.winnerUserId
-            ? session.playerB.id
-            : session.playerA.id;
+      if (session.isRanked) {
         this.rankingService
-          .updateElo(session.winnerUserId, loserId)
+          .updateEloWithHistory(winnerUserId, loserUserId, {
+            casualSessionId: session.id,
+          })
           .catch((err) =>
             console.error("Failed to update ELO after ranked match", err),
           );
@@ -415,11 +421,6 @@ export class CasualMatchService {
       return player && player.playerId === pid;
     });
 
-    // Engine player IDs are player entity IDs (from Player table), not user IDs.
-    // We need to look them up. For the casual system, the engine player IDs
-    // are set during createInitialGameState from the Player entity ID.
-    // Since we have 2 players, their IDs in engine are their Player entity IDs.
-    // The first player in playerIds corresponds to playerA, second to playerB.
     return slot === "playerA" ? state.playerIds[0] : state.playerIds[1];
   }
 
