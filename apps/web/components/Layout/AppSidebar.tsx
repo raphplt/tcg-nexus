@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Library,
   LogIn,
+  Medal,
   Package,
   PenLine,
   Plus,

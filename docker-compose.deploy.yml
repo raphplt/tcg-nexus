@@ -61,6 +61,17 @@ services:
     networks:
       - tcg-nexus-network
 
+  docs:
+    build:
+      context: .
+      dockerfile: docker/docs.Dockerfile
+    container_name: tcg-nexus-docs
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    networks:
+      - tcg-nexus-network
+
 volumes:
   postgres_data:
     driver: local

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
@@ -24,6 +25,36 @@ export class RankingController {
   @Post()
   create(@Body() createRankingDto: CreateRankingDto) {
     return this.rankingService.create(createRankingDto);
+  }
+
+  @Get("global")
+  getGlobalRanking(
+    @Query("page") page?: number,
+    @Query("limit") limit?: number,
+    @Query("period") period?: string,
+    @Query("format") format?: string,
+  ) {
+    return this.rankingService.getGlobalRanking(
+      page ? +page : 1,
+      limit ? +limit : 20,
+      period || "all-time",
+      format,
+    );
+  }
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  getMyRankingPosition(
+    @CurrentUser() user: User,
+    @Query("period") period?: string,
+    @Query("format") format?: string,
+  ) {
+    return this.rankingService.getMyRankingPosition(
+      user.id,
+      period || "all-time",
+      format,
+    );
   }
 
   @Get()

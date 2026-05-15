@@ -52,7 +52,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Ops",
-      items: ["ops/docker", "ops/tests", "ops/vercel"],
+      items: ["ops/docker", "ops/tests"],
     },
   ],
 };

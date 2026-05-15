@@ -1,10 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Match } from "../match/entities/match.entity";
+import { In, Repository } from "typeorm";
+import { Deck } from "../deck/entities/deck.entity";
+import { CasualMatchSession } from "../match/entities/casual-match-session.entity";
+import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
+  TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
 import { User } from "../user/entities/user.entity";
@@ -12,6 +15,15 @@ import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
 import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
+
+export interface GlobalRankingPlayer {
+  rank: number;
+  userId: number;
+  pseudo: string;
+  avatarUrl: string | null;
+  score: number;
+  tendency: "up" | "down" | "equal";
+}
 
 export interface RankingCalculationResult {
   playerId: number;
@@ -21,8 +33,8 @@ export interface RankingCalculationResult {
   draws: number;
   winRate: number;
   tieBreaks: {
-    opponentWinRate: number; // Moyenne des winRate des adversaires
-    gameWinRate: number; // Ratio de games gagnés
+    opponentWinRate: number;
+    gameWinRate: number;
   };
 }
 
@@ -40,6 +52,228 @@ export class RankingService {
     @InjectRepository(RankedMatchHistory)
     private rankedHistoryRepository: Repository<RankedMatchHistory>,
   ) {}
+
+  /**
+   * Date de début de la période pour la tendance (week/month/all-time).
+   * "all-time" utilise une fenêtre de 30 jours comme proxy de "période précédente".
+   */
+  private getPeriodStartDate(period: string): Date {
+    const date = new Date();
+    if (period === "week") {
+      date.setDate(date.getDate() - 7);
+    } else if (period === "month") {
+      date.setMonth(date.getMonth() - 1);
+    } else {
+      date.setDate(date.getDate() - 30);
+    }
+    return date;
+  }
+
+  /**
+   * Récupère les lignes de RankedMatchHistory dans la période, optionnellement filtrées par format de deck.
+   * Un row "matche" le format si :
+   *   - row.casualSessionId set ET au moins un des decks (A ou B) de la session est dans ce format
+   *   - row.matchId set ET le tournoi du match a `format` dans ses allowedFormats
+   */
+  private async getInPeriodHistory(
+    periodStart: Date,
+    format?: string,
+  ): Promise<
+    Array<{ winnerId: number | null; loserId: number | null; delta: number }>
+  > {
+    const qb = this.rankedHistoryRepository
+      .createQueryBuilder("h")
+      .select("h.winnerId", "winnerId")
+      .addSelect("h.loserId", "loserId")
+      .addSelect("h.delta", "delta")
+      .where("h.createdAt >= :date", { date: periodStart });
+
+    if (format) {
+      qb.leftJoin(CasualMatchSession, "cs", "cs.id = h.casualSessionId")
+        .leftJoin(Deck, "deckA", "deckA.id = cs.playerADeckId")
+        .leftJoin("deckA.format", "fA")
+        .leftJoin(Deck, "deckB", "deckB.id = cs.playerBDeckId")
+        .leftJoin("deckB.format", "fB")
+        .leftJoin(Match, "m", "m.id = h.matchId")
+        .leftJoin("m.tournament", "t")
+        .andWhere(
+          `(
+            (h.casualSessionId IS NOT NULL AND (fA.type = :format OR fB.type = :format))
+            OR (h.matchId IS NOT NULL AND :format = ANY(string_to_array(t.allowedFormats, ',')))
+          )`,
+          { format },
+        );
+    }
+
+    const rows = await qb.getRawMany<{
+      winnerId: number | null;
+      loserId: number | null;
+      delta: number | string;
+    }>();
+
+    return rows.map((r) => ({
+      winnerId: r.winnerId ?? null,
+      loserId: r.loserId ?? null,
+      delta: Number(r.delta) || 0,
+    }));
+  }
+
+  /**
+   * Construit un snapshot de classement avec rang actuel et rang au début de période.
+   * Si `format` est fourni, ne retient que les joueurs ayant joué ≥1 match dans ce format pendant la période.
+   */
+  private async buildRankingSnapshot(
+    period: string,
+    format?: string,
+  ): Promise<{
+    players: Player[];
+    currentRank: Map<number, number>;
+    oldRank: Map<number, number>;
+  }> {
+    const periodStart = this.getPeriodStartDate(period);
+    const history = await this.getInPeriodHistory(periodStart, format);
+
+    const deltaByUser = new Map<number, number>();
+    const activeUsers = new Set<number>();
+    for (const row of history) {
+      if (row.winnerId != null) {
+        deltaByUser.set(
+          row.winnerId,
+          (deltaByUser.get(row.winnerId) ?? 0) + row.delta,
+        );
+        activeUsers.add(row.winnerId);
+      }
+      if (row.loserId != null) {
+        deltaByUser.set(
+          row.loserId,
+          (deltaByUser.get(row.loserId) ?? 0) - row.delta,
+        );
+        activeUsers.add(row.loserId);
+      }
+    }
+
+    const playerWhere = format
+      ? { user: { id: In(Array.from(activeUsers)) } }
+      : {};
+    const players =
+      format && activeUsers.size === 0
+        ? []
+        : await this.playerRepository.find({
+            where: playerWhere,
+            relations: ["user"],
+          });
+
+    const byCurrent = [...players].sort((a, b) => b.elo - a.elo || a.id - b.id);
+    const currentRank = new Map<number, number>();
+    byCurrent.forEach((p, i) => currentRank.set(p.id, i + 1));
+
+    const byOld = [...players].sort((a, b) => {
+      const va = a.elo - (deltaByUser.get(a.user.id) ?? 0);
+      const vb = b.elo - (deltaByUser.get(b.user.id) ?? 0);
+      return vb - va || a.id - b.id;
+    });
+    const oldRank = new Map<number, number>();
+    byOld.forEach((p, i) => oldRank.set(p.id, i + 1));
+
+    return { players: byCurrent, currentRank, oldRank };
+  }
+
+  private toGlobalRankingPlayer(
+    player: Player,
+    rank: number,
+    tendency: "up" | "down" | "equal",
+  ): GlobalRankingPlayer {
+    return {
+      rank,
+      userId: player.user.id,
+      pseudo: player.user.firstName
+        ? `${player.user.firstName} ${player.user.lastName}`.trim()
+        : player.user.email,
+      avatarUrl: player.user.avatarUrl || null,
+      score: player.elo,
+      tendency,
+    };
+  }
+
+  private computeTendency(
+    currentRank: number | undefined,
+    oldRank: number | undefined,
+  ): "up" | "down" | "equal" {
+    if (currentRank == null || oldRank == null) return "equal";
+    if (oldRank > currentRank) return "up";
+    if (oldRank < currentRank) return "down";
+    return "equal";
+  }
+
+  /**
+   * Récupère le classement global avec pagination et filtres (période, format de deck).
+   * Tendance = rang actuel comparé au rang au début de la période.
+   */
+  async getGlobalRanking(
+    page: number = 1,
+    limit: number = 20,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<{
+    data: GlobalRankingPlayer[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const { players, currentRank, oldRank } = await this.buildRankingSnapshot(
+      period,
+      format,
+    );
+
+    const total = players.length;
+    const pageSlice = players.slice((page - 1) * limit, page * limit);
+
+    const data = pageSlice.map((p) =>
+      this.toGlobalRankingPlayer(
+        p,
+        currentRank.get(p.id)!,
+        this.computeTendency(currentRank.get(p.id), oldRank.get(p.id)),
+      ),
+    );
+
+    return { data, total, page, limit };
+  }
+
+  /**
+   * Récupère la position de l'utilisateur dans le classement global.
+   * Le rang est calculé sur le sous-ensemble actif si `format` est fourni.
+   */
+  async getMyRankingPosition(
+    userId: number,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<GlobalRankingPlayer> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["user"],
+    });
+
+    if (!player) {
+      throw new NotFoundException("Joueur non trouvé");
+    }
+
+    const { currentRank, oldRank } = await this.buildRankingSnapshot(
+      period,
+      format,
+    );
+
+    const rank = currentRank.get(player.id);
+    if (rank == null) {
+      // Le joueur n'a pas participé au format demandé sur la période
+      return this.toGlobalRankingPlayer(player, 0, "equal");
+    }
+
+    return this.toGlobalRankingPlayer(
+      player,
+      rank,
+      this.computeTendency(currentRank.get(player.id), oldRank.get(player.id)),
+    );
+  }
 
   /**
    * Crée un nouveau ranking
@@ -202,7 +436,83 @@ export class RankingService {
     // Sauvegarder
     await this.rankingRepository.save(rankings);
 
+    // Mettre à jour l'ELO si le tournoi est terminé
+    if (
+      tournament.status === TournamentStatus.FINISHED ||
+      tournament.isFinished
+    ) {
+      await this.processTournamentMatchesForElo(tournamentId);
+    }
+
     return rankings;
+  }
+
+  /**
+   * Calcule et met à jour le score ELO après chaque tournoi terminé
+   */
+  async processTournamentMatchesForElo(tournamentId: number): Promise<void> {
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+      relations: [
+        "matches",
+        "matches.playerA",
+        "matches.playerA.user",
+        "matches.playerB",
+        "matches.playerB.user",
+        "matches.winner",
+        "matches.winner.user",
+      ],
+    });
+
+    if (!tournament) return;
+
+    const sortedMatches = tournament.matches
+      .filter((m) => m.status === MatchStatus.FINISHED)
+      .sort((a, b) => {
+        if (a.round !== b.round) return a.round - b.round;
+        return a.id - b.id;
+      });
+
+    for (const match of sortedMatches) {
+      const existingHistory = await this.rankedHistoryRepository.findOne({
+        where: { matchId: match.id },
+      });
+
+      if (!existingHistory && match.playerA?.user && match.playerB?.user) {
+        let winnerUserId: number | undefined;
+        let loserUserId: number | undefined;
+        let isDraw = false;
+
+        if (match.winner?.user) {
+          winnerUserId = match.winner.user.id;
+          loserUserId =
+            match.playerA.user.id === match.winner.user.id
+              ? match.playerB.user.id
+              : match.playerA.user.id;
+        } else {
+          isDraw = true;
+          // For draw, order doesn't really matter for ELO formula
+          winnerUserId = match.playerA.user.id;
+          loserUserId = match.playerB.user.id;
+        }
+
+        if (winnerUserId && loserUserId) {
+          try {
+            await this.updateEloWithHistory(
+              winnerUserId,
+              loserUserId,
+              { matchId: match.id },
+              isDraw,
+            );
+          } catch (error) {
+            console.error(
+              `Failed to update ELO for tournament match ${match.id}`,
+              error,
+            );
+          }
+        }
+      }
+    }
   }
 
   /**
