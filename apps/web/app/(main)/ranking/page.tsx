@@ -106,7 +106,10 @@ function PodiumCard({
       <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
         <div className="absolute right-3 top-3 opacity-60">{s.icon}</div>
         <Avatar className={`${s.avatarSize} ${s.ring}`}>
-          <AvatarImage src={player.avatarUrl || undefined} alt={player.pseudo} />
+          <AvatarImage
+            src={player.avatarUrl || undefined}
+            alt={player.pseudo}
+          />
           <AvatarFallback className="text-lg font-bold">
             {player.pseudo.charAt(0).toUpperCase()}
           </AvatarFallback>
@@ -163,7 +166,9 @@ function RankingRow({
         <p className="truncate font-semibold">
           {player.pseudo}
           {isCurrentUser && (
-            <span className="ml-2 text-xs font-medium text-primary">(vous)</span>
+            <span className="ml-2 text-xs font-medium text-primary">
+              (vous)
+            </span>
           )}
         </p>
       </div>
@@ -382,31 +387,29 @@ export default function RankingPage() {
                 Précédent
               </Button>
               <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 7) }).map(
-                  (_, i) => {
-                    let pageNum: number;
-                    if (totalPages <= 7) {
-                      pageNum = i + 1;
-                    } else if (page <= 4) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 3) {
-                      pageNum = totalPages - 6 + i;
-                    } else {
-                      pageNum = page - 3 + i;
-                    }
-                    return (
-                      <Button
-                        key={pageNum}
-                        size="sm"
-                        variant={page === pageNum ? "default" : "ghost"}
-                        className="h-8 w-8 p-0 tabular-nums"
-                        onClick={() => setPage(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  },
-                )}
+                {Array.from({ length: Math.min(totalPages, 7) }).map((_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (page <= 4) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = page - 3 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      size="sm"
+                      variant={page === pageNum ? "default" : "ghost"}
+                      className="h-8 w-8 p-0 tabular-nums"
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
               </div>
               <Button
                 size="sm"

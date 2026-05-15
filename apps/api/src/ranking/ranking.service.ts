@@ -152,7 +152,8 @@ export class RankingService {
 
     let tendencyDate = new Date();
     if (period === "week") tendencyDate.setDate(tendencyDate.getDate() - 7);
-    else if (period === "month") tendencyDate.setMonth(tendencyDate.getMonth() - 1);
+    else if (period === "month")
+      tendencyDate.setMonth(tendencyDate.getMonth() - 1);
     else tendencyDate.setDate(tendencyDate.getDate() - 30);
 
     const { sum: winnerSum } = await this.rankedHistoryRepository
@@ -348,7 +349,10 @@ export class RankingService {
     await this.rankingRepository.save(rankings);
 
     // Mettre à jour l'ELO si le tournoi est terminé
-    if (tournament.status === TournamentStatus.FINISHED || tournament.isFinished) {
+    if (
+      tournament.status === TournamentStatus.FINISHED ||
+      tournament.isFinished
+    ) {
       await this.processTournamentMatchesForElo(tournamentId);
     }
 
