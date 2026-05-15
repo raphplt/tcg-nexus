@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
+import { Deck } from "../deck/entities/deck.entity";
 import { CasualMatchSession } from "../match/entities/casual-match-session.entity";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
+  TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
 import { User } from "../user/entities/user.entity";
@@ -13,7 +15,6 @@ import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
 import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
-import { TournamentStatus } from "../tournament/entities/tournament.entity";
 
 export interface GlobalRankingPlayer {
   rank: number;
@@ -32,8 +33,8 @@ export interface RankingCalculationResult {
   draws: number;
   winRate: number;
   tieBreaks: {
-    opponentWinRate: number; // Moyenne des winRate des adversaires
-    gameWinRate: number; // Ratio de games gagnés
+    opponentWinRate: number;
+    gameWinRate: number;
   };
 }
 
@@ -89,16 +90,16 @@ export class RankingService {
 
     if (format) {
       qb.leftJoin(CasualMatchSession, "cs", "cs.id = h.casualSessionId")
-        .leftJoin("deck", "deckA", `deckA.id = cs."playerADeckId"`)
-        .leftJoin("deck", "deckB", `deckB.id = cs."playerBDeckId"`)
-        .leftJoin("deck_format", "fA", `fA.id = deckA."formatId"`)
-        .leftJoin("deck_format", "fB", `fB.id = deckB."formatId"`)
+        .leftJoin(Deck, "deckA", "deckA.id = cs.playerADeckId")
+        .leftJoin("deckA.format", "fA")
+        .leftJoin(Deck, "deckB", "deckB.id = cs.playerBDeckId")
+        .leftJoin("deckB.format", "fB")
         .leftJoin(Match, "m", "m.id = h.matchId")
-        .leftJoin(Tournament, "t", `t.id = m."tournamentId"`)
+        .leftJoin("m.tournament", "t")
         .andWhere(
           `(
             (h.casualSessionId IS NOT NULL AND (fA.type = :format OR fB.type = :format))
-            OR (h.matchId IS NOT NULL AND :format = ANY(string_to_array(t."allowedFormats", ',')))
+            OR (h.matchId IS NOT NULL AND :format = ANY(string_to_array(t.allowedFormats, ',')))
           )`,
           { format },
         );
@@ -154,16 +155,15 @@ export class RankingService {
     const playerWhere = format
       ? { user: { id: In(Array.from(activeUsers)) } }
       : {};
-    const players = format && activeUsers.size === 0
-      ? []
-      : await this.playerRepository.find({
-          where: playerWhere,
-          relations: ["user"],
-        });
+    const players =
+      format && activeUsers.size === 0
+        ? []
+        : await this.playerRepository.find({
+            where: playerWhere,
+            relations: ["user"],
+          });
 
-    const byCurrent = [...players].sort(
-      (a, b) => b.elo - a.elo || a.id - b.id,
-    );
+    const byCurrent = [...players].sort((a, b) => b.elo - a.elo || a.id - b.id);
     const currentRank = new Map<number, number>();
     byCurrent.forEach((p, i) => currentRank.set(p.id, i + 1));
 
