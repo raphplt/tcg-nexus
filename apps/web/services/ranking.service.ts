@@ -39,12 +39,14 @@ export const rankingService = {
     page?: number;
     limit?: number;
     period?: string;
+    format?: string;
   }): Promise<GlobalRankingResponse> {
     return fetcher<GlobalRankingResponse>("/ranking/global", { params });
   },
 
   async getMyRankingPosition(params: {
     period?: string;
+    format?: string;
   }): Promise<GlobalRankingPlayer> {
     return authedFetch<GlobalRankingPlayer>("GET", "/ranking/me", { params });
   },

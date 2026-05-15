@@ -26,6 +26,8 @@ import {
   GlobalRankingResponse,
   rankingService,
 } from "@/services/ranking.service";
+import { DeckFormat } from "@/types/deckFormat";
+import { authedFetch } from "@/utils/fetch";
 
 const PERIODS = [
   { value: "week", label: "Semaine" },
@@ -227,20 +229,42 @@ export default function RankingPage() {
   const { user, isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [period, setPeriod] = useState<string>("all-time");
+  const [format, setFormat] = useState<string>("all");
+
+  const { data: formats } = useQuery<DeckFormat[]>({
+    queryKey: ["deck-format", "list"],
+    queryFn: async () => {
+      const res = await authedFetch<DeckFormat[] | { data: DeckFormat[] }>(
+        "GET",
+        "deck-format",
+      );
+      if (Array.isArray(res)) return res;
+      if (res && typeof res === "object" && "data" in res) return res.data;
+      return [];
+    },
+  });
+
+  const formatParam = format === "all" ? undefined : format;
 
   const {
     data: ranking,
     isLoading,
     error,
   } = useQuery<GlobalRankingResponse>({
-    queryKey: ["ranking", "global", page, period],
+    queryKey: ["ranking", "global", page, period, format],
     queryFn: () =>
-      rankingService.getGlobalRanking({ page, limit: LIMIT, period }),
+      rankingService.getGlobalRanking({
+        page,
+        limit: LIMIT,
+        period,
+        format: formatParam,
+      }),
   });
 
   const { data: myPosition } = useQuery<GlobalRankingPlayer>({
-    queryKey: ["ranking", "me", period],
-    queryFn: () => rankingService.getMyRankingPosition({ period }),
+    queryKey: ["ranking", "me", period, format],
+    queryFn: () =>
+      rankingService.getMyRankingPosition({ period, format: formatParam }),
     enabled: isAuthenticated,
   });
 
@@ -278,20 +302,55 @@ export default function RankingPage() {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-3">
-              {PERIODS.map((p) => (
-                <Button
-                  key={p.value}
-                  size="sm"
-                  variant={period === p.value ? "default" : "outline"}
-                  onClick={() => {
-                    setPeriod(p.value);
-                    setPage(1);
-                  }}
-                >
-                  {p.label}
-                </Button>
-              ))}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Période
+                </span>
+                {PERIODS.map((p) => (
+                  <Button
+                    key={p.value}
+                    size="sm"
+                    variant={period === p.value ? "default" : "outline"}
+                    onClick={() => {
+                      setPeriod(p.value);
+                      setPage(1);
+                    }}
+                  >
+                    {p.label}
+                  </Button>
+                ))}
+              </div>
+              {formats && formats.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Format
+                  </span>
+                  <Button
+                    size="sm"
+                    variant={format === "all" ? "default" : "outline"}
+                    onClick={() => {
+                      setFormat("all");
+                      setPage(1);
+                    }}
+                  >
+                    Tous
+                  </Button>
+                  {formats.map((f) => (
+                    <Button
+                      key={f.id}
+                      size="sm"
+                      variant={format === f.type ? "default" : "outline"}
+                      onClick={() => {
+                        setFormat(f.type);
+                        setPage(1);
+                      }}
+                    >
+                      {f.type}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Current user summary */}
@@ -303,16 +362,24 @@ export default function RankingPage() {
                     Votre position
                   </span>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="border-primary/30 text-lg font-bold"
-                >
-                  #{myPosition.rank}
-                </Badge>
-                <span className="text-lg font-black tabular-nums">
-                  {myPosition.score} ELO
-                </span>
-                <TendencyBadge tendency={myPosition.tendency} />
+                {myPosition.rank > 0 ? (
+                  <>
+                    <Badge
+                      variant="outline"
+                      className="border-primary/30 text-lg font-bold"
+                    >
+                      #{myPosition.rank}
+                    </Badge>
+                    <span className="text-lg font-black tabular-nums">
+                      {myPosition.score} ELO
+                    </span>
+                    <TendencyBadge tendency={myPosition.tendency} />
+                  </>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    Non classé sur ce format pour cette période
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -368,7 +435,7 @@ export default function RankingPage() {
               )}
 
               {/* Sticky user row when not visible */}
-              {myPosition && !isUserVisibleInPage && (
+              {myPosition && myPosition.rank > 0 && !isUserVisibleInPage && (
                 <StickyUserRow player={myPosition} />
               )}
             </CardContent>

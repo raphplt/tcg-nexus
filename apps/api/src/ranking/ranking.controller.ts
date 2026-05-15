@@ -32,11 +32,13 @@ export class RankingController {
     @Query("page") page?: number,
     @Query("limit") limit?: number,
     @Query("period") period?: string,
+    @Query("format") format?: string,
   ) {
     return this.rankingService.getGlobalRanking(
       page ? +page : 1,
       limit ? +limit : 20,
       period || "all-time",
+      format,
     );
   }
 
@@ -46,10 +48,12 @@ export class RankingController {
   getMyRankingPosition(
     @CurrentUser() user: User,
     @Query("period") period?: string,
+    @Query("format") format?: string,
   ) {
     return this.rankingService.getMyRankingPosition(
       user.id,
       period || "all-time",
+      format,
     );
   }
 

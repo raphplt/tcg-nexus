@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { LessThan, MoreThan, Repository } from "typeorm";
+import { In, Repository } from "typeorm";
+import { CasualMatchSession } from "../match/entities/casual-match-session.entity";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
@@ -52,129 +53,136 @@ export class RankingService {
   ) {}
 
   /**
-   * Récupère le classement global avec pagination et filtres
+   * Date de début de la période pour la tendance (week/month/all-time).
+   * "all-time" utilise une fenêtre de 30 jours comme proxy de "période précédente".
    */
-  async getGlobalRanking(
-    page: number = 1,
-    limit: number = 20,
-    period: string = "all-time",
-  ): Promise<{
-    data: GlobalRankingPlayer[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
-    let tendencyDate = new Date();
+  private getPeriodStartDate(period: string): Date {
+    const date = new Date();
     if (period === "week") {
-      tendencyDate.setDate(tendencyDate.getDate() - 7);
+      date.setDate(date.getDate() - 7);
     } else if (period === "month") {
-      tendencyDate.setMonth(tendencyDate.getMonth() - 1);
+      date.setMonth(date.getMonth() - 1);
     } else {
-      tendencyDate.setDate(tendencyDate.getDate() - 30);
+      date.setDate(date.getDate() - 30);
     }
-
-    const [players, total] = await this.playerRepository.findAndCount({
-      relations: ["user"],
-      order: { elo: "DESC", id: "ASC" },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    const data = await Promise.all(
-      players.map(async (player, index) => {
-        const rank = (page - 1) * limit + index + 1;
-
-        const { sum: winnerSum } = await this.rankedHistoryRepository
-          .createQueryBuilder("history")
-          .select("SUM(history.delta)", "sum")
-          .where("history.winnerId = :userId", { userId: player.user.id })
-          .andWhere("history.createdAt >= :date", { date: tendencyDate })
-          .getRawOne();
-
-        const { sum: loserSum } = await this.rankedHistoryRepository
-          .createQueryBuilder("history")
-          .select("SUM(history.delta)", "sum")
-          .where("history.loserId = :userId", { userId: player.user.id })
-          .andWhere("history.createdAt >= :date", { date: tendencyDate })
-          .getRawOne();
-
-        const delta = (Number(winnerSum) || 0) - (Number(loserSum) || 0);
-        let tendency: "up" | "down" | "equal" = "equal";
-        if (delta > 0) tendency = "up";
-        if (delta < 0) tendency = "down";
-
-        return {
-          rank,
-          userId: player.user.id,
-          pseudo: player.user.firstName
-            ? `${player.user.firstName} ${player.user.lastName}`.trim()
-            : player.user.email,
-          avatarUrl: player.user.avatarUrl || null,
-          score: player.elo,
-          tendency,
-        };
-      }),
-    );
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-    };
+    return date;
   }
 
   /**
-   * Récupère la position d'un utilisateur dans le classement global
+   * Récupère les lignes de RankedMatchHistory dans la période, optionnellement filtrées par format de deck.
+   * Un row "matche" le format si :
+   *   - row.casualSessionId set ET au moins un des decks (A ou B) de la session est dans ce format
+   *   - row.matchId set ET le tournoi du match a `format` dans ses allowedFormats
    */
-  async getMyRankingPosition(
-    userId: number,
-    period: string = "all-time",
-  ): Promise<GlobalRankingPlayer> {
-    const player = await this.playerRepository.findOne({
-      where: { user: { id: userId } },
-      relations: ["user"],
-    });
+  private async getInPeriodHistory(
+    periodStart: Date,
+    format?: string,
+  ): Promise<
+    Array<{ winnerId: number | null; loserId: number | null; delta: number }>
+  > {
+    const qb = this.rankedHistoryRepository
+      .createQueryBuilder("h")
+      .select("h.winnerId", "winnerId")
+      .addSelect("h.loserId", "loserId")
+      .addSelect("h.delta", "delta")
+      .where("h.createdAt >= :date", { date: periodStart });
 
-    if (!player) {
-      throw new NotFoundException("Joueur non trouvé");
+    if (format) {
+      qb.leftJoin(CasualMatchSession, "cs", "cs.id = h.casualSessionId")
+        .leftJoin("deck", "deckA", `deckA.id = cs."playerADeckId"`)
+        .leftJoin("deck", "deckB", `deckB.id = cs."playerBDeckId"`)
+        .leftJoin("deck_format", "fA", `fA.id = deckA."formatId"`)
+        .leftJoin("deck_format", "fB", `fB.id = deckB."formatId"`)
+        .leftJoin(Match, "m", "m.id = h.matchId")
+        .leftJoin(Tournament, "t", `t.id = m."tournamentId"`)
+        .andWhere(
+          `(
+            (h.casualSessionId IS NOT NULL AND (fA.type = :format OR fB.type = :format))
+            OR (h.matchId IS NOT NULL AND :format = ANY(string_to_array(t."allowedFormats", ',')))
+          )`,
+          { format },
+        );
     }
 
-    const higherEloCount = await this.playerRepository.count({
-      where: { elo: MoreThan(player.elo) },
+    const rows = await qb.getRawMany<{
+      winnerId: number | null;
+      loserId: number | null;
+      delta: number | string;
+    }>();
+
+    return rows.map((r) => ({
+      winnerId: r.winnerId ?? null,
+      loserId: r.loserId ?? null,
+      delta: Number(r.delta) || 0,
+    }));
+  }
+
+  /**
+   * Construit un snapshot de classement avec rang actuel et rang au début de période.
+   * Si `format` est fourni, ne retient que les joueurs ayant joué ≥1 match dans ce format pendant la période.
+   */
+  private async buildRankingSnapshot(
+    period: string,
+    format?: string,
+  ): Promise<{
+    players: Player[];
+    currentRank: Map<number, number>;
+    oldRank: Map<number, number>;
+  }> {
+    const periodStart = this.getPeriodStartDate(period);
+    const history = await this.getInPeriodHistory(periodStart, format);
+
+    const deltaByUser = new Map<number, number>();
+    const activeUsers = new Set<number>();
+    for (const row of history) {
+      if (row.winnerId != null) {
+        deltaByUser.set(
+          row.winnerId,
+          (deltaByUser.get(row.winnerId) ?? 0) + row.delta,
+        );
+        activeUsers.add(row.winnerId);
+      }
+      if (row.loserId != null) {
+        deltaByUser.set(
+          row.loserId,
+          (deltaByUser.get(row.loserId) ?? 0) - row.delta,
+        );
+        activeUsers.add(row.loserId);
+      }
+    }
+
+    const playerWhere = format
+      ? { user: { id: In(Array.from(activeUsers)) } }
+      : {};
+    const players = format && activeUsers.size === 0
+      ? []
+      : await this.playerRepository.find({
+          where: playerWhere,
+          relations: ["user"],
+        });
+
+    const byCurrent = [...players].sort(
+      (a, b) => b.elo - a.elo || a.id - b.id,
+    );
+    const currentRank = new Map<number, number>();
+    byCurrent.forEach((p, i) => currentRank.set(p.id, i + 1));
+
+    const byOld = [...players].sort((a, b) => {
+      const va = a.elo - (deltaByUser.get(a.user.id) ?? 0);
+      const vb = b.elo - (deltaByUser.get(b.user.id) ?? 0);
+      return vb - va || a.id - b.id;
     });
+    const oldRank = new Map<number, number>();
+    byOld.forEach((p, i) => oldRank.set(p.id, i + 1));
 
-    const sameEloCount = await this.playerRepository.count({
-      where: { elo: player.elo, id: LessThan(player.id) },
-    });
+    return { players: byCurrent, currentRank, oldRank };
+  }
 
-    const rank = higherEloCount + sameEloCount + 1;
-
-    let tendencyDate = new Date();
-    if (period === "week") tendencyDate.setDate(tendencyDate.getDate() - 7);
-    else if (period === "month")
-      tendencyDate.setMonth(tendencyDate.getMonth() - 1);
-    else tendencyDate.setDate(tendencyDate.getDate() - 30);
-
-    const { sum: winnerSum } = await this.rankedHistoryRepository
-      .createQueryBuilder("history")
-      .select("SUM(history.delta)", "sum")
-      .where("history.winnerId = :userId", { userId: player.user.id })
-      .andWhere("history.createdAt >= :date", { date: tendencyDate })
-      .getRawOne();
-
-    const { sum: loserSum } = await this.rankedHistoryRepository
-      .createQueryBuilder("history")
-      .select("SUM(history.delta)", "sum")
-      .where("history.loserId = :userId", { userId: player.user.id })
-      .andWhere("history.createdAt >= :date", { date: tendencyDate })
-      .getRawOne();
-
-    const delta = (Number(winnerSum) || 0) - (Number(loserSum) || 0);
-    let tendency: "up" | "down" | "equal" = "equal";
-    if (delta > 0) tendency = "up";
-    if (delta < 0) tendency = "down";
-
+  private toGlobalRankingPlayer(
+    player: Player,
+    rank: number,
+    tendency: "up" | "down" | "equal",
+  ): GlobalRankingPlayer {
     return {
       rank,
       userId: player.user.id,
@@ -185,6 +193,86 @@ export class RankingService {
       score: player.elo,
       tendency,
     };
+  }
+
+  private computeTendency(
+    currentRank: number | undefined,
+    oldRank: number | undefined,
+  ): "up" | "down" | "equal" {
+    if (currentRank == null || oldRank == null) return "equal";
+    if (oldRank > currentRank) return "up";
+    if (oldRank < currentRank) return "down";
+    return "equal";
+  }
+
+  /**
+   * Récupère le classement global avec pagination et filtres (période, format de deck).
+   * Tendance = rang actuel comparé au rang au début de la période.
+   */
+  async getGlobalRanking(
+    page: number = 1,
+    limit: number = 20,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<{
+    data: GlobalRankingPlayer[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const { players, currentRank, oldRank } = await this.buildRankingSnapshot(
+      period,
+      format,
+    );
+
+    const total = players.length;
+    const pageSlice = players.slice((page - 1) * limit, page * limit);
+
+    const data = pageSlice.map((p) =>
+      this.toGlobalRankingPlayer(
+        p,
+        currentRank.get(p.id)!,
+        this.computeTendency(currentRank.get(p.id), oldRank.get(p.id)),
+      ),
+    );
+
+    return { data, total, page, limit };
+  }
+
+  /**
+   * Récupère la position de l'utilisateur dans le classement global.
+   * Le rang est calculé sur le sous-ensemble actif si `format` est fourni.
+   */
+  async getMyRankingPosition(
+    userId: number,
+    period: string = "all-time",
+    format?: string,
+  ): Promise<GlobalRankingPlayer> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["user"],
+    });
+
+    if (!player) {
+      throw new NotFoundException("Joueur non trouvé");
+    }
+
+    const { currentRank, oldRank } = await this.buildRankingSnapshot(
+      period,
+      format,
+    );
+
+    const rank = currentRank.get(player.id);
+    if (rank == null) {
+      // Le joueur n'a pas participé au format demandé sur la période
+      return this.toGlobalRankingPlayer(player, 0, "equal");
+    }
+
+    return this.toGlobalRankingPlayer(
+      player,
+      rank,
+      this.computeTendency(currentRank.get(player.id), oldRank.get(player.id)),
+    );
   }
 
   /**
