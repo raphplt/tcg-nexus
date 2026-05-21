@@ -11,6 +11,7 @@ import { sealedProductService } from "@/services/sealed-product.service";
 import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
 import { PaginatedResult } from "@/types/pagination";
 import type { SealedProduct } from "@/types/sealed-product";
+import { Listing } from "@/types/listing";
 
 export interface FilterState {
   search: string;
@@ -77,6 +78,20 @@ export function useMarketplaceHome() {
     queryFn: () => sealedProductService.getPopular(8),
   });
 
+  // Récupère les dernières annonces créées
+  const { data: recentListings, isLoading: loadingRecentListings } = useQuery<
+    PaginatedResult<Listing>
+  >({
+    queryKey: ["marketplace", "recent-listings", 5],
+    queryFn: () =>
+      marketplaceService.getPaginated({
+        page: 1,
+        limit: 5,
+        sortBy: "createdAt",
+        sortOrder: "DESC",
+      }),
+  });
+
   return {
     popularCards,
     trendingCards,
@@ -84,12 +99,14 @@ export function useMarketplaceHome() {
     sets,
     sealedProducts: recentSealed,
     popularSealed,
+    recentListings,
     loadingPopular,
     loadingTrending,
     loadingSellers,
     loadingSets,
     loadingSealed: loadingRecentSealed,
     loadingPopularSealed,
+    loadingRecentListings,
   };
 }
 

@@ -309,8 +309,10 @@ export default function SellerPage() {
                 value={`${sortBy}-${sortOrder}`}
                 onValueChange={(value) => {
                   const [newSortBy, newSortOrder] = value.split("-");
-                  setSortBy(newSortBy);
-                  setSortOrder(newSortOrder as "ASC" | "DESC");
+                  if (newSortBy) {
+                    setSortBy(newSortBy);
+                    setSortOrder((newSortOrder || "DESC") as "ASC" | "DESC");
+                  }
                 }}
               >
                 <SelectTrigger className="w-[200px]">

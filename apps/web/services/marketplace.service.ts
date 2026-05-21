@@ -90,7 +90,7 @@ export const marketplaceService = {
   async getPaginated(
     params: MarketplaceQueryParams = {},
   ): Promise<PaginatedResult<Listing>> {
-    return fetcher<PaginatedResult<Listing>>("/listings", { params });
+    return fetcher<PaginatedResult<Listing>>("/marketplace/listings", { params });
   },
 
   /**
