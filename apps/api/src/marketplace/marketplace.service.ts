@@ -432,11 +432,13 @@ export class MarketplaceService {
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
+      .leftJoinAndSelect("listing.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
       .where("seller.id = :sellerId", { sellerId });
 
     if (search) {
       qb.andWhere(
-        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search)",
+        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedProduct.nameFr) LIKE :search OR LOWER(sealedSet.name) LIKE :search)",
         { search: `%${search.toLowerCase()}%` },
       );
     }
@@ -791,6 +793,8 @@ export class MarketplaceService {
         "pokemonCard",
         "pokemonCard.set",
         "pokemonCard.set.serie",
+        "sealedProduct",
+        "sealedProduct.pokemonSet",
       ],
       order: { createdAt: "DESC" },
     });

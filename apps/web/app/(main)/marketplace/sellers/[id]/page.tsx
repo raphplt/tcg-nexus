@@ -30,6 +30,21 @@ import { useViewMode } from "@/hooks/useViewMode";
 import { marketplaceService } from "@/services/marketplace.service";
 import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
+import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
+import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
+
+const getSealedConditionColor = (condition: string | null | undefined) => {
+  switch (condition) {
+    case "sealed":
+      return "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
+    case "box_damaged":
+      return "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30";
+    case "opened_resealed":
+      return "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
+};
 
 export default function SellerPage() {
   const { id } = useParams();
@@ -145,7 +160,6 @@ export default function SellerPage() {
           </CardContent>
         </Card>
 
-        {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader>
@@ -234,16 +248,32 @@ export default function SellerPage() {
             viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {sellerListings.map((listing) => {
-                  if (!listing.pokemonCard) return null;
-                  return (
-                    <CardCard
-                      key={listing.id}
-                      card={listing.pokemonCard}
-                      minPrice={parseFloat(listing.price.toString())}
-                      listingCount={listing.quantityAvailable}
-                      currency={listing.currency}
-                    />
-                  );
+                  const isCard = listing.productKind === "card" || !!listing.pokemonCard;
+                  if (isCard) {
+                    if (!listing.pokemonCard) return null;
+                    return (
+                      <CardCard
+                        key={listing.id}
+                        card={listing.pokemonCard}
+                        minPrice={parseFloat(listing.price.toString())}
+                        listingCount={listing.quantityAvailable}
+                        currency={listing.currency}
+                      />
+                    );
+                  } else {
+                    if (!listing.sealedProduct) return null;
+                    return (
+                      <SealedProductCard
+                        key={listing.id}
+                        product={listing.sealedProduct}
+                        price={parseFloat(listing.price.toString())}
+                        quantity={listing.quantityAvailable}
+                        currency={listing.currency}
+                        condition={listing.sealedCondition ?? undefined}
+                        listingId={listing.id}
+                      />
+                    );
+                  }
                 })}
               </div>
             ) : (
@@ -252,8 +282,8 @@ export default function SellerPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Carte</TableHead>
-                        <TableHead>État</TableHead>
+                        <TableHead>Produit</TableHead>
+                        <TableHead>État / Condition</TableHead>
                         <TableHead>Prix</TableHead>
                         <TableHead>Quantité</TableHead>
                         <TableHead>Date</TableHead>
@@ -261,52 +291,73 @@ export default function SellerPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sellerListings.map((listing) => (
-                        <TableRow key={listing.id}>
-                          <TableCell>
-                            <Link
-                              href={`/marketplace/cards/${listing.pokemonCard?.id}`}
-                              className="hover:text-primary transition-colors font-medium"
-                            >
-                              {listing.pokemonCard?.name}
-                            </Link>
-                            {listing.pokemonCard?.set && (
-                              <div className="text-xs text-muted-foreground">
-                                {listing.pokemonCard?.set.name}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={getCardStateColor(
-                                listing.cardState ?? "",
+                      {sellerListings.map((listing) => {
+                        const isCard = listing.productKind === "card" || !!listing.pokemonCard;
+                        const productName = isCard
+                          ? listing.pokemonCard?.name
+                          : listing.sealedProduct?.nameEn;
+                        const productSetName = isCard
+                          ? listing.pokemonCard?.set?.name
+                          : listing.sealedProduct?.pokemonSet?.name;
+                        const productLink = isCard
+                          ? `/marketplace/cards/${listing.pokemonCard?.id}`
+                          : `/marketplace/sealed/${listing.sealedProduct?.id}`;
+                        const conditionLabel = isCard
+                          ? listing.cardState ?? ""
+                          : (listing.sealedCondition ? (sealedConditionLabels[listing.sealedCondition as SealedCondition] || listing.sealedCondition) : "");
+                        const conditionColor = isCard
+                          ? getCardStateColor(listing.cardState ?? "")
+                          : getSealedConditionColor(listing.sealedCondition);
+
+                        return (
+                          <TableRow key={listing.id}>
+                            <TableCell>
+                              {productName ? (
+                                <Link
+                                  href={productLink}
+                                  className="hover:text-primary transition-colors font-medium"
+                                >
+                                  {productName}
+                                </Link>
+                              ) : (
+                                <span className="text-muted-foreground italic">Produit inconnu</span>
                               )}
-                            >
-                              {listing.cardState ?? ""}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {formatPriceUtil(listing.price, listing.currency)}
-                          </TableCell>
-                          <TableCell>{listing.quantityAvailable}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(listing.createdAt).toLocaleDateString(
-                              "fr-FR",
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Link href={`/marketplace/${listing.id}`}>
+                              {productSetName && (
+                                <div className="text-xs text-muted-foreground">
+                                  {productSetName}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
                               <Badge
                                 variant="outline"
-                                className="cursor-pointer hover:bg-accent"
+                                className={conditionColor}
                               >
-                                Voir
+                                {conditionLabel}
                               </Badge>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              {formatPriceUtil(listing.price, listing.currency)}
+                            </TableCell>
+                            <TableCell>{listing.quantityAvailable}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(listing.createdAt).toLocaleDateString(
+                                "fr-FR",
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Link href={`/marketplace/${listing.id}`}>
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-accent"
+                                >
+                                  Voir
+                                </Badge>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>
