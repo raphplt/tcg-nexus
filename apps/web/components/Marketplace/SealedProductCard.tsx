@@ -86,7 +86,10 @@ export function SealedProductCard({
               {typeLabel}
             </Badge>
             {formattedCondition && (
-              <Badge variant="secondary" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20">
+              <Badge
+                variant="secondary"
+                className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20"
+              >
                 {formattedCondition}
               </Badge>
             )}

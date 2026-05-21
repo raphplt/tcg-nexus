@@ -248,7 +248,8 @@ export default function SellerPage() {
             viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {sellerListings.map((listing) => {
-                  const isCard = listing.productKind === "card" || !!listing.pokemonCard;
+                  const isCard =
+                    listing.productKind === "card" || !!listing.pokemonCard;
                   if (isCard) {
                     if (!listing.pokemonCard) return null;
                     return (
@@ -292,7 +293,9 @@ export default function SellerPage() {
                     </TableHeader>
                     <TableBody>
                       {sellerListings.map((listing) => {
-                        const isCard = listing.productKind === "card" || !!listing.pokemonCard;
+                        const isCard =
+                          listing.productKind === "card" ||
+                          !!listing.pokemonCard;
                         const productName = isCard
                           ? listing.pokemonCard?.name
                           : listing.sealedProduct?.nameEn;
@@ -303,8 +306,12 @@ export default function SellerPage() {
                           ? `/marketplace/cards/${listing.pokemonCard?.id}`
                           : `/marketplace/sealed/${listing.sealedProduct?.id}`;
                         const conditionLabel = isCard
-                          ? listing.cardState ?? ""
-                          : (listing.sealedCondition ? (sealedConditionLabels[listing.sealedCondition as SealedCondition] || listing.sealedCondition) : "");
+                          ? (listing.cardState ?? "")
+                          : listing.sealedCondition
+                            ? sealedConditionLabels[
+                                listing.sealedCondition as SealedCondition
+                              ] || listing.sealedCondition
+                            : "";
                         const conditionColor = isCard
                           ? getCardStateColor(listing.cardState ?? "")
                           : getSealedConditionColor(listing.sealedCondition);
@@ -320,7 +327,9 @@ export default function SellerPage() {
                                   {productName}
                                 </Link>
                               ) : (
-                                <span className="text-muted-foreground italic">Produit inconnu</span>
+                                <span className="text-muted-foreground italic">
+                                  Produit inconnu
+                                </span>
                               )}
                               {productSetName && (
                                 <div className="text-xs text-muted-foreground">
