@@ -424,6 +424,7 @@ export class MarketplaceService {
       search,
       cardState,
       currency,
+      productKind,
     } = params;
 
     const qb = this.listingRepository
@@ -438,7 +439,7 @@ export class MarketplaceService {
 
     if (search) {
       qb.andWhere(
-        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedProduct.nameFr) LIKE :search OR LOWER(sealedSet.name) LIKE :search)",
+        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedSet.name) LIKE :search)",
         { search: `%${search.toLowerCase()}%` },
       );
     }
@@ -451,11 +452,23 @@ export class MarketplaceService {
       qb.andWhere("listing.currency = :currency", { currency });
     }
 
+    if (productKind) {
+      qb.andWhere("listing.productKind = :productKind", { productKind });
+    }
+
+    if (sortBy === "name") {
+      qb.addSelect(
+        "COALESCE(pokemonCard.name, sealedProduct.nameEn)",
+        "product_name",
+      );
+      qb.orderBy("product_name", sortOrder);
+    } else {
+      qb.orderBy(`listing.${sortBy || "createdAt"}`, sortOrder);
+    }
+
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
-      sortBy ? `listing.${sortBy}` : undefined,
-      sortOrder,
     );
   }
 

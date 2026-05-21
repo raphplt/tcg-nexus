@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   MessageCircle,
@@ -7,6 +8,9 @@ import {
   ShoppingBag,
   Star,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -32,6 +36,16 @@ import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const getSealedConditionColor = (condition: string | null | undefined) => {
   switch (condition) {
@@ -50,6 +64,17 @@ export default function SellerPage() {
   const { id } = useParams();
   const sellerId = parseInt(id as string);
   const [viewMode, setViewMode] = useViewMode("grid");
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [productKind, setProductKind] = useState<"all" | "card" | "sealed">("all");
+
+  // Reset to page 1 on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sortBy, sortOrder, productKind]);
 
   // Fetch seller statistics
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -60,8 +85,24 @@ export default function SellerPage() {
 
   // Fetch seller listings
   const { data: listings, isLoading: loadingListings } = useQuery({
-    queryKey: ["seller-listings", sellerId],
-    queryFn: () => marketplaceService.getSellerListings(sellerId),
+    queryKey: [
+      "seller-listings",
+      sellerId,
+      page,
+      debouncedSearch,
+      sortBy,
+      sortOrder,
+      productKind,
+    ],
+    queryFn: () =>
+      marketplaceService.getSellerListings(sellerId, {
+        page,
+        limit: 20,
+        search: debouncedSearch || undefined,
+        sortBy,
+        sortOrder,
+        productKind: productKind === "all" ? undefined : productKind,
+      }),
     enabled: !!sellerId && !isNaN(sellerId),
   });
 
@@ -231,10 +272,59 @@ export default function SellerPage() {
             <H2>Offres du vendeur</H2>
             <div className="flex items-center gap-3">
               <Badge variant="secondary">
-                {sellerListings.length} offre
-                {sellerListings.length > 1 ? "s" : ""}
+                {listings?.meta?.totalItems ?? 0} offre
+                {(listings?.meta?.totalItems ?? 0) > 1 ? "s" : ""}
               </Badge>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            </div>
+          </div>
+
+          {/* Filtres et recherche */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une offre..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Select
+                value={productKind}
+                onValueChange={(value) => setProductKind(value as "all" | "card" | "sealed")}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Type de produit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les produits</SelectItem>
+                  <SelectItem value="card">Cartes</SelectItem>
+                  <SelectItem value="sealed">Produits Scellés</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={`${sortBy}-${sortOrder}`}
+                onValueChange={(value) => {
+                  const [newSortBy, newSortOrder] = value.split("-");
+                  setSortBy(newSortBy);
+                  setSortOrder(newSortOrder as "ASC" | "DESC");
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt-DESC">Plus récent</SelectItem>
+                  <SelectItem value="createdAt-ASC">Plus ancien</SelectItem>
+                  <SelectItem value="name-ASC">Nom (A-Z)</SelectItem>
+                  <SelectItem value="name-DESC">Nom (Z-A)</SelectItem>
+                  <SelectItem value="price-ASC">Prix : croissant</SelectItem>
+                  <SelectItem value="price-DESC">Prix : décroissant</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -378,6 +468,32 @@ export default function SellerPage() {
                 Aucune offre disponible pour le moment
               </CardContent>
             </Card>
+          )}
+
+          {listings && listings.meta && listings.meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={!listings.meta.hasPreviousPage}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Précédent
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {listings.meta.currentPage} sur {listings.meta.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(listings.meta.totalPages, p + 1))}
+                disabled={!listings.meta.hasNextPage}
+              >
+                Suivant
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

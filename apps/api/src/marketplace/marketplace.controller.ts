@@ -194,7 +194,10 @@ export class MarketplaceController {
 
   @Get("sellers/:id/listings")
   @Public()
-  getSellerListings(@Param("id", ParseIntPipe) id: number) {
-    return this.marketplaceService.findBySellerId(id);
+  getSellerListings(
+    @Param("id", ParseIntPipe) id: number,
+    @Query() query: FindAllListingsQuery,
+  ) {
+    return this.marketplaceService.findBySellerId(id, query);
   }
 }
