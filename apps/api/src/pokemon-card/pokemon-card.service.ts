@@ -253,6 +253,11 @@ export class PokemonCardService {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
+    search?: string,
+    setId?: string,
+    serieId?: string,
+    rarity?: string,
+    type?: string,
   ): Promise<PaginatedResult<Record<string, any>>> {
     const { page: validPage, limit: validLimit } =
       PaginationHelper.validateParams({
@@ -262,13 +267,46 @@ export class PokemonCardService {
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
-    const [data, totalItems] = await this.pokemonCardRepository.findAndCount({
-      relations: ["set", "pokemonDetails"],
-      where: { game: CardGame.Pokemon },
-      skip: offset,
-      take: validLimit,
-      order: { name: "ASC" },
-    });
+    const qb = this.pokemonCardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoin("set.serie", "serie")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.game = :game", { game: CardGame.Pokemon });
+
+    if (search && search.trim() !== "") {
+      qb.andWhere(
+        "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
+        { search: `%${search}%` },
+      );
+    }
+
+    if (setId && setId.trim() !== "") {
+      qb.andWhere("set.id = :setId", { setId });
+    }
+
+    if (serieId && serieId.trim() !== "") {
+      qb.andWhere("serie.id = :serieId", { serieId });
+    }
+
+    if (rarity && rarity.trim() !== "") {
+      qb.andWhere("card.rarity = :rarity", { rarity });
+    }
+
+    if (type && type.trim() !== "") {
+      qb.andWhere(":type = ANY(pokemonDetails.types)", { type });
+    }
+
+    qb.orderBy("set.releaseDate", "DESC")
+      .addOrderBy('CAST(NULLIF(regexp_replace("localId", \'\\D\', \'\', \'g\'), \'\') AS INTEGER)', "ASC")
+      .addOrderBy("card.localId", "ASC");
+
+    qb.limit(validLimit).offset(offset);
+
+    const [data, totalItems] = await Promise.all([
+      qb.getMany(),
+      qb.getCount(),
+    ]);
 
     return PaginationHelper.createPaginatedResult(
       data.map((card) => this.toPokemonCardResponse(card)),
