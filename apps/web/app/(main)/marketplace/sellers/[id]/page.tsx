@@ -355,7 +355,7 @@ export default function SellerPage() {
                               )}
                             </TableCell>
                             <TableCell>
-                              <Link href={`/marketplace/${listing.id}`}>
+                              <Link href={productLink}>
                                 <Badge
                                   variant="outline"
                                   className="cursor-pointer hover:bg-accent"

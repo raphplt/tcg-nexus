@@ -41,9 +41,7 @@ export function SealedProductCard({
     ? sealedConditionLabels[condition as SealedCondition] || condition
     : undefined;
 
-  const cardLink = listingId
-    ? `/marketplace/${listingId}`
-    : `/marketplace/sealed/${product.id}`;
+  const cardLink = `/marketplace/sealed/${product.id}`;
 
   return (
     <Link href={cardLink}>
