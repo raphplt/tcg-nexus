@@ -35,6 +35,7 @@ import { StatisticsModule } from "./statistics/statistics.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
+import { SupportTicketModule } from './support-ticket/support-ticket.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { UserCartModule } from "./user_cart/user_cart.module";
     AiModule,
     UserCartModule,
     FaqModule,
+    SupportTicketModule,
     BadgeModule,
     DashboardModule,
     SealedProductModule,

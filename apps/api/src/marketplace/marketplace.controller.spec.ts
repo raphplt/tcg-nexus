@@ -47,6 +47,10 @@ describe("MarketplaceController", () => {
           useValue: { canActivate: jest.fn().mockReturnValue(true) },
         },
         {
+          provide: ThrottlerGuard,
+          useValue: { canActivate: jest.fn().mockReturnValue(true) },
+        },
+        {
           provide: Reflector,
           useValue: { getAllAndOverride: jest.fn() },
         },

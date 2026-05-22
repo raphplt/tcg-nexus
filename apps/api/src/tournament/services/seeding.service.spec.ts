@@ -108,12 +108,21 @@ describe("SeedingService", () => {
     expect(seeded[0].seed).toBe(1);
   });
 
-  it("delegates ELO seeding to ranking-based", async () => {
-    const spy = jest
-      .spyOn<any, any>(service as any, "rankingBasedSeeding")
-      .mockResolvedValue([]);
-    await service.seedPlayers([player(1)], {} as any, SeedingMethod.ELO);
-    expect(spy).toHaveBeenCalled();
+  it("uses ELO-based seeding sorted by elo descending", async () => {
+    const players = [player(1), player(2)];
+    (mockPlayerRepository as any).findByIds = jest.fn().mockResolvedValue([
+      { id: 1, elo: 1500 },
+      { id: 2, elo: 2000 },
+    ]);
+    const seeded = await service.seedPlayers(
+      players,
+      {} as any,
+      SeedingMethod.ELO,
+    );
+    expect(seeded[0].id).toBe(2);
+    expect(seeded[0].seed).toBe(1);
+    expect(seeded[1].id).toBe(1);
+    expect(seeded[1].seed).toBe(2);
   });
 
   it("validates sequential seeding", () => {

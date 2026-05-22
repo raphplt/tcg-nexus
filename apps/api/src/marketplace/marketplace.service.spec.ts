@@ -5,12 +5,14 @@ import {
 } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
 import { CardState } from "../common/enums/pokemonCardsType";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { CardPopularityService } from "./card-popularity.service";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
@@ -48,8 +50,10 @@ describe("MarketplaceService", () => {
   const createMockQb = () => ({
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
+    innerJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
+    setParameter: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
@@ -76,7 +80,9 @@ describe("MarketplaceService", () => {
       findOne: jest.fn(),
       softRemove: jest.fn(),
       delete: jest.fn(),
+      softRemove: jest.fn(),
       find: jest.fn(),
+      count: jest.fn(),
       createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
@@ -215,14 +221,35 @@ describe("MarketplaceService", () => {
       shippingAddress: "123 Main St",
     };
 
+    const buildManager = (
+      freshListing: any,
+      savedOrder: any = { id: 1 },
+    ) => ({
+      findOne: jest.fn().mockResolvedValue(freshListing),
+      create: jest.fn().mockReturnValue({}),
+      save: jest.fn().mockImplementation(async (entity, value) =>
+        entity === Order ? savedOrder : value,
+      ),
+      decrement: jest.fn(),
+    });
+
+    beforeEach(() => {
+      mockStripeService.retrievePaymentIntent.mockResolvedValue({
+        status: "succeeded",
+        amount: 2000,
+        currency: "usd",
+      });
+    });
+
     it("should create an order successfully", async () => {
+      const listing = {
+        id: 1,
+        price: 10,
+        quantityAvailable: 5,
+        currency: Currency.USD,
+      };
       const cart = {
-        cartItems: [
-          {
-            listing: { id: 1, price: 10, quantityAvailable: 5 },
-            quantity: 2,
-          },
-        ],
+        cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
       mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 5 });
@@ -232,7 +259,7 @@ describe("MarketplaceService", () => {
       const result = await service.createOrder(dto, user);
 
       expect(result).toEqual({ id: 1 });
-      expect(orderRepo.save).toHaveBeenCalled();
+      expect(manager.save).toHaveBeenCalled();
       expect(userCartService.clearCart).toHaveBeenCalledWith(user.id);
     });
 
@@ -244,13 +271,14 @@ describe("MarketplaceService", () => {
     });
 
     it("should throw BadRequestException if insufficient quantity", async () => {
+      const listing = {
+        id: 1,
+        price: 10,
+        quantityAvailable: 1,
+        currency: Currency.USD,
+      };
       const cart = {
-        cartItems: [
-          {
-            listing: { id: 1, price: 10, quantityAvailable: 1 },
-            quantity: 2,
-          },
-        ],
+        cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
       mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 1 });
@@ -326,13 +354,15 @@ describe("MarketplaceService", () => {
     });
 
     it("allows owner", async () => {
-      listingRepo.findOne.mockResolvedValue({ ...listing });
+      const found = { ...listing };
+      listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
       expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
     });
 
     it("allows admin", async () => {
-      listingRepo.findOne.mockResolvedValue({ ...listing });
+      const found = { ...listing };
+      listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, admin);
       expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
     });

@@ -1,5 +1,7 @@
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { Card } from "../card/entities/card.entity";
 import { CardState } from "../card-state/entities/card-state.entity";
 import { Collection } from "../collection/entities/collection.entity";
@@ -58,6 +60,14 @@ describe("CollectionItemService", () => {
         {
           provide: getRepositoryToken(CardState),
           useValue: mockCardStateRepo,
+        },
+        {
+          provide: getRepositoryToken(SealedProduct),
+          useValue: { findOne: jest.fn() },
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn(), emitAsync: jest.fn() },
         },
       ],
     }).compile();
