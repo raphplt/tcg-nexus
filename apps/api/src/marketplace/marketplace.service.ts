@@ -466,10 +466,7 @@ export class MarketplaceService {
       qb.orderBy(`listing.${sortBy || "createdAt"}`, sortOrder);
     }
 
-    return PaginationHelper.paginateQueryBuilder(
-      qb,
-      { page, limit },
-    );
+    return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
   }
 
   /**
@@ -985,7 +982,10 @@ export class MarketplaceService {
     }
 
     const validated = PaginationHelper.validateParams({ page, limit });
-    const skip = PaginationHelper.calculateOffset(validated.page, validated.limit);
+    const skip = PaginationHelper.calculateOffset(
+      validated.page,
+      validated.limit,
+    );
 
     qb.skip(skip).take(validated.limit);
 
@@ -996,15 +996,17 @@ export class MarketplaceService {
 
     const mappedData = entities.map((entity, index) => {
       const rawRow = raw[index];
-      const row = (rawRow && rawRow.card_id === entity.id)
-        ? rawRow
-        : raw.find((r) => r.card_id === entity.id);
+      const row =
+        rawRow && rawRow.card_id === entity.id
+          ? rawRow
+          : raw.find((r) => r.card_id === entity.id);
 
       return {
         card: entity,
         minPrice: row && row.min_price ? parseFloat(row.min_price) : undefined,
         avgPrice: row && row.avg_price ? parseFloat(row.avg_price) : undefined,
-        listingCount: row && row.listing_count ? parseInt(row.listing_count, 10) : 0,
+        listingCount:
+          row && row.listing_count ? parseInt(row.listing_count, 10) : 0,
       };
     });
 

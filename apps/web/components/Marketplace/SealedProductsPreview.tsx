@@ -43,7 +43,8 @@ export function SealedProductsPreview({
   const products = mode === "popular" ? popular : recent;
   const isLoading = mode === "popular" ? loadingPopular : loadingRecent;
 
-  const colsClass = gridCols || "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+  const colsClass =
+    gridCols || "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
 
   return (
     <section className={cn("space-y-6", className)}>

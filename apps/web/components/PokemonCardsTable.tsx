@@ -21,7 +21,13 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,19 +39,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import type { PokemonCardType, PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
+import type {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "@/types/cardPokemon";
 import type { PaginatedResult } from "@/types/pagination";
-import { 
-  Layers, 
-  Grid as GridIcon, 
-  List as ListIcon, 
-  Search, 
-  X, 
-  ChevronRight, 
+import {
+  Layers,
+  Grid as GridIcon,
+  List as ListIcon,
+  Search,
+  X,
+  ChevronRight,
   ArrowLeft,
   Calendar,
   Sparkles,
-  Bookmark
+  Bookmark,
 } from "lucide-react";
 
 interface PokemonCardsTableProps {
@@ -97,9 +107,11 @@ export function PokemonCardsTable({
   // Series and Sets states
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [sets, setSets] = useState<PokemonSetType[]>([]);
-  const [selectedSerie, setSelectedSerie] = useState<PokemonSerieType | null>(null);
+  const [selectedSerie, setSelectedSerie] = useState<PokemonSerieType | null>(
+    null,
+  );
   const [selectedSet, setSelectedSet] = useState<PokemonSetType | null>(null);
-  
+
   // Custom Filters
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
@@ -122,18 +134,29 @@ export function PokemonCardsTable({
         });
         setSets(sortedSets);
       } catch (err) {
-        console.error("Erreur lors du chargement des métadonnées (séries/sets):", err);
+        console.error(
+          "Erreur lors du chargement des métadonnées (séries/sets):",
+          err,
+        );
       }
     };
     loadMetadata();
   }, []);
 
   const fetchCards = useCallback(
-    async (page: number, filters: { setId?: string; serieId?: string; rarity?: string; type?: string } = {}) => {
+    async (
+      page: number,
+      filters: {
+        setId?: string;
+        serieId?: string;
+        rarity?: string;
+        type?: string;
+      } = {},
+    ) => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const params: any = {
           page,
           limit: itemsPerPage,
@@ -142,7 +165,8 @@ export function PokemonCardsTable({
         if (filters.setId) params.setId = filters.setId;
         else if (filters.serieId) params.serieId = filters.serieId;
 
-        if (filters.rarity && filters.rarity !== "all") params.rarity = filters.rarity;
+        if (filters.rarity && filters.rarity !== "all")
+          params.rarity = filters.rarity;
         if (filters.type && filters.type !== "all") params.type = filters.type;
 
         const data = await pokemonCardService.getPaginated(params);
@@ -167,7 +191,15 @@ export function PokemonCardsTable({
         type: selectedType,
       });
     }
-  }, [currentPage, fetchCards, isSearching, selectedSet, selectedSerie, selectedRarity, selectedType]);
+  }, [
+    currentPage,
+    fetchCards,
+    isSearching,
+    selectedSet,
+    selectedSerie,
+    selectedRarity,
+    selectedType,
+  ]);
 
   // Fonction pour effectuer une recherche
   const handleSearch = useCallback(
@@ -239,7 +271,10 @@ export function PokemonCardsTable({
 
     const filtered = searchResults.filter((card) => {
       // Type filter
-      if (selectedType !== "all" && (!card.types || !card.types.includes(selectedType))) {
+      if (
+        selectedType !== "all" &&
+        (!card.types || !card.types.includes(selectedType))
+      ) {
         return false;
       }
       // Rarity filter
@@ -276,7 +311,16 @@ export function PokemonCardsTable({
         hasPreviousPage: currentPage > 1,
       },
     };
-  }, [isSearching, searchResults, currentPage, itemsPerPage, selectedType, selectedRarity, selectedSet, selectedSerie]);
+  }, [
+    isSearching,
+    searchResults,
+    currentPage,
+    itemsPerPage,
+    selectedType,
+    selectedRarity,
+    selectedSet,
+    selectedSerie,
+  ]);
 
   // Détermine quelles données utiliser (recherche ou pagination normale)
   const currentData = isSearching ? paginatedSearchResults : paginatedData;
@@ -415,7 +459,7 @@ export function PokemonCardsTable({
                 Naviguez par séries et extensions de cartes officielles
               </CardDescription>
             </div>
-            
+
             {/* View Mode Toggle & Reset */}
             <div className="flex items-center gap-2">
               <Button
@@ -491,7 +535,8 @@ export function PokemonCardsTable({
           {!selectedSerie && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-primary" /> Séries Pokémon ({series.length})
+                <Layers className="w-4 h-4 text-primary" /> Séries Pokémon (
+                {series.length})
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {series.map((serie) => (
@@ -540,7 +585,8 @@ export function PokemonCardsTable({
                 </Button>
               </div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-primary" /> Extensions de la série {selectedSerie.name} ({filteredSets.length})
+                <Layers className="w-4 h-4 text-primary" /> Extensions de la
+                série {selectedSerie.name} ({filteredSets.length})
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredSets.map((set) => (
@@ -551,9 +597,17 @@ export function PokemonCardsTable({
                   >
                     <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-background/50 rounded-lg p-1.5 border border-border/20">
                       {set.symbol ? (
-                        <img src={set.symbol} alt="" className="max-h-full max-w-full object-contain" />
+                        <img
+                          src={set.symbol}
+                          alt=""
+                          className="max-h-full max-w-full object-contain"
+                        />
                       ) : set.logo ? (
-                        <img src={set.logo} alt="" className="max-h-full max-w-full object-contain" />
+                        <img
+                          src={set.logo}
+                          alt=""
+                          className="max-h-full max-w-full object-contain"
+                        />
                       ) : (
                         <Bookmark className="w-5 h-5 text-muted-foreground/40" />
                       )}
@@ -564,16 +618,33 @@ export function PokemonCardsTable({
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                         <Calendar className="w-3 h-3" />
-                        <span>{set.releaseDate ? new Date(set.releaseDate).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' }) : "N/A"}</span>
+                        <span>
+                          {set.releaseDate
+                            ? new Date(set.releaseDate).toLocaleDateString(
+                                "fr-FR",
+                                { year: "numeric", month: "short" },
+                              )
+                            : "N/A"}
+                        </span>
                         <span>•</span>
                         <span>{set.cardCount?.total ?? 0} cartes</span>
                       </div>
                       <div className="flex gap-1 mt-1">
                         {set.legal?.standard && (
-                          <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-green-500/10 text-green-500 border border-green-500/20">Std</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] px-1 py-0 bg-green-500/10 text-green-500 border border-green-500/20"
+                          >
+                            Std
+                          </Badge>
                         )}
                         {set.legal?.expanded && (
-                          <Badge variant="secondary" className="text-[9px] px-1 py-0 bg-blue-500/10 text-blue-500 border border-blue-500/20">Exp</Badge>
+                          <Badge
+                            variant="secondary"
+                            className="text-[9px] px-1 py-0 bg-blue-500/10 text-blue-500 border border-blue-500/20"
+                          >
+                            Exp
+                          </Badge>
                         )}
                       </div>
                     </div>
@@ -588,9 +659,17 @@ export function PokemonCardsTable({
             <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/20 rounded-xl p-4">
               <div className="w-20 h-20 flex items-center justify-center bg-background/50 rounded-xl p-2 border border-border/20">
                 {selectedSet.logo ? (
-                  <img src={selectedSet.logo} alt={selectedSet.name} className="max-h-full max-w-full object-contain" />
+                  <img
+                    src={selectedSet.logo}
+                    alt={selectedSet.name}
+                    className="max-h-full max-w-full object-contain"
+                  />
                 ) : selectedSet.symbol ? (
-                  <img src={selectedSet.symbol} alt={selectedSet.name} className="max-h-full max-w-full object-contain" />
+                  <img
+                    src={selectedSet.symbol}
+                    alt={selectedSet.name}
+                    className="max-h-full max-w-full object-contain"
+                  />
                 ) : (
                   <Bookmark className="w-10 h-10 text-muted-foreground/30" />
                 )}
@@ -600,17 +679,33 @@ export function PokemonCardsTable({
                   <h2 className="text-xl font-bold">{selectedSet.name}</h2>
                   <div className="flex gap-1">
                     {selectedSet.legal?.standard && (
-                      <Badge className="bg-green-500/15 text-green-500 border border-green-500/30 text-xs">Standard</Badge>
+                      <Badge className="bg-green-500/15 text-green-500 border border-green-500/30 text-xs">
+                        Standard
+                      </Badge>
                     )}
                     {selectedSet.legal?.expanded && (
-                      <Badge className="bg-blue-500/15 text-blue-500 border border-blue-500/30 text-xs">Expanded</Badge>
+                      <Badge className="bg-blue-500/15 text-blue-500 border border-blue-500/30 text-xs">
+                        Expanded
+                      </Badge>
                     )}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Série : <span className="font-semibold text-foreground">{selectedSerie?.name || selectedSet.serie?.name}</span> • 
-                  Sortie le {selectedSet.releaseDate ? new Date(selectedSet.releaseDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : "N/A"} • 
-                  Nombre de cartes : <span className="font-semibold text-foreground">{selectedSet.cardCount?.total}</span>
+                  Série :{" "}
+                  <span className="font-semibold text-foreground">
+                    {selectedSerie?.name || selectedSet.serie?.name}
+                  </span>{" "}
+                  • Sortie le{" "}
+                  {selectedSet.releaseDate
+                    ? new Date(selectedSet.releaseDate).toLocaleDateString(
+                        "fr-FR",
+                        { day: "numeric", month: "long", year: "numeric" },
+                      )
+                    : "N/A"}{" "}
+                  • Nombre de cartes :{" "}
+                  <span className="font-semibold text-foreground">
+                    {selectedSet.cardCount?.total}
+                  </span>
                 </p>
               </div>
               <Button
@@ -635,16 +730,19 @@ export function PokemonCardsTable({
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <CardTitle className="text-xl font-semibold flex items-center gap-2">
-                {currentData ? `Cartes Pokemon (${currentData.meta.totalItems} cartes)` : "Cartes Pokemon"}
+                {currentData
+                  ? `Cartes Pokemon (${currentData.meta.totalItems} cartes)`
+                  : "Cartes Pokemon"}
                 {isSearching && (
                   <span className="text-sm font-normal text-muted-foreground">
-                     - Résultats pour &quot;{searchQuery}&quot;
+                    - Résultats pour &quot;{searchQuery}&quot;
                   </span>
                 )}
               </CardTitle>
               {currentData && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  Page {currentData.meta.currentPage} sur {currentData.meta.totalPages}
+                  Page {currentData.meta.currentPage} sur{" "}
+                  {currentData.meta.totalPages}
                 </div>
               )}
             </div>
@@ -653,7 +751,13 @@ export function PokemonCardsTable({
             <div className="flex flex-wrap items-center gap-3">
               {/* Type Select */}
               <div className="w-[140px]">
-                <Select value={selectedType} onValueChange={(val) => { setSelectedType(val); setCurrentPage(1); }}>
+                <Select
+                  value={selectedType}
+                  onValueChange={(val) => {
+                    setSelectedType(val);
+                    setCurrentPage(1);
+                  }}
+                >
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue placeholder="Filtrer par type" />
                   </SelectTrigger>
@@ -670,7 +774,13 @@ export function PokemonCardsTable({
 
               {/* Rarity Select */}
               <div className="w-[160px]">
-                <Select value={selectedRarity} onValueChange={(val) => { setSelectedRarity(val); setCurrentPage(1); }}>
+                <Select
+                  value={selectedRarity}
+                  onValueChange={(val) => {
+                    setSelectedRarity(val);
+                    setCurrentPage(1);
+                  }}
+                >
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue placeholder="Filtrer par rareté" />
                   </SelectTrigger>
@@ -686,7 +796,10 @@ export function PokemonCardsTable({
               </div>
 
               {/* Search Form */}
-              <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-1 sm:flex-initial min-w-[240px]">
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex items-center gap-2 flex-1 sm:flex-initial min-w-[240px]"
+              >
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -710,7 +823,13 @@ export function PokemonCardsTable({
                   Rechercher
                 </Button>
                 {isSearching && (
-                  <Button type="button" variant="outline" size="sm" onClick={clearSearch} className="h-9 text-xs">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="h-9 text-xs"
+                  >
                     Effacer
                   </Button>
                 )}
@@ -723,20 +842,27 @@ export function PokemonCardsTable({
           {loading ? (
             <div className="flex flex-col items-center justify-center p-24 gap-4">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <div className="text-sm text-muted-foreground font-medium">Chargement...</div>
+              <div className="text-sm text-muted-foreground font-medium">
+                Chargement...
+              </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center p-12 bg-destructive/10 border border-destructive/20 rounded-xl">
-              <div className="text-sm text-destructive font-semibold">{error}</div>
+              <div className="text-sm text-destructive font-semibold">
+                {error}
+              </div>
             </div>
           ) : !currentData || currentData.data.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-20 text-center">
               <div className="rounded-full bg-muted p-4 mb-4">
                 <Search className="w-8 h-8 text-muted-foreground/60" />
               </div>
-              <h3 className="font-semibold text-lg mb-1">Aucune carte trouvée</h3>
+              <h3 className="font-semibold text-lg mb-1">
+                Aucune carte trouvée
+              </h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-4">
-                Nous n&apos;avons trouvé aucune carte correspondant à vos critères de recherche. Essayez de réinitialiser vos filtres.
+                Nous n&apos;avons trouvé aucune carte correspondant à vos
+                critères de recherche. Essayez de réinitialiser vos filtres.
               </p>
               <Button onClick={resetFilters} size="sm">
                 Réinitialiser les filtres
@@ -773,9 +899,11 @@ export function PokemonCardsTable({
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <span className="truncate">{card.set?.name}</span>
                       <span>•</span>
-                      <span className="font-semibold text-foreground whitespace-nowrap">#{card.localId}</span>
+                      <span className="font-semibold text-foreground whitespace-nowrap">
+                        #{card.localId}
+                      </span>
                     </div>
-                    
+
                     {/* Types & Rarity */}
                     <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/20">
                       <div className="flex gap-0.5">
@@ -809,7 +937,10 @@ export function PokemonCardsTable({
                         ))}
                       </div>
                       {card.rarity && (
-                        <span className="text-[9px] font-medium text-muted-foreground truncate max-w-[80px]" title={card.rarity}>
+                        <span
+                          className="text-[9px] font-medium text-muted-foreground truncate max-w-[80px]"
+                          title={card.rarity}
+                        >
                           {card.rarity}
                         </span>
                       )}
@@ -851,7 +982,10 @@ export function PokemonCardsTable({
                         </Link>
                       </TableCell>
                       <TableCell className="font-semibold text-foreground py-2">
-                        <Link href={`/pokemon/${card.id}`} className="hover:text-primary transition-colors">
+                        <Link
+                          href={`/pokemon/${card.id}`}
+                          className="hover:text-primary transition-colors"
+                        >
                           {card.name || "N/A"}
                         </Link>
                       </TableCell>
@@ -863,10 +997,15 @@ export function PokemonCardsTable({
                       </TableCell>
                       <TableCell className="py-2">
                         {card.rarity ? (
-                          <Badge variant="outline" className="text-[10px] bg-muted/50 font-normal">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-muted/50 font-normal"
+                          >
                             {card.rarity}
                           </Badge>
-                        ) : "N/A"}
+                        ) : (
+                          "N/A"
+                        )}
                       </TableCell>
                       <TableCell className="py-2">
                         <div className="flex gap-1">

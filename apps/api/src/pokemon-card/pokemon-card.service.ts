@@ -298,15 +298,15 @@ export class PokemonCardService {
     }
 
     qb.orderBy("set.releaseDate", "DESC")
-      .addOrderBy('CAST(NULLIF(regexp_replace("localId", \'\\D\', \'\', \'g\'), \'\') AS INTEGER)', "ASC")
+      .addOrderBy(
+        "CAST(NULLIF(regexp_replace(\"localId\", '\\D', '', 'g'), '') AS INTEGER)",
+        "ASC",
+      )
       .addOrderBy("card.localId", "ASC");
 
     qb.limit(validLimit).offset(offset);
 
-    const [data, totalItems] = await Promise.all([
-      qb.getMany(),
-      qb.getCount(),
-    ]);
+    const [data, totalItems] = await Promise.all([qb.getMany(), qb.getCount()]);
 
     return PaginationHelper.createPaginatedResult(
       data.map((card) => this.toPokemonCardResponse(card)),

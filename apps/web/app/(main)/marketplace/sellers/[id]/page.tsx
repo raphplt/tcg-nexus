@@ -69,7 +69,9 @@ export default function SellerPage() {
   const debouncedSearch = useDebounce(search, 500);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
-  const [productKind, setProductKind] = useState<"all" | "card" | "sealed">("all");
+  const [productKind, setProductKind] = useState<"all" | "card" | "sealed">(
+    "all",
+  );
 
   // Reset to page 1 on filter/search change
   useEffect(() => {
@@ -293,7 +295,9 @@ export default function SellerPage() {
             <div className="flex flex-wrap gap-2">
               <Select
                 value={productKind}
-                onValueChange={(value) => setProductKind(value as "all" | "card" | "sealed")}
+                onValueChange={(value) =>
+                  setProductKind(value as "all" | "card" | "sealed")
+                }
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Type de produit" />
@@ -489,7 +493,9 @@ export default function SellerPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(listings.meta.totalPages, p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(listings.meta.totalPages, p + 1))
+                }
                 disabled={!listings.meta.hasNextPage}
               >
                 Suivant

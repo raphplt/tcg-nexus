@@ -85,7 +85,7 @@ const SEED_AVATARS = [
   "/images/avatars/snorlax.png",
   "/images/avatars/umbreon.png",
   "/images/avatars/lucario.png",
-  "/images/avatars/mew.png", 
+  "/images/avatars/mew.png",
 ];
 
 @Injectable()

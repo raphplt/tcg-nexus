@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRight, Flame, Package, Star, TrendingUp, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Flame,
+  Package,
+  Star,
+  TrendingUp,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
@@ -162,9 +169,9 @@ export default function MarketplaceHomePage() {
                     Boosters, displays, ETB & decks préconstruits
                   </h3>
                   <p className="text-muted-foreground">
-                    Toute la collection de produits scellés, avec prix du marché et
-                    historique. Achetez auprès de vendeurs de confiance ou mettez
-                    vos propres produits en vente.
+                    Toute la collection de produits scellés, avec prix du marché
+                    et historique. Achetez auprès de vendeurs de confiance ou
+                    mettez vos propres produits en vente.
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -200,7 +207,8 @@ export default function MarketplaceHomePage() {
                 </div>
                 <Button variant="ghost" asChild>
                   <Link href="/marketplace/cards">
-                    Voir toutes les séries <ArrowRight className="ml-2 w-4 h-4" />
+                    Voir toutes les séries{" "}
+                    <ArrowRight className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
               </div>
@@ -286,12 +294,18 @@ export default function MarketplaceHomePage() {
                               {formatPrice(listing.price, listing.currency)}
                             </span>
                             {isCard && listing.cardState && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1 font-medium bg-background/50">
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] py-0 px-1 font-medium bg-background/50"
+                              >
                                 {listing.cardState}
                               </Badge>
                             )}
                             {!isCard && listing.sealedCondition && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1 font-medium bg-background/50">
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] py-0 px-1 font-medium bg-background/50"
+                              >
                                 {listing.sealedCondition}
                               </Badge>
                             )}
@@ -358,7 +372,8 @@ export default function MarketplaceHomePage() {
                           )}
                         </h4>
                         <p className="text-xs text-muted-foreground">
-                          {seller.totalSales} vente{seller.totalSales > 1 ? "s" : ""}
+                          {seller.totalSales} vente
+                          {seller.totalSales > 1 ? "s" : ""}
                         </p>
                       </div>
                     </Link>

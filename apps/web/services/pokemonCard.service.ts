@@ -20,7 +20,15 @@ export const pokemonCardService = {
       type?: string;
     } = {},
   ): Promise<PaginatedResult<PokemonCardType>> {
-    const { page = 1, limit = 10, search, setId, serieId, rarity, type } = params;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      setId,
+      serieId,
+      rarity,
+      type,
+    } = params;
     const response = await api.get<PaginatedResult<PokemonCardType>>(
       "/pokemon-card/paginated",
       {

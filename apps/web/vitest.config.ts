@@ -14,7 +14,7 @@ export default defineConfig({
       "@lib": path.resolve(__dirname, "lib"),
       "@actions": path.resolve(__dirname, "actions"),
       "@public": path.resolve(__dirname, "public"),
-      "react": path.resolve(__dirname, "../../node_modules/react"),
+      react: path.resolve(__dirname, "../../node_modules/react"),
       "react-dom": path.resolve(__dirname, "../../node_modules/react-dom"),
     },
   },
