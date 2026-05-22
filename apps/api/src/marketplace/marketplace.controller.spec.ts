@@ -1,5 +1,6 @@
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { User } from "../user/entities/user.entity";
@@ -50,7 +51,10 @@ describe("MarketplaceController", () => {
           useValue: { getAllAndOverride: jest.fn() },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .compile();
 
     controller = module.get<MarketplaceController>(MarketplaceController);
     service = module.get<MarketplaceService>(MarketplaceService);
