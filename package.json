@@ -14,7 +14,8 @@
     "@biomejs/biome": "^2.4.3",
     "npm-check-updates": "^18.0.2",
     "turbo": "^2.6.0",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "webpack": "5.95.0"
   },
   "engines": {
     "node": ">=18"
