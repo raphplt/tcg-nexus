@@ -9,7 +9,7 @@ export interface OcrResult {
 
 const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate";
 
-// Liste de cartes mockées pour tester en développement sans clé API
+// Mock data for fallback testing
 const MOCK_OCR_RESPONSES = [
   {
     rawText: "Terracool\nSTAGE 1\n60 HP\n025/198\nIllus. Tika Matsuno\n© 2023 Pokémon",
@@ -33,9 +33,7 @@ const MOCK_OCR_RESPONSES = [
 
 let mockIndex = 0;
 
-/**
- * Nettoie et extrait les informations importantes du texte brut OCR
- */
+// Parse name and ID from raw OCR text
 export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
   const lines = text
     .split("\n")
@@ -46,7 +44,7 @@ export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
   let denominator: string | undefined;
   let name: string | undefined;
 
-  // 1. Rechercher le numéro de set (ex: "025/198")
+  // Extract card number (e.g. 025/198)
   const setNumberRegex = /\b(\d{1,3})\s*[\/\u2044]\s*(\d{1,3})\b/;
   for (const line of lines) {
     const match = line.match(setNumberRegex);
@@ -57,8 +55,7 @@ export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
     }
   }
 
-  // 2. Tenter d'extraire le nom de la carte
-  // Filtres d'exclusion de mots clés typiques
+  // Extract card name, filtering out metadata keywords
   const excludedKeywords = [
     "stage",
     "hp",
@@ -87,20 +84,16 @@ export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
   ];
 
   for (const line of lines) {
-    // Le nom est généralement en haut, sans chiffres, et assez court
     const lowerLine = line.toLowerCase();
     
-    // Ignorer si la ligne contient un mot clé exclu
     if (excludedKeywords.some((keyword) => lowerLine.includes(keyword))) {
       continue;
     }
 
-    // Ignorer si la ligne contient uniquement des chiffres ou des symboles
     if (/^[^a-zA-Z]+$/.test(line)) {
       continue;
     }
 
-    // Si on trouve une ligne principalement alphabétique (lettres, espaces, tirets)
     if (/^[a-zA-Z\s\-\'\’]+$/.test(line) && line.length > 2 && line.length < 30) {
       name = line;
       break;
@@ -110,18 +103,14 @@ export function parseOcrText(text: string): Omit<OcrResult, "rawText"> {
   return { name, localId, denominator };
 }
 
-/**
- * Envoie une image au service OCR et retourne les résultats extraits
- * @param base64Image L'image encodée en base64 (sans le préfixe data:image/jpeg;base64,)
- */
+// Send image to Google Cloud Vision or run fallback mock
 export async function performOcr(base64Image: string): Promise<OcrResult> {
   const apiKey = process.env.EXPO_PUBLIC_VISION_API_KEY;
 
   if (!apiKey) {
     console.warn(
-      "[OCR Service] EXPO_PUBLIC_VISION_API_KEY non configurée. Utilisation du mode mock."
+      "[OCR Service] EXPO_PUBLIC_VISION_API_KEY not configured. Using mock data."
     );
-    // Simuler un délai réseau
     await new Promise((resolve) => setTimeout(resolve, 1500));
     const mock = (MOCK_OCR_RESPONSES[mockIndex] || MOCK_OCR_RESPONSES[0]) as OcrResult;
     mockIndex = (mockIndex + 1) % MOCK_OCR_RESPONSES.length;

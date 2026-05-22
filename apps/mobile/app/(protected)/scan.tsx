@@ -22,9 +22,9 @@ import { api } from "../../services/api";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Dimensions de la boîte de visée (Viewfinder)
+// Viewfinder dimensions (matches Pokémon card aspect ratio ~2.5x3.5)
 const VIEWFINDER_WIDTH = SCREEN_WIDTH * 0.75;
-const VIEWFINDER_HEIGHT = VIEWFINDER_WIDTH * 1.4; // Ratio d'une carte Pokémon (~2.5 x 3.5)
+const VIEWFINDER_HEIGHT = VIEWFINDER_WIDTH * 1.4;
 
 interface ScannedHistoryItem {
   id: string;
@@ -66,28 +66,17 @@ export default function ScanScreen() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
 
-  // Dimensions réelles de la preview caméra pour le recadrage
   const [cameraLayout, setCameraLayout] = useState<{ width: number; height: number } | null>(null);
-
-  // Historique des scans dans la session
   const [history, setHistory] = useState<ScannedHistoryItem[]>([]);
-
-  // Collections de l'utilisateur
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | number>("");
-
-  // Modal de confirmation
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [croppedImageUri, setCroppedImageUri] = useState<string | null>(null);
   const [foundCard, setFoundCard] = useState<Card | null>(null);
   const [scannedTextDetails, setScannedTextDetails] = useState<{ name?: string; localId?: string } | null>(null);
-
-  // Recherche manuelle de correction
   const [manualQuery, setManualQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Card[]>([]);
   const [isSearchingManual, setIsSearchingManual] = useState<boolean>(false);
-
-  // Notification Toast en mode Rafale
   const [bulkToast, setBulkToast] = useState<{ visible: boolean; message: string; success: boolean }>({
     visible: false,
     message: "",
@@ -96,14 +85,12 @@ export default function ScanScreen() {
 
   const cameraRef = useRef<CameraView>(null);
 
-  // Charger les collections de l'utilisateur au montage (UserId par défaut = 1)
   useEffect(() => {
     fetchUserCollections();
   }, []);
 
   const fetchUserCollections = async () => {
     try {
-      // Appel de l'endpoint public pour récupérer les collections de l'utilisateur 1
       const response = await api.get<Collection[]>("/collection/user/1");
       setCollections(response.data);
       const firstCol = response.data[0];
@@ -111,12 +98,11 @@ export default function ScanScreen() {
         setSelectedCollectionId(firstCol.id);
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des collections :", error);
+      console.error("Failed to fetch collections:", error);
     }
   };
 
   if (!permission) {
-    // Les permissions sont en cours de chargement
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -125,7 +111,6 @@ export default function ScanScreen() {
   }
 
   if (!permission.granted) {
-    // La permission n'est pas accordée
     return (
       <View style={styles.centerContainer}>
         <Ionicons name="camera-outline" size={64} color="#6366f1" style={{ marginBottom: 16 }} />
@@ -150,20 +135,16 @@ export default function ScanScreen() {
     }, 2500);
   };
 
-  // Algorithme de correspondance de cartes basé sur l'OCR
   const matchCardFromOcr = async (ocrName?: string, ocrLocalId?: string, denominator?: string): Promise<Card | null> => {
-    // Si nous n'avons ni nom ni numéro, impossible de chercher
     if (!ocrName && !ocrLocalId) return null;
 
     try {
-      // 1. Recherche par le localId en priorité si extrait
       let cardsFound: Card[] = [];
       if (ocrLocalId) {
         const res = await api.get<Card[]>(`/cards/search/${ocrLocalId}`);
         cardsFound = res.data;
       }
 
-      // Si aucune carte n'est trouvée et qu'on a un nom, on cherche par le nom
       if (cardsFound.length === 0 && ocrName) {
         const res = await api.get<Card[]>(`/cards/search/${ocrName}`);
         cardsFound = res.data;
@@ -171,21 +152,18 @@ export default function ScanScreen() {
 
       if (cardsFound.length === 0) return null;
 
-      // 2. Moteur de scoring pour trouver le meilleur match
       let bestMatch: Card | null = null;
       let highestScore = -1;
 
       for (const card of cardsFound) {
         let score = 0;
 
-        // Correspondance sur le localId
         if (ocrLocalId && card.localId === ocrLocalId) {
           score += 10;
         } else if (ocrLocalId && card.localId?.includes(ocrLocalId)) {
           score += 5;
         }
 
-        // Correspondance sur le nom de la carte (case insensitive)
         if (ocrName && card.name) {
           const cName = card.name.toLowerCase();
           const oName = ocrName.toLowerCase();
@@ -196,7 +174,6 @@ export default function ScanScreen() {
           }
         }
 
-        // Correspondance sur le dénominateur de set (ex: /198)
         if (denominator && card.set?.cardCount?.official === parseInt(denominator, 10)) {
           score += 10;
         }
@@ -209,7 +186,7 @@ export default function ScanScreen() {
 
       return bestMatch;
     } catch (err) {
-      console.error("Erreur de recherche automatique de carte :", err);
+      console.error("Error matching card:", err);
       return null;
     }
   };
@@ -231,7 +208,7 @@ export default function ScanScreen() {
 
       setProcessingStatus("Optimisation de l'image...");
 
-      // Calcul des coordonnées de découpe (Crop) relatives au viewfinder
+      // Map viewfinder bounds to raw photo coordinates
       const scaleX = photo.width / cameraLayout.width;
       const scaleY = photo.height / cameraLayout.height;
 
@@ -243,7 +220,7 @@ export default function ScanScreen() {
       const width = Math.round(VIEWFINDER_WIDTH * scaleX);
       const height = Math.round(VIEWFINDER_HEIGHT * scaleY);
 
-      // Effectuer le Crop et la compression via expo-image-manipulator
+      // Crop, resize and compress image
       const cropResult = await manipulateAsync(
         photo.uri,
         [
@@ -257,7 +234,7 @@ export default function ScanScreen() {
           },
           {
             resize: {
-              width: 500, // Largeur optimisée pour l'OCR Google Vision
+              width: 500,
             },
           },
         ],
@@ -267,25 +244,20 @@ export default function ScanScreen() {
       setCroppedImageUri(cropResult.uri);
       setProcessingStatus("Reconnaissance OCR en cours...");
 
-      // Appeler le service OCR
       const ocrResult = await performOcr(cropResult.base64 || "");
 
       setScannedTextDetails({ name: ocrResult.name, localId: ocrResult.localId });
       setProcessingStatus("Recherche dans la base de données...");
 
-      // Matcher la carte
       const matched = await matchCardFromOcr(ocrResult.name, ocrResult.localId, ocrResult.denominator);
 
       if (isBulkMode) {
-        // Mode Rafale
         if (matched) {
-          // Ajouter automatiquement à la collection ciblée
           try {
             await api.post(`/collection-item/collection/${selectedCollectionId}`, {
               pokemonCardId: matched.id,
             });
 
-            // Ajouter à l'historique
             setHistory((prev) => [
               {
                 id: Math.random().toString(),
@@ -316,7 +288,6 @@ export default function ScanScreen() {
             ]);
           }
         } else {
-          // Non trouvé
           triggerBulkToast("Carte non identifiée", false);
           setHistory((prev) => [
             {
@@ -331,7 +302,6 @@ export default function ScanScreen() {
         }
         setIsProcessing(false);
       } else {
-        // Mode Unique
         setFoundCard(matched);
         setManualQuery(ocrResult.name || ocrResult.localId || "");
         setIsProcessing(false);
@@ -344,7 +314,6 @@ export default function ScanScreen() {
     }
   };
 
-  // Effectuer une recherche manuelle de correction dans la modale
   const handleManualSearch = async (text: string) => {
     setManualQuery(text);
     if (text.trim().length < 2) {
@@ -357,13 +326,12 @@ export default function ScanScreen() {
       const response = await api.get<Card[]>(`/cards/search/${text}`);
       setSearchResults(response.data);
     } catch (err) {
-      console.error("Erreur lors de la recherche manuelle :", err);
+      console.error("Error during manual search:", err);
     } finally {
       setIsSearchingManual(false);
     }
   };
 
-  // Confirmer l'ajout de la carte à la collection (Mode Unique)
   const confirmAddToCollection = async () => {
     if (!foundCard || !selectedCollectionId) return;
 
@@ -373,7 +341,6 @@ export default function ScanScreen() {
         pokemonCardId: foundCard.id,
       });
 
-      // Ajouter à l'historique
       setHistory((prev) => [
         {
           id: Math.random().toString(),
