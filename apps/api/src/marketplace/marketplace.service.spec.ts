@@ -21,8 +21,6 @@ import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
-import { DataSource } from "typeorm";
-import { CardPopularityService } from "./card-popularity.service";
 import { MarketplaceService } from "./marketplace.service";
 import { StripeService } from "./stripe.service";
 
@@ -45,6 +43,7 @@ describe("MarketplaceService", () => {
   let mockUserRepository: any;
   let mockCardPopularityService: any;
   let mockDataSource: any;
+  let mockManager: any;
 
   // Helper to create a fresh QB mock
   const createMockQb = () => ({
@@ -80,7 +79,6 @@ describe("MarketplaceService", () => {
       findOne: jest.fn(),
       softRemove: jest.fn(),
       delete: jest.fn(),
-      softRemove: jest.fn(),
       find: jest.fn(),
       count: jest.fn(),
       createQueryBuilder: jest.fn(() => createMockQb()),
@@ -135,7 +133,7 @@ describe("MarketplaceService", () => {
       recordEvent: jest.fn().mockResolvedValue(undefined),
     };
 
-    const mockManager = {
+    mockManager = {
       findOne: jest.fn().mockImplementation(async (cls, options) => {
         if (cls === Listing) {
           return mockListingRepo.findOne(options);
@@ -259,7 +257,7 @@ describe("MarketplaceService", () => {
       const result = await service.createOrder(dto, user);
 
       expect(result).toEqual({ id: 1 });
-      expect(manager.save).toHaveBeenCalled();
+      expect(mockManager.save).toHaveBeenCalled();
       expect(userCartService.clearCart).toHaveBeenCalledWith(user.id);
     });
 
