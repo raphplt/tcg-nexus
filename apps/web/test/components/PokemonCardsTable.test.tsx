@@ -11,6 +11,8 @@ vi.mock("@/services/pokemonCard.service", () => ({
   pokemonCardService: {
     getPaginated: vi.fn(),
     search: vi.fn(),
+    getAllSeries: vi.fn().mockResolvedValue([]),
+    getAllSets: vi.fn().mockResolvedValue([]),
   },
 }));
 

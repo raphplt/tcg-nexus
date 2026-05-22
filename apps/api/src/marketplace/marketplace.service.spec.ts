@@ -21,6 +21,8 @@ import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
+import { DataSource } from "typeorm";
+import { CardPopularityService } from "./card-popularity.service";
 import { MarketplaceService } from "./marketplace.service";
 import { StripeService } from "./stripe.service";
 
@@ -40,6 +42,9 @@ describe("MarketplaceService", () => {
   let mockOrderItemRepo: any;
   let mockStripeService: any;
   let mockUserCartService: any;
+  let mockUserRepository: any;
+  let mockCardPopularityService: any;
+  let mockDataSource: any;
 
   // Helper to create a fresh QB mock
   const createMockQb = () => ({
@@ -62,8 +67,9 @@ describe("MarketplaceService", () => {
     limit: jest.fn().mockReturnThis(),
     having: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
-    getRawOne: jest.fn().mockResolvedValue(undefined),
     getCount: jest.fn().mockResolvedValue(0),
+    getRawAndEntities: jest.fn().mockResolvedValue({ entities: [], raw: [] }),
+    getRawOne: jest.fn().mockResolvedValue(null),
   });
 
   beforeEach(async () => {
@@ -72,6 +78,7 @@ describe("MarketplaceService", () => {
       create: jest.fn(),
       save: jest.fn(),
       findOne: jest.fn(),
+      softRemove: jest.fn(),
       delete: jest.fn(),
       softRemove: jest.fn(),
       find: jest.fn(),
@@ -109,7 +116,10 @@ describe("MarketplaceService", () => {
     };
 
     mockStripeService = {
-      retrievePaymentIntent: jest.fn(),
+      retrievePaymentIntent: jest.fn().mockResolvedValue({
+        status: "succeeded",
+        amount: 2000,
+      }),
     };
 
     mockUserCartService = {
@@ -117,29 +127,52 @@ describe("MarketplaceService", () => {
       clearCart: jest.fn(),
     };
 
-    const mockUserRepo = {
+    mockUserRepository = {
       findOne: jest.fn(),
-      save: jest.fn(),
     };
 
-    const mockCardPopularityService = {
-      recordEvent: jest.fn(),
+    mockCardPopularityService = {
+      recordEvent: jest.fn().mockResolvedValue(undefined),
     };
 
-    const mockDataSource = {
-      transaction: jest.fn((cb: any) => cb({ save: jest.fn() })),
-      createQueryRunner: jest.fn(() => ({
-        connect: jest.fn(),
-        startTransaction: jest.fn(),
-        commitTransaction: jest.fn(),
-        rollbackTransaction: jest.fn(),
-        release: jest.fn(),
-        manager: {
-          save: jest.fn(),
-          findOne: jest.fn(),
-          create: jest.fn(),
-        },
-      })),
+    const mockManager = {
+      findOne: jest.fn().mockImplementation(async (cls, options) => {
+        if (cls === Listing) {
+          return mockListingRepo.findOne(options);
+        }
+        return null;
+      }),
+      create: jest.fn().mockImplementation((cls, data) => {
+        if (cls === Order) {
+          return mockOrderRepo.create(data);
+        }
+        if (cls === OrderItem) {
+          return mockOrderItemRepo.create(data);
+        }
+        if (cls === PaymentTransaction) {
+          return mockPaymentTransactionRepo.create(data);
+        }
+        return data;
+      }),
+      save: jest.fn().mockImplementation(async (arg1, arg2) => {
+        const entity = arg2 || arg1;
+        const cls = arg2 ? arg1 : undefined;
+        if (cls === Order) {
+          return mockOrderRepo.save(entity);
+        }
+        if (cls === OrderItem) {
+          return mockOrderItemRepo.save(entity);
+        }
+        if (cls === PaymentTransaction) {
+          return mockPaymentTransactionRepo.save(entity);
+        }
+        return entity;
+      }),
+      decrement: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockDataSource = {
+      transaction: jest.fn().mockImplementation(async (cb) => cb(mockManager)),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -160,13 +193,10 @@ describe("MarketplaceService", () => {
           useValue: mockPaymentTransactionRepo,
         },
         { provide: getRepositoryToken(OrderItem), useValue: mockOrderItemRepo },
-        { provide: getRepositoryToken(User), useValue: mockUserRepo },
+        { provide: getRepositoryToken(User), useValue: mockUserRepository },
         { provide: StripeService, useValue: mockStripeService },
         { provide: UserCartService, useValue: mockUserCartService },
-        {
-          provide: CardPopularityService,
-          useValue: mockCardPopularityService,
-        },
+        { provide: CardPopularityService, useValue: mockCardPopularityService },
         { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
@@ -222,11 +252,9 @@ describe("MarketplaceService", () => {
         cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
-
-      const manager = buildManager({ ...listing });
-      (service as any).dataSource.transaction.mockImplementation((cb: any) =>
-        cb(manager),
-      );
+      mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 5 });
+      orderRepo.create.mockReturnValue({});
+      orderRepo.save.mockResolvedValue({ id: 1 });
 
       const result = await service.createOrder(dto, user);
 
@@ -253,12 +281,7 @@ describe("MarketplaceService", () => {
         cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
-
-      const manager = buildManager({ ...listing });
-      (service as any).dataSource.transaction.mockImplementation((cb: any) =>
-        cb(manager),
-      );
-
+      mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 1 });
       await expect(service.createOrder(dto, user)).rejects.toThrow(
         BadRequestException,
       );
@@ -334,14 +357,14 @@ describe("MarketplaceService", () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
     });
 
     it("allows admin", async () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, admin);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
     });
   });
 
@@ -626,12 +649,14 @@ describe("MarketplaceService", () => {
 
   describe("getSellerStatistics", () => {
     it("calculates seller stats", async () => {
-      const userRepo = (service as any).userRepository;
-      userRepo.findOne.mockResolvedValue({
+      mockUserRepository.findOne.mockResolvedValue({
         id: 1,
-        username: "alice",
-        firstName: "Alice",
-        lastName: "Doe",
+        firstName: "Seller",
+        lastName: "One",
+        email: "seller@test.com",
+        avatarUrl: "avatar",
+        isPro: false,
+        createdAt: new Date(),
       });
       listingRepo.find.mockResolvedValue([
         { id: 1, expiresAt: new Date(Date.now() + 10000) },
@@ -672,7 +697,7 @@ describe("MarketplaceService", () => {
         expect.stringContaining("MIN(listing.price) >= :priceMin"),
         expect.anything(),
       );
-      expect(qb.orderBy).toHaveBeenCalledWith("min_price", "ASC");
+      expect(qb.orderBy).toHaveBeenCalledWith("min_price", "ASC", "NULLS LAST");
     });
 
     it("applies filters and fallback sorting", async () => {

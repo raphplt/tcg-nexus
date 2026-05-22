@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   MessageCircle,
@@ -7,6 +8,9 @@ import {
   ShoppingBag,
   Star,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -30,11 +34,49 @@ import { useViewMode } from "@/hooks/useViewMode";
 import { marketplaceService } from "@/services/marketplace.service";
 import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
+import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
+import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
+import { useDebounce } from "@/hooks/useDebounce";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const getSealedConditionColor = (condition: string | null | undefined) => {
+  switch (condition) {
+    case "sealed":
+      return "bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30";
+    case "box_damaged":
+      return "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30";
+    case "opened_resealed":
+      return "bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
+};
 
 export default function SellerPage() {
   const { id } = useParams();
   const sellerId = parseInt(id as string);
   const [viewMode, setViewMode] = useViewMode("grid");
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [productKind, setProductKind] = useState<"all" | "card" | "sealed">(
+    "all",
+  );
+
+  // Reset to page 1 on filter/search change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sortBy, sortOrder, productKind]);
 
   // Fetch seller statistics
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -45,8 +87,24 @@ export default function SellerPage() {
 
   // Fetch seller listings
   const { data: listings, isLoading: loadingListings } = useQuery({
-    queryKey: ["seller-listings", sellerId],
-    queryFn: () => marketplaceService.getSellerListings(sellerId),
+    queryKey: [
+      "seller-listings",
+      sellerId,
+      page,
+      debouncedSearch,
+      sortBy,
+      sortOrder,
+      productKind,
+    ],
+    queryFn: () =>
+      marketplaceService.getSellerListings(sellerId, {
+        page,
+        limit: 20,
+        search: debouncedSearch || undefined,
+        sortBy,
+        sortOrder,
+        productKind: productKind === "all" ? undefined : productKind,
+      }),
     enabled: !!sellerId && !isNaN(sellerId),
   });
 
@@ -145,7 +203,6 @@ export default function SellerPage() {
           </CardContent>
         </Card>
 
-        {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader>
@@ -217,10 +274,63 @@ export default function SellerPage() {
             <H2>Offres du vendeur</H2>
             <div className="flex items-center gap-3">
               <Badge variant="secondary">
-                {sellerListings.length} offre
-                {sellerListings.length > 1 ? "s" : ""}
+                {listings?.meta?.totalItems ?? 0} offre
+                {(listings?.meta?.totalItems ?? 0) > 1 ? "s" : ""}
               </Badge>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+            </div>
+          </div>
+
+          {/* Filtres et recherche */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher une offre..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Select
+                value={productKind}
+                onValueChange={(value) =>
+                  setProductKind(value as "all" | "card" | "sealed")
+                }
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Type de produit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les produits</SelectItem>
+                  <SelectItem value="card">Cartes</SelectItem>
+                  <SelectItem value="sealed">Produits Scellés</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={`${sortBy}-${sortOrder}`}
+                onValueChange={(value) => {
+                  const [newSortBy, newSortOrder] = value.split("-");
+                  if (newSortBy) {
+                    setSortBy(newSortBy);
+                    setSortOrder((newSortOrder || "DESC") as "ASC" | "DESC");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="createdAt-DESC">Plus récent</SelectItem>
+                  <SelectItem value="createdAt-ASC">Plus ancien</SelectItem>
+                  <SelectItem value="name-ASC">Nom (A-Z)</SelectItem>
+                  <SelectItem value="name-DESC">Nom (Z-A)</SelectItem>
+                  <SelectItem value="price-ASC">Prix : croissant</SelectItem>
+                  <SelectItem value="price-DESC">Prix : décroissant</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -234,16 +344,33 @@ export default function SellerPage() {
             viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {sellerListings.map((listing) => {
-                  if (!listing.pokemonCard) return null;
-                  return (
-                    <CardCard
-                      key={listing.id}
-                      card={listing.pokemonCard}
-                      minPrice={parseFloat(listing.price.toString())}
-                      listingCount={listing.quantityAvailable}
-                      currency={listing.currency}
-                    />
-                  );
+                  const isCard =
+                    listing.productKind === "card" || !!listing.pokemonCard;
+                  if (isCard) {
+                    if (!listing.pokemonCard) return null;
+                    return (
+                      <CardCard
+                        key={listing.id}
+                        card={listing.pokemonCard}
+                        minPrice={parseFloat(listing.price.toString())}
+                        listingCount={listing.quantityAvailable}
+                        currency={listing.currency}
+                      />
+                    );
+                  } else {
+                    if (!listing.sealedProduct) return null;
+                    return (
+                      <SealedProductCard
+                        key={listing.id}
+                        product={listing.sealedProduct}
+                        price={parseFloat(listing.price.toString())}
+                        quantity={listing.quantityAvailable}
+                        currency={listing.currency}
+                        condition={listing.sealedCondition ?? undefined}
+                        listingId={listing.id}
+                      />
+                    );
+                  }
                 })}
               </div>
             ) : (
@@ -252,8 +379,8 @@ export default function SellerPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Carte</TableHead>
-                        <TableHead>État</TableHead>
+                        <TableHead>Produit</TableHead>
+                        <TableHead>État / Condition</TableHead>
                         <TableHead>Prix</TableHead>
                         <TableHead>Quantité</TableHead>
                         <TableHead>Date</TableHead>
@@ -261,52 +388,81 @@ export default function SellerPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sellerListings.map((listing) => (
-                        <TableRow key={listing.id}>
-                          <TableCell>
-                            <Link
-                              href={`/marketplace/cards/${listing.pokemonCard?.id}`}
-                              className="hover:text-primary transition-colors font-medium"
-                            >
-                              {listing.pokemonCard?.name}
-                            </Link>
-                            {listing.pokemonCard?.set && (
-                              <div className="text-xs text-muted-foreground">
-                                {listing.pokemonCard?.set.name}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={getCardStateColor(
-                                listing.cardState ?? "",
+                      {sellerListings.map((listing) => {
+                        const isCard =
+                          listing.productKind === "card" ||
+                          !!listing.pokemonCard;
+                        const productName = isCard
+                          ? listing.pokemonCard?.name
+                          : listing.sealedProduct?.nameEn;
+                        const productSetName = isCard
+                          ? listing.pokemonCard?.set?.name
+                          : listing.sealedProduct?.pokemonSet?.name;
+                        const productLink = isCard
+                          ? `/marketplace/cards/${listing.pokemonCard?.id}`
+                          : `/marketplace/sealed/${listing.sealedProduct?.id}`;
+                        const conditionLabel = isCard
+                          ? (listing.cardState ?? "")
+                          : listing.sealedCondition
+                            ? sealedConditionLabels[
+                                listing.sealedCondition as SealedCondition
+                              ] || listing.sealedCondition
+                            : "";
+                        const conditionColor = isCard
+                          ? getCardStateColor(listing.cardState ?? "")
+                          : getSealedConditionColor(listing.sealedCondition);
+
+                        return (
+                          <TableRow key={listing.id}>
+                            <TableCell>
+                              {productName ? (
+                                <Link
+                                  href={productLink}
+                                  className="hover:text-primary transition-colors font-medium"
+                                >
+                                  {productName}
+                                </Link>
+                              ) : (
+                                <span className="text-muted-foreground italic">
+                                  Produit inconnu
+                                </span>
                               )}
-                            >
-                              {listing.cardState ?? ""}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {formatPriceUtil(listing.price, listing.currency)}
-                          </TableCell>
-                          <TableCell>{listing.quantityAvailable}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(listing.createdAt).toLocaleDateString(
-                              "fr-FR",
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Link href={`/marketplace/${listing.id}`}>
+                              {productSetName && (
+                                <div className="text-xs text-muted-foreground">
+                                  {productSetName}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
                               <Badge
                                 variant="outline"
-                                className="cursor-pointer hover:bg-accent"
+                                className={conditionColor}
                               >
-                                Voir
+                                {conditionLabel}
                               </Badge>
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell className="font-semibold">
+                              {formatPriceUtil(listing.price, listing.currency)}
+                            </TableCell>
+                            <TableCell>{listing.quantityAvailable}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {new Date(listing.createdAt).toLocaleDateString(
+                                "fr-FR",
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Link href={productLink}>
+                                <Badge
+                                  variant="outline"
+                                  className="cursor-pointer hover:bg-accent"
+                                >
+                                  Voir
+                                </Badge>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>
@@ -318,6 +474,34 @@ export default function SellerPage() {
                 Aucune offre disponible pour le moment
               </CardContent>
             </Card>
+          )}
+
+          {listings && listings.meta && listings.meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={!listings.meta.hasPreviousPage}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Précédent
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {listings.meta.currentPage} sur {listings.meta.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setPage((p) => Math.min(listings.meta.totalPages, p + 1))
+                }
+                disabled={!listings.meta.hasNextPage}
+              >
+                Suivant
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

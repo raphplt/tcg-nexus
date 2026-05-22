@@ -74,6 +74,20 @@ import {
 import { User } from "src/user/entities/user.entity";
 import { DeepPartial, Repository } from "typeorm";
 
+const SEED_AVATARS = [
+  "/images/avatars/pikachu.png",
+  "/images/avatars/eevee.png",
+  "/images/avatars/charizard.png",
+  "/images/avatars/blastoise.png",
+  "/images/avatars/venusaur.png",
+  "/images/avatars/gengar.png",
+  "/images/avatars/mewtwo.png",
+  "/images/avatars/snorlax.png",
+  "/images/avatars/umbreon.png",
+  "/images/avatars/lucario.png",
+  "/images/avatars/mew.png",
+];
+
 @Injectable()
 export class SeedService {
   constructor(
@@ -583,7 +597,7 @@ export class SeedService {
         firstName: "Test",
         lastName: "User1",
         password: "password1",
-        avatarUrl: "https://via.placeholder.com/150",
+        avatarUrl: "/images/avatars/pikachu.png",
         role: UserRole.USER,
         isPro: false,
         isActive: true,
@@ -598,7 +612,7 @@ export class SeedService {
         firstName: "Test",
         lastName: "User2",
         password: "password2",
-        avatarUrl: "https://via.placeholder.com/150",
+        avatarUrl: "/images/avatars/charizard.png",
         role: UserRole.ADMIN,
         isPro: true,
         isActive: true,
@@ -613,7 +627,7 @@ export class SeedService {
         firstName: "Test",
         lastName: "User3",
         password: "password3",
-        avatarUrl: "https://via.placeholder.com/150",
+        avatarUrl: "/images/avatars/eevee.png",
         role: UserRole.MODERATOR,
         isPro: true,
         isActive: true,
@@ -631,7 +645,7 @@ export class SeedService {
         firstName: faker.person.firstName(),
         lastName: faker.person.lastName(),
         password: `password${i}`,
-        avatarUrl: `https://via.placeholder.com/150?text=Seller${i}`,
+        avatarUrl: SEED_AVATARS[i % SEED_AVATARS.length],
         role: UserRole.USER,
         isPro: i % 3 === 0,
         isActive: true,
@@ -740,6 +754,7 @@ export class SeedService {
         firstName: `Player`,
         lastName: `${userIndex}`,
         password: await bcrypt.hash(`password${userIndex}`, 10),
+        avatarUrl: SEED_AVATARS[userIndex % SEED_AVATARS.length],
         role: UserRole.USER,
         isPro: false,
         isActive: true,
@@ -1000,6 +1015,7 @@ export class SeedService {
         firstName: `Player`,
         lastName: `${userIndex}`,
         password: await bcrypt.hash(`password${userIndex}`, 10),
+        avatarUrl: SEED_AVATARS[userIndex % SEED_AVATARS.length],
         role: UserRole.USER,
         isPro: false,
         isActive: true,
