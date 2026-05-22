@@ -42,7 +42,7 @@ export class CardService {
     }
 
     qb.andWhere(
-      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
+      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search OR card.localId ILIKE :search)",
       { search: `%${search}%` },
     );
 

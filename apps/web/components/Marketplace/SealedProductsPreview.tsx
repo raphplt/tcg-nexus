@@ -20,6 +20,7 @@ interface SealedProductsPreviewProps {
   defaultMode?: Mode;
   limit?: number;
   className?: string;
+  gridCols?: string;
 }
 
 /**
@@ -30,6 +31,7 @@ export function SealedProductsPreview({
   defaultMode = "popular",
   limit = 8,
   className,
+  gridCols,
 }: SealedProductsPreviewProps) {
   const [mode, setMode] = useState<Mode>(defaultMode);
 
@@ -40,6 +42,9 @@ export function SealedProductsPreview({
 
   const products = mode === "popular" ? popular : recent;
   const isLoading = mode === "popular" ? loadingPopular : loadingRecent;
+
+  const colsClass =
+    gridCols || "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
 
   return (
     <section className={cn("space-y-6", className)}>
@@ -74,13 +79,13 @@ export function SealedProductsPreview({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
+        <div className={cn("grid gap-4", colsClass)}>
+          {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-72" />
           ))}
         </div>
       ) : products && products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className={cn("grid gap-4", colsClass)}>
           {products.slice(0, limit).map((product) => (
             <SealedProductCard key={product.id} product={product} />
           ))}

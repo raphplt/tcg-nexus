@@ -31,8 +31,8 @@ export class PokemonSeriesService {
       .groupBy("serie.id")
       .addGroupBy("serie.name")
       .addGroupBy("serie.logo")
-      .addSelect("MAX(set.releaseDate)", "maxReleaseDate")
-      .orderBy("MAX(set.releaseDate)", "DESC")
+      .addSelect("MIN(set.releaseDate)", "minReleaseDate")
+      .orderBy("MIN(set.releaseDate)", "ASC")
       .addOrderBy("serie.name", "ASC")
       .getRawAndEntities()
       .then((result) => result.entities);

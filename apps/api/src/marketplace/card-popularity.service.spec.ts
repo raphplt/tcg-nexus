@@ -23,10 +23,10 @@ const mockRepo = () => ({
     groupBy: jest.fn().mockReturnThis(),
     addGroupBy: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
-    getRawOne: jest.fn().mockResolvedValue(undefined),
     getMany: jest.fn().mockResolvedValue([]),
     orderBy: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
+    getRawOne: jest.fn().mockResolvedValue(null),
   })),
   count: jest.fn(),
   findAndCount: jest.fn(),
@@ -94,8 +94,8 @@ describe("CardPopularityService", () => {
   it("should calculate popularity score", async () => {
     const qb = cardEventRepo.createQueryBuilder();
     qb.getRawMany.mockResolvedValue([
-      { eventType: CardEventType.VIEW, count: "3" },
-      { eventType: CardEventType.ADD_TO_CART, count: "2" },
+      { eventType: CardEventType.VIEW, count: "1" },
+      { eventType: CardEventType.ADD_TO_CART, count: "1" },
     ]);
     cardEventRepo.createQueryBuilder.mockReturnValue(qb);
     const score = await (service as any).calculatePopularityScore("c1");
@@ -191,6 +191,7 @@ describe("CardPopularityService", () => {
       { eventType: CardEventType.VIEW, window: "recent", count: "1" },
     ]);
     cardEventRepo.createQueryBuilder.mockReturnValue(qb);
+    listingRepo.count.mockResolvedValue(10);
 
     const score = await (service as any).calculateTrendScore("card1");
     expect(score).toBe(100);

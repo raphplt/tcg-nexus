@@ -12,7 +12,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Public } from "src/auth/decorators/public.decorator";
 import { Roles } from "src/auth/decorators/roles.decorator";
 import { UserRole } from "src/common/enums/user";
-import { PaginationDto } from "../common/dto/pagination.dto";
+import { FindAllPokemonCardDto } from "./dto/find-all-pokemon-card.dto";
 import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
 import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
 import { PokemonCardService } from "./pokemon-card.service";
@@ -35,10 +35,15 @@ export class PokemonCardController {
 
   @Public()
   @Get("paginated")
-  findAllPaginated(@Query() paginationDto: PaginationDto) {
+  findAllPaginated(@Query() query: FindAllPokemonCardDto) {
     return this.pokemonCardService.findAllPaginated(
-      paginationDto.page,
-      paginationDto.limit,
+      query.page,
+      query.limit,
+      query.search,
+      query.setId,
+      query.serieId,
+      query.rarity,
+      query.type,
     );
   }
 

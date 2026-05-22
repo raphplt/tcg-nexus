@@ -57,6 +57,14 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Patch("me")
+  updateProfile(
+    @CurrentUser() user: User,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.update(user.id, updateUserDto);
+  }
+
   @Patch(":id")
   @Roles(UserRole.ADMIN)
   update(
@@ -64,14 +72,6 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.userService.update(id, updateUserDto);
-  }
-
-  @Patch("me")
-  updateProfile(
-    @CurrentUser() user: User,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.userService.update(user.id, updateUserDto);
   }
 
   @Delete(":id")

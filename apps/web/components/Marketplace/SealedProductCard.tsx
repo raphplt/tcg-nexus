@@ -5,23 +5,46 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { SealedProduct, sealedProductTypeLabels } from "@/types/sealed-product";
+import {
+  SealedProduct,
+  sealedProductTypeLabels,
+  sealedConditionLabels,
+  SealedCondition,
+} from "@/types/sealed-product";
 import { getSealedImageUrl } from "@/utils/sealedImage";
+import { useCurrencyStore } from "@/store/currency.store";
 
 interface SealedProductCardProps {
   product: SealedProduct;
   className?: string;
+  price?: number;
+  quantity?: number;
+  currency?: string;
+  condition?: string;
+  listingId?: string | number;
 }
 
 export function SealedProductCard({
   product,
   className,
+  price,
+  quantity,
+  currency = "EUR",
+  condition,
+  listingId,
 }: SealedProductCardProps) {
   const imageUrl = getSealedImageUrl(product);
   const typeLabel = sealedProductTypeLabels[product.productType];
+  const { formatPrice } = useCurrencyStore();
+
+  const formattedCondition = condition
+    ? sealedConditionLabels[condition as SealedCondition] || condition
+    : undefined;
+
+  const cardLink = `/marketplace/sealed/${product.id}`;
 
   return (
-    <Link href={`/marketplace/sealed/${product.id}`}>
+    <Link href={cardLink}>
       <Card
         className={cn(
           "group hover:shadow-lg transition-all duration-200 cursor-pointer h-full flex flex-col",
@@ -56,11 +79,31 @@ export function SealedProductCard({
           </div>
         </CardHeader>
         <CardContent className="pt-0 mt-auto">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-3">
             <Badge variant="outline" className="text-xs">
               {typeLabel}
             </Badge>
+            {formattedCondition && (
+              <Badge
+                variant="secondary"
+                className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/20"
+              >
+                {formattedCondition}
+              </Badge>
+            )}
+            {quantity !== undefined && (
+              <Badge variant="secondary" className="text-xs">
+                {quantity} offre{quantity > 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
+          {price !== undefined && (
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold text-primary">
+                {formatPrice(price, currency)}
+              </span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </Link>

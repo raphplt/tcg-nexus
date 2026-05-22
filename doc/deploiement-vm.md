@@ -1,10 +1,11 @@
-# Deploiement complet sur VM ETNA (Docker: Front + API + PostgreSQL + Cloudflare)
+# Deploiement complet sur VM ETNA (Docker: Front + API + Docs + PostgreSQL + Cloudflare)
 
 Ce guide deploie toute la plateforme sur la VM:
 - Front Next.js (container `web`, port `3000`)
 - API NestJS (container `api`, port `3001`)
+- Docs Docusaurus servie par Nginx (container `docs`, port `3002`)
 - PostgreSQL (container `postgres`, port `5432`)
-- Cloudflare Tunnel pour exposer `tcg-nexus.org` et `api.tcg-nexus.org` avec URL stable
+- Cloudflare Tunnel pour exposer `tcg-nexus.org`, `api.tcg-nexus.org` et `docs.tcg-nexus.org` avec URL stable
 
 Le tout est orchestre par `docker-compose.deploy.yml`.
 
@@ -115,6 +116,7 @@ Test local VM:
 ```bash
 curl -I http://127.0.0.1:3000
 curl -i http://127.0.0.1:3001/
+curl -I http://127.0.0.1:3002
 ```
 
 ---
@@ -153,6 +155,8 @@ ingress:
     service: http://localhost:3001
   - hostname: api.tcg-nexus.org
     service: http://localhost:3001
+  - hostname: docs.tcg-nexus.org
+    service: http://localhost:3002
   - hostname: tcg-nexus.org
     service: http://localhost:3000
   - hostname: www.tcg-nexus.org
@@ -168,6 +172,7 @@ Si un record existe deja pour `@` ou `www`, supprime-le d'abord dans Cloudflare 
 sudo cloudflared tunnel route dns tcg-nexus-main tcg-nexus.org
 sudo cloudflared tunnel route dns tcg-nexus-main www.tcg-nexus.org
 sudo cloudflared tunnel route dns tcg-nexus-main api.tcg-nexus.org
+sudo cloudflared tunnel route dns tcg-nexus-main docs.tcg-nexus.org
 ```
 
 ### 6.3 Service systemd cloudflared
@@ -199,6 +204,7 @@ Depuis ton poste:
 curl -I https://tcg-nexus.org
 curl -i https://tcg-nexus.org/api/
 curl -i https://api.tcg-nexus.org/
+curl -I https://docs.tcg-nexus.org
 ```
 
 Checklist:
@@ -206,6 +212,7 @@ Checklist:
 - les appels `/api/*` passent
 - login/register fonctionne
 - pas d'erreurs CORS
+- `https://docs.tcg-nexus.org` charge la documentation Docusaurus
 
 ---
 
@@ -286,4 +293,6 @@ docker compose -f docker-compose.deploy.yml restart web
 - `docker-compose.deploy.yml`
 - `docker/api.Dockerfile`
 - `docker/web.Dockerfile`
+- `docker/docs.Dockerfile`
+- `docker/docs.nginx.conf`
 - `.dockerignore`

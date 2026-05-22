@@ -6,6 +6,7 @@ import {
   Import,
   LayoutDashboard,
   Library,
+  Medal,
   Package,
   PenLine,
   Plus,
@@ -56,6 +57,7 @@ const mainNavItems: NavItem[] = [
     ],
   },
   { label: "Jouer", href: "/play", icon: Swords },
+  { label: "Classement", href: "/ranking", icon: Medal },
   {
     label: "Tournois",
     href: "/tournaments",

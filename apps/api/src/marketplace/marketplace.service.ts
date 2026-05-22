@@ -424,6 +424,7 @@ export class MarketplaceService {
       search,
       cardState,
       currency,
+      productKind,
     } = params;
 
     const qb = this.listingRepository
@@ -432,11 +433,13 @@ export class MarketplaceService {
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
+      .leftJoinAndSelect("listing.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
       .where("seller.id = :sellerId", { sellerId });
 
     if (search) {
       qb.andWhere(
-        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search)",
+        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedSet.name) LIKE :search)",
         { search: `%${search.toLowerCase()}%` },
       );
     }
@@ -449,12 +452,21 @@ export class MarketplaceService {
       qb.andWhere("listing.currency = :currency", { currency });
     }
 
-    return PaginationHelper.paginateQueryBuilder(
-      qb,
-      { page, limit },
-      sortBy ? `listing.${sortBy}` : undefined,
-      sortOrder,
-    );
+    if (productKind) {
+      qb.andWhere("listing.productKind = :productKind", { productKind });
+    }
+
+    if (sortBy === "name") {
+      qb.addSelect(
+        "COALESCE(pokemonCard.name, sealedProduct.nameEn)",
+        "product_name",
+      );
+      qb.orderBy("product_name", sortOrder);
+    } else {
+      qb.orderBy(`listing.${sortBy || "createdAt"}`, sortOrder);
+    }
+
+    return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
   }
 
   /**
@@ -791,6 +803,8 @@ export class MarketplaceService {
         "pokemonCard",
         "pokemonCard.set",
         "pokemonCard.set.serie",
+        "sealedProduct",
+        "sealedProduct.pokemonSet",
       ],
       order: { createdAt: "DESC" },
     });
@@ -950,7 +964,7 @@ export class MarketplaceService {
 
     // Sorting with safeguards
     if (sortBy === "price") {
-      qb.orderBy("min_price", sortOrder);
+      qb.orderBy("min_price", sortOrder, "NULLS LAST");
     } else if (sortBy === "popularity") {
       qb.orderBy("listing_count", "DESC");
     } else if (sortBy === "localId") {
@@ -967,7 +981,41 @@ export class MarketplaceService {
       qb.orderBy("card.name", sortOrder);
     }
 
-    return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
+    const validated = PaginationHelper.validateParams({ page, limit });
+    const skip = PaginationHelper.calculateOffset(
+      validated.page,
+      validated.limit,
+    );
+
+    qb.skip(skip).take(validated.limit);
+
+    const [total, { entities, raw }] = await Promise.all([
+      qb.getCount(),
+      qb.getRawAndEntities(),
+    ]);
+
+    const mappedData = entities.map((entity, index) => {
+      const rawRow = raw[index];
+      const row =
+        rawRow && rawRow.card_id === entity.id
+          ? rawRow
+          : raw.find((r) => r.card_id === entity.id);
+
+      return {
+        card: entity,
+        minPrice: row && row.min_price ? parseFloat(row.min_price) : undefined,
+        avgPrice: row && row.avg_price ? parseFloat(row.avg_price) : undefined,
+        listingCount:
+          row && row.listing_count ? parseInt(row.listing_count, 10) : 0,
+      };
+    });
+
+    return PaginationHelper.createPaginatedResult(
+      mappedData,
+      total,
+      validated.page,
+      validated.limit,
+    );
   }
 
   async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {

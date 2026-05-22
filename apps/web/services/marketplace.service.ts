@@ -90,7 +90,9 @@ export const marketplaceService = {
   async getPaginated(
     params: MarketplaceQueryParams = {},
   ): Promise<PaginatedResult<Listing>> {
-    return fetcher<PaginatedResult<Listing>>("/listings", { params });
+    return fetcher<PaginatedResult<Listing>>("/marketplace/listings", {
+      params,
+    });
   },
 
   /**
@@ -195,9 +197,20 @@ export const marketplaceService = {
   /**
    * Récupère les listings d'un vendeur
    */
-  async getSellerListings(sellerId: number): Promise<PaginatedResult<Listing>> {
+  async getSellerListings(
+    sellerId: number,
+    query?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "ASC" | "DESC";
+      productKind?: string;
+    },
+  ): Promise<PaginatedResult<Listing>> {
     return fetcher<PaginatedResult<Listing>>(
       `/marketplace/sellers/${sellerId}/listings`,
+      { params: query },
     );
   },
 

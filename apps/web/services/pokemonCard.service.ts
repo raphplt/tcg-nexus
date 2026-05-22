@@ -10,13 +10,29 @@ import { PokemonRarity } from "../types/enums/pokemonCardsType";
 
 export const pokemonCardService = {
   async getPaginated(
-    params: PaginationParams = {},
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      setId?: string;
+      serieId?: string;
+      rarity?: string;
+      type?: string;
+    } = {},
   ): Promise<PaginatedResult<PokemonCardType>> {
-    const { page = 1, limit = 10 } = params;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      setId,
+      serieId,
+      rarity,
+      type,
+    } = params;
     const response = await api.get<PaginatedResult<PokemonCardType>>(
       "/pokemon-card/paginated",
       {
-        params: { page, limit },
+        params: { page, limit, search, setId, serieId, rarity, type },
       },
     );
     return response.data;
