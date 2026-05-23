@@ -7,6 +7,7 @@ import { Deck } from "src/deck/entities/deck.entity";
 import { Player } from "src/player/entities/player.entity";
 import { TournamentOrganizer } from "src/tournament/entities";
 import { UserCart } from "src/user_cart/entities/user_cart.entity";
+import { UserFollow } from "src/user-follow/entities/user-follow.entity";
 import {
   Column,
   CreateDateColumn,
@@ -119,6 +120,18 @@ export class User {
     (userBadge) => userBadge.user,
   )
   userBadges?: UserBadge[];
+
+  @OneToMany(
+    () => UserFollow,
+    (follow) => follow.follower,
+  )
+  following?: UserFollow[];
+
+  @OneToMany(
+    () => UserFollow,
+    (follow) => follow.followed,
+  )
+  followers?: UserFollow[];
 
   // Dates
   @CreateDateColumn()

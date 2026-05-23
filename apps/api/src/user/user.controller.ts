@@ -47,8 +47,11 @@ export class UserController {
 
   @Public()
   @Get(":id/public")
-  getPublicProfile(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.findPublicProfile(id);
+  getPublicProfile(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() currentUser?: User,
+  ) {
+    return this.userService.findPublicProfile(id, currentUser?.id);
   }
 
   @Get(":id")

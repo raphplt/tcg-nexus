@@ -1,4 +1,3 @@
-// apps/web/types/public-profile.ts
 export interface PublicPlayer {
   id: number;
   elo: number;
@@ -13,6 +12,9 @@ export interface PublicUser {
   avatarUrl: string | null;
   createdAt: string;
   player?: PublicPlayer;
+  followersCount: number;
+  followingCount: number;
+  isFollowing?: boolean;
 }
 
 export interface PublicUserBadge {

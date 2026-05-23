@@ -35,6 +35,8 @@ import { StatisticsModule } from "./statistics/statistics.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
+import { UserFollowModule } from "./user-follow/user-follow.module";
+import { FeedModule } from "./feed/feed.module";
 import { SupportTicketModule } from './support-ticket/support-ticket.module';
 
 @Module({
@@ -96,6 +98,8 @@ import { SupportTicketModule } from './support-ticket/support-ticket.module';
     BadgeModule,
     DashboardModule,
     SealedProductModule,
+    UserFollowModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [

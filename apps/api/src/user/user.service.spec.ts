@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
+import { UserFollowService } from "../user-follow/user-follow.service";
 import { User } from "./entities/user.entity";
 import { UserService } from "./user.service";
 
@@ -25,6 +26,11 @@ describe("UserService", () => {
     create: jest.fn(),
     save: jest.fn(),
   };
+  const mockFollowService = {
+    countFollowers: jest.fn().mockResolvedValue(0),
+    countFollowing: jest.fn().mockResolvedValue(0),
+    isFollowing: jest.fn().mockResolvedValue(false),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,6 +43,10 @@ describe("UserService", () => {
         {
           provide: getRepositoryToken(Player),
           useValue: playerRepo,
+        },
+        {
+          provide: UserFollowService,
+          useValue: mockFollowService,
         },
       ],
     }).compile();
