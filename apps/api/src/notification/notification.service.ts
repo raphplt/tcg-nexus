@@ -19,7 +19,7 @@ export class NotificationService {
   ) {}
 
   /**
-   * Creates a user notification, saves it, broadcasts via WebSockets, and pushes to devices.
+   * Crée une notification pour un utilisateur, l'enregistre, la diffuse via WebSockets et envoie un push.
    */
   async createNotification(
     userId: number,
@@ -44,8 +44,7 @@ export class NotificationService {
 
     const savedNotification = await this.notificationRepository.save(notification);
 
-    // Send real-time socket update
-    // We omit user relation from the gateway payload to keep it lightweight
+    // Envoi en temps réel via WebSocket (sans la relation user pour alléger)
     const socketPayload = {
       id: savedNotification.id,
       title: savedNotification.title,
@@ -57,14 +56,14 @@ export class NotificationService {
     };
     this.notificationGateway.sendNotificationToUser(userId, socketPayload);
 
-    // Trigger push notification to registered devices
+    // Déclenchement de la notification push
     this.triggerPushNotification(userId, title, body, data);
 
     return savedNotification;
   }
 
   /**
-   * Returns paginated list of notifications for a user.
+   * Retourne la liste paginée des notifications d'un utilisateur.
    */
   async getNotifications(
     userId: number,
@@ -91,7 +90,7 @@ export class NotificationService {
       where: { user: { id: userId }, isRead: false },
     });
 
-    // Remove user field from payload to avoid exposing password hash or extra fields
+    // Suppression du champ user pour ne pas exposer de données sensibles
     const data = notifications.map(({ user, ...rest }) => rest);
 
     return {
@@ -105,7 +104,7 @@ export class NotificationService {
   }
 
   /**
-   * Marks a notification as read.
+   * Marque une notification comme lue.
    */
   async markAsRead(userId: number, notificationId: number): Promise<Omit<Notification, "user">> {
     const notification = await this.notificationRepository.findOne({
@@ -122,7 +121,7 @@ export class NotificationService {
   }
 
   /**
-   * Marks all notifications of a user as read.
+   * Marque toutes les notifications d'un utilisateur comme lues.
    */
   async markAllAsRead(userId: number): Promise<{ success: boolean; updatedCount: number }> {
     const unreadNotifications = await this.notificationRepository.find({
@@ -143,7 +142,7 @@ export class NotificationService {
   }
 
   /**
-   * Deletes a user notification.
+   * Supprime une notification.
    */
   async deleteNotification(userId: number, notificationId: number): Promise<{ success: boolean }> {
     const notification = await this.notificationRepository.findOne({
@@ -159,7 +158,7 @@ export class NotificationService {
   }
 
   /**
-   * Registers a push token for a user.
+   * Enregistre un token push pour un utilisateur.
    */
   async registerToken(
     userId: number,
@@ -173,7 +172,7 @@ export class NotificationService {
 
     if (existing) {
       if (existing.user.id !== userId) {
-        // Re-assign token to current user if it was registered to someone else
+        // Réassignation du token s'il appartenait à un autre utilisateur
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user) {
           throw new NotFoundException(`User with ID ${userId} not found`);
@@ -202,7 +201,7 @@ export class NotificationService {
   }
 
   /**
-   * Removes a registered push token.
+   * Supprime un token push enregistré.
    */
   async unregisterToken(userId: number, token: string): Promise<{ success: boolean }> {
     const deviceToken = await this.deviceTokenRepository.findOne({
@@ -217,7 +216,7 @@ export class NotificationService {
   }
 
   /**
-   * Internal method to fetch tokens and trigger external push notifications (FCM or Expo).
+   * Méthode interne pour envoyer les notifications push (Expo).
    */
   private async triggerPushNotification(
     userId: number,
@@ -242,7 +241,7 @@ export class NotificationService {
         await this.sendExpoPushNotifications(expoTokens, title, body, data);
       }
 
-      // Log push notification trigger for diagnostics
+      // Log pour le diagnostic
       console.log(
         `Push Notifications triggered for User ID ${userId}: Title="${title}". Platforms: ${deviceTokens
           .map((t) => t.platform)
@@ -254,7 +253,7 @@ export class NotificationService {
   }
 
   /**
-   * Sends push notifications through Expo's HTTP push API.
+   * Envoie les notifications push via l'API HTTP d'Expo.
    */
   private async sendExpoPushNotifications(
     tokens: string[],

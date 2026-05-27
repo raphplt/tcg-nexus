@@ -102,7 +102,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initial fetch on auth state change
+  // Chargement initial des notifications
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
@@ -112,7 +112,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, fetchNotifications]);
 
-  // WebSocket Connection
+  // Connexion WebSocket
   useEffect(() => {
     if (!isAuthenticated || !socketBaseUrl) {
       if (socketRef.current) {
@@ -149,7 +149,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setNotifications((prev) => [newNotification, ...prev]);
       setUnreadCount((prev) => prev + 1);
 
-      // Play soft sound or trigger toast notification
+
       toast(
         (t) => (
           <div className="flex flex-col gap-1">

@@ -58,7 +58,7 @@ export class NotificationGateway
   }
 
   /**
-   * Broadcasts a new notification event to a specific user.
+   * Envoie une notification en temps réel à un utilisateur spécifique.
    */
   sendNotificationToUser(userId: number, notification: any) {
     this.server.to(`user:${userId}`).emit("new_notification", notification);
