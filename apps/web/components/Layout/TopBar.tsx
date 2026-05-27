@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, LogOut, ShoppingCart, Shield, Settings } from "lucide-react";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
+import { NotificationBell } from "./NotificationBell";
 
 export function TopBar() {
   const [mounted, setMounted] = useState(false);
@@ -60,6 +61,7 @@ export function TopBar() {
       <div className="flex items-center gap-2">
         <CurrencySelector />
         <ThemeToggle />
+        {isAuthenticated && <NotificationBell />}
 
         {isAuthLoading ? (
           <Skeleton className="h-8 w-8 rounded-full" />

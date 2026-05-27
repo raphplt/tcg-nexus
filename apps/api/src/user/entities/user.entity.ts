@@ -18,6 +18,8 @@ import {
 } from "typeorm";
 import {SupportTicket} from "../../support-ticket/entities/support-ticket.entity";
 import {SupportMessage} from "../../support-message/entities/support-message.entity";
+import { Notification } from "src/notification/entities/notification.entity";
+import { DeviceToken } from "src/notification/entities/device-token.entity";
 
 @Entity()
 export class User {
@@ -119,6 +121,18 @@ export class User {
     (userBadge) => userBadge.user,
   )
   userBadges?: UserBadge[];
+
+  @OneToMany(
+    () => Notification,
+    (notification) => notification.user,
+  )
+  notifications?: Notification[];
+
+  @OneToMany(
+    () => DeviceToken,
+    (deviceToken) => deviceToken.user,
+  )
+  deviceTokens?: DeviceToken[];
 
   // Dates
   @CreateDateColumn()
