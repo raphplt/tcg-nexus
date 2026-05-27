@@ -23,7 +23,7 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "Architecture",
-      items: ["architecture/monorepo"],
+      items: ["architecture/monorepo", "architecture/database"],
     },
     {
       type: "category",

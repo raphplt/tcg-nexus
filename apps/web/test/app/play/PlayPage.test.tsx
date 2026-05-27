@@ -400,6 +400,7 @@ describe("PlayPage", () => {
     await waitFor(() => expect(socketMocks.io).toHaveBeenCalled());
     expect(socketMocks.socket.emit).toHaveBeenCalledWith("matchmaking_join", {
       deckId: 9,
+      isRanked: false,
     });
 
     await act(async () => {
