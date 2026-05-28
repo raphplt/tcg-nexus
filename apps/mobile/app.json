@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TCG Nexus",
-    "slug": "tcg-nexus",
+    "slug": "tcg-nexus-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,7 +22,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tcgnexus.app"
+      "package": "com.tcgnexus.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -40,6 +44,13 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "030d0c32-9e1b-4b01-a864-2cd2e908dcac"
+      }
+    },
+    "owner": "tcg-nexus"
   }
 }
