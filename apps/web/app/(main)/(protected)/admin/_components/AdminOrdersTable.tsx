@@ -297,28 +297,43 @@ export function AdminOrdersTable() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>Carte</TableHead>
-                                      <TableHead>État</TableHead>
+                                      <TableHead>Article</TableHead>
+                                      <TableHead>État / Cond.</TableHead>
                                       <TableHead>Qté</TableHead>
                                       <TableHead>PU</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {selectedOrder.orderItems.map((item) => (
-                                      <TableRow key={item.id}>
-                                        <TableCell>
-                                          {item.listing.pokemonCard?.name}
-                                        </TableCell>
-                                        <TableCell>
-                                          {item.listing.cardState ?? ""}
-                                        </TableCell>
-                                        <TableCell>{item.quantity}</TableCell>
-                                        <TableCell>
-                                          {formatAmount(item.unitPrice)}{" "}
-                                          {selectedOrder.currency}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
+                                    {selectedOrder.orderItems.map((item) => {
+                                      const isSealed =
+                                        item.listing.productKind === "sealed" ||
+                                        !!item.listing.sealedProduct;
+                                      return (
+                                        <TableRow key={item.id}>
+                                          <TableCell>
+                                            {isSealed
+                                              ? item.listing.sealedProduct
+                                                  ?.nameFr ||
+                                                item.listing.sealedProduct
+                                                  ?.nameEn ||
+                                                "Produit scellé"
+                                              : item.listing.pokemonCard?.name ||
+                                                "Carte inconnue"}
+                                          </TableCell>
+                                          <TableCell>
+                                            {isSealed
+                                              ? item.listing.sealedCondition ??
+                                                "Neuf"
+                                              : item.listing.cardState ?? ""}
+                                          </TableCell>
+                                          <TableCell>{item.quantity}</TableCell>
+                                          <TableCell>
+                                            {formatAmount(item.unitPrice)}{" "}
+                                            {selectedOrder.currency}
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
                                   </TableBody>
                                 </Table>
                               </div>

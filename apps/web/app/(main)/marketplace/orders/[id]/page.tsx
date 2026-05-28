@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import Image from "next/image";
+import { getSealedImageUrl } from "@/utils/sealedImage";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -116,24 +117,41 @@ export default function OrderDetailsPage() {
                 <tr key={item.id} className="border-b">
                   <td className="py-4">
                     <div className="flex items-center gap-4">
-                      {item.listing.pokemonCard.image && (
-                        <div className="relative h-12 w-8 hidden sm:block">
-                          <Image
-                            src={item.listing.pokemonCard.image}
-                            alt={item.listing.pokemonCard.name}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      )}
-                      <div>
-                        <p className="font-medium">
-                          {item.listing.pokemonCard.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.listing.pokemonCard.rarity}
-                        </p>
-                      </div>
+                      {(() => {
+                        const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
+                        const imageUrl = isSealed
+                          ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                          : item.listing.pokemonCard?.image;
+                        const productName = isSealed
+                          ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                          : item.listing.pokemonCard?.name || "Carte inconnue";
+                        const productSub = isSealed
+                          ? item.listing.sealedCondition || "Neuf"
+                          : item.listing.pokemonCard?.rarity;
+
+                        return (
+                          <>
+                            {imageUrl && (
+                              <div className="relative h-12 w-8 hidden sm:block">
+                                <Image
+                                  src={imageUrl}
+                                  alt={productName}
+                                  fill
+                                  className="object-contain"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium">
+                                {productName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {productSub}
+                              </p>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="text-center py-4">{item.quantity}</td>
