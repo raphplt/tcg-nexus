@@ -2,68 +2,33 @@ import TCGdex from "@tcgdex/sdk";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import {
+  assertR2Config,
+  migrateCardImageToR2,
+  uploadToR2,
+} from "./r2.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const tcgdex = new TCGdex("fr");
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import dotenv from "dotenv";
-
-dotenv.config();
-
 const DATA_DIR = path.resolve(__dirname, "../../data");
 const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
 const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
 
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
+// Vérifie la présence des credentials R2 (lève une erreur explicite sinon).
+assertR2Config();
 
-if (
-  !R2_ACCOUNT_ID ||
-  !R2_ACCESS_KEY_ID ||
-  !R2_SECRET_ACCESS_KEY ||
-  !R2_BUCKET_NAME ||
-  !R2_PUBLIC_URL
-) {
-  console.error("Missing R2 credentials in .env file");
-  process.exit(1);
-}
-
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  },
-});
-
-async function uploadToR2(url: string, key: string): Promise<string | null> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: key,
-        Body: buffer,
-        ContentType: response.headers.get("content-type") || "image/png",
-      }),
-    );
-    return `${R2_PUBLIC_URL}/${key}`;
-  } catch (error) {
-    console.error(`Failed to upload ${url} to R2:`, error);
-    return null;
-  }
-}
+/**
+ * Par défaut, les images de cartes restent servies par TCGdex (déjà un CDN
+ * performant) : on ne les ré-héberge PAS sur R2. Passer
+ * `MIGRATE_CARD_IMAGES_TO_R2=true` pour activer l'upload des images de cartes
+ * lors du fetch des nouveaux sets. Les logos/symboles de sets, eux, vont
+ * toujours sur R2.
+ */
+const MIGRATE_CARD_IMAGES_TO_R2 =
+  process.env.MIGRATE_CARD_IMAGES_TO_R2 === "true";
 
 function slugify(str: string): string {
   return str
@@ -204,7 +169,24 @@ async function updateData() {
         try {
           const cardDetails = await tcgdex.fetch("cards", cardRef.id);
           if (cardDetails) {
-            // Save card to JSON file (no R2 upload for card images)
+            // Migration optionnelle des images de la carte (high + low) vers
+            // R2. Désactivée par défaut : les images restent sur TCGdex. Si
+            // l'upload échoue, on conserve l'URL TCGdex (le front gère les deux).
+            if (MIGRATE_CARD_IMAGES_TO_R2 && cardDetails.image) {
+              try {
+                const migrated = await migrateCardImageToR2(cardDetails.image);
+                if (migrated?.uploaded) {
+                  cardDetails.image = migrated.newBase;
+                }
+              } catch (imgErr) {
+                console.error(
+                  `\nImage upload échoué pour ${cardRef.id}:`,
+                  imgErr,
+                );
+              }
+            }
+
+            // Save card to JSON file
             const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
             fs.writeFileSync(
               cardFilePath,

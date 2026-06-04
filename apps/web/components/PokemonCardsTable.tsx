@@ -1,9 +1,46 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  ArrowLeft,
+  Bookmark,
+  Calendar,
+  ChevronRight,
+  Grid as GridIcon,
+  Layers,
+  List as ListIcon,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { getCardImage } from "@/utils/images";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -12,32 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import type {
   PokemonCardType,
@@ -46,17 +58,11 @@ import type {
 } from "@/types/cardPokemon";
 import type { PaginatedResult } from "@/types/pagination";
 import {
-  Layers,
-  Grid as GridIcon,
-  List as ListIcon,
-  Search,
-  X,
-  ChevronRight,
-  ArrowLeft,
-  Calendar,
-  Sparkles,
-  Bookmark,
-} from "lucide-react";
+  getCardImage,
+  getSeriesLogo,
+  getSetLogo,
+  getSetSymbol,
+} from "@/utils/images";
 
 interface PokemonCardsTableProps {
   initialPage?: number;
@@ -546,10 +552,12 @@ export function PokemonCardsTable({
                     className="group relative cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-muted/30 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-muted/60 hover:shadow-lg"
                   >
                     <div className="flex h-16 items-center justify-center mb-3">
-                      {serie.logo ? (
+                      {getSeriesLogo(serie) ? (
                         <img
-                          src={serie.logo}
+                          src={getSeriesLogo(serie)}
                           alt={serie.name}
+                          loading="lazy"
+                          decoding="async"
                           className="max-h-full max-w-full object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -596,16 +604,20 @@ export function PokemonCardsTable({
                     className="group flex items-center gap-3 cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-muted/30 p-3 transition-all duration-300 hover:border-primary/50 hover:bg-muted/60 hover:shadow-lg"
                   >
                     <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-background/50 rounded-lg p-1.5 border border-border/20">
-                      {set.symbol ? (
+                      {getSetSymbol(set) ? (
                         <img
-                          src={set.symbol}
+                          src={getSetSymbol(set)}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="max-h-full max-w-full object-contain"
                         />
-                      ) : set.logo ? (
+                      ) : getSetLogo(set) ? (
                         <img
-                          src={set.logo}
+                          src={getSetLogo(set)}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="max-h-full max-w-full object-contain"
                         />
                       ) : (
@@ -658,16 +670,20 @@ export function PokemonCardsTable({
           {selectedSet && (
             <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/20 rounded-xl p-4">
               <div className="w-20 h-20 flex items-center justify-center bg-background/50 rounded-xl p-2 border border-border/20">
-                {selectedSet.logo ? (
+                {getSetLogo(selectedSet) ? (
                   <img
-                    src={selectedSet.logo}
+                    src={getSetLogo(selectedSet)}
                     alt={selectedSet.name}
+                    loading="lazy"
+                    decoding="async"
                     className="max-h-full max-w-full object-contain"
                   />
-                ) : selectedSet.symbol ? (
+                ) : getSetSymbol(selectedSet) ? (
                   <img
-                    src={selectedSet.symbol}
+                    src={getSetSymbol(selectedSet)}
                     alt={selectedSet.name}
+                    loading="lazy"
+                    decoding="async"
                     className="max-h-full max-w-full object-contain"
                   />
                 ) : (
@@ -878,11 +894,11 @@ export function PokemonCardsTable({
                   className="group flex flex-col h-full bg-muted/20 border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-muted/40 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black/5 shadow-inner mb-3">
-                    <img
+                    <SmartImage
                       src={getCardImage(card, "low")}
+                      fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={card.name || "Pokemon Card"}
                       className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
                     />
                   </div>
                   <div className="flex-1 min-w-0">

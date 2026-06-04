@@ -6,6 +6,7 @@
     "start": "node --import ./register-tsnode.mjs server.ts",
     "update-data": "tsx update-data.ts",
     "update-sealed": "tsx update-sealed.ts",
+    "migrate-card-images": "tsx migrate-card-images-r2.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

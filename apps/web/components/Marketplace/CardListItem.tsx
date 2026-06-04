@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrencyStore } from "@/store/currency.store";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { getCardImage } from "@/utils/images";
+import { getCardImage, getSetSymbol } from "@/utils/images";
 import { getMarketReferencePrice } from "@/utils/price";
 
 interface CardListItemProps {
@@ -61,8 +61,13 @@ export function CardListItem({
           </div>
           {card.set && (
             <div className="flex items-center gap-1 mt-0.5">
-              {card.set.symbol && (
-                <Image src={card.set.symbol} alt="" width={14} height={14} />
+              {getSetSymbol(card.set) && (
+                <Image
+                  src={getSetSymbol(card.set) as string}
+                  alt=""
+                  width={14}
+                  height={14}
+                />
               )}
               <p className="text-xs text-muted-foreground line-clamp-1">
                 {card.set.name}
