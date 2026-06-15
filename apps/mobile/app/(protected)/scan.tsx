@@ -342,7 +342,7 @@ export default function ScanScreen() {
         <CameraView
           facing="back"
           ref={cameraRef}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
         />
 
         <View style={[styles.cameraTopBar, { paddingTop: insets.top + 8 }]}>
