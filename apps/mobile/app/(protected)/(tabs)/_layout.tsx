@@ -10,9 +10,8 @@ function TabIcon({
   name,
   size,
 }: {
-  color: string;
-  name: IconName;
   color: ColorValue;
+  name: IconName;
   size: number;
 }) {
   return <Ionicons color={color} name={name} size={size} />;
