@@ -3,6 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
+    // Metro gère le bundling : tsc ne doit rien émettre dans app/
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
     "paths": {
       "@/*": ["./*"]
     }

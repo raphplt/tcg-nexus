@@ -125,6 +125,29 @@ export class CollectionController {
     return this.collectionService.create(createCollectionDto);
   }
 
+  @Post(":id/items")
+  @ApiOperation({ summary: "Ajouter une carte a une collection" })
+  @ApiResponse({ status: 201, description: "Carte ajoutee a la collection" })
+  async addItem(
+    @Param("id") id: string,
+    @Body("pokemonCardId") pokemonCardId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionService.addCardToCollection(id, pokemonCardId, user.id);
+  }
+
+  @Delete(":id/items/:itemId")
+  @ApiOperation({ summary: "Supprimer un item d'une collection" })
+  @ApiResponse({ status: 200, description: "Item supprime" })
+  async removeItem(
+    @Param("id") id: string,
+    @Param("itemId") itemId: string,
+    @CurrentUser() user: User,
+  ): Promise<{ message: string }> {
+    await this.collectionService.removeCollectionItem(id, Number(itemId), user.id);
+    return { message: "Item supprime avec succes" };
+  }
+
   @Put(":id")
   @ApiOperation({ summary: "Mettre à jour une collection" })
   @ApiResponse({

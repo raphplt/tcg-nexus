@@ -1,14 +1,48 @@
 import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { ApiErrorSnackbar } from "@/components/ApiErrorSnackbar";
+import { LoadingScreen } from "@/components/LoadingScreen";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { useAuthStore } from "@/store/useAuthStore";
+
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // Safe guard for repeated calls during fast refresh.
+});
+
+function AppNavigator() {
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+
+  useEffect(() => {
+    if (isHydrated) {
+      SplashScreen.hideAsync().catch(() => {
+        // Ignore splash screen race conditions.
+      });
+    }
+  }, [isHydrated]);
+
+  if (!isHydrated) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(protected)" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   return (
-    <>
-      <StatusBar style="auto" />
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(protected)/scan" options={{ headerShown: false, presentation: "modal" }} />
-      </Stack>
-    </>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <AppNavigator />
+        <ApiErrorSnackbar />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

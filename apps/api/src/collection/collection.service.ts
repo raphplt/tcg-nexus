@@ -4,6 +4,12 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Card } from "src/card/entities/card.entity";
+import {
+  CardState,
+  CardStateCode,
+} from "src/card-state/entities/card-state.entity";
+import { ProductKind } from "src/common/enums/product-kind";
 import { Repository } from "typeorm";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { User } from "../user/entities/user.entity";
@@ -18,7 +24,30 @@ export class CollectionService {
     private collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private collectionItemRepository: Repository<CollectionItem>,
+    @InjectRepository(Card)
+    private cardRepository: Repository<Card>,
+    @InjectRepository(CardState)
+    private cardStateRepository: Repository<CardState>,
   ) {}
+
+  private async getOwnedCollection(id: string, userId: number): Promise<Collection> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id },
+      relations: ["user", "items", "items.pokemonCard"],
+    });
+
+    if (!collection) {
+      throw new NotFoundException(`Collection with id ${id} not found`);
+    }
+
+    if (collection.user.id !== userId) {
+      throw new ForbiddenException(
+        "Vous ne pouvez acceder qu'a vos propres collections",
+      );
+    }
+
+    return collection;
+  }
 
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.find({
@@ -62,6 +91,73 @@ export class CollectionService {
     });
     collection.user = { id: Number(createCollectionDto.userId) } as User;
     return await this.collectionRepository.save(collection);
+  }
+
+  async addCardToCollection(
+    collectionId: string,
+    pokemonCardId: string,
+    userId: number,
+  ): Promise<CollectionItem> {
+    const collection = await this.getOwnedCollection(collectionId, userId);
+
+    const card = await this.cardRepository.findOne({
+      where: { id: pokemonCardId },
+    });
+
+    if (!card) {
+      throw new NotFoundException("Carte non trouvee");
+    }
+
+    const existingItem = collection.items?.find(
+      (item) => item.pokemonCard?.id === card.id,
+    );
+
+    if (existingItem) {
+      existingItem.quantity += 1;
+      return this.collectionItemRepository.save(existingItem);
+    }
+
+    const defaultCardState = await this.cardStateRepository.findOne({
+      where: { code: CardStateCode.NM },
+    });
+
+    if (!defaultCardState) {
+      throw new NotFoundException(
+        "CardState NM non trouve. Lance d'abord le seed card states.",
+      );
+    }
+
+    const newItem = this.collectionItemRepository.create({
+      collection,
+      productKind: ProductKind.CARD,
+      pokemonCard: card,
+      cardState: defaultCardState,
+      quantity: 1,
+    });
+
+    return this.collectionItemRepository.save(newItem);
+  }
+
+  async removeCollectionItem(
+    collectionId: string,
+    itemId: number,
+    userId: number,
+  ): Promise<void> {
+    await this.getOwnedCollection(collectionId, userId);
+
+    const item = await this.collectionItemRepository.findOne({
+      where: {
+        id: itemId,
+        collection: { id: collectionId },
+      },
+      relations: ["collection"],
+    });
+
+    if (!item) {
+      throw new NotFoundException("Item de collection non trouve");
+    }
+
+    await this.collectionItemRepository.delete(itemId);
   }
 
   async update(
