@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useCurrencyStore } from "@/store/currency.store";
 import { Order, OrderStatus } from "@/types/order";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 
 interface OrderListProps {
   orders: Order[];
@@ -123,7 +123,7 @@ export default function OrderList({ orders }: OrderListProps) {
                             ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
                             : getCardImage(item.listing.pokemonCard);
                           const productName = isSealed
-                            ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                            ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
                             : item.listing.pokemonCard?.name || "Carte inconnue";
                           const productSub = isSealed
                             ? item.listing.sealedProduct?.pokemonSet?.name

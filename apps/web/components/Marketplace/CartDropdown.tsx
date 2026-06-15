@@ -21,7 +21,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 
 const CartDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,7 +86,7 @@ const CartDropdown = () => {
                       }
                       alt={
                         (item.listing.productKind === "sealed" || item.listing.sealedProduct
-                          ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn
+                          ? getSealedName(item.listing.sealedProduct)
                           : item.listing.pokemonCard?.name) || "Produit"
                       }
                       fill
@@ -96,7 +96,7 @@ const CartDropdown = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
                       {item.listing.productKind === "sealed" || item.listing.sealedProduct
-                        ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                        ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
                         : item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">
