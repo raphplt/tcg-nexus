@@ -97,21 +97,21 @@ export default function CheckoutPage() {
                             <p className="text-sm text-muted-foreground">
                               {productSub}
                             </p>
-                          </>
-                        );
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-sm text-muted-foreground">
+                                Qté: {item.quantity}
+                              </span>
+                              <span className="font-medium">
+                                {formatPrice(
+                                  item.listing.price * item.quantity,
+                                  item.listing.currency,
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      );
                     })()}
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-sm text-muted-foreground">
-                          Qté: {item.quantity}
-                        </span>
-                        <span className="font-medium">
-                          {formatPrice(
-                            item.listing.price * item.quantity,
-                            item.listing.currency,
-                          )}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>
