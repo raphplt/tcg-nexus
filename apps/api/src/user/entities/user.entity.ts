@@ -134,6 +134,7 @@ export class User {
     (follow) => follow.followed,
   )
   followers?: UserFollow[];
+  @OneToMany(
     () => Notification,
     (notification) => notification.user,
   )
