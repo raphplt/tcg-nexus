@@ -1,24 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  Image,
-  Modal,
-  TextInput,
-  FlatList,
-  Dimensions,
-  Platform,
-  Alert,
-} from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { router } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { performOcr } from "../../services/ocr.service";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { api } from "../../services/api";
+import { performOcr } from "../../services/ocr.service";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -66,18 +66,30 @@ export default function ScanScreen() {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processingStatus, setProcessingStatus] = useState<string>("");
 
-  const [cameraLayout, setCameraLayout] = useState<{ width: number; height: number } | null>(null);
+  const [cameraLayout, setCameraLayout] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [history, setHistory] = useState<ScannedHistoryItem[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | number>("");
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | number
+  >("");
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [croppedImageUri, setCroppedImageUri] = useState<string | null>(null);
   const [foundCard, setFoundCard] = useState<Card | null>(null);
-  const [scannedTextDetails, setScannedTextDetails] = useState<{ name?: string; localId?: string } | null>(null);
+  const [scannedTextDetails, setScannedTextDetails] = useState<{
+    name?: string;
+    localId?: string;
+  } | null>(null);
   const [manualQuery, setManualQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Card[]>([]);
   const [isSearchingManual, setIsSearchingManual] = useState<boolean>(false);
-  const [bulkToast, setBulkToast] = useState<{ visible: boolean; message: string; success: boolean }>({
+  const [bulkToast, setBulkToast] = useState<{
+    visible: boolean;
+    message: string;
+    success: boolean;
+  }>({
     visible: false,
     message: "",
     success: true,
@@ -113,14 +125,26 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.centerContainer}>
-        <Ionicons name="camera-outline" size={64} color="#6366f1" style={{ marginBottom: 16 }} />
+        <Ionicons
+          name="camera-outline"
+          size={64}
+          color="#6366f1"
+          style={{ marginBottom: 16 }}
+        />
         <Text style={styles.permissionText}>
-          TCG Nexus a besoin d'accéder à votre caméra pour pouvoir scanner vos cartes Pokémon.
+          TCG Nexus a besoin d'accéder à votre caméra pour pouvoir scanner vos
+          cartes Pokémon.
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
           <Text style={styles.permissionButtonText}>Autoriser la caméra</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelLink} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.cancelLink}
+          onPress={() => router.back()}
+        >
           <Text style={styles.cancelLinkText}>Retour</Text>
         </TouchableOpacity>
       </View>
@@ -135,7 +159,11 @@ export default function ScanScreen() {
     }, 2500);
   };
 
-  const matchCardFromOcr = async (ocrName?: string, ocrLocalId?: string, denominator?: string): Promise<Card | null> => {
+  const matchCardFromOcr = async (
+    ocrName?: string,
+    ocrLocalId?: string,
+    denominator?: string,
+  ): Promise<Card | null> => {
     if (!ocrName && !ocrLocalId) return null;
 
     try {
@@ -174,7 +202,10 @@ export default function ScanScreen() {
           }
         }
 
-        if (denominator && card.set?.cardCount?.official === parseInt(denominator, 10)) {
+        if (
+          denominator &&
+          card.set?.cardCount?.official === parseInt(denominator, 10)
+        ) {
           score += 10;
         }
 
@@ -204,7 +235,8 @@ export default function ScanScreen() {
       });
 
       if (!photo) throw new Error("Échec de la capture photo");
-      if (!cameraLayout) throw new Error("Dimensions de la caméra non définies");
+      if (!cameraLayout)
+        throw new Error("Dimensions de la caméra non définies");
 
       setProcessingStatus("Optimisation de l'image...");
 
@@ -238,7 +270,7 @@ export default function ScanScreen() {
             },
           },
         ],
-        { compress: 0.75, format: SaveFormat.JPEG, base64: true }
+        { compress: 0.75, format: SaveFormat.JPEG, base64: true },
       );
 
       setCroppedImageUri(cropResult.uri);
@@ -246,17 +278,27 @@ export default function ScanScreen() {
 
       const ocrResult = await performOcr(cropResult.base64 || "");
 
-      setScannedTextDetails({ name: ocrResult.name, localId: ocrResult.localId });
+      setScannedTextDetails({
+        name: ocrResult.name,
+        localId: ocrResult.localId,
+      });
       setProcessingStatus("Recherche dans la base de données...");
 
-      const matched = await matchCardFromOcr(ocrResult.name, ocrResult.localId, ocrResult.denominator);
+      const matched = await matchCardFromOcr(
+        ocrResult.name,
+        ocrResult.localId,
+        ocrResult.denominator,
+      );
 
       if (isBulkMode) {
         if (matched) {
           try {
-            await api.post(`/collection-item/collection/${selectedCollectionId}`, {
-              pokemonCardId: matched.id,
-            });
+            await api.post(
+              `/collection-item/collection/${selectedCollectionId}`,
+              {
+                pokemonCardId: matched.id,
+              },
+            );
 
             setHistory((prev) => [
               {
@@ -271,7 +313,10 @@ export default function ScanScreen() {
               ...prev,
             ]);
 
-            triggerBulkToast(`${matched.name} (${matched.localId}) ajouté !`, true);
+            triggerBulkToast(
+              `${matched.name} (${matched.localId}) ajouté !`,
+              true,
+            );
           } catch (addErr) {
             triggerBulkToast("Erreur d'ajout automatique", false);
             setHistory((prev) => [
@@ -309,7 +354,10 @@ export default function ScanScreen() {
       }
     } catch (error: any) {
       console.error("Erreur lors du scan :", error);
-      Alert.alert("Erreur", error.message || "Une erreur est survenue lors du scan de la carte.");
+      Alert.alert(
+        "Erreur",
+        error.message || "Une erreur est survenue lors du scan de la carte.",
+      );
       setIsProcessing(false);
     }
   };
@@ -359,7 +407,10 @@ export default function ScanScreen() {
       setCroppedImageUri(null);
       setSearchResults([]);
       setManualQuery("");
-      Alert.alert("Succès", `La carte ${foundCard.name} a été ajoutée à votre collection.`);
+      Alert.alert(
+        "Succès",
+        `La carte ${foundCard.name} a été ajoutée à votre collection.`,
+      );
     } catch (error) {
       console.error("Erreur lors de l'ajout à la collection :", error);
       Alert.alert("Erreur", "Impossible d'ajouter la carte à la collection.");
@@ -370,14 +421,12 @@ export default function ScanScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Caméra plein écran */}
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         ref={cameraRef}
         flash={flash}
         onLayout={(e) => setCameraLayout(e.nativeEvent.layout)}
       >
-        {/* Overlay d'assombrissement avec découpe centrale pour le viewfinder */}
         <View style={styles.overlayContainer}>
           <View style={styles.topOverlay} />
           <View style={styles.middleRow}>
@@ -387,34 +436,50 @@ export default function ScanScreen() {
               <View style={[styles.corner, styles.topRight]} />
               <View style={[styles.corner, styles.bottomLeft]} />
               <View style={[styles.corner, styles.bottomRight]} />
-              {isProcessing && (
-                <View style={styles.scanningLine} />
-              )}
+              {isProcessing && <View style={styles.scanningLine} />}
             </View>
             <View style={styles.sideOverlay} />
           </View>
           <View style={styles.bottomOverlay} />
         </View>
 
-        {/* En-tête : Contrôles */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.circularButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.circularButton}
+            onPress={() => router.back()}
+          >
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
 
-          {/* Sélecteur de mode de scan */}
           <View style={styles.modeContainer}>
             <TouchableOpacity
-              style={[styles.modeButton, !isBulkMode && styles.activeModeButton]}
+              style={[
+                styles.modeButton,
+                !isBulkMode && styles.activeModeButton,
+              ]}
               onPress={() => setIsBulkMode(false)}
             >
-              <Text style={[styles.modeButtonText, !isBulkMode && styles.activeModeButtonText]}>Unique</Text>
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  !isBulkMode && styles.activeModeButtonText,
+                ]}
+              >
+                Unique
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modeButton, isBulkMode && styles.activeModeButton]}
               onPress={() => setIsBulkMode(true)}
             >
-              <Text style={[styles.modeButtonText, isBulkMode && styles.activeModeButtonText]}>Rafale</Text>
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  isBulkMode && styles.activeModeButtonText,
+                ]}
+              >
+                Rafale
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -422,13 +487,21 @@ export default function ScanScreen() {
             style={styles.circularButton}
             onPress={() => setFlash((prev) => (prev === "on" ? "off" : "on"))}
           >
-            <Ionicons name={flash === "on" ? "flash" : "flash-off"} size={20} color="#fff" />
+            <Ionicons
+              name={flash === "on" ? "flash" : "flash-off"}
+              size={20}
+              color="#fff"
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Toast flottant pour le mode Rafale */}
         {bulkToast.visible && (
-          <View style={[styles.toast, bulkToast.success ? styles.toastSuccess : styles.toastError]}>
+          <View
+            style={[
+              styles.toast,
+              bulkToast.success ? styles.toastSuccess : styles.toastError,
+            ]}
+          >
             <Ionicons
               name={bulkToast.success ? "checkmark-circle" : "alert-circle"}
               size={20}
@@ -439,9 +512,7 @@ export default function ScanScreen() {
           </View>
         )}
 
-        {/* Bas de l'écran : Zone de capture et historique */}
         <View style={styles.footerContainer}>
-          {/* Historique horizontal rapide */}
           {history.length > 0 && (
             <View style={styles.historyContainer}>
               <Text style={styles.historyTitle}>Derniers scans</Text>
@@ -453,7 +524,10 @@ export default function ScanScreen() {
                 renderItem={({ item }) => (
                   <View style={styles.historyCard}>
                     {item.image ? (
-                      <Image source={{ uri: item.image }} style={styles.historyCardImage} />
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.historyCardImage}
+                      />
                     ) : (
                       <View style={styles.historyCardPlaceholder}>
                         <Ionicons name="image-outline" size={24} color="#aaa" />
@@ -465,16 +539,16 @@ export default function ScanScreen() {
                           item.status === "success"
                             ? "checkmark-circle"
                             : item.status === "failed"
-                            ? "close-circle"
-                            : "help-circle"
+                              ? "close-circle"
+                              : "help-circle"
                         }
                         size={16}
                         color={
                           item.status === "success"
                             ? "#4ade80"
                             : item.status === "failed"
-                            ? "#f87171"
-                            : "#fbbf24"
+                              ? "#f87171"
+                              : "#fbbf24"
                         }
                       />
                     </View>
@@ -484,7 +558,6 @@ export default function ScanScreen() {
             </View>
           )}
 
-          {/* Bouton de capture */}
           <View style={styles.captureRow}>
             {isProcessing ? (
               <View style={styles.loadingContainer}>
@@ -492,7 +565,10 @@ export default function ScanScreen() {
                 <Text style={styles.loadingText}>{processingStatus}</Text>
               </View>
             ) : (
-              <TouchableOpacity style={styles.captureOuterButton} onPress={handleCapture}>
+              <TouchableOpacity
+                style={styles.captureOuterButton}
+                onPress={handleCapture}
+              >
                 <View style={styles.captureInnerButton} />
               </TouchableOpacity>
             )}
@@ -500,11 +576,9 @@ export default function ScanScreen() {
         </View>
       </CameraView>
 
-      {/* MODAL DE CONFIRMATION / CORRECTION MANUELLE */}
       <Modal visible={showConfirmModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Barre de glissement de la modale */}
             <View style={styles.modalDragBar} />
 
             <View style={styles.modalHeader}>
@@ -519,15 +593,26 @@ export default function ScanScreen() {
               renderItem={null}
               ListHeaderComponent={
                 <View>
-                  {/* Visuels : Image Scannée vs Image BDD */}
                   <View style={styles.visualComparison}>
                     <View style={styles.imageColumn}>
                       <Text style={styles.imageLabel}>Image Scannée</Text>
                       {croppedImageUri ? (
-                        <Image source={{ uri: croppedImageUri }} style={styles.scanPreviewImage} />
+                        <Image
+                          source={{ uri: croppedImageUri }}
+                          style={styles.scanPreviewImage}
+                        />
                       ) : (
-                        <View style={[styles.scanPreviewImage, styles.centerContainer]}>
-                          <Ionicons name="image-outline" size={32} color="#aaa" />
+                        <View
+                          style={[
+                            styles.scanPreviewImage,
+                            styles.centerContainer,
+                          ]}
+                        >
+                          <Ionicons
+                            name="image-outline"
+                            size={32}
+                            color="#aaa"
+                          />
                         </View>
                       )}
                     </View>
@@ -535,32 +620,48 @@ export default function ScanScreen() {
                     <View style={styles.imageColumn}>
                       <Text style={styles.imageLabel}>Résultat BDD</Text>
                       {foundCard?.image ? (
-                        <Image source={{ uri: foundCard.image }} style={styles.dbPreviewImage} />
+                        <Image
+                          source={{ uri: foundCard.image }}
+                          style={styles.dbPreviewImage}
+                        />
                       ) : (
-                        <View style={[styles.dbPreviewImage, styles.centerContainer, { backgroundColor: "#f3f4f6" }]}>
-                          <Ionicons name="help-circle-outline" size={48} color="#9ca3af" />
-                          <Text style={styles.noCardText}>Aucun match automatique</Text>
+                        <View
+                          style={[
+                            styles.dbPreviewImage,
+                            styles.centerContainer,
+                            { backgroundColor: "#f3f4f6" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="help-circle-outline"
+                            size={48}
+                            color="#9ca3af"
+                          />
+                          <Text style={styles.noCardText}>
+                            Aucun match automatique
+                          </Text>
                         </View>
                       )}
                     </View>
                   </View>
 
-                  {/* Détails de la carte trouvée */}
                   {foundCard && (
                     <View style={styles.foundCardDetails}>
                       <Text style={styles.foundCardName}>{foundCard.name}</Text>
                       <Text style={styles.foundCardSet}>
-                        N° {foundCard.localId} — Set: {foundCard.set?.name || "Inconnu"}
+                        N° {foundCard.localId} — Set:{" "}
+                        {foundCard.set?.name || "Inconnu"}
                       </Text>
                       {foundCard.rarity && (
                         <View style={styles.rarityBadge}>
-                          <Text style={styles.rarityText}>{foundCard.rarity}</Text>
+                          <Text style={styles.rarityText}>
+                            {foundCard.rarity}
+                          </Text>
                         </View>
                       )}
                     </View>
                   )}
 
-                  {/* Sélecteur de collection */}
                   <View style={styles.sectionContainer}>
                     <Text style={styles.sectionLabel}>Collection cible</Text>
                     {collections.length > 0 ? (
@@ -570,14 +671,16 @@ export default function ScanScreen() {
                             key={col.id}
                             style={[
                               styles.collectionPill,
-                              selectedCollectionId === col.id && styles.activeCollectionPill,
+                              selectedCollectionId === col.id &&
+                                styles.activeCollectionPill,
                             ]}
                             onPress={() => setSelectedCollectionId(col.id)}
                           >
                             <Text
                               style={[
                                 styles.collectionPillText,
-                                selectedCollectionId === col.id && styles.activeCollectionPillText,
+                                selectedCollectionId === col.id &&
+                                  styles.activeCollectionPillText,
                               ]}
                             >
                               {col.name}
@@ -586,15 +689,21 @@ export default function ScanScreen() {
                         ))}
                       </View>
                     ) : (
-                      <Text style={styles.noCollectionsText}>Aucune collection disponible</Text>
+                      <Text style={styles.noCollectionsText}>
+                        Aucune collection disponible
+                      </Text>
                     )}
                   </View>
 
-                  {/* Section Correction Manuelle */}
                   <View style={styles.sectionContainer}>
                     <Text style={styles.sectionLabel}>Correction manuelle</Text>
                     <View style={styles.searchBarContainer}>
-                      <Ionicons name="search" size={20} color="#9ca3af" style={{ marginRight: 8 }} />
+                      <Ionicons
+                        name="search"
+                        size={20}
+                        color="#9ca3af"
+                        style={{ marginRight: 8 }}
+                      />
                       <TextInput
                         style={styles.searchInput}
                         placeholder="Rechercher par nom ou numéro..."
@@ -602,19 +711,31 @@ export default function ScanScreen() {
                         onChangeText={handleManualSearch}
                       />
                       {manualQuery.length > 0 && (
-                        <TouchableOpacity onPress={() => handleManualSearch("")}>
-                          <Ionicons name="close-circle" size={18} color="#9ca3af" />
+                        <TouchableOpacity
+                          onPress={() => handleManualSearch("")}
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={18}
+                            color="#9ca3af"
+                          />
                         </TouchableOpacity>
                       )}
                     </View>
 
                     {isSearchingManual && (
-                      <ActivityIndicator size="small" color="#6366f1" style={{ marginTop: 12 }} />
+                      <ActivityIndicator
+                        size="small"
+                        color="#6366f1"
+                        style={{ marginTop: 12 }}
+                      />
                     )}
 
                     {searchResults.length > 0 && (
                       <View style={styles.searchResultsContainer}>
-                        <Text style={styles.searchResultsTitle}>Résultats de recherche :</Text>
+                        <Text style={styles.searchResultsTitle}>
+                          Résultats de recherche :
+                        </Text>
                         {searchResults.map((item) => (
                           <TouchableOpacity
                             key={item.id}
@@ -630,19 +751,24 @@ export default function ScanScreen() {
                               resizeMode="contain"
                             />
                             <View style={styles.searchResultInfo}>
-                              <Text style={styles.searchResultName}>{item.name}</Text>
+                              <Text style={styles.searchResultName}>
+                                {item.name}
+                              </Text>
                               <Text style={styles.searchResultSet}>
                                 N° {item.localId} — {item.set?.name}
                               </Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+                            <Ionicons
+                              name="chevron-forward"
+                              size={18}
+                              color="#9ca3af"
+                            />
                           </TouchableOpacity>
                         ))}
                       </View>
                     )}
                   </View>
 
-                  {/* Actions de validation */}
                   <View style={styles.actionRow}>
                     <TouchableOpacity
                       style={[styles.actionButton, styles.cancelButton]}
@@ -719,7 +845,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 1,
   },
   topOverlay: {
