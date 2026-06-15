@@ -43,7 +43,11 @@
         {
           "cameraPermission": "Permettre à TCG Nexus d'utiliser votre caméra pour scanner vos cartes Pokémon."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-splash-screen",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": false
