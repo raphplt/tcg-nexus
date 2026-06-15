@@ -11,6 +11,7 @@ import { paymentService } from "@/services/payment.service";
 import { useCartStore, useCartTotal } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
+import { getSealedImageUrl } from "@/utils/sealedImage";
 import CheckoutForm from "./_components/CheckoutForm";
 
 const stripePromise = loadStripe(
@@ -67,21 +68,38 @@ export default function CheckoutPage() {
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                 {cart.cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4">
-                    <div className="relative w-16 h-24 shrink-0">
-                      <Image
-                        src={getCardImage(item.listing.pokemonCard)}
-                        alt={item.listing.pokemonCard?.name || "Carte"}
-                        fill
-                        className="object-contain rounded"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {item.listing.pokemonCard?.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.listing.pokemonCard?.set?.name}
-                      </p>
+                    {(() => {
+                      const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
+                      const imageUrl = isSealed
+                        ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                        : getCardImage(item.listing.pokemonCard);
+                      const productName = isSealed
+                        ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                        : item.listing.pokemonCard?.name;
+                      const productSub = isSealed
+                        ? item.listing.sealedCondition || "Neuf"
+                        : item.listing.pokemonCard?.set?.name;
+
+                      return (
+                        <>
+                          <div className="relative w-16 h-24 shrink-0">
+                            <Image
+                              src={imageUrl}
+                              alt={productName || "Produit"}
+                              fill
+                              className="object-contain rounded"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">
+                              {productName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {productSub}
+                            </p>
+                          </>
+                        );
+                    })()}
                       <div className="flex justify-between items-center mt-1">
                         <span className="text-sm text-muted-foreground">
                           Qté: {item.quantity}

@@ -2,7 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { getCardImage } from "@/utils/images";
+import { getCardImage, getSetLogo } from "@/utils/images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -269,11 +269,11 @@ const PokemonCardDetail: React.FC<PokemonCardDetailProps> = ({ card }) => {
                       </p>
                     </div>
                   )}
-                  {card.set.logo && (
+                  {getSetLogo(card.set) && (
                     <div className="mt-4">
                       <div className="relative w-16 h-16">
                         <Image
-                          src={card.set.logo}
+                          src={getSetLogo(card.set) as string}
                           alt={`Logo ${card.set.name}`}
                           fill
                           className="object-contain"

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { rarityToImage, getCardImage } from "@/utils/images";
+import { rarityToImage, getCardImage, getSetSymbol } from "@/utils/images";
 import Image from "next/image";
 
 interface CardImageProps {
@@ -30,13 +30,15 @@ export function CardImage({ card }: CardImageProps) {
         <div className="flex flex-wrap gap-2 justify-center mt-4">
           {card.set && (
             <Badge variant="outline" className="text-sm px-3 py-1">
-              <Image
-                src={card.set.symbol || ""}
-                alt={card.set.name}
-                width={16}
-                height={16}
-                className="mr-1"
-              />
+              {getSetSymbol(card.set) && (
+                <Image
+                  src={getSetSymbol(card.set) as string}
+                  alt={card.set.name}
+                  width={16}
+                  height={16}
+                  className="mr-1"
+                />
+              )}
               {card.set.name}
             </Badge>
           )}

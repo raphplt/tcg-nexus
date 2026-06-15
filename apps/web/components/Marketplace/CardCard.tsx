@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/utils";
 import { useCurrencyStore } from "@/store/currency.store";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { getCardImage } from "@/utils/images";
+import { getCardImage, getSetSymbol } from "@/utils/images";
 import { getMarketReferencePrice } from "@/utils/price";
 
 interface CardCardProps {
@@ -52,12 +53,11 @@ export function CardCard({
       >
         <CardHeader className="pb-3">
           <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg mb-3">
-            <Image
-              src={getCardImage(card)}
+            <SmartImage
+              src={getCardImage(card, "low")}
+              fallbackSrc="/images/carte-pokemon-dos.jpg"
               alt={card.name || "Pokemon Card"}
-              fill
-              className="object-contain group-hover:scale-105 transition-transform duration-200"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-200"
             />
             {(isPopular || isTrending) && (
               <div className="absolute top-2 right-2 flex gap-1">
@@ -91,12 +91,14 @@ export function CardCard({
             </div>
             {card.set && (
               <div className="flex items-center gap-2">
-                <Image
-                  src={card.set.symbol || ""}
-                  alt={""}
-                  width={16}
-                  height={16}
-                />
+                {getSetSymbol(card.set) && (
+                  <Image
+                    src={getSetSymbol(card.set) as string}
+                    alt={""}
+                    width={16}
+                    height={16}
+                  />
+                )}
                 <p className="text-sm text-muted-foreground line-clamp-1">
                   {card.set.name}
                 </p>

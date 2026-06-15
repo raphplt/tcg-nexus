@@ -214,6 +214,8 @@ export class MarketplaceService {
       .leftJoinAndSelect("orderItem.listing", "listing")
       .leftJoinAndSelect("listing.seller", "seller")
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
+      .leftJoinAndSelect("listing.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
       .leftJoinAndSelect("order.payments", "payment");
 
     if (status) {
@@ -1025,6 +1027,7 @@ export class MarketplaceService {
         "orderItems",
         "orderItems.listing",
         "orderItems.listing.pokemonCard",
+        "orderItems.listing.sealedProduct",
         "payments",
       ],
       order: { createdAt: "DESC" },
@@ -1039,6 +1042,7 @@ export class MarketplaceService {
         "orderItems",
         "orderItems.listing",
         "orderItems.listing.pokemonCard",
+        "orderItems.listing.sealedProduct",
         "payments",
       ],
     });
@@ -1063,6 +1067,7 @@ export class MarketplaceService {
         "orderItems.listing",
         "orderItems.listing.seller",
         "orderItems.listing.pokemonCard",
+        "orderItems.listing.sealedProduct",
         "payments",
       ],
     });
