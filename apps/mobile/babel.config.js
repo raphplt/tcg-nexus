@@ -1,6 +1,6 @@
 const {
   expoRouterBabelPlugin,
-} = require("babel-preset-expo/build/expo-router-plugin");
+} = require("babel-preset-expo/build/plugins/expo-router-plugin");
 
 module.exports = (api) => {
   api.cache(true);
