@@ -19,9 +19,31 @@ export const normalize = (value: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
-const parseSetMetadata = (text: string): ScanParsedFields => {
-  const setCodeMatch = text.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
+type NumberFields = Pick<
+  ScanParsedFields,
+  "setCode" | "setNumber" | "setTotal"
+>;
 
+// numéro/dénominateur "NN/MMM" depuis le texte d'une ROI ou le texte plein
+export const parseNumber = (text: string): NumberFields => {
+  const match = text.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
+  if (!match) return {};
+  return {
+    setCode: `${match[1]}/${match[2]}`,
+    setNumber: match[1],
+    setTotal: match[2],
+  };
+};
+
+// nettoie le texte de la ROI nom (bruit OCR autour, espaces) sans toucher aux accents
+export const cleanName = (raw: string): string =>
+  raw
+    .replace(/[\r\n]+/g, " ")
+    .replace(/[^\p{L}\p{N}' .-]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const parseSetMetadata = (text: string): ScanParsedFields => {
   let setName: string | undefined;
   const setNameMatch = text.match(
     /(\d{1,3}\s*\/\s*\d{1,3})\s*[—\-]\s*([A-Za-z0-9À-ÿ'\- ]{3,})/,
@@ -30,16 +52,7 @@ const parseSetMetadata = (text: string): ScanParsedFields => {
     setName = setNameMatch[2].trim();
   }
 
-  if (!setCodeMatch) {
-    return { setName };
-  }
-
-  return {
-    setCode: `${setCodeMatch[1]}/${setCodeMatch[2]}`,
-    setNumber: setCodeMatch[1],
-    setTotal: setCodeMatch[2],
-    setName,
-  };
+  return { ...parseNumber(text), setName };
 };
 
 const pickCardName = (lines: string[]): string | undefined => {

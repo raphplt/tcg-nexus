@@ -14,10 +14,18 @@ import {
   toCandidate,
 } from "./matching/scan-matcher";
 import { type OcrProfile, OcrService } from "./ocr/ocr.service";
-import { buildSearchHints, parseOcrText } from "./parsing/scan-parser";
+import {
+  buildSearchHints,
+  cleanName,
+  parseNumber,
+  parseOcrText,
+} from "./parsing/scan-parser";
 import { type VisionRoi, VisionService } from "./vision/vision.service";
 
 const MAX_CANDIDATES = 10;
+
+// en dessous, le candidat est trop faible pour être proposé
+const MIN_CANDIDATE_SCORE = 0.4;
 
 const TEXT_ROI_KEYS = new Set(["name", "number"]);
 
@@ -39,35 +47,42 @@ export class ScanService {
     const { text, engine } = await this.ocrService.recognize(ocrTarget, "full");
     const rois = vision ? await this.readRois(vision.rois) : [];
 
-    const augmentedText = [
-      this.roiText(rois, "name"),
-      text,
-      this.roiText(rois, "number"),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    // texte plein en repli, puis on privilégie ce qui vient des ROI
+    const fallback = parseOcrText(text);
+    const fields = this.buildFields(rois, fallback.fields);
+    const searchHints = buildSearchHints(fields);
 
-    const parsed = parseOcrText(augmentedText);
-    const searchHints = buildSearchHints(parsed.fields);
-
-    const candidates = await this.matchCandidates(
-      parsed.fields,
-      searchHints,
-      game,
-    );
+    const candidates = await this.matchCandidates(fields, searchHints, game);
     const bestCard = candidates[0] ?? null;
     const { confidence, confidenceLevel } = computeConfidence(candidates);
 
     return {
       rawText: text,
-      lines: parsed.lines,
-      parsed: parsed.fields,
-      rois: rois.length > 0 ? rois : this.fallbackRois(parsed.fields),
+      lines: fallback.lines,
+      parsed: fields,
+      rois: rois.length > 0 ? rois : this.fallbackRois(fields),
       candidates,
       bestCard,
       confidence,
       confidenceLevel,
       engine: vision ? `${vision.engine}+${engine}` : engine,
+    };
+  }
+
+  // D1 : champs issus en priorité des ROI nom/numéro, sinon du texte plein
+  private buildFields(
+    rois: ScanRoi[],
+    fallback: ScanParsedFields,
+  ): ScanParsedFields {
+    const nameText = this.roiText(rois, "name");
+    const roiNumber = parseNumber(this.roiText(rois, "number"));
+
+    return {
+      cardName: (nameText && cleanName(nameText)) || fallback.cardName,
+      setCode: roiNumber.setCode ?? fallback.setCode,
+      setNumber: roiNumber.setNumber ?? fallback.setNumber,
+      setTotal: roiNumber.setTotal ?? fallback.setTotal,
+      setName: fallback.setName,
     };
   }
 
@@ -103,7 +118,7 @@ export class ScanService {
 
       for (const card of results) {
         const score = scoreCard(card, fields);
-        if (score > 0) {
+        if (score >= MIN_CANDIDATE_SCORE) {
           scored.set(card.id, toCandidate(card, score));
         }
       }
