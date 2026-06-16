@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# cache traineddata Tesseract (écrit par tesseract.js en dev)
+*.traineddata
+
 # Logs
 logs
 *.log

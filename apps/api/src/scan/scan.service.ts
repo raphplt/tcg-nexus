@@ -13,7 +13,7 @@ import {
   scoreCard,
   toCandidate,
 } from "./matching/scan-matcher";
-import { OcrService } from "./ocr/ocr.service";
+import { type OcrProfile, OcrService } from "./ocr/ocr.service";
 import { buildSearchHints, parseOcrText } from "./parsing/scan-parser";
 import { type VisionRoi, VisionService } from "./vision/vision.service";
 
@@ -36,7 +36,7 @@ export class ScanService {
     const vision = await this.visionService.preprocess(image);
     const ocrTarget = vision?.normalizedImage ?? image;
 
-    const { text, engine } = await this.ocrService.recognize(ocrTarget);
+    const { text, engine } = await this.ocrService.recognize(ocrTarget, "full");
     const rois = vision ? await this.readRois(vision.rois) : [];
 
     const augmentedText = [
@@ -77,7 +77,8 @@ export class ScanService {
     for (const roi of visionRois) {
       let text = "";
       if (TEXT_ROI_KEYS.has(roi.key)) {
-        const result = await this.ocrService.recognize(roi.image);
+        const profile: OcrProfile = roi.key === "number" ? "number" : "name";
+        const result = await this.ocrService.recognize(roi.image, profile);
         text = result.text.trim();
       }
       rois.push({ key: roi.key, text, box: roi.box });
