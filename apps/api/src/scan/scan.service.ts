@@ -168,20 +168,17 @@ export class ScanService {
 
     const cards = Array.from(pool.values());
 
-    // 2) si un nom colle vraiment à une carte, on ne fait pas confiance au
-    // numéro seul (souvent mal lu) ; sinon (nom illisible) on l'accepte.
+    // 2) meilleur match de nom toutes cartes confondues : sert de référence au
+    // garde-fou relatif (une carte trouvée par numéro mais au nom bien moins bon
+    // que ce meilleur match a un numéro mal lu -> son numéro est ignoré).
     const bestName = cards.reduce(
       (max, card) => Math.max(max, nameScore(card, nameCandidates)),
       0,
     );
-    const trustNumberWithoutName = bestName < 0.5;
 
     return cards
       .map((card) =>
-        toCandidate(
-          card,
-          scoreCard(card, fields, nameCandidates, trustNumberWithoutName),
-        ),
+        toCandidate(card, scoreCard(card, fields, nameCandidates, bestName)),
       )
       .filter((c) => c.score >= MIN_CANDIDATE_SCORE)
       .sort((a, b) => b.score - a.score)

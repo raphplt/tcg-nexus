@@ -10,9 +10,11 @@ const NAME_W = 0.55;
 const NUMBER_W = 0.3;
 const SET_W = 0.15;
 
-const NAME_GATE = 0.45;
-
-export const STRONG_MATCH_SCORE = 0.85;
+// si une autre carte matche le nom bien mieux que celle-ci (écart > marge),
+// le numéro de celle-ci est une coïncidence (numéro mal lu) -> on ne le crédite pas.
+const NAME_MARGIN = 0.2;
+// en dessous, aucun nom n'est exploitable : on accepte alors le numéro seul.
+const NAME_INFORMATIVE = 0.5;
 
 const normalize = (value?: string): string =>
   (value || "")
@@ -31,22 +33,20 @@ const sameNumber = (a?: string, b?: string): boolean => {
   return !Number.isNaN(ia) && ia === ib;
 };
 
-// meilleur match de nom de la carte parmi les lectures OCR possibles (0..1)
+// meilleur match de nom de la carte parmi les lectures OCR possibles (0..1).
 export const nameScore = (card: Card, nameCandidates?: string[]): number => {
-  if (!nameCandidates?.length) return 0;
+  const cands = (nameCandidates ?? []).filter((c) => c.length >= 4);
+  if (!cands.length) return 0;
   const cardNameNorm = normalize(card.name);
-  return Math.max(
-    ...nameCandidates.map((c) => jaroWinkler(normalize(c), cardNameNorm)),
-  );
+  return Math.max(...cands.map((c) => jaroWinkler(normalize(c), cardNameNorm)));
 };
 
 export const scoreCard = (
   card: Card,
   fields: ScanParsedFields,
   nameCandidates?: string[],
-  // true seulement quand AUCUN nom n'est exploitable (vieille carte illisible) :
-  // on accepte alors un match par numéro seul.
-  trustNumberWithoutName = false,
+  // meilleur score de nom parmi TOUS les candidats cartes (pour le garde-fou relatif)
+  bestName = 0,
 ): number => {
   const name = nameCandidates?.length
     ? nameScore(card, nameCandidates)
@@ -67,9 +67,10 @@ export const scoreCard = (
   if (numberExact && totalExact) numberSignal = 1;
   else if (numberExact && !totalKnown) numberSignal = 0.5;
 
-  // garde-fou : le numéro ne compte que s'il est cohérent avec le nom lu,
-  // sauf si aucun nom n'est exploitable nulle part (numéro seul toléré).
-  if (numberSignal > 0 && name < NAME_GATE && !trustNumberWithoutName) {
+  // garde-fou relatif : si un nom est exploitable mais qu'une autre carte le
+  // matche bien mieux, le numéro de celle-ci est une coïncidence -> on l'écarte.
+  const nameInformative = bestName >= NAME_INFORMATIVE;
+  if (numberSignal > 0 && nameInformative && bestName - name > NAME_MARGIN) {
     numberSignal = 0;
   }
 

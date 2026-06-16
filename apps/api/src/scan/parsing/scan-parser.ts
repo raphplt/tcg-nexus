@@ -89,12 +89,14 @@ export const extractNameCandidates = (
     out.add(c);
   };
 
-  if (roiName) add(roiName);
+  if (roiName) {
+    add(roiName);
+    for (const word of roiName.split(/\s+/)) add(word);
+  }
 
   for (const line of lines.slice(0, 8)) {
     const lettersOnly = line.replace(/[0-9©®@]/g, " ");
-    add(lettersOnly); // ligne entière (noms multi-mots)
-    for (const word of lettersOnly.split(/\s+/)) add(word); // mots isolés
+    for (const word of lettersOnly.split(/\s+/)) add(word);
   }
 
   return Array.from(out);
