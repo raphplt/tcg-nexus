@@ -84,6 +84,10 @@ export class CollectionController {
     @Query("search") search?: string,
     @Query("sortBy") sortBy?: string,
     @Query("sortOrder") sortOrder?: "ASC" | "DESC",
+    @Query("setId") setId?: string,
+    @Query("serieId") serieId?: string,
+    @Query("rarity") rarity?: string,
+    @Query("cardState") cardState?: string,
   ) {
     const pageNumber = page ? parseInt(page, 10) : 1;
     const limitNumber = limit ? parseInt(limit, 10) : 10;
@@ -94,6 +98,10 @@ export class CollectionController {
       search,
       sortBy,
       sortOrder,
+      setId,
+      serieId,
+      rarity,
+      cardState,
     );
   }
 

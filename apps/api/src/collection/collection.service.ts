@@ -238,6 +238,10 @@ export class CollectionService {
     search?: string,
     sortBy: string = "added_at",
     sortOrder: "ASC" | "DESC" = "DESC",
+    setId?: string,
+    serieId?: string,
+    rarity?: string,
+    cardState?: string,
   ): Promise<{
     data: CollectionItem[];
     meta: {
@@ -268,6 +272,7 @@ export class CollectionService {
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("item.cardState", "cardState")
       .leftJoinAndSelect("pokemonCard.set", "set")
+      .leftJoinAndSelect("set.serie", "serie")
       .where("item.collection.id = :collectionId", { collectionId });
 
     // Ajouter la recherche si fournie
@@ -276,6 +281,23 @@ export class CollectionService {
         "(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)",
         { search: `%${search}%` },
       );
+    }
+
+    // Appliquer les filtres avancés
+    if (setId) {
+      queryBuilder.andWhere("set.id = :setId", { setId });
+    }
+
+    if (serieId) {
+      queryBuilder.andWhere("serie.id = :serieId", { serieId });
+    }
+
+    if (rarity) {
+      queryBuilder.andWhere("pokemonCard.rarity = :rarity", { rarity });
+    }
+
+    if (cardState) {
+      queryBuilder.andWhere("cardState.code = :cardState", { cardState });
     }
 
     // Trier

@@ -24,11 +24,23 @@ import type {
   CollectionItem,
   CollectionItemsPaginatedResponse,
   UserCollection,
+  PokemonSerieType,
+  PokemonSetType,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { AddCardModal } from "@/components/AddCardModal";
+import { CardDetailModal } from "@/components/CardDetailModal";
+import { SelectionModal } from "@/components/SelectionModal";
 import { getCardImage } from "@/utils/images";
 
+const cardStates = [
+  { label: "Near Mint", value: "NM" },
+  { label: "Excellent", value: "EX" },
+  { label: "Good", value: "GD" },
+  { label: "Lightly Played", value: "LP" },
+  { label: "Played", value: "PL" },
+  { label: "Poor", value: "Poor" },
+];
 
 const PAGE_SIZE = 24;
 
@@ -94,7 +106,61 @@ export default function CollectionDetailsScreen() {
     "added_at",
   );
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(undefined);
+  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(undefined);
+  const [rarityInput, setRarityInput] = useState("");
+  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(undefined);
+  const [selectedCardState, setSelectedCardState] = useState<string | undefined>(undefined);
+
+  const [series, setSeries] = useState<PokemonSerieType[]>([]);
+  const [sets, setSets] = useState<PokemonSetType[]>([]);
+
+  const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
+  const [isSetModalVisible, setIsSetModalVisible] = useState(false);
+  const [isStateModalVisible, setIsStateModalVisible] = useState(false);
+
+  const getSortByLabel = (value: typeof sortBy) => {
+    switch (value) {
+      case "added_at":
+        return "Date d'ajout";
+      case "pokemonCard.name":
+        return "Nom";
+      case "pokemonCard.rarity":
+        return "Rareté";
+      case "quantity":
+        return "Quantité";
+      default:
+        return "";
+    }
+  };
+
+  const handleSelectSortBy = () => {
+    Alert.alert(
+      "Trier par",
+      "Choisissez une option de tri :",
+      [
+        { text: "Date d'ajout", onPress: () => setSortBy("added_at") },
+        { text: "Nom", onPress: () => setSortBy("pokemonCard.name") },
+        { text: "Rareté", onPress: () => setSortBy("pokemonCard.rarity") },
+        { text: "Quantité", onPress: () => setSortBy("quantity") },
+        { text: "Annuler", style: "cancel" },
+      ]
+    );
+  };
+
+  const handleSelectSortOrder = () => {
+    Alert.alert(
+      "Ordre",
+      "Choisissez l'ordre de tri :",
+      [
+        { text: "Croissant", onPress: () => setSortOrder("ASC") },
+        { text: "Décroissant", onPress: () => setSortOrder("DESC") },
+        { text: "Annuler", style: "cancel" },
+      ]
+    );
+  };
 
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
@@ -108,7 +174,29 @@ export default function CollectionDetailsScreen() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSelectedRarity(rarityInput.trim() || undefined);
+    }, 350);
 
+    return () => clearTimeout(timer);
+  }, [rarityInput]);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const [loadedSeries, loadedSets] = await Promise.all([
+          cardService.getAllSeries(),
+          cardService.getAllSets(),
+        ]);
+        setSeries(loadedSeries);
+        setSets(loadedSets);
+      } catch (err) {
+        console.error("Failed to load filter metadata:", err);
+      }
+    };
+    void fetchMetadata();
+  }, []);
 
   const loadCollectionHeader = useCallback(async () => {
     if (!collectionId) {
@@ -147,6 +235,10 @@ export default function CollectionDetailsScreen() {
           search: debouncedSearch || undefined,
           sortBy,
           sortOrder,
+          setId: selectedSetId,
+          serieId: selectedSerieId,
+          rarity: selectedRarity,
+          cardState: selectedCardState,
         });
 
         setMeta(response.meta);
@@ -166,7 +258,19 @@ export default function CollectionDetailsScreen() {
         }
       }
     },
-    [collectionId, debouncedSearch, isLoadingMore, meta?.currentPage, meta?.hasNextPage, sortBy, sortOrder],
+    [
+      collectionId,
+      debouncedSearch,
+      isLoadingMore,
+      meta?.currentPage,
+      meta?.hasNextPage,
+      sortBy,
+      sortOrder,
+      selectedSetId,
+      selectedSerieId,
+      selectedRarity,
+      selectedCardState,
+    ],
   );
 
   useEffect(() => {
@@ -183,7 +287,50 @@ export default function CollectionDetailsScreen() {
     }
 
     void loadItems();
-  }, [debouncedSearch, sortBy, sortOrder]);
+  }, [
+    debouncedSearch,
+    sortBy,
+    sortOrder,
+    selectedSetId,
+    selectedSerieId,
+    selectedRarity,
+    selectedCardState,
+  ]);
+
+  const handleSelectSerie = (serieId: string | undefined) => {
+    setSelectedSerieId(serieId);
+    if (serieId) {
+      const selectedSet = sets.find((s) => s.id === selectedSetId);
+      if (selectedSet && selectedSet.serie?.id !== serieId) {
+        setSelectedSetId(undefined);
+      }
+    }
+  };
+
+  const filteredSetsOptions = useMemo(() => {
+    if (!selectedSerieId) {
+      return sets;
+    }
+    return sets.filter((s) => s.serie?.id === selectedSerieId);
+  }, [sets, selectedSerieId]);
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      search.trim().length > 0 ||
+      selectedSerieId !== undefined ||
+      selectedSetId !== undefined ||
+      rarityInput.trim().length > 0 ||
+      selectedCardState !== undefined
+    );
+  }, [search, selectedSerieId, selectedSetId, rarityInput, selectedCardState]);
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setSelectedSerieId(undefined);
+    setSelectedSetId(undefined);
+    setRarityInput("");
+    setSelectedCardState(undefined);
+  };
 
   const stats = useMemo(() => {
     const totalCards = items.reduce(
@@ -372,7 +519,7 @@ export default function CollectionDetailsScreen() {
         </Text>
       </View>
 
-      <View style={styles.searchFilterRow}>
+      <View style={styles.searchRow}>
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={16} color="#777777" style={styles.searchIcon} />
           <TextInput
@@ -389,89 +536,102 @@ export default function CollectionDetailsScreen() {
             </Pressable>
           )}
         </View>
-
         <Pressable
           onPress={() => setShowFilters(!showFilters)}
-          style={({ pressed }) => [
-            styles.filterToggleButton,
-            showFilters && styles.filterToggleButtonActive,
-            pressed && styles.filterToggleButtonPressed,
-          ]}
+          style={[styles.filterToggleButton, showFilters && styles.filterToggleButtonActive]}
         >
           <Ionicons
-            color={showFilters ? "#ffffff" : "#0b0b0b"}
             name="options-outline"
-            size={18}
+            size={20}
+            color={showFilters ? "#ffffff" : "#0b0b0b"}
           />
         </Pressable>
       </View>
 
       {showFilters && (
-        <View style={styles.filterPanel}>
-          <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Trier par</Text>
-            <View style={styles.chipsRow}>
-              {sortOptions.map((option) => (
-                <Pressable
-                  key={option.value}
-                  onPress={() => setSortBy(option.value)}
-                  style={[
-                    styles.filterChip,
-                    sortBy === option.value && styles.filterChipActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.filterChipText,
-                      sortBy === option.value && styles.filterChipTextActive,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </Pressable>
-              ))}
+        <View style={styles.filtersPanel}>
+          <Text style={styles.filtersPanelTitle}>Filtres avancés</Text>
+          
+          <View style={styles.filterFieldRow}>
+            <View style={styles.filterFieldContainer}>
+              <Text style={styles.filterLabel}>Série</Text>
+              <Pressable
+                onPress={() => setIsSerieModalVisible(true)}
+                style={styles.filterDropdown}
+              >
+                <Text numberOfLines={1} style={styles.filterDropdownText}>
+                  {selectedSerieId ? series.find((s) => s.id === selectedSerieId)?.name : "Toutes les séries"}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color="#777777" />
+              </Pressable>
+            </View>
+
+            <View style={styles.filterFieldContainer}>
+              <Text style={styles.filterLabel}>Extension</Text>
+              <Pressable
+                onPress={() => setIsSetModalVisible(true)}
+                style={styles.filterDropdown}
+              >
+                <Text numberOfLines={1} style={styles.filterDropdownText}>
+                  {selectedSetId ? sets.find((s) => s.id === selectedSetId)?.name : "Toutes les extensions"}
+                </Text>
+                <Ionicons name="chevron-down" size={14} color="#777777" />
+              </Pressable>
             </View>
           </View>
 
-          <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Ordre</Text>
-            <View style={styles.chipsRow}>
+          <View style={styles.filterFieldRow}>
+            <View style={styles.filterFieldContainer}>
+              <Text style={styles.filterLabel}>Rareté</Text>
+              <TextInput
+                autoCapitalize="none"
+                onChangeText={setRarityInput}
+                placeholder="Ex: Rare Holo"
+                placeholderTextColor="#777777"
+                style={styles.filterTextInput}
+                value={rarityInput}
+              />
+            </View>
+
+            <View style={styles.filterFieldContainer}>
+              <Text style={styles.filterLabel}>État</Text>
               <Pressable
-                onPress={() => setSortOrder("ASC")}
-                style={[
-                  styles.filterChip,
-                  sortOrder === "ASC" && styles.filterChipActive,
-                ]}
+                onPress={() => setIsStateModalVisible(true)}
+                style={styles.filterDropdown}
               >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    sortOrder === "ASC" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Croissant
+                <Text numberOfLines={1} style={styles.filterDropdownText}>
+                  {selectedCardState ? cardStates.find((cs) => cs.value === selectedCardState)?.label : "Tous les états"}
                 </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setSortOrder("DESC")}
-                style={[
-                  styles.filterChip,
-                  sortOrder === "DESC" && styles.filterChipActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.filterChipText,
-                    sortOrder === "DESC" && styles.filterChipTextActive,
-                  ]}
-                >
-                  Décroissant
-                </Text>
+                <Ionicons name="chevron-down" size={14} color="#777777" />
               </Pressable>
             </View>
           </View>
+
+          {hasActiveFilters && (
+            <Pressable
+              onPress={handleResetFilters}
+              style={({ pressed }) => [styles.resetFiltersButton, pressed && styles.resetFiltersButtonPressed]}
+            >
+              <Ionicons name="refresh" size={14} color="#0b0b0b" />
+              <Text style={styles.resetFiltersText}>Réinitialiser les filtres</Text>
+            </Pressable>
+          )}
         </View>
       )}
+
+      <View style={styles.selectRow}>
+        <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
+          <Text style={styles.selectInputText}>Trier par : {getSortByLabel(sortBy)}</Text>
+          <Ionicons name="chevron-down" size={14} color="#555555" />
+        </Pressable>
+
+        <Pressable onPress={handleSelectSortOrder} style={styles.selectInput}>
+          <Text style={styles.selectInputText}>
+            Ordre : {sortOrder === "ASC" ? "Croissant" : "Décroissant"}
+          </Text>
+          <Ionicons name="chevron-down" size={14} color="#555555" />
+        </Pressable>
+      </View>
     </View>
   );
 
@@ -537,54 +697,11 @@ export default function CollectionDetailsScreen() {
         renderItem={renderCardCell}
       />
 
-      <Modal
-        animationType="slide"
-        onRequestClose={() => setIsCardModalVisible(false)}
-        visible={isCardModalVisible}
-      >
-        <SafeAreaView style={styles.modalSafeArea}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <Pressable
-              onPress={() => setIsCardModalVisible(false)}
-              style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
-            >
-              <Ionicons color="#0b0b0b" name="close" size={22} />
-            </Pressable>
-
-            <Image source={{ uri: getCardImage(selectedCard?.image, "low") }} style={styles.modalImage} />
-
-            <Text style={styles.modalTitle}>{selectedCard?.name || "Carte"}</Text>
-            <Text style={styles.modalMeta}>
-              {selectedCard?.set?.name || "Set inconnu"} • {selectedCard?.rarity || "Rarete inconnue"}
-            </Text>
-
-            <Text style={styles.modalSectionTitle}>Informations</Text>
-            <Text style={styles.modalText}>HP: {selectedCard?.pokemonDetails?.hp || "-"}</Text>
-            <Text style={styles.modalText}>
-              Types: {(selectedCard?.pokemonDetails?.types || []).join(", ") || "-"}
-            </Text>
-            <Text style={styles.modalText}>Stage: {selectedCard?.pokemonDetails?.stage || "-"}</Text>
-            <Text style={styles.modalText}>
-              {selectedCard?.pokemonDetails?.description || "Aucune description disponible."}
-            </Text>
-
-            <Text style={styles.modalSectionTitle}>Attaques</Text>
-            {(selectedCard?.pokemonDetails?.attacks || []).length > 0 ? (
-              selectedCard?.pokemonDetails?.attacks?.map((attack, index) => (
-                <View key={`attack-${index}`} style={styles.attackCard}>
-                  <Text style={styles.attackName}>
-                    {attack.name || "Attaque"}
-                    {attack.damage ? ` - ${attack.damage}` : ""}
-                  </Text>
-                  <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.modalText}>Aucune attaque detaillee disponible.</Text>
-            )}
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+      <CardDetailModal
+        card={selectedCard}
+        isVisible={isCardModalVisible}
+        onClose={() => setIsCardModalVisible(false)}
+      />
 
       <AddCardModal
         isVisible={isAddModalVisible}
@@ -594,30 +711,41 @@ export default function CollectionDetailsScreen() {
           await Promise.all([loadCollectionHeader(), loadItems({ refresh: true })]);
         }}
       />
+
+      <SelectionModal
+        isVisible={isSerieModalVisible}
+        onClose={() => setIsSerieModalVisible(false)}
+        title="Série"
+        options={series.map((s) => ({ id: s.id, name: s.name }))}
+        selectedValue={selectedSerieId}
+        onSelect={handleSelectSerie}
+        placeholder="Rechercher une série..."
+      />
+
+      <SelectionModal
+        isVisible={isSetModalVisible}
+        onClose={() => setIsSetModalVisible(false)}
+        title="Extension"
+        options={filteredSetsOptions.map((s) => ({ id: s.id, name: s.name }))}
+        selectedValue={selectedSetId}
+        onSelect={setSelectedSetId}
+        placeholder="Rechercher un set..."
+      />
+
+      <SelectionModal
+        isVisible={isStateModalVisible}
+        onClose={() => setIsStateModalVisible(false)}
+        title="État"
+        options={cardStates.map((cs) => ({ id: cs.value, name: cs.label }))}
+        selectedValue={selectedCardState}
+        onSelect={setSelectedCardState}
+        showSearch={false}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  attackCard: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: 8,
-    padding: 10,
-  },
-  attackName: {
-    color: "#0b0b0b",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  attackText: {
-    color: "#555555",
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
   cardCell: {
     flex: 1,
     maxWidth: "48.5%",
@@ -760,55 +888,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
   },
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
   clearButton: {
     padding: 4,
-  },
-  filterChip: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 20,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  filterChipActive: {
-    backgroundColor: "#b72921",
-    borderColor: "#b72921",
-  },
-  filterChipText: {
-    color: "#0b0b0b",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  filterChipTextActive: {
-    color: "#ffffff",
-  },
-  filterPanel: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e4e4e4",
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 12,
-    marginTop: 10,
-    padding: 12,
-  },
-  filterRow: {
-    marginTop: 8,
-  },
-  filterSection: {
-    gap: 6,
-  },
-  filterSectionTitle: {
-    color: "#555555",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
   },
   gridRow: {
     gap: 10,
@@ -942,58 +1023,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  modalClose: {
-    alignItems: "center",
-    alignSelf: "flex-end",
-    backgroundColor: "#f3f5f9",
-    borderRadius: 20,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
-  modalSafeArea: {
-    flex: 1,
-    backgroundColor: "#fcfcfc",
-  },
-  modalClosePressed: {
-    opacity: 0.8,
-  },
-  modalContent: {
-    backgroundColor: "#fcfcfc",
-    padding: 16,
-    paddingBottom: 34,
-  },
-  modalImage: {
-    alignSelf: "center",
-    borderRadius: 14,
-    height: 320,
-    marginTop: 12,
-    resizeMode: "contain",
-    width: "100%",
-  },
-  modalMeta: {
-    color: "#555555",
-    fontSize: 14,
-    marginTop: 6,
-  },
-  modalSectionTitle: {
-    color: "#0b0b0b",
-    fontSize: 16,
-    fontWeight: "800",
-    marginTop: 14,
-  },
-  modalText: {
-    color: "#555555",
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 6,
-  },
-  modalTitle: {
-    color: "#0b0b0b",
-    fontSize: 26,
-    fontWeight: "800",
-    marginTop: 12,
-  },
   navButton: {
     alignItems: "center",
     backgroundColor: "#ffffff",
@@ -1028,22 +1057,115 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
   },
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginTop: 12,
+  },
   searchContainer: {
     alignItems: "center",
     backgroundColor: "#ffffff",
     borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    flex: 1,
     flexDirection: "row",
     height: 44,
+    flex: 1,
     paddingHorizontal: 10,
   },
-  searchFilterRow: {
+  filterToggleButton: {
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 44,
+    width: 44,
+  },
+  filterToggleButtonActive: {
+    backgroundColor: "#0b0b0b",
+    borderColor: "#0b0b0b",
+  },
+  filtersPanel: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 10,
+    padding: 12,
+  },
+  filtersPanelTitle: {
+    color: "#0b0b0b",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  filterFieldRow: {
     flexDirection: "row",
     gap: 8,
-    marginTop: 12,
+    marginBottom: 8,
+  },
+  filterFieldContainer: {
+    flex: 1,
+  },
+  filterLabel: {
+    color: "#555555",
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  filterDropdown: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fcfcfc",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    height: 38,
+  },
+  filterDropdownText: {
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: 4,
+  },
+  filterTextInput: {
+    backgroundColor: "#fcfcfc",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    height: 38,
+  },
+  resetFiltersButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 6,
+    marginTop: 6,
+    paddingVertical: 8,
+  },
+  resetFiltersButtonPressed: {
+    opacity: 0.8,
+  },
+  resetFiltersText: {
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "700",
   },
   searchIcon: {
     marginRight: 6,
@@ -1055,22 +1177,28 @@ const styles = StyleSheet.create({
     height: "100%",
     paddingVertical: 0,
   },
-  filterToggleButton: {
+  selectRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  selectInput: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#ffffff",
     borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    height: 44,
-    justifyContent: "center",
-    width: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    height: 40,
   },
-  filterToggleButtonActive: {
-    backgroundColor: "#0b0b0b",
-    borderColor: "#0b0b0b",
-  },
-  filterToggleButtonPressed: {
-    opacity: 0.8,
+  selectInputText: {
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
   },
   statsCard: {
     backgroundColor: "#ffffff",

@@ -25,6 +25,10 @@ export interface CollectionItemsQueryParams {
   search?: string;
   sortBy?: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
   sortOrder?: "ASC" | "DESC";
+  setId?: string;
+  serieId?: string;
+  rarity?: string;
+  cardState?: string;
 }
 
 export const collectionService = {
@@ -59,6 +63,10 @@ export const collectionService = {
           search: params.search,
           sortBy: params.sortBy ?? "added_at",
           sortOrder: params.sortOrder ?? "DESC",
+          setId: params.setId,
+          serieId: params.serieId,
+          rarity: params.rarity,
+          cardState: params.cardState,
         },
       },
     );

@@ -106,3 +106,18 @@ export interface CardSearchResolution {
   candidates: CardSearchResult[];
   searchedTerms: string[];
 }
+
+export interface PokemonSerieType {
+  id: string;
+  name: string;
+  logo?: string;
+}
+
+export interface PokemonSetType {
+  id: string;
+  name: string;
+  logo?: string;
+  symbol?: string;
+  releaseDate?: string;
+  serie?: PokemonSerieType;
+}

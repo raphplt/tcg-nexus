@@ -3,6 +3,8 @@ import type {
   CardSearchResolution,
   CardSearchResult,
   OcrParsedResult,
+  PokemonSerieType,
+  PokemonSetType,
 } from "@/types";
 
 const searchCache = new Map<string, CardSearchResult[]>();
@@ -166,5 +168,15 @@ export const cardService = {
       candidates: ranked,
       searchedTerms,
     };
+  },
+
+  async getAllSets(): Promise<PokemonSetType[]> {
+    const response = await api.get<PokemonSetType[]>("/pokemon-set");
+    return response.data || [];
+  },
+
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data || [];
   },
 };
