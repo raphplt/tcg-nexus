@@ -10,6 +10,8 @@ const NAME_W = 0.55;
 const NUMBER_W = 0.3;
 const SET_W = 0.15;
 
+const NAME_GATE = 0.45;
+
 export const STRONG_MATCH_SCORE = 0.85;
 
 const normalize = (value?: string): string =>
@@ -29,22 +31,28 @@ const sameNumber = (a?: string, b?: string): boolean => {
   return !Number.isNaN(ia) && ia === ib;
 };
 
+// meilleur match de nom de la carte parmi les lectures OCR possibles (0..1)
+export const nameScore = (card: Card, nameCandidates?: string[]): number => {
+  if (!nameCandidates?.length) return 0;
+  const cardNameNorm = normalize(card.name);
+  return Math.max(
+    ...nameCandidates.map((c) => jaroWinkler(normalize(c), cardNameNorm)),
+  );
+};
+
 export const scoreCard = (
   card: Card,
   fields: ScanParsedFields,
   nameCandidates?: string[],
+  // true seulement quand AUCUN nom n'est exploitable (vieille carte illisible) :
+  // on accepte alors un match par numéro seul.
+  trustNumberWithoutName = false,
 ): number => {
-  const candidates = nameCandidates?.length
-    ? nameCandidates
+  const name = nameCandidates?.length
+    ? nameScore(card, nameCandidates)
     : fields.cardName
-      ? [fields.cardName]
-      : [];
-  const cardNameNorm = normalize(card.name);
-  const name = candidates.length
-    ? Math.max(
-        ...candidates.map((c) => jaroWinkler(normalize(c), cardNameNorm)),
-      )
-    : 0;
+      ? jaroWinkler(normalize(fields.cardName), normalize(card.name))
+      : 0;
 
   const numberExact = sameNumber(card.localId, fields.setNumber);
   // le dénominateur imprimé (ex. /182) = cardCountOfficial, pas le total réel
@@ -56,11 +64,13 @@ export const scoreCard = (
       String(cardCount?.total ?? "") === fields.setTotal);
 
   let numberSignal = 0;
-  if (numberExact) {
-    if (totalExact)
-      numberSignal = 1; // bon numéro ET bonne série
-    else if (!totalKnown) numberSignal = 0.5; // numéro seul : simple indice
-    // total connu mais série différente -> coïncidence, on ne crédite pas
+  if (numberExact && totalExact) numberSignal = 1;
+  else if (numberExact && !totalKnown) numberSignal = 0.5;
+
+  // garde-fou : le numéro ne compte que s'il est cohérent avec le nom lu,
+  // sauf si aucun nom n'est exploitable nulle part (numéro seul toléré).
+  if (numberSignal > 0 && name < NAME_GATE && !trustNumberWithoutName) {
+    numberSignal = 0;
   }
 
   const setSignal =

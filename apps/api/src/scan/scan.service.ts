@@ -11,7 +11,7 @@ import { CardGame } from "../common/enums/cardGame";
 import { ScanLogger } from "./logging/scan-logger";
 import {
   computeConfidence,
-  STRONG_MATCH_SCORE,
+  nameScore,
   scoreCard,
   toCandidate,
 } from "./matching/scan-matcher";
@@ -142,22 +142,14 @@ export class ScanService {
     nameCandidates: string[],
     game?: CardGame,
   ): Promise<ScanCardCandidate[]> {
-    const scored = new Map<string, ScanCardCandidate>();
-
-    const consider = (cards: Card[]) => {
-      for (const card of cards) {
-        const score = scoreCard(card, fields, nameCandidates);
-        if (score >= MIN_CANDIDATE_SCORE) {
-          scored.set(card.id, toCandidate(card, score));
-        }
-      }
+    // 1) collecte des cartes : par numéro (robuste au bruit du nom) + par nom fuzzy
+    const pool = new Map<string, Card>();
+    const add = (cards: Card[]) => {
+      for (const card of cards) pool.set(card.id, card);
     };
-    const hasStrongMatch = () =>
-      Array.from(scored.values()).some((c) => c.score >= STRONG_MATCH_SCORE);
 
-    // 1) par numéro de carte : indépendant du nom (robuste au bruit OCR)
     if (fields.setNumber) {
-      consider(
+      add(
         await this.cardService.findByLocalId(
           fields.setNumber,
           fields.setTotal,
@@ -166,21 +158,32 @@ export class ScanService {
       );
     }
 
-    // 2) par nom en fuzzy (trigrammes) : tolère fautes d'OCR et accents.
-    // on tente les meilleurs candidats (phrases longues d'abord), jusqu'à un match sûr.
-    if (!hasStrongMatch()) {
-      const terms = Array.from(new Set(nameCandidates))
-        .filter((t) => t.length >= 4)
-        .sort((a, b) => b.length - a.length)
-        .slice(0, 6);
-
-      for (const term of terms) {
-        consider(await this.cardService.findByNameFuzzy(term, game));
-        if (hasStrongMatch()) break;
-      }
+    const terms = Array.from(new Set(nameCandidates))
+      .filter((t) => t.length >= 4)
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 6);
+    for (const term of terms) {
+      add(await this.cardService.findByNameFuzzy(term, game));
     }
 
-    return Array.from(scored.values())
+    const cards = Array.from(pool.values());
+
+    // 2) si un nom colle vraiment à une carte, on ne fait pas confiance au
+    // numéro seul (souvent mal lu) ; sinon (nom illisible) on l'accepte.
+    const bestName = cards.reduce(
+      (max, card) => Math.max(max, nameScore(card, nameCandidates)),
+      0,
+    );
+    const trustNumberWithoutName = bestName < 0.5;
+
+    return cards
+      .map((card) =>
+        toCandidate(
+          card,
+          scoreCard(card, fields, nameCandidates, trustNumberWithoutName),
+        ),
+      )
+      .filter((c) => c.score >= MIN_CANDIDATE_SCORE)
       .sort((a, b) => b.score - a.score)
       .slice(0, MAX_CANDIDATES);
   }
