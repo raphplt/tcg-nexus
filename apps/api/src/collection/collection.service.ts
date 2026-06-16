@@ -138,6 +138,30 @@ export class CollectionService {
     return this.collectionItemRepository.save(newItem);
   }
 
+  async removeCardFromCollection(
+    collectionId: string,
+    pokemonCardId: string,
+    userId: number,
+  ): Promise<CollectionItem | null> {
+    const collection = await this.getOwnedCollection(collectionId, userId);
+
+    const existingItem = collection.items?.find(
+      (item) => item.pokemonCard?.id === pokemonCardId,
+    );
+
+    if (!existingItem) {
+      throw new NotFoundException("Carte non trouvee dans la collection");
+    }
+
+    if (existingItem.quantity > 1) {
+      existingItem.quantity -= 1;
+      return this.collectionItemRepository.save(existingItem);
+    }
+
+    await this.collectionItemRepository.delete(existingItem.id);
+    return null;
+  }
+
   async removeCollectionItem(
     collectionId: string,
     itemId: number,

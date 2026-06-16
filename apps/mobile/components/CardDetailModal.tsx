@@ -19,6 +19,35 @@ interface CardDetailModalProps {
   card: CardSearchResult | null;
 }
 
+const energyToImageName: Record<string, string> = {
+  // French
+  plante: "Type-Plante-JCC.png",
+  feu: "Type-Feu-JCC.png",
+  eau: "Type-Eau-JCC.png",
+  électrique: "Type-Électrique-JCC.png",
+  psy: "Type-Psy-JCC.png",
+  incolore: "Type-Incolore-JCC.png",
+  obscurité: "Type-Obscurité-JCC.png",
+  métal: "Type-Métal-JCC.png",
+  dragon: "Type-Dragon-JCC.png",
+  fée: "Type-Fée-JCC.png",
+  combat: "Type-Combat-JCC.png",
+
+  // English
+  grass: "Type-Plante-JCC.png",
+  fire: "Type-Feu-JCC.png",
+  water: "Type-Eau-JCC.png",
+  lightning: "Type-Électrique-JCC.png",
+  electric: "Type-Électrique-JCC.png",
+  psychic: "Type-Psy-JCC.png",
+  colorless: "Type-Incolore-JCC.png",
+  darkness: "Type-Obscurité-JCC.png",
+  dark: "Type-Obscurité-JCC.png",
+  metal: "Type-Métal-JCC.png",
+  fairy: "Type-Fée-JCC.png",
+  fighting: "Type-Combat-JCC.png",
+};
+
 export const CardDetailModal: React.FC<CardDetailModalProps> = ({
   isVisible,
   onClose,
@@ -50,9 +79,28 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
 
           <Text style={styles.modalSectionTitle}>Informations</Text>
           <Text style={styles.modalText}>HP: {card.pokemonDetails?.hp || "-"}</Text>
-          <Text style={styles.modalText}>
-            Types: {(card.pokemonDetails?.types || []).join(", ") || "-"}
-          </Text>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.modalText, { marginTop: 0 }]}>Types: </Text>
+            {card.pokemonDetails?.types && card.pokemonDetails.types.length > 0 ? (
+              <View style={styles.typesContainer}>
+                {card.pokemonDetails.types.map((type, i) => {
+                  const key = type.toLowerCase().replace(/ /g, "_");
+                  const imageName = energyToImageName[key] || energyToImageName[type.toLowerCase()] || "Type-Incolore-JCC.png";
+                  return (
+                    <Image
+                      key={i}
+                      source={{ uri: `https://tcg-nexus.org/images/types/${imageName}` }}
+                      style={styles.energyIcon}
+                    />
+                  );
+                })}
+              </View>
+            ) : (
+              <Text style={[styles.modalText, { marginTop: 0 }]}>-</Text>
+            )}
+          </View>
+
           <Text style={styles.modalText}>Stage: {card.pokemonDetails?.stage || "-"}</Text>
           <Text style={styles.modalText}>
             {card.pokemonDetails?.description || "Aucune description disponible."}
@@ -68,9 +116,19 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
                     {attack.damage ? ` - ${attack.damage}` : ""}
                   </Text>
                   {attack.cost && attack.cost.length > 0 && (
-                    <Text style={styles.attackCost}>
-                      Coût : {attack.cost.join(", ")}
-                    </Text>
+                    <View style={styles.attackCostContainer}>
+                      {attack.cost.map((energy, i) => {
+                        const key = energy.toLowerCase().replace(/ /g, "_");
+                        const imageName = energyToImageName[key] || energyToImageName[energy.toLowerCase()] || "Type-Incolore-JCC.png";
+                        return (
+                          <Image
+                            key={i}
+                            source={{ uri: `https://tcg-nexus.org/images/types/${imageName}` }}
+                            style={styles.energyIcon}
+                          />
+                        );
+                      })}
+                    </View>
                   )}
                 </View>
                 <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
@@ -105,14 +163,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
   },
-  attackCost: {
-    color: "#555555",
-    fontSize: 11,
-    fontWeight: "700",
+  attackCostContainer: {
+    flexDirection: "row",
+    gap: 3,
+    alignItems: "center",
     backgroundColor: "#e4e4e4",
     borderRadius: 8,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 3,
+  },
+  energyIcon: {
+    width: 16,
+    height: 16,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  typesContainer: {
+    flexDirection: "row",
+    gap: 4,
+    alignItems: "center",
   },
   attackText: {
     color: "#555555",

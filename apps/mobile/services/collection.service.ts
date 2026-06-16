@@ -135,4 +135,15 @@ export const collectionService = {
       return fallbackResponse.data;
     }
   },
+
+  async removeCardFromCollection(
+    collectionId: string,
+    pokemonCardId: string,
+  ): Promise<any> {
+    const response = await secureApi.post(
+      `/collection/${collectionId}/items/remove`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
 };

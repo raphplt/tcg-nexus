@@ -25,6 +25,7 @@ interface SelectionModalProps {
   onSelect: (id: string | undefined) => void;
   placeholder?: string;
   showSearch?: boolean;
+  showAllOption?: boolean;
 }
 
 export const SelectionModal: React.FC<SelectionModalProps> = ({
@@ -36,6 +37,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   onSelect,
   placeholder = "Rechercher...",
   showSearch = true,
+  showAllOption = true,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -51,7 +53,9 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
       )
     : options;
 
-  const displayData = [{ id: "all", name: `Toutes / Tous (${title.toLowerCase()})` }, ...filteredOptions];
+  const displayData = showAllOption
+    ? [{ id: "all", name: `Toutes / Tous (${title.toLowerCase()})` }, ...filteredOptions]
+    : filteredOptions;
 
   const handleSelectItem = (id: string) => {
     if (id === "all") {

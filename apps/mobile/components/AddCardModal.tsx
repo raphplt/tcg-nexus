@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Modal,
@@ -36,6 +37,8 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
   const [isManualSearching, setIsManualSearching] = useState(false);
   const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
   const [addingCardId, setAddingCardId] = useState<string | null>(null);
+  const [collectionQuantities, setCollectionQuantities] = useState<Record<string, number>>({});
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Debounce manual search
   useEffect(() => {
@@ -52,7 +55,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       return;
     }
 
-    if (debouncedManualSearch.length < 2) {
+    if (debouncedManualSearch.length < 1) {
       setManualResults([]);
       setIsManualSearching(false);
       return;
@@ -89,28 +92,118 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     };
   }, [debouncedManualSearch, isVisible]);
 
-  // Reset when modal opens
+  // Reset and fetch initial quantities when modal opens
   useEffect(() => {
     if (isVisible) {
       setManualSearch("");
       setDebouncedManualSearch("");
       setManualResults([]);
       setIsManualSearching(false);
-    }
-  }, [isVisible]);
+      setCollectionQuantities({});
+      setSuccessMessage(null);
 
-  const handleAddCardFromSearch = async (card: CardSearchResult) => {
-    if (!collectionId || !card.id) {
+      if (collectionId) {
+        const loadInitialQuantities = async () => {
+          try {
+            const data = await collectionService.getCollectionById(collectionId);
+            const quantities: Record<string, number> = {};
+            if (data.items) {
+              for (const item of data.items) {
+                if (item.pokemonCard?.id) {
+                  quantities[item.pokemonCard.id] = (quantities[item.pokemonCard.id] || 0) + item.quantity;
+                }
+              }
+            }
+            setCollectionQuantities(quantities);
+          } catch (error) {
+            console.error("Failed to load initial quantities:", error);
+          }
+        };
+        void loadInitialQuantities();
+      }
+    }
+  }, [isVisible, collectionId]);
+
+  // Auto-clear success banner message
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const handleIncrement = async (card: CardSearchResult) => {
+    const cardId = card.id;
+    if (!collectionId || !cardId) {
       return;
     }
 
-    setAddingCardId(card.id);
+    // Optimistically update quantities
+    setCollectionQuantities((prev) => ({
+      ...prev,
+      [cardId]: (prev[cardId] || 0) + 1,
+    }));
+
+    setAddingCardId(cardId);
     try {
-      await collectionService.addCardToCollection(collectionId, card.id);
+      await collectionService.addCardToCollection(collectionId, cardId);
+      setSuccessMessage(`"${card.name || "Carte"}" ajoutée !`);
       toast.showSuccess(`${card.name || "Carte"} ajoutée.`);
       await onCardAdded();
     } catch (error) {
-      toast.showError(getApiErrorMessage(error));
+      // Revert optimistic update
+      setCollectionQuantities((prev) => ({
+        ...prev,
+        [cardId]: Math.max(0, (prev[cardId] || 1) - 1),
+      }));
+      const errMsg = getApiErrorMessage(error);
+      toast.showError(errMsg);
+      Alert.alert("Erreur", errMsg);
+    } finally {
+      setAddingCardId(null);
+    }
+  };
+
+  const handleDecrement = async (card: CardSearchResult) => {
+    const cardId = card.id;
+    if (!collectionId || !cardId) {
+      return;
+    }
+
+    const currentQty = collectionQuantities[cardId] || 0;
+    if (currentQty <= 0) {
+      return;
+    }
+
+    // Optimistically update quantities
+    setCollectionQuantities((prev) => {
+      const next = { ...prev };
+      const current = next[cardId] ?? 0;
+      if (current > 1) {
+        next[cardId] = current - 1;
+      } else {
+        delete next[cardId];
+      }
+      return next;
+    });
+
+    setAddingCardId(cardId);
+    try {
+      await collectionService.removeCardFromCollection(collectionId, cardId);
+      setSuccessMessage(`"${card.name || "Carte"}" retirée !`);
+      toast.showSuccess(`${card.name || "Carte"} retirée.`);
+      await onCardAdded();
+    } catch (error) {
+      // Revert optimistic update
+      setCollectionQuantities((prev) => ({
+        ...prev,
+        [cardId]: currentQty,
+      }));
+      const errMsg = getApiErrorMessage(error);
+      toast.showError(errMsg);
+      Alert.alert("Erreur", errMsg);
     } finally {
       setAddingCardId(null);
     }
@@ -145,8 +238,15 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
           value={manualSearch}
         />
 
-        {debouncedManualSearch.length < 2 ? (
-          <Text style={styles.manualHint}>Tape au moins 2 caractères pour rechercher.</Text>
+        {successMessage ? (
+          <View style={styles.successBanner}>
+            <Ionicons color="#1b5e20" name="checkmark-circle" size={16} />
+            <Text style={styles.successBannerText}>{successMessage}</Text>
+          </View>
+        ) : null}
+
+        {debouncedManualSearch.length < 1 ? (
+          <Text style={styles.manualHint}>Tape au moins 1 caractère pour rechercher.</Text>
         ) : null}
 
         {isManualSearching ? (
@@ -158,43 +258,81 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
           data={manualResults}
           keyExtractor={(item) => item.id || Math.random().toString()}
           ListEmptyComponent={
-            !isManualSearching && debouncedManualSearch.length >= 2 ? (
+            !isManualSearching && debouncedManualSearch.length >= 1 ? (
               <Text style={styles.manualEmptyText}>Aucun résultat.</Text>
             ) : null
           }
-          renderItem={({ item }) => (
-            <View style={styles.manualResultCard}>
-              <Image source={{ uri: getCardImage(item.image, "low") }} style={styles.manualResultImage} />
+          renderItem={({ item }) => {
+            const cardQty = item.id ? (collectionQuantities[item.id] ?? 0) : 0;
+            return (
+              <View style={styles.manualResultCard}>
+                <Image source={{ uri: getCardImage(item.image, "low") }} style={styles.manualResultImage} />
 
-              <View style={styles.manualResultContent}>
-                <Text numberOfLines={1} style={styles.manualResultName}>
-                  {item.name || "Carte"}
-                </Text>
-                <Text numberOfLines={1} style={styles.manualResultMeta}>
-                  {item.set?.name || "Set inconnu"}
-                </Text>
-                <Text numberOfLines={1} style={styles.manualResultMeta}>
-                  {item.rarity || "Rareté inconnue"}
-                </Text>
+                <View style={styles.manualResultContent}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text numberOfLines={1} style={[styles.manualResultName, { flexShrink: 1 }]}>
+                      {item.name || "Carte"}
+                    </Text>
+                    {cardQty > 0 ? (
+                      <View style={styles.addedBadge}>
+                        <Text style={styles.addedBadgeText}>x{cardQty}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text numberOfLines={1} style={styles.manualResultMeta}>
+                    {item.set?.name || "Set inconnu"}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.manualResultMeta}>
+                    {item.rarity || "Rareté inconnue"}
+                  </Text>
+                </View>
+
+                {cardQty > 0 ? (
+                  <View style={styles.qtyContainer}>
+                    <Pressable
+                      disabled={addingCardId === item.id}
+                      onPress={() => void handleDecrement(item)}
+                      style={({ pressed }) => [
+                        styles.qtyButton,
+                        pressed && styles.qtyButtonPressed,
+                      ]}
+                    >
+                      <Ionicons color="#15233b" name="remove" size={16} />
+                    </Pressable>
+                    <Text style={styles.qtyText}>
+                      {cardQty}
+                    </Text>
+                    <Pressable
+                      disabled={addingCardId === item.id}
+                      onPress={() => void handleIncrement(item)}
+                      style={({ pressed }) => [
+                        styles.qtyButton,
+                        pressed && styles.qtyButtonPressed,
+                      ]}
+                    >
+                      <Ionicons color="#15233b" name="add" size={16} />
+                    </Pressable>
+                  </View>
+                ) : (
+                  <Pressable
+                    disabled={addingCardId === item.id}
+                    onPress={() => {
+                      void handleIncrement(item);
+                    }}
+                    style={({ pressed }) => [
+                      styles.manualAddCardButton,
+                      (pressed || addingCardId === item.id) &&
+                        styles.manualAddCardButtonPressed,
+                    ]}
+                  >
+                    <Text style={styles.manualAddCardButtonText}>
+                      {addingCardId === item.id ? "Ajout..." : "Ajouter"}
+                    </Text>
+                  </Pressable>
+                )}
               </View>
-
-              <Pressable
-                disabled={addingCardId === item.id}
-                onPress={() => {
-                  void handleAddCardFromSearch(item);
-                }}
-                style={({ pressed }) => [
-                  styles.manualAddCardButton,
-                  (pressed || addingCardId === item.id) &&
-                    styles.manualAddCardButtonPressed,
-                ]}
-              >
-                <Text style={styles.manualAddCardButtonText}>
-                  {addingCardId === item.id ? "Ajout..." : "Ajouter"}
-                </Text>
-              </Pressable>
-            </View>
-          )}
+            );
+          }}
         />
       </View>
     </Modal>
@@ -306,5 +444,60 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  addedBadge: {
+    backgroundColor: "#2e7d32",
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  addedBadgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  successBanner: {
+    alignItems: "center",
+    backgroundColor: "#e8f5e9",
+    borderColor: "#c8e6c9",
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  successBannerText: {
+    color: "#1b5e20",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  qtyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fffdf9",
+    borderColor: "#eadfd3",
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: "space-between",
+    minWidth: 96,
+  },
+  qtyButton: {
+    alignItems: "center",
+    height: 36,
+    justifyContent: "center",
+    width: 30,
+  },
+  qtyButtonPressed: {
+    opacity: 0.5,
+  },
+  qtyText: {
+    color: "#15233b",
+    fontSize: 14,
+    fontWeight: "700",
+    minWidth: 24,
+    textAlign: "center",
   },
 });

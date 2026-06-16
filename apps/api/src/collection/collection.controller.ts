@@ -144,6 +144,17 @@ export class CollectionController {
     return this.collectionService.addCardToCollection(id, pokemonCardId, user.id);
   }
 
+  @Post(":id/items/remove")
+  @ApiOperation({ summary: "Retirer ou décrémenter une carte d'une collection" })
+  @ApiResponse({ status: 200, description: "Carte décrémentée ou retirée" })
+  async removeItemByCardId(
+    @Param("id") id: string,
+    @Body("pokemonCardId") pokemonCardId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionService.removeCardFromCollection(id, pokemonCardId, user.id);
+  }
+
   @Delete(":id/items/:itemId")
   @ApiOperation({ summary: "Supprimer un item d'une collection" })
   @ApiResponse({ status: 200, description: "Item supprime" })

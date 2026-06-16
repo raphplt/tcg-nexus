@@ -120,6 +120,7 @@ export default function CollectionDetailsScreen() {
   const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
   const [isSetModalVisible, setIsSetModalVisible] = useState(false);
   const [isStateModalVisible, setIsStateModalVisible] = useState(false);
+  const [isSortByModalVisible, setIsSortByModalVisible] = useState(false);
 
   const getSortByLabel = (value: typeof sortBy) => {
     switch (value) {
@@ -137,29 +138,11 @@ export default function CollectionDetailsScreen() {
   };
 
   const handleSelectSortBy = () => {
-    Alert.alert(
-      "Trier par",
-      "Choisissez une option de tri :",
-      [
-        { text: "Date d'ajout", onPress: () => setSortBy("added_at") },
-        { text: "Nom", onPress: () => setSortBy("pokemonCard.name") },
-        { text: "Rareté", onPress: () => setSortBy("pokemonCard.rarity") },
-        { text: "Quantité", onPress: () => setSortBy("quantity") },
-        { text: "Annuler", style: "cancel" },
-      ]
-    );
+    setIsSortByModalVisible(true);
   };
 
   const handleSelectSortOrder = () => {
-    Alert.alert(
-      "Ordre",
-      "Choisissez l'ordre de tri :",
-      [
-        { text: "Croissant", onPress: () => setSortOrder("ASC") },
-        { text: "Décroissant", onPress: () => setSortOrder("DESC") },
-        { text: "Annuler", style: "cancel" },
-      ]
-    );
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
@@ -424,6 +407,70 @@ export default function CollectionDetailsScreen() {
     );
   };
 
+  const handleDecrementItem = async (item: CollectionItem) => {
+    if (!collectionId || !item.pokemonCard?.id) {
+      return;
+    }
+
+    const currentQty = Number(item.quantity || 0);
+    if (currentQty <= 0) {
+      return;
+    }
+
+    if (currentQty === 1) {
+      handleDeleteItem(item);
+      return;
+    }
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((val) =>
+        val.id === item.id ? { ...val, quantity: currentQty - 1 } : val
+      )
+    );
+
+    try {
+      await collectionService.removeCardFromCollection(collectionId, item.pokemonCard.id);
+      toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
+      void loadCollectionHeader();
+    } catch (error) {
+      // Revert optimistic update
+      setItems((prev) =>
+        prev.map((val) =>
+          val.id === item.id ? { ...val, quantity: currentQty } : val
+        )
+      );
+      toast.showError(getApiErrorMessage(error));
+    }
+  };
+
+  const handleIncrementItem = async (item: CollectionItem) => {
+    if (!collectionId || !item.pokemonCard?.id) {
+      return;
+    }
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((val) =>
+        val.id === item.id ? { ...val, quantity: Number(val.quantity || 0) + 1 } : val
+      )
+    );
+
+    try {
+      await collectionService.addCardToCollection(collectionId, item.pokemonCard.id);
+      toast.showSuccess(`${item.pokemonCard.name || "Carte"} ajoutée.`);
+      void loadCollectionHeader();
+    } catch (error) {
+      // Revert optimistic update
+      setItems((prev) =>
+        prev.map((val) =>
+          val.id === item.id ? { ...val, quantity: Number(val.quantity || 1) - 1 } : val
+        )
+      );
+      toast.showError(getApiErrorMessage(error));
+    }
+  };
+
   const openManualAddModal = () => {
     setIsAddModalVisible(true);
   };
@@ -433,37 +480,54 @@ export default function CollectionDetailsScreen() {
 
     return (
       <View style={styles.cardCell}>
-        <Pressable
-          onPress={() => {
-            if (card?.id) {
-              void openCardDetails(card.id);
-            }
-          }}
-          style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressablePressed]}
-        >
-          <Image
-            source={{ uri: getCardImage(card?.image, "low") }}
-            style={styles.cardImage}
-          />
-          <Text numberOfLines={1} style={styles.cardName}>
-            {card?.name || "Carte inconnue"}
-          </Text>
-          <Text numberOfLines={1} style={styles.cardMeta}>
-            {card?.set?.name || "Set inconnu"}
-          </Text>
-          <Text style={styles.cardMeta}>x{item.quantity}</Text>
-        </Pressable>
+        <View style={styles.cardPressable}>
+          <Pressable
+            onPress={() => {
+              if (card?.id) {
+                void openCardDetails(card.id);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.cardTopArea,
+              pressed && styles.cardTopAreaPressed,
+            ]}
+          >
+            <Image
+              source={{ uri: getCardImage(card?.image, "low") }}
+              style={styles.cardImage}
+            />
+            <Text numberOfLines={1} style={styles.cardName}>
+              {card?.name || "Carte inconnue"}
+            </Text>
+            <Text numberOfLines={1} style={styles.cardMeta}>
+              {card?.set?.name || "Set inconnu"}
+            </Text>
+          </Pressable>
 
-        <Pressable
-          disabled={isDeletingItemId === item.id}
-          onPress={() => handleDeleteItem(item)}
-          style={({ pressed }) => [
-            styles.deleteBadge,
-            (pressed || isDeletingItemId === item.id) && styles.deleteBadgePressed,
-          ]}
-        >
-          <Ionicons color="#ffffff" name="trash-outline" size={14} />
-        </Pressable>
+          <View style={styles.cardQtyRow}>
+            <Pressable
+              disabled={isDeletingItemId === item.id}
+              onPress={() => void handleDecrementItem(item)}
+              style={({ pressed }) => [
+                styles.cardQtyButton,
+                pressed && styles.cardQtyButtonPressed,
+              ]}
+            >
+              <Ionicons name="remove" size={12} color="#0b0b0b" />
+            </Pressable>
+            <Text style={styles.cardQtyText}>{item.quantity}</Text>
+            <Pressable
+              disabled={isDeletingItemId === item.id}
+              onPress={() => void handleIncrementItem(item)}
+              style={({ pressed }) => [
+                styles.cardQtyButton,
+                pressed && styles.cardQtyButtonPressed,
+              ]}
+            >
+              <Ionicons name="add" size={12} color="#0b0b0b" />
+            </Pressable>
+          </View>
+        </View>
       </View>
     );
   };
@@ -741,6 +805,26 @@ export default function CollectionDetailsScreen() {
         onSelect={setSelectedCardState}
         showSearch={false}
       />
+
+      <SelectionModal
+        isVisible={isSortByModalVisible}
+        onClose={() => setIsSortByModalVisible(false)}
+        title="Trier par"
+        options={[
+          { id: "added_at", name: "Date d'ajout" },
+          { id: "pokemonCard.name", name: "Nom" },
+          { id: "pokemonCard.rarity", name: "Rareté" },
+          { id: "quantity", name: "Quantité" },
+        ]}
+        selectedValue={sortBy}
+        onSelect={(id) => {
+          if (id) {
+            setSortBy(id as any);
+          }
+        }}
+        showSearch={false}
+        showAllOption={false}
+      />
     </View>
   );
 }
@@ -801,19 +885,37 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
     flex: 1,
   },
-  deleteBadge: {
-    alignItems: "center",
-    backgroundColor: "#da2b29",
-    borderRadius: 12,
-    height: 24,
-    justifyContent: "center",
-    position: "absolute",
-    right: 10,
-    top: 10,
-    width: 24,
+  cardTopArea: {
+    width: "100%",
   },
-  deleteBadgePressed: {
-    opacity: 0.75,
+  cardTopAreaPressed: {
+    opacity: 0.86,
+  },
+  cardQtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fcfcfc",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 36,
+    marginTop: 8,
+  },
+  cardQtyButton: {
+    alignItems: "center",
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+  cardQtyButtonPressed: {
+    opacity: 0.5,
+  },
+  cardQtyText: {
+    color: "#0b0b0b",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
   deleteCollectionButton: {
     alignItems: "center",
