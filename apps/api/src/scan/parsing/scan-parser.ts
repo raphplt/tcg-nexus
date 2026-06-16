@@ -1,15 +1,20 @@
 import type { ScanParsedFields } from "@repo/scan-contract";
 
-//TODO : à étendre ?
 const STOPWORDS = new Set([
   "hp",
+  "pv",
   "pokemon",
   "trainer",
   "energy",
   "basic",
+  "base",
   "stage",
+  "niv",
+  "niveau",
   "ability",
   "attack",
+  "temps",
+  "passe",
 ]);
 
 export const normalize = (value: string): string =>
@@ -69,27 +74,55 @@ const pickCardName = (lines: string[]): string | undefined => {
   return candidate?.trim();
 };
 
-export const buildSearchHints = (fields: ScanParsedFields): string[] => {
+// candidats de nom : le nom propre figure souvent en clair dans le texte plein
+// même quand la ROI nom échoue. On en garde plusieurs, le scoring prend le meilleur.
+export const extractNameCandidates = (
+  roiName: string,
+  lines: string[],
+): string[] => {
+  const out = new Set<string>();
+
+  const add = (raw: string) => {
+    const c = cleanName(raw);
+    if (c.length < 3 || !/\p{L}/u.test(c)) return;
+    if (STOPWORDS.has(normalize(c).toLowerCase())) return;
+    out.add(c);
+  };
+
+  if (roiName) add(roiName);
+
+  for (const line of lines.slice(0, 8)) {
+    const lettersOnly = line.replace(/[0-9©®@]/g, " ");
+    add(lettersOnly); // ligne entière (noms multi-mots)
+    for (const word of lettersOnly.split(/\s+/)) add(word); // mots isolés
+  }
+
+  return Array.from(out);
+};
+
+const HINTS_LIMIT = 10;
+
+export const buildSearchHints = (
+  nameCandidates: string[],
+  setCode?: string,
+): string[] => {
   const hints = new Set<string>();
 
-  if (fields.cardName && fields.setCode) {
-    hints.add(`${fields.cardName} ${fields.setCode}`);
+  // les plus spécifiques d'abord (longues phrases avant mots isolés)
+  for (const cand of [...nameCandidates].sort((a, b) => b.length - a.length)) {
+    hints.add(cand);
+    for (const word of cand.split(/[\s-]+/)) {
+      if (word.length >= 4) hints.add(word);
+    }
   }
-  if (fields.cardName && fields.setNumber) {
-    hints.add(`${fields.cardName} ${fields.setNumber}`);
-  }
-  if (fields.cardName) hints.add(fields.cardName);
-  if (fields.setCode) hints.add(fields.setCode);
-  if (fields.setNumber) hints.add(fields.setNumber);
-  if (fields.setName) hints.add(fields.setName);
+  if (setCode) hints.add(setCode);
 
-  return Array.from(hints).filter(Boolean);
+  return Array.from(hints).filter(Boolean).slice(0, HINTS_LIMIT);
 };
 
 export interface ParsedOcr {
   lines: string[];
   fields: ScanParsedFields;
-  searchHints: string[];
 }
 
 export const parseOcrText = (rawText: string): ParsedOcr => {
@@ -101,11 +134,6 @@ export const parseOcrText = (rawText: string): ParsedOcr => {
 
   const cardName = pickCardName(lines);
   const metadata = parseSetMetadata(rawText);
-  const fields: ScanParsedFields = { cardName, ...metadata };
 
-  return {
-    lines,
-    fields,
-    searchHints: buildSearchHints(fields),
-  };
+  return { lines, fields: { cardName, ...metadata } };
 };

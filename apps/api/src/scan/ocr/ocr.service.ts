@@ -10,10 +10,12 @@ export interface OcrResult {
 }
 
 // params Tesseract par zone : carte entière, ligne du nom, numéro (chiffres + /)
+// SINGLE_BLOCK lit mieux une carte chargée que AUTO ; SPARSE_TEXT retrouve le
+// numéro au milieu du bruit de la bande basse.
 const PROFILES: Record<OcrProfile, { psm: PSM; whitelist: string }> = {
-  full: { psm: PSM.AUTO, whitelist: "" },
+  full: { psm: PSM.SINGLE_BLOCK, whitelist: "" },
   name: { psm: PSM.SINGLE_LINE, whitelist: "" },
-  number: { psm: PSM.SINGLE_LINE, whitelist: "0123456789/ " },
+  number: { psm: PSM.SPARSE_TEXT, whitelist: "0123456789/ " },
 };
 
 const VISION_URL = "https://vision.googleapis.com/v1/images:annotate";

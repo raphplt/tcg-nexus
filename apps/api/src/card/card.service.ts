@@ -30,6 +30,44 @@ export class CardService {
     return card;
   }
 
+  // récupération par numéro de carte (localId), robuste au bruit OCR sur le nom.
+  // si le dénominateur imprimé est connu, on filtre par cardCountOfficial
+  // (= partie droite du "131/182"), ce qui cible directement la bonne série.
+  async findByLocalId(
+    localId: string,
+    total?: string,
+    game?: CardGame,
+  ): Promise<Card[]> {
+    const n = localId.trim();
+    if (!n) return [];
+
+    // variantes avec/sans zéros de tête (ex. "086" <-> "86")
+    const numeric = Number(n);
+    const variants = Array.from(
+      new Set([n, String(numeric), n.padStart(3, "0")]),
+    ).filter((v) => v && v !== "NaN");
+
+    const qb = this.cardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.localId IN (:...variants)", { variants });
+
+    const totalNum = Number(total);
+    if (total && !Number.isNaN(totalNum)) {
+      qb.andWhere(
+        "(set.cardCount.official = :total OR set.cardCount.total = :total)",
+        { total: totalNum },
+      );
+    }
+
+    if (game) {
+      qb.andWhere("card.game = :game", { game });
+    }
+
+    return qb.take(80).getMany();
+  }
+
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
     if (!search) return [];
     const qb = this.cardRepository

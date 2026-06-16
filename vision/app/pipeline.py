@@ -10,14 +10,18 @@ CARD_W = 600
 CARD_H = 838
 
 # En dessous de ce ratio d'aire, on considère que ce n'est pas la carte.
-MIN_CARD_AREA_RATIO = 0.20
+MIN_CARD_AREA_RATIO = 0.15
 
 # Zones d'intérêt en fractions (x, y, largeur, hauteur).
 ROI_LAYOUT = {
-    "name": (0.06, 0.045, 0.70, 0.075),
+    "name": (0.14, 0.045, 0.62, 0.075),
     "hp": (0.70, 0.040, 0.26, 0.060),
-    "number": (0.05, 0.915, 0.42, 0.060),
+    "number": (0.05, 0.915, 0.45, 0.060),
+    "number_right": (0.52, 0.945, 0.45, 0.050),
 }
+
+# hauteur cible des crops ROI : agrandis pour que l'OCR lise le petit texte
+ROI_TARGET_H = 160
 
 
 def _decode(image_b64: str) -> np.ndarray:
@@ -48,12 +52,17 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
     return rect
 
 
-def _find_card_quad(img: np.ndarray):
+def _find_card_box(img: np.ndarray):
+    """Rectangle (éventuellement tourné) de la plus grande forme = la carte."""
     h, w = img.shape[:2]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
-    edges = cv2.Canny(gray, 50, 150)
-    edges = cv2.dilate(edges, np.ones((3, 3), np.uint8), iterations=1)
+
+    # bords + fermeture morpho pour relier les contours de la carte
+    edges = cv2.Canny(gray, 30, 120)
+    kernel = np.ones((5, 5), np.uint8)
+    edges = cv2.dilate(edges, kernel, iterations=2)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
     contours, _ = cv2.findContours(
         edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -61,26 +70,37 @@ def _find_card_quad(img: np.ndarray):
     if not contours:
         return None
 
-    img_area = float(w * h)
-    # on ne garde que les plus gros contours, et le premier qui forme un quadrilatère
-    for contour in sorted(contours, key=cv2.contourArea, reverse=True)[:5]:
-        if cv2.contourArea(contour) < MIN_CARD_AREA_RATIO * img_area:
-            continue
-        peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
-        if len(approx) == 4:
-            return approx.reshape(4, 2).astype("float32")
-    return None
+    largest = max(contours, key=cv2.contourArea)
+    if cv2.contourArea(largest) < MIN_CARD_AREA_RATIO * float(w * h):
+        return None
+
+    # minAreaRect tolère les coins arrondis (contrairement à approxPolyDP)
+    box = cv2.boxPoints(cv2.minAreaRect(largest))
+    return box.astype("float32")
 
 
-def _warp(img: np.ndarray, quad: np.ndarray) -> np.ndarray:
-    rect = _order_points(quad)
+def _warp_to_portrait(img: np.ndarray, box: np.ndarray) -> np.ndarray:
+    """Redresse la carte et la ramène en portrait (carte couchée -> tournée)."""
+    rect = _order_points(box)
+    tl, tr, br, bl = rect
+
+    width = max(np.linalg.norm(br - bl), np.linalg.norm(tr - tl))
+    height = max(np.linalg.norm(tr - br), np.linalg.norm(tl - bl))
+    max_w, max_h = max(int(width), 1), max(int(height), 1)
+
     dst = np.array(
-        [[0, 0], [CARD_W - 1, 0], [CARD_W - 1, CARD_H - 1], [0, CARD_H - 1]],
+        [[0, 0], [max_w - 1, 0], [max_w - 1, max_h - 1], [0, max_h - 1]],
         dtype="float32",
     )
-    matrix = cv2.getPerspectiveTransform(rect, dst)
-    return cv2.warpPerspective(img, matrix, (CARD_W, CARD_H))
+    warped = cv2.warpPerspective(
+        img, cv2.getPerspectiveTransform(rect, dst), (max_w, max_h)
+    )
+
+    # carte détectée couchée -> on la remet debout
+    if max_w > max_h:
+        warped = cv2.rotate(warped, cv2.ROTATE_90_CLOCKWISE)
+
+    return cv2.resize(warped, (CARD_W, CARD_H))
 
 
 def _normalize(card_bgr: np.ndarray) -> np.ndarray:
@@ -100,6 +120,11 @@ def _extract_rois(norm: np.ndarray) -> list:
         crop = norm[y : y + hh, x : x + ww]
         if crop.size == 0:
             continue
+        scale = ROI_TARGET_H / crop.shape[0]
+        if scale > 1:
+            crop = cv2.resize(
+                crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC
+            )
         rois.append(
             {
                 "key": key,
@@ -112,11 +137,20 @@ def _extract_rois(norm: np.ndarray) -> list:
 
 def preprocess(image_b64: str) -> dict:
     img = _decode(image_b64)
-    quad = _find_card_quad(img)
-    detected = quad is not None
+    box = _find_card_box(img)
+    detected = box is not None
 
-    # pas de carte détectée : on travaille sur l'image entière redimensionnée
-    card = _warp(img, quad) if detected else cv2.resize(img, (CARD_W, CARD_H))
+    if detected:
+        card = _warp_to_portrait(img, box)
+    else:
+        # pas de carte isolée : on redresse au moins en portrait avant de réduire
+        upright = (
+            cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+            if img.shape[1] > img.shape[0]
+            else img
+        )
+        card = cv2.resize(upright, (CARD_W, CARD_H))
+
     norm = _normalize(card)
 
     return {

@@ -6,12 +6,10 @@ import type {
 import type { Card } from "../../card/entities/card.entity";
 import { jaroWinkler } from "./similarity";
 
-// poids des signaux dans le score 0..1
 const NAME_W = 0.55;
 const NUMBER_W = 0.3;
 const SET_W = 0.15;
 
-// au-delà, correspondance assez sûre pour court-circuiter la recherche
 export const STRONG_MATCH_SCORE = 0.85;
 
 const normalize = (value?: string): string =>
@@ -21,20 +19,49 @@ const normalize = (value?: string): string =>
     .toLowerCase()
     .trim();
 
-// score 0..1 : nom fuzzy + numéro exact (bonus dénominateur) + set fuzzy
-export const scoreCard = (card: Card, fields: ScanParsedFields): number => {
-  const name = fields.cardName
-    ? jaroWinkler(normalize(fields.cardName), normalize(card.name))
+const sameNumber = (a?: string, b?: string): boolean => {
+  const na = normalize(a);
+  const nb = normalize(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  const ia = Number(na);
+  const ib = Number(nb);
+  return !Number.isNaN(ia) && ia === ib;
+};
+
+export const scoreCard = (
+  card: Card,
+  fields: ScanParsedFields,
+  nameCandidates?: string[],
+): number => {
+  const candidates = nameCandidates?.length
+    ? nameCandidates
+    : fields.cardName
+      ? [fields.cardName]
+      : [];
+  const cardNameNorm = normalize(card.name);
+  const name = candidates.length
+    ? Math.max(
+        ...candidates.map((c) => jaroWinkler(normalize(c), cardNameNorm)),
+      )
     : 0;
 
-  const numberExact =
-    Boolean(fields.setNumber) &&
-    normalize(card.localId) === normalize(fields.setNumber);
+  const numberExact = sameNumber(card.localId, fields.setNumber);
+  // le dénominateur imprimé (ex. /182) = cardCountOfficial, pas le total réel
+  const totalKnown = Boolean(fields.setTotal);
+  const cardCount = card.set?.cardCount;
   const totalExact =
-    numberExact &&
-    Boolean(fields.setTotal) &&
-    String(card.set?.cardCount?.total ?? "") === fields.setTotal;
-  const numberSignal = numberExact ? (totalExact ? 1 : 0.85) : 0;
+    totalKnown &&
+    (String(cardCount?.official ?? "") === fields.setTotal ||
+      String(cardCount?.total ?? "") === fields.setTotal);
+
+  let numberSignal = 0;
+  if (numberExact) {
+    if (totalExact)
+      numberSignal = 1; // bon numéro ET bonne série
+    else if (!totalKnown) numberSignal = 0.5; // numéro seul : simple indice
+    // total connu mais série différente -> coïncidence, on ne crédite pas
+  }
 
   const setSignal =
     fields.setName && card.set?.name

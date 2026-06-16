@@ -6,18 +6,20 @@ import type {
   ScanRoi,
 } from "@repo/scan-contract";
 import { CardService } from "../card/card.service";
+import type { Card } from "../card/entities/card.entity";
 import { CardGame } from "../common/enums/cardGame";
+import { ScanLogger } from "./logging/scan-logger";
 import {
   computeConfidence,
   STRONG_MATCH_SCORE,
   scoreCard,
   toCandidate,
 } from "./matching/scan-matcher";
-import { ScanLogger } from "./logging/scan-logger";
 import { type OcrProfile, OcrService } from "./ocr/ocr.service";
 import {
   buildSearchHints,
   cleanName,
+  extractNameCandidates,
   parseNumber,
   parseOcrText,
 } from "./parsing/scan-parser";
@@ -28,7 +30,7 @@ const MAX_CANDIDATES = 10;
 // en dessous, le candidat est trop faible pour être proposé
 const MIN_CANDIDATE_SCORE = 0.4;
 
-const TEXT_ROI_KEYS = new Set(["name", "number"]);
+const TEXT_ROI_KEYS = new Set(["name", "number", "number_right"]);
 
 @Injectable()
 export class ScanService {
@@ -54,10 +56,19 @@ export class ScanService {
     // texte plein en repli, puis on privilégie ce qui vient des ROI
     const fallback = parseOcrText(text);
     const fields = this.buildFields(rois, fallback.fields);
-    const searchHints = buildSearchHints(fields);
+    const nameCandidates = extractNameCandidates(
+      this.roiText(rois, "name"),
+      fallback.lines,
+    );
+    const searchHints = buildSearchHints(nameCandidates, fields.setCode);
 
     const t2 = Date.now();
-    const candidates = await this.matchCandidates(fields, searchHints, game);
+    const candidates = await this.matchCandidates(
+      fields,
+      nameCandidates,
+      searchHints,
+      game,
+    );
     const bestCard = candidates[0] ?? null;
     const { confidence, confidenceLevel } = computeConfidence(candidates);
 
@@ -95,7 +106,12 @@ export class ScanService {
     fallback: ScanParsedFields,
   ): ScanParsedFields {
     const nameText = this.roiText(rois, "name");
-    const roiNumber = parseNumber(this.roiText(rois, "number"));
+    // numéro bas-gauche (récentes) sinon bas-droite (anciennes)
+    const numberText =
+      [this.roiText(rois, "number"), this.roiText(rois, "number_right")].find(
+        (t) => parseNumber(t).setNumber,
+      ) ?? "";
+    const roiNumber = parseNumber(numberText);
 
     return {
       cardName: (nameText && cleanName(nameText)) || fallback.cardName,
@@ -112,7 +128,9 @@ export class ScanService {
     for (const roi of visionRois) {
       let text = "";
       if (TEXT_ROI_KEYS.has(roi.key)) {
-        const profile: OcrProfile = roi.key === "number" ? "number" : "name";
+        const profile: OcrProfile = roi.key.startsWith("number")
+          ? "number"
+          : "name";
         const result = await this.ocrService.recognize(roi.image, profile);
         text = result.text.trim();
       }
@@ -128,25 +146,39 @@ export class ScanService {
 
   private async matchCandidates(
     fields: ScanParsedFields,
+    nameCandidates: string[],
     searchHints: string[],
     game?: CardGame,
   ): Promise<ScanCardCandidate[]> {
     const scored = new Map<string, ScanCardCandidate>();
 
-    for (const term of searchHints) {
-      const results = await this.cardService.findBySearch(term, game);
-
-      for (const card of results) {
-        const score = scoreCard(card, fields);
+    const consider = (cards: Card[]) => {
+      for (const card of cards) {
+        const score = scoreCard(card, fields, nameCandidates);
         if (score >= MIN_CANDIDATE_SCORE) {
           scored.set(card.id, toCandidate(card, score));
         }
       }
+    };
+    const hasStrongMatch = () =>
+      Array.from(scored.values()).some((c) => c.score >= STRONG_MATCH_SCORE);
 
-      if (
-        results.some((card) => scoreCard(card, fields) >= STRONG_MATCH_SCORE)
-      ) {
-        break;
+    // 1) par numéro de carte : indépendant du nom (robuste au bruit OCR)
+    if (fields.setNumber) {
+      consider(
+        await this.cardService.findByLocalId(
+          fields.setNumber,
+          fields.setTotal,
+          game,
+        ),
+      );
+    }
+
+    // 2) par nom / hints, sauf si le numéro a déjà donné une correspondance sûre
+    if (!hasStrongMatch()) {
+      for (const term of searchHints) {
+        consider(await this.cardService.findBySearch(term, game));
+        if (hasStrongMatch()) break;
       }
     }
 
