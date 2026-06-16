@@ -1,11 +1,12 @@
-import { api } from "./api";
 import type {
   CardSearchResolution,
+  CardSearchResult,
   CardSearchResult,
   OcrParsedResult,
   PokemonSerieType,
   PokemonSetType,
 } from "@/types";
+import { api } from "./api";
 
 const searchCache = new Map<string, CardSearchResult[]>();
 
@@ -30,70 +31,6 @@ const dedupeCards = (cards: CardSearchResult[]): CardSearchResult[] => {
   }
 
   return next;
-};
-
-const scoreCard = (card: CardSearchResult, ocr: OcrParsedResult): number => {
-  let score = 0;
-
-  const cardName = normalize(card.name);
-  const cardLocalId = normalize(card.localId);
-  const cardSetName = normalize(card.set?.name);
-
-  const targetName = normalize(ocr.cardName);
-  const targetSetName = normalize(ocr.setName);
-  const targetSetNumber = normalize(ocr.setNumber);
-
-  if (targetName && cardName === targetName) {
-    score += 70;
-  } else if (targetName && cardName.includes(targetName)) {
-    score += 45;
-  } else if (targetName && targetName.includes(cardName)) {
-    score += 35;
-  }
-
-  if (targetSetNumber && cardLocalId && cardLocalId === targetSetNumber) {
-    score += 45;
-  }
-
-  if (targetSetName && cardSetName && cardSetName.includes(targetSetName)) {
-    score += 20;
-  }
-
-  if (!targetName && cardName) {
-    score += 5;
-  }
-
-  return score;
-};
-
-const buildHints = (ocr: OcrParsedResult): string[] => {
-  const hints: string[] = [];
-
-  if (ocr.cardName && ocr.setCode) {
-    hints.push(`${ocr.cardName} ${ocr.setCode}`);
-  }
-
-  if (ocr.cardName && ocr.setNumber) {
-    hints.push(`${ocr.cardName} ${ocr.setNumber}`);
-  }
-
-  if (ocr.cardName) {
-    hints.push(ocr.cardName);
-  }
-
-  if (ocr.setCode) {
-    hints.push(ocr.setCode);
-  }
-
-  if (ocr.setNumber) {
-    hints.push(ocr.setNumber);
-  }
-
-  if (ocr.setName) {
-    hints.push(ocr.setName);
-  }
-
-  return Array.from(new Set([...hints, ...ocr.searchHints])).filter(Boolean);
 };
 
 export const cardService = {
@@ -170,15 +107,5 @@ export const cardService = {
       candidates: ranked,
       searchedTerms,
     };
-  },
-
-  async getAllSets(): Promise<PokemonSetType[]> {
-    const response = await api.get<PokemonSetType[]>("/pokemon-set");
-    return response.data || [];
-  },
-
-  async getAllSeries(): Promise<PokemonSerieType[]> {
-    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
-    return response.data || [];
   },
 };

@@ -20,14 +20,27 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { cardService } from "@/services/card.service";
 import { collectionService } from "@/services/collection.service";
 import { ocrService } from "@/services/ocr.service";
+import { scanService } from "@/services/scan.service";
 import { toast } from "@/store/useToastStore";
 import type {
   CardSearchResult,
-  OcrParsedResult,
+  ScanCardCandidate,
   ScanHistoryItem,
+  ScanParsedFields,
   UserCollection,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
+
+//TODO : à refactoriser dans plusieurs fichiers
+
+const candidateToCard = (candidate: ScanCardCandidate): CardSearchResult => ({
+  id: candidate.id,
+  name: candidate.name,
+  image: candidate.image,
+  localId: candidate.localId,
+  rarity: candidate.rarity,
+  set: candidate.setName ? { name: candidate.setName } : undefined,
+});
 
 type ScanMode = "camera" | "review";
 
@@ -63,7 +76,7 @@ export default function ScanScreen() {
 
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [optimizedUri, setOptimizedUri] = useState<string | null>(null);
-  const [ocrResult, setOcrResult] = useState<OcrParsedResult | null>(null);
+  const [parsed, setParsed] = useState<ScanParsedFields | null>(null);
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
     null,
   );
@@ -134,7 +147,7 @@ export default function ScanScreen() {
     setMode("camera");
     setCapturedUri(null);
     setOptimizedUri(null);
-    setOcrResult(null);
+    setParsed(null);
     setSelectedCard(null);
     setCandidateCards([]);
     setManualQuery("");
@@ -166,20 +179,21 @@ export default function ScanScreen() {
 
       setCapturedUri(picture.uri);
 
-      const optimized = await ocrService.optimizeImage(picture.uri);
-      setOptimizedUri(optimized.optimizedUri);
+      const optimizedUri = await ocrService.optimizeImage(picture.uri);
+      setOptimizedUri(optimizedUri);
 
-      const extracted = await ocrService.readCardText(optimized.base64);
-      setOcrResult(extracted);
+      const result = await scanService.recognize(optimizedUri);
+      setParsed(result.parsed);
 
-      const resolution = await cardService.resolveCardFromOcr(extracted);
-      setCandidateCards(resolution.candidates);
-      setSelectedCard(resolution.bestCard);
+      const candidates = result.candidates.map(candidateToCard);
+      setCandidateCards(candidates);
+      setSelectedCard(
+        result.bestCard ? candidateToCard(result.bestCard) : null,
+      );
 
-      if (resolution.bestCard) {
+      if (result.bestCard) {
         pushHistory({
-          message:
-            resolution.bestCard.name || "Carte identifiee automatiquement",
+          message: result.bestCard.name || "Carte identifiee automatiquement",
           status: "found",
           title: "Carte reconnue",
         });
@@ -470,10 +484,10 @@ export default function ScanScreen() {
             </View>
           </View>
 
-          {ocrResult?.cardName ? (
+          {parsed?.cardName ? (
             <Text style={styles.ocrMeta}>
-              Carte lue : {ocrResult.cardName}
-              {ocrResult?.setName ? ` • ${ocrResult.setName}` : ""}
+              Carte lue : {parsed.cardName}
+              {parsed?.setName ? ` • ${parsed.setName}` : ""}
             </Text>
           ) : null}
         </View>
