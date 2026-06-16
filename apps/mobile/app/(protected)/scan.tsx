@@ -25,6 +25,7 @@ import { toast } from "@/store/useToastStore";
 import type {
   CardSearchResult,
   ScanCardCandidate,
+  ScanConfidenceLevel,
   ScanHistoryItem,
   ScanParsedFields,
   UserCollection,
@@ -41,6 +42,36 @@ const candidateToCard = (candidate: ScanCardCandidate): CardSearchResult => ({
   rarity: candidate.rarity,
   set: candidate.setName ? { name: candidate.setName } : undefined,
 });
+
+// affichage selon le niveau de confiance renvoyé par le backend
+const CONFIDENCE_META: Record<
+  ScanConfidenceLevel,
+  {
+    color: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    hint: string;
+  }
+> = {
+  high: {
+    color: "#3a9742",
+    icon: "checkmark-circle",
+    label: "Confiance élevée",
+    hint: "Carte reconnue, prête à être ajoutée.",
+  },
+  medium: {
+    color: "#e49e22",
+    icon: "help-circle",
+    label: "À confirmer",
+    hint: "Vérifie la carte parmi les candidats proposés.",
+  },
+  low: {
+    color: "#da2b29",
+    icon: "alert-circle",
+    label: "Reconnaissance incertaine",
+    hint: "Aucune correspondance fiable, fais une recherche manuelle.",
+  },
+};
 
 type ScanMode = "camera" | "review";
 
@@ -77,6 +108,9 @@ export default function ScanScreen() {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [optimizedUri, setOptimizedUri] = useState<string | null>(null);
   const [parsed, setParsed] = useState<ScanParsedFields | null>(null);
+  const [confidence, setConfidence] = useState(0);
+  const [confidenceLevel, setConfidenceLevel] =
+    useState<ScanConfidenceLevel | null>(null);
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
     null,
   );
@@ -148,6 +182,8 @@ export default function ScanScreen() {
     setCapturedUri(null);
     setOptimizedUri(null);
     setParsed(null);
+    setConfidence(0);
+    setConfidenceLevel(null);
     setSelectedCard(null);
     setCandidateCards([]);
     setManualQuery("");
@@ -184,12 +220,18 @@ export default function ScanScreen() {
 
       const result = await scanService.recognize(optimizedUri);
       setParsed(result.parsed);
+      setConfidence(result.confidence);
+      setConfidenceLevel(result.confidenceLevel);
 
-      const candidates = result.candidates.map(candidateToCard);
-      setCandidateCards(candidates);
-      setSelectedCard(
-        result.bestCard ? candidateToCard(result.bestCard) : null,
-      );
+      setCandidateCards(result.candidates.map(candidateToCard));
+      const best = result.bestCard ? candidateToCard(result.bestCard) : null;
+      setSelectedCard(best);
+
+      // confiance haute en rafale : on ajoute direct et on repart sur la caméra
+      if (result.confidenceLevel === "high" && best && burstMode) {
+        await addCardToCollection(best);
+        return;
+      }
 
       if (result.bestCard) {
         pushHistory({
@@ -271,8 +313,9 @@ export default function ScanScreen() {
     return created.id;
   };
 
-  const addCardToCollection = async () => {
-    if (!selectedCard || isSaving) {
+  const addCardToCollection = async (card?: CardSearchResult) => {
+    const target = card ?? selectedCard;
+    if (!target || isSaving) {
       setInlineError("Selectionne une carte avant l'ajout.");
       return;
     }
@@ -284,14 +327,14 @@ export default function ScanScreen() {
       const collectionId = await ensureTargetCollection();
       const item = await collectionService.addCardToCollection(
         collectionId,
-        selectedCard.id,
+        target.id,
       );
 
       const quantity = Number(item.quantity || 1);
       const successMessage =
         quantity > 1
-          ? `${selectedCard.name || "Carte"} deja presente, quantite incrementee (${quantity}).`
-          : `${selectedCard.name || "Carte"} ajoutee a ${selectedCollection?.name || "la collection"}.`;
+          ? `${target.name || "Carte"} deja presente, quantite incrementee (${quantity}).`
+          : `${target.name || "Carte"} ajoutee a ${selectedCollection?.name || "la collection"}.`;
 
       toast.showSuccess(successMessage);
       pushHistory({
@@ -315,6 +358,29 @@ export default function ScanScreen() {
       setIsSaving(false);
     }
   };
+
+  const renderCardRow = (card: CardSearchResult) => (
+    <Pressable
+      key={card.id}
+      onPress={() => {
+        setSelectedCard(card);
+        setInlineError(null);
+      }}
+      style={({ pressed }) => [
+        styles.resultRow,
+        selectedCard?.id === card.id && styles.resultRowSelected,
+        pressed && styles.resultRowPressed,
+      ]}
+    >
+      <Text numberOfLines={1} style={styles.resultTitle}>
+        {card.name || "Carte sans nom"}
+      </Text>
+      <Text style={styles.resultMeta}>
+        {card.localId ? `#${card.localId}` : "-"}
+        {card.set?.name ? ` • ${card.set.name}` : ""}
+      </Text>
+    </Pressable>
+  );
 
   if (!permission) {
     return (
@@ -450,6 +516,35 @@ export default function ScanScreen() {
           </View>
         </View>
 
+        {confidenceLevel ? (
+          <View
+            style={[
+              styles.confidenceBanner,
+              { borderColor: CONFIDENCE_META[confidenceLevel].color },
+            ]}
+          >
+            <Ionicons
+              color={CONFIDENCE_META[confidenceLevel].color}
+              name={CONFIDENCE_META[confidenceLevel].icon}
+              size={22}
+            />
+            <View style={styles.confidenceTextWrap}>
+              <Text
+                style={[
+                  styles.confidenceLabel,
+                  { color: CONFIDENCE_META[confidenceLevel].color },
+                ]}
+              >
+                {CONFIDENCE_META[confidenceLevel].label} ·{" "}
+                {Math.round(confidence * 100)}%
+              </Text>
+              <Text style={styles.confidenceHint}>
+                {CONFIDENCE_META[confidenceLevel].hint}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.compareCard}>
           <Text style={styles.sectionTitle}>Vérification</Text>
           <View style={styles.compareRow}>
@@ -492,6 +587,15 @@ export default function ScanScreen() {
           ) : null}
         </View>
 
+        {candidateCards.length > 0 ? (
+          <View style={styles.blockCard}>
+            <Text style={styles.sectionTitle}>Cartes reconnues</Text>
+            <View style={styles.resultList}>
+              {candidateCards.slice(0, 6).map(renderCardRow)}
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.blockCard}>
           <Text style={styles.sectionTitle}>Rechercher une autre carte</Text>
           <View style={styles.searchRow}>
@@ -523,28 +627,7 @@ export default function ScanScreen() {
 
           {manualResults.length > 0 ? (
             <View style={styles.resultList}>
-              {manualResults.slice(0, 6).map((card) => (
-                <Pressable
-                  key={card.id}
-                  onPress={() => {
-                    setSelectedCard(card);
-                    setInlineError(null);
-                  }}
-                  style={({ pressed }) => [
-                    styles.resultRow,
-                    selectedCard?.id === card.id && styles.resultRowSelected,
-                    pressed && styles.resultRowPressed,
-                  ]}
-                >
-                  <Text numberOfLines={1} style={styles.resultTitle}>
-                    {card.name || "Carte sans nom"}
-                  </Text>
-                  <Text style={styles.resultMeta}>
-                    {card.localId ? `#${card.localId}` : "-"}
-                    {card.set?.name ? ` • ${card.set.name}` : ""}
-                  </Text>
-                </Pressable>
-              ))}
+              {manualResults.slice(0, 6).map(renderCardRow)}
             </View>
           ) : null}
         </View>
@@ -633,6 +716,28 @@ export default function ScanScreen() {
 }
 
 const styles = StyleSheet.create({
+  confidenceBanner: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    borderWidth: 1.5,
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+    padding: 14,
+  },
+  confidenceTextWrap: {
+    flex: 1,
+    gap: 2,
+  },
+  confidenceLabel: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  confidenceHint: {
+    color: "#555555",
+    fontSize: 12,
+  },
   addButton: {
     alignItems: "center",
     backgroundColor: "#0b0b0b",
