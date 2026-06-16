@@ -22,6 +22,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { colors, radius } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthProvider";
 import { cardService } from "@/services/card.service";
 import { collectionService } from "@/services/collection.service";
@@ -61,19 +62,19 @@ const CONFIDENCE_META: Record<
   }
 > = {
   high: {
-    color: "#3a9742",
+    color: colors.success,
     icon: "checkmark-circle",
     label: "Confiance élevée",
     hint: "Carte reconnue, prête à être ajoutée.",
   },
   medium: {
-    color: "#e49e22",
+    color: colors.warning,
     icon: "help-circle",
     label: "À confirmer",
     hint: "Vérifie la carte parmi les candidats proposés.",
   },
   low: {
-    color: "#da2b29",
+    color: colors.destructive,
     icon: "alert-circle",
     label: "Reconnaissance incertaine",
     hint: "Aucune correspondance fiable, fais une recherche manuelle.",
@@ -128,7 +129,7 @@ function ProcessingOverlay({ uri }: { uri: string | null }) {
         style={[styles.scanLine, { transform: [{ translateY }] }]}
       />
       <View style={styles.processingInfo}>
-        <ActivityIndicator color="#ffffff" size="large" />
+        <ActivityIndicator color={colors.primaryForeground} size="large" />
         <Text style={styles.processingTitle}>Analyse de la carte…</Text>
       </View>
     </View>
@@ -142,13 +143,13 @@ const HISTORY_LIMIT = 8;
 const getHistoryColor = (status: ScanHistoryItem["status"]) => {
   switch (status) {
     case "added":
-      return "#3a9742";
+      return colors.success;
     case "found":
-      return "#09597d";
+      return colors.secondary;
     case "not-found":
-      return "#e49e22";
+      return colors.warning;
     default:
-      return "#da2b29";
+      return colors.destructive;
   }
 };
 
@@ -422,9 +423,8 @@ export default function ScanScreen() {
         title: "Ajout collection",
       });
 
-      if (burstMode) {
-        resetForNextCapture();
-      }
+      // carte validée : on enchaîne directement sur la capture suivante
+      resetForNextCapture();
     } catch (error) {
       const message = getApiErrorMessage(error);
       setInlineError(message);
@@ -469,7 +469,7 @@ export default function ScanScreen() {
           </Text>
         </View>
         {isSelected ? (
-          <Ionicons color="#09597d" name="checkmark-circle" size={22} />
+          <Ionicons color={colors.secondary} name="checkmark-circle" size={22} />
         ) : null}
       </Pressable>
     );
@@ -483,7 +483,7 @@ export default function ScanScreen() {
   if (!permission) {
     return (
       <View style={styles.centeredScreen}>
-        <ActivityIndicator color="#0b0b0b" size="large" />
+        <ActivityIndicator color={colors.foreground} size="large" />
       </View>
     );
   }
@@ -524,14 +524,14 @@ export default function ScanScreen() {
 
         <View style={[styles.cameraTopBar, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
-            <Ionicons color="#ffffff" name="arrow-back" size={22} />
+            <Ionicons color={colors.primaryForeground} name="arrow-back" size={22} />
           </Pressable>
 
           <View style={styles.burstBadge}>
             <Text style={styles.burstText}>Rafale</Text>
             <Switch
               onValueChange={setBurstMode}
-              trackColor={{ false: "#555555", true: "#b72921" }}
+              trackColor={{ false: colors.mutedForeground, true: colors.primary }}
               value={burstMode}
             />
           </View>
@@ -572,7 +572,7 @@ export default function ScanScreen() {
               pressed && styles.captureButtonPressed,
             ]}
           >
-            <Ionicons color="#fcfcfc" name="camera" size={28} />
+            <Ionicons color={colors.primaryForeground} name="camera" size={28} />
           </Pressable>
 
           <Text style={styles.captureHint}>
@@ -614,7 +614,7 @@ export default function ScanScreen() {
         >
           <View style={styles.reviewHeader}>
             <Pressable onPress={resetForNextCapture} style={styles.lightButton}>
-              <Ionicons color="#0b0b0b" name="camera-reverse" size={18} />
+              <Ionicons color={colors.foreground} name="camera-reverse" size={18} />
               <Text style={styles.lightButtonText}>Rescanner</Text>
             </Pressable>
 
@@ -622,7 +622,7 @@ export default function ScanScreen() {
               <Text style={styles.burstInlineText}>Mode rafale</Text>
               <Switch
                 onValueChange={setBurstMode}
-                trackColor={{ false: "#e4e4e4", true: "#b72921" }}
+                trackColor={{ false: colors.border, true: colors.primary }}
                 value={burstMode}
               />
             </View>
@@ -712,7 +712,7 @@ export default function ScanScreen() {
                   Ce n'est pas la bonne carte ?
                 </Text>
                 <Ionicons
-                  color="#555555"
+                  color={colors.mutedForeground}
                   name={showOtherMatches ? "chevron-up" : "chevron-down"}
                   size={18}
                 />
@@ -742,7 +742,7 @@ export default function ScanScreen() {
                 autoCapitalize="none"
                 onChangeText={setManualQuery}
                 placeholder="Nom de carte, set ou numero"
-                placeholderTextColor="#555555"
+                placeholderTextColor={colors.mutedForeground}
                 style={styles.searchInput}
                 value={manualQuery}
               />
@@ -757,9 +757,9 @@ export default function ScanScreen() {
                 ]}
               >
                 {isManualSearching ? (
-                  <ActivityIndicator color="#ffffff" size="small" />
+                  <ActivityIndicator color={colors.secondaryForeground} size="small" />
                 ) : (
-                  <Ionicons color="#ffffff" name="search" size={16} />
+                  <Ionicons color={colors.secondaryForeground} name="search" size={16} />
                 )}
               </Pressable>
             </View>
@@ -774,7 +774,7 @@ export default function ScanScreen() {
           <View style={styles.blockCard}>
             <Text style={styles.sectionTitle}>Ajouter à une collection</Text>
             {isLoadingCollections ? (
-              <ActivityIndicator color="#0b0b0b" />
+              <ActivityIndicator color={colors.foreground} />
             ) : (
               <View style={styles.collectionWrap}>
                 {collections.map((collection) => (
@@ -801,28 +801,6 @@ export default function ScanScreen() {
                 ))}
               </View>
             )}
-
-            <Pressable
-              disabled={isSaving || !selectedCard}
-              onPress={() => {
-                void addCardToCollection();
-              }}
-              style={({ pressed }) => [
-                styles.addButton,
-                (pressed || isSaving || !selectedCard) &&
-                  styles.addButtonPressed,
-              ]}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.addButtonText}>
-                  {selectedCard
-                    ? "Ajouter a la collection"
-                    : "Selectionne une carte"}
-                </Text>
-              )}
-            </Pressable>
           </View>
 
           <View style={styles.blockCard}>
@@ -851,6 +829,37 @@ export default function ScanScreen() {
             <Text style={styles.inlineErrorPanel}>{inlineError}</Text>
           ) : null}
         </ScrollView>
+
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+          <Pressable
+            disabled={isSaving || !selectedCard}
+            onPress={() => {
+              void addCardToCollection();
+            }}
+            style={({ pressed }) => [
+              styles.addButton,
+              (isSaving || !selectedCard) && styles.addButtonDisabled,
+              pressed && !isSaving && selectedCard && styles.addButtonPressed,
+            ]}
+          >
+            {isSaving ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <>
+                <Ionicons
+                  color={colors.primaryForeground}
+                  name={selectedCard ? "add-circle" : "albums-outline"}
+                  size={22}
+                />
+                <Text style={styles.addButtonText} numberOfLines={1}>
+                  {selectedCard
+                    ? `Ajouter à ${selectedCollection?.name ?? "la collection"}`
+                    : "Sélectionne une carte"}
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -859,8 +868,8 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   confidenceBanner: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
     borderWidth: 1.5,
     flexDirection: "row",
     gap: 12,
@@ -876,29 +885,47 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   confidenceHint: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 12,
+  },
+  footer: {
+    backgroundColor: colors.surface,
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   addButton: {
     alignItems: "center",
-    backgroundColor: "#0b0b0b",
-    borderRadius: 16,
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
+    elevation: 6,
+    flexDirection: "row",
+    gap: 10,
     justifyContent: "center",
-    marginTop: 16,
-    minHeight: 52,
-    paddingHorizontal: 14,
+    minHeight: 56,
+    paddingHorizontal: 18,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  addButtonDisabled: {
+    backgroundColor: colors.border,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   addButtonPressed: {
-    opacity: 0.7,
+    opacity: 0.85,
   },
   addButtonText: {
-    color: "#ffffff",
-    fontSize: 15,
+    color: colors.primaryForeground,
+    fontSize: 16,
     fontWeight: "800",
   },
   blockCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e4e4e4",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 20,
     borderWidth: 1,
     marginTop: 12,
@@ -919,12 +946,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   burstInlineText: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 13,
     fontWeight: "700",
   },
   burstText: {
-    color: "#ffffff",
+    color: colors.primaryForeground,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -950,8 +977,8 @@ const styles = StyleSheet.create({
   },
   captureButton: {
     alignItems: "center",
-    backgroundColor: "rgba(11,11,11,0.85)",
-    borderColor: "#fcfcfc",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryForeground,
     borderRadius: 34,
     borderWidth: 2,
     height: 68,
@@ -962,38 +989,38 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   captureHint: {
-    color: "#ffffff",
+    color: colors.primaryForeground,
     fontSize: 13,
     marginTop: 10,
   },
   centeredScreen: {
     alignItems: "center",
-    backgroundColor: "#fcfcfc",
+    backgroundColor: colors.pageBg,
     flex: 1,
     justifyContent: "center",
   },
   collectionChip: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 14,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   collectionChipActive: {
-    backgroundColor: "#0b0b0b",
-    borderColor: "#0b0b0b",
+    backgroundColor: colors.secondary,
+    borderColor: colors.secondary,
   },
   collectionChipPressed: {
     opacity: 0.8,
   },
   collectionChipText: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 13,
     fontWeight: "700",
   },
   collectionChipTextActive: {
-    color: "#ffffff",
+    color: colors.secondaryForeground,
   },
   collectionWrap: {
     flexDirection: "row",
@@ -1001,8 +1028,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compareCard: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e4e4e4",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 20,
     borderWidth: 1,
     padding: 16,
@@ -1012,7 +1039,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compareLabel: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
@@ -1022,7 +1049,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 14,
   },
   historyDot: {
@@ -1041,17 +1068,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   historyListText: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 13,
   },
   historyListTitle: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
   },
   historyOverlay: {
     backgroundColor: "rgba(11,11,11,0.72)",
-    borderRadius: 14,
+    borderRadius: radius.lg,
     left: 16,
     padding: 10,
     position: "absolute",
@@ -1064,7 +1091,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   historyText: {
-    color: "#f3f5f9",
+    color: colors.inputBg,
     flex: 1,
     fontSize: 12,
   },
@@ -1082,16 +1109,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   inlineErrorPanel: {
-    color: "#da2b29",
+    color: colors.destructive,
     fontSize: 13,
     fontWeight: "700",
     marginTop: 12,
   },
   lightButton: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     flexDirection: "row",
     gap: 6,
@@ -1099,31 +1126,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   lightButtonText: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 13,
     fontWeight: "700",
   },
   ocrMeta: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 12,
     marginTop: 8,
   },
   permissionButton: {
     alignItems: "center",
-    backgroundColor: "#0b0b0b",
-    borderRadius: 14,
+    backgroundColor: colors.primary,
+    borderRadius: radius.xl,
     marginTop: 18,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   permissionButtonText: {
-    color: "#ffffff",
+    color: colors.primaryForeground,
     fontSize: 15,
     fontWeight: "700",
   },
   permissionScreen: {
     alignItems: "center",
-    backgroundColor: "#fcfcfc",
+    backgroundColor: colors.pageBg,
     flex: 1,
     justifyContent: "center",
     padding: 24,
@@ -1134,17 +1161,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   permissionSecondaryText: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontWeight: "700",
   },
   permissionText: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
   },
   permissionTitle: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 30,
     fontWeight: "800",
     marginBottom: 8,
@@ -1152,15 +1179,15 @@ const styles = StyleSheet.create({
   },
   placeholderBox: {
     alignItems: "center",
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     height: 160,
     justifyContent: "center",
   },
   placeholderText: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 13,
     textAlign: "center",
   },
@@ -1169,14 +1196,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   resultMeta: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 12,
   },
   resultRow: {
     alignItems: "center",
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     flexDirection: "row",
     gap: 10,
@@ -1187,15 +1214,15 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   resultRowSelected: {
-    backgroundColor: "#ecf3f8",
-    borderColor: "#09597d",
+    backgroundColor: colors.accent,
+    borderColor: colors.secondary,
   },
   resultText: {
     flex: 1,
   },
   rowThumb: {
-    backgroundColor: "#e4e4e4",
-    borderRadius: 6,
+    backgroundColor: colors.border,
+    borderRadius: radius.sm,
     height: 66,
     width: 47,
   },
@@ -1204,7 +1231,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   resultTitle: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1214,7 +1241,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   toggleText: {
-    color: "#555555",
+    color: colors.mutedForeground,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -1232,7 +1259,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reviewScreen: {
-    backgroundColor: "#fcfcfc",
+    backgroundColor: colors.pageBg,
     flex: 1,
   },
   mask: {
@@ -1240,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   frameBorder: {
     borderColor: "rgba(255,255,255,0.45)",
-    borderRadius: 16,
+    borderRadius: radius.xl,
     borderWidth: 1,
     bottom: 0,
     left: 0,
@@ -1249,7 +1276,7 @@ const styles = StyleSheet.create({
     top: 0,
   },
   corner: {
-    borderColor: "#ffffff",
+    borderColor: colors.primaryForeground,
     height: 30,
     position: "absolute",
     width: 30,
@@ -1283,7 +1310,7 @@ const styles = StyleSheet.create({
     right: -1,
   },
   frameHint: {
-    color: "#f3f5f9",
+    color: colors.heroDarkForeground,
     fontSize: 14,
     fontWeight: "600",
     marginTop: 18,
@@ -1291,7 +1318,7 @@ const styles = StyleSheet.create({
   },
   processingScreen: {
     alignItems: "center",
-    backgroundColor: "#0b0b0b",
+    backgroundColor: colors.heroDark,
     flex: 1,
     justifyContent: "center",
   },
@@ -1304,12 +1331,12 @@ const styles = StyleSheet.create({
     top: 0,
   },
   scanLine: {
-    backgroundColor: "#b72921",
+    backgroundColor: colors.primary,
     height: 2,
     left: 0,
     position: "absolute",
     right: 0,
-    shadowColor: "#b72921",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.9,
     shadowRadius: 8,
@@ -1320,20 +1347,20 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   processingTitle: {
-    color: "#ffffff",
+    color: colors.primaryForeground,
     fontSize: 16,
     fontWeight: "700",
   },
   scanPreview: {
-    borderRadius: 12,
+    borderRadius: radius.lg,
     height: 160,
     resizeMode: "cover",
     width: "100%",
   },
   searchButton: {
     alignItems: "center",
-    backgroundColor: "#0b0b0b",
-    borderRadius: 12,
+    backgroundColor: colors.secondary,
+    borderRadius: radius.lg,
     height: 44,
     justifyContent: "center",
     width: 44,
@@ -1342,11 +1369,11 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   searchInput: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    color: "#0b0b0b",
+    color: colors.foreground,
     flex: 1,
     fontSize: 15,
     height: 44,
@@ -1358,7 +1385,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: "#0b0b0b",
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: "800",
     marginBottom: 10,
