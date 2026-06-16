@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -14,6 +15,14 @@ export interface ScanLogInput {
 }
 
 const LOG_ROOT = "scan-logs";
+
+const INDEX_HEADER =
+  "scanId,timestamp,carteLue,bestCard,bestCardId,confiance,niveau,engine,totalMs,nbCandidats,carteDetectee\n";
+
+const csvCell = (value: unknown): string => {
+  const s = value === undefined || value === null ? "" : String(value);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 
 // Journalise chaque scan (image + infos) dans un dossier dédié, pour le debug.
 // Désactivable avec SCAN_LOG=false.
@@ -83,6 +92,8 @@ export class ScanLogger {
         "utf8",
       );
 
+      await this.appendIndex(scanId, meta.timestamp, input);
+
       this.logger.log(`Scan loggé: ${LOG_ROOT}/${scanId}`);
       return scanId;
     } catch (error) {
@@ -90,6 +101,38 @@ export class ScanLogger {
       this.logger.warn(`Log de scan échoué: ${reason}`);
       return null;
     }
+  }
+
+  // ligne récap par scan dans un index.csv commun (vue d'ensemble rapide)
+  private async appendIndex(
+    scanId: string,
+    timestamp: string,
+    input: ScanLogInput,
+  ): Promise<void> {
+    const path = join(process.cwd(), LOG_ROOT, "index.csv");
+    const { response, timingsMs, vision } = input;
+
+    const row =
+      [
+        scanId,
+        timestamp,
+        response.parsed.cardName,
+        response.bestCard?.name,
+        response.bestCard?.id,
+        response.confidence,
+        response.confidenceLevel,
+        response.engine,
+        timingsMs.total,
+        response.candidates.length,
+        vision?.detected ?? false,
+      ]
+        .map(csvCell)
+        .join(",") + "\n";
+
+    if (!existsSync(path)) {
+      await writeFile(path, INDEX_HEADER, "utf8");
+    }
+    await appendFile(path, row, "utf8");
   }
 
   private buildId(): string {

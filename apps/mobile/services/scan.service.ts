@@ -18,10 +18,15 @@ export const scanService = {
       formData.append("game", game);
     }
 
+    // le pipeline (vision + OCR) peut être long, surtout au 1er scan :
+    // on relève le timeout bien au-delà des 10s par défaut de secureApi
     const response = await secureApi.post<ScanRecognizeResponse>(
       "/scan/recognize",
       formData,
-      { headers: { "Content-Type": "multipart/form-data" } },
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 60000,
+      },
     );
 
     return response.data;
