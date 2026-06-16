@@ -15,7 +15,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthProvider";
 import { cardService } from "@/services/card.service";
 import { collectionService } from "@/services/collection.service";
@@ -492,226 +495,231 @@ export default function ScanScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.reviewScreen}
-    >
-      <ScrollView
-        contentContainerStyle={styles.reviewContent}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.reviewScreen}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.reviewContainer}
       >
-        <View style={styles.reviewHeader}>
-          <Pressable onPress={resetForNextCapture} style={styles.lightButton}>
-            <Ionicons color="#0b0b0b" name="camera-reverse" size={18} />
-            <Text style={styles.lightButtonText}>Rescanner</Text>
-          </Pressable>
+        <ScrollView
+          contentContainerStyle={styles.reviewContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.reviewHeader}>
+            <Pressable onPress={resetForNextCapture} style={styles.lightButton}>
+              <Ionicons color="#0b0b0b" name="camera-reverse" size={18} />
+              <Text style={styles.lightButtonText}>Rescanner</Text>
+            </Pressable>
 
-          <View style={styles.burstInlineRow}>
-            <Text style={styles.burstInlineText}>Mode rafale</Text>
-            <Switch
-              onValueChange={setBurstMode}
-              trackColor={{ false: "#e4e4e4", true: "#b72921" }}
-              value={burstMode}
-            />
-          </View>
-        </View>
-
-        {confidenceLevel ? (
-          <View
-            style={[
-              styles.confidenceBanner,
-              { borderColor: CONFIDENCE_META[confidenceLevel].color },
-            ]}
-          >
-            <Ionicons
-              color={CONFIDENCE_META[confidenceLevel].color}
-              name={CONFIDENCE_META[confidenceLevel].icon}
-              size={22}
-            />
-            <View style={styles.confidenceTextWrap}>
-              <Text
-                style={[
-                  styles.confidenceLabel,
-                  { color: CONFIDENCE_META[confidenceLevel].color },
-                ]}
-              >
-                {CONFIDENCE_META[confidenceLevel].label} ·{" "}
-                {Math.round(confidence * 100)}%
-              </Text>
-              <Text style={styles.confidenceHint}>
-                {CONFIDENCE_META[confidenceLevel].hint}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.compareCard}>
-          <Text style={styles.sectionTitle}>Vérification</Text>
-          <View style={styles.compareRow}>
-            <View style={styles.compareColumn}>
-              <Text style={styles.compareLabel}>Ta photo</Text>
-              {optimizedUri || capturedUri ? (
-                <Image
-                  source={{ uri: optimizedUri || capturedUri || undefined }}
-                  style={styles.scanPreview}
-                />
-              ) : (
-                <View style={styles.placeholderBox}>
-                  <Text style={styles.placeholderText}>Image indisponible</Text>
-                </View>
-              )}
-            </View>
-
-            <View style={styles.compareColumn}>
-              <Text style={styles.compareLabel}>Carte trouvée</Text>
-              {selectedCard?.image ? (
-                <Image
-                  source={{ uri: selectedCard.image }}
-                  style={styles.scanPreview}
-                />
-              ) : (
-                <View style={styles.placeholderBox}>
-                  <Text style={styles.placeholderText}>
-                    Aucune carte correspondante
-                  </Text>
-                </View>
-              )}
+            <View style={styles.burstInlineRow}>
+              <Text style={styles.burstInlineText}>Mode rafale</Text>
+              <Switch
+                onValueChange={setBurstMode}
+                trackColor={{ false: "#e4e4e4", true: "#b72921" }}
+                value={burstMode}
+              />
             </View>
           </View>
 
-          {parsed?.cardName ? (
-            <Text style={styles.ocrMeta}>
-              Carte lue : {parsed.cardName}
-              {parsed?.setName ? ` • ${parsed.setName}` : ""}
-            </Text>
-          ) : null}
-        </View>
-
-        {candidateCards.length > 0 ? (
-          <View style={styles.blockCard}>
-            <Text style={styles.sectionTitle}>Cartes reconnues</Text>
-            <View style={styles.resultList}>
-              {candidateCards.slice(0, 6).map(renderCardRow)}
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Rechercher une autre carte</Text>
-          <View style={styles.searchRow}>
-            <TextInput
-              autoCapitalize="none"
-              onChangeText={setManualQuery}
-              placeholder="Nom de carte, set ou numero"
-              placeholderTextColor="#555555"
-              style={styles.searchInput}
-              value={manualQuery}
-            />
-            <Pressable
-              disabled={isManualSearching}
-              onPress={() => {
-                void runManualSearch();
-              }}
-              style={({ pressed }) => [
-                styles.searchButton,
-                (pressed || isManualSearching) && styles.searchButtonPressed,
+          {confidenceLevel ? (
+            <View
+              style={[
+                styles.confidenceBanner,
+                { borderColor: CONFIDENCE_META[confidenceLevel].color },
               ]}
             >
-              {isManualSearching ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+              <Ionicons
+                color={CONFIDENCE_META[confidenceLevel].color}
+                name={CONFIDENCE_META[confidenceLevel].icon}
+                size={22}
+              />
+              <View style={styles.confidenceTextWrap}>
+                <Text
+                  style={[
+                    styles.confidenceLabel,
+                    { color: CONFIDENCE_META[confidenceLevel].color },
+                  ]}
+                >
+                  {CONFIDENCE_META[confidenceLevel].label} ·{" "}
+                  {Math.round(confidence * 100)}%
+                </Text>
+                <Text style={styles.confidenceHint}>
+                  {CONFIDENCE_META[confidenceLevel].hint}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.compareCard}>
+            <Text style={styles.sectionTitle}>Vérification</Text>
+            <View style={styles.compareRow}>
+              <View style={styles.compareColumn}>
+                <Text style={styles.compareLabel}>Ta photo</Text>
+                {optimizedUri || capturedUri ? (
+                  <Image
+                    source={{ uri: optimizedUri || capturedUri || undefined }}
+                    style={styles.scanPreview}
+                  />
+                ) : (
+                  <View style={styles.placeholderBox}>
+                    <Text style={styles.placeholderText}>
+                      Image indisponible
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.compareColumn}>
+                <Text style={styles.compareLabel}>Carte trouvée</Text>
+                {selectedCard?.image ? (
+                  <Image
+                    source={{ uri: selectedCard.image }}
+                    style={styles.scanPreview}
+                  />
+                ) : (
+                  <View style={styles.placeholderBox}>
+                    <Text style={styles.placeholderText}>
+                      Aucune carte correspondante
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            {parsed?.cardName ? (
+              <Text style={styles.ocrMeta}>
+                Carte lue : {parsed.cardName}
+                {parsed?.setName ? ` • ${parsed.setName}` : ""}
+              </Text>
+            ) : null}
+          </View>
+
+          {candidateCards.length > 0 ? (
+            <View style={styles.blockCard}>
+              <Text style={styles.sectionTitle}>Cartes reconnues</Text>
+              <View style={styles.resultList}>
+                {candidateCards.slice(0, 6).map(renderCardRow)}
+              </View>
+            </View>
+          ) : null}
+
+          <View style={styles.blockCard}>
+            <Text style={styles.sectionTitle}>Rechercher une autre carte</Text>
+            <View style={styles.searchRow}>
+              <TextInput
+                autoCapitalize="none"
+                onChangeText={setManualQuery}
+                placeholder="Nom de carte, set ou numero"
+                placeholderTextColor="#555555"
+                style={styles.searchInput}
+                value={manualQuery}
+              />
+              <Pressable
+                disabled={isManualSearching}
+                onPress={() => {
+                  void runManualSearch();
+                }}
+                style={({ pressed }) => [
+                  styles.searchButton,
+                  (pressed || isManualSearching) && styles.searchButtonPressed,
+                ]}
+              >
+                {isManualSearching ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <Ionicons color="#ffffff" name="search" size={16} />
+                )}
+              </Pressable>
+            </View>
+
+            {manualResults.length > 0 ? (
+              <View style={styles.resultList}>
+                {manualResults.slice(0, 6).map(renderCardRow)}
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.blockCard}>
+            <Text style={styles.sectionTitle}>Ajouter à une collection</Text>
+            {isLoadingCollections ? (
+              <ActivityIndicator color="#0b0b0b" />
+            ) : (
+              <View style={styles.collectionWrap}>
+                {collections.map((collection) => (
+                  <Pressable
+                    key={collection.id}
+                    onPress={() => setSelectedCollectionId(collection.id)}
+                    style={({ pressed }) => [
+                      styles.collectionChip,
+                      selectedCollectionId === collection.id &&
+                        styles.collectionChipActive,
+                      pressed && styles.collectionChipPressed,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.collectionChipText,
+                        selectedCollectionId === collection.id &&
+                          styles.collectionChipTextActive,
+                      ]}
+                    >
+                      {collection.name}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+
+            <Pressable
+              disabled={isSaving || !selectedCard}
+              onPress={() => {
+                void addCardToCollection();
+              }}
+              style={({ pressed }) => [
+                styles.addButton,
+                (pressed || isSaving || !selectedCard) &&
+                  styles.addButtonPressed,
+              ]}
+            >
+              {isSaving ? (
+                <ActivityIndicator color="#ffffff" />
               ) : (
-                <Ionicons color="#ffffff" name="search" size={16} />
+                <Text style={styles.addButtonText}>
+                  {selectedCard
+                    ? "Ajouter a la collection"
+                    : "Selectionne une carte"}
+                </Text>
               )}
             </Pressable>
           </View>
 
-          {manualResults.length > 0 ? (
-            <View style={styles.resultList}>
-              {manualResults.slice(0, 6).map(renderCardRow)}
-            </View>
-          ) : null}
-        </View>
-
-        <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Ajouter à une collection</Text>
-          {isLoadingCollections ? (
-            <ActivityIndicator color="#0b0b0b" />
-          ) : (
-            <View style={styles.collectionWrap}>
-              {collections.map((collection) => (
-                <Pressable
-                  key={collection.id}
-                  onPress={() => setSelectedCollectionId(collection.id)}
-                  style={({ pressed }) => [
-                    styles.collectionChip,
-                    selectedCollectionId === collection.id &&
-                      styles.collectionChipActive,
-                    pressed && styles.collectionChipPressed,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.collectionChipText,
-                      selectedCollectionId === collection.id &&
-                        styles.collectionChipTextActive,
-                    ]}
-                  >
-                    {collection.name}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-
-          <Pressable
-            disabled={isSaving || !selectedCard}
-            onPress={() => {
-              void addCardToCollection();
-            }}
-            style={({ pressed }) => [
-              styles.addButton,
-              (pressed || isSaving || !selectedCard) && styles.addButtonPressed,
-            ]}
-          >
-            {isSaving ? (
-              <ActivityIndicator color="#ffffff" />
+          <View style={styles.blockCard}>
+            <Text style={styles.sectionTitle}>Activité récente</Text>
+            {history.length === 0 ? (
+              <Text style={styles.emptyText}>Aucun scan pour le moment.</Text>
             ) : (
-              <Text style={styles.addButtonText}>
-                {selectedCard
-                  ? "Ajouter a la collection"
-                  : "Selectionne une carte"}
-              </Text>
-            )}
-          </Pressable>
-        </View>
-
-        <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Activité récente</Text>
-          {history.length === 0 ? (
-            <Text style={styles.emptyText}>Aucun scan pour le moment.</Text>
-          ) : (
-            history.map((entry) => (
-              <View key={entry.id} style={styles.historyListRow}>
-                <View
-                  style={[
-                    styles.historyDot,
-                    { backgroundColor: getHistoryColor(entry.status) },
-                  ]}
-                />
-                <View style={styles.historyListContent}>
-                  <Text style={styles.historyListTitle}>{entry.title}</Text>
-                  <Text style={styles.historyListText}>{entry.message}</Text>
+              history.map((entry) => (
+                <View key={entry.id} style={styles.historyListRow}>
+                  <View
+                    style={[
+                      styles.historyDot,
+                      { backgroundColor: getHistoryColor(entry.status) },
+                    ]}
+                  />
+                  <View style={styles.historyListContent}>
+                    <Text style={styles.historyListTitle}>{entry.title}</Text>
+                    <Text style={styles.historyListText}>{entry.message}</Text>
+                  </View>
                 </View>
-              </View>
-            ))
-          )}
-        </View>
+              ))
+            )}
+          </View>
 
-        {inlineError ? (
-          <Text style={styles.inlineErrorPanel}>{inlineError}</Text>
-        ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {inlineError ? (
+            <Text style={styles.inlineErrorPanel}>{inlineError}</Text>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -1054,6 +1062,9 @@ const styles = StyleSheet.create({
   reviewContent: {
     padding: 16,
     paddingBottom: 32,
+  },
+  reviewContainer: {
+    flex: 1,
   },
   reviewHeader: {
     alignItems: "center",
