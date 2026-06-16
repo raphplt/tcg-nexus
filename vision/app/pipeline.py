@@ -1,6 +1,7 @@
 # Prétraitement des cartes avant OCR : détection + redressement, normalisation, ROI.
 
 import base64
+import math
 
 import cv2
 import numpy as np
@@ -10,7 +11,7 @@ CARD_W = 600
 CARD_H = 838
 
 # En dessous de ce ratio d'aire, on considère que ce n'est pas la carte.
-MIN_CARD_AREA_RATIO = 0.15
+MIN_CARD_AREA_RATIO = 0.08
 
 # Zones d'intérêt en fractions (x, y, largeur, hauteur).
 ROI_LAYOUT = {
@@ -52,31 +53,66 @@ def _order_points(pts: np.ndarray) -> np.ndarray:
     return rect
 
 
-def _find_card_box(img: np.ndarray):
-    """Rectangle (éventuellement tourné) de la plus grande forme = la carte."""
-    h, w = img.shape[:2]
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+def _card_contours(img: np.ndarray) -> list:
+    """Contours candidats via 2 indices complémentaires : bords + saturation."""
+    candidates = []
 
-    # bords + fermeture morpho pour relier les contours de la carte
+    # 1) bords (Canny) + fermeture morpho — marche sur cartes contrastées
+    gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (5, 5), 0)
     edges = cv2.Canny(gray, 30, 120)
     kernel = np.ones((5, 5), np.uint8)
-    edges = cv2.dilate(edges, kernel, iterations=2)
-    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
-
-    contours, _ = cv2.findContours(
-        edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    edges = cv2.morphologyEx(
+        cv2.dilate(edges, kernel, iterations=2), cv2.MORPH_CLOSE, kernel
     )
-    if not contours:
-        return None
+    candidates += list(
+        cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    )
 
-    largest = max(contours, key=cv2.contourArea)
-    if cv2.contourArea(largest) < MIN_CARD_AREA_RATIO * float(w * h):
+    # 2) saturation — une carte colorée ressort d'un fond neutre (bureau/mur)
+    sat = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 1]
+    _, mask = cv2.threshold(sat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
+    candidates += list(
+        cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    )
+    return candidates
+
+
+def _find_card_box(img: np.ndarray):
+    """Rectangle (tourné) de la carte : on privilégie une forme grande ET centrée
+    (l'utilisateur vise la carte au centre, d'éventuelles voisines sont en bord)."""
+    h, w = img.shape[:2]
+    area = float(h * w)
+    cx, cy = w / 2.0, h / 2.0
+    diag = math.hypot(cx, cy)
+
+    best = None
+    best_score = -1.0
+    for contour in _card_contours(img):
+        a = cv2.contourArea(contour)
+        if a < MIN_CARD_AREA_RATIO * area:
+            continue
+        moments = cv2.moments(contour)
+        if moments["m00"] == 0:
+            continue
+        dist = (
+            math.hypot(
+                moments["m10"] / moments["m00"] - cx,
+                moments["m01"] / moments["m00"] - cy,
+            )
+            / diag
+        )
+        # grand + centré
+        score = a / area - 0.6 * dist
+        if score > best_score:
+            best_score = score
+            best = contour
+
+    if best is None:
         return None
 
     # minAreaRect tolère les coins arrondis (contrairement à approxPolyDP)
-    box = cv2.boxPoints(cv2.minAreaRect(largest))
-    return box.astype("float32")
+    return cv2.boxPoints(cv2.minAreaRect(best)).astype("float32")
 
 
 def _warp_to_portrait(img: np.ndarray, box: np.ndarray) -> np.ndarray:
