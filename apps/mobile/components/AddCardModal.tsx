@@ -25,8 +25,6 @@ interface AddCardModalProps {
   onCardAdded: () => Promise<void>;
 }
 
-
-
 export const AddCardModal: React.FC<AddCardModalProps> = ({
   isVisible,
   onClose,
@@ -166,7 +164,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
           }
           renderItem={({ item }) => (
             <View style={styles.manualResultCard}>
-              <Image source={{ uri: getCardImage(item.image) }} style={styles.manualResultImage} />
+              <Image source={{ uri: getCardImage(item.image, "low") }} style={styles.manualResultImage} />
 
               <View style={styles.manualResultContent}>
                 <Text numberOfLines={1} style={styles.manualResultName}>

@@ -26,6 +26,8 @@ import type {
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { AddCardModal } from "@/components/AddCardModal";
+import { getCardImage } from "@/utils/images";
+
 
 const PAGE_SIZE = 24;
 
@@ -324,7 +326,7 @@ export default function CollectionDetailsScreen() {
           style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressablePressed]}
         >
           <Image
-            source={{ uri: resolveImage(card?.image) }}
+            source={{ uri: getCardImage(card?.image, "low") }}
             style={styles.cardImage}
           />
           <Text numberOfLines={1} style={styles.cardName}>
@@ -579,7 +581,7 @@ export default function CollectionDetailsScreen() {
             <Ionicons color="#0b0b0b" name="close" size={22} />
           </Pressable>
 
-          <Image source={{ uri: resolveImage(selectedCard?.image) }} style={styles.modalImage} />
+          <Image source={{ uri: getCardImage(selectedCard?.image, "low") }} style={styles.modalImage} />
 
           <Text style={styles.modalTitle}>{selectedCard?.name || "Carte"}</Text>
           <Text style={styles.modalMeta}>
