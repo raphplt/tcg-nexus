@@ -37,6 +37,7 @@ import type {
   UserCollection,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
+import { getCardImage } from "@/utils/images";
 
 //TODO : à refactoriser dans plusieurs fichiers
 
@@ -439,6 +440,7 @@ export default function ScanScreen() {
 
   const renderCardRow = (card: CardSearchResult) => {
     const isSelected = selectedCard?.id === card.id;
+    const thumb = getCardImage(card.image, "low");
     return (
       <Pressable
         key={card.id}
@@ -452,8 +454,8 @@ export default function ScanScreen() {
           pressed && styles.resultRowPressed,
         ]}
       >
-        {card.image ? (
-          <Image source={{ uri: card.image }} style={styles.rowThumb} />
+        {thumb ? (
+          <Image source={{ uri: thumb }} style={styles.rowThumb} />
         ) : (
           <View style={[styles.rowThumb, styles.rowThumbEmpty]} />
         )}
@@ -676,9 +678,9 @@ export default function ScanScreen() {
 
               <View style={styles.compareColumn}>
                 <Text style={styles.compareLabel}>Carte trouvée</Text>
-                {selectedCard?.image ? (
+                {getCardImage(selectedCard?.image, "high") ? (
                   <Image
-                    source={{ uri: selectedCard.image }}
+                    source={{ uri: getCardImage(selectedCard?.image, "high") }}
                     style={styles.scanPreview}
                   />
                 ) : (
