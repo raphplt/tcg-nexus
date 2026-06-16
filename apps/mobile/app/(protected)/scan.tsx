@@ -83,6 +83,9 @@ const CONFIDENCE_META: Record<
 
 const CARD_RATIO = 63 / 88; // largeur / hauteur d'une carte Pokémon
 
+// rafale : nb de frames capturées par scan (best-of-N côté backend)
+const BURST_FRAMES = 5;
+
 // overlay affiché pendant l'analyse : photo figée + ligne de scan animée
 function ProcessingOverlay({ uri }: { uri: string | null }) {
   const { height } = useWindowDimensions();
@@ -271,17 +274,22 @@ export default function ScanScreen() {
     setManualResults([]);
     setManualQuery("");
 
-    // 1) capture pendant que la caméra est encore montée
-    let capturedImageUri: string;
+    // 1) rafale : plusieurs frames pendant que la caméra est montée. Le crop
+    // rate de façon aléatoire selon la prise -> le backend garde la meilleure.
+    const frames: string[] = [];
     try {
-      const picture = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        skipProcessing: true,
-      });
-      if (!picture?.uri) {
+      for (let i = 0; i < BURST_FRAMES; i++) {
+        const picture = await cameraRef.current.takePictureAsync({
+          quality: 0.8,
+          skipProcessing: true,
+        });
+        if (picture?.uri) {
+          frames.push(picture.uri);
+        }
+      }
+      if (frames.length === 0) {
         throw new Error("Capture impossible.");
       }
-      capturedImageUri = picture.uri;
     } catch {
       setInlineError(
         "Capture impossible. Reessaie dans une zone bien eclairee.",
@@ -289,16 +297,18 @@ export default function ScanScreen() {
       return;
     }
 
-    setCapturedUri(capturedImageUri);
+    setCapturedUri(frames[0] ?? null);
 
     // 2) seulement maintenant on bascule sur le loader (la caméra se démonte)
     setIsProcessing(true);
 
     try {
-      const optimizedUri = await ocrService.optimizeImage(capturedImageUri);
-      setOptimizedUri(optimizedUri);
+      const optimizedUris = await Promise.all(
+        frames.map((uri) => ocrService.optimizeImage(uri)),
+      );
+      setOptimizedUri(optimizedUris[0] ?? null);
 
-      const result = await scanService.recognize(optimizedUri);
+      const result = await scanService.recognize(optimizedUris);
       setParsed(result.parsed);
       setConfidence(result.confidence);
       setConfidenceLevel(result.confidenceLevel);

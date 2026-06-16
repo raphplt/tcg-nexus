@@ -1,14 +1,22 @@
 # Service Vision (TCG Nexus)
 
-Microservice de prétraitement d'image (workstream B) appelé par l'API NestJS
-avant l'OCR. Détecte la carte, corrige la perspective, normalise l'image et
-extrait les zones d'intérêt (nom, numéro, HP).
+Microservice de prétraitement d'image appelé par l'API NestJS. Détecte la carte,
+corrige la perspective, et **OCRise les zones d'intérêt** (nom, numéro) avec
+tesseract natif + multi-variantes de binarisation + sélection par confiance.
+
+> Dépendance système : `tesseract-ocr` (+ `tesseract-ocr-eng`, `tesseract-ocr-fra`),
+> installé par le Dockerfile. En local, installer tesseract et les langues
+> `eng`/`fra`. Sans tesseract, le service répond sans texte ROI et l'API bascule
+> sur son repli OCR (tesseract.js).
 
 ## Endpoints
 
 - `GET /health` — sonde de disponibilité.
 - `POST /preprocess` — corps `{ "image": "<base64>" }`, renvoie l'image
-  normalisée + les ROI (image base64 + boîte normalisée) + un drapeau `detected`.
+  normalisée + les ROI (image base64 + boîte + `text` + `conf`) + `detected`.
+- `POST /preprocess-batch` — corps `{ "images": ["<base64>", …] }` (rafale d'une
+  même carte). OCRise toutes les frames **en parallèle** et fusionne le meilleur
+  nom + le meilleur numéro (best-of-N), avec `best_index` de la frame retenue.
 
 ## Lancer en local (sans Docker)
 

@@ -2,8 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# libglib2.0-0 : runtime OpenCV. tesseract-ocr (+ eng/fra) : OCR natif des ROI.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libglib2.0-0 \
+    && apt-get install -y --no-install-recommends \
+        libglib2.0-0 \
+        tesseract-ocr \
+        tesseract-ocr-eng \
+        tesseract-ocr-fra \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

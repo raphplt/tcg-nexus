@@ -3,16 +3,17 @@ import {
   Body,
   Controller,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import type { ScanRecognizeResponse } from "@repo/scan-contract";
 import { ScanRecognizeDto } from "./dto/scan-recognize.dto";
 import { ScanService } from "./scan.service";
 
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8 Mo
+const MAX_FRAMES = 8; // rafale best-of-N
 
 @ApiTags("scan")
 @ApiBearerAuth("bearerAuth")
@@ -22,19 +23,34 @@ export class ScanController {
 
   @Post("recognize")
   @ApiConsumes("multipart/form-data")
+  // `images` = rafale (best-of-N) ; `image` conservé pour la compat mono-frame.
   @UseInterceptors(
-    FileInterceptor("image", { limits: { fileSize: MAX_IMAGE_SIZE } }),
+    FileFieldsInterceptor(
+      [
+        { name: "images", maxCount: MAX_FRAMES },
+        { name: "image", maxCount: 1 },
+      ],
+      { limits: { fileSize: MAX_IMAGE_SIZE } },
+    ),
   )
   async recognize(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles()
+    files: {
+      images?: Express.Multer.File[];
+      image?: Express.Multer.File[];
+    },
     @Body() dto: ScanRecognizeDto,
   ): Promise<ScanRecognizeResponse> {
-    if (!file?.buffer?.length) {
+    const buffers = [...(files?.images ?? []), ...(files?.image ?? [])]
+      .map((f) => f.buffer)
+      .filter((b) => b?.length);
+
+    if (buffers.length === 0) {
       throw new BadRequestException(
-        "Aucune image reçue. Envoie l'image dans le champ multipart `image`.",
+        "Aucune image reçue. Envoie les frames dans le champ multipart `images` (ou `image`).",
       );
     }
 
-    return this.scanService.recognize(file.buffer, dto.game);
+    return this.scanService.recognize(buffers, dto.game);
   }
 }

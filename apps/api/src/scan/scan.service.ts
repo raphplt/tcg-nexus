@@ -58,12 +58,16 @@ export class ScanService {
   ) {}
 
   async recognize(
-    image: Buffer,
+    images: Buffer[],
     game?: CardGame,
   ): Promise<ScanRecognizeResponse> {
+    const frames = images.length > 0 ? images : [];
     const t0 = Date.now();
-    const vision = await this.visionService.preprocess(image);
-    const ocrTarget = vision?.normalizedImage ?? image;
+    // best-of-N : plusieurs frames OCRisées en parallèle, meilleur résultat fusionné
+    const vision = await this.visionService.preprocessBatch(frames);
+    // frame retenue : base de l'ORB, du repli OCR plein texte et du log
+    const bestFrame = frames[vision?.bestIndex ?? 0] ?? frames[0];
+    const ocrTarget = vision?.normalizedImage ?? bestFrame;
 
     const t1 = Date.now();
     const { text, engine } = await this.ocrService.recognize(ocrTarget, "full");
@@ -85,7 +89,7 @@ export class ScanService {
     );
 
     // départage visuel (ORB) quand le texte est ambigu
-    const refined = await this.visualDisambiguate(image, textCandidates);
+    const refined = await this.visualDisambiguate(bestFrame, textCandidates);
 
     const response: ScanRecognizeResponse = {
       rawText: text,
@@ -101,7 +105,7 @@ export class ScanService {
 
     const t3 = Date.now();
     await this.scanLogger.log({
-      inputImage: image,
+      inputImage: bestFrame,
       vision,
       response,
       timingsMs: {
@@ -141,8 +145,11 @@ export class ScanService {
     const rois: ScanRoi[] = [];
 
     for (const roi of visionRois) {
-      let text = "";
-      if (TEXT_ROI_KEYS.has(roi.key)) {
+      // le service vision OCRise déjà les ROI (nom/numéro) : on consomme son
+      // texte. Repli tesseract.js uniquement si le service n'en fournit pas
+      // (ancienne version sans OCR).
+      let text = roi.text?.trim() ?? "";
+      if (roi.text === undefined && TEXT_ROI_KEYS.has(roi.key)) {
         const profile: OcrProfile = roi.key.startsWith("number")
           ? "number"
           : "name";

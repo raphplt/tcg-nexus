@@ -1,18 +1,23 @@
 import type { ScanRecognizeResponse } from "@repo/scan-contract";
 import { secureApi } from "./secureApi";
 
-// Envoi de l'image au backend
+// Envoi des frames (rafale best-of-N) au backend
 export const scanService = {
   async recognize(
-    imageUri: string,
+    imageUris: string | string[],
     game?: string,
   ): Promise<ScanRecognizeResponse> {
+    const uris = Array.isArray(imageUris) ? imageUris : [imageUris];
     const formData = new FormData();
-    formData.append("image", {
-      uri: imageUri,
-      name: "scan.jpg",
-      type: "image/jpeg",
-    } as unknown as Blob);
+    // toutes les frames sous `images` : le backend OCRise en parallèle et garde
+    // la meilleure (compense les frames mal cadrées).
+    uris.forEach((uri, i) => {
+      formData.append("images", {
+        uri,
+        name: `scan-${i}.jpg`,
+        type: "image/jpeg",
+      } as unknown as Blob);
+    });
 
     if (game) {
       formData.append("game", game);

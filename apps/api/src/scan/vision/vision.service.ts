@@ -5,6 +5,10 @@ export interface VisionRoi {
   key: string;
   box?: { x: number; y: number; width: number; height: number };
   image: Buffer;
+  // texte + confiance (0..100) OCRisés côté service vision ; absents si
+  // l'ancien service (sans OCR) répond -> repli OCR côté API.
+  text?: string;
+  conf?: number;
 }
 
 export interface VisionResult {
@@ -12,6 +16,8 @@ export interface VisionResult {
   engine: string;
   normalizedImage: Buffer;
   rois: VisionRoi[];
+  // index de la frame retenue (best-of-N) ; 0 en mono-frame.
+  bestIndex: number;
 }
 
 export interface VisionMatchCandidate {
@@ -19,8 +25,24 @@ export interface VisionMatchCandidate {
   url: string;
 }
 
-const REQUEST_TIMEOUT_MS = 8000;
+// l'OCR natif (multi-variantes, plusieurs frames en parallèle) tourne dans le
+// service vision : on laisse de la marge au-delà des 8s d'origine.
+const REQUEST_TIMEOUT_MS = 25000;
 const MATCH_TIMEOUT_MS = 25000;
+
+interface VisionResponseJson {
+  detected?: boolean;
+  engine?: string;
+  normalized_image: string;
+  best_index?: number;
+  rois?: Array<{
+    key: string;
+    box?: VisionRoi["box"];
+    image: string;
+    text?: string;
+    conf?: number;
+  }>;
+}
 
 @Injectable()
 export class VisionService {
@@ -81,23 +103,7 @@ export class VisionService {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const data = (await response.json()) as {
-        detected?: boolean;
-        engine?: string;
-        normalized_image: string;
-        rois?: Array<{ key: string; box?: VisionRoi["box"]; image: string }>;
-      };
-
-      return {
-        detected: Boolean(data.detected),
-        engine: data.engine ?? "opencv",
-        normalizedImage: Buffer.from(data.normalized_image, "base64"),
-        rois: (data.rois ?? []).map((roi) => ({
-          key: roi.key,
-          box: roi.box,
-          image: Buffer.from(roi.image, "base64"),
-        })),
-      };
+      return this.parseResult(await response.json());
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       this.logger.warn(`Service vision KO, image brute utilisée: ${reason}`);
@@ -105,5 +111,54 @@ export class VisionService {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  // best-of-N : envoie toutes les frames d'une rafale, le service les OCRise en
+  // parallèle et renvoie le meilleur nom + le meilleur numéro fusionnés.
+  async preprocessBatch(images: Buffer[]): Promise<VisionResult | null> {
+    if (images.length === 0) return null;
+    if (images.length === 1) return this.preprocess(images[0]);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(`${this.baseUrl}/preprocess-batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          images: images.map((img) => img.toString("base64")),
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      return this.parseResult(await response.json());
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Batch vision KO, repli mono-frame: ${reason}`);
+      // repli : on tente au moins la première frame en mono
+      return this.preprocess(images[0]);
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private parseResult(payload: unknown): VisionResult {
+    const data = payload as VisionResponseJson;
+    return {
+      detected: Boolean(data.detected),
+      engine: data.engine ?? "opencv",
+      normalizedImage: Buffer.from(data.normalized_image, "base64"),
+      bestIndex: data.best_index ?? 0,
+      rois: (data.rois ?? []).map((roi) => ({
+        key: roi.key,
+        box: roi.box,
+        image: Buffer.from(roi.image, "base64"),
+        text: roi.text,
+        conf: roi.conf,
+      })),
+    };
   }
 }
