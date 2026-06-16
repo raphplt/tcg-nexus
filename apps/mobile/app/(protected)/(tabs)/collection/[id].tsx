@@ -25,6 +25,7 @@ import type {
   UserCollection,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
+import { AddCardModal } from "@/components/AddCardModal";
 
 const PAGE_SIZE = 24;
 
@@ -94,11 +95,6 @@ export default function CollectionDetailsScreen() {
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [manualSearch, setManualSearch] = useState("");
-  const [debouncedManualSearch, setDebouncedManualSearch] = useState("");
-  const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
-  const [isManualSearching, setIsManualSearching] = useState(false);
-  const [addingCardId, setAddingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -108,13 +104,7 @@ export default function CollectionDetailsScreen() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedManualSearch(manualSearch.trim());
-    }, 300);
 
-    return () => clearTimeout(timer);
-  }, [manualSearch]);
 
   const loadCollectionHeader = useCallback(async () => {
     if (!collectionId) {
@@ -191,44 +181,7 @@ export default function CollectionDetailsScreen() {
     void loadItems();
   }, [debouncedSearch, sortBy]);
 
-  useEffect(() => {
-    if (!isAddModalVisible) {
-      return;
-    }
 
-    if (debouncedManualSearch.length < 2) {
-      setManualResults([]);
-      setIsManualSearching(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const runSearch = async () => {
-      setIsManualSearching(true);
-      try {
-        const cards = await cardService.searchCards(debouncedManualSearch);
-        if (!cancelled) {
-          setManualResults(cards.slice(0, 30));
-        }
-      } catch (error) {
-        if (!cancelled) {
-          toast.showError(getApiErrorMessage(error));
-          setManualResults([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsManualSearching(false);
-        }
-      }
-    };
-
-    void runSearch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedManualSearch, isAddModalVisible]);
 
   const availableSetFilters = useMemo(() => {
     const values = new Set<string>();
@@ -353,29 +306,8 @@ export default function CollectionDetailsScreen() {
     );
   };
 
-  const handleAddCardFromSearch = async (card: CardSearchResult) => {
-    if (!collectionId || !card.id) {
-      return;
-    }
-
-    setAddingCardId(card.id);
-    try {
-      await collectionService.addCardToCollection(collectionId, card.id);
-      toast.showSuccess(`${card.name || "Carte"} ajoutee.`);
-      await Promise.all([loadCollectionHeader(), loadItems({ refresh: true })]);
-    } catch (error) {
-      toast.showError(getApiErrorMessage(error));
-    } finally {
-      setAddingCardId(null);
-    }
-  };
-
   const openManualAddModal = () => {
     setIsAddModalVisible(true);
-    setManualSearch("");
-    setDebouncedManualSearch("");
-    setManualResults([]);
-    setIsManualSearching(false);
   };
 
   const renderCardCell = ({ item }: { item: CollectionItem }) => {
@@ -681,87 +613,14 @@ export default function CollectionDetailsScreen() {
         </ScrollView>
       </Modal>
 
-      <Modal
-        animationType="slide"
-        onRequestClose={() => setIsAddModalVisible(false)}
-        visible={isAddModalVisible}
-      >
-        <View style={styles.manualModalContainer}>
-          <View style={styles.manualModalHeader}>
-            <Text style={styles.manualModalTitle}>Ajouter une carte</Text>
-            <Pressable
-              onPress={() => setIsAddModalVisible(false)}
-              style={({ pressed }) => [
-                styles.manualModalClose,
-                pressed && styles.manualModalClosePressed,
-              ]}
-            >
-              <Ionicons color="#15233b" name="close" size={20} />
-            </Pressable>
-          </View>
-
-          <TextInput
-            autoCapitalize="none"
-            onChangeText={setManualSearch}
-            placeholder="Nom, set, numero"
-            placeholderTextColor="#8a92a0"
-            style={styles.manualSearchInput}
-            value={manualSearch}
-          />
-
-          {debouncedManualSearch.length < 2 ? (
-            <Text style={styles.manualHint}>Tape au moins 2 caracteres pour rechercher.</Text>
-          ) : null}
-
-          {isManualSearching ? (
-            <ActivityIndicator color="#15233b" style={styles.manualLoading} />
-          ) : null}
-
-          <FlatList
-            contentContainerStyle={styles.manualResultsList}
-            data={manualResults}
-            keyExtractor={(item) => item.id || Math.random().toString()}
-            ListEmptyComponent={
-              !isManualSearching && debouncedManualSearch.length >= 2 ? (
-                <Text style={styles.manualEmptyText}>Aucun resultat.</Text>
-              ) : null
-            }
-            renderItem={({ item }) => (
-              <View style={styles.manualResultCard}>
-                <Image source={{ uri: resolveImage(item.image) }} style={styles.manualResultImage} />
-
-                <View style={styles.manualResultContent}>
-                  <Text numberOfLines={1} style={styles.manualResultName}>
-                    {item.name || "Carte"}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.manualResultMeta}>
-                    {item.set?.name || "Set inconnu"}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.manualResultMeta}>
-                    {item.rarity || "Rarete inconnue"}
-                  </Text>
-                </View>
-
-                <Pressable
-                  disabled={addingCardId === item.id}
-                  onPress={() => {
-                    void handleAddCardFromSearch(item);
-                  }}
-                  style={({ pressed }) => [
-                    styles.manualAddCardButton,
-                    (pressed || addingCardId === item.id) &&
-                      styles.manualAddCardButtonPressed,
-                  ]}
-                >
-                  <Text style={styles.manualAddCardButtonText}>
-                    {addingCardId === item.id ? "Ajout..." : "Ajouter"}
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-          />
-        </View>
-      </Modal>
+      <AddCardModal
+        isVisible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        collectionId={collectionId as string}
+        onCardAdded={async () => {
+          await Promise.all([loadCollectionHeader(), loadItems({ refresh: true })]);
+        }}
+      />
     </View>
   );
 }

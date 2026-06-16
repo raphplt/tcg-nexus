@@ -10,23 +10,6 @@ export default function HomeScreen() {
       <View style={styles.heroCard}>
         <Text style={styles.eyebrow}>MOBILE FOUNDATION</Text>
         <Text style={styles.title}>Bienvenue {user?.firstName ?? "Dresseur"}</Text>
-        <Text style={styles.subtitle}>
-          L&apos;authentification mobile est branchee sur l&apos;API NestJS avec
-          JWT, refresh automatique et session restauree.
-        </Text>
-      </View>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.infoLabel}>API cible</Text>
-        <Text style={styles.infoValue}>{API_URL}</Text>
-      </View>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.infoLabel}>Etat actuel</Text>
-        <Text style={styles.infoValue}>
-          Navigation protegee active, onglets securises, profil recuperable via
-          /auth/profile.
-        </Text>
       </View>
     </View>
   );

@@ -105,22 +105,24 @@ export const cardService = {
   },
 
   async searchCards(search: string): Promise<CardSearchResult[]> {
+    console.log("card service searchCards : ", search);
     const query = search.trim();
     if (!query) {
       return [];
     }
-
     const cacheKey = normalize(query);
     const cached = searchCache.get(cacheKey);
     if (cached) {
+      console.log("cached : ", cached); 
       return cached;
     }
-
+    
     const response = await api.get<CardSearchResult[]>(
       `/cards/search/${encodeURIComponent(query)}`,
     );
 
     const cards = dedupeCards(response.data || []);
+    console.log("card service dedupeCards : ", cards); 
     searchCache.set(cacheKey, cards);
     return cards;
   },
