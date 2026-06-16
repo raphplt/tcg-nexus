@@ -5,12 +5,36 @@ import { CardGame } from "../common/enums/cardGame";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { Card } from "./entities/card.entity";
 
+const stripAccents = (value: string): string =>
+  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 @Injectable()
 export class CardService {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
   ) {}
+
+  // recherche fuzzy par nom (trigrammes pg_trgm) tolérant fautes d'OCR et accents.
+  // les noms en base sont sans accents, on retire donc les accents du terme.
+  async findByNameFuzzy(term: string, game?: CardGame): Promise<Card[]> {
+    const t = stripAccents(term).trim();
+    if (t.length < 3) return [];
+
+    const qb = this.cardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .where("card.name % :t", { t })
+      .orderBy("similarity(card.name, :t)", "DESC")
+      .limit(20);
+
+    if (game) {
+      qb.andWhere("card.game = :game", { game });
+    }
+
+    return qb.getMany();
+  }
 
   async findAll(game?: CardGame): Promise<Card[]> {
     return this.cardRepository.find({

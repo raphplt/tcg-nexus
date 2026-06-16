@@ -17,7 +17,6 @@ import {
 } from "./matching/scan-matcher";
 import { type OcrProfile, OcrService } from "./ocr/ocr.service";
 import {
-  buildSearchHints,
   cleanName,
   extractNameCandidates,
   parseNumber,
@@ -60,15 +59,9 @@ export class ScanService {
       this.roiText(rois, "name"),
       fallback.lines,
     );
-    const searchHints = buildSearchHints(nameCandidates, fields.setCode);
 
     const t2 = Date.now();
-    const candidates = await this.matchCandidates(
-      fields,
-      nameCandidates,
-      searchHints,
-      game,
-    );
+    const candidates = await this.matchCandidates(fields, nameCandidates, game);
     const bestCard = candidates[0] ?? null;
     const { confidence, confidenceLevel } = computeConfidence(candidates);
 
@@ -147,7 +140,6 @@ export class ScanService {
   private async matchCandidates(
     fields: ScanParsedFields,
     nameCandidates: string[],
-    searchHints: string[],
     game?: CardGame,
   ): Promise<ScanCardCandidate[]> {
     const scored = new Map<string, ScanCardCandidate>();
@@ -174,10 +166,16 @@ export class ScanService {
       );
     }
 
-    // 2) par nom / hints, sauf si le numéro a déjà donné une correspondance sûre
+    // 2) par nom en fuzzy (trigrammes) : tolère fautes d'OCR et accents.
+    // on tente les meilleurs candidats (phrases longues d'abord), jusqu'à un match sûr.
     if (!hasStrongMatch()) {
-      for (const term of searchHints) {
-        consider(await this.cardService.findBySearch(term, game));
+      const terms = Array.from(new Set(nameCandidates))
+        .filter((t) => t.length >= 4)
+        .sort((a, b) => b.length - a.length)
+        .slice(0, 6);
+
+      for (const term of terms) {
+        consider(await this.cardService.findByNameFuzzy(term, game));
         if (hasStrongMatch()) break;
       }
     }

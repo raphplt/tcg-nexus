@@ -100,26 +100,6 @@ export const extractNameCandidates = (
   return Array.from(out);
 };
 
-const HINTS_LIMIT = 10;
-
-export const buildSearchHints = (
-  nameCandidates: string[],
-  setCode?: string,
-): string[] => {
-  const hints = new Set<string>();
-
-  // les plus spécifiques d'abord (longues phrases avant mots isolés)
-  for (const cand of [...nameCandidates].sort((a, b) => b.length - a.length)) {
-    hints.add(cand);
-    for (const word of cand.split(/[\s-]+/)) {
-      if (word.length >= 4) hints.add(word);
-    }
-  }
-  if (setCode) hints.add(setCode);
-
-  return Array.from(hints).filter(Boolean).slice(0, HINTS_LIMIT);
-};
-
 export interface ParsedOcr {
   lines: string[];
   fields: ScanParsedFields;
