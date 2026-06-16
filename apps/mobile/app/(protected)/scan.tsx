@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +15,7 @@ import {
   Switch,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import {
@@ -76,6 +79,61 @@ const CONFIDENCE_META: Record<
   },
 };
 
+const CARD_RATIO = 63 / 88; // largeur / hauteur d'une carte Pokémon
+
+// overlay affiché pendant l'analyse : photo figée + ligne de scan animée
+function ProcessingOverlay({ uri }: { uri: string | null }) {
+  const { height } = useWindowDimensions();
+  const sweep = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(sweep, {
+          toValue: 1,
+          duration: 1300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sweep, {
+          toValue: 0,
+          duration: 1300,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [sweep]);
+
+  const translateY = sweep.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, height],
+  });
+
+  return (
+    <View style={styles.processingScreen}>
+      {uri ? (
+        <Image
+          blurRadius={3}
+          resizeMode="cover"
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <View style={styles.processingDim} />
+      <Animated.View
+        style={[styles.scanLine, { transform: [{ translateY }] }]}
+      />
+      <View style={styles.processingInfo}>
+        <ActivityIndicator color="#ffffff" size="large" />
+        <Text style={styles.processingTitle}>Analyse de la carte…</Text>
+      </View>
+    </View>
+  );
+}
+
 type ScanMode = "camera" | "review";
 
 const HISTORY_LIMIT = 8;
@@ -98,9 +156,15 @@ const buildHistoryId = () =>
 
 export default function ScanScreen() {
   const insets = useSafeAreaInsets();
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const { user } = useAuth();
+
+  // cadre au ratio d'une carte, centré et un peu remonté (barre du bas)
+  const frameW = Math.min(screenW * 0.84, 360);
+  const frameH = frameW / CARD_RATIO;
+  const frameTop = Math.max(insets.top + 70, (screenH - frameH) / 2 - 40);
 
   const [mode, setMode] = useState<ScanMode>("camera");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -118,6 +182,7 @@ export default function ScanScreen() {
     null,
   );
   const [candidateCards, setCandidateCards] = useState<CardSearchResult[]>([]);
+  const [showOtherMatches, setShowOtherMatches] = useState(false);
   const [manualQuery, setManualQuery] = useState("");
   const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
 
@@ -189,6 +254,7 @@ export default function ScanScreen() {
     setConfidenceLevel(null);
     setSelectedCard(null);
     setCandidateCards([]);
+    setShowOtherMatches(false);
     setManualQuery("");
     setManualResults([]);
     setInlineError(null);
@@ -202,23 +268,32 @@ export default function ScanScreen() {
     setInlineError(null);
     setManualResults([]);
     setManualQuery("");
-    setIsProcessing(true);
 
+    // 1) capture pendant que la caméra est encore montée
+    let capturedImageUri: string;
     try {
       const picture = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         skipProcessing: true,
       });
-
       if (!picture?.uri) {
-        throw new Error(
-          "Capture impossible. Reessaie dans une zone bien eclairee.",
-        );
+        throw new Error("Capture impossible.");
       }
+      capturedImageUri = picture.uri;
+    } catch {
+      setInlineError(
+        "Capture impossible. Reessaie dans une zone bien eclairee.",
+      );
+      return;
+    }
 
-      setCapturedUri(picture.uri);
+    setCapturedUri(capturedImageUri);
 
-      const optimizedUri = await ocrService.optimizeImage(picture.uri);
+    // 2) seulement maintenant on bascule sur le loader (la caméra se démonte)
+    setIsProcessing(true);
+
+    try {
+      const optimizedUri = await ocrService.optimizeImage(capturedImageUri);
       setOptimizedUri(optimizedUri);
 
       const result = await scanService.recognize(optimizedUri);
@@ -362,28 +437,46 @@ export default function ScanScreen() {
     }
   };
 
-  const renderCardRow = (card: CardSearchResult) => (
-    <Pressable
-      key={card.id}
-      onPress={() => {
-        setSelectedCard(card);
-        setInlineError(null);
-      }}
-      style={({ pressed }) => [
-        styles.resultRow,
-        selectedCard?.id === card.id && styles.resultRowSelected,
-        pressed && styles.resultRowPressed,
-      ]}
-    >
-      <Text numberOfLines={1} style={styles.resultTitle}>
-        {card.name || "Carte sans nom"}
-      </Text>
-      <Text style={styles.resultMeta}>
-        {card.localId ? `#${card.localId}` : "-"}
-        {card.set?.name ? ` • ${card.set.name}` : ""}
-      </Text>
-    </Pressable>
-  );
+  const renderCardRow = (card: CardSearchResult) => {
+    const isSelected = selectedCard?.id === card.id;
+    return (
+      <Pressable
+        key={card.id}
+        onPress={() => {
+          setSelectedCard(card);
+          setInlineError(null);
+        }}
+        style={({ pressed }) => [
+          styles.resultRow,
+          isSelected && styles.resultRowSelected,
+          pressed && styles.resultRowPressed,
+        ]}
+      >
+        {card.image ? (
+          <Image source={{ uri: card.image }} style={styles.rowThumb} />
+        ) : (
+          <View style={[styles.rowThumb, styles.rowThumbEmpty]} />
+        )}
+        <View style={styles.resultText}>
+          <Text numberOfLines={1} style={styles.resultTitle}>
+            {card.name || "Carte sans nom"}
+          </Text>
+          <Text style={styles.resultMeta}>
+            {card.localId ? `#${card.localId}` : "-"}
+            {card.set?.name ? ` • ${card.set.name}` : ""}
+          </Text>
+        </View>
+        {isSelected ? (
+          <Ionicons color="#09597d" name="checkmark-circle" size={22} />
+        ) : null}
+      </Pressable>
+    );
+  };
+
+  // pendant l'analyse : on ferme le scanner et on montre le loader transitoire
+  if (isProcessing) {
+    return <ProcessingOverlay uri={capturedUri} />;
+  }
 
   if (!permission) {
     return (
@@ -442,7 +535,25 @@ export default function ScanScreen() {
           </View>
         </View>
 
-        <View style={styles.scanFrame} />
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <View style={[styles.mask, { height: frameTop }]} />
+          <View style={{ flexDirection: "row", height: frameH }}>
+            <View style={[styles.mask, { flex: 1 }]} />
+            <View style={{ width: frameW, height: frameH }}>
+              <View style={styles.frameBorder} />
+              <View style={[styles.corner, styles.cornerTL]} />
+              <View style={[styles.corner, styles.cornerTR]} />
+              <View style={[styles.corner, styles.cornerBL]} />
+              <View style={[styles.corner, styles.cornerBR]} />
+            </View>
+            <View style={[styles.mask, { flex: 1 }]} />
+          </View>
+          <View style={[styles.mask, { flex: 1 }]}>
+            <Text style={styles.frameHint}>
+              Aligne la carte dans le cadre, bien à plat
+            </Text>
+          </View>
+        </View>
 
         <View
           style={[
@@ -451,24 +562,19 @@ export default function ScanScreen() {
           ]}
         >
           <Pressable
-            disabled={isProcessing}
             onPress={() => {
               void captureCard();
             }}
             style={({ pressed }) => [
               styles.captureButton,
-              (pressed || isProcessing) && styles.captureButtonPressed,
+              pressed && styles.captureButtonPressed,
             ]}
           >
-            {isProcessing ? (
-              <ActivityIndicator color="#fcfcfc" />
-            ) : (
-              <Ionicons color="#fcfcfc" name="camera" size={28} />
-            )}
+            <Ionicons color="#fcfcfc" name="camera" size={28} />
           </Pressable>
 
           <Text style={styles.captureHint}>
-            Place la carte dans le cadre puis capture.
+            Remplis bien le cadre puis capture
           </Text>
         </View>
 
@@ -593,9 +699,34 @@ export default function ScanScreen() {
             ) : null}
           </View>
 
-          {candidateCards.length > 0 ? (
+          {candidateCards.length > 0 && confidenceLevel === "high" ? (
+            // confiance haute : on replie les autres correspondances
             <View style={styles.blockCard}>
-              <Text style={styles.sectionTitle}>Cartes reconnues</Text>
+              <Pressable
+                onPress={() => setShowOtherMatches((v) => !v)}
+                style={styles.toggleRow}
+              >
+                <Text style={styles.toggleText}>
+                  Ce n'est pas la bonne carte ?
+                </Text>
+                <Ionicons
+                  color="#555555"
+                  name={showOtherMatches ? "chevron-up" : "chevron-down"}
+                  size={18}
+                />
+              </Pressable>
+              {showOtherMatches ? (
+                <View style={styles.resultList}>
+                  {candidateCards.slice(0, 6).map(renderCardRow)}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          {candidateCards.length > 0 && confidenceLevel !== "high" ? (
+            // confiance moyenne/basse : comparer et choisir la bonne carte
+            <View style={styles.blockCard}>
+              <Text style={styles.sectionTitle}>Choisis la bonne carte</Text>
               <View style={styles.resultList}>
                 {candidateCards.slice(0, 6).map(renderCardRow)}
               </View>
@@ -1040,10 +1171,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   resultRow: {
+    alignItems: "center",
     backgroundColor: "#f3f5f9",
     borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
@@ -1054,10 +1188,33 @@ const styles = StyleSheet.create({
     backgroundColor: "#ecf3f8",
     borderColor: "#09597d",
   },
+  resultText: {
+    flex: 1,
+  },
+  rowThumb: {
+    backgroundColor: "#e4e4e4",
+    borderRadius: 6,
+    height: 66,
+    width: 47,
+  },
+  rowThumbEmpty: {
+    borderColor: "#d0d0d0",
+    borderWidth: 1,
+  },
   resultTitle: {
     color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
+  },
+  toggleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  toggleText: {
+    color: "#555555",
+    fontSize: 14,
+    fontWeight: "600",
   },
   reviewContent: {
     padding: 16,
@@ -1076,15 +1233,94 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
     flex: 1,
   },
-  scanFrame: {
-    borderColor: "rgba(255,255,255,0.9)",
-    borderRadius: 20,
-    borderWidth: 2,
-    height: "52%",
-    left: 24,
+  mask: {
+    backgroundColor: "rgba(11,11,11,0.62)",
+  },
+  frameBorder: {
+    borderColor: "rgba(255,255,255,0.45)",
+    borderRadius: 16,
+    borderWidth: 1,
+    bottom: 0,
+    left: 0,
     position: "absolute",
-    right: 24,
-    top: "20%",
+    right: 0,
+    top: 0,
+  },
+  corner: {
+    borderColor: "#ffffff",
+    height: 30,
+    position: "absolute",
+    width: 30,
+  },
+  cornerTL: {
+    borderLeftWidth: 3,
+    borderTopLeftRadius: 16,
+    borderTopWidth: 3,
+    left: -1,
+    top: -1,
+  },
+  cornerTR: {
+    borderRightWidth: 3,
+    borderTopRightRadius: 16,
+    borderTopWidth: 3,
+    right: -1,
+    top: -1,
+  },
+  cornerBL: {
+    borderBottomLeftRadius: 16,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    bottom: -1,
+    left: -1,
+  },
+  cornerBR: {
+    borderBottomRightRadius: 16,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    bottom: -1,
+    right: -1,
+  },
+  frameHint: {
+    color: "#f3f5f9",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 18,
+    textAlign: "center",
+  },
+  processingScreen: {
+    alignItems: "center",
+    backgroundColor: "#0b0b0b",
+    flex: 1,
+    justifyContent: "center",
+  },
+  processingDim: {
+    backgroundColor: "rgba(11,11,11,0.6)",
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  scanLine: {
+    backgroundColor: "#b72921",
+    height: 2,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    shadowColor: "#b72921",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
+    top: 0,
+  },
+  processingInfo: {
+    alignItems: "center",
+    gap: 14,
+  },
+  processingTitle: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
   },
   scanPreview: {
     borderRadius: 12,
