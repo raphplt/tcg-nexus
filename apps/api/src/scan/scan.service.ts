@@ -13,6 +13,7 @@ import {
   scoreCard,
   toCandidate,
 } from "./matching/scan-matcher";
+import { ScanLogger } from "./logging/scan-logger";
 import { type OcrProfile, OcrService } from "./ocr/ocr.service";
 import {
   buildSearchHints,
@@ -35,15 +36,18 @@ export class ScanService {
     private readonly visionService: VisionService,
     private readonly ocrService: OcrService,
     private readonly cardService: CardService,
+    private readonly scanLogger: ScanLogger,
   ) {}
 
   async recognize(
     image: Buffer,
     game?: CardGame,
   ): Promise<ScanRecognizeResponse> {
+    const t0 = Date.now();
     const vision = await this.visionService.preprocess(image);
     const ocrTarget = vision?.normalizedImage ?? image;
 
+    const t1 = Date.now();
     const { text, engine } = await this.ocrService.recognize(ocrTarget, "full");
     const rois = vision ? await this.readRois(vision.rois) : [];
 
@@ -52,11 +56,12 @@ export class ScanService {
     const fields = this.buildFields(rois, fallback.fields);
     const searchHints = buildSearchHints(fields);
 
+    const t2 = Date.now();
     const candidates = await this.matchCandidates(fields, searchHints, game);
     const bestCard = candidates[0] ?? null;
     const { confidence, confidenceLevel } = computeConfidence(candidates);
 
-    return {
+    const response: ScanRecognizeResponse = {
       rawText: text,
       lines: fallback.lines,
       parsed: fields,
@@ -67,6 +72,21 @@ export class ScanService {
       confidenceLevel,
       engine: vision ? `${vision.engine}+${engine}` : engine,
     };
+
+    const t3 = Date.now();
+    await this.scanLogger.log({
+      inputImage: image,
+      vision,
+      response,
+      timingsMs: {
+        preprocess: t1 - t0,
+        ocr: t2 - t1,
+        match: t3 - t2,
+        total: t3 - t0,
+      },
+    });
+
+    return response;
   }
 
   // D1 : champs issus en priorité des ROI nom/numéro, sinon du texte plein
