@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, radius } from "@/constants/theme";
 import type { UserCollection } from "@/types";
 
 interface CollectionCardProps {
@@ -43,7 +44,7 @@ export function CollectionCard({ collection, onDelete, onPress }: CollectionCard
           <Image source={{ uri: coverImage }} style={styles.coverImage} />
         ) : (
           <View style={styles.coverPlaceholder}>
-            <Ionicons color="#8f96a6" name="albums-outline" size={28} />
+            <Ionicons color={colors.mutedForeground} name="albums-outline" size={28} />
             <Text style={styles.coverPlaceholderText}>Pas encore de carte</Text>
           </View>
         )}
@@ -70,7 +71,7 @@ export function CollectionCard({ collection, onDelete, onPress }: CollectionCard
           onPress={() => onDelete(collection)}
           style={({ pressed }) => [styles.deleteButton, pressed && styles.deleteButtonPressed]}
         >
-          <Ionicons color="#ffffff" name="trash-outline" size={14} />
+          <Ionicons color={colors.destructiveForeground} name="trash-outline" size={14} />
         </Pressable>
       ) : null}
     </Pressable>
@@ -79,9 +80,9 @@ export function CollectionCard({ collection, onDelete, onPress }: CollectionCard
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
-    borderRadius: 18,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     marginBottom: 14,
     overflow: "hidden",
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   coverContainer: {
-    backgroundColor: "#f3f0ec",
+    backgroundColor: colors.inputBg,
     height: 120,
     width: "100%",
   },
@@ -110,14 +111,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   coverPlaceholderText: {
-    color: "#8f96a6",
+    color: colors.mutedForeground,
     fontSize: 12,
     marginTop: 6,
   },
   deleteButton: {
     alignItems: "center",
-    backgroundColor: "#bd3b3b",
-    borderRadius: 12,
+    backgroundColor: colors.destructive,
+    borderRadius: radius.md,
     height: 24,
     justifyContent: "center",
     position: "absolute",
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   description: {
-    color: "#687183",
+    color: colors.mutedForeground,
     fontSize: 13,
     lineHeight: 18,
     minHeight: 34,
@@ -139,12 +140,12 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   metaText: {
-    color: "#7c6a58",
+    color: colors.mutedForeground,
     fontSize: 12,
     fontWeight: "700",
   },
   name: {
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 16,
     fontWeight: "800",
   },

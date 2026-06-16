@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,31 @@ const getPlayerName = (player: any): string => {
     return `${player.user.firstName} ${player.user.lastName}`;
   }
   return player.name || `Joueur #${player.id}`;
+};
+
+const PlayerLink = ({
+  player,
+  className,
+}: {
+  player: any;
+  className?: string;
+}) => {
+  const name = getPlayerName(player);
+  if (player?.user?.id) {
+    return (
+      <Link
+        href={`/users/${player.user.id}`}
+        className={cn(
+          "hover:text-primary hover:underline transition-colors",
+          className,
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {name}
+      </Link>
+    );
+  }
+  return <span className={className}>{name}</span>;
 };
 
 const getRoundName = (round: number, totalRounds: number): string => {
@@ -91,16 +117,15 @@ function MatchCard({
             {!match.playerA && (
               <User className="size-3 text-muted-foreground shrink-0" />
             )}
-            <span
+            <PlayerLink
+              player={match.playerA}
               className={cn(
                 "text-sm truncate",
                 playerAWins &&
                   "font-semibold text-green-700 dark:text-green-400",
                 !match.playerA && "text-muted-foreground italic",
               )}
-            >
-              {getPlayerName(match.playerA)}
-            </span>
+            />
           </div>
           <Badge
             variant={playerAWins ? "default" : "outline"}
@@ -127,16 +152,15 @@ function MatchCard({
             {!match.playerB && (
               <User className="size-3 text-muted-foreground shrink-0" />
             )}
-            <span
+            <PlayerLink
+              player={match.playerB}
               className={cn(
                 "text-sm truncate",
                 playerBWins &&
                   "font-semibold text-green-700 dark:text-green-400",
                 !match.playerB && "text-muted-foreground italic",
               )}
-            >
-              {getPlayerName(match.playerB)}
-            </span>
+            />
           </div>
           <Badge
             variant={playerBWins ? "default" : "outline"}
@@ -269,7 +293,9 @@ export function TournamentBracket({
             <Trophy className="size-8 text-yellow-500" />
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Vainqueur</p>
-              <p className="text-xl font-bold">{getPlayerName(winner)}</p>
+              <p className="text-xl font-bold">
+                <PlayerLink player={winner} />
+              </p>
             </div>
             <Trophy className="size-8 text-yellow-500" />
           </CardContent>

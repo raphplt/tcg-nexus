@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
+import { UserFollowService } from "../user-follow/user-follow.service";
 import { User } from "./entities/user.entity";
 import { UserService } from "./user.service";
 
@@ -25,6 +26,11 @@ describe("UserService", () => {
     create: jest.fn(),
     save: jest.fn(),
   };
+  const mockFollowService = {
+    countFollowers: jest.fn().mockResolvedValue(0),
+    countFollowing: jest.fn().mockResolvedValue(0),
+    isFollowing: jest.fn().mockResolvedValue(false),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -37,6 +43,10 @@ describe("UserService", () => {
         {
           provide: getRepositoryToken(Player),
           useValue: playerRepo,
+        },
+        {
+          provide: UserFollowService,
+          useValue: mockFollowService,
         },
       ],
     }).compile();
@@ -216,5 +226,63 @@ describe("UserService", () => {
     repo.remove.mockResolvedValue(undefined);
     await service.remove(5);
     expect(repo.remove).toHaveBeenCalled();
+  });
+
+  describe("findPublicProfile", () => {
+    it("returns PublicUserDto for an active user with a player", async () => {
+      const user = {
+        id: 7,
+        firstName: "Ash",
+        lastName: "Ketchum",
+        avatarUrl: null,
+        createdAt: new Date("2024-01-01"),
+        isActive: true,
+        player: { id: 12, elo: 1500, level: 3, xp: 250 },
+      };
+      repo.findOne.mockResolvedValue(user);
+
+      const result = await service.findPublicProfile(7);
+
+      expect(result.id).toBe(7);
+      expect(result.firstName).toBe("Ash");
+      expect((result as any).email).toBeUndefined();
+      expect((result as any).password).toBeUndefined();
+      expect(result.player?.elo).toBe(1500);
+    });
+
+    it("returns the DTO without player when user has no player record", async () => {
+      repo.findOne.mockResolvedValue({
+        id: 8,
+        firstName: "A",
+        lastName: "B",
+        avatarUrl: null,
+        createdAt: new Date(),
+        isActive: true,
+        player: null,
+      });
+
+      const result = await service.findPublicProfile(8);
+
+      expect(result.player).toBeUndefined();
+    });
+
+    it("throws NotFoundException for an inactive user", async () => {
+      repo.findOne.mockResolvedValue({
+        id: 9,
+        firstName: "X",
+        lastName: "Y",
+        avatarUrl: null,
+        createdAt: new Date(),
+        isActive: false,
+        player: null,
+      });
+
+      await expect(service.findPublicProfile(9)).rejects.toThrow("User not found");
+    });
+
+    it("throws NotFoundException when user does not exist", async () => {
+      repo.findOne.mockResolvedValue(null);
+      await expect(service.findPublicProfile(404)).rejects.toThrow("User not found");
+    });
   });
 });

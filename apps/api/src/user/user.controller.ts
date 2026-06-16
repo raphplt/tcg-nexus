@@ -12,6 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "src/common/enums/user";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -42,6 +43,15 @@ export class UserController {
   @Get("me")
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
+  }
+
+  @Public()
+  @Get(":id/public")
+  getPublicProfile(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() currentUser?: User,
+  ) {
+    return this.userService.findPublicProfile(id, currentUser?.id);
   }
 
   @Get(":id")

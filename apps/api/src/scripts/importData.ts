@@ -137,7 +137,7 @@ async function bootstrap() {
 
     logStep("Création des métriques de popularité...");
     await seedService.seedCardPopularityMetrics();
-    logSuccess("Métriques de popularité créées !");
+    logSuccess("Métriques de popularité créées !"); 
 
     logStep("Import des produits scellés...");
     try {

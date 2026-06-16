@@ -7,7 +7,9 @@ import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
 import { Repository } from "typeorm";
+import { UserFollowService } from "../user-follow/user-follow.service";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { PublicUserDto } from "./dto/public-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
 
@@ -18,6 +20,7 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(Player)
     private playerRepository: Repository<Player>,
+    private readonly followService: UserFollowService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -104,6 +107,32 @@ export class UserService {
       relations: ["player"],
     });
     return this.ensurePlayerProfile(user);
+  }
+
+  async findPublicProfile(
+    id: number,
+    requesterId?: number,
+  ): Promise<PublicUserDto> {
+    const user = await this.userRepository.findOne({
+      where: { id, isActive: true },
+      relations: ["player"],
+    });
+    if (!user || !user.isActive) {
+      throw new NotFoundException("User not found");
+    }
+    const [followersCount, followingCount] = await Promise.all([
+      this.followService.countFollowers(id),
+      this.followService.countFollowing(id),
+    ]);
+    let isFollowing: boolean | undefined;
+    if (requesterId && requesterId !== id) {
+      isFollowing = await this.followService.isFollowing(requesterId, id);
+    }
+    return PublicUserDto.fromEntities(user, user.player ?? null, {
+      followersCount,
+      followingCount,
+      isFollowing,
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {

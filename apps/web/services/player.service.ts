@@ -8,7 +8,7 @@ export const playerService = {
   ): Promise<TournamentHistoryResponse> {
     return authedFetch<TournamentHistoryResponse>(
       "GET",
-      `/players/${playerId}/tournament-history`,
+      `/player/${playerId}/tournament-history`,
       { params: { period } },
     );
   },

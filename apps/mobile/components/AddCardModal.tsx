@@ -134,7 +134,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
               pressed && styles.manualModalClosePressed,
             ]}
           >
-            <Ionicons color="#15233b" name="close" size={20} />
+            <Ionicons color="#0b0b0b" name="close" size={20} />
           </Pressable>
         </View>
 

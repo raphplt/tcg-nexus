@@ -163,6 +163,21 @@ export class DeckService {
       sortOrder,
     );
   }
+  async findPublicDecksByUser(
+    userId: number,
+    params: { page?: number; limit?: number } = {},
+  ) {
+    const { page = 1, limit = 20 } = params;
+    const [items, total] = await this.decksRepository.findAndCount({
+      where: { user: { id: userId }, isPublic: true },
+      relations: ["format", "coverCard", "cards", "cards.card"],
+      order: { createdAt: "DESC" },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { items, total, page, limit };
+  }
+
   async findOneWithCards(id: number): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },

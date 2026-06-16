@@ -1,6 +1,8 @@
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { Card } from "../card/entities/card.entity";
+import { CardState } from "../card-state/entities/card-state.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
@@ -19,6 +21,16 @@ describe("CollectionService", () => {
 
   const mockCollectionItemRepo = {
     createQueryBuilder: jest.fn(),
+  };
+
+  const mockCardRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+  };
+
+  const mockCardStateRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
   };
 
   const createQueryBuilder = () => {
@@ -50,6 +62,14 @@ describe("CollectionService", () => {
         {
           provide: getRepositoryToken(CollectionItem),
           useValue: mockCollectionItemRepo,
+        },
+        {
+          provide: getRepositoryToken(Card),
+          useValue: mockCardRepo,
+        },
+        {
+          provide: getRepositoryToken(CardState),
+          useValue: mockCardStateRepo,
         },
       ],
     }).compile();

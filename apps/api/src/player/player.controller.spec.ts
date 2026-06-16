@@ -11,6 +11,7 @@ describe("PlayerController", () => {
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    getTournamentHistory: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -35,5 +36,12 @@ describe("PlayerController", () => {
     expect(await controller.findOne("1")).toBe("one");
     expect(await controller.update("2", {} as any)).toBe("updated");
     expect(await controller.remove("3")).toBe("removed");
+  });
+
+  it("getTournamentHistory delegates to PlayerService.getTournamentHistory", async () => {
+    const result = { history: [], stats: {} };
+    (service.getTournamentHistory as any).mockResolvedValue(result);
+    await expect(controller.getTournamentHistory("5", "all")).resolves.toEqual(result);
+    expect(service.getTournamentHistory).toHaveBeenCalledWith(5, "all");
   });
 });

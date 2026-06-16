@@ -15,3 +15,16 @@ export function getSealedImageUrl(
   const trimmed = product.image.replace(/^\/+/, "");
   return `${NEXT_PUBLIC_SEALED_CDN_URL}/${trimmed}`;
 }
+
+/**
+ * Returns the localized name of a sealed product.
+ * Looks up `locales` for the requested locale (default `fr`) and falls back to `nameEn`.
+ */
+export function getSealedName(
+  product: Pick<SealedProduct, "nameEn" | "locales"> | null | undefined,
+  locale: string = "fr",
+): string {
+  if (!product) return "";
+  const localized = product.locales?.find((l) => l.locale === locale)?.name;
+  return localized || product.nameEn || "";
+}

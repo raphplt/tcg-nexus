@@ -26,9 +26,13 @@ describe("JwtRefreshStrategy", () => {
     const strategy = new JwtRefreshStrategy(mockConfig, mockUserService);
     const token = (strategy as any)._jwtFromRequest({
       cookies: { refreshToken: "refresh" },
+      headers: {},
     });
     expect(token).toBe("refresh");
-    const empty = (strategy as any)._jwtFromRequest({});
+    const empty = (strategy as any)._jwtFromRequest({
+      cookies: {},
+      headers: {},
+    });
     expect(empty).toBeNull();
   });
 
@@ -51,7 +55,10 @@ describe("JwtRefreshStrategy", () => {
       .mockResolvedValue({ id: 1, isActive: false });
 
     await expect(
-      strategy.validate({ cookies: {} } as any, { sub: 1 } as any),
+      strategy.validate(
+        { cookies: {}, headers: {} } as any,
+        { sub: 1 } as any,
+      ),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

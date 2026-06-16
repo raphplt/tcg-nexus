@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -111,6 +112,15 @@ export class DeckController {
     @Body() dto: ImportDeckJsonDto,
   ) {
     return this.deckService.importDeckFromJson(user, dto);
+  }
+
+  @Public()
+  @Get("user/:userId/public")
+  findPublicDecksByUser(
+    @Param("userId", ParseIntPipe) userId: number,
+    @Query() query: FindAllDecksParams,
+  ) {
+    return this.deckService.findPublicDecksByUser(userId, query);
   }
 
   @Public()

@@ -35,6 +35,7 @@ import {
 import { AdminOrderFilters, adminService } from "@/services/admin.service";
 import { Order, OrderStatus } from "@/types/order";
 import { PaginatedResult } from "@/types/pagination";
+import { getSealedName } from "@/utils/sealedImage";
 
 const statusOptions = Object.values(OrderStatus);
 
@@ -312,11 +313,9 @@ export function AdminOrdersTable() {
                                         <TableRow key={item.id}>
                                           <TableCell>
                                             {isSealed
-                                              ? item.listing.sealedProduct
-                                                  ?.nameFr ||
-                                                item.listing.sealedProduct
-                                                  ?.nameEn ||
-                                                "Produit scellé"
+                                              ? getSealedName(
+                                                  item.listing.sealedProduct,
+                                                ) || "Produit scellé"
                                               : item.listing.pokemonCard?.name ||
                                                 "Carte inconnue"}
                                           </TableCell>
