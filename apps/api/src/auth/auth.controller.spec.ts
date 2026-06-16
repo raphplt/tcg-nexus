@@ -96,6 +96,7 @@ describe("AuthController", () => {
     process.env.FRONTEND_URL = prevFrontend;
     expect(res.json).toHaveBeenCalledWith({
       user: { id: 1, email: "a" },
+      tokens: { accessToken: "a", refreshToken: "b", accessTokenExpiresAt: 42 },
       accessTokenExpiresAt: 42,
     });
   });
@@ -121,6 +122,7 @@ describe("AuthController", () => {
     expect(cookies[1][2].maxAge).toBeUndefined();
     expect(res.json).toHaveBeenCalledWith({
       user: { id: 2, email: "b" },
+      tokens: { accessToken: "c", refreshToken: "d", accessTokenExpiresAt: 99 },
       accessTokenExpiresAt: 99,
     });
   });
@@ -193,6 +195,11 @@ describe("AuthController", () => {
     expect(res.cookie).toHaveBeenCalledTimes(2);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
+      tokens: {
+        accessToken: "newAccess",
+        refreshToken: "newRefresh",
+        accessTokenExpiresAt: 123,
+      },
       accessTokenExpiresAt: 123,
     });
   });
