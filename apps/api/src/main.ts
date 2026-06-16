@@ -61,7 +61,7 @@ export async function bootstrap() {
       origin:
         process.env.NODE_ENV === "production"
           ? process.env.FRONTEND_URL || "https://tcg-nexus.org"
-          : "http://localhost:3000",
+          : ["http://localhost:3000", "http://localhost:8081"],
       credentials: true,
     });
 
