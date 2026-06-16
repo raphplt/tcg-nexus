@@ -18,6 +18,15 @@ services:
     networks:
       - tcg-nexus-network
 
+  vision:
+    build:
+      context: ./vision
+      dockerfile: Dockerfile
+    container_name: tcg-nexus-vision
+    restart: unless-stopped
+    networks:
+      - tcg-nexus-network
+
   api:
     build:
       context: .
@@ -27,6 +36,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      vision:
+        condition: service_started
     env_file:
       - ./apps/api/.env
     environment:
@@ -35,6 +46,7 @@ services:
       NODE_ENV: production
       FRONTEND_URL: https://tcg-nexus.org
       COOKIE_DOMAIN: tcg-nexus.org
+      VISION_SERVICE_URL: http://vision:8000
     ports:
       - "3001:3001"
     networks:

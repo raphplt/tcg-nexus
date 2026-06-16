@@ -14,14 +14,17 @@ import {
   toCandidate,
 } from "./matching/scan-matcher";
 import { OcrService } from "./ocr/ocr.service";
-import { parseOcrText } from "./parsing/scan-parser";
+import { buildSearchHints, parseOcrText } from "./parsing/scan-parser";
+import { type VisionRoi, VisionService } from "./vision/vision.service";
 
 const MAX_CANDIDATES = 10;
 
-// orchestrateur du pipeline de scan : OCR -> parsing -> matching -> confiance.
+const TEXT_ROI_KEYS = new Set(["name", "number"]);
+
 @Injectable()
 export class ScanService {
   constructor(
+    private readonly visionService: VisionService,
     private readonly ocrService: OcrService,
     private readonly cardService: CardService,
   ) {}
@@ -30,24 +33,61 @@ export class ScanService {
     image: Buffer,
     game?: CardGame,
   ): Promise<ScanRecognizeResponse> {
-    const { text, engine } = await this.ocrService.recognize(image);
-    const { lines, fields, searchHints } = parseOcrText(text);
+    const vision = await this.visionService.preprocess(image);
+    const ocrTarget = vision?.normalizedImage ?? image;
 
-    const candidates = await this.matchCandidates(fields, searchHints, game);
+    const { text, engine } = await this.ocrService.recognize(ocrTarget);
+    const rois = vision ? await this.readRois(vision.rois) : [];
+
+    const augmentedText = [
+      this.roiText(rois, "name"),
+      text,
+      this.roiText(rois, "number"),
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const parsed = parseOcrText(augmentedText);
+    const searchHints = buildSearchHints(parsed.fields);
+
+    const candidates = await this.matchCandidates(
+      parsed.fields,
+      searchHints,
+      game,
+    );
     const bestCard = candidates[0] ?? null;
     const { confidence, confidenceLevel } = computeConfidence(candidates);
 
     return {
       rawText: text,
-      lines,
-      parsed: fields,
-      rois: this.buildRois(fields),
+      lines: parsed.lines,
+      parsed: parsed.fields,
+      rois: rois.length > 0 ? rois : this.fallbackRois(parsed.fields),
       candidates,
       bestCard,
       confidence,
       confidenceLevel,
-      engine,
+      engine: vision ? `${vision.engine}+${engine}` : engine,
     };
+  }
+
+  private async readRois(visionRois: VisionRoi[]): Promise<ScanRoi[]> {
+    const rois: ScanRoi[] = [];
+
+    for (const roi of visionRois) {
+      let text = "";
+      if (TEXT_ROI_KEYS.has(roi.key)) {
+        const result = await this.ocrService.recognize(roi.image);
+        text = result.text.trim();
+      }
+      rois.push({ key: roi.key, text, box: roi.box });
+    }
+
+    return rois;
+  }
+
+  private roiText(rois: ScanRoi[], key: string): string {
+    return rois.find((roi) => roi.key === key)?.text ?? "";
   }
 
   private async matchCandidates(
@@ -79,7 +119,8 @@ export class ScanService {
       .slice(0, MAX_CANDIDATES);
   }
 
-  private buildRois(fields: ScanParsedFields): ScanRoi[] {
+  // sans service vision, on reconstruit deux ROI à partir du texte parsé
+  private fallbackRois(fields: ScanParsedFields): ScanRoi[] {
     const rois: ScanRoi[] = [];
     if (fields.cardName) rois.push({ key: "name", text: fields.cardName });
     if (fields.setCode) rois.push({ key: "number", text: fields.setCode });
