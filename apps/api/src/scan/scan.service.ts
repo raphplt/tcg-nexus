@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type {
   ScanCardCandidate,
+  ScanConfidenceLevel,
   ScanParsedFields,
   ScanRecognizeResponse,
   ScanRoi,
@@ -30,6 +31,22 @@ const MAX_CANDIDATES = 10;
 const MIN_CANDIDATE_SCORE = 0.4;
 
 const TEXT_ROI_KEYS = new Set(["name", "number", "number_right"]);
+
+// départage visuel : nb max de candidats comparés, et seuil de bons matches ORB
+const VISUAL_TOP_K = 6;
+const VISUAL_MIN_GOOD = 12;
+
+const LEGACY_R2_HOST = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
+
+// URL de l'image catalogue (base sans extension -> .../low.png), hôte réécrit
+const cardImageUrl = (base?: string): string | undefined => {
+  const value = base?.trim();
+  if (!value) return undefined;
+  const host = value.includes(LEGACY_R2_HOST)
+    ? value.replace(LEGACY_R2_HOST, "cdn.tcg-nexus.org")
+    : value;
+  return `${host}/low.png`;
+};
 
 @Injectable()
 export class ScanService {
@@ -61,20 +78,25 @@ export class ScanService {
     );
 
     const t2 = Date.now();
-    const candidates = await this.matchCandidates(fields, nameCandidates, game);
-    const bestCard = candidates[0] ?? null;
-    const { confidence, confidenceLevel } = computeConfidence(candidates);
+    const textCandidates = await this.matchCandidates(
+      fields,
+      nameCandidates,
+      game,
+    );
+
+    // départage visuel (ORB) quand le texte est ambigu
+    const refined = await this.visualDisambiguate(image, textCandidates);
 
     const response: ScanRecognizeResponse = {
       rawText: text,
       lines: fallback.lines,
       parsed: fields,
       rois: rois.length > 0 ? rois : this.fallbackRois(fields),
-      candidates,
-      bestCard,
-      confidence,
-      confidenceLevel,
-      engine: vision ? `${vision.engine}+${engine}` : engine,
+      candidates: refined.candidates,
+      bestCard: refined.candidates[0] ?? null,
+      confidence: refined.confidence,
+      confidenceLevel: refined.confidenceLevel,
+      engine: `${vision ? `${vision.engine}+` : ""}${engine}${refined.usedVisual ? "+orb" : ""}`,
     };
 
     const t3 = Date.now();
@@ -183,6 +205,49 @@ export class ScanService {
       .filter((c) => c.score >= MIN_CANDIDATE_SCORE)
       .sort((a, b) => b.score - a.score)
       .slice(0, MAX_CANDIDATES);
+  }
+
+  // départage visuel ORB : quand le texte est ambigu (pas déjà high), on compare
+  // l'artwork de la photo aux images des top candidats et on promeut le gagnant.
+  private async visualDisambiguate(
+    image: Buffer,
+    candidates: ScanCardCandidate[],
+  ): Promise<{
+    candidates: ScanCardCandidate[];
+    confidence: number;
+    confidenceLevel: ScanConfidenceLevel;
+    usedVisual: boolean;
+  }> {
+    const base = computeConfidence(candidates);
+    const keep = { candidates, ...base, usedVisual: false };
+
+    if (base.confidenceLevel === "high" || candidates.length < 2) return keep;
+
+    const requested = candidates
+      .slice(0, VISUAL_TOP_K)
+      .map((c) => ({ id: c.id, url: cardImageUrl(c.image) }))
+      .filter((c): c is { id: string; url: string } => Boolean(c.url));
+    if (requested.length < 2) return keep;
+
+    const scores = await this.visionService.match(image, requested);
+    if (scores.size === 0) return keep;
+
+    const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+    const [bestId, bestScore] = ranked[0];
+    const secondScore = ranked[1]?.[1] ?? 0;
+
+    // gagnant visuel net (assez de matches ET franchement devant le 2e)
+    if (bestScore < VISUAL_MIN_GOOD || bestScore < 2 * secondScore) return keep;
+
+    const winner = candidates.find((c) => c.id === bestId);
+    if (!winner) return keep;
+
+    return {
+      candidates: [winner, ...candidates.filter((c) => c.id !== bestId)],
+      confidence: 0.95,
+      confidenceLevel: "high",
+      usedVisual: true,
+    };
   }
 
   // sans service vision, on reconstruit deux ROI à partir du texte parsé
