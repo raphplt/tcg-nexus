@@ -161,7 +161,7 @@ export default function CollectionScreen() {
           }}
           style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
         >
-          <Ionicons color="#fff8f3" name="scan" size={16} />
+          <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
         </Pressable>
       </View>
@@ -183,7 +183,7 @@ export default function CollectionScreen() {
         onPress={() => setIsCreateModalVisible(true)}
         style={({ pressed }) => [styles.createButton, pressed && styles.createButtonPressed]}
       >
-        <Ionicons color="#fff8f3" name="add-circle-outline" size={18} />
+        <Ionicons color="#ffffff" name="add-circle-outline" size={18} />
         <Text style={styles.createButtonText}>Nouvelle collection</Text>
       </Pressable>
     </View>
@@ -236,7 +236,7 @@ export default function CollectionScreen() {
               void loadCollections(true);
             }}
             refreshing={isRefreshing}
-            tintColor="#15233b"
+            tintColor="#0b0b0b"
           />
         }
         renderItem={({ item }) => (
@@ -263,7 +263,7 @@ export default function CollectionScreen() {
             <TextInput
               onChangeText={setNewCollectionName}
               placeholder="Nom de la collection"
-              placeholderTextColor="#8992a3"
+              placeholderTextColor="#555555"
               style={styles.modalInput}
               value={newCollectionName}
             />
@@ -273,7 +273,7 @@ export default function CollectionScreen() {
               numberOfLines={3}
               onChangeText={setNewCollectionDescription}
               placeholder="Description (optionnelle)"
-              placeholderTextColor="#8992a3"
+              placeholderTextColor="#555555"
               style={[styles.modalInput, styles.modalTextArea]}
               value={newCollectionDescription}
             />
@@ -282,7 +282,7 @@ export default function CollectionScreen() {
               <Text style={styles.modalSwitchLabel}>Collection publique</Text>
               <Switch
                 onValueChange={setNewCollectionIsPublic}
-                trackColor={{ false: "#d7dce5", true: "#d95f4d" }}
+                trackColor={{ false: "#e4e4e4", true: "#b72921" }}
                 value={newCollectionIsPublic}
               />
             </View>
@@ -318,12 +318,12 @@ export default function CollectionScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
   },
   createButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 14,
     flexDirection: "row",
     gap: 6,
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   createButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   emptyPrimaryAction: {
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -355,12 +355,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   emptyPrimaryActionText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontWeight: "700",
   },
   emptySecondaryAction: {
-    backgroundColor: "#fff",
-    borderColor: "#15233b",
+    backgroundColor: "#ffffff",
+    borderColor: "#0b0b0b",
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 14,
@@ -370,32 +370,32 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   emptySecondaryActionText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontWeight: "700",
   },
   emptyState: {
     alignItems: "center",
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 16,
     borderWidth: 1,
     marginTop: 8,
     padding: 18,
   },
   emptyText: {
-    color: "#687183",
+    color: "#555555",
     fontSize: 14,
     lineHeight: 20,
     marginTop: 6,
     textAlign: "center",
   },
   emptyTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 17,
     fontWeight: "800",
   },
   eyebrow: {
-    color: "#d95f4d",
+    color: "#b72921",
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.6,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalCancel: {
-    backgroundColor: "#f2f3f7",
+    backgroundColor: "#f3f5f9",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -431,17 +431,17 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   modalCancelText: {
-    color: "#1d293d",
+    color: "#0b0b0b",
     fontWeight: "700",
   },
   modalCard: {
-    backgroundColor: "#fffdf9",
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
     width: "100%",
   },
   modalConfirm: {
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
@@ -450,22 +450,22 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   modalConfirmText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontWeight: "700",
   },
   modalInput: {
-    backgroundColor: "#f6f7fa",
-    borderColor: "#e4e8ef",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 10,
     borderWidth: 1,
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 15,
     marginTop: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   modalSwitchLabel: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -480,13 +480,13 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   modalTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 18,
     fontWeight: "800",
   },
   scanButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 14,
     flexDirection: "row",
     gap: 6,
@@ -497,37 +497,37 @@ const styles = StyleSheet.create({
     opacity: 0.86,
   },
   scanButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 14,
     fontWeight: "700",
   },
   statsCard: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 16,
     borderWidth: 1,
     marginTop: 10,
     padding: 14,
   },
   statsMeta: {
-    color: "#687183",
+    color: "#555555",
     fontSize: 13,
     lineHeight: 18,
     marginTop: 6,
   },
   statsSubtitle: {
-    color: "#244f80",
+    color: "#09597d",
     fontSize: 14,
     fontWeight: "700",
     marginTop: 4,
   },
   statsTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 18,
     fontWeight: "800",
   },
   title: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 28,
     fontWeight: "800",
   },
