@@ -1,5 +1,5 @@
 const LEGACY_R2_HOSTS = ["pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev"];
-const PLACEHOLDER_CARD = "https://tcg-nexus.org/placeholder.png";
+const PLACEHOLDER_CARD = "https://tcg-nexus.org/images/carte-pokemon-dos.jpg";
 
 export function rewriteLegacyHost(
   url: string | null | undefined,

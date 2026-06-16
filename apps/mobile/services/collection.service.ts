@@ -23,7 +23,7 @@ export interface CollectionItemsQueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  sortBy?: "added_at" | "pokemonCard.name" | "pokemonCard.rarity";
+  sortBy?: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
   sortOrder?: "ASC" | "DESC";
 }
 

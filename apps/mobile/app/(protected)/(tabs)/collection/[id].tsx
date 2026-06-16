@@ -9,6 +9,7 @@ import {
   Modal,
   Pressable,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -50,11 +51,12 @@ const resolveImage = (image?: string): string | undefined => {
 
 const sortOptions: Array<{
   label: string;
-  value: "added_at" | "pokemonCard.name" | "pokemonCard.rarity";
+  value: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
 }> = [
-  { label: "Date", value: "added_at" },
+  { label: "Date d'ajout", value: "added_at" },
   { label: "Nom", value: "pokemonCard.name" },
-  { label: "Rarete", value: "pokemonCard.rarity" },
+  { label: "Rareté", value: "pokemonCard.rarity" },
+  { label: "Quantité", value: "quantity" },
 ];
 
 const dedupeItems = (items: CollectionItem[]): CollectionItem[] => {
@@ -88,11 +90,11 @@ export default function CollectionDetailsScreen() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"added_at" | "pokemonCard.name" | "pokemonCard.rarity">(
+  const [sortBy, setSortBy] = useState<"added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity">(
     "added_at",
   );
-  const [selectedSetFilter, setSelectedSetFilter] = useState<string>("all");
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
+  const [showFilters, setShowFilters] = useState(false);
 
   const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
@@ -144,7 +146,7 @@ export default function CollectionDetailsScreen() {
           page: nextPage,
           search: debouncedSearch || undefined,
           sortBy,
-          sortOrder: sortBy === "added_at" ? "DESC" : "ASC",
+          sortOrder,
         });
 
         setMeta(response.meta);
@@ -164,7 +166,7 @@ export default function CollectionDetailsScreen() {
         }
       }
     },
-    [collectionId, debouncedSearch, isLoadingMore, meta?.currentPage, meta?.hasNextPage, sortBy],
+    [collectionId, debouncedSearch, isLoadingMore, meta?.currentPage, meta?.hasNextPage, sortBy, sortOrder],
   );
 
   useEffect(() => {
@@ -181,43 +183,10 @@ export default function CollectionDetailsScreen() {
     }
 
     void loadItems();
-  }, [debouncedSearch, sortBy]);
-
-
-
-  const availableSetFilters = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.pokemonCard?.set?.name) {
-        values.add(item.pokemonCard.set.name);
-      }
-    }
-    return Array.from(values).sort();
-  }, [items]);
-
-  const availableTypeFilters = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.pokemonCard?.category) {
-        values.add(item.pokemonCard.category);
-      }
-    }
-    return Array.from(values).sort();
-  }, [items]);
-
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSet =
-        selectedSetFilter === "all" || item.pokemonCard?.set?.name === selectedSetFilter;
-      const matchesType =
-        selectedTypeFilter === "all" || item.pokemonCard?.category === selectedTypeFilter;
-
-      return matchesSet && matchesType;
-    });
-  }, [items, selectedSetFilter, selectedTypeFilter]);
+  }, [debouncedSearch, sortBy, sortOrder]);
 
   const stats = useMemo(() => {
-    const totalCards = filteredItems.reduce(
+    const totalCards = items.reduce(
       (sum, item) => sum + Number(item.quantity || 0),
       0,
     );
@@ -225,7 +194,7 @@ export default function CollectionDetailsScreen() {
     const bySet = new Map<string, number>();
     const byRarity = new Map<string, number>();
 
-    for (const item of filteredItems) {
+    for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const setName = item.pokemonCard?.set?.name || "Inconnu";
       const rarity = item.pokemonCard?.rarity || "Inconnue";
@@ -239,7 +208,7 @@ export default function CollectionDetailsScreen() {
       bySet: Array.from(bySet.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
       totalCards,
     };
-  }, [filteredItems]);
+  }, [items]);
 
   const openCardDetails = async (cardId: string) => {
     try {
@@ -403,106 +372,106 @@ export default function CollectionDetailsScreen() {
         </Text>
       </View>
 
-      <TextInput
-        autoCapitalize="none"
-        onChangeText={setSearch}
-        placeholder="Rechercher une carte dans la collection"
-        placeholderTextColor="#555555"
-        style={styles.searchInput}
-        value={search}
-      />
+      <View style={styles.searchFilterRow}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search-outline" size={16} color="#777777" style={styles.searchIcon} />
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearch}
+            placeholder="Rechercher (nom, rareté, set)..."
+            placeholderTextColor="#777777"
+            style={styles.searchInputField}
+            value={search}
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={16} color="#777777" />
+            </Pressable>
+          )}
+        </View>
 
-      <View style={styles.sortRow}>
-        {sortOptions.map((option) => (
-          <Pressable
-            key={option.value}
-            onPress={() => setSortBy(option.value)}
-            style={({ pressed }) => [
-              styles.sortChip,
-              sortBy === option.value && styles.sortChipActive,
-              pressed && styles.sortChipPressed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.sortChipText,
-                sortBy === option.value && styles.sortChipTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
-        ))}
+        <Pressable
+          onPress={() => setShowFilters(!showFilters)}
+          style={({ pressed }) => [
+            styles.filterToggleButton,
+            showFilters && styles.filterToggleButtonActive,
+            pressed && styles.filterToggleButtonPressed,
+          ]}
+        >
+          <Ionicons
+            color={showFilters ? "#ffffff" : "#0b0b0b"}
+            name="options-outline"
+            size={18}
+          />
+        </Pressable>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        <Pressable
-          onPress={() => setSelectedSetFilter("all")}
-          style={[styles.filterChip, selectedSetFilter === "all" && styles.filterChipActive]}
-        >
-          <Text
-            style={[styles.filterChipText, selectedSetFilter === "all" && styles.filterChipTextActive]}
-          >
-            Tous les sets
-          </Text>
-        </Pressable>
+      {showFilters && (
+        <View style={styles.filterPanel}>
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Trier par</Text>
+            <View style={styles.chipsRow}>
+              {sortOptions.map((option) => (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setSortBy(option.value)}
+                  style={[
+                    styles.filterChip,
+                    sortBy === option.value && styles.filterChipActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      sortBy === option.value && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
 
-        {availableSetFilters.map((setName) => (
-          <Pressable
-            key={`set-${setName}`}
-            onPress={() => setSelectedSetFilter(setName)}
-            style={[
-              styles.filterChip,
-              selectedSetFilter === setName && styles.filterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedSetFilter === setName && styles.filterChipTextActive,
-              ]}
-            >
-              {setName}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        <Pressable
-          onPress={() => setSelectedTypeFilter("all")}
-          style={[styles.filterChip, selectedTypeFilter === "all" && styles.filterChipActive]}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              selectedTypeFilter === "all" && styles.filterChipTextActive,
-            ]}
-          >
-            Tous les types
-          </Text>
-        </Pressable>
-
-        {availableTypeFilters.map((typeName) => (
-          <Pressable
-            key={`type-${typeName}`}
-            onPress={() => setSelectedTypeFilter(typeName)}
-            style={[
-              styles.filterChip,
-              selectedTypeFilter === typeName && styles.filterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedTypeFilter === typeName && styles.filterChipTextActive,
-              ]}
-            >
-              {typeName}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Ordre</Text>
+            <View style={styles.chipsRow}>
+              <Pressable
+                onPress={() => setSortOrder("ASC")}
+                style={[
+                  styles.filterChip,
+                  sortOrder === "ASC" && styles.filterChipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    sortOrder === "ASC" && styles.filterChipTextActive,
+                  ]}
+                >
+                  Croissant
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setSortOrder("DESC")}
+                style={[
+                  styles.filterChip,
+                  sortOrder === "DESC" && styles.filterChipActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    sortOrder === "DESC" && styles.filterChipTextActive,
+                  ]}
+                >
+                  Décroissant
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 
@@ -519,7 +488,7 @@ export default function CollectionDetailsScreen() {
       <FlatList
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
-        data={filteredItems}
+        data={items}
         keyExtractor={(item) => String(item.id)}
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -573,46 +542,48 @@ export default function CollectionDetailsScreen() {
         onRequestClose={() => setIsCardModalVisible(false)}
         visible={isCardModalVisible}
       >
-        <ScrollView contentContainerStyle={styles.modalContent}>
-          <Pressable
-            onPress={() => setIsCardModalVisible(false)}
-            style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
-          >
-            <Ionicons color="#0b0b0b" name="close" size={22} />
-          </Pressable>
+        <SafeAreaView style={styles.modalSafeArea}>
+          <ScrollView contentContainerStyle={styles.modalContent}>
+            <Pressable
+              onPress={() => setIsCardModalVisible(false)}
+              style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
+            >
+              <Ionicons color="#0b0b0b" name="close" size={22} />
+            </Pressable>
 
-          <Image source={{ uri: getCardImage(selectedCard?.image, "low") }} style={styles.modalImage} />
+            <Image source={{ uri: getCardImage(selectedCard?.image, "low") }} style={styles.modalImage} />
 
-          <Text style={styles.modalTitle}>{selectedCard?.name || "Carte"}</Text>
-          <Text style={styles.modalMeta}>
-            {selectedCard?.set?.name || "Set inconnu"} • {selectedCard?.rarity || "Rarete inconnue"}
-          </Text>
+            <Text style={styles.modalTitle}>{selectedCard?.name || "Carte"}</Text>
+            <Text style={styles.modalMeta}>
+              {selectedCard?.set?.name || "Set inconnu"} • {selectedCard?.rarity || "Rarete inconnue"}
+            </Text>
 
-          <Text style={styles.modalSectionTitle}>Informations</Text>
-          <Text style={styles.modalText}>HP: {selectedCard?.pokemonDetails?.hp || "-"}</Text>
-          <Text style={styles.modalText}>
-            Types: {(selectedCard?.pokemonDetails?.types || []).join(", ") || "-"}
-          </Text>
-          <Text style={styles.modalText}>Stage: {selectedCard?.pokemonDetails?.stage || "-"}</Text>
-          <Text style={styles.modalText}>
-            {selectedCard?.pokemonDetails?.description || "Aucune description disponible."}
-          </Text>
+            <Text style={styles.modalSectionTitle}>Informations</Text>
+            <Text style={styles.modalText}>HP: {selectedCard?.pokemonDetails?.hp || "-"}</Text>
+            <Text style={styles.modalText}>
+              Types: {(selectedCard?.pokemonDetails?.types || []).join(", ") || "-"}
+            </Text>
+            <Text style={styles.modalText}>Stage: {selectedCard?.pokemonDetails?.stage || "-"}</Text>
+            <Text style={styles.modalText}>
+              {selectedCard?.pokemonDetails?.description || "Aucune description disponible."}
+            </Text>
 
-          <Text style={styles.modalSectionTitle}>Attaques</Text>
-          {(selectedCard?.pokemonDetails?.attacks || []).length > 0 ? (
-            selectedCard?.pokemonDetails?.attacks?.map((attack, index) => (
-              <View key={`attack-${index}`} style={styles.attackCard}>
-                <Text style={styles.attackName}>
-                  {attack.name || "Attaque"}
-                  {attack.damage ? ` - ${attack.damage}` : ""}
-                </Text>
-                <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.modalText}>Aucune attaque detaillee disponible.</Text>
-          )}
-        </ScrollView>
+            <Text style={styles.modalSectionTitle}>Attaques</Text>
+            {(selectedCard?.pokemonDetails?.attacks || []).length > 0 ? (
+              selectedCard?.pokemonDetails?.attacks?.map((attack, index) => (
+                <View key={`attack-${index}`} style={styles.attackCard}>
+                  <Text style={styles.attackName}>
+                    {attack.name || "Attaque"}
+                    {attack.damage ? ` - ${attack.damage}` : ""}
+                  </Text>
+                  <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.modalText}>Aucune attaque detaillee disponible.</Text>
+            )}
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
 
       <AddCardModal
@@ -649,6 +620,7 @@ const styles = StyleSheet.create({
   },
   cardCell: {
     flex: 1,
+    maxWidth: "48.5%",
     marginBottom: 10,
     position: "relative",
   },
@@ -788,18 +760,25 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
   },
+  chipsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  clearButton: {
+    padding: 4,
+  },
   filterChip: {
     backgroundColor: "#f3f5f9",
     borderColor: "#e4e4e4",
-    borderRadius: 999,
+    borderRadius: 20,
     borderWidth: 1,
-    marginRight: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
   },
   filterChipActive: {
-    backgroundColor: "#0b0b0b",
-    borderColor: "#0b0b0b",
+    backgroundColor: "#b72921",
+    borderColor: "#b72921",
   },
   filterChipText: {
     color: "#0b0b0b",
@@ -809,8 +788,27 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: "#ffffff",
   },
+  filterPanel: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 12,
+    marginTop: 10,
+    padding: 12,
+  },
   filterRow: {
     marginTop: 8,
+  },
+  filterSection: {
+    gap: 6,
+  },
+  filterSectionTitle: {
+    color: "#555555",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   gridRow: {
     gap: 10,
@@ -953,6 +951,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 32,
   },
+  modalSafeArea: {
+    flex: 1,
+    backgroundColor: "#fcfcfc",
+  },
   modalClosePressed: {
     opacity: 0.8,
   },
@@ -1026,44 +1028,49 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
   },
-  searchInput: {
+  searchContainer: {
+    alignItems: "center",
     backgroundColor: "#ffffff",
     borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    color: "#0b0b0b",
-    fontSize: 14,
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  sortChip: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 999,
-    borderWidth: 1,
+    flex: 1,
+    flexDirection: "row",
+    height: 44,
     paddingHorizontal: 10,
-    paddingVertical: 6,
   },
-  sortChipActive: {
-    backgroundColor: "#b72921",
-    borderColor: "#b72921",
-  },
-  sortChipPressed: {
-    opacity: 0.82,
-  },
-  sortChipText: {
-    color: "#0b0b0b",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  sortChipTextActive: {
-    color: "#ffffff",
-  },
-  sortRow: {
+  searchFilterRow: {
+    alignItems: "center",
     flexDirection: "row",
     gap: 8,
-    marginTop: 10,
+    marginTop: 12,
+  },
+  searchIcon: {
+    marginRight: 6,
+  },
+  searchInputField: {
+    color: "#0b0b0b",
+    flex: 1,
+    fontSize: 14,
+    height: "100%",
+    paddingVertical: 0,
+  },
+  filterToggleButton: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  filterToggleButtonActive: {
+    backgroundColor: "#0b0b0b",
+    borderColor: "#0b0b0b",
+  },
+  filterToggleButtonPressed: {
+    opacity: 0.8,
   },
   statsCard: {
     backgroundColor: "#ffffff",
