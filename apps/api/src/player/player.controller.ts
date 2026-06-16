@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
 import { CreatePlayerDto } from "./dto/create-player.dto";
 import { UpdatePlayerDto } from "./dto/update-player.dto";
 import { PlayerService } from "./player.service";
@@ -25,6 +27,15 @@ export class PlayerController {
   @Get()
   findAll() {
     return this.playerService.findAll();
+  }
+
+  @Public()
+  @Get(":id/tournament-history")
+  getTournamentHistory(
+    @Param("id") id: string,
+    @Query("period") period?: string,
+  ) {
+    return this.playerService.getTournamentHistory(+id, period);
   }
 
   @Get(":id")

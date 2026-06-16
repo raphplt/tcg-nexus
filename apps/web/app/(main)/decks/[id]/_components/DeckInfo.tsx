@@ -35,14 +35,28 @@ export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
         <InfoRow
           label="Créateur"
           value={
-            <div className="flex items-center gap-2">
-              <Avatar className="w-6 h-6">
-                <AvatarFallback>
-                  {deck.user?.firstName?.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="font-medium">{deck.user?.firstName}</span>
-            </div>
+            deck.user?.id ? (
+              <Link
+                href={`/users/${deck.user.id}`}
+                className="flex items-center gap-2 hover:text-primary hover:underline transition-colors"
+              >
+                <Avatar className="w-6 h-6">
+                  <AvatarFallback>
+                    {deck.user?.firstName?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{deck.user?.firstName}</span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Avatar className="w-6 h-6">
+                  <AvatarFallback>
+                    {deck.user?.firstName?.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{deck.user?.firstName}</span>
+              </div>
+            )
           }
         />
         <InfoRow

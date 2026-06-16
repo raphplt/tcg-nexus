@@ -12,6 +12,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { getCardImage } from "@/utils/images";
 import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
@@ -69,9 +70,18 @@ export function DeckHeader({
                 </Badge>
                 <div className="flex items-center gap-2">
                   <UserIcon className="w-4 h-4" />
-                  <span>
-                    {deck.user?.firstName} {deck.user?.lastName}
-                  </span>
+                  {deck.user?.id ? (
+                    <Link
+                      href={`/users/${deck.user.id}`}
+                      className="hover:text-primary hover:underline transition-colors"
+                    >
+                      {deck.user?.firstName} {deck.user?.lastName}
+                    </Link>
+                  ) : (
+                    <span>
+                      {deck.user?.firstName} {deck.user?.lastName}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />

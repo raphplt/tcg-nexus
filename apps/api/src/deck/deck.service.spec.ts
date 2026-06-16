@@ -60,6 +60,7 @@ describe("DeckService", () => {
       create: jest.fn((data) => data),
       save: jest.fn(async (data) => data),
       findOne: jest.fn(),
+      findAndCount: jest.fn(),
       remove: jest.fn(),
       increment: jest.fn(),
       createQueryBuilder: jest.fn(),
@@ -718,6 +719,21 @@ describe("DeckService", () => {
       const result = await service.getDeckForImport("valid");
 
       expect(result).toBe(deck);
+    });
+  });
+
+  describe("findPublicDecksByUser", () => {
+    it("queries decks by user id and isPublic = true", async () => {
+      const fake = [{ id: 1, name: "D" }];
+      deckRepo.findAndCount.mockResolvedValue([fake, 1]);
+      const result = await service.findPublicDecksByUser(7, { page: 1, limit: 20 });
+      expect(result.items).toEqual(fake);
+      expect(result.total).toBe(1);
+      expect(deckRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { user: { id: 7 }, isPublic: true },
+        }),
+      );
     });
   });
 

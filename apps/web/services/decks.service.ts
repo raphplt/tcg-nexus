@@ -145,4 +145,11 @@ export const decksService = {
   async removeDeckFromLibrary(deckId: number): Promise<{ saved: boolean }> {
     return authedFetch("DELETE", `/deck/${deckId}/save`);
   },
+
+  async getPublicDecksByUser(
+    userId: number,
+    params: { page?: number; limit?: number } = {},
+  ): Promise<{ items: Deck[]; total: number; page: number; limit: number }> {
+    return authedFetch("GET", `/deck/user/${userId}/public`, { params });
+  },
 };

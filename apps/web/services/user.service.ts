@@ -1,5 +1,6 @@
 import { User } from "@/types/auth";
 import { authedFetch } from "@/utils/fetch";
+import type { PublicUser } from "@/types/public-profile";
 
 export interface UpdateProfileData {
   firstName?: string;
@@ -20,5 +21,9 @@ export const userService = {
 
   async updatePassword(data: UpdatePasswordData): Promise<User> {
     return authedFetch<User>("PATCH", "/users/me", { data });
+  },
+
+  async getPublicProfile(userId: number): Promise<PublicUser> {
+    return authedFetch<PublicUser>("GET", `/users/${userId}/public`);
   },
 };

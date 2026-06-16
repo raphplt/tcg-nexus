@@ -34,7 +34,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 
 export default function CartPage() {
   const router = useRouter();
@@ -200,66 +200,63 @@ export default function CartPage() {
                         const itemTotal = item.listing.price * item.quantity;
                         const isUpdating = updatingItemId === item.id;
                         const isRemoving = removingItemId === item.id;
+                        const isSealed =
+                          item.listing.productKind === "sealed" ||
+                          !!item.listing.sealedProduct;
+                        const productUrl = isSealed
+                          ? `/marketplace/sealed/${item.listing.sealedProduct?.id}`
+                          : `/marketplace/cards/${item.listing.pokemonCard?.id}`;
+                        const imageUrl = isSealed
+                          ? getSealedImageUrl(item.listing.sealedProduct) ||
+                            "/images/sealed-default.png"
+                          : getCardImage(item.listing.pokemonCard);
+                        const productName = isSealed
+                          ? getSealedName(item.listing.sealedProduct) ||
+                            "Produit scellé"
+                          : item.listing.pokemonCard?.name || "Carte inconnue";
+                        const productSub = isSealed
+                          ? item.listing.sealedProduct?.pokemonSet?.name
+                          : item.listing.pokemonCard?.set?.name;
+                        const condition = isSealed
+                          ? item.listing.sealedCondition
+                          : item.listing.cardState;
 
                         return (
                           <TableRow key={item.id}>
                             <TableCell>
-                              {(() => {
-                                const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
-                                const productUrl = isSealed
-                                  ? `/marketplace/sealed/${item.listing.sealedProduct?.id}`
-                                  : `/marketplace/cards/${item.listing.pokemonCard?.id}`;
-                                const imageUrl = isSealed
-                                  ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
-                                  : getCardImage(item.listing.pokemonCard);
-                                const productName = isSealed
-                                  ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
-                                  : item.listing.pokemonCard?.name || "Carte inconnue";
-                                const productSub = isSealed
-                                  ? item.listing.sealedProduct?.pokemonSet?.name
-                                  : item.listing.pokemonCard?.set?.name;
-                                const condition = isSealed
-                                  ? item.listing.sealedCondition
-                                  : item.listing.cardState;
-
-                                return (
-                                  <>
-                                    <Link href={productUrl} className="block">
-                                      <div className="relative w-16 h-24">
-                                        <Image
-                                          src={imageUrl}
-                                          alt={productName}
-                                          fill
-                                          className="object-contain rounded hover:opacity-80 transition-opacity"
-                                        />
-                                      </div>
-                                    </Link>
-                                    </TableCell>
-                                    <TableCell>
-                                      <div>
-                                        <Link
-                                          href={productUrl}
-                                          className="font-medium hover:text-primary transition-colors"
-                                        >
-                                          {productName}
-                                        </Link>
-                                        {productSub && (
-                                          <p className="text-sm text-muted-foreground">
-                                            {productSub}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge
-                                        variant="outline"
-                                        className={getCardStateColor(condition ?? "")}
-                                      >
-                                        {condition ?? ""}
-                                      </Badge>
-                                  </>
-                                );
-                              })()}
+                              <Link href={productUrl} className="block">
+                                <div className="relative w-16 h-24">
+                                  <Image
+                                    src={imageUrl}
+                                    alt={productName}
+                                    fill
+                                    className="object-contain rounded hover:opacity-80 transition-opacity"
+                                  />
+                                </div>
+                              </Link>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <Link
+                                  href={productUrl}
+                                  className="font-medium hover:text-primary transition-colors"
+                                >
+                                  {productName}
+                                </Link>
+                                {productSub && (
+                                  <p className="text-sm text-muted-foreground">
+                                    {productSub}
+                                  </p>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={getCardStateColor(condition ?? "")}
+                              >
+                                {condition ?? ""}
+                              </Badge>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center justify-center gap-2">

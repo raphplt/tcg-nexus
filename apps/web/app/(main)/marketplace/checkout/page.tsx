@@ -11,7 +11,7 @@ import { paymentService } from "@/services/payment.service";
 import { useCartStore, useCartTotal } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 import CheckoutForm from "./_components/CheckoutForm";
 
 const stripePromise = loadStripe(
@@ -74,7 +74,7 @@ export default function CheckoutPage() {
                         ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
                         : getCardImage(item.listing.pokemonCard);
                       const productName = isSealed
-                        ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                        ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
                         : item.listing.pokemonCard?.name;
                       const productSub = isSealed
                         ? item.listing.sealedCondition || "Neuf"
@@ -97,21 +97,21 @@ export default function CheckoutPage() {
                             <p className="text-sm text-muted-foreground">
                               {productSub}
                             </p>
-                          </>
-                        );
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-sm text-muted-foreground">
+                                Qté: {item.quantity}
+                              </span>
+                              <span className="font-medium">
+                                {formatPrice(
+                                  item.listing.price * item.quantity,
+                                  item.listing.currency,
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      );
                     })()}
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-sm text-muted-foreground">
-                          Qté: {item.quantity}
-                        </span>
-                        <span className="font-medium">
-                          {formatPrice(
-                            item.listing.price * item.quantity,
-                            item.listing.currency,
-                          )}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 ))}
               </div>

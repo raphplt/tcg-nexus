@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import Image from "next/image";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -123,7 +123,7 @@ export default function OrderDetailsPage() {
                           ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
                           : item.listing.pokemonCard?.image;
                         const productName = isSealed
-                          ? item.listing.sealedProduct?.nameFr || item.listing.sealedProduct?.nameEn || "Produit scellé"
+                          ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
                           : item.listing.pokemonCard?.name || "Carte inconnue";
                         const productSub = isSealed
                           ? item.listing.sealedCondition || "Neuf"

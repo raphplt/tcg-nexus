@@ -26,10 +26,14 @@ describe("JwtStrategy", () => {
     const strategy = new JwtStrategy(mockConfig, mockUserService);
     const token = (strategy as any)._jwtFromRequest({
       cookies: { accessToken: "abc" },
+      headers: {},
     });
     expect(token).toBe("abc");
-    const empty = (strategy as any)._jwtFromRequest({});
-    expect(empty).toBeNull();
+    const empty = (strategy as any)._jwtFromRequest({
+      cookies: {},
+      headers: {},
+    });
+    expect(empty == null).toBe(true);
   });
 
   it("should validate active user", async () => {

@@ -89,4 +89,18 @@ describe("UserController", () => {
     await expect(controller.remove(9)).resolves.toEqual({ affected: 1 });
     expect(mockUserService.remove).toHaveBeenCalledWith(9);
   });
+
+  it("getPublicProfile delegates to userService.findPublicProfile without requester when anonymous", async () => {
+    const dto = { id: 1, firstName: "A", lastName: "B" };
+    (mockUserService as any).findPublicProfile = jest.fn().mockResolvedValue(dto);
+    await expect(controller.getPublicProfile(1)).resolves.toEqual(dto);
+    expect((mockUserService as any).findPublicProfile).toHaveBeenCalledWith(1, undefined);
+  });
+
+  it("getPublicProfile passes the current user id when authenticated", async () => {
+    const dto = { id: 1, firstName: "A", lastName: "B" };
+    (mockUserService as any).findPublicProfile = jest.fn().mockResolvedValue(dto);
+    await expect(controller.getPublicProfile(1, { id: 7 } as any)).resolves.toEqual(dto);
+    expect((mockUserService as any).findPublicProfile).toHaveBeenCalledWith(1, 7);
+  });
 });
