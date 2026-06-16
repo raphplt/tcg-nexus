@@ -288,7 +288,76 @@ export class CollectionService {
       );
     }
 
+    const isMasterSet = collection.name === "Étincelles Déferlantes";
     const skip = (page - 1) * limit;
+
+    if (isMasterSet) {
+      const queryBuilder = this.cardRepository
+        .createQueryBuilder("card")
+        .leftJoinAndSelect("card.set", "set")
+        .leftJoinAndSelect("set.serie", "serie")
+        .leftJoinAndSelect("card.collectionItems", "item", "item.collection.id = :collectionId", { collectionId })
+        .where("set.name = :setName", { setName: "Étincelles Déferlantes" });
+
+      if (search) {
+        queryBuilder.andWhere(
+          "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search)",
+          { search: `%${search}%` },
+        );
+      }
+
+      if (setId) {
+        queryBuilder.andWhere("set.id = :setId", { setId });
+      }
+      if (serieId) {
+        queryBuilder.andWhere("serie.id = :serieId", { serieId });
+      }
+      if (rarity) {
+        queryBuilder.andWhere("card.rarity = :rarity", { rarity });
+      }
+      if (cardState) {
+        queryBuilder.andWhere("item.cardState.code = :cardState", { cardState });
+      }
+
+      queryBuilder.orderBy("card.localId", "ASC");
+
+      const totalItems = await queryBuilder.getCount();
+      const cards = await queryBuilder.skip(skip).take(limit).getMany();
+
+      const data = cards.map((card) => {
+        const item = card.collectionItems?.[0];
+        return {
+          id: item?.id ?? null,
+          quantity: item?.quantity ?? 0,
+          added_at: item?.added_at ?? null,
+          pokemonCard: {
+            id: card.id,
+            name: card.name,
+            image: card.image,
+            localId: card.localId,
+            rarity: card.rarity,
+            category: card.category,
+            updated: card.updated,
+            set: card.set,
+          },
+        };
+      });
+
+      const totalPages = Math.ceil(totalItems / limit);
+
+      return {
+        data: data as any,
+        meta: {
+          totalItems,
+          itemCount: data.length,
+          itemsPerPage: limit,
+          totalPages,
+          currentPage: page,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
+    }
 
     // Construire la query avec recherche
     const queryBuilder = this.collectionItemRepository

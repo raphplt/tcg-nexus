@@ -38,6 +38,16 @@ export default function CollectionScreen() {
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [newCollectionIsPublic, setNewCollectionIsPublic] = useState(false);
 
+  const standardCollections = useMemo(
+    () => collections.filter((col) => col.name !== "Étincelles Déferlantes"),
+    [collections],
+  );
+
+  const masterSetCollection = useMemo(
+    () => collections.find((col) => col.name === "Étincelles Déferlantes") || null,
+    [collections],
+  );
+
   const loadCollections = useCallback(async (refresh = false) => {
     if (!user?.id) {
       setCollections([]);
@@ -68,6 +78,30 @@ export default function CollectionScreen() {
   useEffect(() => {
     void loadCollections();
   }, [loadCollections]);
+
+  const handleCreateMasterSet = async () => {
+    if (!user?.id) {
+      return;
+    }
+
+    const payload: CreateCollectionPayload = {
+      name: "Étincelles Déferlantes",
+      description: "Mon Master Set pour l'extension Étincelles Déferlantes (EV08)",
+      isPublic: false,
+      userId: user.id,
+    };
+
+    setIsCreating(true);
+    try {
+      await collectionService.createCollection(payload);
+      toast.showSuccess("Master Set Étincelles Déferlantes initialisé !");
+      await loadCollections(true);
+    } catch (error) {
+      toast.showError(getApiErrorMessage(error));
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const totalCards = useMemo(
     () => collections.reduce((sum, collection) => sum + getTotalCards(collection), 0),
@@ -189,14 +223,48 @@ export default function CollectionScreen() {
     </View>
   );
 
+  const renderFooter = () => (
+    <View style={styles.masterSection}>
+      <Text style={styles.sectionTitle}>Master Sets (Bêta)</Text>
+      {masterSetCollection ? (
+        <CollectionCard
+          collection={masterSetCollection}
+          onDelete={handleDeleteCollection}
+          onPress={(collection) => {
+            router.push(`/collection/${collection.id}`);
+          }}
+        />
+      ) : (
+        <View style={styles.masterSetPromo}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.masterSetName}>Étincelles Déferlantes</Text>
+            <Text style={styles.masterSetDesc}>
+              Suivez votre collection complète de l'extension EV08.
+            </Text>
+          </View>
+          <Pressable
+            disabled={isLoading}
+            onPress={() => void handleCreateMasterSet()}
+            style={({ pressed }) => [
+              styles.masterCreateButton,
+              (pressed || isLoading) && styles.masterCreateButtonPressed,
+            ]}
+          >
+            <Text style={styles.masterCreateButtonText}>Commencer</Text>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
         contentContainerStyle={styles.listContent}
-        data={collections}
+        data={standardCollections}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          !isLoading ? (
+          !isLoading && standardCollections.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>Aucune collection pour le moment</Text>
               <Text style={styles.emptyText}>
@@ -230,6 +298,7 @@ export default function CollectionScreen() {
           ) : null
         }
         ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl
             onRefresh={() => {
@@ -535,5 +604,54 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  masterSection: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e4",
+    paddingTop: 20,
+  },
+  sectionTitle: {
+    color: "#0b0b0b",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  masterSetPromo: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  masterSetName: {
+    color: "#0b0b0b",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  masterSetDesc: {
+    color: "#555555",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  masterCreateButton: {
+    backgroundColor: "#0b0b0b",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  masterCreateButtonPressed: {
+    opacity: 0.8,
+  },
+  masterCreateButtonText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 13,
   },
 });

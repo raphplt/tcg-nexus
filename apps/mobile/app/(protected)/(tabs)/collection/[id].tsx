@@ -42,6 +42,18 @@ const cardStates = [
   { label: "Poor", value: "Poor" },
 ];
 
+const POKEMON_RARITIES = [
+  { id: "Commune", name: "Commune" },
+  { id: "Peu Commune", name: "Peu Commune" },
+  { id: "Rare", name: "Rare" },
+  { id: "Double rare", name: "Double Rare" },
+  { id: "HIGH-TECG rare", name: "Rare ACE SPEC" },
+  { id: "Illustration rare", name: "Illustration rare" },
+  { id: "Ultra Rare", name: "Ultra Rare" },
+  { id: "Illustration spéciale rare", name: "Illustration spéciale rare" },
+  { id: "Hyper rare", name: "Hyper rare" },
+];
+
 const PAGE_SIZE = 24;
 
 const resolveImage = (image?: string): string | undefined => {
@@ -72,15 +84,16 @@ const sortOptions: Array<{
 ];
 
 const dedupeItems = (items: CollectionItem[]): CollectionItem[] => {
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   const next: CollectionItem[] = [];
 
   for (const item of items) {
-    if (!item.id || seen.has(item.id)) {
+    const key = item.id ? `item-${item.id}` : `card-${item.pokemonCard?.id}`;
+    if (seen.has(key)) {
       continue;
     }
 
-    seen.add(item.id);
+    seen.add(key);
     next.push(item);
   }
 
@@ -92,6 +105,9 @@ export default function CollectionDetailsScreen() {
   const collectionId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [collection, setCollection] = useState<UserCollection | null>(null);
+  const isMasterSet = useMemo(() => {
+    return collection?.name === "Étincelles Déferlantes";
+  }, [collection?.name]);
   const [items, setItems] = useState<CollectionItem[]>([]);
   const [meta, setMeta] = useState<CollectionItemsPaginatedResponse["meta"] | null>(null);
 
@@ -110,7 +126,6 @@ export default function CollectionDetailsScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(undefined);
   const [selectedSetId, setSelectedSetId] = useState<string | undefined>(undefined);
-  const [rarityInput, setRarityInput] = useState("");
   const [selectedRarity, setSelectedRarity] = useState<string | undefined>(undefined);
   const [selectedCardState, setSelectedCardState] = useState<string | undefined>(undefined);
 
@@ -119,6 +134,7 @@ export default function CollectionDetailsScreen() {
 
   const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
   const [isSetModalVisible, setIsSetModalVisible] = useState(false);
+  const [isRarityModalVisible, setIsRarityModalVisible] = useState(false);
   const [isStateModalVisible, setIsStateModalVisible] = useState(false);
   const [isSortByModalVisible, setIsSortByModalVisible] = useState(false);
 
@@ -156,14 +172,6 @@ export default function CollectionDetailsScreen() {
 
     return () => clearTimeout(timer);
   }, [search]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSelectedRarity(rarityInput.trim() || undefined);
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [rarityInput]);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -298,20 +306,23 @@ export default function CollectionDetailsScreen() {
   }, [sets, selectedSerieId]);
 
   const hasActiveFilters = useMemo(() => {
+    if (isMasterSet) {
+      return search.trim().length > 0 || selectedRarity !== undefined;
+    }
     return (
       search.trim().length > 0 ||
       selectedSerieId !== undefined ||
       selectedSetId !== undefined ||
-      rarityInput.trim().length > 0 ||
+      selectedRarity !== undefined ||
       selectedCardState !== undefined
     );
-  }, [search, selectedSerieId, selectedSetId, rarityInput, selectedCardState]);
+  }, [isMasterSet, search, selectedSerieId, selectedSetId, selectedRarity, selectedCardState]);
 
   const handleResetFilters = () => {
     setSearch("");
     setSelectedSerieId(undefined);
     setSelectedSetId(undefined);
-    setRarityInput("");
+    setSelectedRarity(undefined);
     setSelectedCardState(undefined);
   };
 
@@ -354,6 +365,7 @@ export default function CollectionDetailsScreen() {
     if (!collectionId || !item.id) {
       return;
     }
+    const itemId = item.id;
 
     Alert.alert(
       "Retirer la carte",
@@ -364,11 +376,22 @@ export default function CollectionDetailsScreen() {
           style: "destructive",
           text: "Supprimer",
           onPress: async () => {
-            setIsDeletingItemId(item.id);
+            setIsDeletingItemId(itemId);
             try {
-              await collectionService.deleteCollectionItem(collectionId, item.id);
-              setItems((prev) => prev.filter((value) => value.id !== item.id));
+              await collectionService.deleteCollectionItem(collectionId, itemId);
+              if (isMasterSet) {
+                setItems((prev) =>
+                  prev.map((val) =>
+                    val.pokemonCard?.id === item.pokemonCard?.id
+                      ? { ...val, quantity: 0, id: null }
+                      : val
+                  )
+                );
+              } else {
+                setItems((prev) => prev.filter((value) => value.id !== itemId));
+              }
               toast.showSuccess("Carte retiree de la collection.");
+              void loadCollectionHeader();
             } catch (error) {
               toast.showError(getApiErrorMessage(error));
             } finally {
@@ -418,14 +441,50 @@ export default function CollectionDetailsScreen() {
     }
 
     if (currentQty === 1) {
-      handleDeleteItem(item);
-      return;
+      if (isMasterSet) {
+        if (!item.id) {
+          toast.showError("Impossible de supprimer la carte : ID manquant.");
+          return;
+        }
+        setIsDeletingItemId(item.id);
+        // Optimistic update
+        setItems((prev) =>
+          prev.map((val) =>
+            val.pokemonCard?.id === item.pokemonCard?.id
+              ? { ...val, quantity: 0, id: null }
+              : val
+          )
+        );
+        try {
+          await collectionService.deleteCollectionItem(collectionId, item.id);
+          toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
+          void loadCollectionHeader();
+        } catch (error) {
+          // Revert optimistic update
+          setItems((prev) =>
+            prev.map((val) =>
+              val.pokemonCard?.id === item.pokemonCard?.id
+                ? { ...val, quantity: 1, id: item.id }
+                : val
+            )
+          );
+          toast.showError(getApiErrorMessage(error));
+        } finally {
+          setIsDeletingItemId(null);
+        }
+        return;
+      } else {
+        handleDeleteItem(item);
+        return;
+      }
     }
 
     // Optimistic update
     setItems((prev) =>
       prev.map((val) =>
-        val.id === item.id ? { ...val, quantity: currentQty - 1 } : val
+        val.pokemonCard?.id === item.pokemonCard?.id
+          ? { ...val, quantity: currentQty - 1 }
+          : val
       )
     );
 
@@ -437,7 +496,9 @@ export default function CollectionDetailsScreen() {
       // Revert optimistic update
       setItems((prev) =>
         prev.map((val) =>
-          val.id === item.id ? { ...val, quantity: currentQty } : val
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, quantity: currentQty }
+            : val
         )
       );
       toast.showError(getApiErrorMessage(error));
@@ -449,22 +510,35 @@ export default function CollectionDetailsScreen() {
       return;
     }
 
+    const currentQty = Number(item.quantity || 0);
+
     // Optimistic update
     setItems((prev) =>
       prev.map((val) =>
-        val.id === item.id ? { ...val, quantity: Number(val.quantity || 0) + 1 } : val
+        val.pokemonCard?.id === item.pokemonCard?.id
+          ? { ...val, quantity: currentQty + 1 }
+          : val
       )
     );
 
     try {
-      await collectionService.addCardToCollection(collectionId, item.pokemonCard.id);
+      const response = await collectionService.addCardToCollection(collectionId, item.pokemonCard.id);
+      setItems((prev) =>
+        prev.map((val) =>
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, id: response.id, quantity: response.quantity }
+            : val
+        )
+      );
       toast.showSuccess(`${item.pokemonCard.name || "Carte"} ajoutée.`);
       void loadCollectionHeader();
     } catch (error) {
       // Revert optimistic update
       setItems((prev) =>
         prev.map((val) =>
-          val.id === item.id ? { ...val, quantity: Number(val.quantity || 1) - 1 } : val
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, id: item.id, quantity: currentQty }
+            : val
         )
       );
       toast.showError(getApiErrorMessage(error));
@@ -477,6 +551,7 @@ export default function CollectionDetailsScreen() {
 
   const renderCardCell = ({ item }: { item: CollectionItem }) => {
     const card = item.pokemonCard;
+    const isQtyZero = Number(item.quantity || 0) === 0;
 
     return (
       <View style={styles.cardCell}>
@@ -490,6 +565,7 @@ export default function CollectionDetailsScreen() {
             style={({ pressed }) => [
               styles.cardTopArea,
               pressed && styles.cardTopAreaPressed,
+              isQtyZero && { opacity: 0.4 },
             ]}
           >
             <Image
@@ -506,18 +582,19 @@ export default function CollectionDetailsScreen() {
 
           <View style={styles.cardQtyRow}>
             <Pressable
-              disabled={isDeletingItemId === item.id}
+              disabled={(item.id ? isDeletingItemId === item.id : false) || isQtyZero}
               onPress={() => void handleDecrementItem(item)}
               style={({ pressed }) => [
                 styles.cardQtyButton,
                 pressed && styles.cardQtyButtonPressed,
+                isQtyZero && { opacity: 0.3 },
               ]}
             >
               <Ionicons name="remove" size={12} color="#0b0b0b" />
             </Pressable>
             <Text style={styles.cardQtyText}>{item.quantity}</Text>
             <Pressable
-              disabled={isDeletingItemId === item.id}
+              disabled={item.id ? isDeletingItemId === item.id : false}
               onPress={() => void handleIncrementItem(item)}
               style={({ pressed }) => [
                 styles.cardQtyButton,
@@ -552,21 +629,25 @@ export default function CollectionDetailsScreen() {
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={openManualAddModal}
-        style={({ pressed }) => [styles.manualAddButton, pressed && styles.manualAddButtonPressed]}
-      >
-        <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
-        <Text style={styles.manualAddButtonText}>Ajouter une carte manuellement</Text>
-      </Pressable>
+      {!isMasterSet && (
+        <>
+          <Pressable
+            onPress={openManualAddModal}
+            style={({ pressed }) => [styles.manualAddButton, pressed && styles.manualAddButtonPressed]}
+          >
+            <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
+            <Text style={styles.manualAddButtonText}>Ajouter une carte manuellement</Text>
+          </Pressable>
 
-      <Pressable
-        onPress={handleDeleteCollection}
-        style={({ pressed }) => [styles.deleteCollectionButton, pressed && styles.deleteCollectionButtonPressed]}
-      >
-        <Ionicons color="#ffffff" name="trash-outline" size={16} />
-        <Text style={styles.deleteCollectionButtonText}>Supprimer cette collection</Text>
-      </Pressable>
+          <Pressable
+            onPress={handleDeleteCollection}
+            style={({ pressed }) => [styles.deleteCollectionButton, pressed && styles.deleteCollectionButtonPressed]}
+          >
+            <Ionicons color="#ffffff" name="trash-outline" size={16} />
+            <Text style={styles.deleteCollectionButtonText}>Supprimer cette collection</Text>
+          </Pressable>
+        </>
+      )}
 
       <Text style={styles.collectionName}>{collection?.name || "Collection"}</Text>
       <Text style={styles.collectionDescription}>
@@ -616,60 +697,80 @@ export default function CollectionDetailsScreen() {
         <View style={styles.filtersPanel}>
           <Text style={styles.filtersPanelTitle}>Filtres avancés</Text>
           
-          <View style={styles.filterFieldRow}>
-            <View style={styles.filterFieldContainer}>
-              <Text style={styles.filterLabel}>Série</Text>
-              <Pressable
-                onPress={() => setIsSerieModalVisible(true)}
-                style={styles.filterDropdown}
-              >
-                <Text numberOfLines={1} style={styles.filterDropdownText}>
-                  {selectedSerieId ? series.find((s) => s.id === selectedSerieId)?.name : "Toutes les séries"}
-                </Text>
-                <Ionicons name="chevron-down" size={14} color="#777777" />
-              </Pressable>
+          {isMasterSet ? (
+            <View style={styles.filterFieldRow}>
+              <View style={styles.filterFieldContainer}>
+                <Text style={styles.filterLabel}>Rareté</Text>
+                <Pressable
+                  onPress={() => setIsRarityModalVisible(true)}
+                  style={styles.filterDropdown}
+                >
+                  <Text numberOfLines={1} style={styles.filterDropdownText}>
+                    {selectedRarity || "Toutes les raretés"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color="#777777" />
+                </Pressable>
+              </View>
             </View>
+          ) : (
+            <>
+              <View style={styles.filterFieldRow}>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Série</Text>
+                  <Pressable
+                    onPress={() => setIsSerieModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedSerieId ? series.find((s) => s.id === selectedSerieId)?.name : "Toutes les séries"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
 
-            <View style={styles.filterFieldContainer}>
-              <Text style={styles.filterLabel}>Extension</Text>
-              <Pressable
-                onPress={() => setIsSetModalVisible(true)}
-                style={styles.filterDropdown}
-              >
-                <Text numberOfLines={1} style={styles.filterDropdownText}>
-                  {selectedSetId ? sets.find((s) => s.id === selectedSetId)?.name : "Toutes les extensions"}
-                </Text>
-                <Ionicons name="chevron-down" size={14} color="#777777" />
-              </Pressable>
-            </View>
-          </View>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Extension</Text>
+                  <Pressable
+                    onPress={() => setIsSetModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedSetId ? sets.find((s) => s.id === selectedSetId)?.name : "Toutes les extensions"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+              </View>
 
-          <View style={styles.filterFieldRow}>
-            <View style={styles.filterFieldContainer}>
-              <Text style={styles.filterLabel}>Rareté</Text>
-              <TextInput
-                autoCapitalize="none"
-                onChangeText={setRarityInput}
-                placeholder="Ex: Rare Holo"
-                placeholderTextColor="#777777"
-                style={styles.filterTextInput}
-                value={rarityInput}
-              />
-            </View>
+              <View style={styles.filterFieldRow}>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Rareté</Text>
+                  <Pressable
+                    onPress={() => setIsRarityModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedRarity || "Toutes les raretés"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
 
-            <View style={styles.filterFieldContainer}>
-              <Text style={styles.filterLabel}>État</Text>
-              <Pressable
-                onPress={() => setIsStateModalVisible(true)}
-                style={styles.filterDropdown}
-              >
-                <Text numberOfLines={1} style={styles.filterDropdownText}>
-                  {selectedCardState ? cardStates.find((cs) => cs.value === selectedCardState)?.label : "Tous les états"}
-                </Text>
-                <Ionicons name="chevron-down" size={14} color="#777777" />
-              </Pressable>
-            </View>
-          </View>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>État</Text>
+                  <Pressable
+                    onPress={() => setIsStateModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedCardState ? cardStates.find((cs) => cs.value === selectedCardState)?.label : "Tous les états"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
 
           {hasActiveFilters && (
             <Pressable
@@ -683,19 +784,21 @@ export default function CollectionDetailsScreen() {
         </View>
       )}
 
-      <View style={styles.selectRow}>
-        <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
-          <Text style={styles.selectInputText}>Trier par : {getSortByLabel(sortBy)}</Text>
-          <Ionicons name="chevron-down" size={14} color="#555555" />
-        </Pressable>
+      {!isMasterSet && (
+        <View style={styles.selectRow}>
+          <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
+            <Text style={styles.selectInputText}>Trier par : {getSortByLabel(sortBy)}</Text>
+            <Ionicons name="chevron-down" size={14} color="#555555" />
+          </Pressable>
 
-        <Pressable onPress={handleSelectSortOrder} style={styles.selectInput}>
-          <Text style={styles.selectInputText}>
-            Ordre : {sortOrder === "ASC" ? "Croissant" : "Décroissant"}
-          </Text>
-          <Ionicons name="chevron-down" size={14} color="#555555" />
-        </Pressable>
-      </View>
+          <Pressable onPress={handleSelectSortOrder} style={styles.selectInput}>
+            <Text style={styles.selectInputText}>
+              Ordre : {sortOrder === "ASC" ? "Croissant" : "Décroissant"}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color="#555555" />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 
@@ -713,30 +816,36 @@ export default function CollectionDetailsScreen() {
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
         data={items}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item) => (item.id ? String(item.id) : `card-${item.pokemonCard?.id}`)}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Collection vide</Text>
-            <Text style={styles.emptyText}>
-              Ajoute des cartes en scannant ou via la recherche.
+            <Text style={styles.emptyTitle}>
+              {isMasterSet ? "Aucune carte" : "Collection vide"}
             </Text>
-            <View style={styles.emptyActionsRow}>
-              <Pressable
-                onPress={() => router.push("/scan")}
-                style={({ pressed }) => [styles.emptyAction, pressed && styles.emptyActionPressed]}
-              >
-                <Text style={styles.emptyActionText}>Scanner</Text>
-              </Pressable>
-              <Pressable
-                onPress={openManualAddModal}
-                style={({ pressed }) => [
-                  styles.emptySecondaryAction,
-                  pressed && styles.emptySecondaryActionPressed,
-                ]}
-              >
-                <Text style={styles.emptySecondaryActionText}>Ajouter manuellement</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.emptyText}>
+              {isMasterSet
+                ? "Aucune carte ne correspond à vos filtres de recherche."
+                : "Ajoute des cartes en scannant ou via la recherche."}
+            </Text>
+            {!isMasterSet && (
+              <View style={styles.emptyActionsRow}>
+                <Pressable
+                  onPress={() => router.push("/scan")}
+                  style={({ pressed }) => [styles.emptyAction, pressed && styles.emptyActionPressed]}
+                >
+                  <Text style={styles.emptyActionText}>Scanner</Text>
+                </Pressable>
+                <Pressable
+                  onPress={openManualAddModal}
+                  style={({ pressed }) => [
+                    styles.emptySecondaryAction,
+                    pressed && styles.emptySecondaryActionPressed,
+                  ]}
+                >
+                  <Text style={styles.emptySecondaryActionText}>Ajouter manuellement</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         }
         ListFooterComponent={isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null}
@@ -794,6 +903,16 @@ export default function CollectionDetailsScreen() {
         selectedValue={selectedSetId}
         onSelect={setSelectedSetId}
         placeholder="Rechercher un set..."
+      />
+
+      <SelectionModal
+        isVisible={isRarityModalVisible}
+        onClose={() => setIsRarityModalVisible(false)}
+        title="Rareté"
+        options={POKEMON_RARITIES}
+        selectedValue={selectedRarity}
+        onSelect={setSelectedRarity}
+        placeholder="Rechercher une rareté..."
       />
 
       <SelectionModal

@@ -40,7 +40,7 @@ export interface CardSearchResult {
 }
 
 export interface CollectionItem {
-  id: number;
+  id: number | null;
   quantity: number;
   added_at?: string;
   pokemonCard?: CardSearchResult | null;
