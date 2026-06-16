@@ -12,13 +12,6 @@ import { createUser, TestUser } from "./helpers/auth";
 
 const passThroughGuard = { canActivate: () => true };
 
-/**
- * The paginated endpoints in this project can return either:
- *   - a raw array (older endpoints)
- *   - `{ data: [...], total }` (PaginationHelper.paginateQueryBuilder)
- *   - `{ items: [...], total }` (the public-by-user endpoint added in this branch)
- * This helper extracts the list portion regardless of shape.
- */
 function pickList(body: any): any[] {
   if (Array.isArray(body)) return body;
   if (Array.isArray(body?.items)) return body.items;
@@ -52,7 +45,6 @@ describe("DeckController (e2e)", () => {
     creator = await createUser(httpServer, { firstName: "Deck", lastName: "Creator" });
     other = await createUser(httpServer, { firstName: "Other", lastName: "User" });
 
-    // Ensure at least one DeckFormat exists for create-deck tests.
     const formatRepo = app.get<Repository<DeckFormat>>(
       getRepositoryToken(DeckFormat),
     );

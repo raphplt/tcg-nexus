@@ -16,10 +16,6 @@ export function getSealedImageUrl(
   return `${NEXT_PUBLIC_SEALED_CDN_URL}/${trimmed}`;
 }
 
-/**
- * Returns the localized name of a sealed product.
- * Looks up `locales` for the requested locale (default `fr`) and falls back to `nameEn`.
- */
 export function getSealedName(
   product: Pick<SealedProduct, "nameEn" | "locales"> | null | undefined,
   locale: string = "fr",

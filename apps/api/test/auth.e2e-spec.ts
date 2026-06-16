@@ -140,7 +140,6 @@ describe("AuthController (e2e)", () => {
       expect(response.body.success).toBe(true);
       expect(response.body.tokens.accessToken).toEqual(expect.any(String));
       expect(response.body.tokens.refreshToken).toEqual(expect.any(String));
-      // New tokens must differ from the original ones.
       expect(response.body.tokens.refreshToken).not.toBe(user.refreshToken);
     });
 
@@ -162,7 +161,6 @@ describe("AuthController (e2e)", () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toBeDefined();
       const clearCookies = (response.headers["set-cookie"] ?? []) as unknown as string[];
-      // clearCookie sets the cookie to an empty value with an expired date
       const accessCleared = clearCookies.find((c) =>
         c.startsWith("accessToken="),
       );

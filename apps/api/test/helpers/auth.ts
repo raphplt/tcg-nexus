@@ -12,23 +12,15 @@ export interface TestUser extends TestUserCredentials {
   id: number;
   accessToken: string;
   refreshToken: string;
-  /** Raw set-cookie header strings, useful for cookie-based requests like /auth/refresh */
   cookies: string[];
 }
 
 const DEFAULT_PASSWORD = "Password123!";
 
-/**
- * Build a unique email so tests stay isolated when run against a shared DB.
- */
 export function uniqueEmail(prefix = "test"): string {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}@test.com`;
 }
 
-/**
- * Register a fresh user and return the credentials + tokens.
- * Uses /auth/register which now returns `{ user, tokens, accessTokenExpiresAt }`.
- */
 export async function createUser(
   httpServer: Server,
   overrides: Partial<TestUserCredentials> = {},
@@ -69,9 +61,6 @@ export async function createUser(
   };
 }
 
-/**
- * Log in an existing user and return fresh tokens + cookies.
- */
 export async function login(
   httpServer: Server,
   email: string,
@@ -100,9 +89,6 @@ export async function login(
   };
 }
 
-/**
- * Extract a single cookie value by name from a set-cookie header array.
- */
 export function getCookieValue(
   cookies: string[],
   name: string,
@@ -117,9 +103,6 @@ export function getCookieValue(
   return undefined;
 }
 
-/**
- * Build an Authorization header value for a logged-in user.
- */
 export function authHeader(token: string): string {
   return `Bearer ${token}`;
 }
