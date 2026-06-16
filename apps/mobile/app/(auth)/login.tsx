@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { colors, radius } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthProvider";
 import { mapAuthApiError } from "@/utils/authApiError";
 import {
@@ -62,12 +63,10 @@ export default function LoginScreen() {
         ref={scrollRef}
       >
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>AUTH FLOW</Text>
-          <Text style={styles.title}>Connexion securisee</Text>
+          <Text style={styles.brand}>TCG Nexus</Text>
+          <Text style={styles.title}>Connexion</Text>
           <Text style={styles.subtitle}>
-            Connecte-toi avec ton email et ton mot de passe. Le mode
-            "Se souvenir de moi" garde ta session jusqu'a 7 jours, sinon la
-            session expire rapidement (15 min).
+            Accède à tes collections et scanne tes cartes.
           </Text>
         </View>
 
@@ -85,7 +84,7 @@ export default function LoginScreen() {
               scrollRef.current?.scrollTo({ animated: true, y: 80 });
             }}
             placeholder="vous@tcgnexus.app"
-            placeholderTextColor="#8b92a1"
+            placeholderTextColor={colors.mutedForeground}
             style={[styles.input, errors.email ? styles.inputError : undefined]}
             value={email}
           />
@@ -102,7 +101,7 @@ export default function LoginScreen() {
               scrollRef.current?.scrollTo({ animated: true, y: 160 });
             }}
             placeholder="Votre mot de passe"
-            placeholderTextColor="#8b92a1"
+            placeholderTextColor={colors.mutedForeground}
             secureTextEntry
             style={[styles.input, errors.password ? styles.inputError : undefined]}
             value={password}
@@ -115,12 +114,12 @@ export default function LoginScreen() {
             <View style={styles.rememberTextBlock}>
               <Text style={styles.rememberTitle}>Se souvenir de moi</Text>
               <Text style={styles.rememberSubtitle}>
-                Active 7 jours de session, sinon expiration courte.
+                Reste connecté sur cet appareil.
               </Text>
             </View>
             <Switch
               onValueChange={setRememberMe}
-              trackColor={{ false: "#d7dce5", true: "#d95f4d" }}
+              trackColor={{ false: colors.border, true: colors.primary }}
               value={rememberMe}
             />
           </View>
@@ -138,7 +137,7 @@ export default function LoginScreen() {
             ]}
           >
             {isLoading ? (
-              <ActivityIndicator color="#fff8f3" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text style={styles.primaryButtonText}>Se connecter</Text>
             )}
@@ -146,10 +145,10 @@ export default function LoginScreen() {
 
           <View style={styles.linkRow}>
             <Link href="/register" style={styles.secondaryLink}>
-              Creer un compte
+              Créer un compte
             </Link>
             <Link href="/forgot-password" style={styles.secondaryLink}>
-              Mot de passe oublie
+              Mot de passe oublié
             </Link>
           </View>
         </View>
@@ -159,38 +158,34 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  brand: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
   card: {
-    backgroundColor: "#ffffff",
-    borderColor: "rgba(21,35,59,0.08)",
-    borderRadius: 28,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     gap: 10,
     padding: 22,
-    shadowColor: "#15233b",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.08,
-    shadowRadius: 32,
   },
   content: {
     flexGrow: 1,
     justifyContent: "center",
     padding: 24,
   },
-  eyebrow: {
-    color: "#d95f4d",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 2,
-    marginBottom: 12,
-  },
   errorText: {
-    color: "#b22525",
+    color: colors.destructive,
     fontSize: 13,
     fontWeight: "600",
     marginTop: -4,
   },
   formErrorText: {
-    color: "#7a1f1f",
+    color: colors.destructive,
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 20,
@@ -200,20 +195,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   input: {
-    backgroundColor: "#f6f7fa",
-    borderColor: "#e4e8ef",
-    borderRadius: 16,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     borderWidth: 1,
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   inputError: {
-    borderColor: "#d95f4d",
+    borderColor: colors.destructive,
   },
   label: {
-    color: "#2b3340",
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -225,8 +220,8 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
-    borderRadius: 18,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
     marginTop: 8,
     minHeight: 52,
     justifyContent: "center",
@@ -236,7 +231,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#fff8f3",
+    color: colors.primaryForeground,
     fontSize: 16,
     fontWeight: "800",
   },
@@ -248,7 +243,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   rememberSubtitle: {
-    color: "#6a7382",
+    color: colors.mutedForeground,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -257,27 +252,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   rememberTitle: {
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
   },
   screen: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: colors.pageBg,
     flex: 1,
   },
   secondaryLink: {
-    color: "#d95f4d",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
   },
   subtitle: {
-    color: "#5d6776",
+    color: colors.mutedForeground,
     fontSize: 16,
     lineHeight: 23,
   },
   title: {
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 34,
     fontWeight: "800",
     marginBottom: 10,

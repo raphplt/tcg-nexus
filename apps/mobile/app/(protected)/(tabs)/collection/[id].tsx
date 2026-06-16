@@ -412,7 +412,7 @@ export default function CollectionDetailsScreen() {
             (pressed || isDeletingItemId === item.id) && styles.deleteBadgePressed,
           ]}
         >
-          <Ionicons color="#fff" name="trash-outline" size={14} />
+          <Ionicons color="#ffffff" name="trash-outline" size={14} />
         </Pressable>
       </View>
     );
@@ -425,7 +425,7 @@ export default function CollectionDetailsScreen() {
           onPress={() => router.back()}
           style={({ pressed }) => [styles.navButton, pressed && styles.navButtonPressed]}
         >
-          <Ionicons color="#15233b" name="arrow-back" size={18} />
+          <Ionicons color="#0b0b0b" name="arrow-back" size={18} />
           <Text style={styles.navButtonText}>Retour</Text>
         </Pressable>
 
@@ -433,7 +433,7 @@ export default function CollectionDetailsScreen() {
           onPress={() => router.push("/scan")}
           style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
         >
-          <Ionicons color="#fff8f3" name="scan" size={16} />
+          <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
         </Pressable>
       </View>
@@ -442,7 +442,7 @@ export default function CollectionDetailsScreen() {
         onPress={openManualAddModal}
         style={({ pressed }) => [styles.manualAddButton, pressed && styles.manualAddButtonPressed]}
       >
-        <Ionicons color="#fff8f3" name="add-circle-outline" size={16} />
+        <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
         <Text style={styles.manualAddButtonText}>Ajouter une carte manuellement</Text>
       </Pressable>
 
@@ -450,13 +450,13 @@ export default function CollectionDetailsScreen() {
         onPress={handleDeleteCollection}
         style={({ pressed }) => [styles.deleteCollectionButton, pressed && styles.deleteCollectionButtonPressed]}
       >
-        <Ionicons color="#fff" name="trash-outline" size={16} />
+        <Ionicons color="#ffffff" name="trash-outline" size={16} />
         <Text style={styles.deleteCollectionButtonText}>Supprimer cette collection</Text>
       </Pressable>
 
       <Text style={styles.collectionName}>{collection?.name || "Collection"}</Text>
       <Text style={styles.collectionDescription}>
-        {collection?.description || "Visualise et gere les cartes de ta collection."}
+        {collection?.description || "Gère les cartes de ta collection."}
       </Text>
 
       <View style={styles.statsCard}>
@@ -473,7 +473,7 @@ export default function CollectionDetailsScreen() {
         autoCapitalize="none"
         onChangeText={setSearch}
         placeholder="Rechercher une carte dans la collection"
-        placeholderTextColor="#8a92a0"
+        placeholderTextColor="#555555"
         style={styles.searchInput}
         value={search}
       />
@@ -575,7 +575,7 @@ export default function CollectionDetailsScreen() {
   if (isLoading && items.length === 0) {
     return (
       <View style={styles.centeredScreen}>
-        <ActivityIndicator color="#15233b" size="large" />
+        <ActivityIndicator color="#0b0b0b" size="large" />
       </View>
     );
   }
@@ -591,7 +591,7 @@ export default function CollectionDetailsScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Collection vide</Text>
             <Text style={styles.emptyText}>
-              Ajoute des cartes via le scan OCR ou la recherche manuelle.
+              Ajoute des cartes en scannant ou via la recherche.
             </Text>
             <View style={styles.emptyActionsRow}>
               <Pressable
@@ -612,7 +612,7 @@ export default function CollectionDetailsScreen() {
             </View>
           </View>
         }
-        ListFooterComponent={isLoadingMore ? <ActivityIndicator color="#15233b" /> : null}
+        ListFooterComponent={isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null}
         ListHeaderComponent={listHeader}
         numColumns={2}
         onEndReached={() => {
@@ -628,7 +628,7 @@ export default function CollectionDetailsScreen() {
               ]);
             }}
             refreshing={isRefreshing}
-            tintColor="#15233b"
+            tintColor="#0b0b0b"
           />
         }
         renderItem={renderCardCell}
@@ -644,7 +644,7 @@ export default function CollectionDetailsScreen() {
             onPress={() => setIsCardModalVisible(false)}
             style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
           >
-            <Ionicons color="#15233b" name="close" size={22} />
+            <Ionicons color="#0b0b0b" name="close" size={22} />
           </Pressable>
 
           <Image source={{ uri: resolveImage(selectedCard?.image) }} style={styles.modalImage} />
@@ -696,7 +696,7 @@ export default function CollectionDetailsScreen() {
                 pressed && styles.manualModalClosePressed,
               ]}
             >
-              <Ionicons color="#15233b" name="close" size={20} />
+              <Ionicons color="#0b0b0b" name="close" size={20} />
             </Pressable>
           </View>
 
@@ -704,7 +704,7 @@ export default function CollectionDetailsScreen() {
             autoCapitalize="none"
             onChangeText={setManualSearch}
             placeholder="Nom, set, numero"
-            placeholderTextColor="#8a92a0"
+            placeholderTextColor="#555555"
             style={styles.manualSearchInput}
             value={manualSearch}
           />
@@ -714,7 +714,7 @@ export default function CollectionDetailsScreen() {
           ) : null}
 
           {isManualSearching ? (
-            <ActivityIndicator color="#15233b" style={styles.manualLoading} />
+            <ActivityIndicator color="#0b0b0b" style={styles.manualLoading} />
           ) : null}
 
           <FlatList
@@ -768,20 +768,20 @@ export default function CollectionDetailsScreen() {
 
 const styles = StyleSheet.create({
   attackCard: {
-    backgroundColor: "#f8f9fc",
-    borderColor: "#dbe2f0",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     marginTop: 8,
     padding: 10,
   },
   attackName: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "800",
   },
   attackText: {
-    color: "#5d6776",
+    color: "#555555",
     fontSize: 13,
     lineHeight: 18,
     marginTop: 4,
@@ -792,24 +792,24 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   cardImage: {
-    backgroundColor: "#f0f2f7",
+    backgroundColor: "#f3f5f9",
     borderRadius: 12,
     height: 210,
     width: "100%",
   },
   cardMeta: {
-    color: "#6d7786",
+    color: "#555555",
     fontSize: 12,
   },
   cardName: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
     marginTop: 6,
   },
   cardPressable: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
@@ -820,29 +820,29 @@ const styles = StyleSheet.create({
   },
   centeredScreen: {
     alignItems: "center",
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
     justifyContent: "center",
   },
   collectionDescription: {
-    color: "#5f6978",
+    color: "#555555",
     fontSize: 14,
     lineHeight: 20,
     marginTop: 6,
   },
   collectionName: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 24,
     fontWeight: "800",
     marginTop: 12,
   },
   container: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
   },
   deleteBadge: {
     alignItems: "center",
-    backgroundColor: "#ba3d3d",
+    backgroundColor: "#da2b29",
     borderRadius: 12,
     height: 24,
     justifyContent: "center",
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   deleteCollectionButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#ba3d3d",
+    backgroundColor: "#da2b29",
     borderRadius: 10,
     flexDirection: "row",
     gap: 6,
@@ -869,12 +869,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   deleteCollectionButtonText: {
-    color: "#fff",
+    color: "#ffffff",
     fontSize: 13,
     fontWeight: "700",
   },
   emptyAction: {
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 12,
     marginTop: 10,
     paddingHorizontal: 14,
@@ -889,12 +889,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   emptyActionText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontWeight: "700",
   },
   emptySecondaryAction: {
-    backgroundColor: "#fff",
-    borderColor: "#15233b",
+    backgroundColor: "#ffffff",
+    borderColor: "#0b0b0b",
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 14,
@@ -904,32 +904,32 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   emptySecondaryActionText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontWeight: "700",
   },
   emptyState: {
     alignItems: "center",
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 14,
     borderWidth: 1,
     marginTop: 8,
     padding: 16,
   },
   emptyText: {
-    color: "#5f6978",
+    color: "#555555",
     fontSize: 14,
     marginTop: 6,
     textAlign: "center",
   },
   emptyTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 17,
     fontWeight: "800",
   },
   filterChip: {
-    backgroundColor: "#f6f7fb",
-    borderColor: "#dde3ee",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 999,
     borderWidth: 1,
     marginRight: 8,
@@ -937,16 +937,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   filterChipActive: {
-    backgroundColor: "#15233b",
-    borderColor: "#15233b",
+    backgroundColor: "#0b0b0b",
+    borderColor: "#0b0b0b",
   },
   filterChipText: {
-    color: "#22314c",
+    color: "#0b0b0b",
     fontSize: 12,
     fontWeight: "700",
   },
   filterChipTextActive: {
-    color: "#fff8f3",
+    color: "#ffffff",
   },
   filterRow: {
     marginTop: 8,
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   manualAddButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 10,
     flexDirection: "row",
     gap: 6,
@@ -977,13 +977,13 @@ const styles = StyleSheet.create({
     opacity: 0.84,
   },
   manualAddButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 13,
     fontWeight: "700",
   },
   manualAddCardButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 10,
     justifyContent: "center",
     minWidth: 78,
@@ -994,17 +994,17 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   manualAddCardButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 12,
     fontWeight: "700",
   },
   manualEmptyText: {
-    color: "#5f6978",
+    color: "#555555",
     marginTop: 12,
     textAlign: "center",
   },
   manualHint: {
-    color: "#5f6978",
+    color: "#555555",
     fontSize: 13,
     marginTop: 8,
   },
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   manualModalClose: {
     alignItems: "center",
-    backgroundColor: "#eef1f7",
+    backgroundColor: "#f3f5f9",
     borderRadius: 20,
     height: 32,
     justifyContent: "center",
@@ -1023,7 +1023,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   manualModalContainer: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
     padding: 14,
     paddingTop: 20,
@@ -1034,14 +1034,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   manualModalTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 22,
     fontWeight: "800",
   },
   manualResultCard: {
     alignItems: "center",
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
@@ -1054,17 +1054,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   manualResultImage: {
-    backgroundColor: "#f0f2f7",
+    backgroundColor: "#f3f5f9",
     borderRadius: 8,
     height: 70,
     width: 50,
   },
   manualResultMeta: {
-    color: "#5f6978",
+    color: "#555555",
     fontSize: 12,
   },
   manualResultName: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -1073,11 +1073,11 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   manualSearchInput: {
-    backgroundColor: "#fff",
-    borderColor: "#dce3ef",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     marginTop: 12,
     paddingHorizontal: 12,
@@ -1086,7 +1086,7 @@ const styles = StyleSheet.create({
   modalClose: {
     alignItems: "center",
     alignSelf: "flex-end",
-    backgroundColor: "#eef1f7",
+    backgroundColor: "#f3f5f9",
     borderRadius: 20,
     height: 32,
     justifyContent: "center",
@@ -1096,7 +1096,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   modalContent: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     padding: 16,
     paddingBottom: 34,
   },
@@ -1109,32 +1109,32 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   modalMeta: {
-    color: "#4f5a6c",
+    color: "#555555",
     fontSize: 14,
     marginTop: 6,
   },
   modalSectionTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 16,
     fontWeight: "800",
     marginTop: 14,
   },
   modalText: {
-    color: "#5d6776",
+    color: "#555555",
     fontSize: 14,
     lineHeight: 20,
     marginTop: 6,
   },
   modalTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 26,
     fontWeight: "800",
     marginTop: 12,
   },
   navButton: {
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderColor: "#d7dde9",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
@@ -1146,12 +1146,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   navButtonText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontWeight: "700",
   },
   scanButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 12,
     flexDirection: "row",
     gap: 6,
@@ -1162,42 +1162,42 @@ const styles = StyleSheet.create({
     opacity: 0.84,
   },
   scanButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontWeight: "700",
   },
   searchInput: {
-    backgroundColor: "#fff",
-    borderColor: "#dce3ef",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   sortChip: {
-    backgroundColor: "#f6f7fb",
-    borderColor: "#dde3ee",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   sortChipActive: {
-    backgroundColor: "#d95f4d",
-    borderColor: "#d95f4d",
+    backgroundColor: "#b72921",
+    borderColor: "#b72921",
   },
   sortChipPressed: {
     opacity: 0.82,
   },
   sortChipText: {
-    color: "#22314c",
+    color: "#0b0b0b",
     fontSize: 12,
     fontWeight: "700",
   },
   sortChipTextActive: {
-    color: "#fff8f3",
+    color: "#ffffff",
   },
   sortRow: {
     flexDirection: "row",
@@ -1205,21 +1205,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   statsCard: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 14,
     borderWidth: 1,
     marginTop: 12,
     padding: 12,
   },
   statsText: {
-    color: "#5f6978",
+    color: "#555555",
     fontSize: 12,
     lineHeight: 18,
     marginTop: 4,
   },
   statsTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 16,
     fontWeight: "800",
   },
