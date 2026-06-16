@@ -36,13 +36,13 @@ const HISTORY_LIMIT = 8;
 const getHistoryColor = (status: ScanHistoryItem["status"]) => {
   switch (status) {
     case "added":
-      return "#1c7b58";
+      return "#3a9742";
     case "found":
-      return "#244f80";
+      return "#09597d";
     case "not-found":
-      return "#9f6112";
+      return "#e49e22";
     default:
-      return "#7a1f1f";
+      return "#da2b29";
   }
 };
 
@@ -70,7 +70,6 @@ export default function ScanScreen() {
   const [candidateCards, setCandidateCards] = useState<CardSearchResult[]>([]);
   const [manualQuery, setManualQuery] = useState("");
   const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
-  const [searchedTerms, setSearchedTerms] = useState<string[]>([]);
 
   const [collections, setCollections] = useState<UserCollection[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<
@@ -140,7 +139,6 @@ export default function ScanScreen() {
     setCandidateCards([]);
     setManualQuery("");
     setManualResults([]);
-    setSearchedTerms([]);
     setInlineError(null);
   };
 
@@ -177,7 +175,6 @@ export default function ScanScreen() {
       const resolution = await cardService.resolveCardFromOcr(extracted);
       setCandidateCards(resolution.candidates);
       setSelectedCard(resolution.bestCard);
-      setSearchedTerms(resolution.searchedTerms);
 
       if (resolution.bestCard) {
         pushHistory({
@@ -250,7 +247,7 @@ export default function ScanScreen() {
 
     const created = await collectionService.createCollection({
       name: "Scans rapides",
-      description: "Collection creee automatiquement depuis le scan mobile.",
+      description: "Cartes ajoutées par scan.",
       isPublic: false,
       userId: user.id,
     });
@@ -308,7 +305,7 @@ export default function ScanScreen() {
   if (!permission) {
     return (
       <View style={styles.centeredScreen}>
-        <ActivityIndicator color="#15233b" size="large" />
+        <ActivityIndicator color="#0b0b0b" size="large" />
       </View>
     );
   }
@@ -316,15 +313,15 @@ export default function ScanScreen() {
   if (!permission.granted) {
     return (
       <View style={styles.permissionScreen}>
-        <Text style={styles.permissionTitle}>Camera requise</Text>
+        <Text style={styles.permissionTitle}>Appareil photo requis</Text>
         <Text style={styles.permissionText}>
-          Le scan OCR a besoin de la camera pour capturer la carte.
+          Autorise l'appareil photo pour scanner tes cartes.
         </Text>
         <Pressable
           onPress={() => void requestPermission()}
           style={styles.permissionButton}
         >
-          <Text style={styles.permissionButtonText}>Autoriser la camera</Text>
+          <Text style={styles.permissionButtonText}>Autoriser l'appareil photo</Text>
         </Pressable>
         <Pressable
           onPress={() => router.back()}
@@ -347,14 +344,14 @@ export default function ScanScreen() {
 
         <View style={[styles.cameraTopBar, { paddingTop: insets.top + 8 }]}>
           <Pressable onPress={() => router.back()} style={styles.iconButton}>
-            <Ionicons color="#fff" name="arrow-back" size={22} />
+            <Ionicons color="#ffffff" name="arrow-back" size={22} />
           </Pressable>
 
           <View style={styles.burstBadge}>
             <Text style={styles.burstText}>Rafale</Text>
             <Switch
               onValueChange={setBurstMode}
-              trackColor={{ false: "#667086", true: "#d95f4d" }}
+              trackColor={{ false: "#555555", true: "#b72921" }}
               value={burstMode}
             />
           </View>
@@ -379,9 +376,9 @@ export default function ScanScreen() {
             ]}
           >
             {isProcessing ? (
-              <ActivityIndicator color="#f7f1e8" />
+              <ActivityIndicator color="#fcfcfc" />
             ) : (
-              <Ionicons color="#f7f1e8" name="camera" size={28} />
+              <Ionicons color="#fcfcfc" name="camera" size={28} />
             )}
           </Pressable>
 
@@ -423,7 +420,7 @@ export default function ScanScreen() {
       >
         <View style={styles.reviewHeader}>
           <Pressable onPress={resetForNextCapture} style={styles.lightButton}>
-            <Ionicons color="#15233b" name="camera-reverse" size={18} />
+            <Ionicons color="#0b0b0b" name="camera-reverse" size={18} />
             <Text style={styles.lightButtonText}>Rescanner</Text>
           </Pressable>
 
@@ -431,17 +428,17 @@ export default function ScanScreen() {
             <Text style={styles.burstInlineText}>Mode rafale</Text>
             <Switch
               onValueChange={setBurstMode}
-              trackColor={{ false: "#d7dce5", true: "#d95f4d" }}
+              trackColor={{ false: "#e4e4e4", true: "#b72921" }}
               value={burstMode}
             />
           </View>
         </View>
 
         <View style={styles.compareCard}>
-          <Text style={styles.sectionTitle}>Confirmation visuelle</Text>
+          <Text style={styles.sectionTitle}>Vérification</Text>
           <View style={styles.compareRow}>
             <View style={styles.compareColumn}>
-              <Text style={styles.compareLabel}>Scan</Text>
+              <Text style={styles.compareLabel}>Ta photo</Text>
               {optimizedUri || capturedUri ? (
                 <Image
                   source={{ uri: optimizedUri || capturedUri || undefined }}
@@ -455,7 +452,7 @@ export default function ScanScreen() {
             </View>
 
             <View style={styles.compareColumn}>
-              <Text style={styles.compareLabel}>Carte trouvee (BDD)</Text>
+              <Text style={styles.compareLabel}>Carte trouvée</Text>
               {selectedCard?.image ? (
                 <Image
                   source={{ uri: selectedCard.image }}
@@ -471,26 +468,22 @@ export default function ScanScreen() {
             </View>
           </View>
 
-          <Text style={styles.ocrMeta}>
-            OCR: {ocrResult?.cardName || "nom inconnu"}
-            {ocrResult?.setCode ? ` • ${ocrResult.setCode}` : ""}
-            {ocrResult?.setName ? ` • ${ocrResult.setName}` : ""}
-          </Text>
-          {searchedTerms.length > 0 ? (
+          {ocrResult?.cardName ? (
             <Text style={styles.ocrMeta}>
-              Recherches: {searchedTerms.join(" | ")}
+              Carte lue : {ocrResult.cardName}
+              {ocrResult?.setName ? ` • ${ocrResult.setName}` : ""}
             </Text>
           ) : null}
         </View>
 
         <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Correction manuelle</Text>
+          <Text style={styles.sectionTitle}>Rechercher une autre carte</Text>
           <View style={styles.searchRow}>
             <TextInput
               autoCapitalize="none"
               onChangeText={setManualQuery}
               placeholder="Nom de carte, set ou numero"
-              placeholderTextColor="#8b92a1"
+              placeholderTextColor="#555555"
               style={styles.searchInput}
               value={manualQuery}
             />
@@ -505,9 +498,9 @@ export default function ScanScreen() {
               ]}
             >
               {isManualSearching ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color="#ffffff" size="small" />
               ) : (
-                <Ionicons color="#fff" name="search" size={16} />
+                <Ionicons color="#ffffff" name="search" size={16} />
               )}
             </Pressable>
           </View>
@@ -541,9 +534,9 @@ export default function ScanScreen() {
         </View>
 
         <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Collection cible</Text>
+          <Text style={styles.sectionTitle}>Ajouter à une collection</Text>
           {isLoadingCollections ? (
-            <ActivityIndicator color="#15233b" />
+            <ActivityIndicator color="#0b0b0b" />
           ) : (
             <View style={styles.collectionWrap}>
               {collections.map((collection) => (
@@ -582,7 +575,7 @@ export default function ScanScreen() {
             ]}
           >
             {isSaving ? (
-              <ActivityIndicator color="#fff8f3" />
+              <ActivityIndicator color="#ffffff" />
             ) : (
               <Text style={styles.addButtonText}>
                 {selectedCard
@@ -594,7 +587,7 @@ export default function ScanScreen() {
         </View>
 
         <View style={styles.blockCard}>
-          <Text style={styles.sectionTitle}>Historique session</Text>
+          <Text style={styles.sectionTitle}>Activité récente</Text>
           {history.length === 0 ? (
             <Text style={styles.emptyText}>Aucun scan pour le moment.</Text>
           ) : (
@@ -626,7 +619,7 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   addButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 16,
     justifyContent: "center",
     marginTop: 16,
@@ -637,13 +630,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   addButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 15,
     fontWeight: "800",
   },
   blockCard: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 20,
     borderWidth: 1,
     marginTop: 12,
@@ -651,7 +644,7 @@ const styles = StyleSheet.create({
   },
   burstBadge: {
     alignItems: "center",
-    backgroundColor: "rgba(21,35,59,0.6)",
+    backgroundColor: "rgba(11,11,11,0.6)",
     borderRadius: 18,
     flexDirection: "row",
     gap: 8,
@@ -664,12 +657,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   burstInlineText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 13,
     fontWeight: "700",
   },
   burstText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 12,
     fontWeight: "700",
   },
@@ -695,8 +688,8 @@ const styles = StyleSheet.create({
   },
   captureButton: {
     alignItems: "center",
-    backgroundColor: "rgba(21,35,59,0.85)",
-    borderColor: "#f7f1e8",
+    backgroundColor: "rgba(11,11,11,0.85)",
+    borderColor: "#fcfcfc",
     borderRadius: 34,
     borderWidth: 2,
     height: 68,
@@ -707,38 +700,38 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   captureHint: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 13,
     marginTop: 10,
   },
   centeredScreen: {
     alignItems: "center",
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
     justifyContent: "center",
   },
   collectionChip: {
-    backgroundColor: "#f3f1ed",
-    borderColor: "#ded8d0",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   collectionChipActive: {
-    backgroundColor: "#15233b",
-    borderColor: "#15233b",
+    backgroundColor: "#0b0b0b",
+    borderColor: "#0b0b0b",
   },
   collectionChipPressed: {
     opacity: 0.8,
   },
   collectionChipText: {
-    color: "#2b3340",
+    color: "#0b0b0b",
     fontSize: 13,
     fontWeight: "700",
   },
   collectionChipTextActive: {
-    color: "#fff8f3",
+    color: "#ffffff",
   },
   collectionWrap: {
     flexDirection: "row",
@@ -746,8 +739,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compareCard: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 20,
     borderWidth: 1,
     padding: 16,
@@ -757,7 +750,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   compareLabel: {
-    color: "#7c6a58",
+    color: "#555555",
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
@@ -767,7 +760,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    color: "#6b7280",
+    color: "#555555",
     fontSize: 14,
   },
   historyDot: {
@@ -786,16 +779,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   historyListText: {
-    color: "#5d6776",
+    color: "#555555",
     fontSize: 13,
   },
   historyListTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
   },
   historyOverlay: {
-    backgroundColor: "rgba(11,18,31,0.72)",
+    backgroundColor: "rgba(11,11,11,0.72)",
     borderRadius: 14,
     left: 16,
     padding: 10,
@@ -809,33 +802,33 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   historyText: {
-    color: "#f5f7fa",
+    color: "#f3f5f9",
     flex: 1,
     fontSize: 12,
   },
   iconButton: {
     alignItems: "center",
-    backgroundColor: "rgba(21,35,59,0.65)",
+    backgroundColor: "rgba(11,11,11,0.65)",
     borderRadius: 18,
     height: 36,
     justifyContent: "center",
     width: 36,
   },
   inlineError: {
-    color: "#ffbdbd",
+    color: "#f4b4b3",
     fontSize: 12,
     marginBottom: 6,
   },
   inlineErrorPanel: {
-    color: "#9f2c2c",
+    color: "#da2b29",
     fontSize: 13,
     fontWeight: "700",
     marginTop: 12,
   },
   lightButton: {
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderColor: "#dbe0ea",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
@@ -844,31 +837,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   lightButtonText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 13,
     fontWeight: "700",
   },
   ocrMeta: {
-    color: "#4e5968",
+    color: "#555555",
     fontSize: 12,
     marginTop: 8,
   },
   permissionButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 14,
     marginTop: 18,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   permissionButtonText: {
-    color: "#fff8f3",
+    color: "#ffffff",
     fontSize: 15,
     fontWeight: "700",
   },
   permissionScreen: {
     alignItems: "center",
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
     justifyContent: "center",
     padding: 24,
@@ -879,17 +872,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   permissionSecondaryText: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontWeight: "700",
   },
   permissionText: {
-    color: "#5d6776",
+    color: "#555555",
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
   },
   permissionTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 30,
     fontWeight: "800",
     marginBottom: 8,
@@ -897,15 +890,15 @@ const styles = StyleSheet.create({
   },
   placeholderBox: {
     alignItems: "center",
-    backgroundColor: "#f0f2f7",
-    borderColor: "#d3dae9",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     height: 160,
     justifyContent: "center",
   },
   placeholderText: {
-    color: "#6a7382",
+    color: "#555555",
     fontSize: 13,
     textAlign: "center",
   },
@@ -914,12 +907,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   resultMeta: {
-    color: "#6a7382",
+    color: "#555555",
     fontSize: 12,
   },
   resultRow: {
-    backgroundColor: "#f7f8fb",
-    borderColor: "#dfe4ef",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 10,
@@ -929,11 +922,11 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   resultRowSelected: {
-    backgroundColor: "#e8f0fb",
-    borderColor: "#8caed8",
+    backgroundColor: "#ecf3f8",
+    borderColor: "#09597d",
   },
   resultTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 14,
     fontWeight: "700",
   },
@@ -948,11 +941,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   reviewScreen: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: "#fcfcfc",
     flex: 1,
   },
   scanFrame: {
-    borderColor: "rgba(247,241,232,0.9)",
+    borderColor: "rgba(255,255,255,0.9)",
     borderRadius: 20,
     borderWidth: 2,
     height: "52%",
@@ -969,7 +962,7 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
+    backgroundColor: "#0b0b0b",
     borderRadius: 12,
     height: 44,
     justifyContent: "center",
@@ -979,11 +972,11 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   searchInput: {
-    backgroundColor: "#f6f7fa",
-    borderColor: "#dbe1ec",
+    backgroundColor: "#f3f5f9",
+    borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
-    color: "#15233b",
+    color: "#0b0b0b",
     flex: 1,
     fontSize: 15,
     height: 44,
@@ -995,7 +988,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sectionTitle: {
-    color: "#15233b",
+    color: "#0b0b0b",
     fontSize: 16,
     fontWeight: "800",
     marginBottom: 10,

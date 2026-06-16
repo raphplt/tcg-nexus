@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { colors, radius } from "@/constants/theme";
 import { authService } from "@/services/auth.service";
 import { toast } from "@/store/useToastStore";
 import { mapAuthApiError } from "@/utils/authApiError";
@@ -40,7 +41,7 @@ export default function ForgotPasswordScreen() {
         { email: email.trim() },
         { skipErrorToast: true },
       );
-      toast.showSuccess("Si le compte existe, un email de reinitialisation a ete envoye.");
+      toast.showSuccess("Si le compte existe, un email de réinitialisation a été envoyé.");
       router.replace("/login");
     } catch (error) {
       setErrors(mapAuthApiError(error, "forgot-password"));
@@ -59,10 +60,10 @@ export default function ForgotPasswordScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>RESET PASSWORD</Text>
-          <Text style={styles.title}>Mot de passe oublie</Text>
+          <Text style={styles.brand}>TCG Nexus</Text>
+          <Text style={styles.title}>Mot de passe oublié</Text>
           <Text style={styles.subtitle}>
-            Entrez votre email pour recevoir un lien de reinitialisation.
+            Entre ton email pour recevoir un lien de réinitialisation.
           </Text>
         </View>
 
@@ -77,7 +78,7 @@ export default function ForgotPasswordScreen() {
               setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
             }}
             placeholder="vous@tcgnexus.app"
-            placeholderTextColor="#8b92a1"
+            placeholderTextColor={colors.mutedForeground}
             style={[styles.input, errors.email ? styles.inputError : undefined]}
             value={email}
           />
@@ -96,7 +97,7 @@ export default function ForgotPasswordScreen() {
             ]}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#fff8f3" />
+              <ActivityIndicator color={colors.primaryForeground} />
             ) : (
               <Text style={styles.primaryButtonText}>Envoyer le lien</Text>
             )}
@@ -104,10 +105,10 @@ export default function ForgotPasswordScreen() {
 
           <View style={styles.linkRow}>
             <Link href="/login" style={styles.secondaryLink}>
-              Retour login
+              Retour connexion
             </Link>
             <Link href="/register" style={styles.secondaryLink}>
-              Creer un compte
+              Créer un compte
             </Link>
           </View>
         </View>
@@ -117,38 +118,34 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
+  brand: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
   card: {
-    backgroundColor: "#ffffff",
-    borderColor: "rgba(21,35,59,0.08)",
-    borderRadius: 28,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
     borderWidth: 1,
     gap: 10,
     padding: 22,
-    shadowColor: "#15233b",
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.08,
-    shadowRadius: 32,
   },
   content: {
     flexGrow: 1,
     justifyContent: "center",
     padding: 24,
   },
-  eyebrow: {
-    color: "#d95f4d",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 2,
-    marginBottom: 12,
-  },
   errorText: {
-    color: "#b22525",
+    color: colors.destructive,
     fontSize: 13,
     fontWeight: "600",
     marginTop: -4,
   },
   formErrorText: {
-    color: "#7a1f1f",
+    color: colors.destructive,
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 20,
@@ -158,20 +155,20 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   input: {
-    backgroundColor: "#f6f7fa",
-    borderColor: "#e4e8ef",
-    borderRadius: 16,
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     borderWidth: 1,
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   inputError: {
-    borderColor: "#d95f4d",
+    borderColor: colors.destructive,
   },
   label: {
-    color: "#2b3340",
+    color: colors.foreground,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -183,8 +180,8 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#15233b",
-    borderRadius: 18,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
     marginTop: 8,
     minHeight: 52,
     justifyContent: "center",
@@ -194,27 +191,27 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   primaryButtonText: {
-    color: "#fff8f3",
+    color: colors.primaryForeground,
     fontSize: 16,
     fontWeight: "800",
   },
   screen: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: colors.pageBg,
     flex: 1,
   },
   secondaryLink: {
-    color: "#d95f4d",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700",
     textAlign: "center",
   },
   subtitle: {
-    color: "#5d6776",
+    color: colors.mutedForeground,
     fontSize: 16,
     lineHeight: 23,
   },
   title: {
-    color: "#15233b",
+    color: colors.foreground,
     fontSize: 34,
     fontWeight: "800",
     marginBottom: 10,
