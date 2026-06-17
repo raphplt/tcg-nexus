@@ -23,8 +23,6 @@ NAME_NOISE = {
 }
 
 ROI_TARGET_H = 220
-# le numéro (NN/MMM) est imprimé tout petit -> on agrandit davantage sa bande
-# pour donner de la matière à tesseract.
 NUMBER_TARGET_H = 340
 _OCR_POOL = ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 2)))
 
@@ -118,9 +116,8 @@ def read_name(crop: np.ndarray) -> tuple[str, float]:
 
 
 def read_number(crop: np.ndarray) -> tuple[str, float]:
-    """Numéro de collection normalisé 'NN/MMM' + confiance, via regex sur un
-    OCR chiffres-et-slash. Agrandissement plus fort et PSM 'ligne/mot' (7/8/6)
-    en plus du sparse (11) car les chiffres forment une courte ligne isolée."""
+    """Numéro 'NN/MMM' + confiance. Agrandi davantage et PSM ligne/mot (les
+    chiffres forment une courte ligne isolée)."""
     return _best_attempt(
         crop, _number_attempt, psms=(7, 11, 8, 6), target_h=NUMBER_TARGET_H
     )

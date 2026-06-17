@@ -54,9 +54,8 @@ export class CardService {
     return card;
   }
 
-  // récupération par numéro de carte (localId), robuste au bruit OCR sur le nom.
-  // si le dénominateur imprimé est connu, on filtre par cardCountOfficial
-  // (= partie droite du "131/182"), ce qui cible directement la bonne série.
+  // récupération par numéro (localId), robuste au bruit OCR sur le nom. Le
+  // dénominateur imprimé filtre la série (= cardCountOfficial, ex. /182).
   async findByLocalId(
     localId: string,
     total?: string,
@@ -90,10 +89,8 @@ export class CardService {
         )
         .take(80)
         .getMany();
-      // dénominateur cohérent -> on cible directement la bonne série
       if (withTotal.length > 0) return withTotal;
-      // sinon le dénominateur est probablement mal lu : on retombe sur le
-      // localId seul plutôt que de ne rien renvoyer (le nom départagera).
+      // dénominateur sûrement mal lu -> on retombe sur le localId seul
     }
 
     return base().take(80).getMany();

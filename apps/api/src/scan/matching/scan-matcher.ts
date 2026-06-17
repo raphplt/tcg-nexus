@@ -98,9 +98,7 @@ export const computeConfidence = (
   let confidenceLevel: ScanConfidenceLevel =
     best >= 0.75 ? "high" : best >= 0.45 ? "medium" : "low";
 
-  // P3 : nom quasi-exact (score >= 0.5 ~ name >= 0.9) ET candidat nettement
-  // unique -> on promeut en high même sans numéro lu (titres holo/ex où le
-  // numéro échoue). La marge stricte évite de promouvoir une variante en doublon.
+  // nom quasi-exact et nettement unique -> high même sans numéro (titres holo/ex)
   if (
     confidenceLevel === "medium" &&
     best >= 0.5 &&
@@ -114,7 +112,7 @@ export const computeConfidence = (
     confidenceLevel = "medium";
   }
 
-  // P1 : la confiance affichée est bornée à 1 (le score brut peut monter à 1.2)
+  // le score brut peut monter à 1.2 -> on borne l'affichage à 1
   return {
     confidence: Number(Math.min(1, best).toFixed(3)),
     confidenceLevel,

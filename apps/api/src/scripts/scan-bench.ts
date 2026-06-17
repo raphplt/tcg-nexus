@@ -1,19 +1,13 @@
 /**
- * Banc d'essai du pipeline de scan (workstream E).
+ * Banc d'essai du scan : rejoue ScanService.recognize() sur un jeu de cartes
+ * étiqueté (test-cards/labels.json) et mesure accuracy / rappel / calibration.
+ * Prérequis : vision up (port 8000) + DB (.env).
  *
- * Rejoue le VRAI ScanService.recognize() sur un jeu de cartes étiqueté et
- * mesure précision / rappel / calibration de la confiance — sans réimplémenter
- * le matching (donc toujours en phase avec le code de prod).
- *
- * Prérequis : service vision up (port 8000) + DB accessible (.env), comme en dev.
- *
- * Usage :
- *   npm run bench:scan                 # dossier test-cards par défaut
- *   npm run bench:scan -- --dir=test-cards --labels=test-cards/labels.json
- *   npm run bench:scan -- --only=PXL_20260616_200242260.jpg   # une seule carte
+ *   npm run bench:scan
+ *   npm run bench:scan -- --only=PXL_20260616_200242260.jpg
  */
 
-// scan logs hors-banc : on ne pollue pas scan-logs/ avec 80 entrées
+// on ne pollue pas scan-logs/ pendant le banc
 process.env.SCAN_LOG = "false";
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";

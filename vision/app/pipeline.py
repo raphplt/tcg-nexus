@@ -206,8 +206,7 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     sélection par confiance. Le crop renvoyé sert au debug/log côté API."""
     rois = []
 
-    # le nom peut être déjà lu en amont (gate d'orientation) -> on le réutilise
-    # pour ne pas OCRiser deux fois.
+    # nom déjà lu en amont (orientation) -> réutilisé pour éviter un double OCR
     if name is None:
         name = _read_name_roi(card)
     name_crop, name_text, name_conf = name
@@ -232,9 +231,8 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     return rois
 
 
-# détection de la carte sur une copie réduite : les contours sur du 12 Mpx
-# coûtent cher et sont inutiles, la box est ensuite remise à l'échelle pour
-# warper depuis l'original (OCR pleine qualité). Gros gain sur le prétraitement.
+# on détecte la carte sur une copie réduite (contours rapides), puis on warpe
+# depuis l'original pour garder la résolution pour l'OCR.
 DETECT_MAX_W = 900
 
 
@@ -259,27 +257,23 @@ def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
     return _cap_width(upright), False
 
 
-# confiance OSD mini pour oser corriger l'orientation (en dessous : on garde tel
-# quel, ex. full-art sans assez de texte pour décider).
 OSD_MIN_CONF = 1.5
 
 
 def _orient_upright(card: np.ndarray) -> np.ndarray:
-    """Redresse une carte photographiée à l'envers (180°) ou de travers via
-    Tesseract OSD, qui détecte l'orientation à partir de TOUT le texte de la
-    carte (bien plus robuste que la seule bande du nom). Conservateur : on ne
-    tourne que si OSD est confiant, sinon on ne touche à rien."""
+    """Redresse une carte à l'envers/de travers via Tesseract OSD. On ne tourne
+    que si OSD est confiant, sinon on laisse tel quel."""
     if pytesseract is None or not HAS_OCR:
         return card
     try:
         osd = pytesseract.image_to_osd(card, output_type=Output.DICT)
     except Exception:
-        return card  # OSD échoue (trop peu de texte) -> on ne risque rien
+        return card
 
     if float(osd.get("orientation_conf", 0.0)) < OSD_MIN_CONF:
         return card
 
-    # "rotate" = degrés horaires à appliquer pour redresser
+    # rotate = degrés horaires à appliquer pour redresser
     rotate = int(osd.get("rotate", 0)) % 360
     if rotate == 90:
         return cv2.rotate(card, cv2.ROTATE_90_CLOCKWISE)
@@ -290,14 +284,12 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     return card
 
 
-# au-dessus de cette confiance OCR, le nom est jugé bien lu -> carte à l'endroit,
-# on évite l'appel OSD (coûteux) sur le cas courant.
+# au-delà, le nom est jugé bien lu -> carte à l'endroit, on saute l'OSD (coûteux)
 NAME_OK_CONF = 55.0
 
 
 def _build_result(card: np.ndarray, detected: bool) -> dict:
-    # OSD conditionnel : on lit d'abord le nom ; s'il sort proprement, la carte
-    # est à l'endroit et on saute OSD. Sinon seulement, on vérifie l'orientation.
+    # si le nom sort proprement la carte est à l'endroit ; sinon on vérifie l'OSD
     name = _read_name_roi(card)
     if name[2] < NAME_OK_CONF:
         oriented = _orient_upright(card)
@@ -306,7 +298,6 @@ def _build_result(card: np.ndarray, detected: bool) -> dict:
             name = _read_name_roi(card)
 
     rois = _extract_rois(card, name=name)
-    # image normalisée 600x838 : aperçu/log + repli OCR plein texte côté API
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))
     return {
         "detected": detected,
