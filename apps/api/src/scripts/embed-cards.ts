@@ -60,6 +60,20 @@ async function main() {
   });
   await db.connect();
 
+  // table d'embeddings auto-créée si la machine ne l'a pas encore (idempotent)
+  await db.query("CREATE EXTENSION IF NOT EXISTS vector");
+  await db.query(
+    `CREATE TABLE IF NOT EXISTS card_embedding (
+       card_id uuid PRIMARY KEY REFERENCES card(id) ON DELETE CASCADE,
+       embedding vector(512),
+       updated_at timestamptz DEFAULT now()
+     )`,
+  );
+  await db.query(
+    `CREATE INDEX IF NOT EXISTS card_embedding_hnsw
+       ON card_embedding USING hnsw (embedding vector_cosine_ops)`,
+  );
+
   const params: unknown[] = [];
   let where = `c.image IS NOT NULL AND e.card_id IS NULL`;
   if (sets?.length) {

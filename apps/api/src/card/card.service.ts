@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
@@ -8,12 +8,42 @@ import { Card } from "./entities/card.entity";
 const stripAccents = (value: string): string =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+export const EMBED_DIM = 512;
+
 @Injectable()
-export class CardService {
+export class CardService implements OnModuleInit {
+  private readonly logger = new Logger(CardService.name);
+  private embeddingReady = false;
+
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
   ) {}
+
+  // cr\u00e9e pgvector + la table d'embeddings si absentes (portable : aucune \u00e9tape
+  // manuelle sur une nouvelle base). Si pgvector n'est pas dispo, on log et la
+  // recherche visuelle reste simplement inactive.
+  async onModuleInit(): Promise<void> {
+    try {
+      await this.cardRepository.query("CREATE EXTENSION IF NOT EXISTS vector");
+      await this.cardRepository.query(
+        `CREATE TABLE IF NOT EXISTS card_embedding (
+           card_id uuid PRIMARY KEY REFERENCES card(id) ON DELETE CASCADE,
+           embedding vector(${EMBED_DIM}),
+           updated_at timestamptz DEFAULT now()
+         )`,
+      );
+      await this.cardRepository.query(
+        `CREATE INDEX IF NOT EXISTS card_embedding_hnsw
+           ON card_embedding USING hnsw (embedding vector_cosine_ops)`,
+      );
+      this.embeddingReady = true;
+    } catch (error) {
+      this.logger.warn(
+        `Recherche visuelle indisponible (pgvector non initialis\u00e9): ${(error as Error).message}`,
+      );
+    }
+  }
 
   // recherche fuzzy par nom (trigrammes pg_trgm) tolérant fautes d'OCR et accents.
   // les noms en base sont sans accents, on retire donc les accents du terme.
@@ -54,8 +84,6 @@ export class CardService {
     return card;
   }
 
-  // récupération par numéro (localId), robuste au bruit OCR sur le nom. Le
-  // dénominateur imprimé filtre la série (= cardCountOfficial, ex. /182).
   async findByLocalId(
     localId: string,
     total?: string,
@@ -64,7 +92,6 @@ export class CardService {
     const n = localId.trim();
     if (!n) return [];
 
-    // variantes avec/sans zéros de tête (ex. "086" <-> "86")
     const numeric = Number(n);
     const variants = Array.from(
       new Set([n, String(numeric), n.padStart(3, "0")]),
@@ -90,20 +117,17 @@ export class CardService {
         .take(80)
         .getMany();
       if (withTotal.length > 0) return withTotal;
-      // dénominateur sûrement mal lu -> on retombe sur le localId seul
     }
 
     return base().take(80).getMany();
   }
 
-  // recherche visuelle : plus proches voisins de l'embedding CLIP (pgvector,
-  // distance cosine). Renvoie les cartes + similarité (1 = identique).
   async findByEmbedding(
     embedding: number[],
     game?: CardGame,
     limit = 10,
   ): Promise<Array<{ card: Card; similarity: number }>> {
-    if (!embedding?.length) return [];
+    if (!embedding?.length || !this.embeddingReady) return [];
     const vec = `[${embedding.join(",")}]`;
     const params: unknown[] = [vec];
     let gameFilter = "";
@@ -113,8 +137,9 @@ export class CardService {
     }
     params.push(limit);
 
-    const rows: Array<{ id: string; similarity: string }> =
-      await this.cardRepository.query(
+    let rows: Array<{ id: string; similarity: string }>;
+    try {
+      rows = await this.cardRepository.query(
         `SELECT e.card_id AS id, 1 - (e.embedding <=> $1::vector) AS similarity
          FROM card_embedding e
          JOIN card ON card.id = e.card_id
@@ -123,6 +148,11 @@ export class CardService {
          LIMIT $${params.length}`,
         params,
       );
+    } catch (error) {
+      // base visuelle absente/incohérente -> on ignore le visuel sans planter
+      this.logger.warn(`Recherche visuelle KO: ${(error as Error).message}`);
+      return [];
+    }
     if (rows.length === 0) return [];
 
     const cards = await this.cardRepository.find({
