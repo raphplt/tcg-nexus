@@ -1,20 +1,5 @@
 name: Mirror to Etna GitLab (volet-168h)
 
-# Met en miroir tcg-nexus (branche main) DANS le monorepo GitLab Etna
-# group-1076867, sous le dossier 168h/volet-168h, via git subtree.
-#
-#   - 1er run       -> import initial          (git subtree add)
-#   - runs suivants -> mise a jour incrementale (git subtree pull)
-#   - Import SANS --squash : l'auteur de CHAQUE commit d'origine est conserve
-#     (suivi de contribution par personne sur GitLab).
-#
-# A ne pas confondre avec mirror-to-gitlab.yml (miroir complet a la racine
-# d'un autre projet). Ce workflow-ci ne touche QUE 168h/volet-168h.
-#
-# Pre-requis (voir MIRROR-GITLAB.md) :
-#   - Secret repo GITLAB_168H_TOKEN : token GitLab Etna, scope write_repository.
-#   - (option)    variable repo GITLAB_REPO pour surcharger le chemin ci-dessous.
-
 on:
   push:
     branches: [main]
