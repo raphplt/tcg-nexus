@@ -26,9 +26,14 @@ export interface VisionMatchCandidate {
 }
 
 // l'OCR natif (multi-variantes, plusieurs frames en parallèle) tourne dans le
-// service vision : on laisse de la marge au-delà des 8s d'origine.
-const REQUEST_TIMEOUT_MS = 25000;
-const MATCH_TIMEOUT_MS = 25000;
+// service vision. Timeout borné : mieux vaut échouer vite (repli OCR brut) que
+// faire patienter l'utilisateur. En cas de timeout sur la rafale on NE retente
+// PAS la mono (vision resterait aussi lent) -> évite l'attente doublée.
+const REQUEST_TIMEOUT_MS = 15000;
+const MATCH_TIMEOUT_MS = 15000;
+
+const isTimeout = (error: unknown): boolean =>
+  error instanceof Error && error.name === "AbortError";
 
 interface VisionResponseJson {
   detected?: boolean;
@@ -137,8 +142,13 @@ export class VisionService {
       return this.parseResult(await response.json());
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
+      // timeout : inutile de retenter la mono (vision resterait lent) -> on
+      // rend la main tout de suite (l'API basculera sur l'OCR plein-texte).
+      if (isTimeout(error)) {
+        this.logger.warn(`Batch vision timeout (${reason}), repli OCR brut`);
+        return null;
+      }
       this.logger.warn(`Batch vision KO, repli mono-frame: ${reason}`);
-      // repli : on tente au moins la première frame en mono
       return this.preprocess(images[0]);
     } finally {
       clearTimeout(timeout);

@@ -192,15 +192,27 @@ def _roi(key: str, band: tuple, crop: np.ndarray, text: str, conf: float) -> dic
     }
 
 
-def _extract_rois(card: np.ndarray) -> list:
+def _read_name_roi(card: np.ndarray):
+    """OCR de la bande du nom. Renvoie (crop, texte, conf) ; crop=None si vide."""
+    crop = _crop(card, NAME_BAND)
+    if not crop.size:
+        return None, "", 0.0
+    text, conf = read_name(crop)
+    return crop, text, conf
+
+
+def _extract_rois(card: np.ndarray, name=None) -> list:
     """ROI extraites du warp HAUTE-DÉF puis OCRisées (nom + numéro) avec
     sélection par confiance. Le crop renvoyé sert au debug/log côté API."""
     rois = []
 
-    name_crop = _crop(card, NAME_BAND)
-    if name_crop.size:
-        text, conf = read_name(name_crop)
-        rois.append(_roi("name", NAME_BAND, name_crop, text, conf))
+    # le nom peut être déjà lu en amont (gate d'orientation) -> on le réutilise
+    # pour ne pas OCRiser deux fois.
+    if name is None:
+        name = _read_name_roi(card)
+    name_crop, name_text, name_conf = name
+    if name_crop is not None:
+        rois.append(_roi("name", NAME_BAND, name_crop, name_text, name_conf))
 
     # numéro : bas-gauche d'abord (cartes récentes), bas-droite seulement en
     # repli (anciennes) -> évite 6 appels OCR inutiles dans le cas courant.
@@ -220,17 +232,30 @@ def _extract_rois(card: np.ndarray) -> list:
     return rois
 
 
+# détection de la carte sur une copie réduite : les contours sur du 12 Mpx
+# coûtent cher et sont inutiles, la box est ensuite remise à l'échelle pour
+# warper depuis l'original (OCR pleine qualité). Gros gain sur le prétraitement.
+DETECT_MAX_W = 900
+
+
 def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
     """Carte redressée en portrait + indicateur de détection. Si aucune carte
     isolée n'est trouvée, on redresse au moins l'image en portrait."""
-    box = _find_card_box(img)
-    if box is not None:
-        return _warp_card(img, box), True
-    upright = (
-        cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-        if img.shape[1] > img.shape[0]
+    h, w = img.shape[:2]
+    scale = DETECT_MAX_W / w if w > DETECT_MAX_W else 1.0
+    small = (
+        cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        if scale < 1.0
         else img
     )
+
+    box = _find_card_box(small)
+    if box is not None:
+        if scale < 1.0:
+            box = box / scale  # coords détection -> pleine résolution
+        return _warp_card(img, box), True
+
+    upright = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) if w > h else img
     return _cap_width(upright), False
 
 
@@ -265,9 +290,22 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     return card
 
 
+# au-dessus de cette confiance OCR, le nom est jugé bien lu -> carte à l'endroit,
+# on évite l'appel OSD (coûteux) sur le cas courant.
+NAME_OK_CONF = 55.0
+
+
 def _build_result(card: np.ndarray, detected: bool) -> dict:
-    card = _orient_upright(card)
-    rois = _extract_rois(card)
+    # OSD conditionnel : on lit d'abord le nom ; s'il sort proprement, la carte
+    # est à l'endroit et on saute OSD. Sinon seulement, on vérifie l'orientation.
+    name = _read_name_roi(card)
+    if name[2] < NAME_OK_CONF:
+        oriented = _orient_upright(card)
+        if oriented is not card:
+            card = oriented
+            name = _read_name_roi(card)
+
+    rois = _extract_rois(card, name=name)
     # image normalisée 600x838 : aperçu/log + repli OCR plein texte côté API
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))
     return {
