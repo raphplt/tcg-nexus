@@ -1,11 +1,12 @@
 name: Mirror to GitLab
 
 on:
-  push:
-    branches:
-      - '**'
-    tags:
-      - '*'
+  workflow_dispatch: {}
+  # push:
+  #   branches:
+  #     - '**'
+  #   tags:
+  #     - '*'
 
 concurrency:
   group: mirror-to-gitlab
