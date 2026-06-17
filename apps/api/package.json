@@ -12,6 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "bench:scan": "ts-node -r tsconfig-paths/register ./src/scripts/scan-bench.ts",
+    "embed:cards": "TS_NODE_TRANSPILE_ONLY=1 ts-node -r tsconfig-paths/register ./src/scripts/embed-cards.ts",
     "seed": "ts-node -r tsconfig-paths/register ./src/scripts/importData.ts",
     "seed:prod": "SEED_AUTO_CONFIRM=true node -r tsconfig-paths/register dist/scripts/importData.js",
     "migrate:rename-card": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-rename-card-table.ts",
