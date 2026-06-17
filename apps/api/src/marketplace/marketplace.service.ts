@@ -31,6 +31,7 @@ import {
 } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { StripeService } from "./stripe.service";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -69,6 +70,7 @@ export class MarketplaceService {
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private readonly logger = new Logger(MarketplaceService.name);
@@ -159,6 +161,26 @@ export class MarketplaceService {
         ),
       });
       const savedOrder = await manager.save(Order, order);
+
+      // Emit marketplace.sale events grouped by seller
+      const sellerTotals = new Map<number, number>();
+      for (const item of cart.cartItems) {
+        const sellerId = item.listing.seller?.id;
+        if (!sellerId) continue;
+        const previous = sellerTotals.get(sellerId) ?? 0;
+        sellerTotals.set(
+          sellerId,
+          previous + Number(item.listing.price) * item.quantity,
+        );
+      }
+      for (const [sellerUserId, sellerTotal] of sellerTotals.entries()) {
+        this.eventEmitter.emit("marketplace.sale", {
+          sellerUserId,
+          buyerUserId: user.id,
+          orderId: savedOrder.id,
+          total: sellerTotal,
+        });
+      }
 
       // Create Payment Transaction
       const payment = manager.create(PaymentTransaction, {
@@ -1081,8 +1103,17 @@ export class MarketplaceService {
 
   async updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
     const order = await this.findOrderByIdAsAdmin(id);
+    const wasShipped = order.status === OrderStatus.SHIPPED;
     order.status = status;
-    return this.orderRepository.save(order);
+    const saved = await this.orderRepository.save(order);
+    if (!wasShipped && status === OrderStatus.SHIPPED && order.buyer?.id) {
+      this.eventEmitter.emit("order.shipped", {
+        buyerUserId: order.buyer.id,
+        orderId: order.id,
+        trackingNumber: undefined,
+      });
+    }
+    return saved;
   }
 
   /**

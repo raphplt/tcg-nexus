@@ -655,6 +655,24 @@ describe("MatchService", () => {
         BadRequestException,
       );
     });
+
+    it("should emit match.ready event when transitioning to IN_PROGRESS", async () => {
+      jest.spyOn(service, "findOne").mockResolvedValue({
+        ...mockMatch,
+        status: MatchStatus.SCHEDULED,
+      } as any);
+      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
+
+      const eventEmitter = (service as any).eventEmitter;
+      await service.startMatch(1, {});
+
+      expect(eventEmitter.emit).toHaveBeenCalledWith("match.ready", {
+        matchId: mockMatch.id,
+        tournamentId: mockTournament.id,
+        playerAUserId: mockPlayerA.user.id,
+        playerBUserId: mockPlayerB.user.id,
+      });
+    });
   });
 
   describe("resetMatch", () => {

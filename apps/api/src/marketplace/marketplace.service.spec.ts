@@ -21,6 +21,7 @@ import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { MarketplaceService } from "./marketplace.service";
 import { StripeService } from "./stripe.service";
 
@@ -196,6 +197,7 @@ describe("MarketplaceService", () => {
         { provide: UserCartService, useValue: mockUserCartService },
         { provide: CardPopularityService, useValue: mockCardPopularityService },
         { provide: DataSource, useValue: mockDataSource },
+        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();
 

@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { User } from "../user/entities/user.entity";
@@ -21,6 +22,8 @@ describe("UserFollowService", () => {
     findOne: jest.fn(),
   };
 
+  const emitter = { emit: jest.fn() };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
@@ -28,6 +31,7 @@ describe("UserFollowService", () => {
         UserFollowService,
         { provide: getRepositoryToken(UserFollow), useValue: followRepo },
         { provide: getRepositoryToken(User), useValue: userRepo },
+        { provide: EventEmitter2, useValue: emitter },
       ],
     }).compile();
     service = module.get<UserFollowService>(UserFollowService);
@@ -49,16 +53,43 @@ describe("UserFollowService", () => {
       followRepo.findOne.mockResolvedValue(existing);
       await expect(service.follow(1, 2)).resolves.toBe(existing);
       expect(followRepo.save).not.toHaveBeenCalled();
+      expect(emitter.emit).not.toHaveBeenCalled();
     });
 
     it("creates a new follow when not following yet", async () => {
-      userRepo.findOne.mockResolvedValue({ id: 2, isActive: true });
+      userRepo.findOne.mockResolvedValueOnce({ id: 2, isActive: true });
       followRepo.findOne.mockResolvedValue(null);
       const created = { id: 1, follower: { id: 1 }, followed: { id: 2 } };
       followRepo.create.mockReturnValue(created);
       followRepo.save.mockResolvedValue(created);
+      userRepo.findOne.mockResolvedValueOnce({
+        id: 1,
+        firstName: "Alice",
+        lastName: "Doe",
+      });
       await expect(service.follow(1, 2)).resolves.toBe(created);
       expect(followRepo.save).toHaveBeenCalledWith(created);
+    });
+
+    it("emits follow.created after creating a new follow", async () => {
+      userRepo.findOne.mockResolvedValueOnce({ id: 2, isActive: true });
+      followRepo.findOne.mockResolvedValue(null);
+      const created = { id: 1, follower: { id: 1 }, followed: { id: 2 } };
+      followRepo.create.mockReturnValue(created);
+      followRepo.save.mockResolvedValue(created);
+      userRepo.findOne.mockResolvedValueOnce({
+        id: 1,
+        firstName: "Alice",
+        lastName: "Doe",
+      });
+
+      await service.follow(1, 2);
+
+      expect(emitter.emit).toHaveBeenCalledWith("follow.created", {
+        followerUserId: 1,
+        followedUserId: 2,
+        followerName: "Alice Doe",
+      });
     });
   });
 
