@@ -265,7 +265,7 @@ export class CollectionService {
       );
     }
 
-    await this.collectionRepository.delete(id);
+    await this.collectionRepository.remove(collection);
   }
 
   async findAllPaginated(

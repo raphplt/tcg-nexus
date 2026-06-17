@@ -2,6 +2,7 @@ import { api } from "./api";
 import type {
   CardSearchResolution,
   CardSearchResult,
+  CardsPaginatedResponse,
   OcrParsedResult,
   PokemonSerieType,
   PokemonSetType,
@@ -106,6 +107,11 @@ export const cardService = {
     return response.data;
   },
 
+  async getSetRarities(setId: string): Promise<string[]> {
+    const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
+    return response.data || [];
+  },
+
   async searchCards(search: string): Promise<CardSearchResult[]> {
     console.log("card service searchCards : ", search);
     const query = search.trim();
@@ -178,5 +184,23 @@ export const cardService = {
   async getAllSeries(): Promise<PokemonSerieType[]> {
     const response = await api.get<PokemonSerieType[]>("/pokemon-series");
     return response.data || [];
+  },
+
+  async getPaginated(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      setId?: string;
+      serieId?: string;
+      rarity?: string;
+      type?: string;
+    } = {},
+  ): Promise<CardsPaginatedResponse> {
+    const response = await api.get<CardsPaginatedResponse>(
+      "/pokemon-card/paginated",
+      { params },
+    );
+    return response.data;
   },
 };

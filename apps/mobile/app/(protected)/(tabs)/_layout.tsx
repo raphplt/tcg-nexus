@@ -67,6 +67,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="pokedex"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon color={color} name="book-outline" size={size} />
+          ),
+          title: "Pokédex",
+        }}
+      />
+      <Tabs.Screen
         name="marketplace"
         options={{
           tabBarIcon: ({ color, size }) => (

@@ -5,6 +5,7 @@ import {
   Alert,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -206,9 +207,27 @@ export default function CollectionScreen() {
   };
 
   const handleDeleteCollection = (collection: UserCollection) => {
+    console.log("delete collection", collection);
+    
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(`Confirmer la suppression de "${collection.name}" ?`);
+      if (confirmed) {
+        collectionService
+          .deleteCollection(collection.id)
+          .then(async () => {
+            toast.showSuccess("Collection supprimee.");
+            await loadCollections(true);
+          })
+          .catch((error) => {
+            toast.showError(getApiErrorMessage(error));
+          });
+      }
+      return;
+    }
+
     Alert.alert(
       "Supprimer la collection",
-      `Confirmer la suppression de \"${collection.name}\" ?`,
+      `Confirmer la suppression de "${collection.name}" ?`,
       [
         {
           style: "cancel",
