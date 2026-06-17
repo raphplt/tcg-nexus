@@ -23,19 +23,22 @@ NAME_NOISE = {
 }
 
 ROI_TARGET_H = 220
+# le numéro (NN/MMM) est imprimé tout petit -> on agrandit davantage sa bande
+# pour donner de la matière à tesseract.
+NUMBER_TARGET_H = 340
 _OCR_POOL = ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 2)))
 
 
-def _resize_h(gray: np.ndarray) -> np.ndarray:
-    scale = ROI_TARGET_H / gray.shape[0]
+def _resize_h(gray: np.ndarray, target_h: int = ROI_TARGET_H) -> np.ndarray:
+    scale = target_h / gray.shape[0]
     interp = cv2.INTER_CUBIC if scale > 1 else cv2.INTER_AREA
     gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=interp)
     return cv2.bilateralFilter(gray, 7, 40, 40)
 
 
-def _variants(crop: np.ndarray):
+def _variants(crop: np.ndarray, target_h: int = ROI_TARGET_H):
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) if crop.ndim == 3 else crop
-    g = _resize_h(gray)
+    g = _resize_h(gray, target_h)
 
     _, otsu = cv2.threshold(g, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(g)
@@ -97,11 +100,13 @@ def _number_attempt(im: np.ndarray, psm: int) -> tuple[str, float]:
     return f"{match.group(1)}/{match.group(2)}", conf
 
 
-def _best_attempt(crop: np.ndarray, attempt) -> tuple[str, float]:
+def _best_attempt(
+    crop: np.ndarray, attempt, psms=(11, 7), target_h: int = ROI_TARGET_H
+) -> tuple[str, float]:
     """Lance toutes les variantes×PSM en parallèle et garde la meilleure conf."""
     if not HAS_TESSERACT or crop.size == 0:
         return "", 0.0
-    tasks = [(im, psm) for im in _variants(crop) for psm in (11, 7)]
+    tasks = [(im, psm) for im in _variants(crop, target_h) for psm in psms]
     results = _OCR_POOL.map(lambda t: attempt(*t), tasks)
     return max((r for r in results if r[0]), key=lambda r: r[1], default=("", 0.0))
 
@@ -114,5 +119,8 @@ def read_name(crop: np.ndarray) -> tuple[str, float]:
 
 def read_number(crop: np.ndarray) -> tuple[str, float]:
     """Numéro de collection normalisé 'NN/MMM' + confiance, via regex sur un
-    OCR chiffres-et-slash."""
-    return _best_attempt(crop, _number_attempt)
+    OCR chiffres-et-slash. Agrandissement plus fort et PSM 'ligne/mot' (7/8/6)
+    en plus du sparse (11) car les chiffres forment une courte ligne isolée."""
+    return _best_attempt(
+        crop, _number_attempt, psms=(7, 11, 8, 6), target_h=NUMBER_TARGET_H
+    )

@@ -33,8 +33,8 @@ NAME_BAND = (0.06, 0.0, 0.80, 0.14)
 # Bandes candidates pour le numéro : bas-gauche (cartes récentes) et bas-droite
 # (anciennes).
 NUMBER_BANDS = {
-    "number": (0.02, 0.90, 0.46, 0.085),
-    "number_right": (0.52, 0.90, 0.46, 0.085),
+    "number": (0.02, 0.885, 0.46, 0.10),
+    "number_right": (0.52, 0.885, 0.46, 0.10),
 }
 HP_BAND = (0.70, 0.040, 0.26, 0.060)
 

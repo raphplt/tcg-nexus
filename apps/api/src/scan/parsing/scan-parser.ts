@@ -29,9 +29,11 @@ type NumberFields = Pick<
   "setCode" | "setNumber" | "setTotal"
 >;
 
-// numéro/dénominateur "NN/MMM" depuis le texte d'une ROI ou le texte plein
+// numéro/dénominateur "NN/MMM" depuis le texte d'une ROI ou le texte plein.
+// Dénominateur sur 2-3 chiffres : aucun set réel n'a < 10 cartes, ça évite de
+// confondre des fragments de texte (dégâts "20/", "0/8") avec un vrai numéro.
 export const parseNumber = (text: string): NumberFields => {
-  const match = text.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
+  const match = text.match(/(\d{1,3})\s*\/\s*(\d{2,3})/);
   if (!match) return {};
   return {
     setCode: `${match[1]}/${match[2]}`,

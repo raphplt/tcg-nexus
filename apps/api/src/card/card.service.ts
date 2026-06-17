@@ -71,25 +71,32 @@ export class CardService {
       new Set([n, String(numeric), n.padStart(3, "0")]),
     ).filter((v) => v && v !== "NaN");
 
-    const qb = this.cardRepository
-      .createQueryBuilder("card")
-      .leftJoinAndSelect("card.set", "set")
-      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .where("card.localId IN (:...variants)", { variants });
+    const base = () => {
+      const qb = this.cardRepository
+        .createQueryBuilder("card")
+        .leftJoinAndSelect("card.set", "set")
+        .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+        .where("card.localId IN (:...variants)", { variants });
+      if (game) qb.andWhere("card.game = :game", { game });
+      return qb;
+    };
 
     const totalNum = Number(total);
     if (total && !Number.isNaN(totalNum)) {
-      qb.andWhere(
-        "(set.cardCount.official = :total OR set.cardCount.total = :total)",
-        { total: totalNum },
-      );
+      const withTotal = await base()
+        .andWhere(
+          "(set.cardCount.official = :total OR set.cardCount.total = :total)",
+          { total: totalNum },
+        )
+        .take(80)
+        .getMany();
+      // dénominateur cohérent -> on cible directement la bonne série
+      if (withTotal.length > 0) return withTotal;
+      // sinon le dénominateur est probablement mal lu : on retombe sur le
+      // localId seul plutôt que de ne rien renvoyer (le nom départagera).
     }
 
-    if (game) {
-      qb.andWhere("card.game = :game", { game });
-    }
-
-    return qb.take(80).getMany();
+    return base().take(80).getMany();
   }
 
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
