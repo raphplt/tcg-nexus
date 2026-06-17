@@ -11,6 +11,12 @@ import numpy as np
 from .ocr import HAS_TESSERACT as HAS_OCR
 from .ocr import read_name, read_number
 
+try:
+    import pytesseract
+    from pytesseract import Output
+except Exception:  # pragma: no cover - dépend de l'environnement
+    pytesseract = None
+
 CARD_W = 600
 CARD_H = 838
 
@@ -228,7 +234,39 @@ def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
     return _cap_width(upright), False
 
 
+# confiance OSD mini pour oser corriger l'orientation (en dessous : on garde tel
+# quel, ex. full-art sans assez de texte pour décider).
+OSD_MIN_CONF = 1.5
+
+
+def _orient_upright(card: np.ndarray) -> np.ndarray:
+    """Redresse une carte photographiée à l'envers (180°) ou de travers via
+    Tesseract OSD, qui détecte l'orientation à partir de TOUT le texte de la
+    carte (bien plus robuste que la seule bande du nom). Conservateur : on ne
+    tourne que si OSD est confiant, sinon on ne touche à rien."""
+    if pytesseract is None or not HAS_OCR:
+        return card
+    try:
+        osd = pytesseract.image_to_osd(card, output_type=Output.DICT)
+    except Exception:
+        return card  # OSD échoue (trop peu de texte) -> on ne risque rien
+
+    if float(osd.get("orientation_conf", 0.0)) < OSD_MIN_CONF:
+        return card
+
+    # "rotate" = degrés horaires à appliquer pour redresser
+    rotate = int(osd.get("rotate", 0)) % 360
+    if rotate == 90:
+        return cv2.rotate(card, cv2.ROTATE_90_CLOCKWISE)
+    if rotate == 180:
+        return cv2.rotate(card, cv2.ROTATE_180)
+    if rotate == 270:
+        return cv2.rotate(card, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return card
+
+
 def _build_result(card: np.ndarray, detected: bool) -> dict:
+    card = _orient_upright(card)
     rois = _extract_rois(card)
     # image normalisée 600x838 : aperçu/log + repli OCR plein texte côté API
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))

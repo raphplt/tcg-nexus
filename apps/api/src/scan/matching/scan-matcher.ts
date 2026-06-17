@@ -11,6 +11,7 @@ const NUMBER_W = 0.5;
 const SET_W = 0.15;
 const NAME_MARGIN = 0.2;
 const NAME_INFORMATIVE = 0.5;
+const UNIQUE_MARGIN = 0.12;
 
 const normalize = (value?: string): string =>
   (value || "")
@@ -97,10 +98,25 @@ export const computeConfidence = (
   let confidenceLevel: ScanConfidenceLevel =
     best >= 0.75 ? "high" : best >= 0.45 ? "medium" : "low";
 
+  // P3 : nom quasi-exact (score >= 0.5 ~ name >= 0.9) ET candidat nettement
+  // unique -> on promeut en high même sans numéro lu (titres holo/ex où le
+  // numéro échoue). La marge stricte évite de promouvoir une variante en doublon.
+  if (
+    confidenceLevel === "medium" &&
+    best >= 0.5 &&
+    best - second >= UNIQUE_MARGIN
+  ) {
+    confidenceLevel = "high";
+  }
+
   // deux candidats au coude-à-coude (homonyme, set multiple) -> on fait confirmer
   if (confidenceLevel === "high" && best - second < 0.08) {
     confidenceLevel = "medium";
   }
 
-  return { confidence: Number(best.toFixed(3)), confidenceLevel };
+  // P1 : la confiance affichée est bornée à 1 (le score brut peut monter à 1.2)
+  return {
+    confidence: Number(Math.min(1, best).toFixed(3)),
+    confidenceLevel,
+  };
 };
