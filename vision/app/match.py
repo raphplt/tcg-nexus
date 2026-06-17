@@ -7,7 +7,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-from .pipeline import _decode, _find_card_box, _warp_to_portrait
+from .pipeline import _decode, _find_card_box, _warp_card
 
 # taille commune scan/catalogue pour comparer à échelle équivalente
 _REF_SIZE = (245, 337)
@@ -48,7 +48,7 @@ def _scan_gray(image_b64: str) -> np.ndarray:
     img = _decode(image_b64)
     box = _find_card_box(img)
     if box is not None:
-        warp = _warp_to_portrait(img, box)
+        warp = _warp_card(img, box)
     else:
         upright = (
             cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
