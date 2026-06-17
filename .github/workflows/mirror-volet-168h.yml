@@ -10,7 +10,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Chemin du depot GitLab cible (sans schema ni token).
   GITLAB_HOST_PATH: rendu-git.etna-alternance.net/module-10344/activity-55520/group-1076867.git
   PREFIX: 168h/volet-168h
 
