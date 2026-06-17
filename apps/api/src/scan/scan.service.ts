@@ -36,6 +36,12 @@ const TEXT_ROI_KEYS = new Set(["name", "number", "number_right"]);
 const VISUAL_TOP_K = 6;
 const VISUAL_MIN_GOOD = 12;
 
+// recherche visuelle par embedding (CLIP/pgvector), similarités cosine 0..1
+const EMB_TOP_K = 10;
+const EMB_AGREE = 0.7; // texte n°1 confirmé par le visuel -> high
+const EMB_STRONG = 0.82; // sauvetage : visuel seul assez net pour trancher
+const EMB_MARGIN = 0.03; // ...et nettement devant le 2e
+
 const LEGACY_R2_HOST = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
 
 // URL de l'image catalogue (base sans extension -> .../low.png), hôte réécrit
@@ -88,8 +94,12 @@ export class ScanService {
       game,
     );
 
-    // départage visuel (ORB) quand le texte est ambigu
-    const refined = await this.visualDisambiguate(bestFrame, textCandidates);
+    // départage visuel : embedding plein-catalogue si dispo (gère même 0 candidat
+    // texte), sinon repli ORB sur les candidats texte.
+    const useEmbedding = Boolean(vision?.embedding?.length);
+    const refined = useEmbedding
+      ? await this.fuseWithVisual(vision!.embedding!, textCandidates, game)
+      : await this.visualDisambiguate(bestFrame, textCandidates);
 
     const response: ScanRecognizeResponse = {
       rawText: text,
@@ -100,7 +110,7 @@ export class ScanService {
       bestCard: refined.candidates[0] ?? null,
       confidence: refined.confidence,
       confidenceLevel: refined.confidenceLevel,
-      engine: `${vision ? `${vision.engine}+` : ""}${engine}${refined.usedVisual ? "+orb" : ""}`,
+      engine: `${vision ? `${vision.engine}+` : ""}${engine}${refined.usedVisual ? (useEmbedding ? "+clip" : "+orb") : ""}`,
     };
 
     const t3 = Date.now();
@@ -255,6 +265,71 @@ export class ScanService {
       confidenceLevel: "high",
       usedVisual: true,
     };
+  }
+
+  // fusion texte + recherche visuelle par embedding (plein-catalogue).
+  private async fuseWithVisual(
+    embedding: number[],
+    textCandidates: ScanCardCandidate[],
+    game?: CardGame,
+  ): Promise<{
+    candidates: ScanCardCandidate[];
+    confidence: number;
+    confidenceLevel: ScanConfidenceLevel;
+    usedVisual: boolean;
+  }> {
+    const base = computeConfidence(textCandidates);
+    const keep = { candidates: textCandidates, ...base, usedVisual: false };
+    if (base.confidenceLevel === "high") return keep;
+
+    const hits = await this.cardService.findByEmbedding(
+      embedding,
+      game,
+      EMB_TOP_K,
+    );
+    if (hits.length === 0) return keep;
+
+    const best = hits[0];
+    const second = hits[1]?.similarity ?? 0;
+
+    // 1) le candidat texte n°1 est confirmé par le visuel -> on valide
+    const textTop = textCandidates[0];
+    const agree = hits.find((h) => h.card.id === textTop?.id);
+    if (textTop && agree && agree.similarity >= EMB_AGREE) {
+      return { ...keep, confidence: 0.95, confidenceLevel: "high", usedVisual: true };
+    }
+
+    // 2) sauvetage : texte faible mais visuel net et unique (full-art, holo…)
+    if (best.similarity >= EMB_STRONG && best.similarity - second >= EMB_MARGIN) {
+      const winner = toCandidate(best.card, best.similarity);
+      return {
+        candidates: [winner, ...textCandidates.filter((c) => c.id !== winner.id)],
+        confidence: 0.92,
+        confidenceLevel: "high",
+        usedVisual: true,
+      };
+    }
+
+    // 3) sinon on enrichit la liste de candidats visuels (à confirmer)
+    const merged = this.mergeVisual(textCandidates, hits);
+    return { candidates: merged, ...computeConfidence(merged), usedVisual: true };
+  }
+
+  // fusionne candidats texte et visuels (dédupe). Les visuels-seuls sont bornés
+  // sous le seuil high : ils restent des suggestions à confirmer.
+  private mergeVisual(
+    text: ScanCardCandidate[],
+    hits: Array<{ card: Card; similarity: number }>,
+  ): ScanCardCandidate[] {
+    const byId = new Map(text.map((c) => [c.id, c]));
+    for (const h of hits) {
+      if (!byId.has(h.card.id)) {
+        byId.set(h.card.id, toCandidate(h.card, Number((h.similarity * 0.6).toFixed(3))));
+      }
+    }
+    return [...byId.values()]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_CANDIDATES);
   }
 
   // sans service vision, on reconstruit deux ROI à partir du texte parsé

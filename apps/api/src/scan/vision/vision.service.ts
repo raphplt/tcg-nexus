@@ -18,6 +18,8 @@ export interface VisionResult {
   rois: VisionRoi[];
   // index de la frame retenue (best-of-N) ; 0 en mono-frame.
   bestIndex: number;
+  // embedding CLIP de la carte (recherche visuelle), absent si modèle KO
+  embedding?: number[];
 }
 
 export interface VisionMatchCandidate {
@@ -25,8 +27,9 @@ export interface VisionMatchCandidate {
   url: string;
 }
 
-// timeout borné : mieux vaut échouer vite (repli OCR brut) que faire patienter
-const REQUEST_TIMEOUT_MS = 15000;
+// timeout borné : mieux vaut échouer vite (repli OCR brut) que faire patienter.
+// Surchargeable (ex. banc d'essai qui laisse vision finir pour mesurer).
+const REQUEST_TIMEOUT_MS = Number(process.env.VISION_TIMEOUT_MS) || 15000;
 const MATCH_TIMEOUT_MS = 15000;
 
 const isTimeout = (error: unknown): boolean =>
@@ -37,6 +40,7 @@ interface VisionResponseJson {
   engine?: string;
   normalized_image: string;
   best_index?: number;
+  embedding?: number[];
   rois?: Array<{
     key: string;
     box?: VisionRoi["box"];
@@ -158,6 +162,7 @@ export class VisionService {
       engine: data.engine ?? "opencv",
       normalizedImage: Buffer.from(data.normalized_image, "base64"),
       bestIndex: data.best_index ?? 0,
+      embedding: data.embedding,
       rois: (data.rois ?? []).map((roi) => ({
         key: roi.key,
         box: roi.box,

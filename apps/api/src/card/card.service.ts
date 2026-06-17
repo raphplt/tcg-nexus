@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { Card } from "./entities/card.entity";
@@ -94,6 +94,45 @@ export class CardService {
     }
 
     return base().take(80).getMany();
+  }
+
+  // recherche visuelle : plus proches voisins de l'embedding CLIP (pgvector,
+  // distance cosine). Renvoie les cartes + similarité (1 = identique).
+  async findByEmbedding(
+    embedding: number[],
+    game?: CardGame,
+    limit = 10,
+  ): Promise<Array<{ card: Card; similarity: number }>> {
+    if (!embedding?.length) return [];
+    const vec = `[${embedding.join(",")}]`;
+    const params: unknown[] = [vec];
+    let gameFilter = "";
+    if (game) {
+      params.push(game);
+      gameFilter = `AND card.game = $${params.length}`;
+    }
+    params.push(limit);
+
+    const rows: Array<{ id: string; similarity: string }> =
+      await this.cardRepository.query(
+        `SELECT e.card_id AS id, 1 - (e.embedding <=> $1::vector) AS similarity
+         FROM card_embedding e
+         JOIN card ON card.id = e.card_id
+         WHERE 1 = 1 ${gameFilter}
+         ORDER BY e.embedding <=> $1::vector
+         LIMIT $${params.length}`,
+        params,
+      );
+    if (rows.length === 0) return [];
+
+    const cards = await this.cardRepository.find({
+      where: { id: In(rows.map((r) => r.id)) },
+      relations: ["set", "pokemonDetails"],
+    });
+    const byId = new Map(cards.map((c) => [c.id, c]));
+    return rows
+      .map((r) => ({ card: byId.get(r.id), similarity: Number(r.similarity) }))
+      .filter((x): x is { card: Card; similarity: number } => Boolean(x.card));
   }
 
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
