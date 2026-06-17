@@ -42,8 +42,14 @@ describe("DeckController (e2e)", () => {
     await app.init();
     httpServer = app.getHttpServer() as Server;
 
-    creator = await createUser(httpServer, { firstName: "Deck", lastName: "Creator" });
-    other = await createUser(httpServer, { firstName: "Other", lastName: "User" });
+    creator = await createUser(httpServer, {
+      firstName: "Deck",
+      lastName: "Creator",
+    });
+    other = await createUser(httpServer, {
+      firstName: "Other",
+      lastName: "User",
+    });
 
     const formatRepo = app.get<Repository<DeckFormat>>(
       getRepositoryToken(DeckFormat),
@@ -96,14 +102,12 @@ describe("DeckController (e2e)", () => {
     });
 
     it("rejects deck creation without authentication", async () => {
-      const response = await request(httpServer)
-        .post("/deck")
-        .send({
-          deckName: "Anonymous Deck",
-          isPublic: true,
-          formatId,
-          cards: [],
-        });
+      const response = await request(httpServer).post("/deck").send({
+        deckName: "Anonymous Deck",
+        isPublic: true,
+        formatId,
+        cards: [],
+      });
 
       expect(response.status).toBe(401);
     });

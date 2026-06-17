@@ -45,21 +45,22 @@ export const saveAuthTokens = async (tokens: AuthTokens): Promise<void> => {
   await Promise.all([
     setItem(ACCESS_TOKEN_KEY, tokens.accessToken),
     setItem(REFRESH_TOKEN_KEY, tokens.refreshToken),
-    setItem(
-      ACCESS_TOKEN_EXPIRES_AT_KEY,
-      String(tokens.accessTokenExpiresAt),
-    ),
+    setItem(ACCESS_TOKEN_EXPIRES_AT_KEY, String(tokens.accessTokenExpiresAt)),
   ]);
 };
 
 export const getStoredTokens = async (): Promise<AuthTokens | null> => {
-  const [accessToken, refreshToken, rawAccessTokenExpiresAt, rawSessionExpiresAt] =
-    await Promise.all([
-      getItem(ACCESS_TOKEN_KEY),
-      getItem(REFRESH_TOKEN_KEY),
-      getItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
-      getItem(SESSION_EXPIRES_AT_KEY),
-    ]);
+  const [
+    accessToken,
+    refreshToken,
+    rawAccessTokenExpiresAt,
+    rawSessionExpiresAt,
+  ] = await Promise.all([
+    getItem(ACCESS_TOKEN_KEY),
+    getItem(REFRESH_TOKEN_KEY),
+    getItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
+    getItem(SESSION_EXPIRES_AT_KEY),
+  ]);
 
   if (!accessToken || !refreshToken || !rawAccessTokenExpiresAt) {
     return null;

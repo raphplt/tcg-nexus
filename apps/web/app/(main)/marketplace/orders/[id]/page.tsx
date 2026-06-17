@@ -118,12 +118,16 @@ export default function OrderDetailsPage() {
                   <td className="py-4">
                     <div className="flex items-center gap-4">
                       {(() => {
-                        const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
+                        const isSealed =
+                          item.listing.productKind === "sealed" ||
+                          !!item.listing.sealedProduct;
                         const imageUrl = isSealed
-                          ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                          ? getSealedImageUrl(item.listing.sealedProduct) ||
+                            "/images/sealed-default.png"
                           : item.listing.pokemonCard?.image;
                         const productName = isSealed
-                          ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
+                          ? getSealedName(item.listing.sealedProduct) ||
+                            "Produit scellé"
                           : item.listing.pokemonCard?.name || "Carte inconnue";
                         const productSub = isSealed
                           ? item.listing.sealedCondition || "Neuf"
@@ -142,9 +146,7 @@ export default function OrderDetailsPage() {
                               </div>
                             )}
                             <div>
-                              <p className="font-medium">
-                                {productName}
-                              </p>
+                              <p className="font-medium">{productName}</p>
                               <p className="text-xs text-muted-foreground">
                                 {productSub}
                               </p>

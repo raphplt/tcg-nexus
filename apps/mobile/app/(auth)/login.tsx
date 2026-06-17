@@ -78,7 +78,11 @@ export default function LoginScreen() {
             keyboardType="email-address"
             onChangeText={(value) => {
               setEmail(value);
-              setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                email: undefined,
+                form: undefined,
+              }));
             }}
             onFocus={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 80 });
@@ -88,14 +92,20 @@ export default function LoginScreen() {
             style={[styles.input, errors.email ? styles.inputError : undefined]}
             value={email}
           />
-          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          {errors.email ? (
+            <Text style={styles.errorText}>{errors.email}</Text>
+          ) : null}
 
           <Text style={styles.label}>Mot de passe</Text>
           <TextInput
             autoCapitalize="none"
             onChangeText={(value) => {
               setPassword(value);
-              setErrors((prev) => ({ ...prev, password: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                password: undefined,
+                form: undefined,
+              }));
             }}
             onFocus={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 160 });
@@ -103,7 +113,10 @@ export default function LoginScreen() {
             placeholder="Votre mot de passe"
             placeholderTextColor={colors.mutedForeground}
             secureTextEntry
-            style={[styles.input, errors.password ? styles.inputError : undefined]}
+            style={[
+              styles.input,
+              errors.password ? styles.inputError : undefined,
+            ]}
             value={password}
           />
           {errors.password ? (
@@ -124,7 +137,9 @@ export default function LoginScreen() {
             />
           </View>
 
-          {errors.form ? <Text style={styles.formErrorText}>{errors.form}</Text> : null}
+          {errors.form ? (
+            <Text style={styles.formErrorText}>{errors.form}</Text>
+          ) : null}
 
           <Pressable
             disabled={isLoading}

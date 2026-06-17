@@ -1,9 +1,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from "@nestjs/common";
 import { MatchOnlineService } from "./match-online.service";
 import { Match, MatchStatus, MatchPhase } from "../entities/match.entity";
-import { OnlineMatchSession, OnlineMatchSessionStatus } from "../entities/online-match-session.entity";
+import {
+  OnlineMatchSession,
+  OnlineMatchSessionStatus,
+} from "../entities/online-match-session.entity";
 import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { MatchService } from "../match.service";
@@ -70,7 +77,12 @@ describe("MatchOnlineService", () => {
 
   const mockPlayerB: Player = {
     id: 20,
-    user: { id: 2, email: "other@example.com", firstName: "Other", lastName: "Player" } as any,
+    user: {
+      id: 2,
+      email: "other@example.com",
+      firstName: "Other",
+      lastName: "Player",
+    } as any,
   } as any;
 
   let mockMatchEntity: Match;
@@ -106,11 +118,20 @@ describe("MatchOnlineService", () => {
       providers: [
         MatchOnlineService,
         { provide: getRepositoryToken(Match), useValue: mockMatchRepository },
-        { provide: getRepositoryToken(OnlineMatchSession), useValue: mockOnlineSessionRepository },
+        {
+          provide: getRepositoryToken(OnlineMatchSession),
+          useValue: mockOnlineSessionRepository,
+        },
         { provide: getRepositoryToken(Deck), useValue: mockDeckRepository },
-        { provide: getRepositoryToken(SavedDeck), useValue: mockSavedDeckRepository },
+        {
+          provide: getRepositoryToken(SavedDeck),
+          useValue: mockSavedDeckRepository,
+        },
         { provide: MatchService, useValue: mockMatchService },
-        { provide: OnlinePlaySupportService, useValue: mockOnlinePlaySupportService },
+        {
+          provide: OnlinePlaySupportService,
+          useValue: mockOnlinePlaySupportService,
+        },
       ],
     }).compile();
 
@@ -118,7 +139,9 @@ describe("MatchOnlineService", () => {
 
     // Mock GameEngine methods to prevent type errors and allow clean execution
     const GameEngineClass = require("../engine/GameEngine").GameEngine;
-    jest.spyOn(GameEngineClass.prototype, "getSanitizedState").mockReturnValue({} as any);
+    jest
+      .spyOn(GameEngineClass.prototype, "getSanitizedState")
+      .mockReturnValue({} as any);
   });
 
   afterEach(() => {
@@ -135,21 +158,25 @@ describe("MatchOnlineService", () => {
       mockMatchEntity.onlineSession = mockSessionEntity;
       mockMatchRepository.findOne.mockResolvedValue(mockMatchEntity);
       mockDeckRepository.find.mockResolvedValue([]);
-      
+
       const mockQueryBuilder = {
         innerJoin: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([]),
       };
-      mockSavedDeckRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockSavedDeckRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.getDeckEligibility(1, mockUser);
 
       expect(result).toBeDefined();
       expect(result.matchId).toBe(1);
       expect(result.slot).toBe("playerA");
-      expect(result.sessionStatus).toBe(OnlineMatchSessionStatus.WAITING_FOR_DECKS);
+      expect(result.sessionStatus).toBe(
+        OnlineMatchSessionStatus.WAITING_FOR_DECKS,
+      );
     });
 
     it("should throw ForbiddenException if user is not in match", async () => {
@@ -160,7 +187,9 @@ describe("MatchOnlineService", () => {
       };
       mockMatchRepository.findOne.mockResolvedValue(matchWithDiffPlayers);
 
-      await expect(service.getDeckEligibility(1, mockUser)).rejects.toThrow(ForbiddenException);
+      await expect(service.getDeckEligibility(1, mockUser)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -172,7 +201,7 @@ describe("MatchOnlineService", () => {
       mockMatchEntity.onlineSession = mockSessionEntity;
 
       mockMatchRepository.findOne.mockResolvedValue(mockMatchEntity);
-      
+
       mockDeckRepository.findOne.mockResolvedValue({ id: 88, user: { id: 1 } });
       const mockQueryBuilder = {
         innerJoin: jest.fn().mockReturnThis(),
@@ -180,9 +209,13 @@ describe("MatchOnlineService", () => {
         where: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([]),
       };
-      mockSavedDeckRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockSavedDeckRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
-      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({ eligible: true });
+      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({
+        eligible: true,
+      });
       mockOnlinePlaySupportService.mapDeckToEngineCards.mockReturnValue([]);
       mockOnlinePlaySupportService.createInitialGameState.mockReturnValue({
         gamePhase: GamePhase.Play,
@@ -192,7 +225,10 @@ describe("MatchOnlineService", () => {
       const result = await service.upsertSession(1, mockUser, 88);
 
       expect(result.status).toBe(OnlineMatchSessionStatus.ACTIVE);
-      expect(mockMatchService.startMatch).toHaveBeenCalledWith(1, expect.any(Object));
+      expect(mockMatchService.startMatch).toHaveBeenCalledWith(
+        1,
+        expect.any(Object),
+      );
       expect(mockOnlineSessionRepository.save).toHaveBeenCalled();
     });
   });
@@ -216,17 +252,27 @@ describe("MatchOnlineService", () => {
       };
 
       const GameEngineClass = require("../engine/GameEngine").GameEngine;
-      jest.spyOn(GameEngineClass.prototype, "dispatch").mockImplementation(mockEngine.dispatch);
-      jest.spyOn(GameEngineClass.prototype, "getState").mockImplementation(mockEngine.getState);
+      jest
+        .spyOn(GameEngineClass.prototype, "dispatch")
+        .mockImplementation(mockEngine.dispatch);
+      jest
+        .spyOn(GameEngineClass.prototype, "getState")
+        .mockImplementation(mockEngine.getState);
 
-      await service.dispatchAction(1, mockUser, { playerId: "10", type: "PASS" as any });
+      await service.dispatchAction(1, mockUser, {
+        playerId: "10",
+        type: "PASS" as any,
+      });
 
       // Check if reportScore was called for playerA (winnerId: 10)
-      expect(mockMatchService.reportScore).toHaveBeenCalledWith(1, expect.objectContaining({
-        playerAScore: 1,
-        playerBScore: 0,
-        isForfeit: false,
-      }));
+      expect(mockMatchService.reportScore).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          playerAScore: 1,
+          playerBScore: 0,
+          isForfeit: false,
+        }),
+      );
     });
 
     it("should correctly sync finished game score to match for playerB", async () => {
@@ -247,17 +293,27 @@ describe("MatchOnlineService", () => {
       };
 
       const GameEngineClass = require("../engine/GameEngine").GameEngine;
-      jest.spyOn(GameEngineClass.prototype, "dispatch").mockImplementation(mockEngine.dispatch);
-      jest.spyOn(GameEngineClass.prototype, "getState").mockImplementation(mockEngine.getState);
+      jest
+        .spyOn(GameEngineClass.prototype, "dispatch")
+        .mockImplementation(mockEngine.dispatch);
+      jest
+        .spyOn(GameEngineClass.prototype, "getState")
+        .mockImplementation(mockEngine.getState);
 
-      await service.dispatchAction(1, mockUser, { playerId: "10", type: "PASS" as any });
+      await service.dispatchAction(1, mockUser, {
+        playerId: "10",
+        type: "PASS" as any,
+      });
 
       // Check if reportScore was called for playerB (winnerId: 20)
-      expect(mockMatchService.reportScore).toHaveBeenCalledWith(1, expect.objectContaining({
-        playerAScore: 0,
-        playerBScore: 1,
-        isForfeit: false,
-      }));
+      expect(mockMatchService.reportScore).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          playerAScore: 0,
+          playerBScore: 1,
+          isForfeit: false,
+        }),
+      );
     });
   });
 });

@@ -115,16 +115,21 @@ export default function OrderList({ orders }: OrderListProps) {
                         className="p-4 flex items-center gap-4"
                       >
                         {(() => {
-                          const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
+                          const isSealed =
+                            item.listing.productKind === "sealed" ||
+                            !!item.listing.sealedProduct;
                           const productUrl = isSealed
                             ? `/marketplace/sealed/${item.listing.sealedProduct?.id}`
                             : `/marketplace/cards/${item.listing.pokemonCard?.id}`;
                           const imageUrl = isSealed
-                            ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                            ? getSealedImageUrl(item.listing.sealedProduct) ||
+                              "/images/sealed-default.png"
                             : getCardImage(item.listing.pokemonCard);
                           const productName = isSealed
-                            ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
-                            : item.listing.pokemonCard?.name || "Carte inconnue";
+                            ? getSealedName(item.listing.sealedProduct) ||
+                              "Produit scellé"
+                            : item.listing.pokemonCard?.name ||
+                              "Carte inconnue";
                           const productSub = isSealed
                             ? item.listing.sealedProduct?.pokemonSet?.name
                             : item.listing.pokemonCard?.set?.name;
@@ -156,7 +161,10 @@ export default function OrderList({ orders }: OrderListProps) {
                                 )}
                                 <div className="flex items-center gap-2 mt-1">
                                   {condition && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {condition}
                                     </Badge>
                                   )}

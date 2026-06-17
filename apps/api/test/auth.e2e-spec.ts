@@ -38,15 +38,13 @@ describe("AuthController (e2e)", () => {
       const email = uniqueEmail("register");
       const password = "Password123!";
 
-      const response = await request(httpServer)
-        .post("/auth/register")
-        .send({
-          email,
-          password,
-          confirmPassword: password,
-          firstName: "John",
-          lastName: "Doe",
-        });
+      const response = await request(httpServer).post("/auth/register").send({
+        email,
+        password,
+        confirmPassword: password,
+        firstName: "John",
+        lastName: "Doe",
+      });
 
       expect(response.status).toBe(201);
       expect(response.body.user).toBeDefined();
@@ -60,18 +58,17 @@ describe("AuthController (e2e)", () => {
 
     it("sets accessToken and refreshToken cookies on register", async () => {
       const email = uniqueEmail("register-cookie");
-      const response = await request(httpServer)
-        .post("/auth/register")
-        .send({
-          email,
-          password: "Password123!",
-          confirmPassword: "Password123!",
-          firstName: "Cookie",
-          lastName: "User",
-        });
+      const response = await request(httpServer).post("/auth/register").send({
+        email,
+        password: "Password123!",
+        confirmPassword: "Password123!",
+        firstName: "Cookie",
+        lastName: "User",
+      });
 
       expect(response.status).toBe(201);
-      const cookies = (response.headers["set-cookie"] ?? []) as unknown as string[];
+      const cookies = (response.headers["set-cookie"] ??
+        []) as unknown as string[];
       const cookieNames = cookies.map((c) => c.split("=")[0]);
       expect(cookieNames).toContain("accessToken");
       expect(cookieNames).toContain("refreshToken");
@@ -80,15 +77,13 @@ describe("AuthController (e2e)", () => {
     it("rejects duplicate email with 409", async () => {
       const user = await createUser(httpServer);
 
-      const response = await request(httpServer)
-        .post("/auth/register")
-        .send({
-          email: user.email,
-          password: user.password,
-          confirmPassword: user.password,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        });
+      const response = await request(httpServer).post("/auth/register").send({
+        email: user.email,
+        password: user.password,
+        confirmPassword: user.password,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
 
       expect(response.status).toBe(409);
     });
@@ -160,7 +155,8 @@ describe("AuthController (e2e)", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBeDefined();
-      const clearCookies = (response.headers["set-cookie"] ?? []) as unknown as string[];
+      const clearCookies = (response.headers["set-cookie"] ??
+        []) as unknown as string[];
       const accessCleared = clearCookies.find((c) =>
         c.startsWith("accessToken="),
       );

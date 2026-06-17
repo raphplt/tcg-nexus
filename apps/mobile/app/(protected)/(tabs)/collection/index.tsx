@@ -26,7 +26,10 @@ import type { PokemonSetType, UserCollection } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 const getTotalCards = (collection: UserCollection): number =>
-  (collection.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  (collection.items || []).reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
 
 export default function CollectionScreen() {
   const { user } = useAuth();
@@ -56,32 +59,35 @@ export default function CollectionScreen() {
   const [isLoadingSets, setIsLoadingSets] = useState(false);
   const [setSearchQuery, setSetSearchQuery] = useState("");
 
-  const loadCollections = useCallback(async (refresh = false) => {
-    if (!user?.id) {
-      setCollections([]);
-      setIsLoading(false);
-      return;
-    }
-
-    if (refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    try {
-      const data = await collectionService.getMyCollections();
-      setCollections(data);
-    } catch (error) {
-      toast.showError(getApiErrorMessage(error));
-    } finally {
-      if (refresh) {
-        setIsRefreshing(false);
-      } else {
+  const loadCollections = useCallback(
+    async (refresh = false) => {
+      if (!user?.id) {
+        setCollections([]);
         setIsLoading(false);
+        return;
       }
-    }
-  }, [user?.id]);
+
+      if (refresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      try {
+        const data = await collectionService.getMyCollections();
+        setCollections(data);
+      } catch (error) {
+        toast.showError(getApiErrorMessage(error));
+      } finally {
+        if (refresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [user?.id],
+  );
 
   useEffect(() => {
     void loadCollections();
@@ -103,7 +109,8 @@ export default function CollectionScreen() {
   };
 
   const alreadyStartedSetIds = useMemo(
-    () => new Set(masterSetCollections.map((c) => c.masterSet?.id).filter(Boolean)),
+    () =>
+      new Set(masterSetCollections.map((c) => c.masterSet?.id).filter(Boolean)),
     [masterSetCollections],
   );
 
@@ -116,7 +123,10 @@ export default function CollectionScreen() {
   }, [allSets, setSearchQuery]);
 
   const groupedSets = useMemo(() => {
-    const map = new Map<string, { serieName: string; sets: PokemonSetType[] }>();
+    const map = new Map<
+      string,
+      { serieName: string; sets: PokemonSetType[] }
+    >();
     for (const set of filteredSets) {
       const serieName = set.serie?.name || "Autres";
       const serieId = set.serie?.id || "_other";
@@ -154,7 +164,11 @@ export default function CollectionScreen() {
   };
 
   const totalCards = useMemo(
-    () => collections.reduce((sum, collection) => sum + getTotalCards(collection), 0),
+    () =>
+      collections.reduce(
+        (sum, collection) => sum + getTotalCards(collection),
+        0,
+      ),
     [collections],
   );
 
@@ -243,7 +257,10 @@ export default function CollectionScreen() {
           onPress={() => {
             router.push("/scan");
           }}
-          style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
+          style={({ pressed }) => [
+            styles.scanButton,
+            pressed && styles.scanButtonPressed,
+          ]}
         >
           <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
@@ -256,16 +273,24 @@ export default function CollectionScreen() {
 
         {rarityStats.length > 0 ? (
           <Text style={styles.statsMeta}>
-            Raretés: {rarityStats.map(([rarity, count]) => `${rarity} (${count})`).join(" • ")}
+            Raretés:{" "}
+            {rarityStats
+              .map(([rarity, count]) => `${rarity} (${count})`)
+              .join(" • ")}
           </Text>
         ) : (
-          <Text style={styles.statsMeta}>Ajoute des cartes pour voir tes stats.</Text>
+          <Text style={styles.statsMeta}>
+            Ajoute des cartes pour voir tes stats.
+          </Text>
         )}
       </View>
 
       <Pressable
         onPress={() => setIsCreateModalVisible(true)}
-        style={({ pressed }) => [styles.createButton, pressed && styles.createButtonPressed]}
+        style={({ pressed }) => [
+          styles.createButton,
+          pressed && styles.createButtonPressed,
+        ]}
       >
         <Ionicons color="#ffffff" name="add-circle-outline" size={18} />
         <Text style={styles.createButtonText}>Nouvelle collection</Text>
@@ -310,7 +335,9 @@ export default function CollectionScreen() {
         ListEmptyComponent={
           !isLoading && standardCollections.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>Aucune collection pour le moment</Text>
+              <Text style={styles.emptyTitle}>
+                Aucune collection pour le moment
+              </Text>
               <Text style={styles.emptyText}>
                 Cree ta premiere collection ou scanne une carte pour demarrer.
               </Text>
@@ -335,7 +362,9 @@ export default function CollectionScreen() {
                     pressed && styles.emptySecondaryActionPressed,
                   ]}
                 >
-                  <Text style={styles.emptySecondaryActionText}>Scanner une carte</Text>
+                  <Text style={styles.emptySecondaryActionText}>
+                    Scanner une carte
+                  </Text>
                 </Pressable>
               </View>
             </View>
@@ -403,7 +432,10 @@ export default function CollectionScreen() {
             <View style={styles.modalActionsRow}>
               <Pressable
                 onPress={() => setIsCreateModalVisible(false)}
-                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalCancelPressed]}
+                style={({ pressed }) => [
+                  styles.modalCancel,
+                  pressed && styles.modalCancelPressed,
+                ]}
               >
                 <Text style={styles.modalCancelText}>Annuler</Text>
               </Pressable>
@@ -449,7 +481,9 @@ export default function CollectionScreen() {
             />
 
             {isLoadingSets ? (
-              <Text style={styles.setLoadingText}>Chargement des extensions...</Text>
+              <Text style={styles.setLoadingText}>
+                Chargement des extensions...
+              </Text>
             ) : (
               <ScrollView style={styles.setListContainer}>
                 {groupedSets.map((group) => (
@@ -461,10 +495,13 @@ export default function CollectionScreen() {
                         <Pressable
                           key={set.id}
                           disabled={alreadyStarted || isCreating}
-                          onPress={() => void handleCreateMasterSet(set.id, set.name)}
+                          onPress={() =>
+                            void handleCreateMasterSet(set.id, set.name)
+                          }
                           style={({ pressed }) => [
                             styles.setListItem,
-                            (pressed || alreadyStarted) && styles.setListItemDisabled,
+                            (pressed || alreadyStarted) &&
+                              styles.setListItemDisabled,
                           ]}
                         >
                           <Text
@@ -477,7 +514,9 @@ export default function CollectionScreen() {
                             {set.name}
                           </Text>
                           {alreadyStarted && (
-                            <Text style={styles.setListItemBadge}>Déjà créé</Text>
+                            <Text style={styles.setListItemBadge}>
+                              Déjà créé
+                            </Text>
                           )}
                         </Pressable>
                       );
@@ -485,7 +524,9 @@ export default function CollectionScreen() {
                   </View>
                 ))}
                 {groupedSets.length === 0 && !isLoadingSets && (
-                  <Text style={styles.setLoadingText}>Aucune extension trouvée.</Text>
+                  <Text style={styles.setLoadingText}>
+                    Aucune extension trouvée.
+                  </Text>
                 )}
               </ScrollView>
             )}
@@ -496,7 +537,10 @@ export default function CollectionScreen() {
                   setIsSetSelectionVisible(false);
                   setSetSearchQuery("");
                 }}
-                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalCancelPressed]}
+                style={({ pressed }) => [
+                  styles.modalCancel,
+                  pressed && styles.modalCancelPressed,
+                ]}
               >
                 <Text style={styles.modalCancelText}>Fermer</Text>
               </Pressable>

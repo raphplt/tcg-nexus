@@ -167,8 +167,12 @@ describe("DeckController", () => {
 
   it("findPublicDecksByUser delegates to DeckService", async () => {
     const result = { items: [], total: 0, page: 1, limit: 20 };
-    (service as any).findPublicDecksByUser = jest.fn().mockResolvedValue(result);
-    await expect(controller.findPublicDecksByUser(11, {})).resolves.toEqual(result);
+    (service as any).findPublicDecksByUser = jest
+      .fn()
+      .mockResolvedValue(result);
+    await expect(controller.findPublicDecksByUser(11, {})).resolves.toEqual(
+      result,
+    );
     expect((service as any).findPublicDecksByUser).toHaveBeenCalledWith(11, {});
   });
 });

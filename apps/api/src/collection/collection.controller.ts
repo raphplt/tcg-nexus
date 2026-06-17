@@ -108,8 +108,7 @@ export class CollectionController {
   @Get(":id/rarities")
   @Public()
   @ApiOperation({
-    summary:
-      "Récupérer les raretés distinctes d'un Master Set",
+    summary: "Récupérer les raretés distinctes d'un Master Set",
   })
   @ApiResponse({
     status: 200,
@@ -156,18 +155,28 @@ export class CollectionController {
     @Body("pokemonCardId") pokemonCardId: string,
     @CurrentUser() user: User,
   ) {
-    return this.collectionService.addCardToCollection(id, pokemonCardId, user.id);
+    return this.collectionService.addCardToCollection(
+      id,
+      pokemonCardId,
+      user.id,
+    );
   }
 
   @Post(":id/items/remove")
-  @ApiOperation({ summary: "Retirer ou décrémenter une carte d'une collection" })
+  @ApiOperation({
+    summary: "Retirer ou décrémenter une carte d'une collection",
+  })
   @ApiResponse({ status: 200, description: "Carte décrémentée ou retirée" })
   async removeItemByCardId(
     @Param("id") id: string,
     @Body("pokemonCardId") pokemonCardId: string,
     @CurrentUser() user: User,
   ) {
-    return this.collectionService.removeCardFromCollection(id, pokemonCardId, user.id);
+    return this.collectionService.removeCardFromCollection(
+      id,
+      pokemonCardId,
+      user.id,
+    );
   }
 
   @Delete(":id/items/:itemId")
@@ -178,7 +187,11 @@ export class CollectionController {
     @Param("itemId") itemId: string,
     @CurrentUser() user: User,
   ): Promise<{ message: string }> {
-    await this.collectionService.removeCollectionItem(id, Number(itemId), user.id);
+    await this.collectionService.removeCollectionItem(
+      id,
+      Number(itemId),
+      user.id,
+    );
     return { message: "Item supprime avec succes" };
   }
 

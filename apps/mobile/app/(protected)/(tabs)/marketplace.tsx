@@ -11,7 +11,8 @@ export default function MarketplaceScreen() {
         </View>
         <Text style={styles.title}>Marketplace</Text>
         <Text style={styles.subtitle}>
-          Bientôt disponible : achète, vends et échange tes cartes en toute simplicité.
+          Bientôt disponible : achète, vends et échange tes cartes en toute
+          simplicité.
         </Text>
       </View>
     </View>

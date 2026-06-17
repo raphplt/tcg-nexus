@@ -10,7 +10,13 @@ import { Collection } from "./entities/collection.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Collection, CollectionItem, Card, CardState, PokemonSet]),
+    TypeOrmModule.forFeature([
+      Collection,
+      CollectionItem,
+      Card,
+      CardState,
+      PokemonSet,
+    ]),
   ],
   controllers: [CollectionController],
   providers: [CollectionService],

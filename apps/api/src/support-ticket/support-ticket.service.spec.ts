@@ -1,11 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { MailService } from '../mail/mail.service';
-import { SupportMessage } from '../support-message/entities/support-message.entity';
-import { SupportTicket } from './entities/support-ticket.entity';
-import { SupportTicketService } from './support-ticket.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken } from "@nestjs/typeorm";
+import { MailService } from "../mail/mail.service";
+import { SupportMessage } from "../support-message/entities/support-message.entity";
+import { SupportTicket } from "./entities/support-ticket.entity";
+import { SupportTicketService } from "./support-ticket.service";
 
-describe('SupportTicketService', () => {
+describe("SupportTicketService", () => {
   let service: SupportTicketService;
 
   beforeEach(async () => {
@@ -30,7 +30,7 @@ describe('SupportTicketService', () => {
     service = module.get<SupportTicketService>(SupportTicketService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 });

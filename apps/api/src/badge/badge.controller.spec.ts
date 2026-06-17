@@ -13,9 +13,7 @@ describe("BadgeController", () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BadgeController],
-      providers: [
-        { provide: BadgeService, useValue: mockBadgeService },
-      ],
+      providers: [{ provide: BadgeService, useValue: mockBadgeService }],
     }).compile();
     controller = module.get<BadgeController>(BadgeController);
   });

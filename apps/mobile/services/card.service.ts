@@ -115,21 +115,23 @@ export const cardService = {
     const cacheKey = normalize(query);
     const cached = searchCache.get(cacheKey);
     if (cached) {
-      console.log("cached : ", cached); 
+      console.log("cached : ", cached);
       return cached;
     }
-    
+
     const response = await api.get<CardSearchResult[]>(
       `/cards/search/${encodeURIComponent(query)}`,
     );
 
     const cards = dedupeCards(response.data || []);
-    console.log("card service dedupeCards : ", cards); 
+    console.log("card service dedupeCards : ", cards);
     searchCache.set(cacheKey, cards);
     return cards;
   },
 
-  async resolveCardFromOcr(ocr: OcrParsedResult): Promise<CardSearchResolution> {
+  async resolveCardFromOcr(
+    ocr: OcrParsedResult,
+  ): Promise<CardSearchResolution> {
     const hints = buildHints(ocr);
     const searchedTerms: string[] = [];
     const allCandidates: CardSearchResult[] = [];

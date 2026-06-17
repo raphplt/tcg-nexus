@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
 import { useToastStore } from "@/store/useToastStore";
@@ -27,7 +21,8 @@ const VARIANTS = {
 
 export function ApiErrorSnackbar() {
   const insets = useSafeAreaInsets();
-  const { duration, hideToast, id, message, variant, visible } = useToastStore();
+  const { duration, hideToast, id, message, variant, visible } =
+    useToastStore();
 
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-24)).current;

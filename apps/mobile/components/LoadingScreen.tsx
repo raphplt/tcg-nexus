@@ -15,7 +15,11 @@ export function LoadingScreen({
       <View style={styles.card}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
-        <ActivityIndicator color={colors.primary} size="large" style={styles.loader} />
+        <ActivityIndicator
+          color={colors.primary}
+          size="large"
+          style={styles.loader}
+        />
       </View>
     </View>
   );

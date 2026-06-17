@@ -34,5 +34,7 @@ export function getCardImage(
   const suffix = quality === "low" ? "/low" : "/high";
   const finalUrl = `${base}${suffix}.png`;
 
-  return finalUrl.startsWith("http") ? finalUrl : `https://tcg-nexus.org${finalUrl}`;
+  return finalUrl.startsWith("http")
+    ? finalUrl
+    : `https://tcg-nexus.org${finalUrl}`;
 }

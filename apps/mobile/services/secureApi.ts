@@ -138,7 +138,11 @@ secureApi.interceptors.response.use(
       requestUrl.includes(route),
     );
 
-    if (error.response?.status === 401 && !isAuthRoute && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !isAuthRoute &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {

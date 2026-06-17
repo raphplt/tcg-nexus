@@ -19,9 +19,7 @@ describe("UserFollowController", () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserFollowController],
-      providers: [
-        { provide: UserFollowService, useValue: mockFollowService },
-      ],
+      providers: [{ provide: UserFollowService, useValue: mockFollowService }],
     }).compile();
     controller = module.get<UserFollowController>(UserFollowController);
   });

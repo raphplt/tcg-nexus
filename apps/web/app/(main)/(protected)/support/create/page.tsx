@@ -3,10 +3,7 @@
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1 } from "@components/Shared/Titles";
 import { Button } from "@components/ui/button";
-import {
-  Alert,
-  AlertDescription,
-} from "@components/ui/alert";
+import { Alert, AlertDescription } from "@components/ui/alert";
 import {
   Form,
   FormControl,
@@ -74,8 +71,7 @@ export default function CreateSupportTicketPage() {
       }, 1000);
     } catch (err: any) {
       const message =
-        err?.response?.data?.message ||
-        "Erreur lors de la création du ticket.";
+        err?.response?.data?.message || "Erreur lors de la création du ticket.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -127,7 +123,10 @@ export default function CreateSupportTicketPage() {
                     <FormItem>
                       <FormLabel>Sujet</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Problème de paiement" {...field} />
+                        <Input
+                          placeholder="Ex: Problème de paiement"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
