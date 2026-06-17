@@ -1,3 +1,7 @@
+// ─── Types partagés entre UI et services ─────────────────────────────────────
+// Tous les types spécifiques au pipeline scanner sont dans types/scanner.ts.
+// Ce fichier conserve uniquement les types UI et BDD génériques.
+
 export interface CardSetSummary {
   id?: string;
   name?: string;
@@ -75,17 +79,6 @@ export interface CollectionItemsPaginatedResponse {
   };
 }
 
-export interface OcrParsedResult {
-  rawText: string;
-  lines: string[];
-  cardName?: string;
-  setCode?: string;
-  setNumber?: string;
-  setTotal?: string;
-  setName?: string;
-  searchHints: string[];
-}
-
 export type ScanStatus = "found" | "not-found" | "added" | "error";
 
 export interface ScanHistoryItem {
@@ -96,13 +89,5 @@ export interface ScanHistoryItem {
   createdAt: number;
 }
 
-export interface ProcessedImagePayload {
-  optimizedUri: string;
-  base64: string;
-}
-
-export interface CardSearchResolution {
-  bestCard: CardSearchResult | null;
-  candidates: CardSearchResult[];
-  searchedTerms: string[];
-}
+// Ré-export des types scanner pour usage dans l'UI
+export type { ScanConfidence, ScanResolution, FrameCrop, RankedCandidate } from "./scanner";
