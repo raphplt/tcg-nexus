@@ -42,17 +42,6 @@ const cardStates = [
   { label: "Poor", value: "Poor" },
 ];
 
-const POKEMON_RARITIES = [
-  { id: "Commune", name: "Commune" },
-  { id: "Peu Commune", name: "Peu Commune" },
-  { id: "Rare", name: "Rare" },
-  { id: "Double rare", name: "Double Rare" },
-  { id: "HIGH-TECG rare", name: "Rare ACE SPEC" },
-  { id: "Illustration rare", name: "Illustration rare" },
-  { id: "Ultra Rare", name: "Ultra Rare" },
-  { id: "Illustration spéciale rare", name: "Illustration spéciale rare" },
-  { id: "Hyper rare", name: "Hyper rare" },
-];
 
 const PAGE_SIZE = 24;
 
@@ -106,8 +95,8 @@ export default function CollectionDetailsScreen() {
 
   const [collection, setCollection] = useState<UserCollection | null>(null);
   const isMasterSet = useMemo(() => {
-    return collection?.name === "Étincelles Déferlantes";
-  }, [collection?.name]);
+    return collection?.masterSet != null;
+  }, [collection?.masterSet]);
   const [items, setItems] = useState<CollectionItem[]>([]);
   const [meta, setMeta] = useState<CollectionItemsPaginatedResponse["meta"] | null>(null);
 
@@ -131,6 +120,7 @@ export default function CollectionDetailsScreen() {
 
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [sets, setSets] = useState<PokemonSetType[]>([]);
+  const [setRarities, setSetRarities] = useState<{ id: string; name: string }[]>([]);
 
   const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
   const [isSetModalVisible, setIsSetModalVisible] = useState(false);
@@ -182,12 +172,17 @@ export default function CollectionDetailsScreen() {
         ]);
         setSeries(loadedSeries);
         setSets(loadedSets);
+
+        if (collectionId) {
+          const rarities = await collectionService.getCollectionRarities(collectionId);
+          setSetRarities(rarities.map((r) => ({ id: r, name: r })));
+        }
       } catch (err) {
         console.error("Failed to load filter metadata:", err);
       }
     };
     void fetchMetadata();
-  }, []);
+  }, [collectionId]);
 
   const loadCollectionHeader = useCallback(async () => {
     if (!collectionId) {
@@ -909,7 +904,7 @@ export default function CollectionDetailsScreen() {
         isVisible={isRarityModalVisible}
         onClose={() => setIsRarityModalVisible(false)}
         title="Rareté"
-        options={POKEMON_RARITIES}
+        options={setRarities}
         selectedValue={selectedRarity}
         onSelect={setSelectedRarity}
         placeholder="Rechercher une rareté..."

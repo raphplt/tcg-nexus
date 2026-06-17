@@ -10,6 +10,7 @@ import {
   CardStateCode,
 } from "src/card-state/entities/card-state.entity";
 import { ProductKind } from "src/common/enums/product-kind";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Repository } from "typeorm";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { User } from "../user/entities/user.entity";
@@ -28,6 +29,8 @@ export class CollectionService {
     private cardRepository: Repository<Card>,
     @InjectRepository(CardState)
     private cardStateRepository: Repository<CardState>,
+    @InjectRepository(PokemonSet)
+    private pokemonSetRepository: Repository<PokemonSet>,
   ) {}
 
   private async getOwnedCollection(id: string, userId: number): Promise<Collection> {
@@ -68,14 +71,14 @@ export class CollectionService {
   async findByUserId(userId: string): Promise<Collection[]> {
     return await this.collectionRepository.find({
       where: { user: { id: Number(userId) } },
-      relations: ["user", "items"],
+      relations: ["user", "items", "masterSet"],
     });
   }
 
   async findOneById(id: string): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
-      relations: ["items", "user"],
+      relations: ["items", "user", "masterSet"],
     });
     if (!collection) {
       throw new NotFoundException(`Collection with id ${id} not found`);
@@ -84,12 +87,49 @@ export class CollectionService {
   }
 
   async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
+    let masterSet: PokemonSet | undefined;
+
+    if (createCollectionDto.masterSetId) {
+      const set = await this.pokemonSetRepository.findOne({
+        where: { id: createCollectionDto.masterSetId },
+      });
+      if (!set) {
+        throw new NotFoundException(
+          `PokemonSet with id ${createCollectionDto.masterSetId} not found`,
+        );
+      }
+
+      // Empêcher la création de doublons pour le même user + set
+      const existing = await this.collectionRepository.findOne({
+        where: {
+          user: { id: Number(createCollectionDto.userId) },
+          masterSet: { id: set.id },
+        },
+      });
+      if (existing) {
+        throw new ForbiddenException(
+          `Un Master Set existe déjà pour l'extension ${set.name}.`,
+        );
+      }
+
+      masterSet = set;
+    }
+
+    if (!masterSet && !createCollectionDto.name) {
+      throw new ForbiddenException("Le nom de la collection est requis.");
+    }
+
     const collection = this.collectionRepository.create({
-      name: createCollectionDto.name,
-      description: createCollectionDto.description,
+      name: masterSet ? `Master Set — ${masterSet.name}` : createCollectionDto.name,
+      description: masterSet
+        ? `Master Set pour l'extension ${masterSet.name}`
+        : createCollectionDto.description,
       isPublic: createCollectionDto.isPublic || false,
     });
     collection.user = { id: Number(createCollectionDto.userId) } as User;
+    if (masterSet) {
+      collection.masterSet = masterSet;
+    }
     return await this.collectionRepository.save(collection);
   }
 
@@ -278,9 +318,10 @@ export class CollectionService {
       hasPreviousPage: boolean;
     };
   }> {
-    // Vérifier que la collection existe
+    // Vérifier que la collection existe et charger la relation masterSet
     const collection = await this.collectionRepository.findOne({
       where: { id: collectionId },
+      relations: ["masterSet"],
     });
     if (!collection) {
       throw new NotFoundException(
@@ -288,16 +329,17 @@ export class CollectionService {
       );
     }
 
-    const isMasterSet = collection.name === "Étincelles Déferlantes";
+    const isMasterSet = collection.masterSet != null;
     const skip = (page - 1) * limit;
 
     if (isMasterSet) {
+      const masterSetId = collection.masterSet!.id;
       const queryBuilder = this.cardRepository
         .createQueryBuilder("card")
         .leftJoinAndSelect("card.set", "set")
         .leftJoinAndSelect("set.serie", "serie")
         .leftJoinAndSelect("card.collectionItems", "item", "item.collection.id = :collectionId", { collectionId })
-        .where("set.name = :setName", { setName: "Étincelles Déferlantes" });
+        .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
         queryBuilder.andWhere(
@@ -431,5 +473,31 @@ export class CollectionService {
         hasPreviousPage: page > 1,
       },
     };
+  }
+
+  async getSetRarities(collectionId: string): Promise<string[]> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: collectionId },
+      relations: ["masterSet"],
+    });
+    if (!collection) {
+      throw new NotFoundException(
+        `Collection with id ${collectionId} not found`,
+      );
+    }
+    if (!collection.masterSet) {
+      return [];
+    }
+
+    const result = await this.cardRepository
+      .createQueryBuilder("card")
+      .select("DISTINCT card.rarity", "rarity")
+      .innerJoin("card.set", "set")
+      .where("set.id = :setId", { setId: collection.masterSet.id })
+      .andWhere("card.rarity IS NOT NULL")
+      .orderBy("card.rarity", "ASC")
+      .getRawMany();
+
+    return result.map((r: { rarity: string }) => r.rarity);
   }
 }

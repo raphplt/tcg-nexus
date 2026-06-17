@@ -105,6 +105,21 @@ export class CollectionController {
     );
   }
 
+  @Get(":id/rarities")
+  @Public()
+  @ApiOperation({
+    summary:
+      "Récupérer les raretés distinctes d'un Master Set",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Liste des raretés",
+  })
+  @ApiResponse({ status: 404, description: "Collection non trouvée" })
+  async getSetRarities(@Param("id") id: string): Promise<string[]> {
+    return this.collectionService.getSetRarities(id);
+  }
+
   @Get(":id")
   @Public()
   @ApiOperation({ summary: "Récupérer une collection par son ID" })

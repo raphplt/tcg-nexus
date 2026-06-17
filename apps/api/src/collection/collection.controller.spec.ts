@@ -16,6 +16,10 @@ describe("CollectionController", () => {
     delete: jest.fn(),
     findAllPaginated: jest.fn(),
     findCollectionItemsPaginated: jest.fn(),
+    getSetRarities: jest.fn(),
+    addCardToCollection: jest.fn(),
+    removeCardFromCollection: jest.fn(),
+    removeCollectionItem: jest.fn(),
   };
 
   beforeEach(async () => {

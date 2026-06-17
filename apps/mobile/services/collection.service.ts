@@ -7,10 +7,11 @@ import type {
 } from "@/types";
 
 export interface CreateCollectionPayload {
-  name: string;
+  name?: string;
   description?: string;
   isPublic?: boolean;
   userId?: number;
+  masterSetId?: string;
 }
 
 export interface UpdateCollectionPayload {
@@ -145,5 +146,12 @@ export const collectionService = {
       { pokemonCardId },
     );
     return response.data;
+  },
+
+  async getCollectionRarities(collectionId: string): Promise<string[]> {
+    const response = await secureApi.get<string[]>(
+      `/collection/${collectionId}/rarities`,
+    );
+    return response.data || [];
   },
 };

@@ -54,6 +54,7 @@ export interface UserCollection {
   created_at?: string;
   updated_at?: string;
   items?: CollectionItem[];
+  masterSet?: { id: string; name: string } | null;
 }
 
 export interface CollectionItemResponse {
