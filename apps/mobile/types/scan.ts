@@ -40,7 +40,7 @@ export interface CardSearchResult {
 }
 
 export interface CollectionItem {
-  id: number;
+  id: number | null;
   quantity: number;
   added_at?: string;
   pokemonCard?: CardSearchResult | null;
@@ -54,6 +54,7 @@ export interface UserCollection {
   created_at?: string;
   updated_at?: string;
   items?: CollectionItem[];
+  masterSet?: { id: string; name: string } | null;
 }
 
 export interface CollectionItemResponse {
@@ -105,4 +106,19 @@ export interface CardSearchResolution {
   bestCard: CardSearchResult | null;
   candidates: CardSearchResult[];
   searchedTerms: string[];
+}
+
+export interface PokemonSerieType {
+  id: string;
+  name: string;
+  logo?: string;
+}
+
+export interface PokemonSetType {
+  id: string;
+  name: string;
+  logo?: string;
+  symbol?: string;
+  releaseDate?: string;
+  serie?: PokemonSerieType;
 }

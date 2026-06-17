@@ -1,4 +1,5 @@
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
+import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { User } from "src/user/entities/user.entity";
 import {
   Column,
@@ -36,6 +37,12 @@ export class Collection {
 
   @UpdateDateColumn({ type: "timestamp" })
   updated_at: Date;
+
+  @ManyToOne(
+    () => PokemonSet,
+    { nullable: true, eager: false, onDelete: "SET NULL" },
+  )
+  masterSet?: PokemonSet;
 
   @OneToMany(
     () => CollectionItem,

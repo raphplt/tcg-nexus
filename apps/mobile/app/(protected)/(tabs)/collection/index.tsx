@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -15,12 +16,13 @@ import {
 } from "react-native";
 import { CollectionCard } from "@/components/CollectionCard";
 import { useAuth } from "@/contexts/AuthProvider";
+import { cardService } from "@/services/card.service";
 import {
   collectionService,
   type CreateCollectionPayload,
 } from "@/services/collection.service";
 import { toast } from "@/store/useToastStore";
-import type { UserCollection } from "@/types";
+import type { PokemonSetType, UserCollection } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 
 const getTotalCards = (collection: UserCollection): number =>
@@ -37,6 +39,22 @@ export default function CollectionScreen() {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [newCollectionIsPublic, setNewCollectionIsPublic] = useState(false);
+
+  const standardCollections = useMemo(
+    () => collections.filter((col) => !col.masterSet),
+    [collections],
+  );
+
+  const masterSetCollections = useMemo(
+    () => collections.filter((col) => col.masterSet != null),
+    [collections],
+  );
+
+  // Set selection modal state
+  const [isSetSelectionVisible, setIsSetSelectionVisible] = useState(false);
+  const [allSets, setAllSets] = useState<PokemonSetType[]>([]);
+  const [isLoadingSets, setIsLoadingSets] = useState(false);
+  const [setSearchQuery, setSetSearchQuery] = useState("");
 
   const loadCollections = useCallback(async (refresh = false) => {
     if (!user?.id) {
@@ -68,6 +86,72 @@ export default function CollectionScreen() {
   useEffect(() => {
     void loadCollections();
   }, [loadCollections]);
+
+  const handleOpenSetSelection = async () => {
+    setIsSetSelectionVisible(true);
+    if (allSets.length === 0) {
+      setIsLoadingSets(true);
+      try {
+        const sets = await cardService.getAllSets();
+        setAllSets(sets);
+      } catch (error) {
+        toast.showError(getApiErrorMessage(error));
+      } finally {
+        setIsLoadingSets(false);
+      }
+    }
+  };
+
+  const alreadyStartedSetIds = useMemo(
+    () => new Set(masterSetCollections.map((c) => c.masterSet?.id).filter(Boolean)),
+    [masterSetCollections],
+  );
+
+  const filteredSets = useMemo(() => {
+    const query = setSearchQuery.trim().toLowerCase();
+    const filtered = query
+      ? allSets.filter((s) => s.name.toLowerCase().includes(query))
+      : allSets;
+    return filtered;
+  }, [allSets, setSearchQuery]);
+
+  const groupedSets = useMemo(() => {
+    const map = new Map<string, { serieName: string; sets: PokemonSetType[] }>();
+    for (const set of filteredSets) {
+      const serieName = set.serie?.name || "Autres";
+      const serieId = set.serie?.id || "_other";
+      if (!map.has(serieId)) {
+        map.set(serieId, { serieName, sets: [] });
+      }
+      map.get(serieId)!.sets.push(set);
+    }
+    return Array.from(map.values());
+  }, [filteredSets]);
+
+  const handleCreateMasterSet = async (setId: string, setName: string) => {
+    if (!user?.id) {
+      return;
+    }
+
+    const payload: CreateCollectionPayload = {
+      masterSetId: setId,
+      isPublic: false,
+      userId: user.id,
+    };
+
+    setIsCreating(true);
+    try {
+      await collectionService.createCollection(payload);
+      toast.showSuccess(`Master Set ${setName} créé !`);
+      setIsSetSelectionVisible(false);
+      setSetSearchQuery("");
+      await loadCollections(true);
+    } catch (error) {
+      toast.showError(getApiErrorMessage(error));
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   const totalCards = useMemo(
     () => collections.reduce((sum, collection) => sum + getTotalCards(collection), 0),
@@ -189,14 +273,42 @@ export default function CollectionScreen() {
     </View>
   );
 
+  const renderFooter = () => (
+    <View style={styles.masterSection}>
+      <Text style={styles.sectionTitle}>Master Sets</Text>
+
+      {masterSetCollections.map((col) => (
+        <CollectionCard
+          key={col.id}
+          collection={col}
+          onDelete={handleDeleteCollection}
+          onPress={(collection) => {
+            router.push(`/collection/${collection.id}`);
+          }}
+        />
+      ))}
+
+      <Pressable
+        onPress={() => void handleOpenSetSelection()}
+        style={({ pressed }) => [
+          styles.masterCreateButton,
+          pressed && styles.masterCreateButtonPressed,
+        ]}
+      >
+        <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
+        <Text style={styles.masterCreateButtonText}>Nouveau Master Set</Text>
+      </Pressable>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
         contentContainerStyle={styles.listContent}
-        data={collections}
+        data={standardCollections}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={
-          !isLoading ? (
+          !isLoading && standardCollections.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>Aucune collection pour le moment</Text>
               <Text style={styles.emptyText}>
@@ -230,6 +342,7 @@ export default function CollectionScreen() {
           ) : null
         }
         ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl
             onRefresh={() => {
@@ -307,6 +420,85 @@ export default function CollectionScreen() {
                 <Text style={styles.modalConfirmText}>
                   {isCreating ? "Creation..." : "Creer"}
                 </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        onRequestClose={() => {
+          setIsSetSelectionVisible(false);
+          setSetSearchQuery("");
+        }}
+        transparent
+        visible={isSetSelectionVisible}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { maxHeight: "80%" }]}>
+            <Text style={styles.modalTitle}>Choisir une extension</Text>
+
+            <TextInput
+              autoCapitalize="none"
+              onChangeText={setSetSearchQuery}
+              placeholder="Rechercher une extension..."
+              placeholderTextColor="#555555"
+              style={styles.modalInput}
+              value={setSearchQuery}
+            />
+
+            {isLoadingSets ? (
+              <Text style={styles.setLoadingText}>Chargement des extensions...</Text>
+            ) : (
+              <ScrollView style={styles.setListContainer}>
+                {groupedSets.map((group) => (
+                  <View key={group.serieName}>
+                    <Text style={styles.setGroupTitle}>{group.serieName}</Text>
+                    {group.sets.map((set) => {
+                      const alreadyStarted = alreadyStartedSetIds.has(set.id);
+                      return (
+                        <Pressable
+                          key={set.id}
+                          disabled={alreadyStarted || isCreating}
+                          onPress={() => void handleCreateMasterSet(set.id, set.name)}
+                          style={({ pressed }) => [
+                            styles.setListItem,
+                            (pressed || alreadyStarted) && styles.setListItemDisabled,
+                          ]}
+                        >
+                          <Text
+                            numberOfLines={1}
+                            style={[
+                              styles.setListItemText,
+                              alreadyStarted && styles.setListItemTextDisabled,
+                            ]}
+                          >
+                            {set.name}
+                          </Text>
+                          {alreadyStarted && (
+                            <Text style={styles.setListItemBadge}>Déjà créé</Text>
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ))}
+                {groupedSets.length === 0 && !isLoadingSets && (
+                  <Text style={styles.setLoadingText}>Aucune extension trouvée.</Text>
+                )}
+              </ScrollView>
+            )}
+
+            <View style={styles.modalActionsRow}>
+              <Pressable
+                onPress={() => {
+                  setIsSetSelectionVisible(false);
+                  setSetSearchQuery("");
+                }}
+                style={({ pressed }) => [styles.modalCancel, pressed && styles.modalCancelPressed]}
+              >
+                <Text style={styles.modalCancelText}>Fermer</Text>
               </Pressable>
             </View>
           </View>
@@ -535,5 +727,106 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  masterSection: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: "#e4e4e4",
+    paddingTop: 20,
+  },
+  sectionTitle: {
+    color: "#0b0b0b",
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  masterSetPromo: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  masterSetName: {
+    color: "#0b0b0b",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  masterSetDesc: {
+    color: "#555555",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  masterCreateButton: {
+    backgroundColor: "#0b0b0b",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 10,
+  },
+  masterCreateButtonPressed: {
+    opacity: 0.8,
+  },
+  masterCreateButtonText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 13,
+  },
+  setListContainer: {
+    flex: 1,
+    marginTop: 12,
+  },
+  setGroupTitle: {
+    color: "#555555",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  setListItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  setListItemDisabled: {
+    opacity: 0.5,
+  },
+  setListItemText: {
+    color: "#0b0b0b",
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
+  },
+  setListItemTextDisabled: {
+    color: "#777777",
+  },
+  setListItemBadge: {
+    color: "#09597d",
+    fontSize: 12,
+    fontWeight: "600",
+    backgroundColor: "#e0f0f5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  setLoadingText: {
+    color: "#777777",
+    textAlign: "center",
+    marginTop: 20,
+    fontStyle: "italic",
   },
 });

@@ -7,10 +7,11 @@ import type {
 } from "@/types";
 
 export interface CreateCollectionPayload {
-  name: string;
+  name?: string;
   description?: string;
   isPublic?: boolean;
   userId?: number;
+  masterSetId?: string;
 }
 
 export interface UpdateCollectionPayload {
@@ -23,8 +24,12 @@ export interface CollectionItemsQueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  sortBy?: "added_at" | "pokemonCard.name" | "pokemonCard.rarity";
+  sortBy?: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
   sortOrder?: "ASC" | "DESC";
+  setId?: string;
+  serieId?: string;
+  rarity?: string;
+  cardState?: string;
 }
 
 export const collectionService = {
@@ -59,6 +64,10 @@ export const collectionService = {
           search: params.search,
           sortBy: params.sortBy ?? "added_at",
           sortOrder: params.sortOrder ?? "DESC",
+          setId: params.setId,
+          serieId: params.serieId,
+          rarity: params.rarity,
+          cardState: params.cardState,
         },
       },
     );
@@ -126,5 +135,23 @@ export const collectionService = {
 
       return fallbackResponse.data;
     }
+  },
+
+  async removeCardFromCollection(
+    collectionId: string,
+    pokemonCardId: string,
+  ): Promise<any> {
+    const response = await secureApi.post(
+      `/collection/${collectionId}/items/remove`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
+
+  async getCollectionRarities(collectionId: string): Promise<string[]> {
+    const response = await secureApi.get<string[]>(
+      `/collection/${collectionId}/rarities`,
+    );
+    return response.data || [];
   },
 };
