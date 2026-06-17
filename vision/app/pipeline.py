@@ -196,12 +196,16 @@ def _extract_rois(card: np.ndarray) -> list:
         text, conf = read_name(name_crop)
         rois.append(_roi("name", NAME_BAND, name_crop, text, conf))
 
+    # numéro : bas-gauche d'abord (cartes récentes), bas-droite seulement en
+    # repli (anciennes) -> évite 6 appels OCR inutiles dans le cas courant.
     for key, band in NUMBER_BANDS.items():
         crop = _crop(card, band)
         if not crop.size:
             continue
         text, conf = read_number(crop)
         rois.append(_roi(key, band, crop, text, conf))
+        if text:
+            break
 
     hp_crop = _crop(card, HP_BAND)
     if hp_crop.size:
@@ -210,27 +214,24 @@ def _extract_rois(card: np.ndarray) -> list:
     return rois
 
 
-def preprocess(image_b64: str) -> dict:
-    img = _decode(image_b64)
+def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
+    """Carte redressée en portrait + indicateur de détection. Si aucune carte
+    isolée n'est trouvée, on redresse au moins l'image en portrait."""
     box = _find_card_box(img)
-    detected = box is not None
+    if box is not None:
+        return _warp_card(img, box), True
+    upright = (
+        cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        if img.shape[1] > img.shape[0]
+        else img
+    )
+    return _cap_width(upright), False
 
-    if detected:
-        card = _warp_card(img, box)
-    else:
-        # pas de carte isolée : on redresse au moins en portrait
-        upright = (
-            cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-            if img.shape[1] > img.shape[0]
-            else img
-        )
-        card = _cap_width(upright)
 
+def _build_result(card: np.ndarray, detected: bool) -> dict:
     rois = _extract_rois(card)
-
     # image normalisée 600x838 : aperçu/log + repli OCR plein texte côté API
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))
-
     return {
         "detected": detected,
         "engine": "opencv+tesseract" if rois and HAS_OCR else "opencv",
@@ -239,30 +240,38 @@ def preprocess(image_b64: str) -> dict:
     }
 
 
-def _name_conf(result: dict) -> float:
-    roi = next((r for r in result["rois"] if r["key"] == "name"), None)
-    return roi["conf"] if roi and roi.get("text") else 0.0
+def preprocess(image_b64: str) -> dict:
+    card, detected = _to_card(_decode(image_b64))
+    return _build_result(card, detected)
 
 
-def _best_number_roi(result: dict):
-    """Meilleure ROI numéro (texte non vide) d'un résultat, sinon None."""
-    cands = [
-        r
-        for r in result["rois"]
-        if r["key"].startswith("number") and r.get("text")
-    ]
-    return max(cands, key=lambda r: r["conf"], default=None)
+def _sharpness(card: np.ndarray) -> float:
+    """Netteté du haut de la carte (zone nom) via variance du Laplacien :
+    discrimine les frames floues/bougées d'une rafale sans rien OCRiser."""
+    gray = cv2.cvtColor(card, cv2.COLOR_BGR2GRAY)
+    top = gray[: int(0.20 * gray.shape[0])]
+    return float(cv2.Laplacian(top, cv2.CV_64F).var())
 
 
-# pool réutilisé : l'OCR tesseract tourne en sous-process et libère le GIL,
-# donc les frames d'une rafale s'OCRisent en parallèle (≈ x4 sur multi-cœurs).
+def _prepare_frame(image_b64: str):
+    """Étape légère (pas d'OCR) : redresse la frame et la note. Sert à choisir
+    la meilleure frame d'une rafale avant l'unique passe OCR."""
+    try:
+        card, detected = _to_card(_decode(image_b64))
+        # carte détectée privilégiée d'office, puis départage par netteté
+        score = _sharpness(card) + (1e6 if detected else 0.0)
+        return {"card": card, "detected": detected, "score": score}
+    except Exception:
+        return None
+
+
 _POOL = ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 2)))
 
 
 def preprocess_many(images_b64: list[str]) -> dict:
-    """Best-of-N : OCRise plusieurs frames d'une même carte EN PARALLÈLE et
-    fusionne le meilleur nom et le meilleur numéro (pas forcément la même frame).
-    Robuste aux crops ratés : une frame mal cadrée est compensée par les autres."""
+    """Rafale : on prépare les frames (léger, en parallèle), on garde la plus
+    nette avec carte détectée, et on ne fait l'OCR (coûteux) QUE sur celle-là.
+    Plus rapide et plus cohérent qu'OCRiser puis fusionner toutes les frames."""
     if not images_b64:
         raise ValueError("Aucune image fournie.")
     if len(images_b64) == 1:
@@ -271,35 +280,13 @@ def preprocess_many(images_b64: list[str]) -> dict:
         result["frame_count"] = 1
         return result
 
-    results = list(_POOL.map(_safe_preprocess, images_b64))
-    valid = [(i, r) for i, r in enumerate(results) if r is not None]
+    prepared = list(_POOL.map(_prepare_frame, images_b64))
+    valid = [(i, p) for i, p in enumerate(prepared) if p is not None]
     if not valid:
         raise ValueError("Toutes les frames ont échoué au prétraitement.")
 
-    # frame gagnante = meilleure confiance de nom (sert aussi de base ORB côté API)
-    best_index, best = max(valid, key=lambda pair: _name_conf(pair[1]))
-
-    name_roi = next((r for r in best["rois"] if r["key"] == "name"), None)
-    number_roi = max(
-        (nr for nr in (_best_number_roi(r) for _, r in valid) if nr),
-        key=lambda r: r["conf"],
-        default=None,
-    )
-
-    fused_rois = [r for r in (name_roi, number_roi) if r]
-
-    return {
-        "detected": any(r["detected"] for _, r in valid),
-        "engine": best["engine"],
-        "normalized_image": best["normalized_image"],
-        "rois": fused_rois,
-        "best_index": best_index,
-        "frame_count": len(images_b64),
-    }
-
-
-def _safe_preprocess(image_b64: str):
-    try:
-        return preprocess(image_b64)
-    except Exception:
-        return None
+    best_index, best = max(valid, key=lambda pair: pair[1]["score"])
+    result = _build_result(best["card"], best["detected"])
+    result["best_index"] = best_index
+    result["frame_count"] = len(images_b64)
+    return result

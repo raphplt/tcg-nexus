@@ -7,13 +7,9 @@ import type { Card } from "../../card/entities/card.entity";
 import { jaroWinkler } from "./similarity";
 
 const NAME_W = 0.55;
-const NUMBER_W = 0.3;
+const NUMBER_W = 0.5;
 const SET_W = 0.15;
-
-// si une autre carte matche le nom bien mieux que celle-ci (écart > marge),
-// le numéro de celle-ci est une coïncidence (numéro mal lu) -> on ne le crédite pas.
 const NAME_MARGIN = 0.2;
-// en dessous, aucun nom n'est exploitable : on accepte alors le numéro seul.
 const NAME_INFORMATIVE = 0.5;
 
 const normalize = (value?: string): string =>
