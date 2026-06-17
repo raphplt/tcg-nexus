@@ -40,9 +40,6 @@ import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
-import { FeedModule } from "./feed/feed.module";
-import { SupportTicketModule } from "./support-ticket/support-ticket.module";
-import { NotificationModule } from "./notification/notification.module";
 
 @Module({
   imports: [
