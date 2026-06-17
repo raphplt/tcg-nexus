@@ -303,9 +303,13 @@ export default function ScanScreen() {
     setIsProcessing(true);
 
     try {
-      const optimizedUris = await Promise.all(
-        frames.map((uri) => ocrService.optimizeImage(uri)),
-      );
+      // séquentiel et NON parallèle : chaque optimize décode la photo pleine
+      // résolution en bitmap (~48 Mo). 5 frames d'un coup font sauter le pool
+      // mémoire natif Android (plafond ~192 Mo) -> "Pool hard cap violation".
+      const optimizedUris: string[] = [];
+      for (const uri of frames) {
+        optimizedUris.push(await ocrService.optimizeImage(uri));
+      }
       setOptimizedUri(optimizedUris[0] ?? null);
 
       const result = await scanService.recognize(optimizedUris);
