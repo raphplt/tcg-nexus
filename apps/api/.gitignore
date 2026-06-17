@@ -8,6 +8,7 @@
 
 # logs de scan (debug : image + infos par scan)
 /scan-logs
+/test-cards
 
 # Logs
 logs
