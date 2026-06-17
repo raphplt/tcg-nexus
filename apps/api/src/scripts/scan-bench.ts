@@ -17,8 +17,21 @@ import { ConfigModule } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import type { ScanRecognizeResponse } from "@repo/scan-contract";
+import sharp from "sharp";
 import { ScanModule } from "../scan/scan.module";
 import { ScanService } from "../scan/scan.service";
+
+// le mobile redimensionne à 1600px avant l'envoi (ocr.service.ts) : on fait
+// pareil pour mesurer le vrai pipeline (sinon le 12 Mpx brut fait timeout vision)
+const MAX_WIDTH = 1600;
+
+const toFrame = async (path: string): Promise<Buffer> => {
+  const img = sharp(path);
+  const { width = 0 } = await img.metadata();
+  return width > MAX_WIDTH
+    ? img.resize({ width: MAX_WIDTH }).jpeg({ quality: 85 }).toBuffer()
+    : readFileSync(path);
+};
 
 @Module({
   imports: [
@@ -333,7 +346,7 @@ async function main() {
   const results: CaseResult[] = [];
   for (let i = 0; i < cases.length; i++) {
     const c = cases[i];
-    const buffers = c.files.map((f) => readFileSync(f));
+    const buffers = await Promise.all(c.files.map(toFrame));
     const t0 = Date.now();
     try {
       const res = await scan.recognize(buffers);

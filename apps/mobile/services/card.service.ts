@@ -1,11 +1,4 @@
-import type {
-  CardSearchResolution,
-  CardSearchResult,
-  CardSearchResult,
-  OcrParsedResult,
-  PokemonSerieType,
-  PokemonSetType,
-} from "@/types";
+import type { CardSearchResult } from "@/types";
 import { api } from "./api";
 
 const searchCache = new Map<string, CardSearchResult[]>();
@@ -64,48 +57,5 @@ export const cardService = {
     console.log("card service dedupeCards : ", cards);
     searchCache.set(cacheKey, cards);
     return cards;
-  },
-
-  async resolveCardFromOcr(
-    ocr: OcrParsedResult,
-  ): Promise<CardSearchResolution> {
-    const hints = buildHints(ocr);
-    const searchedTerms: string[] = [];
-    const allCandidates: CardSearchResult[] = [];
-
-    for (const hint of hints) {
-      const term = hint.trim();
-      if (!term) {
-        continue;
-      }
-
-      searchedTerms.push(term);
-      const result = await this.searchCards(term);
-      allCandidates.push(...result);
-
-      // Short-circuit on highly probable direct match.
-      if (result.some((card) => scoreCard(card, ocr) >= 90)) {
-        break;
-      }
-    }
-
-    const candidates = dedupeCards(allCandidates);
-    if (candidates.length === 0) {
-      return {
-        bestCard: null,
-        candidates,
-        searchedTerms,
-      };
-    }
-
-    const ranked = [...candidates].sort(
-      (a, b) => scoreCard(b, ocr) - scoreCard(a, ocr),
-    );
-
-    return {
-      bestCard: ranked[0] || null,
-      candidates: ranked,
-      searchedTerms,
-    };
   },
 };
