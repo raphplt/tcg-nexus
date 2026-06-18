@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .embed import embed_many
+from .embed import embed_artwork
 from .match import match
 from .pipeline import _decode, preprocess, preprocess_many
 
@@ -27,7 +27,7 @@ class MatchRequest(BaseModel):
 
 
 class EmbedRequest(BaseModel):
-    images: list[str]  # images base64 (carte entière) à vectoriser
+    images: list[str]  # images base64 (carte entière) -> recadrées sur l'illustration
 
 
 @app.get("/health")
@@ -66,4 +66,4 @@ def embed_endpoint(req: EmbedRequest) -> dict:
         imgs = [_decode(i) for i in req.images]
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    return {"embeddings": embed_many(imgs)}
+    return {"embeddings": embed_artwork(imgs)}

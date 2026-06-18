@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import cv2
 import numpy as np
 
-from .embed import embed_many
+from .embed import embed_artwork
 from .ocr import HAS_TESSERACT as HAS_OCR
 from .ocr import read_name, read_number
 
@@ -300,8 +300,8 @@ def _build_result(card: np.ndarray, detected: bool) -> dict:
 
     rois = _extract_rois(card, name=name)
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))
-    # embedding CLIP de la carte couleur -> recherche visuelle plein-catalogue
-    emb = embed_many([card])
+    # embedding CLIP de l'illustration -> recherche visuelle plein-catalogue
+    emb = embed_artwork([card])
     return {
         "detected": detected,
         "engine": "opencv+tesseract" if rois and HAS_OCR else "opencv",

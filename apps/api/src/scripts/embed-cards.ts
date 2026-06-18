@@ -7,6 +7,7 @@
  *   npm run embed:cards -- --sets=base1,jungle      # sous-ensemble
  *   npm run embed:cards -- --limit=2000             # n premières non faites
  *   npm run embed:cards -- --all
+ *   npm run embed:cards -- --refresh                # recalcule même les déjà faites
  */
 import "dotenv/config";
 import { Client } from "pg";
@@ -50,6 +51,9 @@ async function main() {
   const sets = arg("sets")?.split(",").filter(Boolean);
   const limit = arg("limit") ? Number(arg("limit")) : undefined;
   const batch = arg("batch") ? Number(arg("batch")) : 16;
+  // --refresh : recalcule aussi les cartes déjà vectorisées (utile quand la
+  // logique d'embedding change, ex. recadrage sur l'illustration).
+  const refresh = process.argv.includes("--refresh");
 
   const db = new Client({
     host: process.env.DATABASE_HOST,
@@ -75,7 +79,9 @@ async function main() {
   );
 
   const params: unknown[] = [];
-  let where = `c.image IS NOT NULL AND e.card_id IS NULL`;
+  let where = refresh
+    ? `c.image IS NOT NULL AND e.card_id IS NOT NULL`
+    : `c.image IS NOT NULL AND e.card_id IS NULL`;
   if (sets?.length) {
     params.push(sets);
     where += ` AND c."setId" = ANY($${params.length})`;
