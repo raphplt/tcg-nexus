@@ -17,8 +17,8 @@ Le système repose sur **trois services** et un **contrat partagé** :
 | Brique | Stack | Rôle |
 |---|---|---|
 | **Mobile** | Expo / React Native | Capture rafale, optimisation, UI selon la confiance |
-| **API** | NestJS (port 3001) | Orchestration : OCR plein-texte, parsing, matching BDD, ORB, confiance, logs |
-| **Vision** | Python FastAPI + OpenCV (port 8000, Docker) | Détection/redressement de la carte, OCR ciblé des ROI, comparaison visuelle ORB |
+| **API** | NestJS (port 3001) | Orchestration : OCR plein-texte, parsing, matching BDD, départage visuel (embeddings CLIP / ORB), confiance, logs |
+| **Vision** | Python FastAPI + OpenCV (port 8000, Docker) | Détection/redressement de la carte, OCR ciblé des ROI, comparaison visuelle ORB, **embedding CLIP de l'illustration** |
 | **Contrat** | `@repo/scan-contract` | Types TypeScript partagés mobile ↔ API |
 
 ```
@@ -29,7 +29,7 @@ Le système repose sur **trois services** et un **contrat partagé** :
 └─────────┘  réponse     └─────────┘  ROI + img     └──────────┘
                               │  OCR plein-texte (tesseract.js, repli)
                               │  parsing + matching PostgreSQL (pg_trgm)
-                              │  /match ORB (départage visuel)
+                              │  départage visuel : embedding CLIP (pgvector) / ORB
                               ▼
                          réponse : candidats + bestCard + confiance
 ```
@@ -91,7 +91,9 @@ Fichiers : `hooks/useScanFlow.ts`, `components/scan/*`, `constants/scan.ts`,
    sinon repli sur le texte plein parsé.
 4. **Candidats de nom** (`extractNameCandidates`).
 5. **Matching BDD** (`matchCandidates`).
-6. **Départage visuel ORB** (`visualDisambiguate`) si le texte est ambigu.
+6. **Départage visuel** si le texte est ambigu : **fusion par embedding CLIP**
+   (`fuseWithVisual`) quand le service vision renvoie un embedding, sinon repli
+   **ORB** (`visualDisambiguate`). Cf. §3.8 et §3.8 bis.
 7. **Réponse** + **log** du scan.
 
 ### 3.4 Vision — prétraitement (`vision/app/pipeline.py`)
@@ -197,6 +199,51 @@ Quand le texte est ambigu (pas déjà *high* et ≥ 2 candidats), on compare
 - Robuste au gap photo ↔ catalogue, contrairement aux hash perceptuels
   (dHash/pHash testés et **non viables** sur ce domaine).
 
+> L'ORB n'est plus que le **repli** : il ne s'active que si le service vision ne
+> renvoie pas d'embedding (ancienne version, ou modèle CLIP indisponible).
+
+### 3.8 bis API — recherche visuelle par embeddings (CLIP / pgvector)
+
+Quand le service vision renvoie un **embedding** de la carte scannée, le départage
+passe par `fuseWithVisual` plutôt que par l'ORB.
+
+**Côté vision** (`vision/app/embed.py`) : modèle **OpenCLIP ViT-B/32**
+(`laion2b_s34b_b79k`, CPU), qui produit un vecteur **512-d L2-normalisé**.
+Point clé : on n'encode **pas la carte entière** mais un **recadrage sur
+l'illustration** (`artwork_crop`, `ARTWORK_BAND`) — le gabarit Pokémon (bordures,
+bandeau, symboles d'énergie, blocs de texte) est commun à toutes les cartes et
+noie le signal. Le **même crop** est appliqué des deux côtés (catalogue et scan)
+pour que les vecteurs soient comparables. L'embedding est renvoyé par
+`/preprocess` (scan) et calculé par `/embed` (pré-calcul catalogue).
+
+**Côté base** : table `card_embedding (card_id, embedding vector(512), …)` en
+**pgvector**, index **HNSW** (`vector_cosine_ops`), **auto-créée** au démarrage de
+l'API (`CardService.onModuleInit`) — aucune étape SQL manuelle. Pré-calcul du
+catalogue via `npm run embed:cards` (télécharge `low.png`, POST `/embed`, UPSERT ;
+`--sets=`, `--limit=`, `--refresh` pour recalculer après un changement de crop).
+
+**Fusion** (`fuseWithVisual`) — **prudente, calibration d'abord** :
+- Ne s'active que si le texte n'est **pas déjà** *high*.
+- Calcule la similarité cosine de l'embedding-requête contre les embeddings
+  **stockés des candidats du texte** (`embeddingSimilarities`, comparaison
+  restreinte) — **pas** une recherche plein-catalogue.
+- Le visuel sert **uniquement à réordonner** : s'il préfère nettement un autre
+  candidat (`sim ≥ EMB_FLOOR = 0.5` **et** marge `≥ EMB_REL_MARGIN = 0.06`), ce
+  candidat passe n°1. **La confiance reste celle du texte** (medium/low) :
+  le visuel ne fabrique **jamais** un *high*.
+- **Sauvetage** (`visualRescue`) : si le texte ne sort **aucun** candidat,
+  on tente l'ANN plein-catalogue (`findByEmbedding`) et on propose le meilleur en
+  *medium* uniquement s'il est net et unique (`EMB_RESCUE = 0.6`, marge `0.05`).
+
+> **Pourquoi ce parti pris.** Mesures au banc (CLIP ViT-B/32, photo ↔ rendu
+> numérique) : recherche plein-catalogue **faible** (top-1 ~17 %), et surtout les
+> similarités des bonnes (~0.5-0.68) et des mauvaises correspondances (jusqu'à
+> ~0.66) **se chevauchent** — aucun seuil absolu ne les sépare. Une première
+> version qui promouvait en *high* sur seuil absolu a fait chuter la calibration
+> (100 % → 71 % : bon nom / mauvais set promu en confiance). D'où la règle
+> actuelle : **le visuel réordonne, le texte décide de la confiance**. Le visuel
+> est un **bonus de départage**, pas un moteur de reconnaissance.
+
 ### 3.9 API — confiance (`computeConfidence`)
 
 À partir du meilleur score :
@@ -235,6 +282,7 @@ Désactivable avec `SCAN_LOG=false`. Le dossier est gitignoré.
 | Variable | Défaut | Rôle |
 |---|---|---|
 | `VISION_SERVICE_URL` | `http://localhost:8000` | URL du service vision |
+| `VISION_TIMEOUT_MS` | `15000` | timeout d'appel vision (le banc l'étend pour laisser finir l'OCR) |
 | `OCR_ENGINE` | `tesseract` | `tesseract` (tesseract.js) ou `vision` (Google Vision) |
 | `OCR_LANGS` | `eng+fra` | langues tesseract.js |
 | `OCR_LANG_PATH` | — | dossier des `traineddata` embarquées (offline Docker) |
@@ -254,9 +302,18 @@ docker compose up -d --build vision
 curl http://localhost:8000/health      # {"status":"ok"}
 
 # API + mobile : via les workspaces du monorepo (turbo / npm)
+
+# pré-calcul des empreintes visuelles (recherche par image), après seed des cartes
+cd apps/api && npm run embed:cards            # ajoute --sets=/--limit=/--refresh
 ```
 
-Endpoints vision : `/health`, `/preprocess`, `/preprocess-batch`, `/match`.
+Endpoints vision : `/health`, `/preprocess`, `/preprocess-batch`, `/match`, `/embed`.
+
+> **Portabilité.** La table `card_embedding` (pgvector) se crée seule au démarrage
+> de l'API ; tant que les empreintes ne sont pas calculées (`embed:cards`), la
+> recherche visuelle reste simplement inactive et le scan fonctionne normalement
+> (texte seul). Le service vision nécessite l'image **pgvector** pour Postgres
+> (`docker-compose.yml`) et un rebuild qui télécharge le modèle CLIP (~quelques min).
 
 ---
 
@@ -271,15 +328,22 @@ Endpoints vision : `/health`, `/preprocess`, `/preprocess-batch`, `/match`.
 
 ## 8. Limites connues & pistes
 
+- **Goulot principal mesuré = OCR du nom.** Au banc (jeu étiqueté), **~65 % des
+  erreurs ont un nom OCR illisible** (« eee », « smn rrr »…), surtout full-art et
+  holo (police stylisée + reflets du foil). Quand le nom est en bouillie **et** le
+  numéro absent, ni le texte ni le visuel ne peuvent trancher. **C'est là que se
+  gagnent les prochains points** (`read_name`/`_read_name_roi`), pas dans le matching.
+- **Recherche visuelle CLIP faible sur ce domaine** : top-1 plein-catalogue ~17 %,
+  similarités correct/faux qui se chevauchent (cf. §3.8 bis). Utile seulement en
+  **réordonnancement prudent** des candidats du texte ; ne remplace pas l'OCR.
+  Couverture partielle tant que `embed:cards` n'a pas vectorisé tout le catalogue.
 - **Cartes très petites / floues / hors cadre** : la détection peut échouer
   (repli sur image redressée brute). Le cadre guide invite à remplir l'écran.
-- **Qualité brute de l'OCR du nom** : certains bandeaux stylisés restent durs ;
-  le matching fuzzy + l'ORB compensent en partie.
 - **Reprints à artwork identique** (ex. mêmes illustrations sur plusieurs sets) :
-  l'ORB ne peut pas les départager ; on s'appuie alors sur le numéro/dénominateur.
-- **Pas de recherche image plein-catalogue** : l'ORB ne re-classe que des
-  candidats déjà trouvés par le texte ; si l'OCR ne sort **aucun** champ
-  exploitable, il n'y a pas de candidat à départager.
-- **Banc d'essai / métriques** (workstream E) : à formaliser à partir de
-  `index.csv` pour mesurer précision/rappel sur un jeu de cartes étiqueté.
+  ni l'ORB ni l'embedding ne les départagent ; on s'appuie alors sur le
+  numéro/dénominateur.
+- **Banc d'essai livré** (`npm run bench:scan`, `apps/api/src/scripts/scan-bench.ts`) :
+  rejoue le vrai `ScanService` sur des cartes étiquetées (`test-cards/*/labels.json`)
+  et mesure accuracy top-1, rappel, **calibration de la confiance** et taux de
+  lecture du numéro, par catégorie. La priorité reste **zéro carte confiante-fausse**.
 ```
