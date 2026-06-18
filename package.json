@@ -32,6 +32,7 @@
     "apps/*",
     "packages/typescript-config",
     "packages/ui",
-    "packages/effect-parser"
+    "packages/effect-parser",
+    "packages/scan-contract"
   ]
 }

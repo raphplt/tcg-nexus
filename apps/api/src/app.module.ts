@@ -21,24 +21,25 @@ import { DeckModule } from "./deck/deck.module";
 import { DeckCardModule } from "./deck-card/deck-card.module";
 import { DeckFormatModule } from "./deck-format/deck-format.module";
 import { FaqModule } from "./faq/faq.module";
+import { FeedModule } from "./feed/feed.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
+import { NotificationModule } from "./notification/notification.module";
 import { PlayerModule } from "./player/player.module";
 import { PokemonCardModule } from "./pokemon-card/pokemon-card.module";
 import { PokemonSeriesModule } from "./pokemon-series/pokemon-series.module";
 import { PokemonSetModule } from "./pokemon-set/pokemon-set.module";
 import { RankingModule } from "./ranking/ranking.module";
+import { ScanModule } from "./scan/scan.module";
 import { SealedProductModule } from "./sealed-product/sealed-product.module";
 import { SearchModule } from "./search/search.module";
 import { SeedModule } from "./seed/seed.module";
 import { StatisticsModule } from "./statistics/statistics.module";
+import { SupportTicketModule } from "./support-ticket/support-ticket.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
-import { FeedModule } from "./feed/feed.module";
-import { SupportTicketModule } from "./support-ticket/support-ticket.module";
-import { NotificationModule } from "./notification/notification.module";
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { NotificationModule } from "./notification/notification.module";
     UserFollowModule,
     FeedModule,
     NotificationModule,
+    ScanModule,
   ],
   controllers: [AppController],
   providers: [
