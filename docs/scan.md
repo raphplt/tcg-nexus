@@ -336,7 +336,17 @@ Endpoints vision : `/health`, `/preprocess`, `/preprocess-batch`, `/match`, `/em
 - **Recherche visuelle CLIP faible sur ce domaine** : top-1 plein-catalogue ~17 %,
   similarités correct/faux qui se chevauchent (cf. §3.8 bis). Utile seulement en
   **réordonnancement prudent** des candidats du texte ; ne remplace pas l'OCR.
-  Couverture partielle tant que `embed:cards` n'a pas vectorisé tout le catalogue.
+  - **Mesure à couverture complète (catalogue vectorisé à 100 %, 16 789 cartes).**
+    Banc rejoué avec vision + embeddings actifs : l'accuracy **ne bouge pas** —
+    top-1 **23 % avec embeddings vs 26 % sans** (= bruit, ±1 carte sur 47), rappel
+    et calibration identiques. Le visuel n'a réordonné que **6 cas sur 47**, pour
+    un bilan net de **−1 carte**. **Conclusion confirmée par la mesure** : à pleine
+    couverture, l'embedding **n'améliore pas la reconnaissance** sur ce domaine.
+    Ce qu'il apporte réellement : (1) un **filet de sauvetage** quand le texte ne
+    sort aucun candidat (`visualRescue`), (2) un **garde-fou de calibration tenu**
+    (il ne fabrique jamais de *high* → **0 confiant-faux ajouté**). C'est un **bonus
+    de départage**, pas un moteur. Le prochain point d'accuracy se gagne sur l'OCR
+    du nom (cf. premier point), pas sur le visuel.
 - **Cartes très petites / floues / hors cadre** : la détection peut échouer
   (repli sur image redressée brute). Le cadre guide invite à remplir l'écran.
 - **Reprints à artwork identique** (ex. mêmes illustrations sur plusieurs sets) :
