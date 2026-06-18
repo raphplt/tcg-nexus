@@ -21,7 +21,7 @@ import type {
   PokemonSetType,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
-import { getCardImage } from "@/utils/images";
+import { getCardImage, getSeriesIconUrl, getSetIconUrl } from "@/utils/images";
 import { CardDetailModal } from "@/components/CardDetailModal";
 import { SelectionModal } from "@/components/SelectionModal";
 
@@ -215,9 +215,9 @@ export default function PokedexScreen() {
             ]}
           >
             <View style={styles.gridItemLogoContainer}>
-              {serie.logo ? (
+              {getSeriesIconUrl(serie) ? (
                 <Image
-                  source={{ uri: serie.logo }}
+                  source={{ uri: getSeriesIconUrl(serie) }}
                   style={styles.gridItemLogo}
                   resizeMode="contain"
                 />
@@ -254,10 +254,8 @@ export default function PokedexScreen() {
               ]}
             >
               <View style={styles.setListLogoContainer}>
-                {set.symbol ? (
-                  <Image source={{ uri: set.symbol }} style={styles.setListLogo} resizeMode="contain" />
-                ) : set.logo ? (
-                  <Image source={{ uri: set.logo }} style={styles.setListLogo} resizeMode="contain" />
+                {getSetIconUrl(set) ? (
+                  <Image source={{ uri: getSetIconUrl(set) }} style={styles.setListLogo} resizeMode="contain" />
                 ) : (
                   <Ionicons name="bookmark" size={24} color="#cccccc" />
                 )}
