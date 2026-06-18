@@ -1,3 +1,7 @@
+// ─── Types partagés entre UI et services ─────────────────────────────────────
+// Tous les types spécifiques au pipeline scanner sont dans types/scanner.ts.
+// Ce fichier conserve uniquement les types UI et BDD génériques.
+
 export interface CardSetSummary {
   id?: string;
   name?: string;

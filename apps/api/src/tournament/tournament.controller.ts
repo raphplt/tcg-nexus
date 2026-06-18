@@ -103,7 +103,6 @@ export class TournamentController {
 
   @Post(":id/register")
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(TournamentParticipantGuard)
   async registerPlayer(
     @Param("id", ParseIntPipe) id: number,
     @Body() registrationDto: Omit<TournamentRegistrationDto, "tournamentId">,
@@ -193,7 +192,7 @@ export class TournamentController {
   @Get(":id/pairings")
   async getCurrentPairings(
     @Param("id", ParseIntPipe) id: number,
-    @Query("round", ParseIntPipe) round?: number,
+    @Query("round", new ParseIntPipe({ optional: true })) round?: number,
   ) {
     return await this.tournamentService.getCurrentPairings(id, round);
   }
@@ -230,7 +229,7 @@ export class TournamentController {
   @Get(":id/matches")
   getTournamentMatches(
     @Param("id", ParseIntPipe) id: number,
-    @Query("round", ParseIntPipe) round?: number,
+    @Query("round", new ParseIntPipe({ optional: true })) round?: number,
     @Query("status") status?: string,
   ) {
     return this.tournamentService.getTournamentMatches(id, { round, status });

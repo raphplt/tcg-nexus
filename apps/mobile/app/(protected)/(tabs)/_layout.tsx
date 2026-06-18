@@ -68,6 +68,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="tournaments"
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon color={color} name="trophy" size={size} />
+          ),
+          title: "Tournois",
+        }}
+      />
+      <Tabs.Screen
         name="collection/[id]"
         options={{
           href: null,

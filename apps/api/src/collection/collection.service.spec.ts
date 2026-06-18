@@ -17,6 +17,7 @@ describe("CollectionService", () => {
     create: jest.fn(),
     save: jest.fn(),
     delete: jest.fn(),
+    remove: jest.fn(),
     findAndCount: jest.fn(),
   };
 
@@ -155,13 +156,14 @@ describe("CollectionService", () => {
   });
 
   it("should delete when owner matches", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({
+    const mockColl = {
       id: "c",
       user: { id: 1 },
-    });
-    mockCollectionRepo.delete.mockResolvedValue({ affected: 1 });
+    };
+    mockCollectionRepo.findOne.mockResolvedValue(mockColl);
+    mockCollectionRepo.remove.mockResolvedValue(mockColl);
     await expect(service.delete("c", 1)).resolves.toBeUndefined();
-    expect(mockCollectionRepo.delete).toHaveBeenCalledWith("c");
+    expect(mockCollectionRepo.remove).toHaveBeenCalledWith(mockColl);
   });
 
   it("should forbid delete for other user", async () => {

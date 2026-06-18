@@ -1,7 +1,6 @@
 import type {
   CardSearchResult,
   CardsPaginatedResponse,
-  OcrParsedResult,
   PokemonSerieType,
   PokemonSetType,
 } from "@/types";
@@ -10,7 +9,7 @@ import { api } from "./api";
 const searchCache = new Map<string, CardSearchResult[]>();
 
 const normalize = (value: string | undefined): string =>
-  (value || "")
+  (value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -18,18 +17,13 @@ const normalize = (value: string | undefined): string =>
 
 const dedupeCards = (cards: CardSearchResult[]): CardSearchResult[] => {
   const seen = new Set<string>();
-  const next: CardSearchResult[] = [];
-
+  const out: CardSearchResult[] = [];
   for (const card of cards) {
-    if (!card.id || seen.has(card.id)) {
-      continue;
-    }
-
+    if (!card.id || seen.has(card.id)) continue;
     seen.add(card.id);
-    next.push(card);
+    out.push(card);
   }
-
-  return next;
+  return out;
 };
 
 export const cardService = {
@@ -38,10 +32,14 @@ export const cardService = {
   },
 
   async getCardById(cardId: string): Promise<CardSearchResult> {
-    const response = await api.get<CardSearchResult>(`/cards/${cardId}`);
+    const response = await api.get<CardSearchResult>(`/pokemon-card/${cardId}`);
     return response.data;
   },
 
+  /**
+   * Recherche textuelle libre dans la BDD Pokémon.
+   * Utilisée par la recherche manuelle dans l'UI de review.
+   */
   async getSetRarities(setId: string): Promise<string[]> {
     const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
     return response.data || [];
@@ -55,13 +53,10 @@ export const cardService = {
     }
     const cacheKey = normalize(query);
     const cached = searchCache.get(cacheKey);
-    if (cached) {
-      console.log("cached : ", cached);
-      return cached;
-    }
+    if (cached) return cached;
 
     const response = await api.get<CardSearchResult[]>(
-      `/cards/search/${encodeURIComponent(query)}`,
+      `/pokemon-card/search/${encodeURIComponent(query)}`,
     );
 
     const cards = dedupeCards(response.data || []);
@@ -80,10 +75,7 @@ export const cardService = {
     return response.data || [];
   },
 
-  async getAllSeries(): Promise<PokemonSerieType[]> {
-    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
-    return response.data || [];
-  },
+
 
   async getPaginated(
     params: {
