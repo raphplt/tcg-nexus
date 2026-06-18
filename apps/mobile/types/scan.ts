@@ -76,17 +76,6 @@ export interface CollectionItemsPaginatedResponse {
   };
 }
 
-export interface OcrParsedResult {
-  rawText: string;
-  lines: string[];
-  cardName?: string;
-  setCode?: string;
-  setNumber?: string;
-  setTotal?: string;
-  setName?: string;
-  searchHints: string[];
-}
-
 export type ScanStatus = "found" | "not-found" | "added" | "error";
 
 export interface ScanHistoryItem {
@@ -97,16 +86,13 @@ export interface ScanHistoryItem {
   createdAt: number;
 }
 
-export interface ProcessedImagePayload {
-  optimizedUri: string;
-  base64: string;
-}
-
-export interface CardSearchResolution {
-  bestCard: CardSearchResult | null;
-  candidates: CardSearchResult[];
-  searchedTerms: string[];
-}
+export type {
+  ScanCardCandidate,
+  ScanConfidenceLevel,
+  ScanParsedFields,
+  ScanRecognizeResponse,
+  ScanRoi,
+} from "@repo/scan-contract";
 
 export interface PokemonSerieType {
   id: string;

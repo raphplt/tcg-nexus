@@ -15,11 +15,22 @@ concurrency:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    env:
+      GITLAB_MIRROR_URL: https://rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981.git
+      GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
+      GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Validate GitLab credentials
+        run: |
+          if [ -z "$GITLAB_TOKEN" ]; then
+            echo "GITLAB_TOKEN is missing. Create a GitLab personal access token or deploy token with write_repository access, then add it as a GitHub secret."
+            exit 1
+          fi
 
       - name: Set Git user
         run: |
@@ -28,8 +39,9 @@ jobs:
 
       - name: Add GitLab remote
         run: |
+          gitlab_username="${GITLAB_USERNAME:-oauth2}"
           git remote add gitlab \
-            https://oauth2:${{ secrets.GITLAB_TOKEN }}@rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981.git
+            "https://${gitlab_username}:${GITLAB_TOKEN}@${GITLAB_MIRROR_URL#https://}"
 
       - name: Push all branches to GitLab
         run: |

@@ -21,6 +21,7 @@ export class SeedController {
 
   @Post("all")
   async seedAll() {
+    await this.seedService.enableExtensions();
     const users = await this.seedService.seedUsers();
     const tournaments = await this.seedService.seedTournaments();
     const faqs = await this.seedService.seedFaq();

@@ -11,6 +11,7 @@ import { getApiErrorMessage } from "@/utils/apiError";
 export interface AppAxiosRequestConfig<D = unknown>
   extends AxiosRequestConfig<D> {
   _retry?: boolean;
+  _netRetry?: boolean;
   skipAuth?: boolean;
   skipErrorToast?: boolean;
 }
@@ -18,9 +19,16 @@ export interface AppAxiosRequestConfig<D = unknown>
 export interface AppInternalAxiosRequestConfig<D = unknown>
   extends InternalAxiosRequestConfig<D> {
   _retry?: boolean;
+  _netRetry?: boolean;
   skipAuth?: boolean;
   skipErrorToast?: boolean;
 }
+
+export const isRetriableNetworkError = (error: AxiosError): boolean =>
+  error.code === "ERR_NETWORK" && !error.response;
+
+export const wait = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 const getDefaultApiUrl = (): string =>
   Platform.OS === "android"
@@ -60,6 +68,13 @@ export const notifyApiError = (error: unknown): void => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    const config = error.config as AppInternalAxiosRequestConfig | undefined;
+    if (config && !config._netRetry && isRetriableNetworkError(error)) {
+      config._netRetry = true;
+      await wait(400);
+      return api(config);
+    }
+
     notifyApiError(error);
     return Promise.reject(error);
   },
