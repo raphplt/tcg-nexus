@@ -10,7 +10,6 @@ interface CardRowProps {
   onSelect: (card: CardSearchResult) => void;
 }
 
-// ligne de résultat sélectionnable (candidats + recherche manuelle)
 export function CardRow({ card, selected, onSelect }: CardRowProps) {
   const thumb = getCardImage(card.image, "low");
 

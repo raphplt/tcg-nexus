@@ -24,8 +24,7 @@ const csvCell = (value: unknown): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-// Journalise chaque scan (image + infos) dans un dossier dédié, pour le debug.
-// Désactivable avec SCAN_LOG=false.
+// journalise chaque scan dans un dossier dédié pour le debug (SCAN_LOG=false pour couper)
 @Injectable()
 export class ScanLogger {
   private readonly logger = new Logger(ScanLogger.name);
@@ -103,7 +102,7 @@ export class ScanLogger {
     }
   }
 
-  // ligne récap par scan dans un index.csv commun (vue d'ensemble rapide)
+  // ligne récap par scan dans un index.csv commun
   private async appendIndex(
     scanId: string,
     timestamp: string,

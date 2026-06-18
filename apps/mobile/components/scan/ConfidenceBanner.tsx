@@ -9,7 +9,6 @@ interface ConfidenceBannerProps {
   confidence: number;
 }
 
-// bandeau résumant le niveau de confiance de la reconnaissance
 export function ConfidenceBanner({ level, confidence }: ConfidenceBannerProps) {
   const meta = CONFIDENCE_META[level];
 

@@ -32,19 +32,18 @@ const MIN_CANDIDATE_SCORE = 0.4;
 
 const TEXT_ROI_KEYS = new Set(["name", "number", "number_right"]);
 
-// départage visuel : nb max de candidats comparés, et seuil de bons matches ORB
+// départage visuel ORB : nb max de candidats comparés et seuil de bons matches
 const VISUAL_TOP_K = 6;
 const VISUAL_MIN_GOOD = 12;
 
 const EMB_TOP_K = 10;
-const EMB_FLOOR = 0.5; // en dessous, le visuel est trop incertain pour trancher
+const EMB_FLOOR = 0.5; // sous ce seuil le visuel est trop incertain pour trancher
 const EMB_REL_MARGIN = 0.06; // écart mini pour qu'un candidat devance les autres
 const EMB_RESCUE = 0.6;
 const EMB_RESCUE_MARGIN = 0.05;
 
 const LEGACY_R2_HOST = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
 
-// URL de l'image catalogue (base sans extension -> .../low.png), hôte réécrit
 const cardImageUrl = (base?: string): string | undefined => {
   const value = base?.trim();
   if (!value) return undefined;
@@ -69,7 +68,7 @@ export class ScanService {
   ): Promise<ScanRecognizeResponse> {
     const frames = images.length > 0 ? images : [];
     const t0 = Date.now();
-    // best-of-N : plusieurs frames OCRisées en parallèle, meilleur résultat fusionné
+    // le service vision OCRise les frames en parallèle et fusionne le meilleur résultat
     const vision = await this.visionService.preprocessBatch(frames);
     // frame retenue : base de l'ORB, du repli OCR plein texte et du log
     const bestFrame = frames[vision?.bestIndex ?? 0] ?? frames[0];
@@ -79,7 +78,7 @@ export class ScanService {
     const { text, engine } = await this.ocrService.recognize(ocrTarget, "full");
     const rois = vision ? await this.readRois(vision.rois) : [];
 
-    // texte plein en repli, puis on privilégie ce qui vient des ROI
+    // texte plein comme repli, on privilégie ce qui vient des ROI
     const fallback = parseOcrText(text);
     const fields = this.buildFields(rois, fallback.fields);
     const nameCandidates = extractNameCandidates(
@@ -95,7 +94,7 @@ export class ScanService {
     );
 
     // départage visuel : embedding plein-catalogue si dispo (gère même 0 candidat
-    // texte), sinon repli ORB sur les candidats texte.
+    // texte), sinon repli ORB sur les candidats texte
     const useEmbedding = Boolean(vision?.embedding?.length);
     const refined = useEmbedding
       ? await this.fuseWithVisual(vision!.embedding!, textCandidates, game)
@@ -129,13 +128,13 @@ export class ScanService {
     return response;
   }
 
-  // D1 : champs issus en priorité des ROI nom/numéro, sinon du texte plein
+  // champs issus en priorité des ROI nom/numéro, sinon du texte plein
   private buildFields(
     rois: ScanRoi[],
     fallback: ScanParsedFields,
   ): ScanParsedFields {
     const nameText = this.roiText(rois, "name");
-    // numéro bas-gauche (récentes) sinon bas-droite (anciennes)
+    // numéro en bas à gauche (cartes récentes), sinon en bas à droite (anciennes)
     const numberText =
       [this.roiText(rois, "number"), this.roiText(rois, "number_right")].find(
         (t) => parseNumber(t).setNumber,
@@ -155,9 +154,8 @@ export class ScanService {
     const rois: ScanRoi[] = [];
 
     for (const roi of visionRois) {
-      // le service vision OCRise déjà les ROI (nom/numéro) : on consomme son
-      // texte. Repli tesseract.js uniquement si le service n'en fournit pas
-      // (ancienne version sans OCR).
+      // le service vision OCRise déjà les ROI ; repli tesseract.js seulement s'il
+      // ne renvoie pas de texte (ancienne version sans OCR)
       let text = roi.text?.trim() ?? "";
       if (roi.text === undefined && TEXT_ROI_KEYS.has(roi.key)) {
         const profile: OcrProfile = roi.key.startsWith("number")
@@ -181,7 +179,7 @@ export class ScanService {
     nameCandidates: string[],
     game?: CardGame,
   ): Promise<ScanCardCandidate[]> {
-    // 1) collecte des cartes : par numéro (robuste au bruit du nom) + par nom fuzzy
+    // collecte des cartes : par numéro (robuste au bruit du nom) + par nom fuzzy
     const pool = new Map<string, Card>();
     const add = (cards: Card[]) => {
       for (const card of cards) pool.set(card.id, card);
@@ -207,9 +205,8 @@ export class ScanService {
 
     const cards = Array.from(pool.values());
 
-    // 2) meilleur match de nom toutes cartes confondues : sert de référence au
-    // garde-fou relatif (une carte trouvée par numéro mais au nom bien moins bon
-    // que ce meilleur match a un numéro mal lu -> son numéro est ignoré).
+    // meilleur match de nom toutes cartes confondues : référence du garde-fou
+    // relatif dans scoreCard (numéro probablement mal lu si le nom décroche trop)
     const bestName = cards.reduce(
       (max, card) => Math.max(max, nameScore(card, nameCandidates)),
       0,
@@ -224,8 +221,8 @@ export class ScanService {
       .slice(0, MAX_CANDIDATES);
   }
 
-  // départage visuel ORB : quand le texte est ambigu (pas déjà high), on compare
-  // l'artwork de la photo aux images des top candidats et on promeut le gagnant.
+  // texte ambigu : on compare l'artwork de la photo aux images des top candidats
+  // (ORB) et on promeut le gagnant
   private async visualDisambiguate(
     image: Buffer,
     candidates: ScanCardCandidate[],
@@ -253,7 +250,7 @@ export class ScanService {
     const [bestId, bestScore] = ranked[0];
     const secondScore = ranked[1]?.[1] ?? 0;
 
-    // gagnant visuel net (assez de matches ET franchement devant le 2e)
+    // gagnant net : assez de matches et franchement devant le 2e
     if (bestScore < VISUAL_MIN_GOOD || bestScore < 2 * secondScore) return keep;
 
     const winner = candidates.find((c) => c.id === bestId);
@@ -267,12 +264,10 @@ export class ScanService {
     };
   }
 
-  // fusion texte + visuel. Le visuel ne sert qu'à RÉORDONNER les candidats du
-  // texte (choisir le n°1 quand le texte est ambigu), jamais à gonfler la
-  // confiance : aux magnitudes observées (bonnes ~0.5-0.68, qui chevauchent les
-  // mauvaises), la similarité ne mérite pas un "high". On préserve ainsi la
-  // calibration (aucune carte confiante-fausse via le visuel). Sauvetage plein-
-  // catalogue seulement quand le texte n'a rien sorti.
+  // fusion texte + visuel. Le visuel ne fait que réordonner les candidats du
+  // texte (choisir le n°1 si le texte est ambigu), jamais gonfler la confiance :
+  // les similarités observées chevauchent trop pour mériter un "high". Sauvetage
+  // plein-catalogue uniquement quand le texte n'a rien sorti.
   private async fuseWithVisual(
     embedding: number[],
     textCandidates: ScanCardCandidate[],
@@ -285,7 +280,6 @@ export class ScanService {
   }> {
     const base = computeConfidence(textCandidates);
     const keep = { candidates: textCandidates, ...base, usedVisual: false };
-    // texte déjà sûr -> on n'y touche pas
     if (base.confidenceLevel === "high") return keep;
 
     // texte muet -> sauvetage plein-catalogue (full-art où l'OCR échoue)
@@ -293,7 +287,6 @@ export class ScanService {
       return this.visualRescue(embedding, game);
     }
 
-    // similarité du visuel contre chaque candidat texte
     const sims = await this.cardService.embeddingSimilarities(
       embedding,
       textCandidates.map((c) => c.id),
@@ -306,14 +299,14 @@ export class ScanService {
     const top = ranked[0];
     const secondSim = ranked[1]?.sim ?? 0;
 
-    // visuel d'accord avec le texte, ou trop incertain / pas assez décisif :
-    // on ne change rien (et surtout on ne gonfle pas la confiance).
+    // visuel d'accord avec le texte, ou trop incertain / peu décisif : on ne
+    // touche à rien
     if (top.c.id === textCandidates[0].id) return keep;
     if (top.sim < EMB_FLOOR || top.sim - secondSim < EMB_REL_MARGIN)
       return keep;
 
-    // visuel décisif pour un autre candidat -> on le remonte n°1, MAIS la
-    // confiance reste celle du texte (medium/low) : suggestion, pas certitude.
+    // visuel décisif pour un autre candidat : on le remonte n°1 mais on garde la
+    // confiance du texte (suggestion, pas certitude)
     return {
       candidates: [top.c, ...textCandidates.filter((c) => c.id !== top.c.id)],
       confidence: base.confidence,
@@ -322,8 +315,8 @@ export class ScanService {
     };
   }
 
-  // sauvetage : aucun candidat texte, on tente l'ANN plein-catalogue. Exigeant
-  // (similarité haute ET nettement unique) car non contraint par le texte.
+  // aucun candidat texte : on tente l'ANN plein-catalogue. Exigeant (similarité
+  // haute et nettement unique) car rien ne contraint le résultat
   private async visualRescue(
     embedding: number[],
     game?: CardGame,
@@ -352,7 +345,7 @@ export class ScanService {
       toCandidate(h.card, Number(h.similarity.toFixed(3))),
     );
 
-    // visuel net et unique -> proposition medium (à confirmer, texte absent)
+    // visuel net et unique -> proposition à confirmer (medium)
     if (
       best.similarity >= EMB_RESCUE &&
       best.similarity - second >= EMB_RESCUE_MARGIN
@@ -368,7 +361,7 @@ export class ScanService {
     return { ...empty, candidates, usedVisual: true };
   }
 
-  // sans service vision, on reconstruit deux ROI à partir du texte parsé
+  // sans service vision, on reconstruit deux ROI depuis le texte parsé
   private fallbackRois(fields: ScanParsedFields): ScanRoi[] {
     const rois: ScanRoi[] = [];
     if (fields.cardName) rois.push({ key: "name", text: fields.cardName });

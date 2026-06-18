@@ -11,7 +11,7 @@ export type ScanMode = "camera" | "review";
 
 export const CARD_RATIO = 63 / 88; // largeur / hauteur d'une carte Pokémon
 
-// rafale : nb de frames capturées par scan (best-of-N côté backend)
+// frames capturées par scan, le backend garde la meilleure
 export const BURST_FRAMES = 5;
 
 export const HISTORY_LIMIT = 8;
@@ -27,7 +27,6 @@ export const candidateToCard = (
   set: candidate.setName ? { name: candidate.setName } : undefined,
 });
 
-// affichage selon le niveau de confiance renvoyé par le backend
 export const CONFIDENCE_META: Record<
   ScanConfidenceLevel,
   {
