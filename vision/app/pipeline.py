@@ -311,18 +311,25 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     return card
 
 
-# au-delà, le nom est jugé bien lu -> carte à l'endroit, on saute l'OSD (coûteux)
+# au-delà, le nom est jugé bien lu -> carte à l'endroit, on saute le test 0/180
 NAME_OK_CONF = 55.0
+# retournement 0/180 : on ne bascule que si le nom retourné est crédible ET
+# nettement meilleur, sinon (foil illisible des deux côtés) on reste à l'endroit.
+FLIP_MIN_CONF = 45.0
+FLIP_MARGIN = 8.0
 
 
 def _build_result(card: np.ndarray, detected: bool) -> dict:
-    # si le nom sort proprement la carte est à l'endroit ; sinon on vérifie l'OSD
+    # si le nom sort proprement la carte est à l'endroit ; sinon on départage
+    # 0° vs 180° par la confiance du nom. L'OSD Tesseract est trop peu fiable sur
+    # des cartes (peu de texte, polices stylisées) ; une carte tenue est de toute
+    # façon ~toujours à 0° ou 180° (le warp a déjà remis le paysage en portrait).
     name = _read_name_roi(card)
     if name[2] < NAME_OK_CONF:
-        oriented = _orient_upright(card)
-        if oriented is not card:
-            card = oriented
-            name = _read_name_roi(card)
+        flipped = cv2.rotate(card, cv2.ROTATE_180)
+        name_flip = _read_name_roi(flipped)
+        if name_flip[2] >= FLIP_MIN_CONF and name_flip[2] > name[2] + FLIP_MARGIN:
+            card, name = flipped, name_flip
 
     rois = _extract_rois(card, name=name)
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))

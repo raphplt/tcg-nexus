@@ -1,1 +1,986 @@
-[]
+[
+  {
+    "key": "PXL_20260616_195546745.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Mew VMAX"
+    },
+    "got": {
+      "name": "Opermine",
+      "localId": "66"
+    },
+    "confidence": 0.427,
+    "level": "low",
+    "nbCandidates": 7,
+    "carteLue": "Mew",
+    "numberRead": "",
+    "ms": 2608,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195608249.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Dracaufeu ex",
+      "number": "238"
+    },
+    "got": {
+      "name": "Era",
+      "localId": "177"
+    },
+    "confidence": 0.477,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Era tal",
+    "numberRead": "",
+    "ms": 3881,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195631969.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Lucario EX",
+      "number": "107"
+    },
+    "got": {
+      "name": "Lucario EX",
+      "localId": "107"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Lucario wil",
+    "numberRead": "107/111",
+    "ms": 2679,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_195650372.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Pechaminus ex",
+      "number": "163"
+    },
+    "got": {
+      "name": "Pechaminus-ex",
+      "localId": "163"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 7,
+    "carteLue": "Péchaminus",
+    "numberRead": "163/131",
+    "ms": 3285,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_195719723.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Zorua",
+      "number": "75"
+    },
+    "got": {
+      "name": "Entretien",
+      "localId": "79"
+    },
+    "confidence": 0.501,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "ate",
+    "numberRead": "",
+    "ms": 3250,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195733221.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Bekaglacon ex",
+      "number": "222"
+    },
+    "got": {
+      "name": "Bekaglacon-ex",
+      "localId": "042"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Bekaglacon hawd",
+    "numberRead": "8/197",
+    "ms": 2350,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195749014.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Grodoudou ex",
+      "number": "222"
+    },
+    "got": {
+      "name": "Rondoudou",
+      "localId": "44"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "GrodoudouG Suton Rondoudou",
+    "numberRead": "222/091",
+    "ms": 2142,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195804024.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Ortiga",
+      "number": "161"
+    },
+    "got": {
+      "name": "Ortiga",
+      "localId": "141"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "DRESL",
+    "numberRead": "141/131",
+    "ms": 2232,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195847250.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Vrombotor ex",
+      "number": "15"
+    },
+    "got": {
+      "name": "Vrombotor-ex",
+      "localId": "015"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Vrombotor ation vromby",
+    "numberRead": "015/064",
+    "ms": 3374,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_195857909.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Nymphali ex",
+      "number": "86"
+    },
+    "got": {
+      "name": "Libegon-ex",
+      "localId": "106"
+    },
+    "confidence": 0,
+    "level": "low",
+    "nbCandidates": 10,
+    "carteLue": "FRE",
+    "numberRead": "",
+    "ms": 3471,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195915865.jpg",
+    "category": "trainer",
+    "expected": {
+      "name": "Zone de Neutralisation",
+      "number": "60"
+    },
+    "got": {
+      "name": "Dresseurs Coach",
+      "localId": "233"
+    },
+    "confidence": 0.499,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Fone tralisation",
+    "numberRead": "24/606",
+    "ms": 2654,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195929598.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Volcanion ex",
+      "number": "31"
+    },
+    "got": {
+      "name": "Cristal Feu",
+      "localId": "173"
+    },
+    "confidence": 0.48,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "LUN CRIS wes awe wee bet PAZ NAN gan wee Liat ety ace gpl CAE",
+    "numberRead": "",
+    "ms": 4881,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195949012.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Mentali GX",
+      "number": "61"
+    },
+    "got": {
+      "name": "Mentali",
+      "localId": "48"
+    },
+    "confidence": 0.534,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "wen Ment",
+    "numberRead": "",
+    "ms": 2447,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_195959028.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Kyurem VMAX",
+      "number": "48"
+    },
+    "got": {
+      "name": "Evoli",
+      "localId": "BW97"
+    },
+    "confidence": 0.501,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "VMAX ZEZ Biebelee VAE",
+    "numberRead": "",
+    "ms": 3816,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200007733.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Lugia V",
+      "number": "138"
+    },
+    "got": {
+      "name": "Lugia V",
+      "localId": "138"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "LugiaV",
+    "numberRead": "138/195",
+    "ms": 2023,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200021109.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Groudon EX"
+    },
+    "got": {
+      "name": "Groudon",
+      "localId": "199"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "ate ase Groudon ABC",
+    "numberRead": "",
+    "ms": 3273,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200036427.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Scarhino EX",
+      "number": "105"
+    },
+    "got": {
+      "name": "Scarhino",
+      "localId": "7"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Scarhino",
+    "numberRead": "",
+    "ms": 2641,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200049808.jpg",
+    "category": "promo",
+    "expected": {
+      "name": "Demeteros",
+      "number": "BW43"
+    },
+    "got": {
+      "name": "Demeteros",
+      "localId": "58"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Démétéros",
+    "numberRead": "",
+    "ms": 3071,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "recoverable",
+    "rankOfCorrect": 4
+  },
+  {
+    "key": "PXL_20260616_200106833.jpg",
+    "category": "vintage",
+    "expected": {
+      "name": "Rapasdepic",
+      "number": "36"
+    },
+    "got": {
+      "name": "Rapasdepic",
+      "localId": "36"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Evolution Piafabec Hacez Rapasdepic sur lae Pokémon eee",
+    "numberRead": "936/64",
+    "ms": 2654,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200119399.jpg",
+    "category": "vintage",
+    "expected": {
+      "name": "Tetarte",
+      "number": "38"
+    },
+    "got": {
+      "name": "Tetarte",
+      "localId": "38"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Remar ane Evolution Prkord Placez Tétarte sur Pokémon",
+    "numberRead": "6/38",
+    "ms": 2360,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200145108.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Polagriffe",
+      "number": "30"
+    },
+    "got": {
+      "name": "Polagriffe",
+      "localId": "30"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Polagriffe",
+    "numberRead": "30/98",
+    "ms": 2005,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200159968.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Lugulabre",
+      "number": "18"
+    },
+    "got": {
+      "name": "Lugulabre",
+      "localId": "018"
+    },
+    "confidence": 0.513,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "ugulab",
+    "numberRead": "018/086",
+    "ms": 1664,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200202411.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Zoroark",
+      "number": "62"
+    },
+    "got": {
+      "name": "Zoroark",
+      "localId": "171"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "LARA Zoroark Nba",
+    "numberRead": "962/005",
+    "ms": 2036,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200205393.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Magnezone",
+      "number": "60"
+    },
+    "got": {
+      "name": "Magnezone",
+      "localId": "SWSH208"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "wey poe MATE SAR SRS",
+    "numberRead": "",
+    "ms": 3654,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200207903.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Gromago",
+      "number": "131"
+    },
+    "got": {
+      "name": "Gromago",
+      "localId": "131"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 7,
+    "carteLue": "Gro",
+    "numberRead": "131/191",
+    "ms": 2074,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200212531.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Frison",
+      "number": "151"
+    },
+    "got": {
+      "name": "Frison",
+      "localId": "136"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "omy SAN awe ate ous Sen gts Niue See Eee ike Brees aes Pare tes",
+    "numberRead": "",
+    "ms": 3434,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200218540.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Darkrai",
+      "number": "136"
+    },
+    "got": {
+      "name": "Carte",
+      "localId": "136"
+    },
+    "confidence": 0.467,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "tev teed wee Nae aire See mes vty",
+    "numberRead": "",
+    "ms": 3490,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200221099.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Pyrax",
+      "number": "25"
+    },
+    "got": {
+      "name": "Pyrax",
+      "localId": "13"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Pyrax",
+    "numberRead": "",
+    "ms": 3003,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "recoverable",
+    "rankOfCorrect": 1
+  },
+  {
+    "key": "PXL_20260616_200235290.jpg",
+    "category": "trainer",
+    "expected": {
+      "name": "Capsule Technique : Fluorine",
+      "number": "188"
+    },
+    "got": {
+      "name": "Capsule Technique : Fluorine",
+      "localId": "188"
+    },
+    "confidence": 0.968,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Pokémon DRESSEU Capsule Technique Fluorine",
+    "numberRead": "188/191",
+    "ms": 2123,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200242260.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Reshiram",
+      "number": "21"
+    },
+    "got": {
+      "name": "Reshiram",
+      "localId": "XY74"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Reshiram",
+    "numberRead": "",
+    "ms": 3030,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "recoverable",
+    "rankOfCorrect": 2
+  },
+  {
+    "key": "PXL_20260616_200245312.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Demeteros",
+      "number": "110"
+    },
+    "got": {
+      "name": "Demeteros",
+      "localId": "110"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Démétéros",
+    "numberRead": "10/191",
+    "ms": 1933,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200251901.jpg",
+    "category": "vintage",
+    "expected": {
+      "name": "Dialga"
+    },
+    "got": {
+      "name": "Dialga",
+      "localId": "105"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Dialga naer",
+    "numberRead": "",
+    "ms": 1958,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200254136.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Fulgulairo de Mashynn",
+      "number": "55"
+    },
+    "got": {
+      "name": "Fulgulairo de Mashynn",
+      "localId": "055"
+    },
+    "confidence": 0.992,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Nive LEUR dupe Masse Fulgulairo Mashynn",
+    "numberRead": "055/159",
+    "ms": 2312,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200300593.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Demeteros",
+      "number": "110"
+    },
+    "got": {
+      "name": "Demeteros",
+      "localId": "110"
+    },
+    "confidence": 0.958,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "étéros",
+    "numberRead": "110/191",
+    "ms": 1943,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200302599.jpg",
+    "category": "trainer",
+    "expected": {
+      "name": "Imakuni ?",
+      "number": "63"
+    },
+    "got": {
+      "name": "Lianaja",
+      "localId": "3"
+    },
+    "confidence": 0.481,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "anbono Joan NOI anon Liane ann sanol aanod SNOA",
+    "numberRead": "",
+    "ms": 2700,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200320242.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Evoli",
+      "number": "80"
+    },
+    "got": {
+      "name": "Evoli",
+      "localId": "80"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Evoli",
+    "numberRead": "80/171",
+    "ms": 2213,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200322963.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Lugia",
+      "number": "78"
+    },
+    "got": {
+      "name": "Lugia",
+      "localId": "78"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Lugia",
+    "numberRead": "78/124",
+    "ms": 2401,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200325496.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Yveltal",
+      "number": "RC16"
+    },
+    "got": {
+      "name": "Yveltal",
+      "localId": "RC16"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Yveltal",
+    "numberRead": "16/32",
+    "ms": 2158,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_200837114.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Reshiram",
+      "number": "21"
+    },
+    "got": {
+      "name": "Mewtwo",
+      "localId": "56"
+    },
+    "confidence": 0,
+    "level": "low",
+    "nbCandidates": 10,
+    "carteLue": "achivam",
+    "numberRead": "",
+    "ms": 2411,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200859283.jpg",
+    "category": "vintage",
+    "expected": {
+      "name": "Embrylex",
+      "number": "52"
+    },
+    "got": {
+      "name": "Roselia",
+      "localId": "9"
+    },
+    "confidence": 0.481,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "wey",
+    "numberRead": "",
+    "ms": 2576,
+    "engine": "opencv+tesseract+tesseract+clip",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200903035.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Balbuto",
+      "number": "122"
+    },
+    "got": {
+      "name": "Balbuto",
+      "localId": "63"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "rans Sons RER wey Henk rae Cie Pare mae vee CAN tre PUS CLS een code NET RTS eel",
+    "numberRead": "",
+    "ms": 3705,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_200905835.jpg",
+    "category": "regular",
+    "expected": {
+      "name": "Prismillon",
+      "number": "7"
+    },
+    "got": {
+      "name": "Prismillon",
+      "localId": "8"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "aoa",
+    "numberRead": "3/26",
+    "ms": 2551,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "recoverable",
+    "rankOfCorrect": 2
+  },
+  {
+    "key": "PXL_20260616_203832489.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Reshiram",
+      "number": "21"
+    },
+    "got": {
+      "name": "Reshiram",
+      "localId": "XY74"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "CCS CUP ayy Via CES ASS ret tar Ate wey Dre",
+    "numberRead": "",
+    "ms": 3357,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "recoverable",
+    "rankOfCorrect": 2
+  },
+  {
+    "key": "PXL_20260616_203852708.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Chovsourir",
+      "number": "117"
+    },
+    "got": {
+      "name": "Meltan",
+      "localId": "SM177"
+    },
+    "confidence": 0.501,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "pyar baled tas Les Key",
+    "numberRead": "",
+    "ms": 4011,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_203903080.jpg",
+    "category": "full-art",
+    "expected": {
+      "name": "Fulgulairo de Mashynn",
+      "number": "163"
+    },
+    "got": {
+      "name": "Fulgulairo",
+      "localId": "022"
+    },
+    "confidence": 0.528,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "FID tafe SAN",
+    "numberRead": "",
+    "ms": 3057,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "wrong",
+    "rankOfCorrect": -1
+  },
+  {
+    "key": "PXL_20260616_203920166.jpg",
+    "category": "trainer",
+    "expected": {
+      "name": "Capsule Technique : Fluorine",
+      "number": "188"
+    },
+    "got": {
+      "name": "Capsule Technique : Fluorine",
+      "localId": "188"
+    },
+    "confidence": 1,
+    "level": "high",
+    "nbCandidates": 10,
+    "carteLue": "Capsule Technique Fluorin",
+    "numberRead": "188/191",
+    "ms": 1970,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  },
+  {
+    "key": "PXL_20260616_203928077.jpg",
+    "category": "holo",
+    "expected": {
+      "name": "Polagriffe",
+      "number": "30"
+    },
+    "got": {
+      "name": "Polagriffe",
+      "localId": "30"
+    },
+    "confidence": 0.55,
+    "level": "medium",
+    "nbCandidates": 10,
+    "carteLue": "Polagriffe",
+    "numberRead": "300/98",
+    "ms": 2035,
+    "engine": "opencv+tesseract+tesseract",
+    "outcome": "correct",
+    "rankOfCorrect": 0
+  }
+]
