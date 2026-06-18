@@ -6,6 +6,7 @@ import { SeedService } from "./seed.service";
 describe("SeedController", () => {
   let controller: SeedController;
   const mockService = {
+    enableExtensions: jest.fn(),
     importPokemonSeries: jest.fn(),
     seedUsers: jest.fn(),
     seedTournaments: jest.fn(),
