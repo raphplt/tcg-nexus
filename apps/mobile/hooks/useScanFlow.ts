@@ -266,8 +266,9 @@ export function useScanFlow() {
     setManualResults([]);
     setManualQuery("");
 
-    // une rafale de frames : le cadrage varie d'une prise à l'autre, le backend
-    // garde la meilleure
+    // mode rafale : on capture BURST_FRAMES frames (le cadrage varie d'une prise
+    // à l'autre, le backend garde la meilleure) ; sinon une seule photo
+    const frameCount = burstMode ? BURST_FRAMES : 1;
     const frames: string[] = [];
     try {
       // on affiche la 1re frame et on lève l'overlay tout de suite, ce qui masque
@@ -283,8 +284,8 @@ export function useScanFlow() {
       setCapturedUri(first.uri);
       setIsProcessing(true);
 
-      // frames restantes capturées derrière l'overlay
-      for (let i = 1; i < BURST_FRAMES; i++) {
+      // frames restantes capturées derrière l'overlay (aucune en mode mono)
+      for (let i = 1; i < frameCount; i++) {
         const picture = await cameraRef.current.takePictureAsync({
           quality: 0.8,
           skipProcessing: true,
@@ -318,12 +319,6 @@ export function useScanFlow() {
       setCandidateCards(result.candidates.map(candidateToCard));
       const best = result.bestCard ? candidateToCard(result.bestCard) : null;
       setSelectedCard(best);
-
-      // confiance haute en rafale : on ajoute direct et on repart sur la caméra
-      if (result.confidenceLevel === "high" && best && burstMode) {
-        await addCardToCollection(best);
-        return;
-      }
 
       if (result.bestCard) {
         pushHistory({

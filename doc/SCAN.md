@@ -2,7 +2,7 @@
 
 Reconnaissance de cartes Pokémon à partir d'une photo : la carte est cadrée,
 nettoyée, lue par OCR, puis appariée à la base, avec un **niveau de confiance**
-qui pilote l'expérience mobile (ajout direct, confirmation, ou saisie manuelle).
+qui pilote l'expérience mobile (présélection, confirmation, ou saisie manuelle).
 
 Tout le traitement vit **côté backend** : le mobile envoie juste l'image. Aucune
 clé d'API n'est exposée dans l'app.
@@ -138,7 +138,7 @@ Le score du meilleur candidat devient la confiance, traduite en niveau :
 
 | Niveau | Score | UX mobile |
 |---|---|---|
-| `high` | ≥ 0.75 | ajout direct (auto-ajout en mode rafale) |
+| `high` | ≥ 0.75 | carte présélectionnée, ajout après confirmation |
 | `medium` | ≥ 0.45 | liste de candidats à confirmer |
 | `low` | < 0.45 | recherche manuelle |
 

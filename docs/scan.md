@@ -62,9 +62,11 @@ Fichiers : `hooks/useScanFlow.ts`, `components/scan/*`, `constants/scan.ts`,
 
 1. **Cadre guide** type scanner d'identité (ratio carte `63/88`) pour aligner la
    carte bien à plat et remplie.
-2. **Rafale best-of-N** (`BURST_FRAMES = 5`) : on capture la 1ʳᵉ frame, on
-   affiche **immédiatement** l'overlay d'analyse figé (masque les micro-gels du
-   preview), puis on prend les 4 frames restantes derrière l'overlay.
+2. **Rafale best-of-N** (`BURST_FRAMES = 5`), activée par le **toggle « Rafale »** :
+   on capture la 1ʳᵉ frame, on affiche **immédiatement** l'overlay d'analyse figé
+   (masque les micro-gels du preview), puis on prend les 4 frames restantes
+   derrière l'overlay. Toggle **désactivé** → une **seule** photo (best-of-1) : le
+   reste du pipeline est identique (l'API/vision gèrent nativement le cas mono-frame).
 3. **Optimisation séquentielle** : chaque frame est redimensionnée
    (`MAX_WIDTH = 1600`) et recompressée en JPEG, **une par une**.
    - ⚠️ Séquentiel obligatoire : optimiser les 5 frames en parallèle décode 5
@@ -260,7 +262,8 @@ Garde-fou d'ambiguïté : deux candidats au coude-à-coude (`best − second < 0
 ### 3.10 Mobile — UI selon la confiance
 
 - **high** : carte présélectionnée, autres correspondances repliées (« Ce n'est
-  pas la bonne carte ? »). En mode rafale, ajout automatique à la collection.
+  pas la bonne carte ? »). L'ajout passe **toujours** par une confirmation (pas
+  d'ajout automatique).
 - **medium / low** : liste « Choisis la bonne carte » dépliée + comparaison photo
   vs carte trouvée (images affichées en `low.png`).
 - Recherche manuelle toujours disponible en repli.
