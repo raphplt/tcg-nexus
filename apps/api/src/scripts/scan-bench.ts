@@ -9,6 +9,10 @@
 
 // on ne pollue pas scan-logs/ pendant le banc
 process.env.SCAN_LOG = "false";
+// le banc étend le timeout vision : sur cette machine l'OCR ciblé + CLIP d'une
+// frame prend ~20 s, au-delà du défaut prod (15 s). Sans ça, chaque scan timeout
+// et bascule sur le repli tesseract.js brut → on ne mesure plus le vrai pipeline.
+process.env.VISION_TIMEOUT_MS = process.env.VISION_TIMEOUT_MS ?? "60000";
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
