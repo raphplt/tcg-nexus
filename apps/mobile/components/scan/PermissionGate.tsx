@@ -13,7 +13,6 @@ interface PermissionGateProps {
   onRequest: () => void;
 }
 
-// écran d'attente / demande d'autorisation caméra avant le scan
 export function PermissionLoading() {
   return (
     <View style={styles.centeredScreen}>

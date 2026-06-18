@@ -67,6 +67,19 @@ export interface CollectionItemResponse {
   pokemonCard?: CardSearchResult | null;
 }
 
+export interface CardsPaginatedResponse {
+  data: CardSearchResult[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 export interface CollectionItemsPaginatedResponse {
   data: CollectionItem[];
   meta: {

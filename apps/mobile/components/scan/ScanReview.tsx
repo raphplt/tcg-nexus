@@ -73,7 +73,6 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
           />
 
           {scan.candidateCards.length > 0 && scan.confidenceLevel === "high" ? (
-            // confiance haute : on replie les autres correspondances
             <View style={styles.blockCard}>
               <Pressable
                 onPress={() => scan.setShowOtherMatches((v) => !v)}
@@ -104,7 +103,6 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
           ) : null}
 
           {scan.candidateCards.length > 0 && scan.confidenceLevel !== "high" ? (
-            // confiance moyenne/basse : comparer et choisir la bonne carte
             <View style={styles.blockCard}>
               <Text style={styles.sectionTitle}>Choisis la bonne carte</Text>
               <View style={styles.resultList}>

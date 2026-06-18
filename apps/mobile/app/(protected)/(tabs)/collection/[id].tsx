@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -434,9 +435,25 @@ export default function CollectionDetailsScreen() {
       return;
     }
 
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(`Confirmer la suppression de "${collection.name}" ?`);
+      if (confirmed) {
+        collectionService
+          .deleteCollection(collectionId)
+          .then(() => {
+            toast.showSuccess("Collection supprimee.");
+            router.replace("/collection");
+          })
+          .catch((error) => {
+            toast.showError(getApiErrorMessage(error));
+          });
+      }
+      return;
+    }
+
     Alert.alert(
       "Supprimer la collection",
-      `Confirmer la suppression de \"${collection.name}\" ?`,
+      `Confirmer la suppression de "${collection.name}" ?`,
       [
         { style: "cancel", text: "Annuler" },
         {

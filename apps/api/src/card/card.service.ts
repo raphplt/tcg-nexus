@@ -249,4 +249,15 @@ export class CardService implements OnModuleInit {
     const card = await qb.orderBy("RANDOM()").limit(1).getOne();
     return card ?? null;
   }
+
+  async getSetRarities(setId: string): Promise<string[]> {
+    const rows = await this.cardRepository
+      .createQueryBuilder("card")
+      .select("DISTINCT(card.rarity)", "rarity")
+      .where("card.setId = :setId", { setId })
+      .andWhere("card.rarity IS NOT NULL")
+      .getRawMany();
+
+    return rows.map((r) => r.rarity).filter(Boolean);
+  }
 }

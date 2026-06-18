@@ -47,6 +47,12 @@ export class CardController {
   }
 
   @Public()
+  @Get("set/:setId/rarities")
+  getSetRarities(@Param("setId") setId: string) {
+    return this.cardService.getSetRarities(setId);
+  }
+
+  @Public()
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.cardService.findOne(id);

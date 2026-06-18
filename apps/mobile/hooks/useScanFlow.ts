@@ -22,7 +22,6 @@ import type {
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 
-// Regroupe l'état et les actions du scan (capture rafale, recherche, ajout).
 export function useScanFlow() {
   const cameraRef = useRef<CameraView>(null);
   const { user } = useAuth();
@@ -121,7 +120,6 @@ export function useScanFlow() {
     setInlineError(null);
   };
 
-  // sélectionne une carte dans une liste et efface l'erreur en cours
   const selectCard = (card: CardSearchResult) => {
     setSelectedCard(card);
     setInlineError(null);
@@ -185,7 +183,6 @@ export function useScanFlow() {
         title: "Ajout collection",
       });
 
-      // carte validée : on enchaîne directement sur la capture suivante
       resetForNextCapture();
     } catch (error) {
       const message = getApiErrorMessage(error);
@@ -209,12 +206,12 @@ export function useScanFlow() {
     setManualResults([]);
     setManualQuery("");
 
-    // rafale : plusieurs frames pendant que la caméra reste montée. Le crop
-    // rate de façon aléatoire selon la prise -> le backend garde la meilleure.
+    // une rafale de frames : le cadrage varie d'une prise à l'autre, le backend
+    // garde la meilleure
     const frames: string[] = [];
     try {
-      // 1) 1re frame : on l'affiche et on lève l'overlay tout de suite, pour
-      // masquer les micro-gels du preview pendant les frames suivantes.
+      // on affiche la 1re frame et on lève l'overlay tout de suite, ce qui masque
+      // les micro-gels du preview pendant les captures suivantes
       const first = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         skipProcessing: true,
@@ -226,7 +223,7 @@ export function useScanFlow() {
       setCapturedUri(first.uri);
       setIsProcessing(true);
 
-      // 2) frames restantes capturées derrière l'overlay figé
+      // frames restantes capturées derrière l'overlay
       for (let i = 1; i < BURST_FRAMES; i++) {
         const picture = await cameraRef.current.takePictureAsync({
           quality: 0.8,
@@ -245,9 +242,8 @@ export function useScanFlow() {
     }
 
     try {
-      // séquentiel et NON parallèle : chaque optimize décode la photo pleine
-      // résolution en bitmap (~48 Mo). 5 frames d'un coup font sauter le pool
-      // mémoire natif Android (plafond ~192 Mo) -> "Pool hard cap violation".
+      // séquentiel et non parallèle : chaque frame est décodée en bitmap plein
+      // format (~48 Mo), tout faire d'un coup dépasse le pool mémoire natif Android
       const optimizedUris: string[] = [];
       for (const uri of frames) {
         optimizedUris.push(await ocrService.optimizeImage(uri));
