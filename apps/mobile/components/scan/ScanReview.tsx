@@ -41,7 +41,11 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
               onPress={scan.resetForNextCapture}
               style={styles.lightButton}
             >
-              <Ionicons color={colors.foreground} name="camera-reverse" size={18} />
+              <Ionicons
+                color={colors.foreground}
+                name="camera-reverse"
+                size={18}
+              />
               <Text style={styles.lightButtonText}>Rescanner</Text>
             </Pressable>
 
@@ -139,9 +143,16 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
                 ]}
               >
                 {scan.isManualSearching ? (
-                  <ActivityIndicator color={colors.secondaryForeground} size="small" />
+                  <ActivityIndicator
+                    color={colors.secondaryForeground}
+                    size="small"
+                  />
                 ) : (
-                  <Ionicons color={colors.secondaryForeground} name="search" size={16} />
+                  <Ionicons
+                    color={colors.secondaryForeground}
+                    name="search"
+                    size={16}
+                  />
                 )}
               </Pressable>
             </View>

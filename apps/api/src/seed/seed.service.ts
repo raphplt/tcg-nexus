@@ -1979,9 +1979,7 @@ export class SeedService {
    * utilisée par la recherche de cartes et le scan OCR (card.service findByNameFuzzy).
    */
   async enableExtensions() {
-    await this.userRepository.query(
-      `CREATE EXTENSION IF NOT EXISTS pg_trgm;`,
-    );
+    await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
     console.log("✅ Extension Postgres pg_trgm activée.");
   }
 

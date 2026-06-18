@@ -34,7 +34,11 @@ export function CameraScanView({ scan }: { scan: ScanFlow }) {
 
       <View style={[styles.cameraTopBar, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => router.back()} style={styles.iconButton}>
-          <Ionicons color={colors.primaryForeground} name="arrow-back" size={22} />
+          <Ionicons
+            color={colors.primaryForeground}
+            name="arrow-back"
+            size={22}
+          />
         </Pressable>
 
         <View style={styles.burstBadge}>

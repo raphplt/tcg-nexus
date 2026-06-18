@@ -99,7 +99,9 @@ async function main() {
 
   for (let i = 0; i < rows.length; i += batch) {
     const slice = rows.slice(i, i + batch);
-    const imgs = await Promise.all(slice.map((r) => downloadB64(lowUrl(r.image))));
+    const imgs = await Promise.all(
+      slice.map((r) => downloadB64(lowUrl(r.image))),
+    );
     const ok = slice
       .map((r, j) => ({ id: r.id, b64: imgs[j] }))
       .filter((x): x is { id: string; b64: string } => Boolean(x.b64));

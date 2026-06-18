@@ -309,7 +309,8 @@ export class ScanService {
     // visuel d'accord avec le texte, ou trop incertain / pas assez décisif :
     // on ne change rien (et surtout on ne gonfle pas la confiance).
     if (top.c.id === textCandidates[0].id) return keep;
-    if (top.sim < EMB_FLOOR || top.sim - secondSim < EMB_REL_MARGIN) return keep;
+    if (top.sim < EMB_FLOOR || top.sim - secondSim < EMB_REL_MARGIN)
+      return keep;
 
     // visuel décisif pour un autre candidat -> on le remonte n°1, MAIS la
     // confiance reste celle du texte (medium/low) : suggestion, pas certitude.

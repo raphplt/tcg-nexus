@@ -1,5 +1,11 @@
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { colors, radius } from "@/constants/theme";
 
 interface PermissionGateProps {
@@ -16,7 +22,9 @@ export function PermissionLoading() {
   );
 }
 
-export function PermissionRequest({ onRequest }: Pick<PermissionGateProps, "onRequest">) {
+export function PermissionRequest({
+  onRequest,
+}: Pick<PermissionGateProps, "onRequest">) {
   return (
     <View style={styles.permissionScreen}>
       <Text style={styles.permissionTitle}>Appareil photo requis</Text>
