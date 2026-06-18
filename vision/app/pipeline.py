@@ -24,10 +24,20 @@ CARD_H = 838
 MAX_WARP_W = 1024
 MIN_CARD_AREA_RATIO = 0.08
 NAME_BAND = (0.06, 0.0, 0.80, 0.14)
-NUMBER_BANDS = {
-    "number": (0.00, 0.82, 0.52, 0.17),
-    "number_right": (0.48, 0.82, 0.52, 0.17),
-}
+# Bandes candidates pour le numéro : plusieurs bandes PLEINE LARGEUR du bas de la
+# carte, à différents niveaux de zoom. Le warp se cale souvent sur la
+# pochette/toploader et laisse une marge variable sous la carte -> le numéro tombe
+# à une hauteur imprévisible et une bande fixe le rate (on lisait alors le fond du
+# tapis -> numéros parasites). On lit toutes les bandes et on garde la lecture la
+# plus SÛRE. Le format NN/MMM (slash obligatoire) filtre nativement le bruit capté
+# en plus (PV, dégâts, illustrateur) ; les lectures correctes ressortent avec une
+# confiance nettement plus haute que les fragments.
+NUMBER_BANDS = [
+    (0.0, 0.70, 1.0, 0.30),
+    (0.0, 0.74, 1.0, 0.26),
+    (0.0, 0.82, 1.0, 0.18),
+    (0.0, 0.88, 1.0, 0.12),
+]
 HP_BAND = (0.70, 0.040, 0.26, 0.060)
 
 
@@ -205,27 +215,22 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     if name_crop is not None:
         rois.append(_roi("name", NAME_BAND, name_crop, name_text, name_conf))
 
-    # numéro : on lit les DEUX coins bas (gauche=récentes, droite=anciennes) et on
-    # ne garde que la lecture la plus sûre. S'arrêter au 1er coin non vide laissait
-    # un numéro parasite (fond/voisin) l'emporter sur la vraie lecture de l'autre
-    # coin ; on tranche désormais par la confiance OCR.
-    reads = {}
-    for key, band in NUMBER_BANDS.items():
+    # numéro : on lit toutes les bandes candidates (différents zooms du bas) et on
+    # ne garde que la lecture la plus SÛRE (confiance OCR la plus haute). Lire une
+    # seule bande laissait un numéro parasite (fond du tapis) l'emporter ; ici la
+    # vraie lecture, plus confiante, gagne. Le crop exposé sert au debug côté API.
+    best_text, best_conf, best_crop = "", -1.0, None
+    for band in NUMBER_BANDS:
         crop = _crop(card, band)
         if not crop.size:
             continue
         text, conf = read_number(crop)
-        reads[key] = (band, crop, text, conf)
-    best_key = max(
-        (k for k, v in reads.items() if v[2]),
-        key=lambda k: reads[k][3],
-        default=None,
-    )
-    for key, (band, crop, text, conf) in reads.items():
-        win = key == best_key
-        # seul le coin gagnant expose son texte : l'API prend le 1er coin qui parse,
-        # on évite donc qu'un coin parasite court-circuite la bonne lecture.
-        rois.append(_roi(key, band, crop, text if win else "", conf if win else 0.0))
+        if text and conf > best_conf:
+            best_text, best_conf, best_crop = text, conf, crop
+    if best_crop is not None:
+        rois.append(
+            _roi("number", (0.0, 0.70, 1.0, 0.30), best_crop, best_text, max(best_conf, 0.0))
+        )
 
     hp_crop = _crop(card, HP_BAND)
     if hp_crop.size:
