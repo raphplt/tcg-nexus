@@ -165,6 +165,29 @@ export class CardService implements OnModuleInit {
       .filter((x): x is { card: Card; similarity: number } => Boolean(x.card));
   }
 
+  async embeddingSimilarities(
+    embedding: number[],
+    cardIds: string[],
+  ): Promise<Map<string, number>> {
+    if (!embedding?.length || !this.embeddingReady || cardIds.length === 0) {
+      return new Map();
+    }
+    const vec = `[${embedding.join(",")}]`;
+    try {
+      const rows: Array<{ id: string; similarity: string }> =
+        await this.cardRepository.query(
+          `SELECT card_id AS id, 1 - (embedding <=> $1::vector) AS similarity
+           FROM card_embedding
+           WHERE card_id = ANY($2)`,
+          [vec, cardIds],
+        );
+      return new Map(rows.map((r) => [r.id, Number(r.similarity)]));
+    } catch (error) {
+      this.logger.warn(`Similarités visuelles KO: ${(error as Error).message}`);
+      return new Map();
+    }
+  }
+
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
     if (!search) return [];
     const qb = this.cardRepository

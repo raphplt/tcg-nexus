@@ -36,11 +36,11 @@ const TEXT_ROI_KEYS = new Set(["name", "number", "number_right"]);
 const VISUAL_TOP_K = 6;
 const VISUAL_MIN_GOOD = 12;
 
-// recherche visuelle par embedding (CLIP/pgvector), similarités cosine 0..1
 const EMB_TOP_K = 10;
-const EMB_AGREE = 0.7; // texte n°1 confirmé par le visuel -> high
-const EMB_STRONG = 0.82; // sauvetage : visuel seul assez net pour trancher
-const EMB_MARGIN = 0.03; // ...et nettement devant le 2e
+const EMB_FLOOR = 0.5; // en dessous, le visuel est trop incertain pour trancher
+const EMB_REL_MARGIN = 0.06; // écart mini pour qu'un candidat devance les autres
+const EMB_RESCUE = 0.6;
+const EMB_RESCUE_MARGIN = 0.05;
 
 const LEGACY_R2_HOST = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
 
@@ -267,7 +267,9 @@ export class ScanService {
     };
   }
 
-  // fusion texte + recherche visuelle par embedding (plein-catalogue).
+  // fusion texte + visuel. Stratégie : départager EN RELATIF les candidats du
+  // texte par leurs embeddings (cas fiable), et ne recourir à l'ANN plein-
+  // catalogue qu'en sauvetage quand le texte n'a rien sorti.
   private async fuseWithVisual(
     embedding: number[],
     textCandidates: ScanCardCandidate[],
@@ -282,54 +284,92 @@ export class ScanService {
     const keep = { candidates: textCandidates, ...base, usedVisual: false };
     if (base.confidenceLevel === "high") return keep;
 
-    const hits = await this.cardService.findByEmbedding(
-      embedding,
-      game,
-      EMB_TOP_K,
-    );
-    if (hits.length === 0) return keep;
-
-    const best = hits[0];
-    const second = hits[1]?.similarity ?? 0;
-
-    // 1) le candidat texte n°1 est confirmé par le visuel -> on valide
-    const textTop = textCandidates[0];
-    const agree = hits.find((h) => h.card.id === textTop?.id);
-    if (textTop && agree && agree.similarity >= EMB_AGREE) {
-      return { ...keep, confidence: 0.95, confidenceLevel: "high", usedVisual: true };
+    // texte muet -> sauvetage plein-catalogue (full-art où l'OCR échoue)
+    if (textCandidates.length === 0) {
+      return this.visualRescue(embedding, game);
     }
 
-    // 2) sauvetage : texte faible mais visuel net et unique (full-art, holo…)
-    if (best.similarity >= EMB_STRONG && best.similarity - second >= EMB_MARGIN) {
-      const winner = toCandidate(best.card, best.similarity);
+    // départage restreint : similarité du visuel contre chaque candidat texte
+    const sims = await this.cardService.embeddingSimilarities(
+      embedding,
+      textCandidates.map((c) => c.id),
+    );
+    if (sims.size === 0) return keep;
+
+    const ranked = textCandidates
+      .map((c) => ({ c, sim: sims.get(c.id) ?? 0 }))
+      .sort((a, b) => b.sim - a.sim);
+    const top = ranked[0];
+    const secondSim = ranked[1]?.sim ?? 0;
+    if (top.sim < EMB_FLOOR) return keep;
+
+    // le visuel confirme le n°1 du texte -> on valide
+    if (top.c.id === textCandidates[0].id) {
       return {
-        candidates: [winner, ...textCandidates.filter((c) => c.id !== winner.id)],
-        confidence: 0.92,
+        ...keep,
+        confidence: 0.95,
         confidenceLevel: "high",
         usedVisual: true,
       };
     }
 
-    // 3) sinon on enrichit la liste de candidats visuels (à confirmer)
-    const merged = this.mergeVisual(textCandidates, hits);
-    return { candidates: merged, ...computeConfidence(merged), usedVisual: true };
+    // le visuel préfère nettement un autre candidat -> on le promeut
+    if (top.sim - secondSim >= EMB_REL_MARGIN) {
+      return {
+        candidates: [top.c, ...textCandidates.filter((c) => c.id !== top.c.id)],
+        confidence: 0.9,
+        confidenceLevel: "high",
+        usedVisual: true,
+      };
+    }
+
+    return keep;
   }
 
-  // fusionne candidats texte et visuels (dédupe). Les visuels-seuls sont bornés
-  // sous le seuil high : ils restent des suggestions à confirmer.
-  private mergeVisual(
-    text: ScanCardCandidate[],
-    hits: Array<{ card: Card; similarity: number }>,
-  ): ScanCardCandidate[] {
-    const byId = new Map(text.map((c) => [c.id, c]));
-    for (const h of hits) {
-      if (!byId.has(h.card.id)) {
-        byId.set(h.card.id, toCandidate(h.card, Number((h.similarity * 0.6).toFixed(3))));
-      }
+  // sauvetage : aucun candidat texte, on tente l'ANN plein-catalogue. Exigeant
+  // (similarité haute ET nettement unique) car non contraint par le texte.
+  private async visualRescue(
+    embedding: number[],
+    game?: CardGame,
+  ): Promise<{
+    candidates: ScanCardCandidate[];
+    confidence: number;
+    confidenceLevel: ScanConfidenceLevel;
+    usedVisual: boolean;
+  }> {
+    const empty = {
+      candidates: [] as ScanCardCandidate[],
+      confidence: 0,
+      confidenceLevel: "low" as ScanConfidenceLevel,
+      usedVisual: false,
+    };
+    const hits = await this.cardService.findByEmbedding(
+      embedding,
+      game,
+      EMB_TOP_K,
+    );
+    if (hits.length === 0) return empty;
+
+    const best = hits[0];
+    const second = hits[1]?.similarity ?? 0;
+    const candidates = hits.map((h) =>
+      toCandidate(h.card, Number(h.similarity.toFixed(3))),
+    );
+
+    // visuel net et unique -> proposition medium (à confirmer, texte absent)
+    if (
+      best.similarity >= EMB_RESCUE &&
+      best.similarity - second >= EMB_RESCUE_MARGIN
+    ) {
+      return {
+        candidates,
+        confidence: Number(best.similarity.toFixed(3)),
+        confidenceLevel: "medium",
+        usedVisual: true,
+      };
     }
-    return [...byId.values()]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_CANDIDATES);
+
+    return { ...empty, candidates, usedVisual: true };
   }
 
   // sans service vision, on reconstruit deux ROI à partir du texte parsé
