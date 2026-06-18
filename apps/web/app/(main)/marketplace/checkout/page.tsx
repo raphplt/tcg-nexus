@@ -69,12 +69,16 @@ export default function CheckoutPage() {
                 {cart.cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4">
                     {(() => {
-                      const isSealed = item.listing.productKind === "sealed" || !!item.listing.sealedProduct;
+                      const isSealed =
+                        item.listing.productKind === "sealed" ||
+                        !!item.listing.sealedProduct;
                       const imageUrl = isSealed
-                        ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                        ? getSealedImageUrl(item.listing.sealedProduct) ||
+                          "/images/sealed-default.png"
                         : getCardImage(item.listing.pokemonCard);
                       const productName = isSealed
-                        ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
+                        ? getSealedName(item.listing.sealedProduct) ||
+                          "Produit scellé"
                         : item.listing.pokemonCard?.name;
                       const productSub = isSealed
                         ? item.listing.sealedCondition || "Neuf"

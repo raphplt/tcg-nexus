@@ -58,9 +58,7 @@ export const getPasswordStrengthLabel = (password: string): string => {
   return "fort";
 };
 
-export const validateLoginForm = (
-  values: LoginFormValues,
-): AuthFieldErrors => {
+export const validateLoginForm = (values: LoginFormValues): AuthFieldErrors => {
   const errors: AuthFieldErrors = {};
 
   if (!values.email.trim()) {

@@ -41,7 +41,9 @@ describe("PlayerController", () => {
   it("getTournamentHistory delegates to PlayerService.getTournamentHistory", async () => {
     const result = { history: [], stats: {} };
     (service.getTournamentHistory as any).mockResolvedValue(result);
-    await expect(controller.getTournamentHistory("5", "all")).resolves.toEqual(result);
+    await expect(controller.getTournamentHistory("5", "all")).resolves.toEqual(
+      result,
+    );
     expect(service.getTournamentHistory).toHaveBeenCalledWith(5, "all");
   });
 });

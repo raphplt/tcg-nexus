@@ -21,9 +21,7 @@ import { SupportTicket } from "@/types/support-ticket";
 import { PaginatedResult } from "@/types/pagination";
 
 export default function SupportPage() {
-  const [data, setData] = useState<PaginatedResult<SupportTicket> | null>(
-    null,
-  );
+  const [data, setData] = useState<PaginatedResult<SupportTicket> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
 

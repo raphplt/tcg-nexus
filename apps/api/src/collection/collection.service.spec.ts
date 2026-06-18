@@ -4,6 +4,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
 import { CardState } from "../card-state/entities/card-state.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
 
@@ -29,6 +30,11 @@ describe("CollectionService", () => {
   };
 
   const mockCardStateRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+  };
+
+  const mockPokemonSetRepo = {
     findOne: jest.fn(),
     find: jest.fn(),
   };
@@ -70,6 +76,10 @@ describe("CollectionService", () => {
         {
           provide: getRepositoryToken(CardState),
           useValue: mockCardStateRepo,
+        },
+        {
+          provide: getRepositoryToken(PokemonSet),
+          useValue: mockPokemonSetRepo,
         },
       ],
     }).compile();

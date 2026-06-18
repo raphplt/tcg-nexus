@@ -136,11 +136,13 @@ describe("CartDropdown", () => {
     // Use formatPrice from the store to get the exact formatted value
     const expectedTotal = currencyStore.formatPrice(totalValue, Currency.EUR);
     // Find the total in the price display span (text-lg font-bold)
-    expect(screen.getByText((content) => {
-      const normalizedContent = content.replace(/\s+/g, " ");
-      const normalizedExpected = expectedTotal.replace(/\s+/g, " ");
-      return normalizedContent.includes(normalizedExpected);
-    })).toBeInTheDocument();
+    expect(
+      screen.getByText((content) => {
+        const normalizedContent = content.replace(/\s+/g, " ");
+        const normalizedExpected = expectedTotal.replace(/\s+/g, " ");
+        return normalizedContent.includes(normalizedExpected);
+      }),
+    ).toBeInTheDocument();
   });
 
   it("supprime un item et met à jour l'affichage", async () => {

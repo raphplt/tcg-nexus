@@ -67,6 +67,10 @@ export async function bootstrap() {
 
     const port = process.env.PORT ?? 3001;
 
+    const server = app.getHttpServer();
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 70000;
+
     await app.listen(port, "0.0.0.0").then(() => {
       // console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`🚀 Server running on http://0.0.0.0:${port}`);

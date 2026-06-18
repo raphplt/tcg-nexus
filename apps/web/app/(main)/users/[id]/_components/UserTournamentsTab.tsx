@@ -1,4 +1,3 @@
-// apps/web/app/(main)/users/[id]/_components/UserTournamentsTab.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

@@ -84,6 +84,10 @@ export class CollectionController {
     @Query("search") search?: string,
     @Query("sortBy") sortBy?: string,
     @Query("sortOrder") sortOrder?: "ASC" | "DESC",
+    @Query("setId") setId?: string,
+    @Query("serieId") serieId?: string,
+    @Query("rarity") rarity?: string,
+    @Query("cardState") cardState?: string,
   ) {
     const pageNumber = page ? parseInt(page, 10) : 1;
     const limitNumber = limit ? parseInt(limit, 10) : 10;
@@ -94,7 +98,25 @@ export class CollectionController {
       search,
       sortBy,
       sortOrder,
+      setId,
+      serieId,
+      rarity,
+      cardState,
     );
+  }
+
+  @Get(":id/rarities")
+  @Public()
+  @ApiOperation({
+    summary: "Récupérer les raretés distinctes d'un Master Set",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Liste des raretés",
+  })
+  @ApiResponse({ status: 404, description: "Collection non trouvée" })
+  async getSetRarities(@Param("id") id: string): Promise<string[]> {
+    return this.collectionService.getSetRarities(id);
   }
 
   @Get(":id")
@@ -133,7 +155,28 @@ export class CollectionController {
     @Body("pokemonCardId") pokemonCardId: string,
     @CurrentUser() user: User,
   ) {
-    return this.collectionService.addCardToCollection(id, pokemonCardId, user.id);
+    return this.collectionService.addCardToCollection(
+      id,
+      pokemonCardId,
+      user.id,
+    );
+  }
+
+  @Post(":id/items/remove")
+  @ApiOperation({
+    summary: "Retirer ou décrémenter une carte d'une collection",
+  })
+  @ApiResponse({ status: 200, description: "Carte décrémentée ou retirée" })
+  async removeItemByCardId(
+    @Param("id") id: string,
+    @Body("pokemonCardId") pokemonCardId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.collectionService.removeCardFromCollection(
+      id,
+      pokemonCardId,
+      user.id,
+    );
   }
 
   @Delete(":id/items/:itemId")
@@ -144,7 +187,11 @@ export class CollectionController {
     @Param("itemId") itemId: string,
     @CurrentUser() user: User,
   ): Promise<{ message: string }> {
-    await this.collectionService.removeCollectionItem(id, Number(itemId), user.id);
+    await this.collectionService.removeCollectionItem(
+      id,
+      Number(itemId),
+      user.id,
+    );
     return { message: "Item supprime avec succes" };
   }
 

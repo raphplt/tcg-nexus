@@ -1,32 +1,28 @@
 import { useEffect, useMemo, useRef } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors } from "@/constants/theme";
 import { useToastStore } from "@/store/useToastStore";
 
-const COLORS = {
+const VARIANTS = {
   error: {
-    background: "#7a1f1f",
-    border: "#d96b5f",
+    background: colors.destructive,
+    label: "Erreur",
   },
   info: {
-    background: "#18324a",
-    border: "#5e98d1",
+    background: colors.secondary,
+    label: "Info",
   },
   success: {
-    background: "#184a38",
-    border: "#66c39a",
+    background: colors.success,
+    label: "Succès",
   },
 } as const;
 
 export function ApiErrorSnackbar() {
   const insets = useSafeAreaInsets();
-  const { duration, hideToast, id, message, variant, visible } = useToastStore();
+  const { duration, hideToast, id, message, variant, visible } =
+    useToastStore();
 
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-24)).current;
@@ -74,7 +70,7 @@ export function ApiErrorSnackbar() {
     };
   }, [duration, hideToast, id, opacity, translateY, visible]);
 
-  const palette = useMemo(() => COLORS[variant], [variant]);
+  const palette = useMemo(() => VARIANTS[variant], [variant]);
 
   if (!message) {
     return null;
@@ -100,11 +96,10 @@ export function ApiErrorSnackbar() {
             styles.snackbar,
             {
               backgroundColor: palette.background,
-              borderColor: palette.border,
             },
           ]}
         >
-          <Text style={styles.label}>API</Text>
+          <Text style={styles.label}>{palette.label}</Text>
           <Text style={styles.message}>{message}</Text>
         </Pressable>
       </Animated.View>
@@ -114,20 +109,19 @@ export function ApiErrorSnackbar() {
 
 const styles = StyleSheet.create({
   label: {
-    color: "#f9dbc8",
+    color: "rgba(255,255,255,0.85)",
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 1.5,
     marginBottom: 6,
   },
   message: {
-    color: "#fff7f2",
+    color: "#ffffff",
     fontSize: 14,
     lineHeight: 20,
   },
   snackbar: {
-    borderRadius: 18,
-    borderWidth: 1,
+    borderRadius: 12,
     marginHorizontal: 16,
     maxWidth: 540,
     paddingHorizontal: 16,

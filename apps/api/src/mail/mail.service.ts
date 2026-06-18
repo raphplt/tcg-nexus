@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { Injectable, Logger } from "@nestjs/common";
+import { MailerService } from "@nestjs-modules/mailer";
 
 @Injectable()
 export class MailService {
@@ -12,12 +12,14 @@ export class MailService {
       await this.mailerService.sendMail({
         to,
         subject: `[TCG Nexus] Ticket #${ticketId} créé : ${subject}`,
-        template: 'ticket-created',
+        template: "ticket-created",
         context: { ticketId, subject },
       });
       this.logger.log(`Email ticket-created envoyé à ${to}`);
     } catch (error) {
-      this.logger.warn(`Failed to send ticket-created email to ${to}: ${error}`);
+      this.logger.warn(
+        `Failed to send ticket-created email to ${to}: ${error}`,
+      );
     }
   }
 
@@ -32,7 +34,7 @@ export class MailService {
       await this.mailerService.sendMail({
         to,
         subject: `[TCG Nexus] Nouvelle réponse sur le ticket #${ticketId} : ${ticketSubject}`,
-        template: 'ticket-reply',
+        template: "ticket-reply",
         context: { ticketId, ticketSubject, senderName, messagePreview },
       });
       this.logger.log(`Email ticket-reply envoyé à ${to}`);

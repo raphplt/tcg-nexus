@@ -726,7 +726,10 @@ describe("DeckService", () => {
     it("queries decks by user id and isPublic = true", async () => {
       const fake = [{ id: 1, name: "D" }];
       deckRepo.findAndCount.mockResolvedValue([fake, 1]);
-      const result = await service.findPublicDecksByUser(7, { page: 1, limit: 20 });
+      const result = await service.findPublicDecksByUser(7, {
+        page: 1,
+        limit: 20,
+      });
       expect(result.items).toEqual(fake);
       expect(result.total).toBe(1);
       expect(deckRepo.findAndCount).toHaveBeenCalledWith(

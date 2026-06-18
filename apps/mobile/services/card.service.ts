@@ -1,5 +1,9 @@
+import type {
+  CardSearchResult,
+  PokemonSerieType,
+  PokemonSetType,
+} from "@/types";
 import { api } from "./api";
-import type { CardSearchResult } from "@/types";
 
 const searchCache = new Map<string, CardSearchResult[]>();
 
@@ -36,9 +40,11 @@ export const cardService = {
    * Utilisée par la recherche manuelle dans l'UI de review.
    */
   async searchCards(search: string): Promise<CardSearchResult[]> {
+    console.log("card service searchCards : ", search);
     const query = search.trim();
-    if (!query) return [];
-
+    if (!query) {
+      return [];
+    }
     const cacheKey = normalize(query);
     const cached = searchCache.get(cacheKey);
     if (cached) return cached;
@@ -48,7 +54,18 @@ export const cardService = {
     );
 
     const cards = dedupeCards(response.data || []);
+    console.log("card service dedupeCards : ", cards);
     searchCache.set(cacheKey, cards);
     return cards;
+  },
+
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data || [];
+  },
+
+  async getAllSets(): Promise<PokemonSetType[]> {
+    const response = await api.get<PokemonSetType[]>("/pokemon-set");
+    return response.data || [];
   },
 };
