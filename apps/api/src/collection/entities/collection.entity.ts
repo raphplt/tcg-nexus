@@ -38,10 +38,11 @@ export class Collection {
   @UpdateDateColumn({ type: "timestamp" })
   updated_at: Date;
 
-  @ManyToOne(
-    () => PokemonSet,
-    { nullable: true, eager: false, onDelete: "SET NULL" },
-  )
+  @ManyToOne(() => PokemonSet, {
+    nullable: true,
+    eager: false,
+    onDelete: "SET NULL",
+  })
   masterSet?: PokemonSet;
 
   @OneToMany(

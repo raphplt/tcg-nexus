@@ -97,7 +97,9 @@ export function NotificationBell() {
         router.push(`/play/casual/${n.data.casualSessionId}`);
         setIsOpen(false);
       } else if (n.data.matchId && n.data.tournamentId) {
-        router.push(`/tournaments/${n.data.tournamentId}/matches/${n.data.matchId}`);
+        router.push(
+          `/tournaments/${n.data.tournamentId}/matches/${n.data.matchId}`,
+        );
         setIsOpen(false);
       } else if (n.data.tournamentId) {
         router.push(`/tournaments/${n.data.tournamentId}`);
@@ -138,7 +140,10 @@ export function NotificationBell() {
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm">Notifications</h3>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="px-1.5 py-0 text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <Badge
+                variant="secondary"
+                className="px-1.5 py-0 text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20"
+              >
                 {unreadCount} nouvelle{unreadCount > 1 ? "s" : ""}
               </Badge>
             )}
@@ -168,14 +173,22 @@ export function NotificationBell() {
                 <Bell className="h-6 w-6 text-muted-foreground/60" />
               </div>
               <div className="space-y-1">
-                <p className="font-medium text-sm text-foreground">Aucune notification</p>
-                <p className="text-xs text-muted-foreground">Vous êtes à jour ! Toutes les alertes s'afficheront ici.</p>
+                <p className="font-medium text-sm text-foreground">
+                  Aucune notification
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Vous êtes à jour ! Toutes les alertes s'afficheront ici.
+                </p>
               </div>
             </div>
           ) : (
             <div className="divide-y divide-border/40">
               {notifications.map((n) => {
-                const hasAction = n.data && (n.data.casualSessionId || n.data.matchId || n.data.tournamentId);
+                const hasAction =
+                  n.data &&
+                  (n.data.casualSessionId ||
+                    n.data.matchId ||
+                    n.data.tournamentId);
 
                 return (
                   <div
@@ -194,7 +207,9 @@ export function NotificationBell() {
                     </div>
                     <div className="flex-1 space-y-1 pr-6">
                       <div className="flex items-center justify-between">
-                        <p className={`text-xs font-semibold leading-none ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}>
+                        <p
+                          className={`text-xs font-semibold leading-none ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}
+                        >
                           {n.title}
                         </p>
                         <span className="text-[10px] text-muted-foreground select-none shrink-0">
@@ -213,7 +228,9 @@ export function NotificationBell() {
                             size="sm"
                             className="h-6 px-2 text-[10px] font-medium bg-accent/60 hover:bg-accent rounded-md gap-1"
                           >
-                            {n.data?.casualSessionId ? "Rejoindre la partie" : "Accéder au match"}
+                            {n.data?.casualSessionId
+                              ? "Rejoindre la partie"
+                              : "Accéder au match"}
                             <ExternalLink className="h-2.5 w-2.5" />
                           </Button>
                         </div>

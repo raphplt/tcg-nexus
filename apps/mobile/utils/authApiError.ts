@@ -18,7 +18,9 @@ export const mapAuthApiError = (
   }
 
   const status = error.response?.status;
-  const rawMessage = String(error.response?.data?.message || error.message || "");
+  const rawMessage = String(
+    error.response?.data?.message || error.message || "",
+  );
   const message = rawMessage.toLowerCase();
 
   if (status === 429) {
@@ -40,7 +42,10 @@ export const mapAuthApiError = (
   }
 
   if (mode === "register") {
-    if (status === 409 && includesOneOf(message, ["email", "already", "exists"])) {
+    if (
+      status === 409 &&
+      includesOneOf(message, ["email", "already", "exists"])
+    ) {
       return {
         email: "Cet email est deja utilise.",
       };
@@ -55,7 +60,10 @@ export const mapAuthApiError = (
       };
     }
 
-    if (status === 400 && includesOneOf(message, ["passwords do not match", "match"])) {
+    if (
+      status === 400 &&
+      includesOneOf(message, ["passwords do not match", "match"])
+    ) {
       return {
         confirmPassword: "Les mots de passe ne correspondent pas.",
       };

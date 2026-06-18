@@ -56,41 +56,52 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
   if (!card) return null;
 
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      visible={isVisible}
-    >
+    <Modal animationType="slide" onRequestClose={onClose} visible={isVisible}>
       <SafeAreaView style={styles.modalSafeArea}>
         <ScrollView contentContainerStyle={styles.modalContent}>
           <Pressable
             onPress={onClose}
-            style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
+            style={({ pressed }) => [
+              styles.modalClose,
+              pressed && styles.modalClosePressed,
+            ]}
           >
             <Ionicons color="#0b0b0b" name="close" size={22} />
           </Pressable>
 
-          <Image source={{ uri: getCardImage(card.image, "low") }} style={styles.modalImage} />
+          <Image
+            source={{ uri: getCardImage(card.image, "low") }}
+            style={styles.modalImage}
+          />
 
           <Text style={styles.modalTitle}>{card.name || "Carte"}</Text>
           <Text style={styles.modalMeta}>
-            {card.set?.name || "Set inconnu"} • {card.rarity || "Rareté inconnue"}
+            {card.set?.name || "Set inconnu"} •{" "}
+            {card.rarity || "Rareté inconnue"}
           </Text>
 
           <Text style={styles.modalSectionTitle}>Informations</Text>
-          <Text style={styles.modalText}>HP: {card.pokemonDetails?.hp || "-"}</Text>
-          
+          <Text style={styles.modalText}>
+            HP: {card.pokemonDetails?.hp || "-"}
+          </Text>
+
           <View style={styles.infoRow}>
             <Text style={[styles.modalText, { marginTop: 0 }]}>Types: </Text>
-            {card.pokemonDetails?.types && card.pokemonDetails.types.length > 0 ? (
+            {card.pokemonDetails?.types &&
+            card.pokemonDetails.types.length > 0 ? (
               <View style={styles.typesContainer}>
                 {card.pokemonDetails.types.map((type, i) => {
                   const key = type.toLowerCase().replace(/ /g, "_");
-                  const imageName = energyToImageName[key] || energyToImageName[type.toLowerCase()] || "Type-Incolore-JCC.png";
+                  const imageName =
+                    energyToImageName[key] ||
+                    energyToImageName[type.toLowerCase()] ||
+                    "Type-Incolore-JCC.png";
                   return (
                     <Image
                       key={i}
-                      source={{ uri: `https://tcg-nexus.org/images/types/${imageName}` }}
+                      source={{
+                        uri: `https://tcg-nexus.org/images/types/${imageName}`,
+                      }}
                       style={styles.energyIcon}
                     />
                   );
@@ -101,9 +112,12 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
             )}
           </View>
 
-          <Text style={styles.modalText}>Stage: {card.pokemonDetails?.stage || "-"}</Text>
           <Text style={styles.modalText}>
-            {card.pokemonDetails?.description || "Aucune description disponible."}
+            Stage: {card.pokemonDetails?.stage || "-"}
+          </Text>
+          <Text style={styles.modalText}>
+            {card.pokemonDetails?.description ||
+              "Aucune description disponible."}
           </Text>
 
           <Text style={styles.modalSectionTitle}>Attaques</Text>
@@ -119,11 +133,16 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
                     <View style={styles.attackCostContainer}>
                       {attack.cost.map((energy, i) => {
                         const key = energy.toLowerCase().replace(/ /g, "_");
-                        const imageName = energyToImageName[key] || energyToImageName[energy.toLowerCase()] || "Type-Incolore-JCC.png";
+                        const imageName =
+                          energyToImageName[key] ||
+                          energyToImageName[energy.toLowerCase()] ||
+                          "Type-Incolore-JCC.png";
                         return (
                           <Image
                             key={i}
-                            source={{ uri: `https://tcg-nexus.org/images/types/${imageName}` }}
+                            source={{
+                              uri: `https://tcg-nexus.org/images/types/${imageName}`,
+                            }}
                             style={styles.energyIcon}
                           />
                         );
@@ -131,11 +150,15 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
                     </View>
                   )}
                 </View>
-                <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
+                <Text style={styles.attackText}>
+                  {attack.effect || "Sans effet texte."}
+                </Text>
               </View>
             ))
           ) : (
-            <Text style={styles.modalText}>Aucune attaque détaillée disponible.</Text>
+            <Text style={styles.modalText}>
+              Aucune attaque détaillée disponible.
+            </Text>
           )}
         </ScrollView>
       </SafeAreaView>

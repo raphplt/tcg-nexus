@@ -1,0 +1,70 @@
+name: Mirror to Etna GitLab (volet-168h)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: mirror-volet-168h
+  cancel-in-progress: false
+
+env:
+  GITLAB_HOST_PATH: rendu-git.etna-alternance.net/module-10344/activity-55520/group-1076867.git
+  PREFIX: 168h/volet-168h
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tcg-nexus (historique complet)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurer git (identite du bot de sync)
+        run: |
+          git config --global user.name  "tcg-nexus mirror bot"
+          git config --global user.email "ci@tcg-nexus.org"
+
+      - name: Cloner le monorepo GitLab Etna
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_168H_TOKEN }}
+          GITLAB_REPO_OVERRIDE: ${{ vars.GITLAB_REPO }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GITLAB_TOKEN:-}" ]; then
+            echo "::error::Secret GITLAB_168H_TOKEN manquant. Voir MIRROR-GITLAB.md."
+            exit 1
+          fi
+          REPO_PATH="${GITLAB_REPO_OVERRIDE:-$GITLAB_HOST_PATH}"
+          # oauth2:<token> fonctionne pour un Personal/Project Access Token GitLab.
+          git clone "https://oauth2:${GITLAB_TOKEN}@${REPO_PATH}" gitlab-repo
+
+      - name: Synchroniser tcg-nexus -> volet-168h (subtree)
+        run: |
+          set -euo pipefail
+          SRC="$GITHUB_WORKSPACE"
+          cd gitlab-repo
+          git config user.name  "tcg-nexus mirror bot"
+          git config user.email "ci@tcg-nexus.org"
+
+          if git log --grep="git-subtree-dir: ${PREFIX}$" --oneline | grep -q .; then
+            echo ">> Subtree deja present : git subtree pull"
+            git subtree pull --prefix="$PREFIX" "$SRC" main \
+              -m "sync(168h): mise a jour de volet-168h depuis tcg-nexus@main"
+          else
+            echo ">> Premier run : git subtree add"
+            if [ -e "$PREFIX" ]; then
+              git rm -r --quiet "$PREFIX"
+              git commit -m "chore(168h): retrait du placeholder avant import subtree"
+            fi
+            git subtree add --prefix="$PREFIX" "$SRC" main \
+              -m "feat(168h): import de tcg-nexus dans volet-168h (subtree)"
+          fi
+
+      - name: Pousser vers GitLab
+        run: |
+          set -euo pipefail
+          cd gitlab-repo
+          git push origin HEAD:main

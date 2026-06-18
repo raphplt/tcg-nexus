@@ -8,7 +8,8 @@ import { Platform } from "react-native";
 import { toast } from "@/store/useToastStore";
 import { getApiErrorMessage } from "@/utils/apiError";
 
-export interface AppAxiosRequestConfig<D = unknown> extends AxiosRequestConfig<D> {
+export interface AppAxiosRequestConfig<D = unknown>
+  extends AxiosRequestConfig<D> {
   _retry?: boolean;
   skipAuth?: boolean;
   skipErrorToast?: boolean;
@@ -32,9 +33,7 @@ const extraApiUrl =
     : "";
 
 const configApiUrl =
-  extraApiUrl && extraApiUrl !== "http://localhost:3001/api"
-    ? extraApiUrl
-    : "";
+  extraApiUrl && extraApiUrl !== "http://localhost:3001/api" ? extraApiUrl : "";
 
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL?.trim() || configApiUrl || getDefaultApiUrl();

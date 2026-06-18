@@ -87,17 +87,26 @@ export default function RegisterScreen() {
             autoCapitalize="none"
             onChangeText={(value) => {
               setPseudo(value);
-              setErrors((prev) => ({ ...prev, pseudo: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                pseudo: undefined,
+                form: undefined,
+              }));
             }}
             onFocus={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 60 });
             }}
             placeholder="tcg_player"
             placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, errors.pseudo ? styles.inputError : undefined]}
+            style={[
+              styles.input,
+              errors.pseudo ? styles.inputError : undefined,
+            ]}
             value={pseudo}
           />
-          {errors.pseudo ? <Text style={styles.errorText}>{errors.pseudo}</Text> : null}
+          {errors.pseudo ? (
+            <Text style={styles.errorText}>{errors.pseudo}</Text>
+          ) : null}
 
           <Text style={styles.label}>Adresse email</Text>
           <TextInput
@@ -106,7 +115,11 @@ export default function RegisterScreen() {
             keyboardType="email-address"
             onChangeText={(value) => {
               setEmail(value);
-              setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                email: undefined,
+                form: undefined,
+              }));
             }}
             onFocus={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 120 });
@@ -116,14 +129,20 @@ export default function RegisterScreen() {
             style={[styles.input, errors.email ? styles.inputError : undefined]}
             value={email}
           />
-          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          {errors.email ? (
+            <Text style={styles.errorText}>{errors.email}</Text>
+          ) : null}
 
           <Text style={styles.label}>Mot de passe</Text>
           <TextInput
             autoCapitalize="none"
             onChangeText={(value) => {
               setPassword(value);
-              setErrors((prev) => ({ ...prev, password: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                password: undefined,
+                form: undefined,
+              }));
             }}
             onFocus={() => {
               scrollRef.current?.scrollTo({ animated: true, y: 190 });
@@ -131,7 +150,10 @@ export default function RegisterScreen() {
             placeholder="Choisissez un mot de passe"
             placeholderTextColor={colors.mutedForeground}
             secureTextEntry
-            style={[styles.input, errors.password ? styles.inputError : undefined]}
+            style={[
+              styles.input,
+              errors.password ? styles.inputError : undefined,
+            ]}
             value={password}
           />
           <Text style={styles.metaText}>Force: {passwordStrength}</Text>
@@ -156,7 +178,10 @@ export default function RegisterScreen() {
             placeholder="Confirmez le mot de passe"
             placeholderTextColor={colors.mutedForeground}
             secureTextEntry
-            style={[styles.input, errors.confirmPassword ? styles.inputError : undefined]}
+            style={[
+              styles.input,
+              errors.confirmPassword ? styles.inputError : undefined,
+            ]}
             value={confirmPassword}
           />
           {errors.confirmPassword ? (
@@ -177,7 +202,9 @@ export default function RegisterScreen() {
             />
           </View>
 
-          {errors.form ? <Text style={styles.formErrorText}>{errors.form}</Text> : null}
+          {errors.form ? (
+            <Text style={styles.formErrorText}>{errors.form}</Text>
+          ) : null}
 
           <Pressable
             disabled={isLoading}

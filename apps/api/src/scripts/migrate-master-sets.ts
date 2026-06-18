@@ -6,17 +6,27 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
 async function bootstrap() {
-  console.log("🔄 Migration: rattacher les anciens Master Sets au PokemonSet correspondant...");
+  console.log(
+    "🔄 Migration: rattacher les anciens Master Sets au PokemonSet correspondant...",
+  );
 
   const app = await NestFactory.createApplicationContext(AppModule);
-  const collectionRepo = app.get<Repository<Collection>>(getRepositoryToken(Collection));
-  const setRepo = app.get<Repository<PokemonSet>>(getRepositoryToken(PokemonSet));
+  const collectionRepo = app.get<Repository<Collection>>(
+    getRepositoryToken(Collection),
+  );
+  const setRepo = app.get<Repository<PokemonSet>>(
+    getRepositoryToken(PokemonSet),
+  );
 
   try {
     // Trouver le PokemonSet "Étincelles Déferlantes"
-    const ev08 = await setRepo.findOne({ where: { name: "Étincelles Déferlantes" } });
+    const ev08 = await setRepo.findOne({
+      where: { name: "Étincelles Déferlantes" },
+    });
     if (!ev08) {
-      console.log("⚠️ PokemonSet 'Étincelles Déferlantes' non trouvé en base. Rien à migrer.");
+      console.log(
+        "⚠️ PokemonSet 'Étincelles Déferlantes' non trouvé en base. Rien à migrer.",
+      );
       await app.close();
       return;
     }
@@ -42,7 +52,9 @@ async function bootstrap() {
       collection.name = `Master Set — ${ev08.name}`;
       collection.description = `Master Set pour l'extension ${ev08.name}`;
       await collectionRepo.save(collection);
-      console.log(`  ✅ Collection #${collection.id} migrée → Master Set ${ev08.name}`);
+      console.log(
+        `  ✅ Collection #${collection.id} migrée → Master Set ${ev08.name}`,
+      );
     }
 
     console.log("🎉 Migration terminée avec succès !");

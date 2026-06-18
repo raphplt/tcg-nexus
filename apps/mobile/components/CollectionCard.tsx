@@ -10,7 +10,8 @@ interface CollectionCardProps {
 }
 
 const resolveCoverImage = (collection: UserCollection): string | undefined => {
-  const cover = collection.items?.find((item) => item.pokemonCard?.image)?.pokemonCard?.image;
+  const cover = collection.items?.find((item) => item.pokemonCard?.image)
+    ?.pokemonCard?.image;
   if (!cover) {
     return undefined;
   }
@@ -28,9 +29,16 @@ const resolveCoverImage = (collection: UserCollection): string | undefined => {
 };
 
 const getTotalCards = (collection: UserCollection): number =>
-  (collection.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  (collection.items || []).reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
 
-export function CollectionCard({ collection, onDelete, onPress }: CollectionCardProps) {
+export function CollectionCard({
+  collection,
+  onDelete,
+  onPress,
+}: CollectionCardProps) {
   const coverImage = resolveCoverImage(collection);
   const totalCards = getTotalCards(collection);
 
@@ -45,7 +53,11 @@ export function CollectionCard({ collection, onDelete, onPress }: CollectionCard
           <Image source={{ uri: coverImage }} style={styles.coverImage} />
         ) : (
           <View style={styles.coverPlaceholder}>
-            <Ionicons color={colors.mutedForeground} name="albums-outline" size={28} />
+            <Ionicons
+              color={colors.mutedForeground}
+              name="albums-outline"
+              size={28}
+            />
             <Text style={styles.coverPlaceholderText}>Pas encore de carte</Text>
           </View>
         )}
@@ -72,9 +84,16 @@ export function CollectionCard({ collection, onDelete, onPress }: CollectionCard
         <Pressable
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           onPress={() => onDelete(collection)}
-          style={({ pressed }) => [styles.deleteButton, pressed && styles.deleteButtonPressed]}
+          style={({ pressed }) => [
+            styles.deleteButton,
+            pressed && styles.deleteButtonPressed,
+          ]}
         >
-          <Ionicons color={colors.destructiveForeground} name="trash-outline" size={14} />
+          <Ionicons
+            color={colors.destructiveForeground}
+            name="trash-outline"
+            size={14}
+          />
         </Pressable>
       ) : null}
     </View>

@@ -49,12 +49,15 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
 
   const filteredOptions = showSearch
     ? options.filter((opt) =>
-        opt.name.toLowerCase().includes(searchQuery.toLowerCase())
+        opt.name.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : options;
 
   const displayData = showAllOption
-    ? [{ id: "all", name: `Toutes / Tous (${title.toLowerCase()})` }, ...filteredOptions]
+    ? [
+        { id: "all", name: `Toutes / Tous (${title.toLowerCase()})` },
+        ...filteredOptions,
+      ]
     : filteredOptions;
 
   const handleSelectItem = (id: string) => {
@@ -67,7 +70,8 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   };
 
   const renderItem = ({ item }: { item: SelectionOption }) => {
-    const isSelected = item.id === "all" ? !selectedValue : selectedValue === item.id;
+    const isSelected =
+      item.id === "all" ? !selectedValue : selectedValue === item.id;
 
     return (
       <Pressable
@@ -89,11 +93,7 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
   };
 
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      visible={isVisible}
-    >
+    <Modal animationType="slide" onRequestClose={onClose} visible={isVisible}>
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>{title}</Text>
@@ -110,7 +110,12 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
 
         {showSearch && (
           <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={16} color="#777777" style={styles.searchIcon} />
+            <Ionicons
+              name="search-outline"
+              size={16}
+              color="#777777"
+              style={styles.searchIcon}
+            />
             <TextInput
               autoCapitalize="none"
               onChangeText={setSearchQuery}
@@ -120,7 +125,10 @@ export const SelectionModal: React.FC<SelectionModalProps> = ({
               value={searchQuery}
             />
             {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery("")} style={styles.clearButton}>
+              <Pressable
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
                 <Ionicons name="close-circle" size={16} color="#777777" />
               </Pressable>
             )}

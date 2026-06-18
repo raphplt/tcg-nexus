@@ -43,7 +43,6 @@ const cardStates = [
   { label: "Poor", value: "Poor" },
 ];
 
-
 const PAGE_SIZE = 24;
 
 const resolveImage = (image?: string): string | undefined => {
@@ -99,7 +98,9 @@ export default function CollectionDetailsScreen() {
     return collection?.masterSet != null;
   }, [collection?.masterSet]);
   const [items, setItems] = useState<CollectionItem[]>([]);
-  const [meta, setMeta] = useState<CollectionItemsPaginatedResponse["meta"] | null>(null);
+  const [meta, setMeta] = useState<
+    CollectionItemsPaginatedResponse["meta"] | null
+  >(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -108,20 +109,30 @@ export default function CollectionDetailsScreen() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity">(
-    "added_at",
-  );
+  const [sortBy, setSortBy] = useState<
+    "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity"
+  >("added_at");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(undefined);
-  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(undefined);
-  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(undefined);
-  const [selectedCardState, setSelectedCardState] = useState<string | undefined>(undefined);
+  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedCardState, setSelectedCardState] = useState<
+    string | undefined
+  >(undefined);
 
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [sets, setSets] = useState<PokemonSetType[]>([]);
-  const [setRarities, setSetRarities] = useState<{ id: string; name: string }[]>([]);
+  const [setRarities, setSetRarities] = useState<
+    { id: string; name: string }[]
+  >([]);
 
   const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
   const [isSetModalVisible, setIsSetModalVisible] = useState(false);
@@ -152,7 +163,9 @@ export default function CollectionDetailsScreen() {
     setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
   };
 
-  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
+    null,
+  );
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
 
@@ -175,7 +188,8 @@ export default function CollectionDetailsScreen() {
         setSets(loadedSets);
 
         if (collectionId) {
-          const rarities = await collectionService.getCollectionRarities(collectionId);
+          const rarities =
+            await collectionService.getCollectionRarities(collectionId);
           setSetRarities(rarities.map((r) => ({ id: r, name: r })));
         }
       } catch (err) {
@@ -216,17 +230,20 @@ export default function CollectionDetailsScreen() {
 
       try {
         const nextPage = loadMore ? (meta?.currentPage || 1) + 1 : 1;
-        const response = await collectionService.getCollectionItems(collectionId, {
-          limit: PAGE_SIZE,
-          page: nextPage,
-          search: debouncedSearch || undefined,
-          sortBy,
-          sortOrder,
-          setId: selectedSetId,
-          serieId: selectedSerieId,
-          rarity: selectedRarity,
-          cardState: selectedCardState,
-        });
+        const response = await collectionService.getCollectionItems(
+          collectionId,
+          {
+            limit: PAGE_SIZE,
+            page: nextPage,
+            search: debouncedSearch || undefined,
+            sortBy,
+            sortOrder,
+            setId: selectedSetId,
+            serieId: selectedSerieId,
+            rarity: selectedRarity,
+            cardState: selectedCardState,
+          },
+        );
 
         setMeta(response.meta);
         setItems((prev) =>
@@ -312,7 +329,14 @@ export default function CollectionDetailsScreen() {
       selectedRarity !== undefined ||
       selectedCardState !== undefined
     );
-  }, [isMasterSet, search, selectedSerieId, selectedSetId, selectedRarity, selectedCardState]);
+  }, [
+    isMasterSet,
+    search,
+    selectedSerieId,
+    selectedSetId,
+    selectedRarity,
+    selectedCardState,
+  ]);
 
   const handleResetFilters = () => {
     setSearch("");
@@ -341,8 +365,12 @@ export default function CollectionDetailsScreen() {
     }
 
     return {
-      byRarity: Array.from(byRarity.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
-      bySet: Array.from(bySet.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
+      byRarity: Array.from(byRarity.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3),
+      bySet: Array.from(bySet.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3),
       totalCards,
     };
   }, [items]);
@@ -374,14 +402,17 @@ export default function CollectionDetailsScreen() {
           onPress: async () => {
             setIsDeletingItemId(itemId);
             try {
-              await collectionService.deleteCollectionItem(collectionId, itemId);
+              await collectionService.deleteCollectionItem(
+                collectionId,
+                itemId,
+              );
               if (isMasterSet) {
                 setItems((prev) =>
                   prev.map((val) =>
                     val.pokemonCard?.id === item.pokemonCard?.id
                       ? { ...val, quantity: 0, id: null }
-                      : val
-                  )
+                      : val,
+                  ),
                 );
               } else {
                 setItems((prev) => prev.filter((value) => value.id !== itemId));
@@ -464,8 +495,8 @@ export default function CollectionDetailsScreen() {
           prev.map((val) =>
             val.pokemonCard?.id === item.pokemonCard?.id
               ? { ...val, quantity: 0, id: null }
-              : val
-          )
+              : val,
+          ),
         );
         try {
           await collectionService.deleteCollectionItem(collectionId, item.id);
@@ -477,8 +508,8 @@ export default function CollectionDetailsScreen() {
             prev.map((val) =>
               val.pokemonCard?.id === item.pokemonCard?.id
                 ? { ...val, quantity: 1, id: item.id }
-                : val
-            )
+                : val,
+            ),
           );
           toast.showError(getApiErrorMessage(error));
         } finally {
@@ -496,12 +527,15 @@ export default function CollectionDetailsScreen() {
       prev.map((val) =>
         val.pokemonCard?.id === item.pokemonCard?.id
           ? { ...val, quantity: currentQty - 1 }
-          : val
-      )
+          : val,
+      ),
     );
 
     try {
-      await collectionService.removeCardFromCollection(collectionId, item.pokemonCard.id);
+      await collectionService.removeCardFromCollection(
+        collectionId,
+        item.pokemonCard.id,
+      );
       toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
       void loadCollectionHeader();
     } catch (error) {
@@ -510,8 +544,8 @@ export default function CollectionDetailsScreen() {
         prev.map((val) =>
           val.pokemonCard?.id === item.pokemonCard?.id
             ? { ...val, quantity: currentQty }
-            : val
-        )
+            : val,
+        ),
       );
       toast.showError(getApiErrorMessage(error));
     }
@@ -529,18 +563,21 @@ export default function CollectionDetailsScreen() {
       prev.map((val) =>
         val.pokemonCard?.id === item.pokemonCard?.id
           ? { ...val, quantity: currentQty + 1 }
-          : val
-      )
+          : val,
+      ),
     );
 
     try {
-      const response = await collectionService.addCardToCollection(collectionId, item.pokemonCard.id);
+      const response = await collectionService.addCardToCollection(
+        collectionId,
+        item.pokemonCard.id,
+      );
       setItems((prev) =>
         prev.map((val) =>
           val.pokemonCard?.id === item.pokemonCard?.id
             ? { ...val, id: response.id, quantity: response.quantity }
-            : val
-        )
+            : val,
+        ),
       );
       toast.showSuccess(`${item.pokemonCard.name || "Carte"} ajoutée.`);
       void loadCollectionHeader();
@@ -550,8 +587,8 @@ export default function CollectionDetailsScreen() {
         prev.map((val) =>
           val.pokemonCard?.id === item.pokemonCard?.id
             ? { ...val, id: item.id, quantity: currentQty }
-            : val
-        )
+            : val,
+        ),
       );
       toast.showError(getApiErrorMessage(error));
     }
@@ -594,7 +631,9 @@ export default function CollectionDetailsScreen() {
 
           <View style={styles.cardQtyRow}>
             <Pressable
-              disabled={(item.id ? isDeletingItemId === item.id : false) || isQtyZero}
+              disabled={
+                (item.id ? isDeletingItemId === item.id : false) || isQtyZero
+              }
               onPress={() => void handleDecrementItem(item)}
               style={({ pressed }) => [
                 styles.cardQtyButton,
@@ -626,7 +665,10 @@ export default function CollectionDetailsScreen() {
       <View style={styles.topRow}>
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => [styles.navButton, pressed && styles.navButtonPressed]}
+          style={({ pressed }) => [
+            styles.navButton,
+            pressed && styles.navButtonPressed,
+          ]}
         >
           <Ionicons color="#0b0b0b" name="arrow-back" size={18} />
           <Text style={styles.navButtonText}>Retour</Text>
@@ -634,7 +676,10 @@ export default function CollectionDetailsScreen() {
 
         <Pressable
           onPress={() => router.push("/scan")}
-          style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
+          style={({ pressed }) => [
+            styles.scanButton,
+            pressed && styles.scanButtonPressed,
+          ]}
         >
           <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
@@ -645,40 +690,65 @@ export default function CollectionDetailsScreen() {
         <>
           <Pressable
             onPress={openManualAddModal}
-            style={({ pressed }) => [styles.manualAddButton, pressed && styles.manualAddButtonPressed]}
+            style={({ pressed }) => [
+              styles.manualAddButton,
+              pressed && styles.manualAddButtonPressed,
+            ]}
           >
             <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
-            <Text style={styles.manualAddButtonText}>Ajouter une carte manuellement</Text>
+            <Text style={styles.manualAddButtonText}>
+              Ajouter une carte manuellement
+            </Text>
           </Pressable>
 
           <Pressable
             onPress={handleDeleteCollection}
-            style={({ pressed }) => [styles.deleteCollectionButton, pressed && styles.deleteCollectionButtonPressed]}
+            style={({ pressed }) => [
+              styles.deleteCollectionButton,
+              pressed && styles.deleteCollectionButtonPressed,
+            ]}
           >
             <Ionicons color="#ffffff" name="trash-outline" size={16} />
-            <Text style={styles.deleteCollectionButtonText}>Supprimer cette collection</Text>
+            <Text style={styles.deleteCollectionButtonText}>
+              Supprimer cette collection
+            </Text>
           </Pressable>
         </>
       )}
 
-      <Text style={styles.collectionName}>{collection?.name || "Collection"}</Text>
+      <Text style={styles.collectionName}>
+        {collection?.name || "Collection"}
+      </Text>
       <Text style={styles.collectionDescription}>
         {collection?.description || "Gère les cartes de ta collection."}
       </Text>
 
       <View style={styles.statsCard}>
-        <Text style={styles.statsTitle}>{stats.totalCards} cartes visibles</Text>
-        <Text style={styles.statsText}>
-          Par set: {stats.bySet.map(([name, count]) => `${name} (${count})`).join(" • ") || "-"}
+        <Text style={styles.statsTitle}>
+          {stats.totalCards} cartes visibles
         </Text>
         <Text style={styles.statsText}>
-          Par rarete: {stats.byRarity.map(([name, count]) => `${name} (${count})`).join(" • ") || "-"}
+          Par set:{" "}
+          {stats.bySet
+            .map(([name, count]) => `${name} (${count})`)
+            .join(" • ") || "-"}
+        </Text>
+        <Text style={styles.statsText}>
+          Par rarete:{" "}
+          {stats.byRarity
+            .map(([name, count]) => `${name} (${count})`)
+            .join(" • ") || "-"}
         </Text>
       </View>
 
       <View style={styles.searchRow}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={16} color="#777777" style={styles.searchIcon} />
+          <Ionicons
+            name="search-outline"
+            size={16}
+            color="#777777"
+            style={styles.searchIcon}
+          />
           <TextInput
             autoCapitalize="none"
             onChangeText={setSearch}
@@ -695,7 +765,10 @@ export default function CollectionDetailsScreen() {
         </View>
         <Pressable
           onPress={() => setShowFilters(!showFilters)}
-          style={[styles.filterToggleButton, showFilters && styles.filterToggleButtonActive]}
+          style={[
+            styles.filterToggleButton,
+            showFilters && styles.filterToggleButtonActive,
+          ]}
         >
           <Ionicons
             name="options-outline"
@@ -708,7 +781,7 @@ export default function CollectionDetailsScreen() {
       {showFilters && (
         <View style={styles.filtersPanel}>
           <Text style={styles.filtersPanelTitle}>Filtres avancés</Text>
-          
+
           {isMasterSet ? (
             <View style={styles.filterFieldRow}>
               <View style={styles.filterFieldContainer}>
@@ -734,7 +807,9 @@ export default function CollectionDetailsScreen() {
                     style={styles.filterDropdown}
                   >
                     <Text numberOfLines={1} style={styles.filterDropdownText}>
-                      {selectedSerieId ? series.find((s) => s.id === selectedSerieId)?.name : "Toutes les séries"}
+                      {selectedSerieId
+                        ? series.find((s) => s.id === selectedSerieId)?.name
+                        : "Toutes les séries"}
                     </Text>
                     <Ionicons name="chevron-down" size={14} color="#777777" />
                   </Pressable>
@@ -747,7 +822,9 @@ export default function CollectionDetailsScreen() {
                     style={styles.filterDropdown}
                   >
                     <Text numberOfLines={1} style={styles.filterDropdownText}>
-                      {selectedSetId ? sets.find((s) => s.id === selectedSetId)?.name : "Toutes les extensions"}
+                      {selectedSetId
+                        ? sets.find((s) => s.id === selectedSetId)?.name
+                        : "Toutes les extensions"}
                     </Text>
                     <Ionicons name="chevron-down" size={14} color="#777777" />
                   </Pressable>
@@ -775,7 +852,11 @@ export default function CollectionDetailsScreen() {
                     style={styles.filterDropdown}
                   >
                     <Text numberOfLines={1} style={styles.filterDropdownText}>
-                      {selectedCardState ? cardStates.find((cs) => cs.value === selectedCardState)?.label : "Tous les états"}
+                      {selectedCardState
+                        ? cardStates.find(
+                            (cs) => cs.value === selectedCardState,
+                          )?.label
+                        : "Tous les états"}
                     </Text>
                     <Ionicons name="chevron-down" size={14} color="#777777" />
                   </Pressable>
@@ -787,10 +868,15 @@ export default function CollectionDetailsScreen() {
           {hasActiveFilters && (
             <Pressable
               onPress={handleResetFilters}
-              style={({ pressed }) => [styles.resetFiltersButton, pressed && styles.resetFiltersButtonPressed]}
+              style={({ pressed }) => [
+                styles.resetFiltersButton,
+                pressed && styles.resetFiltersButtonPressed,
+              ]}
             >
               <Ionicons name="refresh" size={14} color="#0b0b0b" />
-              <Text style={styles.resetFiltersText}>Réinitialiser les filtres</Text>
+              <Text style={styles.resetFiltersText}>
+                Réinitialiser les filtres
+              </Text>
             </Pressable>
           )}
         </View>
@@ -799,7 +885,9 @@ export default function CollectionDetailsScreen() {
       {!isMasterSet && (
         <View style={styles.selectRow}>
           <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
-            <Text style={styles.selectInputText}>Trier par : {getSortByLabel(sortBy)}</Text>
+            <Text style={styles.selectInputText}>
+              Trier par : {getSortByLabel(sortBy)}
+            </Text>
             <Ionicons name="chevron-down" size={14} color="#555555" />
           </Pressable>
 
@@ -828,7 +916,9 @@ export default function CollectionDetailsScreen() {
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
         data={items}
-        keyExtractor={(item) => (item.id ? String(item.id) : `card-${item.pokemonCard?.id}`)}
+        keyExtractor={(item) =>
+          item.id ? String(item.id) : `card-${item.pokemonCard?.id}`
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>
@@ -843,7 +933,10 @@ export default function CollectionDetailsScreen() {
               <View style={styles.emptyActionsRow}>
                 <Pressable
                   onPress={() => router.push("/scan")}
-                  style={({ pressed }) => [styles.emptyAction, pressed && styles.emptyActionPressed]}
+                  style={({ pressed }) => [
+                    styles.emptyAction,
+                    pressed && styles.emptyActionPressed,
+                  ]}
                 >
                   <Text style={styles.emptyActionText}>Scanner</Text>
                 </Pressable>
@@ -854,13 +947,17 @@ export default function CollectionDetailsScreen() {
                     pressed && styles.emptySecondaryActionPressed,
                   ]}
                 >
-                  <Text style={styles.emptySecondaryActionText}>Ajouter manuellement</Text>
+                  <Text style={styles.emptySecondaryActionText}>
+                    Ajouter manuellement
+                  </Text>
                 </Pressable>
               </View>
             )}
           </View>
         }
-        ListFooterComponent={isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null}
+        ListFooterComponent={
+          isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null
+        }
         ListHeaderComponent={listHeader}
         numColumns={2}
         onEndReached={() => {
@@ -893,7 +990,10 @@ export default function CollectionDetailsScreen() {
         onClose={() => setIsAddModalVisible(false)}
         collectionId={collectionId as string}
         onCardAdded={async () => {
-          await Promise.all([loadCollectionHeader(), loadItems({ refresh: true })]);
+          await Promise.all([
+            loadCollectionHeader(),
+            loadItems({ refresh: true }),
+          ]);
         }}
       />
 

@@ -28,7 +28,7 @@ interface NotificationContextType {
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
@@ -49,25 +49,28 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return new URL(API_BASE_URL, window.location.origin).toString();
   }, []);
 
-  const fetchNotifications = useCallback(async (page = 1, limit = 20) => {
-    if (!isAuthenticated) return;
-    try {
-      setLoading(true);
-      const res = await notificationService.getNotifications(page, limit);
-      setNotifications(res.data);
-      setUnreadCount(res.unreadCount);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+  const fetchNotifications = useCallback(
+    async (page = 1, limit = 20) => {
+      if (!isAuthenticated) return;
+      try {
+        setLoading(true);
+        const res = await notificationService.getNotifications(page, limit);
+        setNotifications(res.data);
+        setUnreadCount(res.unreadCount);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
 
   const markAsRead = useCallback(async (id: number) => {
     try {
       await notificationService.markAsRead(id);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
@@ -149,19 +152,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setNotifications((prev) => [newNotification, ...prev]);
       setUnreadCount((prev) => prev + 1);
 
-
       toast(
         (t) => (
           <div className="flex flex-col gap-1">
-            <span className="font-bold text-sm text-slate-800 dark:text-slate-100">{newNotification.title}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">{newNotification.body}</span>
+            <span className="font-bold text-sm text-slate-800 dark:text-slate-100">
+              {newNotification.title}
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {newNotification.body}
+            </span>
           </div>
         ),
         {
           icon: "🔔",
           duration: 4000,
           position: "top-right",
-        }
+        },
       );
     });
 
@@ -194,7 +200,7 @@ export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
     throw new Error(
-      "useNotifications must be used within a NotificationProvider"
+      "useNotifications must be used within a NotificationProvider",
     );
   }
   return context;

@@ -1,4 +1,3 @@
-// apps/web/app/(main)/users/[id]/_components/UserPublicProfile.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
@@ -16,7 +15,11 @@ export default function UserPublicProfile() {
   const { id } = useParams();
   const userId = Number(id);
 
-  const { data: user, isLoading, isError } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["user-public", userId],
     queryFn: () => userService.getPublicProfile(userId),
     enabled: Number.isFinite(userId) && userId > 0,

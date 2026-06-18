@@ -55,10 +55,7 @@ describe("JwtRefreshStrategy", () => {
       .mockResolvedValue({ id: 1, isActive: false });
 
     await expect(
-      strategy.validate(
-        { cookies: {}, headers: {} } as any,
-        { sub: 1 } as any,
-      ),
+      strategy.validate({ cookies: {}, headers: {} } as any, { sub: 1 } as any),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

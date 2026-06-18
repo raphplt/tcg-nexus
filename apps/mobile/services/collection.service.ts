@@ -42,12 +42,16 @@ export const collectionService = {
   },
 
   async getMyCollections(): Promise<UserCollection[]> {
-    const response = await secureApi.get<UserCollection[]>("/collection/my/collections");
+    const response = await secureApi.get<UserCollection[]>(
+      "/collection/my/collections",
+    );
     return response.data || [];
   },
 
   async getCollectionById(collectionId: string): Promise<UserCollection> {
-    const response = await secureApi.get<UserCollection>(`/collection/${collectionId}`);
+    const response = await secureApi.get<UserCollection>(
+      `/collection/${collectionId}`,
+    );
     return response.data;
   },
 
@@ -78,7 +82,10 @@ export const collectionService = {
   async createCollection(
     payload: CreateCollectionPayload,
   ): Promise<UserCollection> {
-    const response = await secureApi.post<UserCollection>("/collection", payload);
+    const response = await secureApi.post<UserCollection>(
+      "/collection",
+      payload,
+    );
     return response.data;
   },
 

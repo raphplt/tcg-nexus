@@ -37,7 +37,9 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
   const [isManualSearching, setIsManualSearching] = useState(false);
   const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
   const [addingCardId, setAddingCardId] = useState<string | null>(null);
-  const [collectionQuantities, setCollectionQuantities] = useState<Record<string, number>>({});
+  const [collectionQuantities, setCollectionQuantities] = useState<
+    Record<string, number>
+  >({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Debounce manual search
@@ -64,12 +66,12 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     let cancelled = false;
 
     const runSearch = async () => {
-      console.log("runSearch")
+      console.log("runSearch");
       setIsManualSearching(true);
       console.log("debouncedManualSearch : ", debouncedManualSearch);
       try {
         const cards = await cardService.searchCards(debouncedManualSearch);
-        console.log("cards : ", cards); 
+        console.log("cards : ", cards);
         if (!cancelled) {
           setManualResults(cards.slice(0, 30));
         }
@@ -105,12 +107,14 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       if (collectionId) {
         const loadInitialQuantities = async () => {
           try {
-            const data = await collectionService.getCollectionById(collectionId);
+            const data =
+              await collectionService.getCollectionById(collectionId);
             const quantities: Record<string, number> = {};
             if (data.items) {
               for (const item of data.items) {
                 if (item.pokemonCard?.id) {
-                  quantities[item.pokemonCard.id] = (quantities[item.pokemonCard.id] || 0) + item.quantity;
+                  quantities[item.pokemonCard.id] =
+                    (quantities[item.pokemonCard.id] || 0) + item.quantity;
                 }
               }
             }
@@ -210,11 +214,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
   };
 
   return (
-    <Modal
-      animationType="slide"
-      onRequestClose={onClose}
-      visible={isVisible}
-    >
+    <Modal animationType="slide" onRequestClose={onClose} visible={isVisible}>
       <View style={styles.manualModalContainer}>
         <View style={styles.manualModalHeader}>
           <Text style={styles.manualModalTitle}>Ajouter une carte</Text>
@@ -246,7 +246,9 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
         ) : null}
 
         {debouncedManualSearch.length < 1 ? (
-          <Text style={styles.manualHint}>Tape au moins 1 caractère pour rechercher.</Text>
+          <Text style={styles.manualHint}>
+            Tape au moins 1 caractère pour rechercher.
+          </Text>
         ) : null}
 
         {isManualSearching ? (
@@ -266,11 +268,23 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
             const cardQty = item.id ? (collectionQuantities[item.id] ?? 0) : 0;
             return (
               <View style={styles.manualResultCard}>
-                <Image source={{ uri: getCardImage(item.image, "low") }} style={styles.manualResultImage} />
+                <Image
+                  source={{ uri: getCardImage(item.image, "low") }}
+                  style={styles.manualResultImage}
+                />
 
                 <View style={styles.manualResultContent}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                    <Text numberOfLines={1} style={[styles.manualResultName, { flexShrink: 1 }]}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.manualResultName, { flexShrink: 1 }]}
+                    >
                       {item.name || "Carte"}
                     </Text>
                     {cardQty > 0 ? (
@@ -299,9 +313,7 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
                     >
                       <Ionicons color="#15233b" name="remove" size={16} />
                     </Pressable>
-                    <Text style={styles.qtyText}>
-                      {cardQty}
-                    </Text>
+                    <Text style={styles.qtyText}>{cardQty}</Text>
                     <Pressable
                       disabled={addingCardId === item.id}
                       onPress={() => void handleIncrement(item)}

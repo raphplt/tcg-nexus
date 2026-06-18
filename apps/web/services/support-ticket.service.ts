@@ -45,9 +45,6 @@ export const supportTicketService = {
   },
 
   async closeTicket(id: string | number): Promise<SupportTicket> {
-    return authedFetch<SupportTicket>(
-      "PATCH",
-      `/support/tickets/${id}/close`,
-    );
+    return authedFetch<SupportTicket>("PATCH", `/support/tickets/${id}/close`);
   },
 };

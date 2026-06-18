@@ -41,7 +41,9 @@ export default function ForgotPasswordScreen() {
         { email: email.trim() },
         { skipErrorToast: true },
       );
-      toast.showSuccess("Si le compte existe, un email de réinitialisation a été envoyé.");
+      toast.showSuccess(
+        "Si le compte existe, un email de réinitialisation a été envoyé.",
+      );
       router.replace("/login");
     } catch (error) {
       setErrors(mapAuthApiError(error, "forgot-password"));
@@ -75,16 +77,24 @@ export default function ForgotPasswordScreen() {
             keyboardType="email-address"
             onChangeText={(value) => {
               setEmail(value);
-              setErrors((prev) => ({ ...prev, email: undefined, form: undefined }));
+              setErrors((prev) => ({
+                ...prev,
+                email: undefined,
+                form: undefined,
+              }));
             }}
             placeholder="vous@tcgnexus.app"
             placeholderTextColor={colors.mutedForeground}
             style={[styles.input, errors.email ? styles.inputError : undefined]}
             value={email}
           />
-          {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+          {errors.email ? (
+            <Text style={styles.errorText}>{errors.email}</Text>
+          ) : null}
 
-          {errors.form ? <Text style={styles.formErrorText}>{errors.form}</Text> : null}
+          {errors.form ? (
+            <Text style={styles.formErrorText}>{errors.form}</Text>
+          ) : null}
 
           <Pressable
             disabled={isSubmitting}

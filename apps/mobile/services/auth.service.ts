@@ -20,7 +20,9 @@ const normalizeAuthSession = (
   tokens: {
     ...response.tokens,
     accessTokenExpiresAt:
-      response.tokens.accessTokenExpiresAt || response.accessTokenExpiresAt || 0,
+      response.tokens.accessTokenExpiresAt ||
+      response.accessTokenExpiresAt ||
+      0,
   },
 });
 
@@ -31,7 +33,9 @@ const normalizeRefreshResponse = (
   tokens: {
     ...response.tokens,
     accessTokenExpiresAt:
-      response.tokens.accessTokenExpiresAt || response.accessTokenExpiresAt || 0,
+      response.tokens.accessTokenExpiresAt ||
+      response.accessTokenExpiresAt ||
+      0,
   },
 });
 
@@ -41,7 +45,9 @@ export const authService = {
     options?: RequestOptions,
   ): Promise<AuthSessionResponse> {
     const { rememberMe = false, ...payload } = credentials;
-    const requestConfig: AppAxiosRequestConfig<Omit<LoginRequest, "rememberMe">> = {
+    const requestConfig: AppAxiosRequestConfig<
+      Omit<LoginRequest, "rememberMe">
+    > = {
       headers: {
         "x-remember-me": rememberMe ? "true" : "false",
       },
@@ -85,11 +91,7 @@ export const authService = {
       skipErrorToast: options?.skipErrorToast,
     };
 
-    await secureApi.post(
-      "/auth/logout",
-      null,
-      requestConfig,
-    );
+    await secureApi.post("/auth/logout", null, requestConfig);
   },
 
   async refresh(
@@ -119,10 +121,7 @@ export const authService = {
       skipErrorToast: options?.skipErrorToast,
     };
 
-    const response = await secureApi.get<User>(
-      "/auth/profile",
-      requestConfig,
-    );
+    const response = await secureApi.get<User>("/auth/profile", requestConfig);
 
     return response.data as User;
   },
@@ -139,10 +138,6 @@ export const authService = {
       skipErrorToast: options?.skipErrorToast,
     };
 
-    await api.post(
-      "/auth/forgot-password",
-      payload,
-      requestConfig,
-    );
+    await api.post("/auth/forgot-password", payload, requestConfig);
   },
 };

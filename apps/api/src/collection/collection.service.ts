@@ -33,7 +33,10 @@ export class CollectionService {
     private pokemonSetRepository: Repository<PokemonSet>,
   ) {}
 
-  private async getOwnedCollection(id: string, userId: number): Promise<Collection> {
+  private async getOwnedCollection(
+    id: string,
+    userId: number,
+  ): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id },
       relations: ["user", "items", "items.pokemonCard"],
@@ -120,7 +123,9 @@ export class CollectionService {
     }
 
     const collection = this.collectionRepository.create({
-      name: masterSet ? `Master Set — ${masterSet.name}` : createCollectionDto.name,
+      name: masterSet
+        ? `Master Set — ${masterSet.name}`
+        : createCollectionDto.name,
       description: masterSet
         ? `Master Set pour l'extension ${masterSet.name}`
         : createCollectionDto.description,
@@ -338,7 +343,12 @@ export class CollectionService {
         .createQueryBuilder("card")
         .leftJoinAndSelect("card.set", "set")
         .leftJoinAndSelect("set.serie", "serie")
-        .leftJoinAndSelect("card.collectionItems", "item", "item.collection.id = :collectionId", { collectionId })
+        .leftJoinAndSelect(
+          "card.collectionItems",
+          "item",
+          "item.collection.id = :collectionId",
+          { collectionId },
+        )
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
@@ -358,7 +368,9 @@ export class CollectionService {
         queryBuilder.andWhere("card.rarity = :rarity", { rarity });
       }
       if (cardState) {
-        queryBuilder.andWhere("item.cardState.code = :cardState", { cardState });
+        queryBuilder.andWhere("item.cardState.code = :cardState", {
+          cardState,
+        });
       }
 
       queryBuilder.orderBy("card.localId", "ASC");

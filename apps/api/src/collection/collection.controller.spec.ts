@@ -79,7 +79,18 @@ describe("CollectionController", () => {
     ).resolves.toEqual({ data: [] });
     expect(
       mockCollectionService.findCollectionItemsPaginated,
-    ).toHaveBeenCalledWith("col", 1, 10, "s", "name", "ASC", undefined, undefined, undefined, undefined);
+    ).toHaveBeenCalledWith(
+      "col",
+      1,
+      10,
+      "s",
+      "name",
+      "ASC",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
   });
 
   it("should find one collection by id", async () => {

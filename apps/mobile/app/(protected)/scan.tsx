@@ -321,7 +321,9 @@ export default function ScanScreen() {
           onPress={() => void requestPermission()}
           style={styles.permissionButton}
         >
-          <Text style={styles.permissionButtonText}>Autoriser l'appareil photo</Text>
+          <Text style={styles.permissionButtonText}>
+            Autoriser l'appareil photo
+          </Text>
         </Pressable>
         <Pressable
           onPress={() => router.back()}
