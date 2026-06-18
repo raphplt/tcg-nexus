@@ -294,6 +294,7 @@ export class TournamentService {
     const tournament = await this.findOne(tournamentId);
     const player = await this.playerRepository.findOne({
       where: { id: playerId },
+      relations: ["user"],
     });
     if (!player) {
       throw new NotFoundException(`Joueur avec l'ID ${playerId} non trouvé`);
@@ -343,7 +344,24 @@ export class TournamentService {
           : RegistrationStatus.CONFIRMED;
         existingRegistration.notes = notes ?? ""; // Ensure notes is never undefined
         existingRegistration.registeredAt = new Date();
-        return this.registrationRepository.save(existingRegistration);
+        
+        const saved = await this.registrationRepository.save(existingRegistration);
+        
+        if (existingRegistration.status === RegistrationStatus.CONFIRMED) {
+          if (!tournament.players.some((p) => p.id === player.id)) {
+            tournament.players.push(player);
+            await this.tournamentRepository.save(tournament);
+          }
+        }
+        
+        if (player.user?.id) {
+          this.eventEmitter.emit("challenge.action", {
+            userId: player.user.id,
+            action: "JOIN_TOURNAMENT",
+          });
+        }
+        
+        return saved;
       } else {
         throw new ConflictException("Le joueur est déjà inscrit à ce tournoi");
       }
@@ -367,6 +385,14 @@ export class TournamentService {
 
     const savedRegistration =
       await this.registrationRepository.save(registration);
+      
+    if (registrationStatus === RegistrationStatus.CONFIRMED) {
+      if (!tournament.players.some((p) => p.id === player.id)) {
+        tournament.players.push(player);
+        await this.tournamentRepository.save(tournament);
+      }
+    }
+    
     if (player.user?.id) {
       this.eventEmitter.emit("challenge.action", {
         userId: player.user.id,
@@ -406,6 +432,9 @@ export class TournamentService {
 
     registration.status = RegistrationStatus.CANCELLED;
     await this.registrationRepository.save(registration);
+
+    tournament.players = tournament.players.filter((p) => p.id !== playerId);
+    await this.tournamentRepository.save(tournament);
   }
 
   // Récupérer les tournois d'un joueur

@@ -230,7 +230,9 @@ export class MatchService {
       .createQueryBuilder("match")
       .leftJoinAndSelect("match.tournament", "tournament")
       .leftJoinAndSelect("match.playerA", "playerA")
+      .leftJoinAndSelect("playerA.user", "playerAUser")
       .leftJoinAndSelect("match.playerB", "playerB")
+      .leftJoinAndSelect("playerB.user", "playerBUser")
       .leftJoinAndSelect("match.winner", "winner")
       .leftJoinAndSelect("match.statistics", "statistics");
 
