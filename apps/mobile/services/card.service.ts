@@ -1,7 +1,6 @@
 import type {
   CardSearchResult,
   CardsPaginatedResponse,
-  OcrParsedResult,
   PokemonSerieType,
   PokemonSetType,
 } from "@/types";
@@ -76,10 +75,7 @@ export const cardService = {
     return response.data || [];
   },
 
-  async getAllSeries(): Promise<PokemonSerieType[]> {
-    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
-    return response.data || [];
-  },
+
 
   async getPaginated(
     params: {

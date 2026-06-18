@@ -349,6 +349,7 @@ export class TournamentService {
           await this.registrationRepository.save(existingRegistration);
 
         if (existingRegistration.status === RegistrationStatus.CONFIRMED) {
+          tournament.players = tournament.players || [];
           if (!tournament.players.some((p) => p.id === player.id)) {
             tournament.players.push(player);
             await this.tournamentRepository.save(tournament);
@@ -388,6 +389,7 @@ export class TournamentService {
       await this.registrationRepository.save(registration);
 
     if (registrationStatus === RegistrationStatus.CONFIRMED) {
+      tournament.players = tournament.players || [];
       if (!tournament.players.some((p) => p.id === player.id)) {
         tournament.players.push(player);
         await this.tournamentRepository.save(tournament);
@@ -434,7 +436,7 @@ export class TournamentService {
     registration.status = RegistrationStatus.CANCELLED;
     await this.registrationRepository.save(registration);
 
-    tournament.players = tournament.players.filter((p) => p.id !== playerId);
+    tournament.players = (tournament.players || []).filter((p) => p.id !== playerId);
     await this.tournamentRepository.save(tournament);
   }
 

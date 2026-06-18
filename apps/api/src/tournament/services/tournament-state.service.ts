@@ -33,8 +33,8 @@ export class TournamentStateService {
       from: TournamentStatus.DRAFT,
       to: TournamentStatus.REGISTRATION_OPEN,
       conditions: [
-        (t) => !t.registrationDeadline || t.registrationDeadline > new Date(),
-        (t) => !t.minPlayers || t.minPlayers >= 2,
+        (t) => !!t.registrationDeadline && t.registrationDeadline > new Date(),
+        (t) => !!t.minPlayers && t.minPlayers >= 2,
         (t) => !t.maxPlayers || !t.minPlayers || t.maxPlayers >= t.minPlayers,
       ],
       description: "Ouvrir les inscriptions",
