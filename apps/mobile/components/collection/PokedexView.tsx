@@ -294,12 +294,6 @@ export function PokedexView() {
 
   const renderHeader = () => (
     <View style={styles.headerBlock}>
-      <Text style={styles.eyebrow}>EXPLORATEUR</Text>
-      <Text style={styles.title}>Pokédex</Text>
-      <Text style={styles.subtitle}>
-        Parcourez toutes les cartes Pokémon officielles
-      </Text>
-
       <View style={styles.searchRow}>
         <View style={styles.searchInputContainer}>
           <Ionicons color="#555555" name="search" size={16} />
@@ -680,7 +674,7 @@ const styles = StyleSheet.create({
   headerBlock: {
     paddingBottom: 16,
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 14,
   },
   imageContainer: {
     aspectRatio: 0.71,
@@ -728,7 +722,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
-    marginTop: 16,
   },
   sparkleBadge: {
     alignItems: "center",

@@ -54,9 +54,12 @@ export default function TabLayout() {
       screenOptions={{
         headerShadowVisible: false,
         headerStyle: {
-          backgroundColor: colors.heroDark,
+          backgroundColor: colors.surface,
         },
-        headerTintColor: colors.heroDarkForeground,
+        headerTintColor: colors.foreground,
+        headerTitleStyle: {
+          fontWeight: "800",
+        },
         sceneStyle: {
           backgroundColor: colors.pageBg,
         },
@@ -74,6 +77,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <TabIcon color={color} name="flash" size={size} />
           ),
@@ -83,6 +87,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="collection"
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <TabIcon color={color} name="albums" size={size} />
           ),
@@ -128,7 +133,7 @@ export default function TabLayout() {
               onPress={() => router.back()}
               style={{ marginLeft: 16, padding: 4 }}
             >
-              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+              <Ionicons name="arrow-back" size={24} color={colors.foreground} />
             </Pressable>
           ),
         }}
@@ -143,7 +148,7 @@ export default function TabLayout() {
               onPress={() => router.back()}
               style={{ marginLeft: 16, padding: 4 }}
             >
-              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+              <Ionicons name="arrow-back" size={24} color={colors.foreground} />
             </Pressable>
           ),
         }}
@@ -158,7 +163,7 @@ export default function TabLayout() {
               onPress={() => router.back()}
               style={{ marginLeft: 16, padding: 4 }}
             >
-              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+              <Ionicons name="arrow-back" size={24} color={colors.foreground} />
             </Pressable>
           ),
         }}

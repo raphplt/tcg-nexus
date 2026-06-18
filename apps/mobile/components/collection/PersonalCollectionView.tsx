@@ -266,16 +266,16 @@ export function PersonalCollectionView() {
 
   const renderHeader = () => (
     <View style={styles.headerBlock}>
-      <View style={styles.titleRow}>
-        <View>
-          <Text style={styles.eyebrow}>COLLECTIONS</Text>
-          <Text style={styles.title}>Ma collection</Text>
-        </View>
+      <View style={styles.statsChip}>
+        <Ionicons color="#555555" name="albums-outline" size={14} />
+        <Text style={styles.statsChipText}>
+          {totalCards} cartes · {collections.length} collections
+        </Text>
+      </View>
 
+      <View style={styles.actionRow}>
         <Pressable
-          onPress={() => {
-            router.push("/scan");
-          }}
+          onPress={() => router.push("/scan")}
           style={({ pressed }) => [
             styles.scanButton,
             pressed && styles.scanButtonPressed,
@@ -284,36 +284,18 @@ export function PersonalCollectionView() {
           <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
         </Pressable>
+
+        <Pressable
+          onPress={() => setIsCreateModalVisible(true)}
+          style={({ pressed }) => [
+            styles.createButton,
+            pressed && styles.createButtonPressed,
+          ]}
+        >
+          <Ionicons color="#ffffff" name="add" size={18} />
+          <Text style={styles.createButtonText}>Nouvelle</Text>
+        </Pressable>
       </View>
-
-      <View style={styles.statsCard}>
-        <Text style={styles.statsTitle}>{collections.length} collections</Text>
-        <Text style={styles.statsSubtitle}>{totalCards} cartes au total</Text>
-
-        {rarityStats.length > 0 ? (
-          <Text style={styles.statsMeta}>
-            Raretés:{" "}
-            {rarityStats
-              .map(([rarity, count]) => `${rarity} (${count})`)
-              .join(" • ")}
-          </Text>
-        ) : (
-          <Text style={styles.statsMeta}>
-            Ajoute des cartes pour voir tes stats.
-          </Text>
-        )}
-      </View>
-
-      <Pressable
-        onPress={() => setIsCreateModalVisible(true)}
-        style={({ pressed }) => [
-          styles.createButton,
-          pressed && styles.createButtonPressed,
-        ]}
-      >
-        <Ionicons color="#ffffff" name="add-circle-outline" size={18} />
-        <Text style={styles.createButtonText}>Nouvelle collection</Text>
-      </Pressable>
     </View>
   );
 
@@ -576,16 +558,38 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
     flex: 1,
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  statsChip: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 9999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  statsChipText: {
+    color: "#555555",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   createButton: {
     alignItems: "center",
     backgroundColor: "#0b0b0b",
     borderRadius: 14,
+    flex: 1,
     flexDirection: "row",
     gap: 6,
-    marginTop: 14,
+    justifyContent: "center",
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    width: 174,
+    paddingVertical: 11,
   },
   createButtonPressed: {
     opacity: 0.85,
@@ -741,12 +745,14 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     alignItems: "center",
-    backgroundColor: "#0b0b0b",
+    backgroundColor: "#b72921",
     borderRadius: 14,
+    flex: 1,
     flexDirection: "row",
     gap: 6,
+    justifyContent: "center",
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 11,
   },
   scanButtonPressed: {
     opacity: 0.86,

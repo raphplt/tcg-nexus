@@ -11,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { colors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthProvider";
 import { tournamentService } from "@/services/tournament.service";
 import type { Tournament } from "@/types";
@@ -137,19 +138,19 @@ export default function TournamentsScreen() {
 
         <View style={styles.cardDetails}>
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={14} color="#7c6a58" />
+            <Ionicons name="calendar-outline" size={14} color={colors.mutedForeground} />
             <Text style={styles.detailText}>{formatDate(item.startDate)}</Text>
           </View>
           {item.location && (
             <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={14} color="#7c6a58" />
+              <Ionicons name="location-outline" size={14} color={colors.mutedForeground} />
               <Text style={styles.detailText} numberOfLines={1}>
                 {item.location}
               </Text>
             </View>
           )}
           <View style={styles.detailRow}>
-            <Ionicons name="people-outline" size={14} color="#7c6a58" />
+            <Ionicons name="people-outline" size={14} color={colors.mutedForeground} />
             <Text style={styles.detailText}>
               {item.players?.length || 0}
               {item.maxPlayers ? ` / ${item.maxPlayers}` : ""} joueurs
@@ -245,7 +246,7 @@ export default function TournamentsScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#d95f4d" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
         <View style={styles.centered}>
@@ -256,7 +257,7 @@ export default function TournamentsScreen() {
         </View>
       ) : tournaments.length === 0 ? (
         <View style={styles.centered}>
-          <Ionicons name="trophy-outline" size={48} color="#eadfd3" />
+          <Ionicons name="trophy-outline" size={48} color={colors.border} />
           <Text style={styles.emptyText}>Aucun tournoi trouvé</Text>
         </View>
       ) : (
@@ -276,8 +277,8 @@ export default function TournamentsScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 12,
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardTitle: {
-    color: "#15233b",
+    color: colors.foreground,
     flex: 1,
     fontSize: 16,
     fontWeight: "700",
@@ -311,7 +312,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   container: {
-    backgroundColor: "#f7f1e8",
+    backgroundColor: colors.pageBg,
     flex: 1,
   },
   detailRow: {
@@ -320,31 +321,31 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   detailText: {
-    color: "#7c6a58",
+    color: colors.mutedForeground,
     fontSize: 13,
   },
   emptyText: {
-    color: "#7c6a58",
+    color: colors.mutedForeground,
     fontSize: 16,
     marginTop: 12,
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.destructive,
     fontSize: 16,
     marginBottom: 16,
     textAlign: "center",
   },
   filterButton: {
-    backgroundColor: "#fffdf9",
-    borderColor: "#eadfd3",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 20,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   filterButtonActive: {
-    backgroundColor: "#15233b",
-    borderColor: "#15233b",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterContainer: {
     flexDirection: "row",
@@ -352,25 +353,25 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   filterText: {
-    color: "#7c6a58",
+    color: colors.mutedForeground,
     fontSize: 13,
     fontWeight: "600",
   },
   filterTextActive: {
-    color: "#fff8f3",
+    color: colors.primaryForeground,
   },
   listContent: {
     padding: 16,
     paddingTop: 0,
   },
   retryButton: {
-    backgroundColor: "#15233b",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
   retryText: {
-    color: "#fff8f3",
+    color: colors.primaryForeground,
     fontWeight: "600",
   },
   statusBadge: {

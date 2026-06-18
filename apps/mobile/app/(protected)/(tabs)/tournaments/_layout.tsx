@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link, Stack } from "expo-router";
 import { Pressable } from "react-native";
+import { colors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthProvider";
 
 export default function TournamentsLayout() {
@@ -8,25 +9,26 @@ export default function TournamentsLayout() {
   const isAdminOrModerator =
     user?.role === "admin" || user?.role === "moderator";
 
+  const headerBase = {
+    headerShown: true,
+    headerShadowVisible: false,
+    headerStyle: { backgroundColor: colors.surface },
+    headerTintColor: colors.foreground,
+    headerTitleStyle: { fontWeight: "800" as const },
+  };
+
   return (
     <Stack>
       <Stack.Screen
         name="index"
         options={{
-          headerShown: true,
+          ...headerBase,
           title: "Tournois",
-          headerStyle: {
-            backgroundColor: "#15233b",
-          },
-          headerTintColor: "#fff8f3",
-          headerTitleStyle: {
-            fontWeight: "800",
-          },
           headerRight: () =>
             isAdminOrModerator ? (
               <Link href="/tournaments/create" asChild>
                 <Pressable hitSlop={10}>
-                  <Ionicons name="add-circle" size={28} color="#d95f4d" />
+                  <Ionicons name="add-circle" size={28} color={colors.primary} />
                 </Pressable>
               </Link>
             ) : null,
@@ -34,25 +36,11 @@ export default function TournamentsLayout() {
       />
       <Stack.Screen
         name="create"
-        options={{
-          headerShown: true,
-          title: "Nouveau tournoi",
-          headerStyle: {
-            backgroundColor: "#15233b",
-          },
-          headerTintColor: "#fff8f3",
-        }}
+        options={{ ...headerBase, title: "Nouveau tournoi" }}
       />
       <Stack.Screen
         name="[id]"
-        options={{
-          headerShown: true,
-          title: "Détails du tournoi",
-          headerStyle: {
-            backgroundColor: "#15233b",
-          },
-          headerTintColor: "#fff8f3",
-        }}
+        options={{ ...headerBase, title: "Détails du tournoi" }}
       />
     </Stack>
   );
