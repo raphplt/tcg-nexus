@@ -144,6 +144,28 @@ export const collectionService = {
     }
   },
 
+  async addToWishlist(
+    userId: number,
+    pokemonCardId: string,
+  ): Promise<CollectionItemResponse> {
+    const response = await secureApi.post<CollectionItemResponse>(
+      `/collection-item/wishlist/${userId}`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
+
+  async addToFavorites(
+    userId: number,
+    pokemonCardId: string,
+  ): Promise<CollectionItemResponse> {
+    const response = await secureApi.post<CollectionItemResponse>(
+      `/collection-item/favorites/${userId}`,
+      { pokemonCardId },
+    );
+    return response.data;
+  },
+
   async removeCardFromCollection(
     collectionId: string,
     pokemonCardId: string,

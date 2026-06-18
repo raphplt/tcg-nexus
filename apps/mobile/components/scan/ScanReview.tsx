@@ -26,6 +26,22 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
   const insets = useSafeAreaInsets();
   const photoUri = scan.optimizedUri || scan.capturedUri || null;
 
+  const ctaIcon = !scan.selectedCard
+    ? "albums-outline"
+    : scan.targetType === "wishlist"
+      ? "heart"
+      : scan.targetType === "favorites"
+        ? "star"
+        : "add-circle";
+
+  const ctaLabel = !scan.selectedCard
+    ? "Sélectionne une carte"
+    : scan.targetType === "wishlist"
+      ? "Ajouter à la wishlist"
+      : scan.targetType === "favorites"
+        ? "Ajouter aux favoris"
+        : `Ajouter à ${scan.selectedCollection?.name ?? "la collection"}`;
+
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.reviewScreen}>
       <KeyboardAvoidingView
@@ -170,33 +186,99 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
           </View>
 
           <View style={styles.blockCard}>
-            <Text style={styles.sectionTitle}>Ajouter à une collection</Text>
+            <Text style={styles.sectionTitle}>Ajouter à</Text>
+
+            <View style={styles.collectionWrap}>
+              <Pressable
+                onPress={() => scan.setTargetType("wishlist")}
+                style={({ pressed }) => [
+                  styles.targetChip,
+                  scan.targetType === "wishlist" && styles.targetChipActive,
+                  pressed && styles.collectionChipPressed,
+                ]}
+              >
+                <Ionicons
+                  color={
+                    scan.targetType === "wishlist"
+                      ? colors.primaryForeground
+                      : colors.primary
+                  }
+                  name="heart"
+                  size={15}
+                />
+                <Text
+                  style={[
+                    styles.targetChipText,
+                    scan.targetType === "wishlist" && styles.targetChipTextActive,
+                  ]}
+                >
+                  Wishlist
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => scan.setTargetType("favorites")}
+                style={({ pressed }) => [
+                  styles.targetChip,
+                  scan.targetType === "favorites" && styles.targetChipActive,
+                  pressed && styles.collectionChipPressed,
+                ]}
+              >
+                <Ionicons
+                  color={
+                    scan.targetType === "favorites"
+                      ? colors.primaryForeground
+                      : colors.primary
+                  }
+                  name="star"
+                  size={15}
+                />
+                <Text
+                  style={[
+                    styles.targetChipText,
+                    scan.targetType === "favorites" &&
+                      styles.targetChipTextActive,
+                  ]}
+                >
+                  Favoris
+                </Text>
+              </Pressable>
+            </View>
+
+            <Text style={styles.subLabel}>Mes collections</Text>
             {scan.isLoadingCollections ? (
               <ActivityIndicator color={colors.foreground} />
+            ) : scan.collections.length === 0 ? (
+              <Text style={styles.emptyText}>
+                Aucune collection — une sera créée automatiquement.
+              </Text>
             ) : (
               <View style={styles.collectionWrap}>
-                {scan.collections.map((collection) => (
-                  <Pressable
-                    key={collection.id}
-                    onPress={() => scan.setSelectedCollectionId(collection.id)}
-                    style={({ pressed }) => [
-                      styles.collectionChip,
-                      scan.selectedCollectionId === collection.id &&
-                        styles.collectionChipActive,
-                      pressed && styles.collectionChipPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.collectionChipText,
-                        scan.selectedCollectionId === collection.id &&
-                          styles.collectionChipTextActive,
+                {scan.collections.map((collection) => {
+                  const active =
+                    scan.targetType === "collection" &&
+                    scan.selectedCollectionId === collection.id;
+                  return (
+                    <Pressable
+                      key={collection.id}
+                      onPress={() => scan.selectCollectionTarget(collection.id)}
+                      style={({ pressed }) => [
+                        styles.collectionChip,
+                        active && styles.collectionChipActive,
+                        pressed && styles.collectionChipPressed,
                       ]}
                     >
-                      {collection.name}
-                    </Text>
-                  </Pressable>
-                ))}
+                      <Text
+                        style={[
+                          styles.collectionChipText,
+                          active && styles.collectionChipTextActive,
+                        ]}
+                      >
+                        {collection.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </View>
@@ -232,7 +314,7 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
           <Pressable
             disabled={scan.isSaving || !scan.selectedCard}
             onPress={() => {
-              void scan.addCardToCollection();
+              void scan.saveCard();
             }}
             style={({ pressed }) => [
               styles.addButton,
@@ -249,13 +331,11 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
               <>
                 <Ionicons
                   color={colors.primaryForeground}
-                  name={scan.selectedCard ? "add-circle" : "albums-outline"}
+                  name={ctaIcon}
                   size={22}
                 />
                 <Text style={styles.addButtonText} numberOfLines={1}>
-                  {scan.selectedCard
-                    ? `Ajouter à ${scan.selectedCollection?.name ?? "la collection"}`
-                    : "Sélectionne une carte"}
+                  {ctaLabel}
                 </Text>
               </>
             )}
@@ -369,6 +449,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+  },
+  targetChip: {
+    alignItems: "center",
+    backgroundColor: colors.inputBg,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  targetChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  targetChipText: {
+    color: colors.foreground,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  targetChipTextActive: {
+    color: colors.primaryForeground,
+  },
+  subLabel: {
+    color: colors.mutedForeground,
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 8,
+    marginTop: 14,
   },
   collectionChip: {
     backgroundColor: colors.inputBg,

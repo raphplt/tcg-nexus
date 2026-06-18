@@ -22,6 +22,8 @@ import type {
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 
+export type ScanTarget = "collection" | "wishlist" | "favorites";
+
 export function useScanFlow() {
   const cameraRef = useRef<CameraView>(null);
   const { user } = useAuth();
@@ -50,6 +52,7 @@ export function useScanFlow() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<
     string | null
   >(null);
+  const [targetType, setTargetType] = useState<ScanTarget>("collection");
   const [isLoadingCollections, setIsLoadingCollections] = useState(true);
 
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
@@ -181,6 +184,63 @@ export function useScanFlow() {
         message: successMessage,
         status: "added",
         title: "Ajout collection",
+      });
+
+      resetForNextCapture();
+    } catch (error) {
+      const message = getApiErrorMessage(error);
+      setInlineError(message);
+      pushHistory({
+        message,
+        status: "error",
+        title: "Ajout impossible",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const selectCollectionTarget = (collectionId: string) => {
+    setSelectedCollectionId(collectionId);
+    setTargetType("collection");
+  };
+
+  // Ajoute la carte à la cible choisie : collection perso, wishlist ou favoris.
+  const saveCard = async () => {
+    if (targetType === "collection") {
+      await addCardToCollection();
+      return;
+    }
+
+    const target = selectedCard;
+    if (!target || isSaving) {
+      setInlineError("Selectionne une carte avant l'ajout.");
+      return;
+    }
+    if (!user?.id) {
+      setInlineError("Utilisateur non connecte.");
+      return;
+    }
+
+    setIsSaving(true);
+    setInlineError(null);
+
+    try {
+      if (targetType === "wishlist") {
+        await collectionService.addToWishlist(user.id, target.id);
+      } else {
+        await collectionService.addToFavorites(user.id, target.id);
+      }
+
+      const isWishlist = targetType === "wishlist";
+      const successMessage = `${target.name || "Carte"} ajoutée ${
+        isWishlist ? "à la wishlist" : "aux favoris"
+      }.`;
+      toast.showSuccess(successMessage);
+      pushHistory({
+        message: successMessage,
+        status: "added",
+        title: isWishlist ? "Wishlist" : "Favoris",
       });
 
       resetForNextCapture();
@@ -340,6 +400,9 @@ export function useScanFlow() {
     collections,
     selectedCollectionId,
     setSelectedCollectionId,
+    targetType,
+    setTargetType,
+    selectCollectionTarget,
     isLoadingCollections,
     history,
     inlineError,
@@ -348,6 +411,7 @@ export function useScanFlow() {
     captureCard,
     runManualSearch,
     addCardToCollection,
+    saveCard,
     resetForNextCapture,
   };
 }
