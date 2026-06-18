@@ -35,6 +35,11 @@ export interface FollowCreatedPayload {
   followedUserId: number;
   followerName: string;
 }
+export interface FollowRemovedPayload {
+  followerUserId: number;
+  followedUserId: number;
+  followerName: string;
+}
 export interface MarketplaceSalePayload {
   sellerUserId: number;
   buyerUserId: number;
@@ -209,6 +214,17 @@ export class NotificationListener {
       "Nouveau follower",
       `${payload.followerName} vous suit désormais.`,
       "follow.created",
+      { link: `/users/${payload.followerUserId}` },
+    );
+  }
+
+  @OnEvent("follow.removed")
+  async onFollowRemoved(payload: FollowRemovedPayload): Promise<void> {
+    await this.safeCreate(
+      payload.followedUserId,
+      "Vous avez perdu un follower",
+      `${payload.followerName} ne vous suit plus.`,
+      "follow.removed",
       { link: `/users/${payload.followerUserId}` },
     );
   }
