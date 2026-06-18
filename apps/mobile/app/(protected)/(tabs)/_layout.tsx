@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
+import { Pressable, type ColorValue } from "react-native";
 import type { ComponentProps } from "react";
-import type { ColorValue } from "react-native";
 import { colors } from "@/constants/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
@@ -39,6 +39,14 @@ export default function TabLayout() {
           paddingBottom: 10,
           paddingTop: 8,
         },
+        headerRight: () => (
+          <Pressable
+            onPress={() => router.push("/profile")}
+            style={{ marginRight: 16, padding: 4 }}
+          >
+            <Ionicons name="person-circle-outline" size={26} color={colors.heroDarkForeground} />
+          </Pressable>
+        ),
       }}
     >
       <Tabs.Screen
@@ -64,24 +72,81 @@ export default function TabLayout() {
         options={{
           href: null,
           title: "Collection",
+          headerRight: () => null,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginLeft: 16, padding: 4 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
-        name="marketplace"
+        name="pokedex"
         options={{
           tabBarIcon: ({ color, size }) => (
-            <TabIcon color={color} name="cart" size={size} />
+            <TabIcon color={color} name="book-outline" size={size} />
           ),
-          title: "Marketplace",
+          title: "Pokédex",
+        }}
+      />
+      <Tabs.Screen
+        name="decks/index"
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <TabIcon color={color} name="layers" size={size} />
+          ),
+          title: "Decks",
+        }}
+      />
+      <Tabs.Screen
+        name="decks/[id]"
+        options={{
+          href: null,
+          title: "Détails du Deck",
+          headerRight: () => null,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginLeft: 16, padding: 4 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+            </Pressable>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="decks/create"
+        options={{
+          href: null,
+          title: "Créer un Deck",
+          headerRight: () => null,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginLeft: 16, padding: 4 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <TabIcon color={color} name="person-circle" size={size} />
+          href: null,
+          title: "Mon Profil",
+          headerRight: () => null,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginLeft: 16, padding: 4 }}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.heroDarkForeground} />
+            </Pressable>
           ),
-          title: "Profil",
         }}
       />
     </Tabs>

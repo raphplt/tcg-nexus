@@ -43,10 +43,11 @@ export function CollectionCard({
   const totalCards = getTotalCards(collection);
 
   return (
-    <Pressable
-      onPress={() => onPress(collection)}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-    >
+    <View style={styles.card}>
+      <Pressable
+        onPress={() => onPress(collection)}
+        style={({ pressed }) => [styles.cardInner, pressed && styles.cardPressed]}
+      >
       <View style={styles.coverContainer}>
         {coverImage ? (
           <Image source={{ uri: coverImage }} style={styles.coverImage} />
@@ -77,9 +78,11 @@ export function CollectionCard({
           </Text>
         </View>
       </View>
+      </Pressable>
 
       {onDelete ? (
         <Pressable
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
           onPress={() => onDelete(collection)}
           style={({ pressed }) => [
             styles.deleteButton,
@@ -93,7 +96,7 @@ export function CollectionCard({
           />
         </Pressable>
       ) : null}
-    </Pressable>
+    </View>
   );
 }
 
@@ -106,6 +109,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     overflow: "hidden",
     position: "relative",
+  },
+  cardInner: {
+    flex: 1,
   },
   cardPressed: {
     opacity: 0.86,
@@ -144,6 +150,8 @@ const styles = StyleSheet.create({
     right: 10,
     top: 10,
     width: 24,
+    zIndex: 10,
+    elevation: 2,
   },
   deleteButtonPressed: {
     opacity: 0.75,
