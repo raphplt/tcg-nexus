@@ -1,14 +1,23 @@
 import { api } from "./api";
-import type { PaginatedResponse, Tournament, TournamentQueryDto } from "@/types";
+import type {
+  PaginatedResponse,
+  Tournament,
+  TournamentQueryDto,
+} from "@/types";
 
 export const tournamentService = {
   /**
    * Récupère la liste des tournois avec filtres et pagination
    */
-  async getTournaments(query?: TournamentQueryDto): Promise<PaginatedResponse<Tournament>> {
-    const response = await api.get<PaginatedResponse<Tournament>>("/tournaments", {
-      params: query,
-    });
+  async getTournaments(
+    query?: TournamentQueryDto,
+  ): Promise<PaginatedResponse<Tournament>> {
+    const response = await api.get<PaginatedResponse<Tournament>>(
+      "/tournaments",
+      {
+        params: query,
+      },
+    );
     return response.data;
   },
 
@@ -59,7 +68,11 @@ export const tournamentService = {
   /**
    * Récupère les matchs d'un tournoi
    */
-  async getTournamentMatches(id: number, round?: number, status?: string): Promise<any> {
+  async getTournamentMatches(
+    id: number,
+    round?: number,
+    status?: string,
+  ): Promise<any> {
     const response = await api.get(`/tournaments/${id}/matches`, {
       params: { round, status },
     });
@@ -93,17 +106,27 @@ export const tournamentService = {
   /**
    * Récupère les tournois d'un joueur
    */
-  async getPlayerTournaments(playerId: number, query?: TournamentQueryDto): Promise<PaginatedResponse<Tournament>> {
-    const response = await api.get<PaginatedResponse<Tournament>>(`/tournaments/player/${playerId}`, {
-      params: query,
-    });
+  async getPlayerTournaments(
+    playerId: number,
+    query?: TournamentQueryDto,
+  ): Promise<PaginatedResponse<Tournament>> {
+    const response = await api.get<PaginatedResponse<Tournament>>(
+      `/tournaments/player/${playerId}`,
+      {
+        params: query,
+      },
+    );
     return response.data;
   },
 
   /**
    * Inscrit le joueur connecté au tournoi
    */
-  async registerTournament(tournamentId: number, playerId: number, notes?: string): Promise<any> {
+  async registerTournament(
+    tournamentId: number,
+    playerId: number,
+    notes?: string,
+  ): Promise<any> {
     const response = await api.post(`/tournaments/${tournamentId}/register`, {
       playerId,
       notes,
@@ -114,7 +137,10 @@ export const tournamentService = {
   /**
    * Met à jour le statut d'un tournoi (Admin uniquement)
    */
-  async updateTournamentStatus(id: number, status: string): Promise<Tournament> {
+  async updateTournamentStatus(
+    id: number,
+    status: string,
+  ): Promise<Tournament> {
     const response = await api.patch<Tournament>(`/tournaments/${id}/status`, {
       status,
     });

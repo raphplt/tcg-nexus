@@ -4,7 +4,11 @@
 
 import { SCANNER_CONFIG } from "./config";
 import type { CardSearchResult } from "@/types";
-import type { RankedCandidate, ScanSignal, ScoreBreakdown } from "@/types/scanner";
+import type {
+  RankedCandidate,
+  ScanSignal,
+  ScoreBreakdown,
+} from "@/types/scanner";
 
 const normalize = (s: string | undefined): string =>
   (s ?? "")

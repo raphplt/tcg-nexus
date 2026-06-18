@@ -344,23 +344,24 @@ export class TournamentService {
           : RegistrationStatus.CONFIRMED;
         existingRegistration.notes = notes ?? ""; // Ensure notes is never undefined
         existingRegistration.registeredAt = new Date();
-        
-        const saved = await this.registrationRepository.save(existingRegistration);
-        
+
+        const saved =
+          await this.registrationRepository.save(existingRegistration);
+
         if (existingRegistration.status === RegistrationStatus.CONFIRMED) {
           if (!tournament.players.some((p) => p.id === player.id)) {
             tournament.players.push(player);
             await this.tournamentRepository.save(tournament);
           }
         }
-        
+
         if (player.user?.id) {
           this.eventEmitter.emit("challenge.action", {
             userId: player.user.id,
             action: "JOIN_TOURNAMENT",
           });
         }
-        
+
         return saved;
       } else {
         throw new ConflictException("Le joueur est déjà inscrit à ce tournoi");
@@ -385,14 +386,14 @@ export class TournamentService {
 
     const savedRegistration =
       await this.registrationRepository.save(registration);
-      
+
     if (registrationStatus === RegistrationStatus.CONFIRMED) {
       if (!tournament.players.some((p) => p.id === player.id)) {
         tournament.players.push(player);
         await this.tournamentRepository.save(tournament);
       }
     }
-    
+
     if (player.user?.id) {
       this.eventEmitter.emit("challenge.action", {
         userId: player.user.id,

@@ -68,7 +68,9 @@ export default function TournamentsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "upcoming" | "past" | "my_tournaments">("upcoming");
+  const [filter, setFilter] = useState<
+    "all" | "upcoming" | "past" | "my_tournaments"
+  >("upcoming");
 
   const loadTournaments = async () => {
     try {
@@ -79,7 +81,10 @@ export default function TournamentsScreen() {
       } else if (filter === "past") {
         data = await tournamentService.getPastTournaments(20);
       } else if (filter === "my_tournaments" && user?.player?.id) {
-        const response = await tournamentService.getPlayerTournaments(user.player.id, { limit: 20 });
+        const response = await tournamentService.getPlayerTournaments(
+          user.player.id,
+          { limit: 20 },
+        );
         data = response.data;
       } else {
         const response = await tournamentService.getTournaments({ limit: 20 });
@@ -120,7 +125,10 @@ export default function TournamentsScreen() {
             ]}
           >
             <Text
-              style={[styles.statusText, { color: getStatusColor(item.status) }]}
+              style={[
+                styles.statusText,
+                { color: getStatusColor(item.status) },
+              ]}
             >
               {getStatusLabel(item.status)}
             </Text>
@@ -156,7 +164,10 @@ export default function TournamentsScreen() {
     <View style={styles.container}>
       <View style={styles.filterContainer}>
         <Pressable
-          style={[styles.filterButton, filter === "upcoming" && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            filter === "upcoming" && styles.filterButtonActive,
+          ]}
           onPress={() => {
             setIsLoading(true);
             setFilter("upcoming");
@@ -173,7 +184,10 @@ export default function TournamentsScreen() {
         </Pressable>
         {user?.player?.id && (
           <Pressable
-            style={[styles.filterButton, filter === "my_tournaments" && styles.filterButtonActive]}
+            style={[
+              styles.filterButton,
+              filter === "my_tournaments" && styles.filterButtonActive,
+            ]}
             onPress={() => {
               setIsLoading(true);
               setFilter("my_tournaments");
@@ -190,7 +204,10 @@ export default function TournamentsScreen() {
           </Pressable>
         )}
         <Pressable
-          style={[styles.filterButton, filter === "all" && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            filter === "all" && styles.filterButtonActive,
+          ]}
           onPress={() => {
             setIsLoading(true);
             setFilter("all");
@@ -206,7 +223,10 @@ export default function TournamentsScreen() {
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.filterButton, filter === "past" && styles.filterButtonActive]}
+          style={[
+            styles.filterButton,
+            filter === "past" && styles.filterButtonActive,
+          ]}
           onPress={() => {
             setIsLoading(true);
             setFilter("past");

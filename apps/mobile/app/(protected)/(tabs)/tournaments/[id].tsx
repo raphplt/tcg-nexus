@@ -74,20 +74,27 @@ export default function TournamentDetailsScreen() {
   const [isJoining, setIsJoining] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"details" | "matches" | "standings">("details");
+  const [activeTab, setActiveTab] = useState<
+    "details" | "matches" | "standings"
+  >("details");
 
-  const isAdminOrModerator = user?.role === "admin" || user?.role === "moderator";
+  const isAdminOrModerator =
+    user?.role === "admin" || user?.role === "moderator";
 
   const loadTournamentDetails = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const [tournamentData, statsData, matchesData, rankingsData] = await Promise.all([
-        tournamentService.getTournamentById(Number(id)),
-        tournamentService.getTournamentStats(Number(id)).catch(() => null),
-        tournamentService.getTournamentMatches(Number(id)).then(res => res?.matches || []).catch(() => []),
-        tournamentService.getTournamentRankings(Number(id)).catch(() => []),
-      ]);
+      const [tournamentData, statsData, matchesData, rankingsData] =
+        await Promise.all([
+          tournamentService.getTournamentById(Number(id)),
+          tournamentService.getTournamentStats(Number(id)).catch(() => null),
+          tournamentService
+            .getTournamentMatches(Number(id))
+            .then((res) => res?.matches || [])
+            .catch(() => []),
+          tournamentService.getTournamentRankings(Number(id)).catch(() => []),
+        ]);
       setTournament(tournamentData);
       setStats(statsData);
       setMatches(matchesData);
@@ -108,17 +115,23 @@ export default function TournamentDetailsScreen() {
 
   const handleJoin = async () => {
     if (!user?.player?.id) {
-      Alert.alert("Erreur", "Vous devez avoir un profil joueur pour participer.");
+      Alert.alert(
+        "Erreur",
+        "Vous devez avoir un profil joueur pour participer.",
+      );
       return;
     }
-    
+
     try {
       setIsJoining(true);
       await tournamentService.registerTournament(Number(id), user.player.id);
       Alert.alert("Succès", "Vous êtes inscrit à ce tournoi !");
       await loadTournamentDetails();
     } catch (err: any) {
-      Alert.alert("Erreur", err?.response?.data?.message || "Impossible de rejoindre le tournoi.");
+      Alert.alert(
+        "Erreur",
+        err?.response?.data?.message || "Impossible de rejoindre le tournoi.",
+      );
     } finally {
       setIsJoining(false);
     }
@@ -131,7 +144,11 @@ export default function TournamentDetailsScreen() {
       Alert.alert("Succès", `Le statut du tournoi a été mis à jour.`);
       await loadTournamentDetails();
     } catch (err: any) {
-      Alert.alert("Erreur", err?.response?.data?.message || "Impossible de mettre à jour le statut.");
+      Alert.alert(
+        "Erreur",
+        err?.response?.data?.message ||
+          "Impossible de mettre à jour le statut.",
+      );
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -148,9 +165,7 @@ export default function TournamentDetailsScreen() {
   if (error || !tournament) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>
-          {error || "Tournoi non trouvé."}
-        </Text>
+        <Text style={styles.errorText}>{error || "Tournoi non trouvé."}</Text>
       </View>
     );
   }
@@ -179,8 +194,8 @@ export default function TournamentDetailsScreen() {
             {tournament.type === "swiss_system"
               ? "Système Suisse"
               : tournament.type === "single_elimination"
-              ? "Élimination directe"
-              : tournament.type}
+                ? "Élimination directe"
+                : tournament.type}
           </Text>
         </View>
 
@@ -211,22 +226,52 @@ export default function TournamentDetailsScreen() {
       {/* Tabs */}
       <View style={styles.tabsContainer}>
         <Pressable
-          style={[styles.tabButton, activeTab === "details" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "details" && styles.tabButtonActive,
+          ]}
           onPress={() => setActiveTab("details")}
         >
-          <Text style={[styles.tabButtonText, activeTab === "details" && styles.tabButtonTextActive]}>Détails</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "details" && styles.tabButtonTextActive,
+            ]}
+          >
+            Détails
+          </Text>
         </Pressable>
         <Pressable
-          style={[styles.tabButton, activeTab === "matches" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "matches" && styles.tabButtonActive,
+          ]}
           onPress={() => setActiveTab("matches")}
         >
-          <Text style={[styles.tabButtonText, activeTab === "matches" && styles.tabButtonTextActive]}>Matchs</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "matches" && styles.tabButtonTextActive,
+            ]}
+          >
+            Matchs
+          </Text>
         </Pressable>
         <Pressable
-          style={[styles.tabButton, activeTab === "standings" && styles.tabButtonActive]}
+          style={[
+            styles.tabButton,
+            activeTab === "standings" && styles.tabButtonActive,
+          ]}
           onPress={() => setActiveTab("standings")}
         >
-          <Text style={[styles.tabButtonText, activeTab === "standings" && styles.tabButtonTextActive]}>Classement</Text>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === "standings" && styles.tabButtonTextActive,
+            ]}
+          >
+            Classement
+          </Text>
         </Pressable>
       </View>
 
@@ -247,7 +292,9 @@ export default function TournamentDetailsScreen() {
                 <Text style={styles.statLabel}>Rounds</Text>
               </View>
               <View style={styles.statBox}>
-                <Text style={styles.statValue}>{stats.completedMatches || 0}</Text>
+                <Text style={styles.statValue}>
+                  {stats.completedMatches || 0}
+                </Text>
                 <Text style={styles.statLabel}>Matchs finis</Text>
               </View>
             </View>
@@ -271,7 +318,9 @@ export default function TournamentDetailsScreen() {
 
           {/* Additional Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations complémentaires</Text>
+            <Text style={styles.sectionTitle}>
+              Informations complémentaires
+            </Text>
             <View style={styles.infoList}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Visibilité :</Text>
@@ -299,15 +348,20 @@ export default function TournamentDetailsScreen() {
           {/* Bouton d'inscription pour les joueurs */}
           {tournament.status === "registration_open" && !isAdminOrModerator && (
             <View style={styles.actionContainer}>
-              <Pressable 
-                style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
+              <Pressable
+                style={[
+                  styles.joinButton,
+                  isJoining && styles.joinButtonDisabled,
+                ]}
                 onPress={handleJoin}
                 disabled={isJoining}
               >
                 {isJoining ? (
                   <ActivityIndicator color="#fff8f3" />
                 ) : (
-                  <Text style={styles.joinButtonText}>Rejoindre le tournoi</Text>
+                  <Text style={styles.joinButtonText}>
+                    Rejoindre le tournoi
+                  </Text>
                 )}
               </Pressable>
             </View>
@@ -320,29 +374,45 @@ export default function TournamentDetailsScreen() {
               <View style={styles.adminButtons}>
                 {tournament.status === "draft" && (
                   <Pressable
-                    style={[styles.adminButton, isUpdatingStatus && styles.adminButtonDisabled]}
+                    style={[
+                      styles.adminButton,
+                      isUpdatingStatus && styles.adminButtonDisabled,
+                    ]}
                     onPress={() => handleUpdateStatus("registration_open")}
                     disabled={isUpdatingStatus}
                   >
-                    <Text style={styles.adminButtonText}>Ouvrir les inscriptions</Text>
+                    <Text style={styles.adminButtonText}>
+                      Ouvrir les inscriptions
+                    </Text>
                   </Pressable>
                 )}
                 {tournament.status === "registration_open" && (
                   <Pressable
-                    style={[styles.adminButton, styles.adminButtonSecondary, isUpdatingStatus && styles.adminButtonDisabled]}
+                    style={[
+                      styles.adminButton,
+                      styles.adminButtonSecondary,
+                      isUpdatingStatus && styles.adminButtonDisabled,
+                    ]}
                     onPress={() => handleUpdateStatus("registration_closed")}
                     disabled={isUpdatingStatus}
                   >
-                    <Text style={styles.adminButtonTextSecondary}>Fermer les inscriptions</Text>
+                    <Text style={styles.adminButtonTextSecondary}>
+                      Fermer les inscriptions
+                    </Text>
                   </Pressable>
                 )}
                 {tournament.status === "registration_closed" && (
                   <Pressable
-                    style={[styles.adminButton, isUpdatingStatus && styles.adminButtonDisabled]}
+                    style={[
+                      styles.adminButton,
+                      isUpdatingStatus && styles.adminButtonDisabled,
+                    ]}
                     onPress={() => handleUpdateStatus("in_progress")}
                     disabled={isUpdatingStatus}
                   >
-                    <Text style={styles.adminButtonText}>Démarrer le tournoi</Text>
+                    <Text style={styles.adminButtonText}>
+                      Démarrer le tournoi
+                    </Text>
                   </Pressable>
                 )}
               </View>
@@ -356,7 +426,9 @@ export default function TournamentDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Matchs</Text>
           {matches.length === 0 ? (
-            <Text style={styles.bodyText}>Aucun match généré pour le moment.</Text>
+            <Text style={styles.bodyText}>
+              Aucun match généré pour le moment.
+            </Text>
           ) : (
             matches.map((match) => (
               <View key={match.id} style={styles.matchCard}>
@@ -368,17 +440,35 @@ export default function TournamentDetailsScreen() {
                 </View>
                 <View style={styles.matchPlayers}>
                   <View style={styles.matchPlayer}>
-                    <Text style={[styles.matchPlayerName, match.winner?.id === match.playerA?.id && styles.matchWinner]}>
-                      {match.playerA?.user?.username || `Joueur ${match.playerA?.id || 'A'}`}
+                    <Text
+                      style={[
+                        styles.matchPlayerName,
+                        match.winner?.id === match.playerA?.id &&
+                          styles.matchWinner,
+                      ]}
+                    >
+                      {match.playerA?.user?.username ||
+                        `Joueur ${match.playerA?.id || "A"}`}
                     </Text>
-                    <Text style={styles.matchScore}>{match.playerAScore ?? "-"}</Text>
+                    <Text style={styles.matchScore}>
+                      {match.playerAScore ?? "-"}
+                    </Text>
                   </View>
                   <View style={styles.matchDivider} />
                   <View style={styles.matchPlayer}>
-                    <Text style={[styles.matchPlayerName, match.winner?.id === match.playerB?.id && styles.matchWinner]}>
-                      {match.playerB?.user?.username || `Joueur ${match.playerB?.id || 'B'}`}
+                    <Text
+                      style={[
+                        styles.matchPlayerName,
+                        match.winner?.id === match.playerB?.id &&
+                          styles.matchWinner,
+                      ]}
+                    >
+                      {match.playerB?.user?.username ||
+                        `Joueur ${match.playerB?.id || "B"}`}
                     </Text>
-                    <Text style={styles.matchScore}>{match.playerBScore ?? "-"}</Text>
+                    <Text style={styles.matchScore}>
+                      {match.playerBScore ?? "-"}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -396,21 +486,36 @@ export default function TournamentDetailsScreen() {
           ) : (
             <View style={styles.standingsContainer}>
               <View style={styles.standingsHeader}>
-                <Text style={[styles.standingsCell, styles.standingsRank]}>#</Text>
-                <Text style={[styles.standingsCell, styles.standingsName]}>Joueur</Text>
-                <Text style={[styles.standingsCell, styles.standingsScore]}>V-D</Text>
-                <Text style={[styles.standingsCell, styles.standingsPoints]}>Pts</Text>
+                <Text style={[styles.standingsCell, styles.standingsRank]}>
+                  #
+                </Text>
+                <Text style={[styles.standingsCell, styles.standingsName]}>
+                  Joueur
+                </Text>
+                <Text style={[styles.standingsCell, styles.standingsScore]}>
+                  V-D
+                </Text>
+                <Text style={[styles.standingsCell, styles.standingsPoints]}>
+                  Pts
+                </Text>
               </View>
               {rankings.map((ranking) => (
                 <View key={ranking.id} style={styles.standingsRow}>
-                  <Text style={[styles.standingsCell, styles.standingsRank]}>{ranking.rank}</Text>
-                  <Text style={[styles.standingsCell, styles.standingsName]} numberOfLines={1}>
+                  <Text style={[styles.standingsCell, styles.standingsRank]}>
+                    {ranking.rank}
+                  </Text>
+                  <Text
+                    style={[styles.standingsCell, styles.standingsName]}
+                    numberOfLines={1}
+                  >
                     {ranking.player?.user?.username || "Inconnu"}
                   </Text>
                   <Text style={[styles.standingsCell, styles.standingsScore]}>
                     {ranking.wins}-{ranking.losses}
                   </Text>
-                  <Text style={[styles.standingsCell, styles.standingsPoints]}>{ranking.points}</Text>
+                  <Text style={[styles.standingsCell, styles.standingsPoints]}>
+                    {ranking.points}
+                  </Text>
                 </View>
               ))}
             </View>

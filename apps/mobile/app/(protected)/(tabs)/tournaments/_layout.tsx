@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthProvider";
 
 export default function TournamentsLayout() {
   const { user } = useAuth();
-  const isAdminOrModerator = user?.role === "admin" || user?.role === "moderator";
+  const isAdminOrModerator =
+    user?.role === "admin" || user?.role === "moderator";
 
   return (
     <Stack>

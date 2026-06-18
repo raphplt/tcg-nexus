@@ -6,14 +6,14 @@ export const SCANNER_CONFIG = {
   CARD_ASPECT_RATIO: 63 / 88, // ≈ 0.716
 
   // Tolérance sur le ratio pour la détection (±10%)
-  CARD_RATIO_TOLERANCE: 0.10,
+  CARD_RATIO_TOLERANCE: 0.1,
 
   // Dimensions normalisées après rectification perspective
   NORMALIZED_WIDTH: 420,
   NORMALIZED_HEIGHT: 588,
 
   // Zones de crop ciblées (en fraction de la hauteur de la carte normalisée)
-  NAME_ZONE: { top: 0, bottom: 0.15 },    // Nom : 0–15%
+  NAME_ZONE: { top: 0, bottom: 0.15 }, // Nom : 0–15%
   NUMBER_ZONE: { top: 0.82, bottom: 1.0 }, // Numéro : 82–100%
 
   // Seuils de confiance finale (score sur 125)

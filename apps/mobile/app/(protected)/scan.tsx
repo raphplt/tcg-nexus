@@ -12,18 +12,7 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const scan = useScanFlow();
 
-  const runManualSearch = async () => {
-    const q = manualQuery.trim();
-    if (!q || isManualSearching) return;
-    setIsManualSearching(true);
-    setInlineError(null);
-    try {
-      const cards = await cardService.searchCards(q);
-      setManualResults(cards);
-      if (cards.length === 0) setInlineError("Aucune carte trouvée.");
-    } catch (e) { setInlineError(getApiErrorMessage(e)); }
-    finally { setIsManualSearching(false); }
-  };
+
 
   // ── Permission caméra ─────────────────────────────────────────────────────
   if (!permission) {

@@ -28,7 +28,7 @@ export interface DetectedCard {
 export interface RectifiedCard {
   uri: string;
   base64: string;
-  width: number;  // toujours NORMALIZED_WIDTH
+  width: number; // toujours NORMALIZED_WIDTH
   height: number; // toujours NORMALIZED_HEIGHT
 }
 
@@ -38,15 +38,15 @@ export interface RectifiedCard {
 export interface NameZoneResult {
   rawText: string;
   candidateName?: string; // première ligne valide, nettoyée
-  confidence: number;     // 0–1
+  confidence: number; // 0–1
 }
 
 /** Résultat OCR de la zone numéro (bas de la carte) */
 export interface NumberZoneResult {
   rawText: string;
-  localId?: string;  // ex: "063"
+  localId?: string; // ex: "063"
   setTotal?: string; // ex: "198"
-  setCode?: string;  // ex: "063/198"
+  setCode?: string; // ex: "063/198"
   confidence: number;
 }
 
@@ -88,10 +88,10 @@ export interface ScanSignal {
 
 /** Décomposition du score pour debug */
 export interface ScoreBreakdown {
-  nameScore: number;        // max 40
-  numberScore: number;      // max 40
+  nameScore: number; // max 40
+  numberScore: number; // max 40
   setCoherenceScore: number; // max 15
-  visualScore: number;      // max 30 (Phase 2)
+  visualScore: number; // max 30 (Phase 2)
   total: number;
 }
 

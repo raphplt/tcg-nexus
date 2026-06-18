@@ -26,13 +26,20 @@ const log = (
   success: boolean,
   detail: string,
 ) => {
-  const entry: ScanStepLog = { step, durationMs: Date.now() - t0, success, detail };
+  const entry: ScanStepLog = {
+    step,
+    durationMs: Date.now() - t0,
+    success,
+    detail,
+  };
   logs.push(entry);
   console.log(`[CardResolver:${step}] ${detail} (${entry.durationMs}ms)`);
 };
 
 /** Appelle l'API pour récupérer les candidats textuels */
-const fetchCandidates = async (signal: ScanSignal): Promise<CardSearchResult[]> => {
+const fetchCandidates = async (
+  signal: ScanSignal,
+): Promise<CardSearchResult[]> => {
   const params: Record<string, string> = {};
   if (signal.ocrName) params.cardName = signal.ocrName;
   if (signal.ocrLocalId) params.localId = signal.ocrLocalId;
@@ -62,7 +69,10 @@ export const cardResolver = {
     t0 = Date.now();
     const detected = cardDetector.detect(frameCrop);
     log(
-      logs, "detect", t0, detected.found,
+      logs,
+      "detect",
+      t0,
+      detected.found,
       `found=${detected.found} ratio=${detected.aspectRatio} confidence=${detected.confidence}`,
     );
 
@@ -71,10 +81,19 @@ export const cardResolver = {
     let rectified;
     try {
       rectified = await perspectiveCorrector.rectify(photoUri, frameCrop);
-      log(logs, "rectify", t0, true, `${rectified.width}×${rectified.height}px`);
+      log(
+        logs,
+        "rectify",
+        t0,
+        true,
+        `${rectified.width}×${rectified.height}px`,
+      );
     } catch (e) {
       log(logs, "rectify", t0, false, String(e));
-      return emptyResolution(logs, "Impossible de normaliser l'image capturée.");
+      return emptyResolution(
+        logs,
+        "Impossible de normaliser l'image capturée.",
+      );
     }
 
     // ── Étape 3 : OCR ciblé (2 zones) ────────────────────────────────────────
@@ -83,20 +102,32 @@ export const cardResolver = {
     try {
       ocrResult = await zoneOcr.extract(rectified);
       log(
-        logs, "ocr", t0, true,
+        logs,
+        "ocr",
+        t0,
+        true,
         `name="${ocrResult.nameZone.candidateName ?? "?"}" ` +
-        `localId="${ocrResult.numberZone.localId ?? "?"}" ` +
-        `lang=${ocrResult.language}`,
+          `localId="${ocrResult.numberZone.localId ?? "?"}" ` +
+          `lang=${ocrResult.language}`,
       );
     } catch (e) {
       log(logs, "ocr", t0, false, String(e));
-      return emptyResolution(logs, "OCR échoué — vérifier la clé Google Vision.");
+      return emptyResolution(
+        logs,
+        "OCR échoué — vérifier la clé Google Vision.",
+      );
     }
 
     // ── Étape 4 : VisualMatcher (Phase 2 stub) ────────────────────────────────
     t0 = Date.now();
     const visualResult = await visualMatcher.match(rectified.base64);
-    log(logs, "visual", t0, true, `method=${visualResult.method} matches=${visualResult.topMatches.length}`);
+    log(
+      logs,
+      "visual",
+      t0,
+      true,
+      `method=${visualResult.method} matches=${visualResult.topMatches.length}`,
+    );
 
     // ── Construction du signal ────────────────────────────────────────────────
     const signal: ScanSignal = {
@@ -110,9 +141,22 @@ export const cardResolver = {
     };
 
     // Pas de signal du tout → on ne peut pas chercher
-    if (!signal.ocrName && !signal.ocrLocalId && visualResult.topMatches.length === 0) {
-      log(logs, "rank", Date.now(), false, "Aucun signal OCR ni visuel disponible");
-      return emptyResolution(logs, "Aucun texte détecté. Repositionne la carte.");
+    if (
+      !signal.ocrName &&
+      !signal.ocrLocalId &&
+      visualResult.topMatches.length === 0
+    ) {
+      log(
+        logs,
+        "rank",
+        Date.now(),
+        false,
+        "Aucun signal OCR ni visuel disponible",
+      );
+      return emptyResolution(
+        logs,
+        "Aucun texte détecté. Repositionne la carte.",
+      );
     }
 
     // ── Étape 5 : Fetch candidats + Ranking ───────────────────────────────────
@@ -134,7 +178,10 @@ export const cardResolver = {
     const confidence = best?.confidence ?? "LOW";
 
     log(
-      logs, "resolve", t0, best !== null,
+      logs,
+      "resolve",
+      t0,
+      best !== null,
       best
         ? `"${best.cardName}" score=${topScore} confidence=${confidence}`
         : "Aucun candidat avec score > 0",
@@ -157,7 +204,10 @@ export const cardResolver = {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
-const emptyResolution = (logs: ScanStepLog[], reason: string): ScanResolution => ({
+const emptyResolution = (
+  logs: ScanStepLog[],
+  reason: string,
+): ScanResolution => ({
   bestCardId: null,
   bestCardName: null,
   bestCardImage: null,

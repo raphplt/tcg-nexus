@@ -7,30 +7,58 @@ const OCR_SPACE_URL = "https://api.ocr.space/parse/image";
 
 // ─── Stopwords — lignes entières à rejeter (égalité exacte après normalize) ──
 const NAME_STOPWORDS_EXACT = new Set([
-  "hp", "pv", "pokemon", "pokemon", "trainer", "dresseur",
-  "energy", "energie", "basic", "stage", "carte",
-  "rare", "common", "uncommon",
+  "hp",
+  "pv",
+  "pokemon",
+  "pokemon",
+  "trainer",
+  "dresseur",
+  "energy",
+  "energie",
+  "basic",
+  "stage",
+  "carte",
+  "rare",
+  "common",
+  "uncommon",
 ]);
 
 // ─── Préfixes/mots-clés à rejeter si la ligne les CONTIENT ───────────────────
 // Ces termes apparaissent souvent collés à d'autres mots sur les cartes FR/EN.
 const NAME_STOPWORDS_CONTAINS = [
   // Stades (FR)
-  "niveau de base", "stade 1", "stade 2",
-  "pokemon de base", "pokemon stade",
+  "niveau de base",
+  "stade 1",
+  "stade 2",
+  "pokemon de base",
+  "pokemon stade",
   // Stades (EN)
-  "basic pokemon", "stage 1", "stage 2", "level up",
+  "basic pokemon",
+  "stage 1",
+  "stage 2",
+  "level up",
   // Infos techniques
-  "game freak", "nintendo", "creatures", "copyright",
-  "illustr", "©", "™", "®",
+  "game freak",
+  "nintendo",
+  "creatures",
+  "copyright",
+  "illustr",
+  "©",
+  "™",
+  "®",
   // Énergie
-  "energie", "energy",
+  "energie",
+  "energy",
   // Niveaux numériques ex: "Niv.52"
   "niv.",
 ];
 
 const normalize = (s: string): string =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 // ─── Parsing du numéro de set ─────────────────────────────────────────────────
 
@@ -52,7 +80,9 @@ const parseSetNumber = (text: string): ParsedNumber => {
   }
 
   // Format spécial : TG01/TG30, GG01/GG70, etc.
-  const special = text.match(/\b([A-Z]{1,3}\d{1,3})\s*\/\s*([A-Z]{0,3}\d{1,3})\b/);
+  const special = text.match(
+    /\b([A-Z]{1,3}\d{1,3})\s*\/\s*([A-Z]{0,3}\d{1,3})\b/,
+  );
   if (special?.[1] && special?.[2]) {
     return {
       localId: special[1],
@@ -91,8 +121,22 @@ const extractCardName = (lines: string[]): string | undefined => {
 
 const detectLanguage = (text: string): "fr" | "en" | "ja" | "unknown" => {
   if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(text)) return "ja";
-  const frWords = ["attaque", "faiblesse", "retraite", "talent", "dresseur", "énergie"];
-  const enWords = ["attack", "weakness", "retreat", "ability", "trainer", "energy"];
+  const frWords = [
+    "attaque",
+    "faiblesse",
+    "retraite",
+    "talent",
+    "dresseur",
+    "énergie",
+  ];
+  const enWords = [
+    "attack",
+    "weakness",
+    "retreat",
+    "ability",
+    "trainer",
+    "energy",
+  ];
   const frScore = frWords.filter((w) => text.toLowerCase().includes(w)).length;
   const enScore = enWords.filter((w) => text.toLowerCase().includes(w)).length;
   if (frScore > enScore) return "fr";
@@ -110,11 +154,13 @@ const callGoogleVision = async (base64: string): Promise<string> => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      requests: [{
-        image: { content: base64 },
-        features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
-        imageContext: { languageHints: ["fr", "en"] },
-      }],
+      requests: [
+        {
+          image: { content: base64 },
+          features: [{ type: "DOCUMENT_TEXT_DETECTION", maxResults: 1 }],
+          imageContext: { languageHints: ["fr", "en"] },
+        },
+      ],
     }),
   });
 
@@ -153,7 +199,9 @@ const ocrText = async (base64: string): Promise<string> => {
 
   if (googleKey) return callGoogleVision(base64);
   if (ocrSpaceKey) return callOcrSpace(base64);
-  throw new Error("Aucun provider OCR configuré (EXPO_PUBLIC_GOOGLE_VISION_API_KEY manquant)");
+  throw new Error(
+    "Aucun provider OCR configuré (EXPO_PUBLIC_GOOGLE_VISION_API_KEY manquant)",
+  );
 };
 
 // ─── Crop d'une zone de la carte normalisée ───────────────────────────────────
@@ -174,7 +222,11 @@ const cropZone = async (
       { crop: { originX: 0, originY, width: cardW, height } },
       { resize: { width: SCANNER_CONFIG.OCR_RESIZE_WIDTH } },
     ],
-    { base64: true, compress: SCANNER_CONFIG.OCR_CROP_QUALITY, format: SaveFormat.JPEG },
+    {
+      base64: true,
+      compress: SCANNER_CONFIG.OCR_CROP_QUALITY,
+      format: SaveFormat.JPEG,
+    },
   );
 
   if (!result.base64) throw new Error("[ZoneOCR] Crop impossible");

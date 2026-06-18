@@ -3,7 +3,9 @@ import { Image } from "react-native";
 import { SCANNER_CONFIG } from "./config";
 import type { DetectedCard, FrameCrop, RectifiedCard } from "@/types/scanner";
 
-const getImageSize = (uri: string): Promise<{ width: number; height: number }> =>
+const getImageSize = (
+  uri: string,
+): Promise<{ width: number; height: number }> =>
   new Promise((resolve, reject) => {
     Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
   });
@@ -20,7 +22,10 @@ export const cardDetector = {
     const aspectRatio = frameCrop.frameW / frameCrop.frameH;
     const expected = SCANNER_CONFIG.CARD_ASPECT_RATIO;
     const diff = Math.abs(aspectRatio - expected);
-    const confidence = Math.max(0, 1 - diff / SCANNER_CONFIG.CARD_RATIO_TOLERANCE);
+    const confidence = Math.max(
+      0,
+      1 - diff / SCANNER_CONFIG.CARD_RATIO_TOLERANCE,
+    );
 
     return {
       found: diff <= SCANNER_CONFIG.CARD_RATIO_TOLERANCE,
@@ -38,17 +43,32 @@ export const cardDetector = {
  * Phase 2 : homographie réelle si 4 coins détectés par le CardDetector.
  */
 export const perspectiveCorrector = {
-  async rectify(photoUri: string, frameCrop: FrameCrop): Promise<RectifiedCard> {
+  async rectify(
+    photoUri: string,
+    frameCrop: FrameCrop,
+  ): Promise<RectifiedCard> {
     const { width: imgW, height: imgH } = await getImageSize(photoUri);
 
     const scaleX = imgW / frameCrop.screenW;
     const scaleY = imgH / frameCrop.screenH;
 
     const margin = 0.02;
-    const originX = Math.max(0, Math.floor((frameCrop.frameX - frameCrop.frameW * margin) * scaleX));
-    const originY = Math.max(0, Math.floor((frameCrop.frameY - frameCrop.frameH * margin) * scaleY));
-    const cropW = Math.min(imgW - originX, Math.floor(frameCrop.frameW * (1 + margin * 2) * scaleX));
-    const cropH = Math.min(imgH - originY, Math.floor(frameCrop.frameH * (1 + margin * 2) * scaleY));
+    const originX = Math.max(
+      0,
+      Math.floor((frameCrop.frameX - frameCrop.frameW * margin) * scaleX),
+    );
+    const originY = Math.max(
+      0,
+      Math.floor((frameCrop.frameY - frameCrop.frameH * margin) * scaleY),
+    );
+    const cropW = Math.min(
+      imgW - originX,
+      Math.floor(frameCrop.frameW * (1 + margin * 2) * scaleX),
+    );
+    const cropH = Math.min(
+      imgH - originY,
+      Math.floor(frameCrop.frameH * (1 + margin * 2) * scaleY),
+    );
 
     const result = await manipulateAsync(
       photoUri,
@@ -69,7 +89,9 @@ export const perspectiveCorrector = {
     );
 
     if (!result.base64) {
-      throw new Error("[Scanner] Impossible de normaliser l'image de la carte.");
+      throw new Error(
+        "[Scanner] Impossible de normaliser l'image de la carte.",
+      );
     }
 
     return {

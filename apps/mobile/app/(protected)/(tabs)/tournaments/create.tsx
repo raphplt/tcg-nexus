@@ -22,7 +22,8 @@ export default function CreateTournamentScreen() {
     description: "",
     location: "",
     startDateStr: new Date().toISOString().split("T")[0] || "",
-    endDateStr: new Date(Date.now() + 86400000).toISOString().split("T")[0] || "",
+    endDateStr:
+      new Date(Date.now() + 86400000).toISOString().split("T")[0] || "",
     type: TournamentType.SINGLE_ELIMINATION,
     isPublic: true,
   });
@@ -32,11 +33,11 @@ export default function CreateTournamentScreen() {
       Alert.alert("Erreur", "Veuillez entrer un nom pour le tournoi.");
       return;
     }
-    
+
     // Validation basique des dates
     const startDate = new Date(formData.startDateStr);
     const endDate = new Date(formData.endDateStr);
-    
+
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       Alert.alert("Erreur", "Format de date invalide. Utilisez AAAA-MM-JJ.");
       return;
@@ -54,14 +55,15 @@ export default function CreateTournamentScreen() {
         endDate: endDate.toISOString(),
       };
 
-      const newTournament = await tournamentService.createTournament(dataToSubmit);
+      const newTournament =
+        await tournamentService.createTournament(dataToSubmit);
       Alert.alert("Succès", "Le tournoi a été créé avec succès.");
       router.replace(`/tournaments/${newTournament.id}`);
     } catch (err: any) {
       console.error(err);
       Alert.alert(
         "Erreur",
-        err?.response?.data?.message || "Impossible de créer le tournoi."
+        err?.response?.data?.message || "Impossible de créer le tournoi.",
       );
     } finally {
       setIsSubmitting(false);
@@ -103,7 +105,9 @@ export default function CreateTournamentScreen() {
             style={styles.input}
             placeholder="2026-06-25"
             value={formData.startDateStr}
-            onChangeText={(text) => setFormData({ ...formData, startDateStr: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, startDateStr: text })
+            }
           />
         </View>
         <View style={{ width: 12 }} />
@@ -113,7 +117,9 @@ export default function CreateTournamentScreen() {
             style={styles.input}
             placeholder="2026-06-26"
             value={formData.endDateStr}
-            onChangeText={(text) => setFormData({ ...formData, endDateStr: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, endDateStr: text })
+            }
           />
         </View>
       </View>
@@ -153,10 +159,10 @@ export default function CreateTournamentScreen() {
                 {type === TournamentType.SWISS_SYSTEM
                   ? "Ronde Suisse"
                   : type === TournamentType.SINGLE_ELIMINATION
-                  ? "Élimination"
-                  : type === TournamentType.DOUBLE_ELIMINATION
-                  ? "Double Élim."
-                  : "Round Robin"}
+                    ? "Élimination"
+                    : type === TournamentType.DOUBLE_ELIMINATION
+                      ? "Double Élim."
+                      : "Round Robin"}
               </Text>
             </Pressable>
           ))}
@@ -173,7 +179,10 @@ export default function CreateTournamentScreen() {
       </View>
 
       <Pressable
-        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+        style={[
+          styles.submitButton,
+          isSubmitting && styles.submitButtonDisabled,
+        ]}
         onPress={handleCreate}
         disabled={isSubmitting}
       >

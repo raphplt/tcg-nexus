@@ -432,7 +432,10 @@ export class PokemonCardService {
           const likeKey = `lidLike${i}`;
           orParams[exactKey] = v;
           orParams[likeKey] = `%${v}%`;
-          return [`card.localId = :${exactKey}`, `card.localId ILIKE :${likeKey}`];
+          return [
+            `card.localId = :${exactKey}`,
+            `card.localId ILIKE :${likeKey}`,
+          ];
         });
         orConditions.push(`(${lidConds.join(" OR ")})`);
       }
@@ -471,15 +474,23 @@ export class PokemonCardService {
 
       // LocalId
       const localIdExact = nLocalIdVariants.some((v) => v && nLocalId === v);
-      const localIdPartial = !localIdExact && nLocalIdVariants.some((v) => v && nLocalId.includes(v));
+      const localIdPartial =
+        !localIdExact &&
+        nLocalIdVariants.some((v) => v && nLocalId.includes(v));
 
       if (localIdExact) score += 60;
       else if (localIdPartial) score += 30;
 
       // Nom
       const nameExact = nTargetName && nName === nTargetName;
-      const nameContains = !nameExact && nTargetName && nName.includes(nTargetName);
-      const namePartial = !nameExact && !nameContains && nTargetName && nTargetName.includes(nName) && nName.length > 3;
+      const nameContains =
+        !nameExact && nTargetName && nName.includes(nTargetName);
+      const namePartial =
+        !nameExact &&
+        !nameContains &&
+        nTargetName &&
+        nTargetName.includes(nName) &&
+        nName.length > 3;
 
       if (nameExact) score += 50;
       else if (nameContains) score += 30;
