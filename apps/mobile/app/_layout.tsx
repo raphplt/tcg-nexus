@@ -1,3 +1,4 @@
+import * as Notifications from "expo-notifications";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -7,6 +8,16 @@ import { ApiErrorSnackbar } from "@/components/ApiErrorSnackbar";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import { useAuthStore } from "@/store/useAuthStore";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Safe guard for repeated calls during fast refresh.

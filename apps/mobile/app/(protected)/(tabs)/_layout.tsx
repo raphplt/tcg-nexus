@@ -1,5 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs, router } from "expo-router";
+import { NotificationBell } from "@/components/NotificationBell";
 import {
   Pressable,
   StyleSheet,
@@ -53,6 +54,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShadowVisible: false,
+        headerRight: () => <NotificationBell />,
         headerStyle: {
           backgroundColor: colors.heroDark,
         },

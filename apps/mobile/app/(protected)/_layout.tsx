@@ -1,5 +1,6 @@
-import { Redirect, Slot } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { colors } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthProvider";
 
 export default function ProtectedLayout() {
@@ -13,5 +14,22 @@ export default function ProtectedLayout() {
     return <Redirect href="/login" />;
   }
 
-  return <Slot />;
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.heroDark },
+        headerTintColor: colors.heroDarkForeground,
+        headerShadowVisible: false,
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+          presentation: "card",
+        }}
+      />
+    </Stack>
+  );
 }
