@@ -26,6 +26,8 @@ services:
       dockerfile: Dockerfile
     container_name: tcg-nexus-vision
     restart: unless-stopped
+    environment:
+      OMP_THREAD_LIMIT: "1"
     ports:
       - "8000:8000"
     networks:
