@@ -268,6 +268,19 @@ Garde-fou d'ambiguïté : deux candidats au coude-à-coude (`best − second < 0
   vs carte trouvée (images affichées en `low.png`).
 - Recherche manuelle toujours disponible en repli.
 
+### 3.11 Fallbacks (la chaîne ne casse jamais)
+
+Chaque étape risquée a un repli ; aucune ne fait planter le scan :
+
+| Étape | Repli |
+|---|---|
+| Service vision indisponible / en erreur | OCR plein-texte sur l'image brute envoyée par le mobile (`vision = null`) |
+| Batch vision en timeout | on rend la main, OCR brut (pas de retry mono, aussi lent) |
+| Pas de carte détectée | image entière redressée en portrait (`detected: false`) |
+| Embedding CLIP indisponible | départage visuel **ORB** sur les candidats texte (cf. §3.8) |
+| Tesseract en échec | `OCR_ENGINE=vision` (Google Vision côté serveur, cf. §5) |
+| Aucun candidat texte | sauvetage ANN plein-catalogue par embedding (`visualRescue`, cf. §3.8 bis) |
+
 ---
 
 ## 4. Logging / debug (`logging/scan-logger.ts`)
