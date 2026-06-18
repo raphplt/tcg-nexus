@@ -267,9 +267,12 @@ export class ScanService {
     };
   }
 
-  // fusion texte + visuel. Stratégie : départager EN RELATIF les candidats du
-  // texte par leurs embeddings (cas fiable), et ne recourir à l'ANN plein-
-  // catalogue qu'en sauvetage quand le texte n'a rien sorti.
+  // fusion texte + visuel. Le visuel ne sert qu'à RÉORDONNER les candidats du
+  // texte (choisir le n°1 quand le texte est ambigu), jamais à gonfler la
+  // confiance : aux magnitudes observées (bonnes ~0.5-0.68, qui chevauchent les
+  // mauvaises), la similarité ne mérite pas un "high". On préserve ainsi la
+  // calibration (aucune carte confiante-fausse via le visuel). Sauvetage plein-
+  // catalogue seulement quand le texte n'a rien sorti.
   private async fuseWithVisual(
     embedding: number[],
     textCandidates: ScanCardCandidate[],
@@ -282,6 +285,7 @@ export class ScanService {
   }> {
     const base = computeConfidence(textCandidates);
     const keep = { candidates: textCandidates, ...base, usedVisual: false };
+    // texte déjà sûr -> on n'y touche pas
     if (base.confidenceLevel === "high") return keep;
 
     // texte muet -> sauvetage plein-catalogue (full-art où l'OCR échoue)
@@ -289,7 +293,7 @@ export class ScanService {
       return this.visualRescue(embedding, game);
     }
 
-    // départage restreint : similarité du visuel contre chaque candidat texte
+    // similarité du visuel contre chaque candidat texte
     const sims = await this.cardService.embeddingSimilarities(
       embedding,
       textCandidates.map((c) => c.id),
@@ -301,29 +305,20 @@ export class ScanService {
       .sort((a, b) => b.sim - a.sim);
     const top = ranked[0];
     const secondSim = ranked[1]?.sim ?? 0;
-    if (top.sim < EMB_FLOOR) return keep;
 
-    // le visuel confirme le n°1 du texte -> on valide
-    if (top.c.id === textCandidates[0].id) {
-      return {
-        ...keep,
-        confidence: 0.95,
-        confidenceLevel: "high",
-        usedVisual: true,
-      };
-    }
+    // visuel d'accord avec le texte, ou trop incertain / pas assez décisif :
+    // on ne change rien (et surtout on ne gonfle pas la confiance).
+    if (top.c.id === textCandidates[0].id) return keep;
+    if (top.sim < EMB_FLOOR || top.sim - secondSim < EMB_REL_MARGIN) return keep;
 
-    // le visuel préfère nettement un autre candidat -> on le promeut
-    if (top.sim - secondSim >= EMB_REL_MARGIN) {
-      return {
-        candidates: [top.c, ...textCandidates.filter((c) => c.id !== top.c.id)],
-        confidence: 0.9,
-        confidenceLevel: "high",
-        usedVisual: true,
-      };
-    }
-
-    return keep;
+    // visuel décisif pour un autre candidat -> on le remonte n°1, MAIS la
+    // confiance reste celle du texte (medium/low) : suggestion, pas certitude.
+    return {
+      candidates: [top.c, ...textCandidates.filter((c) => c.id !== top.c.id)],
+      confidence: base.confidence,
+      confidenceLevel: base.confidenceLevel,
+      usedVisual: true,
+    };
   }
 
   // sauvetage : aucun candidat texte, on tente l'ANN plein-catalogue. Exigeant

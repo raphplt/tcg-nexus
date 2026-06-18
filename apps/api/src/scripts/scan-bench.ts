@@ -374,7 +374,13 @@ async function main() {
   writeFileSync(outPath, JSON.stringify(results, null, 2));
   console.log(`Détail JSON → ${outPath}`);
 
-  await app.close();
+  // app.close() peut traîner (pool DB/sockets vision) -> on force la sortie pour
+  // ne pas laisser un process pendu et vider le buffer stdout.
+  await Promise.race([
+    app.close().catch(() => {}),
+    new Promise((r) => setTimeout(r, 3000)),
+  ]);
+  process.exit(0);
 }
 
 main().catch((e) => {
