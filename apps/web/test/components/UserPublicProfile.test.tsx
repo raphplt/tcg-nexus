@@ -30,7 +30,9 @@ vi.mock("@/services/user.service", () => ({
 
 vi.mock("@/services/decks.service", () => ({
   decksService: {
-    getPublicDecksByUser: vi.fn().mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 }),
+    getPublicDecksByUser: vi
+      .fn()
+      .mockResolvedValue({ items: [], total: 0, page: 1, limit: 20 }),
   },
 }));
 
@@ -40,7 +42,9 @@ vi.mock("@/services/badge.service", () => ({
 
 vi.mock("@/services/marketplace.service", () => ({
   marketplaceService: {
-    getSellerStatistics: vi.fn().mockResolvedValue({ totalSales: 0, avgOrderValue: 0 }),
+    getSellerStatistics: vi
+      .fn()
+      .mockResolvedValue({ totalSales: 0, avgOrderValue: 0 }),
   },
 }));
 

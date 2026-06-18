@@ -175,7 +175,6 @@ export class PokemonCardService {
     updatePokemonCardDto: UpdatePokemonCardDto,
   ): Promise<Record<string, any>> {
     const card = await this.findOneEntity(id);
-    // Associer un set via son id si fourni
     const {
       set,
       setId,
@@ -215,9 +214,7 @@ export class PokemonCardService {
     });
 
     if (!card.pokemonDetails) {
-      card.pokemonDetails = this.pokemonCardDetailsRepository.create({
-        card,
-      });
+      card.pokemonDetails = this.pokemonCardDetailsRepository.create({ card });
     }
 
     Object.assign(card.pokemonDetails, {
@@ -260,10 +257,7 @@ export class PokemonCardService {
     type?: string,
   ): Promise<PaginatedResult<Record<string, any>>> {
     const { page: validPage, limit: validLimit } =
-      PaginationHelper.validateParams({
-        page,
-        limit,
-      });
+      PaginationHelper.validateParams({ page, limit });
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
@@ -316,18 +310,6 @@ export class PokemonCardService {
     );
   }
 
-  // async findRandom(): Promise<Card> {
-  //   const count = await this.pokemonCardRepository.count();
-  //   const randomIndex = Math.floor(Math.random() * count);
-  //   const randomCard = await this.pokemonCardRepository.find({
-  //     skip: randomIndex,
-  //     take: 1
-  //   });
-  //   return randomCard[0];
-  // }
-
-  // pokemon-card.service.ts
-
   async findRandom(
     serieId?: string,
     rarity?: string,
@@ -354,5 +336,187 @@ export class PokemonCardService {
 
     const card = await qb.orderBy("RANDOM()").limit(1).getOne();
     return card ? this.toPokemonCardResponse(card) : null;
+  }
+
+  /**
+   * Trouve les meilleures cartes correspondant aux données OCR.
+   *
+   * Stratégie de scoring (pourquoi "Abra 063" ne peut pas retourner "Machop 063") :
+   *
+   * ÉTAPE 1 — Requête AND prioritaire :
+   *   Si on a NOM + NUMÉRO → on cherche d'abord les cartes qui ont les DEUX.
+   *   → Abra avec localId 063 → trouvé directement, score 230 (60+50+120 bonus combiné)
+   *
+   * ÉTAPE 2 — Fallback OR :
+   *   Si rien trouvé en AND, on cherche par NOM ou NUMÉRO séparément.
+   *
+   * Tableau des scores :
+   *   localId exact           → +60
+   *   nom exact               → +50
+   *   BONUS COMBINÉ (les 2)  → +120   ← clé du fix
+   *   set name match          → +15
+   *   → Abra 063 = 60+50+120 = 230
+   *   → Machop 063 = 60 seul  = 60
+   */
+  async findByScanMatch(params: {
+    cardName?: string;
+    localId?: string;
+    setName?: string;
+    setNumber?: string;
+    setTotal?: string;
+  }): Promise<{ card: Record<string, any>; score: number }[]> {
+    const { cardName, localId, setName, setNumber } = params;
+
+    const norm = (v: string | undefined): string =>
+      (v || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    // Variantes du localId : "063" → ["063", "63"]
+    // pour gérer les BDD qui stockent avec ou sans padding
+    const rawLocalId = (localId || setNumber || "").trim();
+    const localIdVariants: string[] = [];
+    if (rawLocalId) {
+      localIdVariants.push(rawLocalId);
+      const n = parseInt(rawLocalId, 10);
+      if (!isNaN(n)) {
+        const withoutPad = String(n);
+        const withPad3 = String(n).padStart(3, "0");
+        if (withoutPad !== rawLocalId) localIdVariants.push(withoutPad);
+        if (withPad3 !== rawLocalId && withPad3 !== withoutPad)
+          localIdVariants.push(withPad3);
+      }
+    }
+
+    // ── ÉTAPE 1 : requête AND (nom + numéro ensemble) ────────────────────
+    // Plus précise — si les deux critères sont disponibles
+    let cards: Card[] = [];
+
+    if (cardName?.trim() && localIdVariants.length > 0) {
+      const andParams: Record<string, string> = {};
+      andParams.game = CardGame.Pokemon;
+      andParams.cardName = `%${cardName.trim()}%`;
+
+      const localIdConds = localIdVariants.map((v, i) => {
+        andParams[`lid${i}`] = v;
+        return `card.localId = :lid${i}`;
+      });
+
+      const andQb = this.pokemonCardRepository
+        .createQueryBuilder("card")
+        .leftJoinAndSelect("card.set", "set")
+        .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+        .where("card.game = :game", { game: andParams.game })
+        .andWhere("card.name ILIKE :cardName", { cardName: andParams.cardName })
+        .andWhere(`(${localIdConds.join(" OR ")})`, andParams)
+        .limit(5);
+
+      cards = await andQb.getMany();
+    }
+
+    // ── ÉTAPE 2 : fallback OR si rien trouvé ────────────────────────────
+    if (cards.length === 0) {
+      const orConditions: string[] = [];
+      const orParams: Record<string, string> = {};
+
+      if (cardName?.trim()) {
+        orConditions.push("card.name ILIKE :cardName");
+        orParams.cardName = `%${cardName.trim()}%`;
+      }
+
+      if (localIdVariants.length > 0) {
+        const lidConds = localIdVariants.flatMap((v, i) => {
+          const exactKey = `lidExact${i}`;
+          const likeKey = `lidLike${i}`;
+          orParams[exactKey] = v;
+          orParams[likeKey] = `%${v}%`;
+          return [
+            `card.localId = :${exactKey}`,
+            `card.localId ILIKE :${likeKey}`,
+          ];
+        });
+        orConditions.push(`(${lidConds.join(" OR ")})`);
+      }
+
+      if (setName?.trim()) {
+        orConditions.push("set.name ILIKE :setName");
+        orParams.setName = `%${setName.trim()}%`;
+      }
+
+      if (orConditions.length === 0) return [];
+
+      const orQb = this.pokemonCardRepository
+        .createQueryBuilder("card")
+        .leftJoinAndSelect("card.set", "set")
+        .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+        .where("card.game = :game", { game: CardGame.Pokemon })
+        .andWhere(`(${orConditions.join(" OR ")})`, orParams)
+        .limit(25);
+
+      cards = await orQb.getMany();
+    }
+
+    if (cards.length === 0) return [];
+
+    // ── Scoring ─────────────────────────────────────────────────────────
+    const nTargetName = norm(cardName);
+    const nTargetSet = norm(setName);
+    const nLocalIdVariants = localIdVariants.map(norm);
+
+    const scored = cards.map((card) => {
+      let score = 0;
+
+      const nName = norm(card.name);
+      const nLocalId = norm(card.localId);
+      const nSet = norm(card.set?.name);
+
+      // LocalId
+      const localIdExact = nLocalIdVariants.some((v) => v && nLocalId === v);
+      const localIdPartial =
+        !localIdExact &&
+        nLocalIdVariants.some((v) => v && nLocalId.includes(v));
+
+      if (localIdExact) score += 60;
+      else if (localIdPartial) score += 30;
+
+      // Nom
+      const nameExact = nTargetName && nName === nTargetName;
+      const nameContains =
+        !nameExact && nTargetName && nName.includes(nTargetName);
+      const namePartial =
+        !nameExact &&
+        !nameContains &&
+        nTargetName &&
+        nTargetName.includes(nName) &&
+        nName.length > 3;
+
+      if (nameExact) score += 50;
+      else if (nameContains) score += 30;
+      else if (namePartial) score += 20;
+
+      // ★ BONUS COMBINÉ — le cœur du fix ★
+      // Seule une carte qui a à la fois le bon nom ET le bon numéro reçoit ce bonus.
+      // "Abra 063" → score 60+50+120 = 230
+      // "Machop 063" → score 60 seulement
+      // "Abra 025" → score 50 seulement (si OCR donne 063 comme numéro)
+      const hasName = nameExact || nameContains || namePartial;
+      const hasLocalId = localIdExact || localIdPartial;
+      if (hasName && hasLocalId) score += 120;
+
+      // Set name
+      if (nTargetSet && nSet) {
+        if (nSet.includes(nTargetSet)) score += 15;
+        else if (nTargetSet.includes(nSet) && nSet.length > 3) score += 10;
+      }
+
+      return { card: this.toPokemonCardResponse(card), score };
+    });
+
+    return scored
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
   }
 }

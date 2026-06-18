@@ -48,7 +48,8 @@ export function UserHeader({ user }: UserHeaderProps) {
     },
   });
 
-  const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
+  const initials =
+    `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase();
   const fullName = `${user.firstName} ${user.lastName}`.trim();
   const isFollowing = !!user.isFollowing;
 

@@ -7,7 +7,10 @@ export class RegisterTokenDto {
   @IsNotEmpty()
   token: string;
 
-  @ApiProperty({ description: "Platform name (e.g. expo, ios, android, web)", required: false })
+  @ApiProperty({
+    description: "Platform name (e.g. expo, ios, android, web)",
+    required: false,
+  })
   @IsString()
   @IsOptional()
   platform?: string;

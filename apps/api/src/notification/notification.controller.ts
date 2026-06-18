@@ -40,10 +40,7 @@ export class NotificationController {
 
   @Patch(":id/read")
   @ApiOperation({ summary: "Mark a notification as read" })
-  markAsRead(
-    @Param("id", ParseIntPipe) id: number,
-    @CurrentUser() user: User,
-  ) {
+  markAsRead(@Param("id", ParseIntPipe) id: number, @CurrentUser() user: User) {
     return this.notificationService.markAsRead(user.id, id);
   }
 
@@ -55,10 +52,7 @@ export class NotificationController {
 
   @Delete(":id")
   @ApiOperation({ summary: "Delete a specific notification" })
-  remove(
-    @Param("id", ParseIntPipe) id: number,
-    @CurrentUser() user: User,
-  ) {
+  remove(@Param("id", ParseIntPipe) id: number, @CurrentUser() user: User) {
     return this.notificationService.deleteNotification(user.id, id);
   }
 
@@ -90,10 +84,7 @@ export class NotificationController {
 
   @Delete("tokens/:token")
   @ApiOperation({ summary: "Unregister/remove a device token" })
-  unregisterToken(
-    @CurrentUser() user: User,
-    @Param("token") token: string,
-  ) {
+  unregisterToken(@CurrentUser() user: User, @Param("token") token: string) {
     return this.notificationService.unregisterToken(user.id, token);
   }
 }

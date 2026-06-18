@@ -183,13 +183,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       tokens,
       user,
     }),
-    [
-      isAuthenticated,
-      isHydrated,
-      isLoading,
-      tokens,
-      user,
-    ],
+    [isAuthenticated, isHydrated, isLoading, tokens, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

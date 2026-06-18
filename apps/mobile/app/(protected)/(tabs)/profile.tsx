@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthProvider";
 export default function ProfileScreen() {
   const { isLoading, logout, user } = useAuth();
 
-  const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
+  const initials =
+    `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
 
   return (
     <View style={styles.container}>
@@ -19,7 +20,9 @@ export default function ProfileScreen() {
         </Text>
         <Text style={styles.subtitle}>{user?.email}</Text>
         <View style={styles.roleBadge}>
-          <Text style={styles.roleText}>{String(user?.role ?? "user").toUpperCase()}</Text>
+          <Text style={styles.roleText}>
+            {String(user?.role ?? "user").toUpperCase()}
+          </Text>
         </View>
       </View>
 

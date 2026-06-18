@@ -4,6 +4,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
 import { CardState } from "../card-state/entities/card-state.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
 
@@ -16,6 +17,7 @@ describe("CollectionService", () => {
     create: jest.fn(),
     save: jest.fn(),
     delete: jest.fn(),
+    remove: jest.fn(),
     findAndCount: jest.fn(),
   };
 
@@ -29,6 +31,11 @@ describe("CollectionService", () => {
   };
 
   const mockCardStateRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+  };
+
+  const mockPokemonSetRepo = {
     findOne: jest.fn(),
     find: jest.fn(),
   };
@@ -70,6 +77,10 @@ describe("CollectionService", () => {
         {
           provide: getRepositoryToken(CardState),
           useValue: mockCardStateRepo,
+        },
+        {
+          provide: getRepositoryToken(PokemonSet),
+          useValue: mockPokemonSetRepo,
         },
       ],
     }).compile();
@@ -145,13 +156,14 @@ describe("CollectionService", () => {
   });
 
   it("should delete when owner matches", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({
+    const mockColl = {
       id: "c",
       user: { id: 1 },
-    });
-    mockCollectionRepo.delete.mockResolvedValue({ affected: 1 });
+    };
+    mockCollectionRepo.findOne.mockResolvedValue(mockColl);
+    mockCollectionRepo.remove.mockResolvedValue(mockColl);
     await expect(service.delete("c", 1)).resolves.toBeUndefined();
-    expect(mockCollectionRepo.delete).toHaveBeenCalledWith("c");
+    expect(mockCollectionRepo.remove).toHaveBeenCalledWith(mockColl);
   });
 
   it("should forbid delete for other user", async () => {

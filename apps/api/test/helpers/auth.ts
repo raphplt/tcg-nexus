@@ -30,15 +30,13 @@ export async function createUser(
   const firstName = overrides.firstName ?? "Test";
   const lastName = overrides.lastName ?? "User";
 
-  const response = await request(httpServer)
-    .post("/auth/register")
-    .send({
-      email,
-      password,
-      confirmPassword: password,
-      firstName,
-      lastName,
-    });
+  const response = await request(httpServer).post("/auth/register").send({
+    email,
+    password,
+    confirmPassword: password,
+    firstName,
+    lastName,
+  });
 
   if (response.status !== 201 && response.status !== 200) {
     throw new Error(
@@ -47,7 +45,8 @@ export async function createUser(
   }
 
   const body = response.body;
-  const setCookies = (response.headers["set-cookie"] ?? []) as unknown as string[];
+  const setCookies = (response.headers["set-cookie"] ??
+    []) as unknown as string[];
 
   return {
     id: body.user.id,

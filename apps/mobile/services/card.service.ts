@@ -1,14 +1,15 @@
-import { api } from "./api";
 import type {
-  CardSearchResolution,
   CardSearchResult,
-  OcrParsedResult,
+  CardsPaginatedResponse,
+  PokemonSerieType,
+  PokemonSetType,
 } from "@/types";
+import { api } from "./api";
 
 const searchCache = new Map<string, CardSearchResult[]>();
 
 const normalize = (value: string | undefined): string =>
-  (value || "")
+  (value ?? "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
@@ -16,82 +17,13 @@ const normalize = (value: string | undefined): string =>
 
 const dedupeCards = (cards: CardSearchResult[]): CardSearchResult[] => {
   const seen = new Set<string>();
-  const next: CardSearchResult[] = [];
-
+  const out: CardSearchResult[] = [];
   for (const card of cards) {
-    if (!card.id || seen.has(card.id)) {
-      continue;
-    }
-
+    if (!card.id || seen.has(card.id)) continue;
     seen.add(card.id);
-    next.push(card);
+    out.push(card);
   }
-
-  return next;
-};
-
-const scoreCard = (card: CardSearchResult, ocr: OcrParsedResult): number => {
-  let score = 0;
-
-  const cardName = normalize(card.name);
-  const cardLocalId = normalize(card.localId);
-  const cardSetName = normalize(card.set?.name);
-
-  const targetName = normalize(ocr.cardName);
-  const targetSetName = normalize(ocr.setName);
-  const targetSetNumber = normalize(ocr.setNumber);
-
-  if (targetName && cardName === targetName) {
-    score += 70;
-  } else if (targetName && cardName.includes(targetName)) {
-    score += 45;
-  } else if (targetName && targetName.includes(cardName)) {
-    score += 35;
-  }
-
-  if (targetSetNumber && cardLocalId && cardLocalId === targetSetNumber) {
-    score += 45;
-  }
-
-  if (targetSetName && cardSetName && cardSetName.includes(targetSetName)) {
-    score += 20;
-  }
-
-  if (!targetName && cardName) {
-    score += 5;
-  }
-
-  return score;
-};
-
-const buildHints = (ocr: OcrParsedResult): string[] => {
-  const hints: string[] = [];
-
-  if (ocr.cardName && ocr.setCode) {
-    hints.push(`${ocr.cardName} ${ocr.setCode}`);
-  }
-
-  if (ocr.cardName && ocr.setNumber) {
-    hints.push(`${ocr.cardName} ${ocr.setNumber}`);
-  }
-
-  if (ocr.cardName) {
-    hints.push(ocr.cardName);
-  }
-
-  if (ocr.setCode) {
-    hints.push(ocr.setCode);
-  }
-
-  if (ocr.setNumber) {
-    hints.push(ocr.setNumber);
-  }
-
-  if (ocr.setName) {
-    hints.push(ocr.setName);
-  }
-
-  return Array.from(new Set([...hints, ...ocr.searchHints])).filter(Boolean);
+  return out;
 };
 
 export const cardService = {
@@ -100,69 +32,66 @@ export const cardService = {
   },
 
   async getCardById(cardId: string): Promise<CardSearchResult> {
-    const response = await api.get<CardSearchResult>(`/cards/${cardId}`);
+    const response = await api.get<CardSearchResult>(`/pokemon-card/${cardId}`);
     return response.data;
   },
 
+  /**
+   * Recherche textuelle libre dans la BDD Pokémon.
+   * Utilisée par la recherche manuelle dans l'UI de review.
+   */
+  async getSetRarities(setId: string): Promise<string[]> {
+    const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
+    return response.data || [];
+  },
+
   async searchCards(search: string): Promise<CardSearchResult[]> {
+    console.log("card service searchCards : ", search);
     const query = search.trim();
     if (!query) {
       return [];
     }
-
     const cacheKey = normalize(query);
     const cached = searchCache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
     const response = await api.get<CardSearchResult[]>(
-      `/cards/search/${encodeURIComponent(query)}`,
+      `/pokemon-card/search/${encodeURIComponent(query)}`,
     );
 
     const cards = dedupeCards(response.data || []);
+    console.log("card service dedupeCards : ", cards);
     searchCache.set(cacheKey, cards);
     return cards;
   },
 
-  async resolveCardFromOcr(ocr: OcrParsedResult): Promise<CardSearchResolution> {
-    const hints = buildHints(ocr);
-    const searchedTerms: string[] = [];
-    const allCandidates: CardSearchResult[] = [];
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data || [];
+  },
 
-    for (const hint of hints) {
-      const term = hint.trim();
-      if (!term) {
-        continue;
-      }
+  async getAllSets(): Promise<PokemonSetType[]> {
+    const response = await api.get<PokemonSetType[]>("/pokemon-set");
+    return response.data || [];
+  },
 
-      searchedTerms.push(term);
-      const result = await this.searchCards(term);
-      allCandidates.push(...result);
 
-      // Short-circuit on highly probable direct match.
-      if (result.some((card) => scoreCard(card, ocr) >= 90)) {
-        break;
-      }
-    }
 
-    const candidates = dedupeCards(allCandidates);
-    if (candidates.length === 0) {
-      return {
-        bestCard: null,
-        candidates,
-        searchedTerms,
-      };
-    }
-
-    const ranked = [...candidates].sort(
-      (a, b) => scoreCard(b, ocr) - scoreCard(a, ocr),
+  async getPaginated(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      setId?: string;
+      serieId?: string;
+      rarity?: string;
+      type?: string;
+    } = {},
+  ): Promise<CardsPaginatedResponse> {
+    const response = await api.get<CardsPaginatedResponse>(
+      "/pokemon-card/paginated",
+      { params },
     );
-
-    return {
-      bestCard: ranked[0] || null,
-      candidates: ranked,
-      searchedTerms,
-    };
+    return response.data;
   },
 };

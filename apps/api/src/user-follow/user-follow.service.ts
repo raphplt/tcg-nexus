@@ -78,10 +78,7 @@ export class UserFollowService {
     }
   }
 
-  async isFollowing(
-    followerId: number,
-    followedId: number,
-  ): Promise<boolean> {
+  async isFollowing(followerId: number, followedId: number): Promise<boolean> {
     const count = await this.followRepo.count({
       where: { follower: { id: followerId }, followed: { id: followedId } },
     });

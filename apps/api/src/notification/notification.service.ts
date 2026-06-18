@@ -42,7 +42,8 @@ export class NotificationService {
       isRead: false,
     });
 
-    const savedNotification = await this.notificationRepository.save(notification);
+    const savedNotification =
+      await this.notificationRepository.save(notification);
 
     // Envoi en temps réel via WebSocket (sans la relation user pour alléger)
     const socketPayload = {
@@ -88,11 +89,12 @@ export class NotificationService {
       where.isRead = isReadFilter;
     }
 
-    const [notifications, total] = await this.notificationRepository.findAndCount({
-      where,
-      order: { createdAt: "DESC" },
-      skip,
-      take: limit,
+    const [notifications, total] =
+      await this.notificationRepository.findAndCount({
+        where,
+        order: { createdAt: "DESC" },
+        skip,
+        take: limit,
     });
 
     const unreadCount = await this.notificationRepository.count({
@@ -115,24 +117,32 @@ export class NotificationService {
   /**
    * Marque une notification comme lue.
    */
-  async markAsRead(userId: number, notificationId: number): Promise<Omit<Notification, "user">> {
+  async markAsRead(
+    userId: number,
+    notificationId: number,
+  ): Promise<Omit<Notification, "user">> {
     const notification = await this.notificationRepository.findOne({
       where: { id: notificationId, user: { id: userId } },
     });
 
     if (!notification) {
-      throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+      throw new NotFoundException(
+        `Notification with ID ${notificationId} not found`,
+      );
     }
 
     notification.isRead = true;
-    const { user, ...saved } = await this.notificationRepository.save(notification);
+    const { user, ...saved } =
+      await this.notificationRepository.save(notification);
     return saved;
   }
 
   /**
    * Marque toutes les notifications d'un utilisateur comme lues.
    */
-  async markAllAsRead(userId: number): Promise<{ success: boolean; updatedCount: number }> {
+  async markAllAsRead(
+    userId: number,
+  ): Promise<{ success: boolean; updatedCount: number }> {
     const unreadNotifications = await this.notificationRepository.find({
       where: { user: { id: userId }, isRead: false },
     });
@@ -153,13 +163,18 @@ export class NotificationService {
   /**
    * Supprime une notification.
    */
-  async deleteNotification(userId: number, notificationId: number): Promise<{ success: boolean }> {
+  async deleteNotification(
+    userId: number,
+    notificationId: number,
+  ): Promise<{ success: boolean }> {
     const notification = await this.notificationRepository.findOne({
       where: { id: notificationId, user: { id: userId } },
     });
 
     if (!notification) {
-      throw new NotFoundException(`Notification with ID ${notificationId} not found`);
+      throw new NotFoundException(
+        `Notification with ID ${notificationId} not found`,
+      );
     }
 
     await this.notificationRepository.remove(notification);
@@ -182,7 +197,9 @@ export class NotificationService {
     if (existing) {
       if (existing.user.id !== userId) {
         // Réassignation du token s'il appartenait à un autre utilisateur
-        const user = await this.userRepository.findOne({ where: { id: userId } });
+        const user = await this.userRepository.findOne({
+          where: { id: userId },
+        });
         if (!user) {
           throw new NotFoundException(`User with ID ${userId} not found`);
         }
@@ -190,7 +207,7 @@ export class NotificationService {
         existing.platform = platform;
         return this.deviceTokenRepository.save(existing);
       }
-      
+
       existing.platform = platform;
       return this.deviceTokenRepository.save(existing);
     }
@@ -212,7 +229,10 @@ export class NotificationService {
   /**
    * Supprime un token push enregistré.
    */
-  async unregisterToken(userId: number, token: string): Promise<{ success: boolean }> {
+  async unregisterToken(
+    userId: number,
+    token: string,
+  ): Promise<{ success: boolean }> {
     const deviceToken = await this.deviceTokenRepository.findOne({
       where: { token, user: { id: userId } },
     });
@@ -243,7 +263,11 @@ export class NotificationService {
       }
 
       const expoTokens = deviceTokens
-        .filter((t) => t.token.startsWith("ExponentPushToken") || t.token.startsWith("ExpoPushToken"))
+        .filter(
+          (t) =>
+            t.token.startsWith("ExponentPushToken") ||
+            t.token.startsWith("ExpoPushToken"),
+        )
         .map((t) => t.token);
 
       if (expoTokens.length > 0) {

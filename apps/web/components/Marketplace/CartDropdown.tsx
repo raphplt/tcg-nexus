@@ -80,12 +80,15 @@ const CartDropdown = () => {
                   <div className="relative w-12 h-16 shrink-0">
                     <Image
                       src={
-                        item.listing.productKind === "sealed" || item.listing.sealedProduct
-                          ? getSealedImageUrl(item.listing.sealedProduct) || "/images/sealed-default.png"
+                        item.listing.productKind === "sealed" ||
+                        item.listing.sealedProduct
+                          ? getSealedImageUrl(item.listing.sealedProduct) ||
+                            "/images/sealed-default.png"
                           : getCardImage(item.listing.pokemonCard)
                       }
                       alt={
-                        (item.listing.productKind === "sealed" || item.listing.sealedProduct
+                        (item.listing.productKind === "sealed" ||
+                        item.listing.sealedProduct
                           ? getSealedName(item.listing.sealedProduct)
                           : item.listing.pokemonCard?.name) || "Produit"
                       }
@@ -95,8 +98,10 @@ const CartDropdown = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {item.listing.productKind === "sealed" || item.listing.sealedProduct
-                        ? getSealedName(item.listing.sealedProduct) || "Produit scellé"
+                      {item.listing.productKind === "sealed" ||
+                      item.listing.sealedProduct
+                        ? getSealedName(item.listing.sealedProduct) ||
+                          "Produit scellé"
                         : item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">

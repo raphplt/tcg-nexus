@@ -2,7 +2,8 @@ import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateCollectionDto {
   @IsString()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsString()
   @IsOptional()
@@ -14,4 +15,8 @@ export class CreateCollectionDto {
 
   @IsNumber()
   userId: number;
+
+  @IsString()
+  @IsOptional()
+  masterSetId?: string;
 }

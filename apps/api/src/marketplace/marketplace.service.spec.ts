@@ -221,15 +221,14 @@ describe("MarketplaceService", () => {
       shippingAddress: "123 Main St",
     };
 
-    const buildManager = (
-      freshListing: any,
-      savedOrder: any = { id: 1 },
-    ) => ({
+    const buildManager = (freshListing: any, savedOrder: any = { id: 1 }) => ({
       findOne: jest.fn().mockResolvedValue(freshListing),
       create: jest.fn().mockReturnValue({}),
-      save: jest.fn().mockImplementation(async (entity, value) =>
-        entity === Order ? savedOrder : value,
-      ),
+      save: jest
+        .fn()
+        .mockImplementation(async (entity, value) =>
+          entity === Order ? savedOrder : value,
+        ),
       decrement: jest.fn(),
     });
 
@@ -252,7 +251,11 @@ describe("MarketplaceService", () => {
         cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
-      mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 5 });
+      mockListingRepo.findOne.mockResolvedValue({
+        id: 1,
+        price: 10,
+        quantityAvailable: 5,
+      });
       orderRepo.create.mockReturnValue({});
       orderRepo.save.mockResolvedValue({ id: 1 });
 
@@ -281,7 +284,11 @@ describe("MarketplaceService", () => {
         cartItems: [{ listing, quantity: 2 }],
       };
       userCartService.findCartByUserId.mockResolvedValue(cart);
-      mockListingRepo.findOne.mockResolvedValue({ id: 1, price: 10, quantityAvailable: 1 });
+      mockListingRepo.findOne.mockResolvedValue({
+        id: 1,
+        price: 10,
+        quantityAvailable: 1,
+      });
       await expect(service.createOrder(dto, user)).rejects.toThrow(
         BadRequestException,
       );
@@ -357,14 +364,18 @@ describe("MarketplaceService", () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 10 }),
+      );
     });
 
     it("allows admin", async () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, admin);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 10 }),
+      );
     });
   });
 

@@ -277,12 +277,16 @@ describe("UserService", () => {
         player: null,
       });
 
-      await expect(service.findPublicProfile(9)).rejects.toThrow("User not found");
+      await expect(service.findPublicProfile(9)).rejects.toThrow(
+        "User not found",
+      );
     });
 
     it("throws NotFoundException when user does not exist", async () => {
       repo.findOne.mockResolvedValue(null);
-      await expect(service.findPublicProfile(404)).rejects.toThrow("User not found");
+      await expect(service.findPublicProfile(404)).rejects.toThrow(
+        "User not found",
+      );
     });
   });
 });

@@ -16,6 +16,10 @@ describe("CollectionController", () => {
     delete: jest.fn(),
     findAllPaginated: jest.fn(),
     findCollectionItemsPaginated: jest.fn(),
+    getSetRarities: jest.fn(),
+    addCardToCollection: jest.fn(),
+    removeCardFromCollection: jest.fn(),
+    removeCollectionItem: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -75,7 +79,18 @@ describe("CollectionController", () => {
     ).resolves.toEqual({ data: [] });
     expect(
       mockCollectionService.findCollectionItemsPaginated,
-    ).toHaveBeenCalledWith("col", 1, 10, "s", "name", "ASC");
+    ).toHaveBeenCalledWith(
+      "col",
+      1,
+      10,
+      "s",
+      "name",
+      "ASC",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
   });
 
   it("should find one collection by id", async () => {

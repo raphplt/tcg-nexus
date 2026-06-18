@@ -3,6 +3,13 @@
 /node_modules
 /build
 
+# cache traineddata Tesseract (écrit par tesseract.js en dev)
+*.traineddata
+
+# logs de scan (debug : image + infos par scan)
+/scan-logs
+/test-cards
+
 # Logs
 logs
 *.log

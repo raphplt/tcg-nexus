@@ -1,4 +1,4 @@
 export enum SupportTicketStatusType {
-  opened = 'opened',
-  closed = 'closed'
+  opened = "opened",
+  closed = "closed",
 }

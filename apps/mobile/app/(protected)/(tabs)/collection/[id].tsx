@@ -7,8 +7,10 @@ import {
   FlatList,
   Image,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,8 +25,23 @@ import type {
   CollectionItem,
   CollectionItemsPaginatedResponse,
   UserCollection,
+  PokemonSerieType,
+  PokemonSetType,
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
+import { AddCardModal } from "@/components/AddCardModal";
+import { CardDetailModal } from "@/components/CardDetailModal";
+import { SelectionModal } from "@/components/SelectionModal";
+import { getCardImage } from "@/utils/images";
+
+const cardStates = [
+  { label: "Near Mint", value: "NM" },
+  { label: "Excellent", value: "EX" },
+  { label: "Good", value: "GD" },
+  { label: "Lightly Played", value: "LP" },
+  { label: "Played", value: "PL" },
+  { label: "Poor", value: "Poor" },
+];
 
 const PAGE_SIZE = 24;
 
@@ -47,23 +64,25 @@ const resolveImage = (image?: string): string | undefined => {
 
 const sortOptions: Array<{
   label: string;
-  value: "added_at" | "pokemonCard.name" | "pokemonCard.rarity";
+  value: "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity";
 }> = [
-  { label: "Date", value: "added_at" },
+  { label: "Date d'ajout", value: "added_at" },
   { label: "Nom", value: "pokemonCard.name" },
-  { label: "Rarete", value: "pokemonCard.rarity" },
+  { label: "Rareté", value: "pokemonCard.rarity" },
+  { label: "Quantité", value: "quantity" },
 ];
 
 const dedupeItems = (items: CollectionItem[]): CollectionItem[] => {
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   const next: CollectionItem[] = [];
 
   for (const item of items) {
-    if (!item.id || seen.has(item.id)) {
+    const key = item.id ? `item-${item.id}` : `card-${item.pokemonCard?.id}`;
+    if (seen.has(key)) {
       continue;
     }
 
-    seen.add(item.id);
+    seen.add(key);
     next.push(item);
   }
 
@@ -75,8 +94,13 @@ export default function CollectionDetailsScreen() {
   const collectionId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [collection, setCollection] = useState<UserCollection | null>(null);
+  const isMasterSet = useMemo(() => {
+    return collection?.masterSet != null;
+  }, [collection?.masterSet]);
   const [items, setItems] = useState<CollectionItem[]>([]);
-  const [meta, setMeta] = useState<CollectionItemsPaginatedResponse["meta"] | null>(null);
+  const [meta, setMeta] = useState<
+    CollectionItemsPaginatedResponse["meta"] | null
+  >(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,20 +109,65 @@ export default function CollectionDetailsScreen() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"added_at" | "pokemonCard.name" | "pokemonCard.rarity">(
-    "added_at",
-  );
-  const [selectedSetFilter, setSelectedSetFilter] = useState<string>("all");
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<
+    "added_at" | "pokemonCard.name" | "pokemonCard.rarity" | "quantity"
+  >("added_at");
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
 
-  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedCardState, setSelectedCardState] = useState<
+    string | undefined
+  >(undefined);
+
+  const [series, setSeries] = useState<PokemonSerieType[]>([]);
+  const [sets, setSets] = useState<PokemonSetType[]>([]);
+  const [setRarities, setSetRarities] = useState<
+    { id: string; name: string }[]
+  >([]);
+
+  const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
+  const [isSetModalVisible, setIsSetModalVisible] = useState(false);
+  const [isRarityModalVisible, setIsRarityModalVisible] = useState(false);
+  const [isStateModalVisible, setIsStateModalVisible] = useState(false);
+  const [isSortByModalVisible, setIsSortByModalVisible] = useState(false);
+
+  const getSortByLabel = (value: typeof sortBy) => {
+    switch (value) {
+      case "added_at":
+        return "Date d'ajout";
+      case "pokemonCard.name":
+        return "Nom";
+      case "pokemonCard.rarity":
+        return "Rareté";
+      case "quantity":
+        return "Quantité";
+      default:
+        return "";
+    }
+  };
+
+  const handleSelectSortBy = () => {
+    setIsSortByModalVisible(true);
+  };
+
+  const handleSelectSortOrder = () => {
+    setSortOrder((prev) => (prev === "ASC" ? "DESC" : "ASC"));
+  };
+
+  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
+    null,
+  );
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [manualSearch, setManualSearch] = useState("");
-  const [debouncedManualSearch, setDebouncedManualSearch] = useState("");
-  const [manualResults, setManualResults] = useState<CardSearchResult[]>([]);
-  const [isManualSearching, setIsManualSearching] = useState(false);
-  const [addingCardId, setAddingCardId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -109,12 +178,26 @@ export default function CollectionDetailsScreen() {
   }, [search]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedManualSearch(manualSearch.trim());
-    }, 300);
+    const fetchMetadata = async () => {
+      try {
+        const [loadedSeries, loadedSets] = await Promise.all([
+          cardService.getAllSeries(),
+          cardService.getAllSets(),
+        ]);
+        setSeries(loadedSeries);
+        setSets(loadedSets);
 
-    return () => clearTimeout(timer);
-  }, [manualSearch]);
+        if (collectionId) {
+          const rarities =
+            await collectionService.getCollectionRarities(collectionId);
+          setSetRarities(rarities.map((r) => ({ id: r, name: r })));
+        }
+      } catch (err) {
+        console.error("Failed to load filter metadata:", err);
+      }
+    };
+    void fetchMetadata();
+  }, [collectionId]);
 
   const loadCollectionHeader = useCallback(async () => {
     if (!collectionId) {
@@ -147,13 +230,20 @@ export default function CollectionDetailsScreen() {
 
       try {
         const nextPage = loadMore ? (meta?.currentPage || 1) + 1 : 1;
-        const response = await collectionService.getCollectionItems(collectionId, {
-          limit: PAGE_SIZE,
-          page: nextPage,
-          search: debouncedSearch || undefined,
-          sortBy,
-          sortOrder: sortBy === "added_at" ? "DESC" : "ASC",
-        });
+        const response = await collectionService.getCollectionItems(
+          collectionId,
+          {
+            limit: PAGE_SIZE,
+            page: nextPage,
+            search: debouncedSearch || undefined,
+            sortBy,
+            sortOrder,
+            setId: selectedSetId,
+            serieId: selectedSerieId,
+            rarity: selectedRarity,
+            cardState: selectedCardState,
+          },
+        );
 
         setMeta(response.meta);
         setItems((prev) =>
@@ -172,7 +262,19 @@ export default function CollectionDetailsScreen() {
         }
       }
     },
-    [collectionId, debouncedSearch, isLoadingMore, meta?.currentPage, meta?.hasNextPage, sortBy],
+    [
+      collectionId,
+      debouncedSearch,
+      isLoadingMore,
+      meta?.currentPage,
+      meta?.hasNextPage,
+      sortBy,
+      sortOrder,
+      selectedSetId,
+      selectedSerieId,
+      selectedRarity,
+      selectedCardState,
+    ],
   );
 
   useEffect(() => {
@@ -189,80 +291,63 @@ export default function CollectionDetailsScreen() {
     }
 
     void loadItems();
-  }, [debouncedSearch, sortBy]);
+  }, [
+    debouncedSearch,
+    sortBy,
+    sortOrder,
+    selectedSetId,
+    selectedSerieId,
+    selectedRarity,
+    selectedCardState,
+  ]);
 
-  useEffect(() => {
-    if (!isAddModalVisible) {
-      return;
-    }
-
-    if (debouncedManualSearch.length < 2) {
-      setManualResults([]);
-      setIsManualSearching(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const runSearch = async () => {
-      setIsManualSearching(true);
-      try {
-        const cards = await cardService.searchCards(debouncedManualSearch);
-        if (!cancelled) {
-          setManualResults(cards.slice(0, 30));
-        }
-      } catch (error) {
-        if (!cancelled) {
-          toast.showError(getApiErrorMessage(error));
-          setManualResults([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsManualSearching(false);
-        }
-      }
-    };
-
-    void runSearch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedManualSearch, isAddModalVisible]);
-
-  const availableSetFilters = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.pokemonCard?.set?.name) {
-        values.add(item.pokemonCard.set.name);
+  const handleSelectSerie = (serieId: string | undefined) => {
+    setSelectedSerieId(serieId);
+    if (serieId) {
+      const selectedSet = sets.find((s) => s.id === selectedSetId);
+      if (selectedSet && selectedSet.serie?.id !== serieId) {
+        setSelectedSetId(undefined);
       }
     }
-    return Array.from(values).sort();
-  }, [items]);
+  };
 
-  const availableTypeFilters = useMemo(() => {
-    const values = new Set<string>();
-    for (const item of items) {
-      if (item.pokemonCard?.category) {
-        values.add(item.pokemonCard.category);
-      }
+  const filteredSetsOptions = useMemo(() => {
+    if (!selectedSerieId) {
+      return sets;
     }
-    return Array.from(values).sort();
-  }, [items]);
+    return sets.filter((s) => s.serie?.id === selectedSerieId);
+  }, [sets, selectedSerieId]);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSet =
-        selectedSetFilter === "all" || item.pokemonCard?.set?.name === selectedSetFilter;
-      const matchesType =
-        selectedTypeFilter === "all" || item.pokemonCard?.category === selectedTypeFilter;
+  const hasActiveFilters = useMemo(() => {
+    if (isMasterSet) {
+      return search.trim().length > 0 || selectedRarity !== undefined;
+    }
+    return (
+      search.trim().length > 0 ||
+      selectedSerieId !== undefined ||
+      selectedSetId !== undefined ||
+      selectedRarity !== undefined ||
+      selectedCardState !== undefined
+    );
+  }, [
+    isMasterSet,
+    search,
+    selectedSerieId,
+    selectedSetId,
+    selectedRarity,
+    selectedCardState,
+  ]);
 
-      return matchesSet && matchesType;
-    });
-  }, [items, selectedSetFilter, selectedTypeFilter]);
+  const handleResetFilters = () => {
+    setSearch("");
+    setSelectedSerieId(undefined);
+    setSelectedSetId(undefined);
+    setSelectedRarity(undefined);
+    setSelectedCardState(undefined);
+  };
 
   const stats = useMemo(() => {
-    const totalCards = filteredItems.reduce(
+    const totalCards = items.reduce(
       (sum, item) => sum + Number(item.quantity || 0),
       0,
     );
@@ -270,7 +355,7 @@ export default function CollectionDetailsScreen() {
     const bySet = new Map<string, number>();
     const byRarity = new Map<string, number>();
 
-    for (const item of filteredItems) {
+    for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const setName = item.pokemonCard?.set?.name || "Inconnu";
       const rarity = item.pokemonCard?.rarity || "Inconnue";
@@ -280,11 +365,15 @@ export default function CollectionDetailsScreen() {
     }
 
     return {
-      byRarity: Array.from(byRarity.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
-      bySet: Array.from(bySet.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3),
+      byRarity: Array.from(byRarity.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3),
+      bySet: Array.from(bySet.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3),
       totalCards,
     };
-  }, [filteredItems]);
+  }, [items]);
 
   const openCardDetails = async (cardId: string) => {
     try {
@@ -300,6 +389,7 @@ export default function CollectionDetailsScreen() {
     if (!collectionId || !item.id) {
       return;
     }
+    const itemId = item.id;
 
     Alert.alert(
       "Retirer la carte",
@@ -310,11 +400,25 @@ export default function CollectionDetailsScreen() {
           style: "destructive",
           text: "Supprimer",
           onPress: async () => {
-            setIsDeletingItemId(item.id);
+            setIsDeletingItemId(itemId);
             try {
-              await collectionService.deleteCollectionItem(collectionId, item.id);
-              setItems((prev) => prev.filter((value) => value.id !== item.id));
+              await collectionService.deleteCollectionItem(
+                collectionId,
+                itemId,
+              );
+              if (isMasterSet) {
+                setItems((prev) =>
+                  prev.map((val) =>
+                    val.pokemonCard?.id === item.pokemonCard?.id
+                      ? { ...val, quantity: 0, id: null }
+                      : val,
+                  ),
+                );
+              } else {
+                setItems((prev) => prev.filter((value) => value.id !== itemId));
+              }
               toast.showSuccess("Carte retiree de la collection.");
+              void loadCollectionHeader();
             } catch (error) {
               toast.showError(getApiErrorMessage(error));
             } finally {
@@ -331,9 +435,25 @@ export default function CollectionDetailsScreen() {
       return;
     }
 
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(`Confirmer la suppression de "${collection.name}" ?`);
+      if (confirmed) {
+        collectionService
+          .deleteCollection(collectionId)
+          .then(() => {
+            toast.showSuccess("Collection supprimee.");
+            router.replace("/collection");
+          })
+          .catch((error) => {
+            toast.showError(getApiErrorMessage(error));
+          });
+      }
+      return;
+    }
+
     Alert.alert(
       "Supprimer la collection",
-      `Confirmer la suppression de \"${collection.name}\" ?`,
+      `Confirmer la suppression de "${collection.name}" ?`,
       [
         { style: "cancel", text: "Annuler" },
         {
@@ -353,67 +473,189 @@ export default function CollectionDetailsScreen() {
     );
   };
 
-  const handleAddCardFromSearch = async (card: CardSearchResult) => {
-    if (!collectionId || !card.id) {
+  const handleDecrementItem = async (item: CollectionItem) => {
+    if (!collectionId || !item.pokemonCard?.id) {
       return;
     }
 
-    setAddingCardId(card.id);
+    const currentQty = Number(item.quantity || 0);
+    if (currentQty <= 0) {
+      return;
+    }
+
+    if (currentQty === 1) {
+      if (isMasterSet) {
+        if (!item.id) {
+          toast.showError("Impossible de supprimer la carte : ID manquant.");
+          return;
+        }
+        setIsDeletingItemId(item.id);
+        // Optimistic update
+        setItems((prev) =>
+          prev.map((val) =>
+            val.pokemonCard?.id === item.pokemonCard?.id
+              ? { ...val, quantity: 0, id: null }
+              : val,
+          ),
+        );
+        try {
+          await collectionService.deleteCollectionItem(collectionId, item.id);
+          toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
+          void loadCollectionHeader();
+        } catch (error) {
+          // Revert optimistic update
+          setItems((prev) =>
+            prev.map((val) =>
+              val.pokemonCard?.id === item.pokemonCard?.id
+                ? { ...val, quantity: 1, id: item.id }
+                : val,
+            ),
+          );
+          toast.showError(getApiErrorMessage(error));
+        } finally {
+          setIsDeletingItemId(null);
+        }
+        return;
+      } else {
+        handleDeleteItem(item);
+        return;
+      }
+    }
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((val) =>
+        val.pokemonCard?.id === item.pokemonCard?.id
+          ? { ...val, quantity: currentQty - 1 }
+          : val,
+      ),
+    );
+
     try {
-      await collectionService.addCardToCollection(collectionId, card.id);
-      toast.showSuccess(`${card.name || "Carte"} ajoutee.`);
-      await Promise.all([loadCollectionHeader(), loadItems({ refresh: true })]);
+      await collectionService.removeCardFromCollection(
+        collectionId,
+        item.pokemonCard.id,
+      );
+      toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
+      void loadCollectionHeader();
     } catch (error) {
+      // Revert optimistic update
+      setItems((prev) =>
+        prev.map((val) =>
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, quantity: currentQty }
+            : val,
+        ),
+      );
       toast.showError(getApiErrorMessage(error));
-    } finally {
-      setAddingCardId(null);
+    }
+  };
+
+  const handleIncrementItem = async (item: CollectionItem) => {
+    if (!collectionId || !item.pokemonCard?.id) {
+      return;
+    }
+
+    const currentQty = Number(item.quantity || 0);
+
+    // Optimistic update
+    setItems((prev) =>
+      prev.map((val) =>
+        val.pokemonCard?.id === item.pokemonCard?.id
+          ? { ...val, quantity: currentQty + 1 }
+          : val,
+      ),
+    );
+
+    try {
+      const response = await collectionService.addCardToCollection(
+        collectionId,
+        item.pokemonCard.id,
+      );
+      setItems((prev) =>
+        prev.map((val) =>
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, id: response.id, quantity: response.quantity }
+            : val,
+        ),
+      );
+      toast.showSuccess(`${item.pokemonCard.name || "Carte"} ajoutée.`);
+      void loadCollectionHeader();
+    } catch (error) {
+      // Revert optimistic update
+      setItems((prev) =>
+        prev.map((val) =>
+          val.pokemonCard?.id === item.pokemonCard?.id
+            ? { ...val, id: item.id, quantity: currentQty }
+            : val,
+        ),
+      );
+      toast.showError(getApiErrorMessage(error));
     }
   };
 
   const openManualAddModal = () => {
     setIsAddModalVisible(true);
-    setManualSearch("");
-    setDebouncedManualSearch("");
-    setManualResults([]);
-    setIsManualSearching(false);
   };
 
   const renderCardCell = ({ item }: { item: CollectionItem }) => {
     const card = item.pokemonCard;
+    const isQtyZero = Number(item.quantity || 0) === 0;
 
     return (
       <View style={styles.cardCell}>
-        <Pressable
-          onPress={() => {
-            if (card?.id) {
-              void openCardDetails(card.id);
-            }
-          }}
-          style={({ pressed }) => [styles.cardPressable, pressed && styles.cardPressablePressed]}
-        >
-          <Image
-            source={{ uri: resolveImage(card?.image) }}
-            style={styles.cardImage}
-          />
-          <Text numberOfLines={1} style={styles.cardName}>
-            {card?.name || "Carte inconnue"}
-          </Text>
-          <Text numberOfLines={1} style={styles.cardMeta}>
-            {card?.set?.name || "Set inconnu"}
-          </Text>
-          <Text style={styles.cardMeta}>x{item.quantity}</Text>
-        </Pressable>
+        <View style={styles.cardPressable}>
+          <Pressable
+            onPress={() => {
+              if (card?.id) {
+                void openCardDetails(card.id);
+              }
+            }}
+            style={({ pressed }) => [
+              styles.cardTopArea,
+              pressed && styles.cardTopAreaPressed,
+              isQtyZero && { opacity: 0.4 },
+            ]}
+          >
+            <Image
+              source={{ uri: getCardImage(card?.image, "low") }}
+              style={styles.cardImage}
+            />
+            <Text numberOfLines={1} style={styles.cardName}>
+              {card?.name || "Carte inconnue"}
+            </Text>
+            <Text numberOfLines={1} style={styles.cardMeta}>
+              {card?.set?.name || "Set inconnu"}
+            </Text>
+          </Pressable>
 
-        <Pressable
-          disabled={isDeletingItemId === item.id}
-          onPress={() => handleDeleteItem(item)}
-          style={({ pressed }) => [
-            styles.deleteBadge,
-            (pressed || isDeletingItemId === item.id) && styles.deleteBadgePressed,
-          ]}
-        >
-          <Ionicons color="#ffffff" name="trash-outline" size={14} />
-        </Pressable>
+          <View style={styles.cardQtyRow}>
+            <Pressable
+              disabled={
+                (item.id ? isDeletingItemId === item.id : false) || isQtyZero
+              }
+              onPress={() => void handleDecrementItem(item)}
+              style={({ pressed }) => [
+                styles.cardQtyButton,
+                pressed && styles.cardQtyButtonPressed,
+                isQtyZero && { opacity: 0.3 },
+              ]}
+            >
+              <Ionicons name="remove" size={12} color="#0b0b0b" />
+            </Pressable>
+            <Text style={styles.cardQtyText}>{item.quantity}</Text>
+            <Pressable
+              disabled={item.id ? isDeletingItemId === item.id : false}
+              onPress={() => void handleIncrementItem(item)}
+              style={({ pressed }) => [
+                styles.cardQtyButton,
+                pressed && styles.cardQtyButtonPressed,
+              ]}
+            >
+              <Ionicons name="add" size={12} color="#0b0b0b" />
+            </Pressable>
+          </View>
+        </View>
       </View>
     );
   };
@@ -423,7 +665,10 @@ export default function CollectionDetailsScreen() {
       <View style={styles.topRow}>
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => [styles.navButton, pressed && styles.navButtonPressed]}
+          style={({ pressed }) => [
+            styles.navButton,
+            pressed && styles.navButtonPressed,
+          ]}
         >
           <Ionicons color="#0b0b0b" name="arrow-back" size={18} />
           <Text style={styles.navButtonText}>Retour</Text>
@@ -431,144 +676,229 @@ export default function CollectionDetailsScreen() {
 
         <Pressable
           onPress={() => router.push("/scan")}
-          style={({ pressed }) => [styles.scanButton, pressed && styles.scanButtonPressed]}
+          style={({ pressed }) => [
+            styles.scanButton,
+            pressed && styles.scanButtonPressed,
+          ]}
         >
           <Ionicons color="#ffffff" name="scan" size={16} />
           <Text style={styles.scanButtonText}>Scanner</Text>
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={openManualAddModal}
-        style={({ pressed }) => [styles.manualAddButton, pressed && styles.manualAddButtonPressed]}
-      >
-        <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
-        <Text style={styles.manualAddButtonText}>Ajouter une carte manuellement</Text>
-      </Pressable>
+      {!isMasterSet && (
+        <>
+          <Pressable
+            onPress={openManualAddModal}
+            style={({ pressed }) => [
+              styles.manualAddButton,
+              pressed && styles.manualAddButtonPressed,
+            ]}
+          >
+            <Ionicons color="#ffffff" name="add-circle-outline" size={16} />
+            <Text style={styles.manualAddButtonText}>
+              Ajouter une carte manuellement
+            </Text>
+          </Pressable>
 
-      <Pressable
-        onPress={handleDeleteCollection}
-        style={({ pressed }) => [styles.deleteCollectionButton, pressed && styles.deleteCollectionButtonPressed]}
-      >
-        <Ionicons color="#ffffff" name="trash-outline" size={16} />
-        <Text style={styles.deleteCollectionButtonText}>Supprimer cette collection</Text>
-      </Pressable>
+          <Pressable
+            onPress={handleDeleteCollection}
+            style={({ pressed }) => [
+              styles.deleteCollectionButton,
+              pressed && styles.deleteCollectionButtonPressed,
+            ]}
+          >
+            <Ionicons color="#ffffff" name="trash-outline" size={16} />
+            <Text style={styles.deleteCollectionButtonText}>
+              Supprimer cette collection
+            </Text>
+          </Pressable>
+        </>
+      )}
 
-      <Text style={styles.collectionName}>{collection?.name || "Collection"}</Text>
+      <Text style={styles.collectionName}>
+        {collection?.name || "Collection"}
+      </Text>
       <Text style={styles.collectionDescription}>
         {collection?.description || "Gère les cartes de ta collection."}
       </Text>
 
       <View style={styles.statsCard}>
-        <Text style={styles.statsTitle}>{stats.totalCards} cartes visibles</Text>
-        <Text style={styles.statsText}>
-          Par set: {stats.bySet.map(([name, count]) => `${name} (${count})`).join(" • ") || "-"}
+        <Text style={styles.statsTitle}>
+          {stats.totalCards} cartes visibles
         </Text>
         <Text style={styles.statsText}>
-          Par rarete: {stats.byRarity.map(([name, count]) => `${name} (${count})`).join(" • ") || "-"}
+          Par set:{" "}
+          {stats.bySet
+            .map(([name, count]) => `${name} (${count})`)
+            .join(" • ") || "-"}
+        </Text>
+        <Text style={styles.statsText}>
+          Par rarete:{" "}
+          {stats.byRarity
+            .map(([name, count]) => `${name} (${count})`)
+            .join(" • ") || "-"}
         </Text>
       </View>
 
-      <TextInput
-        autoCapitalize="none"
-        onChangeText={setSearch}
-        placeholder="Rechercher une carte dans la collection"
-        placeholderTextColor="#555555"
-        style={styles.searchInput}
-        value={search}
-      />
-
-      <View style={styles.sortRow}>
-        {sortOptions.map((option) => (
-          <Pressable
-            key={option.value}
-            onPress={() => setSortBy(option.value)}
-            style={({ pressed }) => [
-              styles.sortChip,
-              sortBy === option.value && styles.sortChipActive,
-              pressed && styles.sortChipPressed,
-            ]}
-          >
-            <Text
-              style={[
-                styles.sortChipText,
-                sortBy === option.value && styles.sortChipTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </Pressable>
-        ))}
+      <View style={styles.searchRow}>
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={16}
+            color="#777777"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            autoCapitalize="none"
+            onChangeText={setSearch}
+            placeholder="Rechercher (nom, rareté, set)..."
+            placeholderTextColor="#777777"
+            style={styles.searchInputField}
+            value={search}
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={16} color="#777777" />
+            </Pressable>
+          )}
+        </View>
+        <Pressable
+          onPress={() => setShowFilters(!showFilters)}
+          style={[
+            styles.filterToggleButton,
+            showFilters && styles.filterToggleButtonActive,
+          ]}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={showFilters ? "#ffffff" : "#0b0b0b"}
+          />
+        </Pressable>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        <Pressable
-          onPress={() => setSelectedSetFilter("all")}
-          style={[styles.filterChip, selectedSetFilter === "all" && styles.filterChipActive]}
-        >
-          <Text
-            style={[styles.filterChipText, selectedSetFilter === "all" && styles.filterChipTextActive]}
-          >
-            Tous les sets
-          </Text>
-        </Pressable>
+      {showFilters && (
+        <View style={styles.filtersPanel}>
+          <Text style={styles.filtersPanelTitle}>Filtres avancés</Text>
 
-        {availableSetFilters.map((setName) => (
-          <Pressable
-            key={`set-${setName}`}
-            onPress={() => setSelectedSetFilter(setName)}
-            style={[
-              styles.filterChip,
-              selectedSetFilter === setName && styles.filterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedSetFilter === setName && styles.filterChipTextActive,
+          {isMasterSet ? (
+            <View style={styles.filterFieldRow}>
+              <View style={styles.filterFieldContainer}>
+                <Text style={styles.filterLabel}>Rareté</Text>
+                <Pressable
+                  onPress={() => setIsRarityModalVisible(true)}
+                  style={styles.filterDropdown}
+                >
+                  <Text numberOfLines={1} style={styles.filterDropdownText}>
+                    {selectedRarity || "Toutes les raretés"}
+                  </Text>
+                  <Ionicons name="chevron-down" size={14} color="#777777" />
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <>
+              <View style={styles.filterFieldRow}>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Série</Text>
+                  <Pressable
+                    onPress={() => setIsSerieModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedSerieId
+                        ? series.find((s) => s.id === selectedSerieId)?.name
+                        : "Toutes les séries"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Extension</Text>
+                  <Pressable
+                    onPress={() => setIsSetModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedSetId
+                        ? sets.find((s) => s.id === selectedSetId)?.name
+                        : "Toutes les extensions"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.filterFieldRow}>
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>Rareté</Text>
+                  <Pressable
+                    onPress={() => setIsRarityModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedRarity || "Toutes les raretés"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+
+                <View style={styles.filterFieldContainer}>
+                  <Text style={styles.filterLabel}>État</Text>
+                  <Pressable
+                    onPress={() => setIsStateModalVisible(true)}
+                    style={styles.filterDropdown}
+                  >
+                    <Text numberOfLines={1} style={styles.filterDropdownText}>
+                      {selectedCardState
+                        ? cardStates.find(
+                            (cs) => cs.value === selectedCardState,
+                          )?.label
+                        : "Tous les états"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={14} color="#777777" />
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
+
+          {hasActiveFilters && (
+            <Pressable
+              onPress={handleResetFilters}
+              style={({ pressed }) => [
+                styles.resetFiltersButton,
+                pressed && styles.resetFiltersButtonPressed,
               ]}
             >
-              {setName}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+              <Ionicons name="refresh" size={14} color="#0b0b0b" />
+              <Text style={styles.resetFiltersText}>
+                Réinitialiser les filtres
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      )}
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-        <Pressable
-          onPress={() => setSelectedTypeFilter("all")}
-          style={[styles.filterChip, selectedTypeFilter === "all" && styles.filterChipActive]}
-        >
-          <Text
-            style={[
-              styles.filterChipText,
-              selectedTypeFilter === "all" && styles.filterChipTextActive,
-            ]}
-          >
-            Tous les types
-          </Text>
-        </Pressable>
-
-        {availableTypeFilters.map((typeName) => (
-          <Pressable
-            key={`type-${typeName}`}
-            onPress={() => setSelectedTypeFilter(typeName)}
-            style={[
-              styles.filterChip,
-              selectedTypeFilter === typeName && styles.filterChipActive,
-            ]}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                selectedTypeFilter === typeName && styles.filterChipTextActive,
-              ]}
-            >
-              {typeName}
+      {!isMasterSet && (
+        <View style={styles.selectRow}>
+          <Pressable onPress={handleSelectSortBy} style={styles.selectInput}>
+            <Text style={styles.selectInputText}>
+              Trier par : {getSortByLabel(sortBy)}
             </Text>
+            <Ionicons name="chevron-down" size={14} color="#555555" />
           </Pressable>
-        ))}
-      </ScrollView>
+
+          <Pressable onPress={handleSelectSortOrder} style={styles.selectInput}>
+            <Text style={styles.selectInputText}>
+              Ordre : {sortOrder === "ASC" ? "Croissant" : "Décroissant"}
+            </Text>
+            <Ionicons name="chevron-down" size={14} color="#555555" />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 
@@ -585,34 +915,49 @@ export default function CollectionDetailsScreen() {
       <FlatList
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={styles.listContent}
-        data={filteredItems}
-        keyExtractor={(item) => String(item.id)}
+        data={items}
+        keyExtractor={(item) =>
+          item.id ? String(item.id) : `card-${item.pokemonCard?.id}`
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Collection vide</Text>
-            <Text style={styles.emptyText}>
-              Ajoute des cartes en scannant ou via la recherche.
+            <Text style={styles.emptyTitle}>
+              {isMasterSet ? "Aucune carte" : "Collection vide"}
             </Text>
-            <View style={styles.emptyActionsRow}>
-              <Pressable
-                onPress={() => router.push("/scan")}
-                style={({ pressed }) => [styles.emptyAction, pressed && styles.emptyActionPressed]}
-              >
-                <Text style={styles.emptyActionText}>Scanner</Text>
-              </Pressable>
-              <Pressable
-                onPress={openManualAddModal}
-                style={({ pressed }) => [
-                  styles.emptySecondaryAction,
-                  pressed && styles.emptySecondaryActionPressed,
-                ]}
-              >
-                <Text style={styles.emptySecondaryActionText}>Ajouter manuellement</Text>
-              </Pressable>
-            </View>
+            <Text style={styles.emptyText}>
+              {isMasterSet
+                ? "Aucune carte ne correspond à vos filtres de recherche."
+                : "Ajoute des cartes en scannant ou via la recherche."}
+            </Text>
+            {!isMasterSet && (
+              <View style={styles.emptyActionsRow}>
+                <Pressable
+                  onPress={() => router.push("/scan")}
+                  style={({ pressed }) => [
+                    styles.emptyAction,
+                    pressed && styles.emptyActionPressed,
+                  ]}
+                >
+                  <Text style={styles.emptyActionText}>Scanner</Text>
+                </Pressable>
+                <Pressable
+                  onPress={openManualAddModal}
+                  style={({ pressed }) => [
+                    styles.emptySecondaryAction,
+                    pressed && styles.emptySecondaryActionPressed,
+                  ]}
+                >
+                  <Text style={styles.emptySecondaryActionText}>
+                    Ajouter manuellement
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         }
-        ListFooterComponent={isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null}
+        ListFooterComponent={
+          isLoadingMore ? <ActivityIndicator color="#0b0b0b" /> : null
+        }
         ListHeaderComponent={listHeader}
         numColumns={2}
         onEndReached={() => {
@@ -634,160 +979,91 @@ export default function CollectionDetailsScreen() {
         renderItem={renderCardCell}
       />
 
-      <Modal
-        animationType="slide"
-        onRequestClose={() => setIsCardModalVisible(false)}
-        visible={isCardModalVisible}
-      >
-        <ScrollView contentContainerStyle={styles.modalContent}>
-          <Pressable
-            onPress={() => setIsCardModalVisible(false)}
-            style={({ pressed }) => [styles.modalClose, pressed && styles.modalClosePressed]}
-          >
-            <Ionicons color="#0b0b0b" name="close" size={22} />
-          </Pressable>
+      <CardDetailModal
+        card={selectedCard}
+        isVisible={isCardModalVisible}
+        onClose={() => setIsCardModalVisible(false)}
+      />
 
-          <Image source={{ uri: resolveImage(selectedCard?.image) }} style={styles.modalImage} />
+      <AddCardModal
+        isVisible={isAddModalVisible}
+        onClose={() => setIsAddModalVisible(false)}
+        collectionId={collectionId as string}
+        onCardAdded={async () => {
+          await Promise.all([
+            loadCollectionHeader(),
+            loadItems({ refresh: true }),
+          ]);
+        }}
+      />
 
-          <Text style={styles.modalTitle}>{selectedCard?.name || "Carte"}</Text>
-          <Text style={styles.modalMeta}>
-            {selectedCard?.set?.name || "Set inconnu"} • {selectedCard?.rarity || "Rarete inconnue"}
-          </Text>
+      <SelectionModal
+        isVisible={isSerieModalVisible}
+        onClose={() => setIsSerieModalVisible(false)}
+        title="Série"
+        options={series.map((s) => ({ id: s.id, name: s.name }))}
+        selectedValue={selectedSerieId}
+        onSelect={handleSelectSerie}
+        placeholder="Rechercher une série..."
+      />
 
-          <Text style={styles.modalSectionTitle}>Informations</Text>
-          <Text style={styles.modalText}>HP: {selectedCard?.pokemonDetails?.hp || "-"}</Text>
-          <Text style={styles.modalText}>
-            Types: {(selectedCard?.pokemonDetails?.types || []).join(", ") || "-"}
-          </Text>
-          <Text style={styles.modalText}>Stage: {selectedCard?.pokemonDetails?.stage || "-"}</Text>
-          <Text style={styles.modalText}>
-            {selectedCard?.pokemonDetails?.description || "Aucune description disponible."}
-          </Text>
+      <SelectionModal
+        isVisible={isSetModalVisible}
+        onClose={() => setIsSetModalVisible(false)}
+        title="Extension"
+        options={filteredSetsOptions.map((s) => ({ id: s.id, name: s.name }))}
+        selectedValue={selectedSetId}
+        onSelect={setSelectedSetId}
+        placeholder="Rechercher un set..."
+      />
 
-          <Text style={styles.modalSectionTitle}>Attaques</Text>
-          {(selectedCard?.pokemonDetails?.attacks || []).length > 0 ? (
-            selectedCard?.pokemonDetails?.attacks?.map((attack, index) => (
-              <View key={`attack-${index}`} style={styles.attackCard}>
-                <Text style={styles.attackName}>
-                  {attack.name || "Attaque"}
-                  {attack.damage ? ` - ${attack.damage}` : ""}
-                </Text>
-                <Text style={styles.attackText}>{attack.effect || "Sans effet texte."}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.modalText}>Aucune attaque detaillee disponible.</Text>
-          )}
-        </ScrollView>
-      </Modal>
+      <SelectionModal
+        isVisible={isRarityModalVisible}
+        onClose={() => setIsRarityModalVisible(false)}
+        title="Rareté"
+        options={setRarities}
+        selectedValue={selectedRarity}
+        onSelect={setSelectedRarity}
+        placeholder="Rechercher une rareté..."
+      />
 
-      <Modal
-        animationType="slide"
-        onRequestClose={() => setIsAddModalVisible(false)}
-        visible={isAddModalVisible}
-      >
-        <View style={styles.manualModalContainer}>
-          <View style={styles.manualModalHeader}>
-            <Text style={styles.manualModalTitle}>Ajouter une carte</Text>
-            <Pressable
-              onPress={() => setIsAddModalVisible(false)}
-              style={({ pressed }) => [
-                styles.manualModalClose,
-                pressed && styles.manualModalClosePressed,
-              ]}
-            >
-              <Ionicons color="#0b0b0b" name="close" size={20} />
-            </Pressable>
-          </View>
+      <SelectionModal
+        isVisible={isStateModalVisible}
+        onClose={() => setIsStateModalVisible(false)}
+        title="État"
+        options={cardStates.map((cs) => ({ id: cs.value, name: cs.label }))}
+        selectedValue={selectedCardState}
+        onSelect={setSelectedCardState}
+        showSearch={false}
+      />
 
-          <TextInput
-            autoCapitalize="none"
-            onChangeText={setManualSearch}
-            placeholder="Nom, set, numero"
-            placeholderTextColor="#555555"
-            style={styles.manualSearchInput}
-            value={manualSearch}
-          />
-
-          {debouncedManualSearch.length < 2 ? (
-            <Text style={styles.manualHint}>Tape au moins 2 caracteres pour rechercher.</Text>
-          ) : null}
-
-          {isManualSearching ? (
-            <ActivityIndicator color="#0b0b0b" style={styles.manualLoading} />
-          ) : null}
-
-          <FlatList
-            contentContainerStyle={styles.manualResultsList}
-            data={manualResults}
-            keyExtractor={(item) => item.id || Math.random().toString()}
-            ListEmptyComponent={
-              !isManualSearching && debouncedManualSearch.length >= 2 ? (
-                <Text style={styles.manualEmptyText}>Aucun resultat.</Text>
-              ) : null
-            }
-            renderItem={({ item }) => (
-              <View style={styles.manualResultCard}>
-                <Image source={{ uri: resolveImage(item.image) }} style={styles.manualResultImage} />
-
-                <View style={styles.manualResultContent}>
-                  <Text numberOfLines={1} style={styles.manualResultName}>
-                    {item.name || "Carte"}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.manualResultMeta}>
-                    {item.set?.name || "Set inconnu"}
-                  </Text>
-                  <Text numberOfLines={1} style={styles.manualResultMeta}>
-                    {item.rarity || "Rarete inconnue"}
-                  </Text>
-                </View>
-
-                <Pressable
-                  disabled={addingCardId === item.id}
-                  onPress={() => {
-                    void handleAddCardFromSearch(item);
-                  }}
-                  style={({ pressed }) => [
-                    styles.manualAddCardButton,
-                    (pressed || addingCardId === item.id) &&
-                      styles.manualAddCardButtonPressed,
-                  ]}
-                >
-                  <Text style={styles.manualAddCardButtonText}>
-                    {addingCardId === item.id ? "Ajout..." : "Ajouter"}
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-          />
-        </View>
-      </Modal>
+      <SelectionModal
+        isVisible={isSortByModalVisible}
+        onClose={() => setIsSortByModalVisible(false)}
+        title="Trier par"
+        options={[
+          { id: "added_at", name: "Date d'ajout" },
+          { id: "pokemonCard.name", name: "Nom" },
+          { id: "pokemonCard.rarity", name: "Rareté" },
+          { id: "quantity", name: "Quantité" },
+        ]}
+        selectedValue={sortBy}
+        onSelect={(id) => {
+          if (id) {
+            setSortBy(id as any);
+          }
+        }}
+        showSearch={false}
+        showAllOption={false}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  attackCard: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: 8,
-    padding: 10,
-  },
-  attackName: {
-    color: "#0b0b0b",
-    fontSize: 14,
-    fontWeight: "800",
-  },
-  attackText: {
-    color: "#555555",
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
   cardCell: {
     flex: 1,
+    maxWidth: "48.5%",
     marginBottom: 10,
     position: "relative",
   },
@@ -840,19 +1116,37 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
     flex: 1,
   },
-  deleteBadge: {
-    alignItems: "center",
-    backgroundColor: "#da2b29",
-    borderRadius: 12,
-    height: 24,
-    justifyContent: "center",
-    position: "absolute",
-    right: 10,
-    top: 10,
-    width: 24,
+  cardTopArea: {
+    width: "100%",
   },
-  deleteBadgePressed: {
-    opacity: 0.75,
+  cardTopAreaPressed: {
+    opacity: 0.86,
+  },
+  cardQtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fcfcfc",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    height: 36,
+    marginTop: 8,
+  },
+  cardQtyButton: {
+    alignItems: "center",
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+  cardQtyButtonPressed: {
+    opacity: 0.5,
+  },
+  cardQtyText: {
+    color: "#0b0b0b",
+    fontSize: 13,
+    fontWeight: "700",
+    textAlign: "center",
   },
   deleteCollectionButton: {
     alignItems: "center",
@@ -927,29 +1221,8 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "800",
   },
-  filterChip: {
-    backgroundColor: "#f3f5f9",
-    borderColor: "#e4e4e4",
-    borderRadius: 999,
-    borderWidth: 1,
-    marginRight: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  filterChipActive: {
-    backgroundColor: "#0b0b0b",
-    borderColor: "#0b0b0b",
-  },
-  filterChipText: {
-    color: "#0b0b0b",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  filterChipTextActive: {
-    color: "#ffffff",
-  },
-  filterRow: {
-    marginTop: 8,
+  clearButton: {
+    padding: 4,
   },
   gridRow: {
     gap: 10,
@@ -1083,54 +1356,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  modalClose: {
-    alignItems: "center",
-    alignSelf: "flex-end",
-    backgroundColor: "#f3f5f9",
-    borderRadius: 20,
-    height: 32,
-    justifyContent: "center",
-    width: 32,
-  },
-  modalClosePressed: {
-    opacity: 0.8,
-  },
-  modalContent: {
-    backgroundColor: "#fcfcfc",
-    padding: 16,
-    paddingBottom: 34,
-  },
-  modalImage: {
-    alignSelf: "center",
-    borderRadius: 14,
-    height: 320,
-    marginTop: 12,
-    resizeMode: "contain",
-    width: "100%",
-  },
-  modalMeta: {
-    color: "#555555",
-    fontSize: 14,
-    marginTop: 6,
-  },
-  modalSectionTitle: {
-    color: "#0b0b0b",
-    fontSize: 16,
-    fontWeight: "800",
-    marginTop: 14,
-  },
-  modalText: {
-    color: "#555555",
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 6,
-  },
-  modalTitle: {
-    color: "#0b0b0b",
-    fontSize: 26,
-    fontWeight: "800",
-    marginTop: 12,
-  },
   navButton: {
     alignItems: "center",
     backgroundColor: "#ffffff",
@@ -1165,44 +1390,148 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "700",
   },
-  searchInput: {
+  searchRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  searchContainer: {
+    alignItems: "center",
     backgroundColor: "#ffffff",
     borderColor: "#e4e4e4",
     borderRadius: 12,
     borderWidth: 1,
+    flexDirection: "row",
+    height: 44,
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  filterToggleButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 44,
+    width: 44,
+  },
+  filterToggleButtonActive: {
+    backgroundColor: "#0b0b0b",
+    borderColor: "#0b0b0b",
+  },
+  filtersPanel: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 10,
+    padding: 12,
+  },
+  filtersPanelTitle: {
     color: "#0b0b0b",
     fontSize: 14,
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    fontWeight: "800",
+    marginBottom: 10,
   },
-  sortChip: {
-    backgroundColor: "#f3f5f9",
+  filterFieldRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  filterFieldContainer: {
+    flex: 1,
+  },
+  filterLabel: {
+    color: "#555555",
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  filterDropdown: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#fcfcfc",
     borderColor: "#e4e4e4",
-    borderRadius: 999,
+    borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 8,
+    height: 38,
   },
-  sortChipActive: {
-    backgroundColor: "#b72921",
-    borderColor: "#b72921",
+  filterDropdownText: {
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: 4,
   },
-  sortChipPressed: {
-    opacity: 0.82,
+  filterTextInput: {
+    backgroundColor: "#fcfcfc",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    height: 38,
   },
-  sortChipText: {
+  resetFiltersButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderColor: "#e4e4e4",
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 6,
+    marginTop: 6,
+    paddingVertical: 8,
+  },
+  resetFiltersButtonPressed: {
+    opacity: 0.8,
+  },
+  resetFiltersText: {
     color: "#0b0b0b",
     fontSize: 12,
     fontWeight: "700",
   },
-  sortChipTextActive: {
-    color: "#ffffff",
+  searchIcon: {
+    marginRight: 6,
   },
-  sortRow: {
+  searchInputField: {
+    color: "#0b0b0b",
+    flex: 1,
+    fontSize: 14,
+    height: "100%",
+    paddingVertical: 0,
+  },
+  selectRow: {
     flexDirection: "row",
     gap: 8,
-    marginTop: 10,
+    marginTop: 8,
+  },
+  selectInput: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#ffffff",
+    borderColor: "#e4e4e4",
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    height: 40,
+  },
+  selectInputText: {
+    color: "#0b0b0b",
+    fontSize: 12,
+    fontWeight: "600",
   },
   statsCard: {
     backgroundColor: "#ffffff",

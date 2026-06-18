@@ -13,9 +13,7 @@ const extraApiUrl =
     : "";
 
 const configApiUrl =
-  extraApiUrl && extraApiUrl !== "http://localhost:3001/api"
-    ? extraApiUrl
-    : "";
+  extraApiUrl && extraApiUrl !== "http://localhost:3001/api" ? extraApiUrl : "";
 
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL?.trim() || configApiUrl || getDefaultApiUrl();

@@ -2,11 +2,7 @@ import TCGdex from "@tcgdex/sdk";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import {
-  assertR2Config,
-  migrateCardImageToR2,
-  uploadToR2,
-} from "./r2.js";
+import { assertR2Config, migrateCardImageToR2, uploadToR2 } from "./r2.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

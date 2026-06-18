@@ -53,9 +53,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        extractRefreshToken,
-      ]),
+      jwtFromRequest: ExtractJwt.fromExtractors([extractRefreshToken]),
       ignoreExpiration: false,
       secretOrKey: refreshSecret,
       passReqToCallback: true,

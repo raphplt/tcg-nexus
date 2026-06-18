@@ -1,14 +1,16 @@
 import axios, { AxiosError } from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { RefreshResponse } from "@/types";
-import { getRememberMePreference, getStoredTokens } from "./tokenStorage";
 import {
-  api,
   API_URL,
   type AppAxiosRequestConfig,
   type AppInternalAxiosRequestConfig,
+  api,
+  isRetriableNetworkError,
   notifyApiError,
+  wait,
 } from "./api";
+import { getRememberMePreference, getStoredTokens } from "./tokenStorage";
 
 const AUTH_ROUTES_SKIPPING_REFRESH = [
   "/auth/login",
@@ -138,7 +140,11 @@ secureApi.interceptors.response.use(
       requestUrl.includes(route),
     );
 
-    if (error.response?.status === 401 && !isAuthRoute && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !isAuthRoute &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -157,6 +163,17 @@ secureApi.interceptors.response.use(
 
     if (error.response?.status === 401 && !isAuthRoute) {
       await finalizeUnauthorizedState();
+    }
+
+    // coupure réseau aléatoire (socket fermée, blip) : un seul réessai
+    if (
+      originalRequest &&
+      !originalRequest._netRetry &&
+      isRetriableNetworkError(error)
+    ) {
+      originalRequest._netRetry = true;
+      await wait(400);
+      return secureApi(originalRequest);
     }
 
     notifyApiError(error);

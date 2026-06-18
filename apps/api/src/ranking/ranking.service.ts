@@ -363,7 +363,7 @@ export class RankingService {
   async getTournamentRankings(tournamentId: number): Promise<Ranking[]> {
     return this.rankingRepository.find({
       where: { tournament: { id: tournamentId } },
-      relations: ["player"],
+      relations: ["player", "player.user"],
       order: {
         points: "DESC",
         winRate: "DESC",

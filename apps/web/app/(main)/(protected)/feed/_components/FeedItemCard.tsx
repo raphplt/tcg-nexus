@@ -15,7 +15,8 @@ interface FeedItemCardProps {
 
 export function FeedItemCard({ item }: FeedItemCardProps) {
   const actorName = `${item.actor.firstName} ${item.actor.lastName}`.trim();
-  const initials = `${item.actor.firstName[0] ?? ""}${item.actor.lastName[0] ?? ""}`.toUpperCase();
+  const initials =
+    `${item.actor.firstName[0] ?? ""}${item.actor.lastName[0] ?? ""}`.toUpperCase();
   const when = formatDistanceToNow(new Date(item.createdAt), {
     addSuffix: true,
     locale: fr,
@@ -45,9 +46,7 @@ export function FeedItemCard({ item }: FeedItemCardProps) {
             <span className="text-muted-foreground">a publié un deck</span>
           )}
           {item.type === "tournament_joined" && (
-            <span className="text-muted-foreground">
-              a rejoint un tournoi
-            </span>
+            <span className="text-muted-foreground">a rejoint un tournoi</span>
           )}
         </div>
 

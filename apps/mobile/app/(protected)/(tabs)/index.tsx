@@ -10,7 +10,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.heroCard}>
-        <Text style={styles.title}>Bonjour {user?.firstName ?? "Dresseur"}</Text>
+        <Text style={styles.title}>
+          Bonjour {user?.firstName ?? "Dresseur"}
+        </Text>
         <Text style={styles.subtitle}>
           Gère tes collections et enrichis-les en un scan.
         </Text>
@@ -18,30 +20,48 @@ export default function HomeScreen() {
 
       <Pressable
         onPress={() => router.push("/collection")}
-        style={({ pressed }) => [styles.actionCard, pressed && styles.actionCardPressed]}
+        style={({ pressed }) => [
+          styles.actionCard,
+          pressed && styles.actionCardPressed,
+        ]}
       >
         <View style={[styles.actionIcon, styles.actionIconPrimary]}>
           <Ionicons color={colors.primaryForeground} name="albums" size={22} />
         </View>
         <View style={styles.actionTextBlock}>
           <Text style={styles.actionTitle}>Ma collection</Text>
-          <Text style={styles.actionText}>Retrouve et organise tes cartes.</Text>
+          <Text style={styles.actionText}>
+            Retrouve et organise tes cartes.
+          </Text>
         </View>
-        <Ionicons color={colors.mutedForeground} name="chevron-forward" size={20} />
+        <Ionicons
+          color={colors.mutedForeground}
+          name="chevron-forward"
+          size={20}
+        />
       </Pressable>
 
       <Pressable
         onPress={() => router.push("/scan")}
-        style={({ pressed }) => [styles.actionCard, pressed && styles.actionCardPressed]}
+        style={({ pressed }) => [
+          styles.actionCard,
+          pressed && styles.actionCardPressed,
+        ]}
       >
         <View style={[styles.actionIcon, styles.actionIconSecondary]}>
           <Ionicons color={colors.secondaryForeground} name="scan" size={22} />
         </View>
         <View style={styles.actionTextBlock}>
           <Text style={styles.actionTitle}>Scanner une carte</Text>
-          <Text style={styles.actionText}>Ajoute une carte depuis l'appareil photo.</Text>
+          <Text style={styles.actionText}>
+            Ajoute une carte depuis l'appareil photo.
+          </Text>
         </View>
-        <Ionicons color={colors.mutedForeground} name="chevron-forward" size={20} />
+        <Ionicons
+          color={colors.mutedForeground}
+          name="chevron-forward"
+          size={20}
+        />
       </Pressable>
     </View>
   );

@@ -43,7 +43,10 @@ export function FeedList() {
   return (
     <div className="space-y-3">
       {data.map((item, idx) => (
-        <FeedItemCard key={`${item.type}-${idx}-${item.createdAt}`} item={item} />
+        <FeedItemCard
+          key={`${item.type}-${idx}-${item.createdAt}`}
+          item={item}
+        />
       ))}
     </div>
   );

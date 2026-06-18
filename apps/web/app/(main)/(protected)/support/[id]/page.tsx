@@ -65,9 +65,7 @@ export default function SupportTicketDetailPage() {
         message: newMessage.trim(),
       });
       setTicket((prev) =>
-        prev
-          ? { ...prev, messages: [...prev.messages, message] }
-          : prev,
+        prev ? { ...prev, messages: [...prev.messages, message] } : prev,
       );
       setNewMessage("");
     } catch (error) {
@@ -265,9 +263,7 @@ function MessageBubble({
         <div
           className={cn(
             "rounded-xl px-4 py-2.5 text-sm inline-block text-left",
-            isOwn
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted",
+            isOwn ? "bg-primary text-primary-foreground" : "bg-muted",
           )}
         >
           <p className="whitespace-pre-wrap">{message.message}</p>

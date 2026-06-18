@@ -1,3 +1,7 @@
+// ─── Types partagés entre UI et services ─────────────────────────────────────
+// Tous les types spécifiques au pipeline scanner sont dans types/scanner.ts.
+// Ce fichier conserve uniquement les types UI et BDD génériques.
+
 export interface CardSetSummary {
   id?: string;
   name?: string;
@@ -40,7 +44,7 @@ export interface CardSearchResult {
 }
 
 export interface CollectionItem {
-  id: number;
+  id: number | null;
   quantity: number;
   added_at?: string;
   pokemonCard?: CardSearchResult | null;
@@ -54,12 +58,26 @@ export interface UserCollection {
   created_at?: string;
   updated_at?: string;
   items?: CollectionItem[];
+  masterSet?: { id: string; name: string } | null;
 }
 
 export interface CollectionItemResponse {
   id: number;
   quantity: number;
   pokemonCard?: CardSearchResult | null;
+}
+
+export interface CardsPaginatedResponse {
+  data: CardSearchResult[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface CollectionItemsPaginatedResponse {
@@ -75,17 +93,6 @@ export interface CollectionItemsPaginatedResponse {
   };
 }
 
-export interface OcrParsedResult {
-  rawText: string;
-  lines: string[];
-  cardName?: string;
-  setCode?: string;
-  setNumber?: string;
-  setTotal?: string;
-  setName?: string;
-  searchHints: string[];
-}
-
 export type ScanStatus = "found" | "not-found" | "added" | "error";
 
 export interface ScanHistoryItem {
@@ -96,13 +103,25 @@ export interface ScanHistoryItem {
   createdAt: number;
 }
 
-export interface ProcessedImagePayload {
-  optimizedUri: string;
-  base64: string;
+export type {
+  ScanCardCandidate,
+  ScanConfidenceLevel,
+  ScanParsedFields,
+  ScanRecognizeResponse,
+  ScanRoi,
+} from "@repo/scan-contract";
+
+export interface PokemonSerieType {
+  id: string;
+  name: string;
+  logo?: string;
 }
 
-export interface CardSearchResolution {
-  bestCard: CardSearchResult | null;
-  candidates: CardSearchResult[];
-  searchedTerms: string[];
+export interface PokemonSetType {
+  id: string;
+  name: string;
+  logo?: string;
+  symbol?: string;
+  releaseDate?: string;
+  serie?: PokemonSerieType;
 }

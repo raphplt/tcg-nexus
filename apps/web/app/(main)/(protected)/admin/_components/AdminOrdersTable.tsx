@@ -316,14 +316,14 @@ export function AdminOrdersTable() {
                                               ? getSealedName(
                                                   item.listing.sealedProduct,
                                                 ) || "Produit scellé"
-                                              : item.listing.pokemonCard?.name ||
-                                                "Carte inconnue"}
+                                              : item.listing.pokemonCard
+                                                  ?.name || "Carte inconnue"}
                                           </TableCell>
                                           <TableCell>
                                             {isSealed
-                                              ? item.listing.sealedCondition ??
-                                                "Neuf"
-                                              : item.listing.cardState ?? ""}
+                                              ? (item.listing.sealedCondition ??
+                                                "Neuf")
+                                              : (item.listing.cardState ?? "")}
                                           </TableCell>
                                           <TableCell>{item.quantity}</TableCell>
                                           <TableCell>
