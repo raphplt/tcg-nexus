@@ -32,7 +32,7 @@ const getTotalCards = (collection: UserCollection): number =>
     0,
   );
 
-export default function CollectionScreen() {
+export function PersonalCollectionView() {
   const { user } = useAuth();
   const [collections, setCollections] = useState<UserCollection[]>([]);
   const [isLoading, setIsLoading] = useState(true);

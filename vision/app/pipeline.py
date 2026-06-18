@@ -24,20 +24,13 @@ CARD_H = 838
 MAX_WARP_W = 1024
 MIN_CARD_AREA_RATIO = 0.08
 NAME_BAND = (0.06, 0.0, 0.80, 0.14)
-# Bandes candidates pour le numéro : plusieurs bandes PLEINE LARGEUR du bas de la
-# carte, à différents niveaux de zoom. Le warp se cale souvent sur la
-# pochette/toploader et laisse une marge variable sous la carte -> le numéro tombe
-# à une hauteur imprévisible et une bande fixe le rate (on lisait alors le fond du
-# tapis -> numéros parasites). On lit toutes les bandes et on garde la lecture la
-# plus SÛRE. Le format NN/MMM (slash obligatoire) filtre nativement le bruit capté
-# en plus (PV, dégâts, illustrateur) ; les lectures correctes ressortent avec une
-# confiance nettement plus haute que les fragments.
-NUMBER_BANDS = [
-    (0.0, 0.70, 1.0, 0.30),
-    (0.0, 0.74, 1.0, 0.26),
-    (0.0, 0.82, 1.0, 0.18),
-    (0.0, 0.88, 1.0, 0.12),
-]
+# Bandes candidates pour le numéro : bas-gauche (cartes récentes) et bas-droite
+# (anciennes). Fines et calées en bas : valable une fois le warp recadré au plus
+# près de la carte (cf. _tighten_to_card), sinon la marge de pochette les décale.
+NUMBER_BANDS = {
+    "number": (0.02, 0.885, 0.46, 0.10),
+    "number_right": (0.52, 0.885, 0.46, 0.10),
+}
 HP_BAND = (0.70, 0.040, 0.26, 0.060)
 
 
@@ -154,7 +147,7 @@ def _warp_card(img: np.ndarray, box: np.ndarray) -> np.ndarray:
     if max_w > max_h:
         warped = cv2.rotate(warped, cv2.ROTATE_90_CLOCKWISE)
 
-    return _cap_width(warped)
+    return _cap_width(_tighten_to_card(warped))
 
 
 def _cap_width(card: np.ndarray) -> np.ndarray:
@@ -166,6 +159,38 @@ def _cap_width(card: np.ndarray) -> np.ndarray:
             card, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA
         )
     return card
+
+
+def _tighten_to_card(card: np.ndarray) -> np.ndarray:
+    """Recadre au plus près de la carte. La détection se cale parfois sur la
+    pochette/le toploader ou inclut une marge de tapis, ce qui laisse un bord
+    autour de la carte et décale TOUTES les ROI relatives (nom ET numéro, qui
+    lisaient alors le fond). Le warp étant déjà redressé, la carte est un grand
+    rectangle clair ~vertical au centre : on prend sa boîte englobante. Conservateur
+    -> on ne recadre que si on trouve une zone nettement plus petite et au ratio
+    plausible d'une carte ; sinon image inchangée (zéro régression sur les photos
+    déjà bien cadrées)."""
+    h, w = card.shape[:2]
+    if h == 0 or w == 0:
+        return card
+    gray = cv2.cvtColor(card, cv2.COLOR_BGR2GRAY)
+    # la carte ressort (claire) du fond sombre (pochette/tapis)
+    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
+    cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+    if not cnts:
+        return card
+    x, y, bw, bh = cv2.boundingRect(max(cnts, key=cv2.contourArea))
+    area_ratio = (bw * bh) / float(w * h)
+    aspect = bw / float(bh) if bh else 0.0
+    # garde-fous : zone assez grande (vraie carte, pas un reflet), ratio plausible
+    # de carte (~0.72), et recadrage réellement utile (sinon on n'y touche pas).
+    if not (0.45 < area_ratio < 0.93) or not (0.55 < aspect < 0.95):
+        return card
+    pad = int(0.012 * max(w, h))
+    x0, y0 = max(0, x - pad), max(0, y - pad)
+    x1, y1 = min(w, x + bw + pad), min(h, y + bh + pad)
+    return card[y0:y1, x0:x1]
 
 
 def _normalize(card_bgr: np.ndarray) -> np.ndarray:
@@ -215,22 +240,16 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     if name_crop is not None:
         rois.append(_roi("name", NAME_BAND, name_crop, name_text, name_conf))
 
-    # numéro : on lit toutes les bandes candidates (différents zooms du bas) et on
-    # ne garde que la lecture la plus SÛRE (confiance OCR la plus haute). Lire une
-    # seule bande laissait un numéro parasite (fond du tapis) l'emporter ; ici la
-    # vraie lecture, plus confiante, gagne. Le crop exposé sert au debug côté API.
-    best_text, best_conf, best_crop = "", -1.0, None
-    for band in NUMBER_BANDS:
+    # numéro : bas-gauche d'abord (cartes récentes), bas-droite seulement en
+    # repli (anciennes) -> évite des appels OCR inutiles dans le cas courant.
+    for key, band in NUMBER_BANDS.items():
         crop = _crop(card, band)
         if not crop.size:
             continue
         text, conf = read_number(crop)
-        if text and conf > best_conf:
-            best_text, best_conf, best_crop = text, conf, crop
-    if best_crop is not None:
-        rois.append(
-            _roi("number", (0.0, 0.70, 1.0, 0.30), best_crop, best_text, max(best_conf, 0.0))
-        )
+        rois.append(_roi(key, band, crop, text, conf))
+        if text:
+            break
 
     hp_crop = _crop(card, HP_BAND)
     if hp_crop.size:

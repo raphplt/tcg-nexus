@@ -6,12 +6,13 @@ import {
   Image,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { CardDetailModal } from "@/components/CardDetailModal";
+import { SelectionModal } from "@/components/SelectionModal";
 import { cardService } from "@/services/card.service";
 import { toast } from "@/store/useToastStore";
 import type {
@@ -22,14 +23,8 @@ import type {
 } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 import { getCardImage, getSeriesIconUrl, getSetIconUrl } from "@/utils/images";
-import { CardDetailModal } from "@/components/CardDetailModal";
-import { SelectionModal } from "@/components/SelectionModal";
 
 const PAGE_SIZE = 24;
-
-
-
-
 
 const dedupeCards = (cards: CardSearchResult[]): CardSearchResult[] => {
   const seen = new Set<string>();
@@ -42,7 +37,7 @@ const dedupeCards = (cards: CardSearchResult[]): CardSearchResult[] => {
   return next;
 };
 
-export default function PokedexScreen() {
+export function PokedexView() {
   const [cards, setCards] = useState<CardSearchResult[]>([]);
   const [meta, setMeta] = useState<CardsPaginatedResponse["meta"] | null>(null);
 
@@ -54,20 +49,30 @@ export default function PokedexScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(undefined);
-  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(undefined);
-  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(undefined);
+  const [selectedSerieId, setSelectedSerieId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedSetId, setSelectedSetId] = useState<string | undefined>(
+    undefined,
+  );
+  const [selectedRarity, setSelectedRarity] = useState<string | undefined>(
+    undefined,
+  );
 
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [sets, setSets] = useState<PokemonSetType[]>([]);
 
-  const [setRarities, setSetRarities] = useState<{ id: string; name: string }[]>([]);
+  const [setRarities, setSetRarities] = useState<
+    { id: string; name: string }[]
+  >([]);
 
   const [isSerieModalVisible, setIsSerieModalVisible] = useState(false);
   const [isSetModalVisible, setIsSetModalVisible] = useState(false);
   const [isRarityModalVisible, setIsRarityModalVisible] = useState(false);
 
-  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardSearchResult | null>(
+    null,
+  );
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
 
   useEffect(() => {
@@ -233,16 +238,21 @@ export default function PokedexScreen() {
   );
 
   const renderSetsGrid = () => {
-    const activeSerie = series.find(s => s.id === selectedSerieId);
+    const activeSerie = series.find((s) => s.id === selectedSerieId);
     return (
       <View style={styles.gridSection}>
         <View style={styles.sectionHeaderRow}>
-          <Pressable onPress={() => handleSelectSerie(undefined)} style={styles.backButton}>
+          <Pressable
+            onPress={() => handleSelectSerie(undefined)}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={16} color="#555555" />
             <Text style={styles.backButtonText}>Retour aux séries</Text>
           </Pressable>
         </View>
-        <Text style={styles.sectionTitle}>Extensions de {activeSerie?.name || "la série"}</Text>
+        <Text style={styles.sectionTitle}>
+          Extensions de {activeSerie?.name || "la série"}
+        </Text>
         <View style={styles.setsListContainer}>
           {filteredSetsOptions.map((set) => (
             <Pressable
@@ -255,7 +265,11 @@ export default function PokedexScreen() {
             >
               <View style={styles.setListLogoContainer}>
                 {getSetIconUrl(set) ? (
-                  <Image source={{ uri: getSetIconUrl(set) }} style={styles.setListLogo} resizeMode="contain" />
+                  <Image
+                    source={{ uri: getSetIconUrl(set) }}
+                    style={styles.setListLogo}
+                    resizeMode="contain"
+                  />
                 ) : (
                   <Ionicons name="bookmark" size={24} color="#cccccc" />
                 )}
@@ -264,7 +278,10 @@ export default function PokedexScreen() {
                 <Text style={styles.setListName}>{set.name}</Text>
                 {set.releaseDate && (
                   <Text style={styles.setListDate}>
-                    {new Date(set.releaseDate).toLocaleDateString("fr-FR", { year: "numeric", month: "short" })}
+                    {new Date(set.releaseDate).toLocaleDateString("fr-FR", {
+                      year: "numeric",
+                      month: "short",
+                    })}
                   </Text>
                 )}
               </View>
@@ -279,7 +296,9 @@ export default function PokedexScreen() {
     <View style={styles.headerBlock}>
       <Text style={styles.eyebrow}>EXPLORATEUR</Text>
       <Text style={styles.title}>Pokédex</Text>
-      <Text style={styles.subtitle}>Parcourez toutes les cartes Pokémon officielles</Text>
+      <Text style={styles.subtitle}>
+        Parcourez toutes les cartes Pokémon officielles
+      </Text>
 
       <View style={styles.searchRow}>
         <View style={styles.searchInputContainer}>
@@ -298,23 +317,26 @@ export default function PokedexScreen() {
           )}
         </View>
 
-          { (selectedSetId || debouncedSearch.length > 0) && (
-            <Pressable
-              onPress={() => setShowFilters(!showFilters)}
-              style={({ pressed }) => [
-                styles.filterToggleButton,
-                showFilters && styles.filterToggleButtonActive,
-                pressed && styles.filterToggleButtonPressed,
-              ]}
-            >
-              <Ionicons color={showFilters ? "#ffffff" : "#0b0b0b"} name="options" size={18} />
-            </Pressable>
-          )}
-        </View>
+        {(selectedSetId || debouncedSearch.length > 0) && (
+          <Pressable
+            onPress={() => setShowFilters(!showFilters)}
+            style={({ pressed }) => [
+              styles.filterToggleButton,
+              showFilters && styles.filterToggleButtonActive,
+              pressed && styles.filterToggleButtonPressed,
+            ]}
+          >
+            <Ionicons
+              color={showFilters ? "#ffffff" : "#0b0b0b"}
+              name="options"
+              size={18}
+            />
+          </Pressable>
+        )}
+      </View>
       {showFilters && (
         <View style={styles.filtersContainer}>
           <View style={styles.filterRow}>
-
             <Pressable
               onPress={() => setIsRarityModalVisible(true)}
               style={({ pressed }) => [
@@ -330,7 +352,8 @@ export default function PokedexScreen() {
                 ]}
               >
                 {selectedRarity
-                  ? setRarities.find((r) => r.id === selectedRarity)?.name || "Rareté"
+                  ? setRarities.find((r) => r.id === selectedRarity)?.name ||
+                    "Rareté"
                   : "Rareté"}
               </Text>
               <Ionicons
@@ -342,26 +365,44 @@ export default function PokedexScreen() {
           </View>
 
           {hasActiveFilters && (
-            <Pressable onPress={handleResetFilters} style={styles.resetFiltersBtn}>
+            <Pressable
+              onPress={handleResetFilters}
+              style={styles.resetFiltersBtn}
+            >
               <Ionicons color="#555555" name="refresh" size={14} />
-              <Text style={styles.resetFiltersText}>Réinitialiser les filtres</Text>
+              <Text style={styles.resetFiltersText}>
+                Réinitialiser les filtres
+              </Text>
             </Pressable>
           )}
         </View>
       )}
 
-      {!debouncedSearch && !selectedSerieId && !selectedSetId && renderSeriesGrid()}
-      {!debouncedSearch && selectedSerieId && !selectedSetId && renderSetsGrid()}
+      {!debouncedSearch &&
+        !selectedSerieId &&
+        !selectedSetId &&
+        renderSeriesGrid()}
+      {!debouncedSearch &&
+        selectedSerieId &&
+        !selectedSetId &&
+        renderSetsGrid()}
       {!debouncedSearch && selectedSetId && (
         <View style={styles.gridSection}>
           <View style={styles.sectionHeaderRow}>
-            <Pressable onPress={() => { setSelectedSetId(undefined); setShowFilters(false); }} style={styles.backButton}>
+            <Pressable
+              onPress={() => {
+                setSelectedSetId(undefined);
+                setShowFilters(false);
+              }}
+              style={styles.backButton}
+            >
               <Ionicons name="arrow-back" size={16} color="#555555" />
               <Text style={styles.backButtonText}>Retour aux extensions</Text>
             </Pressable>
           </View>
           <Text style={styles.sectionTitle}>
-            Cartes de {sets.find((s) => s.id === selectedSetId)?.name || "l'extension"}
+            Cartes de{" "}
+            {sets.find((s) => s.id === selectedSetId)?.name || "l'extension"}
           </Text>
         </View>
       )}
@@ -395,7 +436,7 @@ export default function PokedexScreen() {
                 <Ionicons color="#e4e4e4" name="image-outline" size={24} />
               </View>
             )}
-            
+
             {isSpecialCard && (
               <View style={styles.sparkleBadge}>
                 <Ionicons color="#ffffff" name="sparkles" size={10} />
@@ -408,7 +449,9 @@ export default function PokedexScreen() {
               {item.name}
             </Text>
             <View style={styles.cardMetaRow}>
-              <Text style={styles.cardSetCode}>{item.set?.name || "Inconnu"}</Text>
+              <Text style={styles.cardSetCode}>
+                {item.set?.name || "Inconnu"}
+              </Text>
               <Text style={styles.cardNumber}>#{item.localId}</Text>
             </View>
           </View>
@@ -418,7 +461,7 @@ export default function PokedexScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
@@ -495,7 +538,7 @@ export default function PokedexScreen() {
         onSelect={setSelectedRarity}
         placeholder="Rechercher une rareté..."
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

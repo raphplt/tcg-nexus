@@ -7,7 +7,6 @@ import {
   Modal,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,7 +19,7 @@ import { toast } from "@/store/useToastStore";
 import type { Deck, DeckFormat } from "@/types";
 import { getApiErrorMessage } from "@/utils/apiError";
 
-export default function DecksIndexScreen() {
+export function DecksView() {
   const [trendingDecks, setTrendingDecks] = useState<Deck[]>([]);
   const [myDecks, setMyDecks] = useState<Deck[]>([]);
   const [savedDecks, setSavedDecks] = useState<Deck[]>([]);
@@ -372,7 +371,7 @@ export default function DecksIndexScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <FlatList
         ListHeaderComponent={renderHeader}
         data={allDecks}
@@ -565,7 +564,7 @@ export default function DecksIndexScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
