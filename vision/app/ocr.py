@@ -45,7 +45,17 @@ def _variants(crop: np.ndarray, target_h: int = ROI_TARGET_H):
     k = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
     blackhat = cv2.morphologyEx(g, cv2.MORPH_BLACKHAT, k)
     _, bh = cv2.threshold(blackhat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    ordered = [otsu, cv2.bitwise_not(otsu), clahe, cv2.bitwise_not(bh)]
+    # tophat : symétrique du blackhat, isole le texte CLAIR (noms blancs des
+    # full-arts ex/V/VMAX) sur fond sombre/chargé, là où blackhat ne voit rien.
+    tophat = cv2.morphologyEx(g, cv2.MORPH_TOPHAT, k)
+    _, th = cv2.threshold(tophat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ordered = [
+        otsu,
+        cv2.bitwise_not(otsu),
+        clahe,
+        cv2.bitwise_not(bh),
+        cv2.bitwise_not(th),
+    ]
     return [
         cv2.copyMakeBorder(im, 18, 18, 18, 18, cv2.BORDER_CONSTANT, value=255)
         for im in ordered
