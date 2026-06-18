@@ -19,7 +19,7 @@ export function CameraScanView({ scan }: { scan: ScanFlow }) {
   const insets = useSafeAreaInsets();
   const { width: screenW, height: screenH } = useWindowDimensions();
 
-  // cadre au ratio d'une carte, centré et un peu remonté (barre du bas)
+  // cadre au ratio d'une carte, centré et remonté pour dégager la barre du bas
   const frameW = Math.min(screenW * 0.84, 360);
   const frameH = frameW / CARD_RATIO;
   const frameTop = Math.max(insets.top + 70, (screenH - frameH) / 2 - 40);
@@ -110,7 +110,7 @@ export function CameraScanView({ scan }: { scan: ScanFlow }) {
         ))}
       </View>
 
-      {/* loader superposé : la caméra reste montée -> pas de remount/flash */}
+      {/* on superpose le loader sans démonter la caméra, pour éviter un flash */}
       {scan.isProcessing ? <ProcessingOverlay uri={scan.capturedUri} /> : null}
     </View>
   );

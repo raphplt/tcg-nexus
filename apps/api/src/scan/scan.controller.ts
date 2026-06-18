@@ -13,7 +13,7 @@ import { ScanRecognizeDto } from "./dto/scan-recognize.dto";
 import { ScanService } from "./scan.service";
 
 const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8 Mo
-const MAX_FRAMES = 8; // rafale best-of-N
+const MAX_FRAMES = 8; // frames d'une rafale
 
 @ApiTags("scan")
 @ApiBearerAuth("bearerAuth")
@@ -23,7 +23,7 @@ export class ScanController {
 
   @Post("recognize")
   @ApiConsumes("multipart/form-data")
-  // `images` = rafale (best-of-N) ; `image` conservé pour la compat mono-frame.
+  // `images` = rafale ; `image` gardé pour la compat mono-frame
   @UseInterceptors(
     FileFieldsInterceptor(
       [

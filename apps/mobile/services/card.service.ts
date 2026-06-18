@@ -1,5 +1,7 @@
 import type {
   CardSearchResult,
+  CardsPaginatedResponse,
+  OcrParsedResult,
   PokemonSerieType,
   PokemonSetType,
 } from "@/types";
@@ -39,6 +41,11 @@ export const cardService = {
    * Recherche textuelle libre dans la BDD Pokémon.
    * Utilisée par la recherche manuelle dans l'UI de review.
    */
+  async getSetRarities(setId: string): Promise<string[]> {
+    const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
+    return response.data || [];
+  },
+
   async searchCards(search: string): Promise<CardSearchResult[]> {
     console.log("card service searchCards : ", search);
     const query = search.trim();
@@ -67,5 +74,28 @@ export const cardService = {
   async getAllSets(): Promise<PokemonSetType[]> {
     const response = await api.get<PokemonSetType[]>("/pokemon-set");
     return response.data || [];
+  },
+
+  async getAllSeries(): Promise<PokemonSerieType[]> {
+    const response = await api.get<PokemonSerieType[]>("/pokemon-series");
+    return response.data || [];
+  },
+
+  async getPaginated(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      setId?: string;
+      serieId?: string;
+      rarity?: string;
+      type?: string;
+    } = {},
+  ): Promise<CardsPaginatedResponse> {
+    const response = await api.get<CardsPaginatedResponse>(
+      "/pokemon-card/paginated",
+      { params },
+    );
+    return response.data;
   },
 };

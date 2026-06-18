@@ -29,8 +29,8 @@ type NumberFields = Pick<
   "setCode" | "setNumber" | "setTotal"
 >;
 
-// numéro "NN/MMM". Dénominateur sur 2-3 chiffres (aucun set < 10 cartes) :
-// évite de prendre un fragment de texte ("20/", "0/8") pour un numéro.
+// numéro "NN/MMM" : dénominateur sur 2-3 chiffres (aucun set < 10 cartes) pour
+// éviter de prendre un fragment de texte ("20/", "0/8") pour un numéro
 export const parseNumber = (text: string): NumberFields => {
   const match = text.match(/(\d{1,3})\s*\/\s*(\d{2,3})/);
   if (!match) return {};
@@ -41,7 +41,7 @@ export const parseNumber = (text: string): NumberFields => {
   };
 };
 
-// nettoie le texte de la ROI nom (bruit OCR autour, espaces) sans toucher aux accents
+// retire le bruit OCR autour du nom sans toucher aux accents
 export const cleanName = (raw: string): string =>
   raw
     .replace(/[\r\n]+/g, " ")
@@ -75,8 +75,8 @@ const pickCardName = (lines: string[]): string | undefined => {
   return candidate?.trim();
 };
 
-// candidats de nom : le nom propre figure souvent en clair dans le texte plein
-// même quand la ROI nom échoue. On en garde plusieurs, le scoring prend le meilleur.
+// le nom figure souvent en clair dans le texte plein même quand la ROI échoue :
+// on garde plusieurs candidats, le scoring prendra le meilleur
 export const extractNameCandidates = (
   roiName: string,
   lines: string[],

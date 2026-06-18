@@ -42,7 +42,7 @@ export const scoreCard = (
   card: Card,
   fields: ScanParsedFields,
   nameCandidates?: string[],
-  // meilleur score de nom parmi TOUS les candidats cartes (pour le garde-fou relatif)
+  // meilleur score de nom parmi toutes les cartes, pour le garde-fou relatif
   bestName = 0,
 ): number => {
   const name = nameCandidates?.length
@@ -64,8 +64,8 @@ export const scoreCard = (
   if (numberExact && totalExact) numberSignal = 1;
   else if (numberExact && !totalKnown) numberSignal = 0.5;
 
-  // garde-fou relatif : si un nom est exploitable mais qu'une autre carte le
-  // matche bien mieux, le numéro de celle-ci est une coïncidence -> on l'écarte.
+  // si une autre carte matche bien mieux sur le nom, ce numéro est sans doute une
+  // coïncidence (numéro mal lu) : on l'ignore
   const nameInformative = bestName >= NAME_INFORMATIVE;
   if (numberSignal > 0 && nameInformative && bestName - name > NAME_MARGIN) {
     numberSignal = 0;

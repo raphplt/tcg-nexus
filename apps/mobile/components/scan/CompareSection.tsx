@@ -9,7 +9,6 @@ interface CompareSectionProps {
   parsed: ScanParsedFields | null;
 }
 
-// comparaison côte à côte : la photo prise vs la carte trouvée
 export function CompareSection({
   photoUri,
   selectedCard,

@@ -5,8 +5,6 @@ export interface VisionRoi {
   key: string;
   box?: { x: number; y: number; width: number; height: number };
   image: Buffer;
-  // texte + confiance (0..100) OCRisés côté service vision ; absents si
-  // l'ancien service (sans OCR) répond -> repli OCR côté API.
   text?: string;
   conf?: number;
 }
@@ -16,9 +14,7 @@ export interface VisionResult {
   engine: string;
   normalizedImage: Buffer;
   rois: VisionRoi[];
-  // index de la frame retenue (best-of-N) ; 0 en mono-frame.
   bestIndex: number;
-  // embedding CLIP de la carte (recherche visuelle), absent si modèle KO
   embedding?: number[];
 }
 
@@ -27,8 +23,8 @@ export interface VisionMatchCandidate {
   url: string;
 }
 
-// timeout borné : mieux vaut échouer vite (repli OCR brut) que faire patienter.
-// Surchargeable (ex. banc d'essai qui laisse vision finir pour mesurer).
+// mieux vaut échouer vite (repli OCR brut) que faire patienter ; surchargeable
+// pour le banc d'essai qui laisse vision finir
 const REQUEST_TIMEOUT_MS = Number(process.env.VISION_TIMEOUT_MS) || 15000;
 const MATCH_TIMEOUT_MS = 15000;
 
@@ -119,8 +115,8 @@ export class VisionService {
     }
   }
 
-  // best-of-N : envoie toutes les frames d'une rafale, le service les OCRise en
-  // parallèle et renvoie le meilleur nom + le meilleur numéro fusionnés.
+  // envoie toute la rafale ; le service OCRise en parallèle et renvoie le meilleur
+  // nom et le meilleur numéro fusionnés
   async preprocessBatch(images: Buffer[]): Promise<VisionResult | null> {
     if (images.length === 0) return null;
     if (images.length === 1) return this.preprocess(images[0]);
@@ -143,7 +139,7 @@ export class VisionService {
       return this.parseResult(await response.json());
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      // sur timeout, retenter la mono serait aussi lent -> on rend la main
+      // sur timeout, retenter en mono serait aussi lent : on rend la main
       if (isTimeout(error)) {
         this.logger.warn(`Batch vision timeout (${reason}), repli OCR brut`);
         return null;

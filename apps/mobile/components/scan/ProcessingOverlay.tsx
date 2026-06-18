@@ -11,11 +11,10 @@ import {
 } from "react-native";
 import { colors } from "@/constants/theme";
 
-// overlay affiché pendant l'analyse : photo figée + ligne de scan animée
 export function ProcessingOverlay({ uri }: { uri: string | null }) {
   const { height } = useWindowDimensions();
   const sweep = useRef(new Animated.Value(0)).current;
-  // fondu d'apparition : évite le flash sec quand l'overlay recouvre la caméra
+  // fondu d'entrée pour éviter le flash quand l'overlay recouvre la caméra
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
