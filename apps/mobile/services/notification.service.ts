@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import type {
   NotificationFilter,
   NotificationListResponse,
@@ -34,11 +35,13 @@ export const notificationService = {
   },
 
   async registerDevice(token: string): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_STORAGE_KEY, token);
+    // On enregistre côté API d'abord, puis on persiste localement uniquement
+    // si l'appel a réussi (évite un token stocké mais absent du serveur).
     await secureApi.post("/notifications/register-device", {
       token,
-      platform: "expo",
+      platform: Platform.OS,
     });
+    await SecureStore.setItemAsync(TOKEN_STORAGE_KEY, token);
   },
 
   async unregisterDevice(): Promise<void> {

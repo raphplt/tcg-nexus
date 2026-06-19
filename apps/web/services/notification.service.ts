@@ -18,7 +18,7 @@ export const notificationService = {
 
   async markAllAsRead(): Promise<{ success: boolean; updatedCount: number }> {
     return authedFetch<{ success: boolean; updatedCount: number }>(
-      "POST",
+      "PATCH",
       "/notifications/read-all",
     );
   },

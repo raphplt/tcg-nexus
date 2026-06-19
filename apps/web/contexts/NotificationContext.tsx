@@ -66,17 +66,24 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     [isAuthenticated],
   );
 
-  const markAsRead = useCallback(async (id: number) => {
-    try {
-      await notificationService.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
-    }
-  }, []);
+  const markAsRead = useCallback(
+    async (id: number) => {
+      try {
+        await notificationService.markAsRead(id);
+        // On ne décrémente le compteur que si la notif était réellement non lue
+        const wasUnread = notifications.some((n) => n.id === id && !n.isRead);
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+        );
+        if (wasUnread) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+      } catch (error) {
+        console.error("Failed to mark notification as read:", error);
+      }
+    },
+    [notifications],
+  );
 
   const markAllAsRead = useCallback(async () => {
     try {
@@ -89,21 +96,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const deleteNotification = useCallback(async (id: number) => {
-    try {
-      await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-      setNotifications((currentNotifications) => {
-        const target = currentNotifications.find((n) => n.id === id);
-        if (target && !target.isRead) {
+  const deleteNotification = useCallback(
+    async (id: number) => {
+      try {
+        await notificationService.deleteNotification(id);
+        // On capture l'état lu/non lu avant de filtrer la liste
+        const wasUnread = notifications.some((n) => n.id === id && !n.isRead);
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+        if (wasUnread) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
         }
-        return currentNotifications;
-      });
-    } catch (error) {
-      console.error("Failed to delete notification:", error);
-    }
-  }, []);
+      } catch (error) {
+        console.error("Failed to delete notification:", error);
+      }
+    },
+    [notifications],
+  );
 
   // Chargement initial des notifications
   useEffect(() => {
@@ -141,6 +149,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     socket.on("connect", () => {
       setIsConnected(true);
       console.log("Connected to notification gateway");
+      // Resynchronisation : on récupère les notifs manquées pendant une coupure
+      fetchNotifications();
     });
 
     socket.on("disconnect", () => {
@@ -149,7 +159,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on("new_notification", (newNotification: UserNotification) => {
-      setNotifications((prev) => [newNotification, ...prev]);
+      // Déduplication : on ignore une notif déjà présente (reconnexion, double émission)
+      let isDuplicate = false;
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === newNotification.id)) {
+          isDuplicate = true;
+          return prev;
+        }
+        return [newNotification, ...prev];
+      });
+      if (isDuplicate) return;
       setUnreadCount((prev) => prev + 1);
 
       toast(
@@ -176,7 +195,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       socketRef.current = null;
       setIsConnected(false);
     };
-  }, [isAuthenticated, socketBaseUrl]);
+  }, [isAuthenticated, socketBaseUrl, fetchNotifications]);
 
   return (
     <NotificationContext.Provider
