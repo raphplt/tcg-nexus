@@ -35,8 +35,6 @@ export const notificationService = {
   },
 
   async registerDevice(token: string): Promise<void> {
-    // On enregistre côté API d'abord, puis on persiste localement uniquement
-    // si l'appel a réussi (évite un token stocké mais absent du serveur).
     await secureApi.post("/notifications/register-device", {
       token,
       platform: Platform.OS,
