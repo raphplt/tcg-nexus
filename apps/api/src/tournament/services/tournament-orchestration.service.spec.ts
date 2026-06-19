@@ -79,6 +79,7 @@ describe("TournamentOrchestrationService", () => {
       mockRankingService as any,
       mockMatchService as any,
       mockDataSource as any,
+      { emit: jest.fn() } as any,
     );
   });
 

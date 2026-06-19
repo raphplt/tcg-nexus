@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "../user/entities/user.entity";
@@ -15,6 +16,7 @@ export class UserFollowService {
     private readonly followRepo: Repository<UserFollow>,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async follow(followerId: number, followedId: number): Promise<UserFollow> {
@@ -37,14 +39,43 @@ export class UserFollowService {
       follower: { id: followerId } as User,
       followed: { id: followedId } as User,
     });
-    return this.followRepo.save(entity);
+    const saved = await this.followRepo.save(entity);
+
+    const follower = await this.userRepo.findOne({
+      where: { id: followerId },
+      select: ["id", "firstName", "lastName"],
+    });
+    this.eventEmitter.emit("follow.created", {
+      followerUserId: followerId,
+      followedUserId: followedId,
+      followerName:
+        follower != null
+          ? `${follower.firstName} ${follower.lastName}`.trim()
+          : `User #${followerId}`,
+    });
+
+    return saved;
   }
 
   async unfollow(followerId: number, followedId: number): Promise<void> {
-    await this.followRepo.delete({
+    const deleted = await this.followRepo.delete({
       follower: { id: followerId },
       followed: { id: followedId },
     });
+    if (deleted.affected && deleted.affected > 0) {
+      const follower = await this.userRepo.findOne({
+        where: { id: followerId },
+        select: ["id", "firstName", "lastName"],
+      });
+      this.eventEmitter.emit("follow.removed", {
+        followerUserId: followerId,
+        followedUserId: followedId,
+        followerName:
+          follower != null
+            ? `${follower.firstName} ${follower.lastName}`.trim()
+            : `User #${followerId}`,
+      });
+    }
   }
 
   async isFollowing(followerId: number, followedId: number): Promise<boolean> {

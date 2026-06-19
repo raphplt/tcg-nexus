@@ -14,6 +14,7 @@ import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { User } from "src/user/entities/user.entity";
+import { GetNotificationsQueryDto } from "./dto/get-notifications.query.dto";
 import { RegisterTokenDto } from "./dto/register-token.dto";
 import { NotificationService } from "./notification.service";
 
@@ -24,16 +25,16 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  @ApiOperation({ summary: "Get paginated user notifications" })
+  @ApiOperation({ summary: "Get paginated user notifications with optional filter" })
   findAll(
     @CurrentUser() user: User,
-    @Query("page") page = "1",
-    @Query("limit") limit = "20",
+    @Query() query: GetNotificationsQueryDto,
   ) {
     return this.notificationService.getNotifications(
       user.id,
-      Number(page),
-      Number(limit),
+      query.page ?? 1,
+      query.limit ?? 20,
+      query.filter ?? "all",
     );
   }
 
@@ -43,7 +44,7 @@ export class NotificationController {
     return this.notificationService.markAsRead(user.id, id);
   }
 
-  @Post("read-all")
+  @Patch("read-all")
   @ApiOperation({ summary: "Mark all user notifications as read" })
   markAllAsRead(@CurrentUser() user: User) {
     return this.notificationService.markAllAsRead(user.id);
@@ -58,6 +59,19 @@ export class NotificationController {
   @Post("tokens")
   @ApiOperation({ summary: "Register a device token for push notifications" })
   registerToken(
+    @CurrentUser() user: User,
+    @Body() registerTokenDto: RegisterTokenDto,
+  ) {
+    return this.notificationService.registerToken(
+      user.id,
+      registerTokenDto.token,
+      registerTokenDto.platform,
+    );
+  }
+
+  @Post("register-device")
+  @ApiOperation({ summary: "Register a device token (ticket alias of /tokens)" })
+  registerDevice(
     @CurrentUser() user: User,
     @Body() registerTokenDto: RegisterTokenDto,
   ) {

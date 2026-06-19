@@ -7,6 +7,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { authService } from "@/services/auth.service";
 import {
   getRememberMePreference,
@@ -37,6 +38,8 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { register: registerPush, unregister: unregisterPush } =
+    usePushNotifications();
   const {
     isAuthenticated,
     isHydrated,
@@ -74,6 +77,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         setUser(profile);
+        try {
+          await registerPush();
+        } catch {}
       } catch (error) {
         if (!isMounted) {
           return;
@@ -124,6 +130,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const profile = await authService.profile({ skipErrorToast: true });
       setUser(profile);
+      try {
+        await registerPush();
+      } catch {}
       toast.showSuccess("Session restauree. Bienvenue sur TCG Nexus.");
       router.replace("/");
     } catch (error) {
@@ -147,6 +156,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const profile = await authService.profile({ skipErrorToast: true });
       setUser(profile);
+      try {
+        await registerPush();
+      } catch {}
       toast.showSuccess("Compte cree et session activee.");
       router.replace("/");
     } catch (error) {
@@ -159,6 +171,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async (): Promise<void> => {
     setIsLoading(true);
+
+    try {
+      await unregisterPush();
+    } catch {}
 
     try {
       await authService.logout({ skipErrorToast: true });

@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { DataSource, EntityManager, Repository } from "typeorm";
 import {
   Match,
@@ -51,6 +52,7 @@ export class TournamentOrchestrationService {
     private rankingService: RankingService,
     private matchService: MatchService,
     private dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -63,7 +65,7 @@ export class TournamentOrchestrationService {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
-        relations: ["registrations", "registrations.player"],
+        relations: ["registrations", "registrations.player", "registrations.player.user"],
       });
 
       if (!tournament) {
@@ -78,6 +80,16 @@ export class TournamentOrchestrationService {
       tournament.status = TournamentStatus.IN_PROGRESS;
       tournament.currentRound = 1;
       tournament.totalRounds = bracketStructure.totalRounds;
+
+      const participantUserIds: number[] = (tournament.registrations ?? [])
+        .map((r) => r.player?.user?.id)
+        .filter((id): id is number => typeof id === "number");
+
+      this.eventEmitter.emit("tournament.started", {
+        tournamentId: tournament.id,
+        name: tournament.name,
+        participantUserIds,
+      });
 
       await manager.save(tournament);
 
@@ -185,6 +197,19 @@ export class TournamentOrchestrationService {
       ) {
         tournament.status = TournamentStatus.FINISHED;
         tournament.isFinished = true;
+
+        const rankings = (tournament.registrations ?? [])
+          .filter((r) => r.player?.user?.id)
+          .map((r) => ({
+            userId: r.player.user.id,
+            rank: r.eliminatedRound ?? 0,
+          }));
+
+        this.eventEmitter.emit("tournament.finished", {
+          tournamentId: tournament.id,
+          name: tournament.name,
+          rankings,
+        });
       } else {
         tournament.currentRound = newRound;
       }
@@ -207,6 +232,7 @@ export class TournamentOrchestrationService {
     return this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
+        relations: ["registrations", "registrations.player", "registrations.player.user"],
       });
 
       if (!tournament) {
@@ -237,6 +263,19 @@ export class TournamentOrchestrationService {
 
       tournament.status = TournamentStatus.FINISHED;
       tournament.isFinished = true;
+
+      const rankings = (tournament.registrations ?? [])
+        .filter((r) => r.player?.user?.id)
+        .map((r) => ({
+          userId: r.player.user.id,
+          rank: r.eliminatedRound ?? 0,
+        }));
+
+      this.eventEmitter.emit("tournament.finished", {
+        tournamentId: tournament.id,
+        name: tournament.name,
+        rankings,
+      });
 
       return manager.save(tournament);
     });

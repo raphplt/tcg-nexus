@@ -70,6 +70,7 @@ export class NotificationService {
     userId: number,
     page = 1,
     limit = 20,
+    filter: "all" | "read" | "unread" = "all",
   ): Promise<{
     data: Omit<Notification, "user">[];
     total: number;
@@ -80,13 +81,21 @@ export class NotificationService {
   }> {
     const skip = (page - 1) * limit;
 
+    const isReadFilter =
+      filter === "read" ? true : filter === "unread" ? false : undefined;
+
+    const where: any = { user: { id: userId } };
+    if (isReadFilter !== undefined) {
+      where.isRead = isReadFilter;
+    }
+
     const [notifications, total] =
       await this.notificationRepository.findAndCount({
-        where: { user: { id: userId } },
+        where,
         order: { createdAt: "DESC" },
         skip,
         take: limit,
-      });
+    });
 
     const unreadCount = await this.notificationRepository.count({
       where: { user: { id: userId }, isRead: false },

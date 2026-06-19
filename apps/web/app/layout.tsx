@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
@@ -101,6 +102,12 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}
       >
+        {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
+          <Script
+            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`}
+            strategy="beforeInteractive"
+          />
+        )}
         <ThemeProvider>
           <ClientProviders>{children}</ClientProviders>
         </ThemeProvider>

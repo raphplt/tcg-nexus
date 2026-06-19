@@ -53,6 +53,13 @@ export default (_: ConfigContext): ExpoConfig => ({
     ],
     "expo-status-bar",
     "expo-web-browser",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/icon.png",
+        color: "#f7f1e8",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: false,

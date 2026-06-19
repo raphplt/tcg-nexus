@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Repository } from "typeorm";
 import { Badge, BadgeCategory } from "./entities/badge.entity";
 import { UserBadge } from "./entities/user-badge.entity";
@@ -118,6 +119,7 @@ export class BadgeService implements OnModuleInit {
     private readonly badgeRepository: Repository<Badge>,
     @InjectRepository(UserBadge)
     private readonly userBadgeRepository: Repository<UserBadge>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async onModuleInit() {
@@ -164,6 +166,11 @@ export class BadgeService implements OnModuleInit {
             badge,
           }),
         );
+        this.eventEmitter.emit("badge.unlocked", {
+          userId,
+          badgeName: badge.name,
+          badgeCode: badge.code,
+        });
       }
     }
   }

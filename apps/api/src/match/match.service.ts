@@ -273,7 +273,15 @@ export class MatchService {
   async findOne(id: number): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
-      relations: ["tournament", "playerA", "playerB", "winner", "statistics"],
+      relations: [
+        "tournament",
+        "playerA",
+        "playerA.user",
+        "playerB",
+        "playerB.user",
+        "winner",
+        "statistics",
+      ],
     });
 
     if (!match) {
@@ -314,6 +322,7 @@ export class MatchService {
     }
 
     // Autres mises à jour si pas de score
+    const wasNotInProgress = match.status !== MatchStatus.IN_PROGRESS;
     if (
       updateMatchDto.status &&
       updateMatchDto.status !== MatchStatus.FINISHED
@@ -327,7 +336,16 @@ export class MatchService {
       match.scheduledDate = updateMatchDto.scheduledDate;
     }
 
-    return this.matchRepository.save(match);
+    const updatedMatch = await this.matchRepository.save(match);
+    if (wasNotInProgress && updatedMatch.status === MatchStatus.IN_PROGRESS) {
+      this.eventEmitter.emit("match.ready", {
+        matchId: updatedMatch.id,
+        tournamentId: updatedMatch.tournament?.id ?? null,
+        playerAUserId: updatedMatch.playerA?.user?.id ?? null,
+        playerBUserId: updatedMatch.playerB?.user?.id ?? null,
+      });
+    }
+    return updatedMatch;
   }
 
   // Supprimer un match
@@ -362,7 +380,14 @@ export class MatchService {
     if (startMatchDto.notes) {
       match.notes = startMatchDto.notes;
     }
-    return this.matchRepository.save(match);
+    const savedMatch = await this.matchRepository.save(match);
+    this.eventEmitter.emit("match.ready", {
+      matchId: match.id,
+      tournamentId: match.tournament?.id ?? null,
+      playerAUserId: match.playerA?.user?.id ?? null,
+      playerBUserId: match.playerB?.user?.id ?? null,
+    });
+    return savedMatch;
   }
 
   // Reporter un score
