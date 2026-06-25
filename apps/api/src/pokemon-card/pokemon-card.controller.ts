@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Public } from "src/auth/decorators/public.decorator";
@@ -16,11 +17,25 @@ import { FindAllPokemonCardDto } from "./dto/find-all-pokemon-card.dto";
 import { CreatePokemonCardDto } from "./dto/create-pokemon-card.dto";
 import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
 import { PokemonCardService } from "./pokemon-card.service";
+import { CardSyncService } from "./card-sync.service";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
+import { RolesGuard } from "src/auth/guards/roles.guard";
 
 @ApiTags("pokemon-card")
 @Controller("pokemon-card")
 export class PokemonCardController {
-  constructor(private readonly pokemonCardService: PokemonCardService) {}
+  constructor(
+    private readonly pokemonCardService: PokemonCardService,
+    private readonly cardSyncService: CardSyncService,
+  ) {}
+
+  @Post("sync")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Déclencher manuellement la synchronisation des cartes Pokémon" })
+  sync() {
+    return this.cardSyncService.syncAll();
+  }
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)

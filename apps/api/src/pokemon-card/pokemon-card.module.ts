@@ -6,6 +6,7 @@ import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { PokemonCardController } from "./pokemon-card.controller";
 import { PokemonCardService } from "./pokemon-card.service";
+import { CardSyncService } from "./card-sync.service";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PokemonCardService } from "./pokemon-card.service";
     ]),
   ],
   controllers: [PokemonCardController],
-  providers: [PokemonCardService],
+  providers: [PokemonCardService, CardSyncService],
+  exports: [CardSyncService],
 })
 export class PokemonCardModule {}

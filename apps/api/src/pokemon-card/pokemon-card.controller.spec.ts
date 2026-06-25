@@ -3,6 +3,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardController } from "./pokemon-card.controller";
 import { PokemonCardService } from "./pokemon-card.service";
+import { CardSyncService } from "./card-sync.service";
 
 describe("PokemonCardController", () => {
   let controller: PokemonCardController;
@@ -18,6 +19,10 @@ describe("PokemonCardController", () => {
     findRandom: jest.fn(),
   };
 
+  const mockCardSyncService = {
+    syncAll: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PokemonCardController],
@@ -25,6 +30,10 @@ describe("PokemonCardController", () => {
         {
           provide: PokemonCardService,
           useValue: mockPokemonCardService,
+        },
+        {
+          provide: CardSyncService,
+          useValue: mockCardSyncService,
         },
         {
           provide: getRepositoryToken(Card),
