@@ -17,7 +17,7 @@ COPY packages/scan-contract /app/packages/scan-contract
 RUN npm ci --workspace=api
 
 COPY apps/api /app/apps/api
-COPY data /app/data
+RUN mkdir -p /app/data
 
 WORKDIR /app/apps/api
 RUN npm run build

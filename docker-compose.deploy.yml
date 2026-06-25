@@ -51,6 +51,8 @@ services:
       - "3001:3001"
     networks:
       - tcg-nexus-network
+    volumes:
+      - /srv/tcg-nexus/data:/app/data
 
   web:
     build:
