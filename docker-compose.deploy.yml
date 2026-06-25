@@ -19,9 +19,7 @@ services:
       - tcg-nexus-network
 
   vision:
-    build:
-      context: ./vision
-      dockerfile: Dockerfile
+    image: tcg-nexus-vision:latest
     container_name: tcg-nexus-vision
     restart: unless-stopped
     networks:
