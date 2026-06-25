@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS builder
+FROM node:20-bookworm-slim AS docs-builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN npm run build --workspace=apps-docs
 
 FROM nginx:alpine
 
-COPY --from=builder /app/apps/docs/build /usr/share/nginx/html
+COPY --from=docs-builder /app/apps/docs/build /usr/share/nginx/html
 COPY docker/docs.nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 3002
