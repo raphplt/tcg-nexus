@@ -39,7 +39,7 @@ services:
       vision:
         condition: service_started
     env_file:
-      - ./apps/api/.env
+      - .env
     environment:
       DATABASE_HOST: postgres
       DATABASE_SSL: "false"
@@ -62,7 +62,7 @@ services:
       api:
         condition: service_started
     env_file:
-      - ./apps/web/.env
+      - .env
     environment:
       NODE_ENV: production
       PORT: 3000
