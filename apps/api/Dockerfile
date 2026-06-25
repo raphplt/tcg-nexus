@@ -1,22 +1,27 @@
-FROM node:18-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-COPY package*.json ./
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates \
+    && mkdir -p /app/tessdata \
+    && curl -fsSL -o /app/tessdata/eng.traineddata.gz https://tessdata.projectnaptha.com/4.0.0/eng.traineddata.gz \
+    && curl -fsSL -o /app/tessdata/fra.traineddata.gz https://tessdata.projectnaptha.com/4.0.0/fra.traineddata.gz \
+    && apt-get purge -y curl \
+    && rm -rf /var/lib/apt/lists/*
+ENV OCR_LANG_PATH=/app/tessdata
 
-RUN npm install
+COPY package*.json /app/
+COPY apps/api/package*.json /app/apps/api/
+COPY packages/scan-contract /app/packages/scan-contract
+RUN npm ci --workspace=api
 
-COPY . .
+COPY apps/api /app/apps/api
+RUN mkdir -p /app/data
 
+WORKDIR /app/apps/api
 RUN npm run build
-RUN npm prune --production
 
 EXPOSE 3001
-
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
-
-RUN chown -R nestjs:nodejs /app
-USER nestjs
 
 CMD ["npm", "run", "start:prod"]

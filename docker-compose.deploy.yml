@@ -20,8 +20,8 @@ services:
 
   vision:
     build:
-      context: .
-      dockerfile: docker/vision.Dockerfile
+      context: ./vision
+      dockerfile: Dockerfile
     container_name: tcg-nexus-vision
     restart: unless-stopped
     networks:
@@ -30,7 +30,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/api.Dockerfile
+      dockerfile: apps/api/Dockerfile
     container_name: tcg-nexus-api
     restart: unless-stopped
     depends_on:
@@ -57,7 +57,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: docker/web.Dockerfile
+      dockerfile: apps/web/Dockerfile
     container_name: tcg-nexus-web
     restart: unless-stopped
     depends_on:
@@ -78,7 +78,7 @@ services:
   docs:
     build:
       context: .
-      dockerfile: docker/docs.Dockerfile
+      dockerfile: apps/docs/Dockerfile
     container_name: tcg-nexus-docs
     restart: unless-stopped
     ports:
