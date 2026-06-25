@@ -3,6 +3,7 @@ FROM node:20-bookworm-slim
 WORKDIR /app
 
 COPY . /app
+RUN if [ -f .env ]; then cp .env apps/web/.env; fi
 
 RUN npm ci
 RUN npm run build --workspace=web
