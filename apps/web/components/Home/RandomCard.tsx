@@ -137,7 +137,7 @@ const RandomCard = () => {
                   </div>
                 )}
                 <Image
-                  src={getCardImage(card)}
+                  src={getCardImage(card, "low")}
                   alt={card.name || "Carte Pokémon"}
                   fill
                   className="object-contain rounded-lg"
