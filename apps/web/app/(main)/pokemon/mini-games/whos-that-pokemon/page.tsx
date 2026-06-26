@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, HelpCircle, RotateCcw, Award, Clock } from "lucide-react";
+import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H3 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,12 +53,10 @@ export default function WhosThatPokemonPage() {
     setGameState("playing");
 
     try {
-      // Fetch a random pokemon card
       const response = await pokemonCardService.getRandom();
       if (response && response.name) {
         setCard(response);
       } else {
-        // Mock fallback
         setCard({
           id: "fallback",
           name: "Dracaufeu",
@@ -122,86 +121,84 @@ export default function WhosThatPokemonPage() {
   const cardImg = card ? getCardImage(card) : "";
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background/95 px-4 py-8 flex flex-col justify-center items-center">
-      <div className="w-full max-w-2xl">
+    <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6 flex flex-col items-center">
+      <div className="w-full max-w-2xl space-y-6">
         {/* Header */}
-        <div className="tcg-surface border-2 border-border p-4 shadow-[4px_4px_0px_0px_hsl(var(--border))] flex items-center justify-between mb-6">
+        <div className="tcg-surface p-4 flex items-center justify-between bg-card/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <Link href="/pokemon/mini-games">
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 w-8 p-0 border-2 border-border shadow-[1px_1px_0px_0px_hsl(var(--border))]"
+                className="h-8 w-8 p-0"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div className="flex h-8 w-8 items-center justify-center border-2 border-primary bg-primary/10 shadow-[2px_2px_0px_0px_hsl(var(--border))]">
-              <HelpCircle className="h-4 w-4 text-primary" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <HelpCircle className="h-4 w-4" />
             </div>
             <div>
               <H1 className="text-lg! sm:text-xl!">Qui est ce Pokémon ?</H1>
-              <p className="text-[10px] text-muted-foreground">Devine le Pokémon à partir de sa silhouette</p>
+              <p className="text-[10px] text-muted-foreground">Estime la silhouette cachée de la carte</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-sm font-black">
-            <div>
-              Manche <span className="text-primary">{round}</span>/{maxRounds}
-            </div>
-            <div className="border-2 border-foreground bg-primary px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-3 text-sm font-semibold">
+            <Badge variant="outline" className="border-border">
+              Manche {round}/{maxRounds}
+            </Badge>
+            <Badge className="bg-primary text-white border-0">
               Score: {score}
-            </div>
+            </Badge>
           </div>
         </div>
 
         {gameOver ? (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="tcg-surface border-4 border-foreground p-8 text-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-card"
+            className="tcg-surface p-8 text-center bg-card shadow-md space-y-6"
           >
-            <Award className="h-16 w-16 mx-auto text-primary mb-4" />
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-2">Partie Terminée !</h2>
-            <p className="text-muted-foreground mb-6">
-              Tu as obtenu un score de <span className="text-foreground font-black text-xl">{score}</span> sur <span className="text-foreground font-black text-xl">{maxRounds}</span>.
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/pokemon/mini-games">
-                <Button variant="outline" className="border-2 border-foreground font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  Retour au Hub
-                </Button>
-              </Link>
-              <Button onClick={handleRestart} className="border-2 border-foreground font-bold bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+            <Award className="h-12 w-12 mx-auto text-primary" />
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black uppercase tracking-tight">Partie Terminée !</h2>
+              <p className="text-muted-foreground text-sm">
+                Ton score final est de <span className="text-foreground font-black text-lg">{score}</span> sur <span className="text-foreground font-black text-lg">{maxRounds}</span>.
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <Button asChild variant="outline">
+                <Link href="/pokemon/mini-games">Retour au Hub</Link>
+              </Button>
+              <Button onClick={handleRestart} className="bg-gradient-to-r from-primary to-secondary text-white font-semibold">
                 <RotateCcw className="h-4 w-4 mr-2" /> Rejouer
               </Button>
             </div>
           </motion.div>
         ) : (
-          <Card className="border-4 border-foreground bg-card shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+          <Card className="tcg-surface bg-card/85 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-6">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" />
-                  <p className="text-sm font-bold text-muted-foreground">Génération de la silhouette...</p>
+                  <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                  <p className="text-xs font-semibold text-muted-foreground">Création de la silhouette...</p>
                 </div>
               ) : (
                 <div className="flex flex-col md:flex-row items-center justify-center gap-8">
-                  {/* Visual Silhouette Area */}
-                  <div className="relative flex flex-col items-center justify-center w-full max-w-64">
+                  {/* Silhouette Visual */}
+                  <div className="relative flex flex-col items-center justify-center w-full max-w-60 shrink-0">
                     {/* Timer circular badge */}
-                    <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1.5 border-2 border-foreground bg-amber-400 px-3 py-1 text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 px-3 py-1 text-xs font-black">
                       <Clock className="h-3.5 w-3.5" />
                       {timeLeft}s
                     </div>
 
-                    <div className="relative aspect-[5/7] w-full border-4 border-foreground bg-zinc-800 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden flex items-center justify-center">
-                      {/* Background design */}
-                      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:16px_16px]" />
-                      
+                    <div className="relative aspect-[5/7] w-full border border-border/50 bg-zinc-950/20 dark:bg-zinc-950/40 shadow-inner rounded-xl overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 bg-[radial-gradient(#ffffff03_1px,transparent_1px)] [background-size:12px_12px]" />
                       <div className="relative w-[85%] h-[85%]">
                         <Image
                           src={cardImg}
-                          alt="Pokémon"
+                          alt="Silhouette"
                           fill
                           className={`object-contain transition-all duration-700 ${
                             revealed ? "filter-none scale-100" : "brightness-0 contrast-200 scale-95 select-none pointer-events-none"
@@ -211,11 +208,11 @@ export default function WhosThatPokemonPage() {
                     </div>
                   </div>
 
-                  {/* Guess / Options Area */}
+                  {/* Guess options */}
                   <div className="flex-1 w-full flex flex-col justify-between gap-6">
                     {gameState === "playing" ? (
                       <div className="space-y-4">
-                        <H3 className="text-lg font-black uppercase text-center md:text-left">
+                        <H3 className="text-lg font-black text-center md:text-left text-foreground">
                           Qui est ce Pokémon ?
                         </H3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -224,7 +221,7 @@ export default function WhosThatPokemonPage() {
                               key={option}
                               variant="outline"
                               onClick={() => handleAnswer(option)}
-                              className="h-14 border-2 border-foreground text-sm font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[0.5px] hover:translate-x-[0.5px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:translate-x-[2px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] bg-background text-foreground"
+                              className="h-12 font-bold justify-center border-border hover:border-primary/50 hover:bg-primary/5 bg-card/50 transition-all rounded-lg"
                             >
                               {option}
                             </Button>
@@ -238,30 +235,28 @@ export default function WhosThatPokemonPage() {
                         className="space-y-4 text-center md:text-left"
                       >
                         {selectedOption === null ? (
-                          <div className="border-4 border-foreground bg-amber-400 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                            <p className="text-sm font-black uppercase">Temps écoulé !</p>
+                          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-500 p-4 font-bold text-sm">
+                            Temps écoulé !
                           </div>
                         ) : selectedOption.toLowerCase() === card?.name?.toLowerCase() ? (
-                          <div className="border-4 border-foreground bg-green-400 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                            <p className="text-sm font-black uppercase">Bien joué !</p>
-                            <p className="text-xs font-semibold">C'est bien {card?.name} !</p>
+                          <div className="rounded-lg border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 p-4 font-bold text-sm">
+                            Bien joué ! C'est bien {card?.name} !
                           </div>
                         ) : (
-                          <div className="border-4 border-foreground bg-red-400 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                            <p className="text-sm font-black uppercase">Faux !</p>
-                            <p className="text-xs font-semibold">Tu as choisi {selectedOption}. La bonne réponse était {card?.name}.</p>
+                          <div className="rounded-lg border border-red-500/20 bg-red-500/10 text-red-500 p-4 font-bold text-sm">
+                            Faux ! La bonne réponse était {card?.name}.
                           </div>
                         )}
 
-                        <div className="text-xs font-bold text-muted-foreground mt-2">
-                          Carte de l'extension : <span className="text-foreground">{card?.set?.name || "Inconnue"}</span>
+                        <div className="text-[11px] font-bold text-muted-foreground">
+                          Extension de la carte : <span className="text-foreground">{card?.set?.name || "Inconnue"}</span>
                         </div>
 
                         <Button
                           onClick={handleNextRound}
-                          className="w-full border-2 border-foreground bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-12"
+                          className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold h-11"
                         >
-                          {round < maxRounds ? "Manche suivante ➡️" : "Voir les résultats 🏁"}
+                          {round < maxRounds ? "Manche suivante" : "Voir les résultats"}
                         </Button>
                       </motion.div>
                     )}
@@ -272,6 +267,6 @@ export default function WhosThatPokemonPage() {
           </Card>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

@@ -178,15 +178,13 @@ export class CardSyncService {
       }
 
       // 2. Ingestion/Mise à jour des Sets et Cartes associées
-      const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A"];
+      const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
 
       for (const setRef of remoteSets) {
         const isPocketName = setRef.name.toLowerCase().includes("pocket");
-        const serieId = (setRef as any).serie?.id || (setRef as any).serie;
-        const isPocketSerie = pocketSeriesIds.has(serieId);
         const isKnownPocketId = knownPocketSetIds.includes(setRef.id);
 
-        if (isPocketName || isPocketSerie || isKnownPocketId) continue;
+        if (isPocketName || isKnownPocketId) continue;
 
         let dbSet = await this.pokemonSetRepository.findOne({
           where: { id: setRef.id },
@@ -196,16 +194,20 @@ export class CardSyncService {
         const setDetails: any = await this.tcgdex.fetch("sets", setRef.id);
         if (!setDetails) continue;
 
+        const actualSerieId = setDetails.serie?.id || setDetails.serie;
+        const isPocketSerie = pocketSeriesIds.has(actualSerieId);
+        if (isPocketSerie) continue;
+
         if (!dbSet) {
           this.logger.log("Nouveau set détecté : " + setRef.name + " (" + setRef.id + ")");
           
           const serie = await this.pokemonSerieRepository.findOne({
-            where: { id: String(serieId) },
+            where: { id: String(actualSerieId) },
           });
 
           if (!serie) {
             this.logger.warn(
-              `Série ${serieId} introuvable pour le set ${setRef.name}. Set ignoré pour le moment.`,
+              `Série ${actualSerieId} introuvable pour le set ${setRef.name}. Set ignoré pour le moment.`,
             );
             continue;
           }

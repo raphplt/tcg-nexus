@@ -135,9 +135,20 @@ async function updateData() {
 
     if (!setDetails) continue;
 
+    // Filter out pocket sets using setDetails
+    const serieId = setDetails.serie?.id || setDetails.serie;
+    const isPocketSerie = pocketSeriesIds.has(serieId);
+    const isPocketName = setDetails.name.toLowerCase().includes("pocket");
+    const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
+    const isKnownPocketId = knownPocketSetIds.includes(set.id);
+
+    if (isPocketSerie || isPocketName || isKnownPocketId) {
+      console.log(`  Skipping pocket set: ${setDetails.name} (${set.id})`);
+      continue;
+    }
+
     // Prepare set metadata
     const { cards, serie, ...setMetadata } = setDetails;
-    const serieId = serie.id || serie; // Handle if it's an object or ID
 
     // Upload Set Images to R2
     const slug = slugify(set.name);

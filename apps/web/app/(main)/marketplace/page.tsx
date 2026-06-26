@@ -36,6 +36,10 @@ export default function MarketplaceHomePage() {
     loadingRecentListings,
   } = useMarketplaceHome();
 
+  // Filtrer pour séparer le TCG physique et le TCG Mobile (Pocket)
+  const physicalSets = sets?.filter((set) => set.serie?.id !== "tcgp") || [];
+  const pocketSets = sets?.filter((set) => set.serie?.id === "tcgp") || [];
+
   return (
     <PageWrapper gradient="secondary">
       <div className="space-y-12">
@@ -220,12 +224,27 @@ export default function MarketplaceHomePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {sets?.slice(0, 8).map((set) => (
+                  {physicalSets.slice(0, 8).map((set) => (
                     <SetCard key={set.id} set={set} />
                   ))}
                 </div>
               )}
             </section>
+
+            {/* Pocket Sets */}
+            {!loadingSets && pocketSets.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-6">
+                  <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                  <H2>Extensions Pokémon TCG Pocket (Mobile)</H2>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {pocketSets.slice(0, 8).map((set) => (
+                    <SetCard key={set.id} set={set} />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Colonne Latérale (Droite - 1/4) */}

@@ -56,10 +56,10 @@ export function useMarketplaceHome() {
     queryFn: () => marketplaceService.getBestSellers(6),
   });
 
-  // Récupère les sets (limité aux 20 plus récents)
+  // Récupère les sets (limité aux 50 plus récents)
   const { data: sets, isLoading: loadingSets } = useQuery<PokemonSetType[]>({
-    queryKey: ["pokemon-sets", 20],
-    queryFn: () => pokemonCardService.getAllSets(20),
+    queryKey: ["pokemon-sets", 50],
+    queryFn: () => pokemonCardService.getAllSets(50),
   });
 
   // Récupère les produits scellés récents (par createdAt desc)

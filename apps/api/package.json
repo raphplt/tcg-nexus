@@ -21,6 +21,7 @@
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
     "sync:effects": "ts-node -r tsconfig-paths/register ./src/scripts/sync-card-effects.ts",
+    "sync:cards": "ts-node -r tsconfig-paths/register ./src/scripts/trigger-card-sync.ts",
     "seed:challenges": "ts-node -r tsconfig-paths/register ./src/scripts/seed-challenges.ts",
     "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",
     "start:debug": "nest start --debug --watch",
