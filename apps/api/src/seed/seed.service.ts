@@ -571,7 +571,9 @@ export class SeedService {
    * Seed test users (dev only)
    */
   async seedUsers() {
-    const isProduction = this.configService.get("NODE_ENV") === "production";
+    const isProduction =
+      this.configService.get("NODE_ENV") === "production" &&
+      this.configService.get("ALLOW_DEMO_SEED") !== "true";
     if (isProduction) {
       console.log("⚠️  Skipping test users seed in production environment.");
       return [];
@@ -721,7 +723,9 @@ export class SeedService {
    * Seed test tournaments with related entities (dev only)
    */
   async seedTournaments() {
-    const isProduction = this.configService.get("NODE_ENV") === "production";
+    const isProduction =
+      this.configService.get("NODE_ENV") === "production" &&
+      this.configService.get("ALLOW_DEMO_SEED") !== "true";
     if (isProduction) {
       console.log(
         "⚠️  Skipping test tournaments seed in production environment.",
@@ -1300,7 +1304,9 @@ export class SeedService {
    * Crée entre 0 et 5 offres pour un échantillon de cartes Pokémon (optimisé avec batch)
    */
   async seedListings() {
-    const isProduction = this.configService.get("NODE_ENV") === "production";
+    const isProduction =
+      this.configService.get("NODE_ENV") === "production" &&
+      this.configService.get("ALLOW_DEMO_SEED") !== "true";
     if (isProduction) {
       console.log("⚠️  Skipping test listings seed in production environment.");
       return;
@@ -1593,7 +1599,9 @@ export class SeedService {
    * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
    */
   async seedCardEvents() {
-    const isProduction = this.configService.get("NODE_ENV") === "production";
+    const isProduction =
+      this.configService.get("NODE_ENV") === "production" &&
+      this.configService.get("ALLOW_DEMO_SEED") !== "true";
     if (isProduction) {
       console.log(
         "⚠️  Skipping test card events seed in production environment.",
@@ -1721,7 +1729,9 @@ export class SeedService {
    * Note: Cette méthode nécessite que seedCardEvents() ait été appelé avant
    */
   async seedCardPopularityMetrics() {
-    const isProduction = this.configService.get("NODE_ENV") === "production";
+    const isProduction =
+      this.configService.get("NODE_ENV") === "production" &&
+      this.configService.get("ALLOW_DEMO_SEED") !== "true";
     if (isProduction) {
       console.log(
         "⚠️  Skipping test card popularity metrics seed in production environment.",

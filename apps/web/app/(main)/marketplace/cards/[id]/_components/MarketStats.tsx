@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrencyStore } from "@/store/currency.store";
 import type { CardPricing } from "@/types/cardPokemon";
 import { getCardMarketPrice, getTcgPlayerPrice } from "@/utils/price";
-import { Star } from "lucide-react";
+import { Star, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MarketStatsProps {
   stats: {
@@ -15,12 +16,15 @@ interface MarketStatsProps {
   };
   isGoodDeal: boolean;
   marketPricing?: CardPricing | null;
+  cardName?: string;
 }
 
 function MarketReferencePrices({
   marketPricing,
+  cardName,
 }: {
   marketPricing: CardPricing;
+  cardName?: string;
 }) {
   const { formatPrice } = useCurrencyStore();
 
@@ -50,6 +54,34 @@ function MarketReferencePrices({
           <span className="font-semibold">{formatPrice(tcgPrice, "USD")}</span>
         </div>
       )}
+      {cardName && (
+        <div className="flex flex-col gap-2 pt-2 mt-2 border-t border-dashed">
+          {cmPrice != null && (
+            <Button variant="outline" size="sm" asChild className="w-full justify-between">
+              <a
+                href={`https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(cardName)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Comparer sur Cardmarket</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
+          )}
+          {tcgPrice != null && (
+            <Button variant="outline" size="sm" asChild className="w-full justify-between">
+              <a
+                href={`https://www.tcgplayer.com/search/pokemon/product?q=${encodeURIComponent(cardName)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span>Comparer sur TCGplayer</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -58,6 +90,7 @@ export function MarketStats({
   stats,
   isGoodDeal,
   marketPricing,
+  cardName,
 }: MarketStatsProps) {
   const { formatPrice } = useCurrencyStore();
 
@@ -117,12 +150,12 @@ export function MarketStats({
               </div>
             )}
             {hasMarketPricing && (
-              <MarketReferencePrices marketPricing={marketPricing!} />
+              <MarketReferencePrices marketPricing={marketPricing!} cardName={cardName} />
             )}
           </>
         ) : hasMarketPricing ? (
           <>
-            <MarketReferencePrices marketPricing={marketPricing!} />
+            <MarketReferencePrices marketPricing={marketPricing!} cardName={cardName} />
             <p className="text-muted-foreground text-center text-sm pt-2">
               Aucune offre en vente pour le moment
             </p>
