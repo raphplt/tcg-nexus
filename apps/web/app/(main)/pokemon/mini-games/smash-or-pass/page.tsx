@@ -92,10 +92,10 @@ function FilterSelect({
         {label}
       </label>
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full border-2 border-border bg-background px-3 py-2.5 text-sm font-medium shadow-[2px_2px_0px_0px_hsl(var(--border))] transition-all hover:shadow-[3px_3px_0px_0px_hsl(var(--border))]">
+        <SelectTrigger className="w-full border border-border bg-background px-3 py-2.5 text-sm font-medium transition-all">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="border-2 border-border bg-popover shadow-[4px_4px_0px_0px_hsl(var(--border))]">
+        <SelectContent className="border border-border bg-popover shadow-md">
           {children}
         </SelectContent>
       </Select>
@@ -172,12 +172,12 @@ function PokemonCardView({
         >
           <SwipeOverlay direction={direction} />
 
-          <Card className="tcg-surface relative overflow-hidden border-2 border-border shadow-[4px_4px_0px_0px_hsl(0_0%_0%/0.15)]">
+          <Card className="tcg-surface relative overflow-hidden shadow-md">
             <CardContent className="relative p-4 sm:p-5">
               <div className="flex items-center justify-between">
                 <Badge
                   variant="secondary"
-                  className="border border-border px-2.5 py-0.5 text-[11px] font-bold shadow-[2px_2px_0px_0px_hsl(var(--border))]"
+                  className="border border-border px-2.5 py-0.5 text-[11px] font-semibold"
                 >
                   {card?.set?.name ?? "Bloc inconnu"}
                 </Badge>
@@ -207,14 +207,14 @@ function PokemonCardView({
                   </H3>
                 </div>
                 {card?.rarity ? (
-                  <Badge className="shrink-0 border-2 border-primary/30 bg-primary/10 text-[11px] font-bold text-primary shadow-[2px_2px_0px_0px_hsl(var(--border))]">
+                  <Badge className="shrink-0 border border-primary/30 bg-primary/10 text-[11px] font-semibold text-primary">
                     <Sparkles className="mr-1 h-3 w-3" />
                     {card.rarity}
                   </Badge>
                 ) : (
                   <Badge
                     variant="outline"
-                    className="shrink-0 border-2 text-[11px]"
+                    className="shrink-0 border text-[11px]"
                   >
                     Rareté inconnue
                   </Badge>
@@ -224,7 +224,7 @@ function PokemonCardView({
 
             {isFetching && (
               <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-                <div className="flex items-center gap-2 border-2 border-border bg-card px-4 py-2 text-sm font-bold shadow-[4px_4px_0px_0px_hsl(var(--border))]">
+                <div className="flex items-center gap-2 bg-card px-4 py-2 text-sm font-semibold border border-border rounded-lg shadow-md">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   Nouvelle carte...
                 </div>
@@ -370,18 +370,18 @@ export default function PokemonMatchPage() {
       <div className="relative z-10 mx-auto flex h-full max-w-5xl flex-col px-4 py-3 sm:px-6 sm:py-4 lg:px-10">
         {/* Header */}
         <div className="mb-3 flex flex-col gap-2 sm:mb-4">
-          <div className="tcg-surface flex items-center justify-between gap-3 border-2 border-border px-4 py-2.5 shadow-[4px_4px_0px_0px_hsl(0_0%_0%/0.12)]">
+          <div className="tcg-surface flex items-center justify-between gap-3 px-4 py-2.5 bg-card/50 backdrop-blur-sm">
             <div className="flex items-center gap-2.5">
               <Link href="/pokemon/mini-games">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 w-8 p-0 border-2 border-border shadow-[1px_1px_0px_0px_hsl(var(--border))]"
+                  className="h-8 w-8 p-0"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-primary bg-primary/10 shadow-[2px_2px_0px_0px_hsl(var(--border))]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Heart className="h-4 w-4 text-primary" />
               </div>
               <div>
@@ -406,13 +406,13 @@ export default function PokemonMatchPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="discovery-button gap-2 border-2 border-border px-4 font-bold shadow-[2px_2px_0px_0px_hsl(var(--border))] transition-all hover:shadow-[3px_3px_0px_0px_hsl(var(--border))]"
+                    className="discovery-button gap-2 px-4 font-semibold transition-all"
                   >
                     <Filter className="h-4 w-4" />
                     Filtres
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="border-2 border-border shadow-[6px_6px_0px_0px_hsl(var(--border))] sm:max-w-xl">
+                <DialogContent className="border border-border shadow-lg sm:max-w-xl">
                   <DialogHeader className="text-left">
                     <DialogTitle className="font-heading text-xl font-bold">
                       Affiner la découverte
@@ -480,7 +480,7 @@ export default function PokemonMatchPage() {
                     </Button>
                     <Button
                       size="sm"
-                      className="border-2 border-border font-bold shadow-[2px_2px_0px_0px_hsl(var(--border))]"
+                      className="font-semibold"
                       onClick={() => setIsFiltersOpen(false)}
                     >
                       Appliquer
@@ -497,7 +497,7 @@ export default function PokemonMatchPage() {
               <Badge
                 key={filter.label}
                 variant="outline"
-                className="border-2 border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-semibold"
+                className="border border-dashed border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-semibold"
               >
                 {filter.label}: {filter.value}
               </Badge>
@@ -522,7 +522,7 @@ export default function PokemonMatchPage() {
           <div className="relative w-full max-w-95">
             {isLoading || !card ? (
               <div className="w-full">
-                <Skeleton className="aspect-[5/7] w-full border-2 border-border shadow-[4px_4px_0px_0px_hsl(var(--border))]" />
+                <Skeleton className="aspect-[5/7] w-full border border-border rounded-xl shadow-sm" />
               </div>
             ) : (
               <PokemonCardView
@@ -535,11 +535,11 @@ export default function PokemonMatchPage() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-4 border-2 border-border bg-card/95 px-5 py-2.5 shadow-[4px_4px_0px_0px_hsl(0_0%_0%/0.15)] backdrop-blur-sm">
+          <div className="flex items-center gap-4 bg-card/95 px-5 py-2.5 border border-border rounded-xl shadow-lg backdrop-blur-sm">
             <Button
               variant="outline"
               disabled={isProcessing}
-              className="group h-12 w-12 border-2 border-red-400 bg-red-50 p-0 shadow-[3px_3px_0px_0px_rgba(239,68,68,0.3)] transition-all hover:bg-red-500 hover:shadow-[4px_4px_0px_0px_rgba(239,68,68,0.4)] active:shadow-[1px_1px_0px_0px_rgba(239,68,68,0.3)] dark:bg-red-500/10 md:h-14 md:w-14"
+              className="group h-12 w-12 border border-red-400/50 bg-red-50/50 dark:bg-red-950/20 p-0 transition-all hover:bg-red-500 hover:border-red-500 hover:shadow-md md:h-14 md:w-14"
               onClick={() => swipe("left")}
             >
               <X
@@ -551,7 +551,7 @@ export default function PokemonMatchPage() {
             <Button
               variant="outline"
               disabled={isProcessing || !card?.id}
-              className="h-10 w-10 border-2 border-border p-0 shadow-[2px_2px_0px_0px_hsl(var(--border))] transition-all hover:shadow-[3px_3px_0px_0px_hsl(var(--border))] active:shadow-[1px_1px_0px_0px_hsl(var(--border))]"
+              className="h-10 w-10 border border-border p-0 transition-all hover:shadow-sm"
               onClick={() => refetch()}
             >
               <Shuffle className="h-4 w-4" />
@@ -560,7 +560,7 @@ export default function PokemonMatchPage() {
             <Button
               variant="outline"
               disabled={isProcessing}
-              className="group h-12 w-12 border-2 border-green-400 bg-green-50 p-0 shadow-[3px_3px_0px_0px_rgba(34,197,94,0.3)] transition-all hover:bg-green-500 hover:shadow-[4px_4px_0px_0px_rgba(34,197,94,0.4)] active:shadow-[1px_1px_0px_0px_rgba(34,197,94,0.3)] dark:bg-green-500/10 md:h-14 md:w-14"
+              className="group h-12 w-12 border border-green-400/50 bg-green-50/50 dark:bg-green-950/20 p-0 transition-all hover:bg-green-500 hover:border-green-500 hover:shadow-md md:h-14 md:w-14"
               onClick={() => swipe("right")}
             >
               <Heart
@@ -572,10 +572,10 @@ export default function PokemonMatchPage() {
 
           {/* Keyboard hint */}
           <p className="hidden text-[11px] text-muted-foreground/50 md:block">
-            <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono shadow-[1px_1px_0px_0px_hsl(var(--border))]">
+            <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono rounded">
               &larr;
             </kbd>
-            <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono shadow-[1px_1px_0px_0px_hsl(var(--border))]">
+            <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono rounded">
               &rarr;
             </kbd>
             ou glisse la carte

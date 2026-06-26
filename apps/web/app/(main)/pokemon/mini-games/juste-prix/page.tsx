@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { H1, H2, H3 } from "@/components/Shared/Titles";
+import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -422,21 +423,20 @@ export default function JustePrixPage() {
   }, [mode, items, currentRound, onlineReveal]);
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background/95 px-4 py-8 flex flex-col justify-start items-center">
-      <div className="w-full max-w-4xl">
+    <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
         {/* Main Header */}
-        <div className="tcg-surface border-2 border-border p-4 shadow-[4px_4px_0px_0px_hsl(var(--border))] flex items-center justify-between mb-6">
+        <div className="tcg-surface p-4 flex items-center justify-between bg-card/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <Link href="/pokemon/mini-games">
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 w-8 p-0 border-2 border-border shadow-[1px_1px_0px_0px_hsl(var(--border))]"
+                className="h-8 w-8 p-0"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div className="flex h-8 w-8 items-center justify-center border-2 border-primary bg-primary/10 shadow-[2px_2px_0px_0px_hsl(var(--border))]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Sparkles className="h-4 w-4 text-primary" />
             </div>
             <div>
@@ -446,16 +446,16 @@ export default function JustePrixPage() {
           </div>
           <div className="flex items-center gap-2">
             {mode === "solo" && (
-              <Badge className="border-2 border-foreground bg-primary px-3 py-1 font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Badge className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 font-semibold">
                 Score: {soloScore} pts
               </Badge>
             )}
             {mode === "local" && (
               <div className="flex gap-2">
-                <Badge className="border-2 border-foreground bg-blue-400 font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-semibold">
                   P1: {p1Score}
                 </Badge>
-                <Badge className="border-2 border-foreground bg-red-400 font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 font-semibold">
                   P2: {p2Score}
                 </Badge>
               </div>
@@ -467,8 +467,8 @@ export default function JustePrixPage() {
                   return (
                     <Badge
                       key={p.userId}
-                      className={`border-2 border-foreground font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                        isMe ? "bg-primary text-foreground" : "bg-purple-400 text-black"
+                      className={`font-semibold ${
+                        isMe ? "bg-primary/10 text-primary border border-primary/20" : "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
                       }`}
                     >
                       {isMe ? "Moi" : p.userName}: {p.score} pts
@@ -491,61 +491,61 @@ export default function JustePrixPage() {
         {/* MODE SELECTION SCREEN */}
         {!loading && mode === "select" && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-6">
-            <Card className="border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <Card className="tcg-surface tcg-surface--hover transition-all">
               <CardContent className="p-6 flex flex-col items-center text-center justify-between h-full gap-4">
-                <div className="p-4 border-2 border-foreground bg-zinc-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                <div className="p-3 rounded-lg bg-muted text-foreground">
                   <User className="h-10 w-10" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-xl font-black uppercase mb-2">Solo</h3>
+                  <h3 className="font-heading text-xl font-bold mb-2">Solo</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Tente de deviner les prix en 5 essais max par manche. Rapproche-toi le plus possible des 10%.
                   </p>
                 </div>
-                <Button onClick={startSoloGame} className="w-full border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-xs h-10">
+                <Button onClick={startSoloGame} className="w-full font-semibold h-10">
                   Jouer Solo
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <Card className="tcg-surface tcg-surface--hover transition-all">
               <CardContent className="p-6 flex flex-col items-center text-center justify-between h-full gap-4">
-                <div className="p-4 border-2 border-foreground bg-blue-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-blue-600">
+                <div className="p-3 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                   <Users className="h-10 w-10" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-xl font-black uppercase mb-2">PVP Local</h3>
+                  <h3 className="font-heading text-xl font-bold mb-2">PVP Local</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Défie un ami sur la même machine. Chacun propose son estimation en secret, la plus proche gagne le point.
                   </p>
                 </div>
-                <Button onClick={startLocalPvpGame} className="w-full border-2 border-foreground bg-blue-500 hover:bg-blue-600 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-xs h-10">
+                <Button onClick={startLocalPvpGame} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold h-10">
                   Jouer Local
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="border-4 border-foreground shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <Card className="tcg-surface tcg-surface--hover transition-all">
               <CardContent className="p-6 flex flex-col items-center text-center justify-between h-full gap-4">
-                <div className="p-4 border-2 border-foreground bg-purple-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-purple-600">
+                <div className="p-3 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
                   <Globe className="h-10 w-10" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-xl font-black uppercase mb-2">PVP En Ligne</h3>
+                  <h3 className="font-heading text-xl font-bold mb-2">PVP En Ligne</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     Matchmaking en temps réel par socket. Estimations simultanées sous tension avec chrono.
                   </p>
                 </div>
                 {onlineQueueStatus === "idle" ? (
-                  <Button onClick={joinOnlineQueue} className="w-full border-2 border-foreground bg-purple-500 hover:bg-purple-600 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-xs h-10">
+                  <Button onClick={joinOnlineQueue} className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold h-10">
                     Trouver un Match
                   </Button>
                 ) : onlineQueueStatus === "queued" ? (
-                  <Button onClick={leaveOnlineQueue} variant="outline" className="w-full border-2 border-foreground text-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-xs h-10 flex items-center justify-center gap-2">
+                  <Button onClick={leaveOnlineQueue} variant="outline" className="w-full text-red-500 font-semibold h-10 flex items-center justify-center gap-2">
                     <Loader2 className="animate-spin h-3.5 w-3.5" /> Annuler Queue
                   </Button>
                 ) : (
-                  <Button disabled className="w-full border-2 border-foreground bg-purple-300 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase text-xs h-10">
+                  <Button disabled className="w-full bg-purple-300 text-white font-semibold h-10">
                     Match trouvé !
                   </Button>
                 )}
@@ -559,10 +559,10 @@ export default function JustePrixPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
             {/* Visual Item Display */}
             <div className="lg:col-span-5 flex flex-col items-center gap-4">
-              <div className="text-sm font-black uppercase">
+              <div className="text-sm font-semibold">
                 Manche {currentRound} / {items.length}
               </div>
-              <Card className="border-4 border-foreground bg-zinc-800 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden w-full max-w-64">
+              <Card className="border border-border bg-zinc-800 dark:bg-zinc-900 rounded-xl shadow-md overflow-hidden w-full max-w-64">
                 <CardContent className="p-4 flex justify-center items-center relative aspect-[5/7]">
                   <div className="absolute inset-0 bg-[radial-gradient(#ffffff04_1px,transparent_1px)] [background-size:12px_12px]" />
                   <div className="relative w-full h-full">
@@ -602,9 +602,9 @@ export default function JustePrixPage() {
                           value={inputVal}
                           onChange={(e) => setInputVal(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && handleSoloGuess()}
-                          className="h-12 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-background text-foreground font-semibold"
+                          className="h-12 border border-border bg-background text-foreground font-semibold"
                         />
-                        <Button onClick={handleSoloGuess} className="border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-12 px-6">
+                        <Button onClick={handleSoloGuess} className="font-semibold h-12 px-6">
                           Deviner
                         </Button>
                       </div>
@@ -615,14 +615,14 @@ export default function JustePrixPage() {
                           <p className="text-xs font-bold text-muted-foreground uppercase">Tes essais :</p>
                           <div className="space-y-1.5">
                             {soloGuesses.map((g, idx) => (
-                              <div key={idx} className="flex items-center gap-3 border-2 border-foreground bg-card p-2 text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                              <div key={idx} className="flex items-center gap-3 border border-border rounded-lg bg-card p-2 text-xs font-bold shadow-sm">
                                 <span>{g.guess.toFixed(2)} €</span>
                                 {g.direction === "more" ? (
-                                  <Badge className="bg-amber-400 text-black border border-foreground flex gap-1 items-center">
+                                  <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex gap-1 items-center">
                                     <TrendingUp className="h-3 w-3" /> C'est plus !
                                   </Badge>
                                 ) : (
-                                  <Badge className="bg-blue-400 text-white border border-foreground flex gap-1 items-center">
+                                  <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex gap-1 items-center">
                                     <TrendingDown className="h-3 w-3" /> C'est moins !
                                   </Badge>
                                 )}
@@ -636,16 +636,13 @@ export default function JustePrixPage() {
                     <motion.div
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4"
-                      style={{
-                        backgroundColor: roundResult === "success" ? "#4ade80" : "#f87171",
-                      }}
+                      className={`border border-border rounded-xl p-6 shadow-md space-y-4 ${roundResult === "success" ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-red-500/10 text-red-700 dark:text-red-400"}`}
                     >
-                      <h3 className="text-xl font-black uppercase">
+                      <h3 className="text-xl font-bold">
                         {roundResult === "success" ? "Bravo !" : "Manche ratée !"}
                       </h3>
-                      <p className="text-sm font-bold">
-                        Le prix correct était de <span className="underline font-black">{currentItem.correctPrice.toFixed(2)} €</span>.
+                      <p className="text-sm font-semibold text-foreground">
+                        Le prix correct était de <span className="underline font-bold">{currentItem.correctPrice.toFixed(2)} €</span>.
                       </p>
                       {roundResult === "success" ? (
                         <p className="text-xs font-semibold">
@@ -655,7 +652,7 @@ export default function JustePrixPage() {
                         <p className="text-xs font-semibold">Tu as épuisé tes 5 tentatives.</p>
                       )}
 
-                      <Button onClick={handleNextSoloRound} className="w-full border-2 border-foreground bg-background text-foreground shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-11">
+                      <Button onClick={handleNextSoloRound} variant="outline" className="w-full font-semibold h-11">
                         {currentRound < items.length ? "Manche suivante ➡️" : "Voir le récapitulatif 🏁"}
                       </Button>
                     </motion.div>
@@ -668,13 +665,13 @@ export default function JustePrixPage() {
                 <div className="space-y-4">
                   {localPvpTurn !== "reveal" ? (
                     <div className="space-y-4">
-                      <div className="border-4 border-foreground p-4 bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
-                        <p className="text-sm font-black uppercase">
-                          Tour de : <span className={localPvpTurn === "p1" ? "text-blue-600" : "text-red-500"}>
-                            {localPvpTurn === "p1" ? "JOUEUR 1 (Bleu)" : "JOUEUR 2 (Rouge)"}
+                      <div className="border border-border rounded-xl p-4 bg-muted text-foreground">
+                        <p className="text-sm font-semibold">
+                          Tour de : <span className={localPvpTurn === "p1" ? "text-blue-600 dark:text-blue-400" : "text-red-500 dark:text-red-400"}>
+                            {localPvpTurn === "p1" ? "Joueur 1 (Bleu)" : "Joueur 2 (Rouge)"}
                           </span>
                         </p>
-                        <p className="text-xs font-medium text-zinc-600">
+                        <p className="text-xs font-medium text-muted-foreground">
                           {localPvpTurn === "p1"
                             ? "Joueur 2, ne regardez pas ! Saisissez votre estimation ci-dessous."
                             : "Joueur 1, ne regardez pas ! Saisissez votre estimation ci-dessous."}
@@ -689,9 +686,9 @@ export default function JustePrixPage() {
                           value={inputVal}
                           onChange={(e) => setInputVal(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && handleLocalSubmit()}
-                          className="h-12 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-background text-foreground font-semibold"
+                          className="h-12 border border-border bg-background text-foreground font-semibold"
                         />
-                        <Button onClick={handleLocalSubmit} className="border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-12 px-6">
+                        <Button onClick={handleLocalSubmit} className="font-semibold h-12 px-6">
                           Valider
                         </Button>
                       </div>
@@ -700,31 +697,31 @@ export default function JustePrixPage() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white text-black space-y-4"
+                      className="border border-border rounded-xl p-6 shadow-md bg-card text-foreground space-y-4"
                     >
-                      <h3 className="text-xl font-black uppercase text-center border-b-2 border-foreground pb-2">Révélation !</h3>
+                      <h3 className="text-xl font-bold text-center border-b border-border pb-2">Révélation !</h3>
                       <div className="grid grid-cols-2 gap-4 text-center">
-                        <div className="border-2 border-foreground p-3 bg-blue-50">
-                          <p className="text-xs font-bold uppercase text-blue-600">Joueur 1</p>
-                          <p className="text-lg font-black">{p1Guess?.toFixed(2)} €</p>
-                          <p className="text-[10px] text-zinc-500">
+                        <div className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/10">
+                          <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Joueur 1</p>
+                          <p className="text-lg font-bold text-foreground">{p1Guess?.toFixed(2)} €</p>
+                          <p className="text-[10px] text-muted-foreground">
                             Diff: {Math.abs(currentItem.correctPrice - p1Guess!).toFixed(2)} €
                           </p>
                         </div>
-                        <div className="border-2 border-foreground p-3 bg-red-50">
-                          <p className="text-xs font-bold uppercase text-red-500">Joueur 2</p>
-                          <p className="text-lg font-black">{p2Guess?.toFixed(2)} €</p>
-                          <p className="text-[10px] text-zinc-500">
+                        <div className="border border-red-500/20 rounded-lg p-3 bg-red-500/10">
+                          <p className="text-xs font-bold text-red-600 dark:text-red-400">Joueur 2</p>
+                          <p className="text-lg font-bold text-foreground">{p2Guess?.toFixed(2)} €</p>
+                          <p className="text-[10px] text-muted-foreground">
                             Diff: {Math.abs(currentItem.correctPrice - p2Guess!).toFixed(2)} €
                           </p>
                         </div>
                       </div>
 
-                      <div className="text-center p-3 border-2 border-foreground bg-zinc-100 font-bold">
-                        Le prix correct était de : <span className="underline font-black text-lg">{currentItem.correctPrice.toFixed(2)} €</span>
+                      <div className="text-center p-3 border border-border rounded-lg bg-muted font-semibold text-foreground">
+                        Le prix correct était de : <span className="underline font-bold text-lg">{currentItem.correctPrice.toFixed(2)} €</span>
                       </div>
 
-                      <div className="text-center font-black uppercase text-sm">
+                      <div className="text-center font-bold text-sm">
                         {Math.abs(currentItem.correctPrice - p1Guess!) === Math.abs(currentItem.correctPrice - p2Guess!) ? (
                           <span className="text-amber-600">Égalité sur cette manche !</span>
                         ) : Math.abs(currentItem.correctPrice - p1Guess!) < Math.abs(currentItem.correctPrice - p2Guess!) ? (
@@ -734,7 +731,7 @@ export default function JustePrixPage() {
                         )}
                       </div>
 
-                      <Button onClick={handleNextLocalRound} className="w-full border-2 border-foreground bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-11">
+                      <Button onClick={handleNextLocalRound} className="w-full font-semibold h-11">
                         {currentRound < items.length ? "Manche suivante ➡️" : "Voir les résultats 🏁"}
                       </Button>
                     </motion.div>
@@ -750,29 +747,29 @@ export default function JustePrixPage() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="tcg-surface border-4 border-foreground p-8 text-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-xl mx-auto bg-card"
+            className="tcg-surface border border-border rounded-xl p-8 text-center shadow-md max-w-xl mx-auto bg-card"
           >
             <Award className="h-16 w-16 mx-auto text-primary mb-4" />
-            <h2 className="text-2xl font-black uppercase tracking-tight mb-2">Partie Terminée !</h2>
+            <h2 className="text-2xl font-bold tracking-tight mb-2">Partie Terminée !</h2>
 
             {mode === "solo" ? (
               <p className="text-muted-foreground mb-6">
-                Score final : <span className="text-foreground font-black text-xl">{soloScore}</span> points.
+                Score final : <span className="text-foreground font-bold text-xl">{soloScore}</span> points.
               </p>
             ) : (
               <div className="space-y-4 mb-6">
                 <p className="text-sm font-semibold">Résultats des duels :</p>
                 <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
-                  <div className="border-2 border-foreground bg-blue-50 p-3">
-                    <p className="text-xs font-bold text-blue-600 uppercase">Joueur 1</p>
-                    <p className="text-2xl font-black">{p1Score} pts</p>
+                  <div className="border border-blue-500/20 rounded-lg bg-blue-500/10 p-3">
+                    <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Joueur 1</p>
+                    <p className="text-2xl font-bold text-foreground">{p1Score} pts</p>
                   </div>
-                  <div className="border-2 border-foreground bg-red-50 p-3">
-                    <p className="text-xs font-bold text-red-500 uppercase">Joueur 2</p>
-                    <p className="text-2xl font-black">{p2Score} pts</p>
+                  <div className="border border-red-500/20 rounded-lg bg-red-500/10 p-3">
+                    <p className="text-xs font-bold text-red-600 dark:text-red-400">Joueur 2</p>
+                    <p className="text-2xl font-bold text-foreground">{p2Score} pts</p>
                   </div>
                 </div>
-                <h3 className="text-lg font-black uppercase mt-4">
+                <h3 className="text-lg font-bold mt-4">
                   {p1Score === p2Score ? (
                     <span className="text-amber-500">Égalité parfaite ! 🤝</span>
                   ) : p1Score > p2Score ? (
@@ -785,10 +782,10 @@ export default function JustePrixPage() {
             )}
 
             <div className="flex justify-center gap-4">
-              <Button onClick={() => setMode("select")} variant="outline" className="border-2 border-foreground font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Button onClick={() => setMode("select")} variant="outline" className="font-semibold">
                 Retour
               </Button>
-              <Button onClick={mode === "solo" ? startSoloGame : startLocalPvpGame} className="border-2 border-foreground font-bold bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Button onClick={mode === "solo" ? startSoloGame : startLocalPvpGame} className="font-semibold">
                 <RotateCcw className="h-4 w-4 mr-2" /> Rejouer
               </Button>
             </div>
@@ -800,7 +797,7 @@ export default function JustePrixPage() {
           <div className="space-y-6 pt-4">
             {/* MATCH STATS / STATUS */}
             {onlineSession.state === "waiting" && (
-              <div className="text-center py-10 border-4 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-card">
+              <div className="text-center py-10 border border-border rounded-xl shadow-sm bg-card">
                 <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary mb-3" />
                 <h3 className="font-heading text-lg font-bold">Synchronisation en cours...</h3>
                 <p className="text-xs text-muted-foreground mb-4">Cliquez sur Prêt pour démarrer le match !</p>
@@ -808,12 +805,12 @@ export default function JustePrixPage() {
                   {onlineSession.players.map((p: any) => {
                     const isMe = p.userId !== onlineOpponent?.id;
                     return (
-                      <div key={p.userId} className="flex flex-col items-center border-2 border-foreground p-3 bg-zinc-50 w-36 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                        <span className="text-xs font-black">{isMe ? "Moi" : p.userName}</span>
+                      <div key={p.userId} className="flex flex-col items-center border border-border rounded-lg p-3 bg-muted w-36">
+                        <span className="text-xs font-semibold text-foreground">{isMe ? "Moi" : p.userName}</span>
                         {p.ready ? (
-                          <Badge className="bg-green-400 text-black border border-foreground mt-2">Prêt</Badge>
+                          <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 mt-2">Prêt</Badge>
                         ) : (
-                          <Badge variant="outline" className="border border-foreground mt-2">Pas prêt</Badge>
+                          <Badge variant="outline" className="border border-border mt-2">Pas prêt</Badge>
                         )}
                       </div>
                     );
@@ -821,11 +818,11 @@ export default function JustePrixPage() {
                 </div>
                 <div className="mt-6">
                   {onlineSession.players.find((p: any) => p.userId !== onlineOpponent?.id)?.ready ? (
-                    <Button disabled className="border-2 border-foreground bg-zinc-300 text-white font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
+                    <Button disabled className="font-semibold">
                       En attente de l'autre joueur...
                     </Button>
                   ) : (
-                    <Button onClick={handleOnlineReady} className="border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase">
+                    <Button onClick={handleOnlineReady} className="font-semibold">
                       Je suis Prêt !
                     </Button>
                   )}
@@ -838,14 +835,14 @@ export default function JustePrixPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Visual Item Display */}
                 <div className="lg:col-span-5 flex flex-col items-center gap-4">
-                  <div className="text-sm font-black uppercase">
+                  <div className="text-sm font-semibold">
                     Manche {onlineSession.round} / {onlineSession.maxRounds}
                   </div>
-                  <Card className="border-4 border-foreground bg-zinc-800 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden w-full max-w-64">
+                  <Card className="border border-border bg-zinc-800 dark:bg-zinc-900 rounded-xl shadow-md overflow-hidden w-full max-w-64">
                     <CardContent className="p-4 flex justify-center items-center relative aspect-[5/7]">
                       {/* Timer bar */}
                       {!onlineReveal && (
-                        <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1 border-2 border-foreground bg-amber-400 px-3 py-1 text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1 border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg px-3 py-1 text-xs font-semibold">
                           <Clock className="h-3.5 w-3.5" />
                           {onlineTimeLeft}s
                         </div>
@@ -875,9 +872,9 @@ export default function JustePrixPage() {
                 <div className="lg:col-span-7 space-y-6">
                   {!onlineReveal ? (
                     <div className="space-y-4">
-                      <div className="border-4 border-foreground p-4 bg-zinc-100 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
-                        <h4 className="text-sm font-black uppercase">Entre ton estimation</h4>
-                        <p className="text-xs text-zinc-600">
+                      <div className="border border-border rounded-xl p-4 bg-muted text-foreground">
+                        <h4 className="text-sm font-semibold">Entre ton estimation</h4>
+                        <p className="text-xs text-muted-foreground">
                           Saisis le prix rapidement. Si tu es proche du prix exact, un bonus de rapidité sera accordé !
                         </p>
                       </div>
@@ -893,9 +890,9 @@ export default function JustePrixPage() {
                             value={inputVal}
                             onChange={(e) => setInputVal(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleOnlineSubmitGuess()}
-                            className="h-12 border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-background text-foreground font-semibold"
+                            className="h-12 border border-border bg-background text-foreground font-semibold"
                           />
-                          <Button onClick={() => handleOnlineSubmitGuess()} className="border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-12 px-6">
+                          <Button onClick={() => handleOnlineSubmitGuess()} className="font-semibold h-12 px-6">
                             Estimer
                           </Button>
                         </div>
@@ -905,34 +902,34 @@ export default function JustePrixPage() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="border-4 border-foreground p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] bg-white text-black space-y-4"
+                      className="border border-border rounded-xl p-6 shadow-md bg-card text-foreground space-y-4"
                     >
-                      <h3 className="text-xl font-black uppercase text-center border-b-2 border-foreground pb-2">Révélation !</h3>
+                      <h3 className="text-xl font-bold text-center border-b border-border pb-2">Révélation !</h3>
                       <div className="grid grid-cols-2 gap-4 text-center">
                         {onlineReveal.guesses.map((g: any) => {
                           const isMe = g.userId !== onlineOpponent?.id;
                           return (
-                            <div key={g.userId} className={`border-2 border-foreground p-3 ${isMe ? "bg-primary/10" : "bg-purple-50"}`}>
-                              <p className="text-xs font-bold uppercase">{isMe ? "Moi" : g.userName}</p>
-                              <p className="text-lg font-black">{g.guess?.toFixed(2) || 0} €</p>
-                              <Badge className="bg-foreground text-background border mt-1">+{g.points || 0} pts</Badge>
+                            <div key={g.userId} className={`border rounded-lg p-3 ${isMe ? "border-primary/20 bg-primary/10" : "border-purple-500/20 bg-purple-500/10"}`}>
+                              <p className="text-xs font-bold">{isMe ? "Moi" : g.userName}</p>
+                              <p className="text-lg font-bold text-foreground">{g.guess?.toFixed(2) || 0} €</p>
+                              <Badge className="bg-muted text-foreground border border-border mt-1">+{g.points || 0} pts</Badge>
                             </div>
                           );
                         })}
                       </div>
 
-                      <div className="text-center p-3 border-2 border-foreground bg-zinc-100 font-bold">
-                        Le juste prix était : <span className="underline font-black text-lg">{correctPriceForReveal.toFixed(2)} €</span>
+                      <div className="text-center p-3 border border-border rounded-lg bg-muted font-semibold text-foreground">
+                        Le juste prix était : <span className="underline font-bold text-lg">{correctPriceForReveal.toFixed(2)} €</span>
                       </div>
 
                       {/* Ready button for next round */}
                       <div>
                         {onlineSession.players.find((p: any) => p.userId !== onlineOpponent?.id)?.ready ? (
-                          <Button disabled className="w-full border-2 border-foreground bg-zinc-300 text-white font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase">
+                          <Button disabled className="w-full font-semibold">
                             En attente de l'adversaire...
                           </Button>
                         ) : (
-                          <Button onClick={handleOnlineReady} className="w-full border-2 border-foreground bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-black uppercase h-11">
+                          <Button onClick={handleOnlineReady} className="w-full font-semibold h-11">
                             {onlineSession.round < onlineSession.maxRounds ? "Prêt pour la manche suivante ➡️" : "Voir les scores finaux 🏁"}
                           </Button>
                         )}
@@ -948,10 +945,10 @@ export default function JustePrixPage() {
               <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="tcg-surface border-4 border-foreground p-8 text-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-xl mx-auto bg-card"
+                className="tcg-surface border border-border rounded-xl p-8 text-center shadow-md max-w-xl mx-auto bg-card"
               >
                 <Award className="h-16 w-16 mx-auto text-primary mb-4" />
-                <h2 className="text-2xl font-black uppercase tracking-tight mb-2">Match Terminé !</h2>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">Match Terminé !</h2>
 
                 <div className="space-y-4 mb-6">
                   <p className="text-sm font-semibold">Tableau des scores :</p>
@@ -959,15 +956,15 @@ export default function JustePrixPage() {
                     {onlineSession.players.map((p: any) => {
                       const isMe = p.userId !== onlineOpponent?.id;
                       return (
-                        <div key={p.userId} className={`border-2 border-foreground p-3 ${isMe ? "bg-primary/10" : "bg-purple-50"}`}>
-                          <p className="text-xs font-bold uppercase">{isMe ? "Moi" : p.userName}</p>
-                          <p className="text-2xl font-black">{p.score} pts</p>
+                        <div key={p.userId} className={`border rounded-lg p-3 ${isMe ? "border-primary/20 bg-primary/10" : "border-purple-500/20 bg-purple-500/10"}`}>
+                          <p className="text-xs font-bold">{isMe ? "Moi" : p.userName}</p>
+                          <p className="text-2xl font-bold text-foreground">{p.score} pts</p>
                         </div>
                       );
                     })}
                   </div>
 
-                  <h3 className="text-lg font-black uppercase mt-4">
+                  <h3 className="text-lg font-bold mt-4">
                     {(() => {
                       const me = onlineSession.players.find((p: any) => p.userId !== onlineOpponent?.id);
                       const opp = onlineSession.players.find((p: any) => p.userId === onlineOpponent?.id);
@@ -979,7 +976,7 @@ export default function JustePrixPage() {
                 </div>
 
                 <div className="flex justify-center gap-4">
-                  <Button onClick={() => setMode("select")} className="w-full border-2 border-foreground bg-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold uppercase">
+                  <Button onClick={() => setMode("select")} className="w-full font-semibold">
                     Retour au Salon
                   </Button>
                 </div>
@@ -988,6 +985,6 @@ export default function JustePrixPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageWrapper>
   );
 }

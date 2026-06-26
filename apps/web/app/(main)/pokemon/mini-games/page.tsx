@@ -26,8 +26,6 @@ interface GameInfo {
   description: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  badgeClass: string;
   modes: ("Solo" | "Local" | "En ligne")[];
   features: string[];
 }
@@ -39,8 +37,6 @@ const MINI_GAMES: GameInfo[] = [
     description: "Parcours des cartes aléatoires et swipe à droite pour les ajouter directement à tes favoris et ta wishlist.",
     href: "/pokemon/mini-games/smash-or-pass",
     icon: Heart,
-    color: "from-pink-500/10 to-pink-500/5 hover:from-pink-500/20 hover:to-pink-500/10 text-pink-500 border-pink-500/20",
-    badgeClass: "bg-pink-500/10 text-pink-500",
     modes: ["Solo"],
     features: ["Wishlist directe", "Filtres par série & bloc", "Stats de session"],
   },
@@ -50,8 +46,6 @@ const MINI_GAMES: GameInfo[] = [
     description: "Affronte tes amis ou un ordinateur dans un duel de tirage de boosters Pokémon en ligne ou en local. Que le plus chanceux gagne !",
     href: "/pokemon/mini-games/case-opening",
     icon: Package,
-    color: "from-amber-500/10 to-amber-500/5 hover:from-amber-500/20 hover:to-amber-500/10 text-amber-500 border-amber-500/20",
-    badgeClass: "bg-amber-500/10 text-amber-500",
     modes: ["Solo", "Local", "En ligne"],
     features: ["Roulette style CS:GO", "Matchmaking temps réel", "Prix en direct"],
   },
@@ -61,8 +55,6 @@ const MINI_GAMES: GameInfo[] = [
     description: "Devine le prix exact de cartes rares ou de produits scellés Pokémon. Le joueur le plus précis ou le plus rapide remporte la mise.",
     href: "/pokemon/mini-games/juste-prix",
     icon: Sparkles,
-    color: "from-emerald-500/10 to-emerald-500/5 hover:from-emerald-500/20 hover:to-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    badgeClass: "bg-emerald-500/10 text-emerald-500",
     modes: ["Solo", "Local", "En ligne"],
     features: ["Estimation de cartes", "Produits scellés", "PVP synchrone"],
   },
@@ -72,8 +64,6 @@ const MINI_GAMES: GameInfo[] = [
     description: "Devine le Pokémon mystère de la session en utilisant des indices Wordle (types, génération, HP, évolution) et une carte qui se défloute.",
     href: "/pokemon/mini-games/pokedle",
     icon: Layers,
-    color: "from-purple-500/10 to-purple-500/5 hover:from-purple-500/20 hover:to-purple-500/10 text-purple-500 border-purple-500/20",
-    badgeClass: "bg-purple-500/10 text-purple-500",
     modes: ["Solo"],
     features: ["Système d'indices", "Recherche autocomplétée", "Défloutage d'image"],
   },
@@ -83,8 +73,6 @@ const MINI_GAMES: GameInfo[] = [
     description: "Retrouve la nostalgie du dessin animé ! Identifie le Pokémon caché derrière la silhouette noire de l'illustration avant la fin du chronomètre.",
     href: "/pokemon/mini-games/whos-that-pokemon",
     icon: HelpCircle,
-    color: "from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10 text-blue-500 border-blue-500/20",
-    badgeClass: "bg-blue-500/10 text-blue-500",
     modes: ["Solo"],
     features: ["Chrono 15 secondes", "Choix multiple", "Révélation de carte"],
   },
@@ -144,12 +132,11 @@ export default function MiniGamesHubPage() {
           return (
             <motion.div key={game.id} variants={cardVariants}>
               <Card className="tcg-surface tcg-surface--hover h-full flex flex-col justify-between overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${game.id === 'smash_or_pass' ? 'from-pink-500 to-rose-400' : game.id === 'case_opening' ? 'from-amber-500 to-orange-400' : game.id === 'juste_prix' ? 'from-emerald-500 to-green-400' : game.id === 'pokedle' ? 'from-purple-500 to-indigo-400' : 'from-blue-500 to-cyan-400'}`} />
                 <CardContent className="p-5 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
                     {/* Top Bar with Icon & Modes */}
                     <div className="flex items-start justify-between gap-4">
-                      <div className={`p-2.5 rounded-lg border bg-gradient-to-br ${game.color}`}>
+                      <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
                         <Icon className="h-5 w-5" />
                       </div>
                       <div className="flex flex-wrap gap-1 justify-end">
@@ -198,7 +185,7 @@ export default function MiniGamesHubPage() {
                   <div className="pt-5">
                     <Button
                       asChild
-                      className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/95 hover:to-secondary/95 text-white font-semibold shadow-sm hover:shadow transition-all duration-300"
+                      className="w-full font-semibold shadow-sm hover:shadow transition-all duration-300"
                     >
                       <Link href={game.href}>
                         Jouer maintenant

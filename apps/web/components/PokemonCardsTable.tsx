@@ -26,15 +26,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -102,13 +93,15 @@ export function PokemonCardsTable({
   itemsPerPage = 10,
 }: PokemonCardsTableProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [paginatedData, setPaginatedData] =
-    useState<PaginatedResult<PokemonCardType> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<PokemonCardType[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [activeSearch, setActiveSearch] = useState("");
+
+  // Cards and pagination states
+  const [cards, setCards] = useState<PokemonCardType[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Series and Sets states
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
@@ -122,6 +115,8 @@ export function PokemonCardsTable({
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
   const [displayFormat, setDisplayFormat] = useState<"grid" | "table">("grid");
+
+  const observerRef = React.useRef<HTMLDivElement | null>(null);
 
   // Load series & sets on mount
   useEffect(() => {
@@ -157,7 +152,9 @@ export function PokemonCardsTable({
         serieId?: string;
         rarity?: string;
         type?: string;
+        search?: string;
       } = {},
+      append = false,
     ) => {
       try {
         setLoading(true);
@@ -174,9 +171,23 @@ export function PokemonCardsTable({
         if (filters.rarity && filters.rarity !== "all")
           params.rarity = filters.rarity;
         if (filters.type && filters.type !== "all") params.type = filters.type;
+        if (filters.search && filters.search.trim() !== "")
+          params.search = filters.search.trim();
 
         const data = await pokemonCardService.getPaginated(params);
-        setPaginatedData(data);
+        
+        if (append) {
+          setCards((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id));
+            const newCards = data.data.filter((c) => !existingIds.has(c.id));
+            return [...prev, ...newCards];
+          });
+        } else {
+          setCards(data.data);
+        }
+        
+        setHasMore(data.meta.hasNextPage);
+        setTotalItems(data.meta.totalItems);
       } catch (err) {
         setError("Erreur lors du chargement des cartes Pokemon");
         console.error("Error fetching Pokemon cards:", err);
@@ -187,74 +198,81 @@ export function PokemonCardsTable({
     [itemsPerPage],
   );
 
-  // Effet pour recharger les cartes lors du changement de page ou de filtres
   useEffect(() => {
-    if (!isSearching) {
-      fetchCards(currentPage, {
-        setId: selectedSet?.id,
-        serieId: selectedSerie?.id,
-        rarity: selectedRarity,
-        type: selectedType,
-      });
+    if (!selectedSet && !activeSearch.trim()) {
+      setCards([]);
+      setHasMore(false);
+      setTotalItems(0);
+      setLoading(false);
+      return;
     }
-  }, [
-    currentPage,
-    fetchCards,
-    isSearching,
-    selectedSet,
-    selectedSerie,
-    selectedRarity,
-    selectedType,
-  ]);
 
-  // Fonction pour effectuer une recherche
-  const handleSearch = useCallback(
-    async (query: string) => {
-      setSearchQuery(query);
-
-      if (!query.trim()) {
-        setIsSearching(false);
-        setSearchResults([]);
-        setCurrentPage(1);
-        fetchCards(1, {
-          setId: selectedSet?.id,
-          serieId: selectedSerie?.id,
-          rarity: selectedRarity,
-          type: selectedType,
-        });
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-        setIsSearching(true);
-        const results = await pokemonCardService.search(query);
-        setSearchResults(results);
-        setCurrentPage(1);
-      } catch (err) {
-        setError("Erreur lors de la recherche");
-        console.error("Error searching Pokemon cards:", err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchCards, selectedSet, selectedSerie, selectedRarity, selectedType],
-  );
-
-  // Fonction pour nettoyer la recherche
-  const clearSearch = useCallback(() => {
-    setSearchQuery("");
-    setIsSearching(false);
-    setSearchResults([]);
     setCurrentPage(1);
     fetchCards(1, {
       setId: selectedSet?.id,
       serieId: selectedSerie?.id,
       rarity: selectedRarity,
       type: selectedType,
-    });
-  }, [fetchCards, selectedSet, selectedSerie, selectedRarity, selectedType]);
+      search: activeSearch || undefined,
+    }, false);
+  }, [
+    selectedSet,
+    selectedSerie,
+    selectedRarity,
+    selectedType,
+    activeSearch,
+    fetchCards,
+  ]);
+
+  // Déclencher le chargement de la page suivante
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchCards(currentPage, {
+        setId: selectedSet?.id,
+        serieId: selectedSerie?.id,
+        rarity: selectedRarity,
+        type: selectedType,
+        search: activeSearch || undefined,
+      }, true);
+    }
+  }, [currentPage, selectedSet, selectedSerie, selectedRarity, selectedType, activeSearch, fetchCards]);
+
+  // Observer pour le scroll infini
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting && hasMore && !loading) {
+          setCurrentPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const currentTarget = observerRef.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading]);
+
+  // Fonction pour effectuer une recherche
+  const handleSearch = useCallback(
+    (query: string) => {
+      setActiveSearch(query);
+    },
+    [],
+  );
+
+  // Fonction pour nettoyer la recherche
+  const clearSearch = useCallback(() => {
+    setSearchQuery("");
+    setActiveSearch("");
+  }, []);
 
   // Reset filters
   const resetFilters = () => {
@@ -271,69 +289,19 @@ export function PokemonCardsTable({
     return sets.filter((set) => set.serie?.id === selectedSerie.id);
   }, [selectedSerie, sets]);
 
-  // Pagination des résultats de recherche
-  const paginatedSearchResults = useMemo(() => {
-    if (!isSearching || searchResults.length === 0) return null;
-
-    const filtered = searchResults.filter((card) => {
-      // Type filter
-      if (
-        selectedType !== "all" &&
-        (!card.types || !card.types.includes(selectedType))
-      ) {
-        return false;
-      }
-      // Rarity filter
-      if (selectedRarity !== "all" && card.rarity !== selectedRarity) {
-        return false;
-      }
-      // Set filter
-      if (selectedSet && card.set?.id !== selectedSet.id) {
-        return false;
-      }
-      // Serie filter
-      if (selectedSerie && card.set?.serie?.id !== selectedSerie.id) {
-        return false;
-      }
-      return true;
-    });
-
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedItems = filtered.slice(startIndex, endIndex);
-
-    const totalItems = filtered.length;
-    const totalPages = Math.ceil(totalItems / itemsPerPage);
-
+  // Détermine quelles données utiliser (recherche ou pagination normale)
+  const currentData = useMemo(() => {
+    if (!selectedSet && !activeSearch.trim()) return null;
     return {
-      data: paginatedItems,
+      data: cards,
       meta: {
         totalItems,
-        itemCount: paginatedItems.length,
-        itemsPerPage,
-        totalPages,
         currentPage,
-        hasNextPage: currentPage < totalPages,
-        hasPreviousPage: currentPage > 1,
-      },
+        totalPages: Math.ceil(totalItems / itemsPerPage),
+        hasNextPage: hasMore,
+      }
     };
-  }, [
-    isSearching,
-    searchResults,
-    currentPage,
-    itemsPerPage,
-    selectedType,
-    selectedRarity,
-    selectedSet,
-    selectedSerie,
-  ]);
-
-  // Détermine quelles données utiliser (recherche ou pagination normale)
-  const currentData = isSearching ? paginatedSearchResults : paginatedData;
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  }, [cards, totalItems, currentPage, itemsPerPage, hasMore, selectedSet, activeSearch]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,100 +323,6 @@ export function PokemonCardsTable({
     setCurrentPage(1);
   };
 
-  const renderPaginationItems = () => {
-    if (!currentData) return null;
-
-    const { totalPages, currentPage: current } = currentData.meta;
-    const items = [];
-
-    if (currentData.meta.hasPreviousPage) {
-      items.push(
-        <PaginationItem key="previous">
-          <PaginationPrevious
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(current - 1);
-            }}
-          />
-        </PaginationItem>,
-      );
-    }
-
-    const startPage = Math.max(1, current - 2);
-    const endPage = Math.min(totalPages, current + 2);
-
-    if (startPage > 1) {
-      items.push(
-        <PaginationItem key={1}>
-          <PaginationLink
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(1);
-            }}
-          >
-            1
-          </PaginationLink>
-        </PaginationItem>,
-      );
-      if (startPage > 2) {
-        items.push(<PaginationEllipsis key="ellipsis1" />);
-      }
-    }
-
-    for (let page = startPage; page <= endPage; page++) {
-      items.push(
-        <PaginationItem key={page}>
-          <PaginationLink
-            href="#"
-            isActive={page === current}
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(page);
-            }}
-          >
-            {page}
-          </PaginationLink>
-        </PaginationItem>,
-      );
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(<PaginationEllipsis key="ellipsis2" />);
-      }
-      items.push(
-        <PaginationItem key={totalPages}>
-          <PaginationLink
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(totalPages);
-            }}
-          >
-            {totalPages}
-          </PaginationLink>
-        </PaginationItem>,
-      );
-    }
-
-    if (currentData.meta.hasNextPage) {
-      items.push(
-        <PaginationItem key="next">
-          <PaginationNext
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handlePageChange(current + 1);
-            }}
-          />
-        </PaginationItem>,
-      );
-    }
-
-    return items;
-  };
 
   return (
     <div className="space-y-8">
@@ -749,18 +623,12 @@ export function PokemonCardsTable({
                 {currentData
                   ? `Cartes Pokemon (${currentData.meta.totalItems} cartes)`
                   : "Cartes Pokemon"}
-                {isSearching && (
+                {activeSearch.trim() && (
                   <span className="text-sm font-normal text-muted-foreground">
-                    - Résultats pour &quot;{searchQuery}&quot;
+                    - Résultats pour &quot;{activeSearch}&quot;
                   </span>
                 )}
               </CardTitle>
-              {currentData && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Page {currentData.meta.currentPage} sur{" "}
-                  {currentData.meta.totalPages}
-                </div>
-              )}
             </div>
 
             {/* Filter selectors & Search */}
@@ -838,7 +706,7 @@ export function PokemonCardsTable({
                 <Button type="submit" size="sm" className="h-9 text-xs">
                   Rechercher
                 </Button>
-                {isSearching && (
+                {activeSearch.trim() !== "" && (
                   <Button
                     type="button"
                     variant="outline"
@@ -855,7 +723,7 @@ export function PokemonCardsTable({
         </CardHeader>
 
         <CardContent className="pt-6">
-          {loading ? (
+          {loading && cards.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-24 gap-4">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               <div className="text-sm text-muted-foreground font-medium">
@@ -867,6 +735,16 @@ export function PokemonCardsTable({
               <div className="text-sm text-destructive font-semibold">
                 {error}
               </div>
+            </div>
+          ) : !selectedSet && !activeSearch.trim() ? (
+            <div className="flex flex-col items-center justify-center p-20 text-center">
+              <div className="rounded-full bg-primary/10 p-4 mb-4 text-primary">
+                <Sparkles className="w-8 h-8 animate-pulse" />
+              </div>
+              <h3 className="font-bold text-lg mb-1">Prêt à explorer ?</h3>
+              <p className="text-sm text-muted-foreground max-w-sm mb-4">
+                Sélectionnez une extension dans l'explorateur ou utilisez la barre de recherche pour afficher les cartes Pokémon.
+              </p>
             </div>
           ) : !currentData || currentData.data.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-20 text-center">
@@ -885,7 +763,6 @@ export function PokemonCardsTable({
               </Button>
             </div>
           ) : displayFormat === "grid" ? (
-            /* Premium Grid View */
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
               {currentData.data.map((card) => (
                 <Link
@@ -893,7 +770,7 @@ export function PokemonCardsTable({
                   key={card.id}
                   className="group flex flex-col h-full bg-muted/20 border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-muted/40 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-black/5 shadow-inner mb-3">
+                  <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-black/5 shadow-inner mb-3">
                     <SmartImage
                       src={getCardImage(card, "low")}
                       fallbackSrc="/images/carte-pokemon-dos.jpg"
@@ -906,11 +783,6 @@ export function PokemonCardsTable({
                       <h4 className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
                         {card.name}
                       </h4>
-                      {card.hp && (
-                        <span className="text-[10px] font-extrabold text-red-500 whitespace-nowrap">
-                          {card.hp} HP
-                        </span>
-                      )}
                     </div>
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <span className="truncate">{card.set?.name}</span>
@@ -1038,14 +910,12 @@ export function PokemonCardsTable({
             </div>
           )}
 
-          {/* Pagination Controls */}
-          {currentData && currentData.meta.totalPages > 1 && (
-            <div className="mt-8 border-t border-border/20 pt-6">
-              <Pagination>
-                <PaginationContent>{renderPaginationItems()}</PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          {/* Sentinelle pour le scroll infini */}
+          <div ref={observerRef} className="h-10 w-full flex items-center justify-center mt-6">
+            {loading && cards.length > 0 && (
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

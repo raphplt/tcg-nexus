@@ -111,6 +111,10 @@ export function normalizeAssetUrl(
     next = `${next}.${ext}`;
   }
 
+  if (next.includes("cdn.tcg-nexus.org/series/")) {
+    next = `${next}?v=2`;
+  }
+
   return next;
 }
 
