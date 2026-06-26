@@ -24,7 +24,7 @@ assertR2Config();
  * toujours sur R2.
  */
 const MIGRATE_CARD_IMAGES_TO_R2 =
-  process.env.MIGRATE_CARD_IMAGES_TO_R2 === "true";
+  process.env.MIGRATE_CARD_IMAGES_TO_R2 !== "false";
 
 function slugify(str: string): string {
   return str
@@ -109,6 +109,16 @@ async function updateData() {
     if (details) {
       // Strip 'sets' to avoid bloating the file
       const { sets, ...seriesData } = details;
+
+      // Upload Series Logo to R2
+      if (details.logo) {
+        const logoKey = `series/${serie.id}/logo.webp`;
+        const logoUrl = await uploadToR2(details.logo + ".webp", logoKey);
+        if (logoUrl) {
+          seriesData.logo = logoUrl;
+        }
+      }
+
       localSeries.push(seriesData);
       console.log(`Added series: ${serie.name}`);
     }
