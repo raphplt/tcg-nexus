@@ -105,10 +105,16 @@ async function processFile(file: string, args: Args, stats: Stats) {
     return;
   }
 
-  const image: string | undefined = card.image;
+  let image: string | undefined = card.image;
 
-  // Déjà migrée (CDN) ou pas d'image exploitable -> on saute.
-  if (!image || (R2_PUBLIC_URL && image.startsWith(R2_PUBLIC_URL))) {
+  // Si l'image pointe déjà sur le CDN, on réécrit l'URL vers TCGdex pour pouvoir
+  // la télécharger et forcer le téléversement dans le nouveau bucket R2 vide.
+  if (image && R2_PUBLIC_URL && image.startsWith(R2_PUBLIC_URL)) {
+    image = image.replace(`${R2_PUBLIC_URL}/cards`, "https://assets.tcgdex.net");
+  }
+
+  // Pas d'image exploitable -> on saute.
+  if (!image) {
     stats.skipped++;
     return;
   }

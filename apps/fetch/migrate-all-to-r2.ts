@@ -46,9 +46,17 @@ function slugify(str: string): string {
  */
 async function uploadUrlToR2(sourceUrl: string, key: string): Promise<string | null> {
   try {
-    const response = await fetch(sourceUrl);
+    let url = sourceUrl;
+    // Réécrire l'ancien hôte public dev R2 bloqué (401) vers le CDN public
+    if (url.includes("pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev")) {
+      url = url.replace("pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev", "cdn.tcg-nexus.org");
+    }
+    const response = await fetch(url);
+    if (response.status === 404) {
+      return null;
+    }
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} sur ${sourceUrl}`);
+      throw new Error(`HTTP ${response.status} sur ${url}`);
     }
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -58,7 +66,7 @@ async function uploadUrlToR2(sourceUrl: string, key: string): Promise<string | n
         Bucket: R2_BUCKET_NAME,
         Key: key,
         Body: buffer,
-        ContentType: response.headers.get("content-type") || getContentType(sourceUrl),
+        ContentType: response.headers.get("content-type") || getContentType(url),
         CacheControl: "public, max-age=31536000, immutable",
       }),
     );
@@ -157,7 +165,16 @@ async function migrateSeries() {
         // TCGdex fournit les logos sans extension, on tente en .webp
         const sourceUrl = serie.logo.includes(".") ? serie.logo : `${serie.logo}.webp`;
         const key = `series/${serie.id}/logo.webp`;
-        const r2Url = await uploadUrlToR2(sourceUrl, key);
+        let r2Url = await uploadUrlToR2(sourceUrl, key);
+        
+        // Fallback TCGdex si R2 échoue (ex: 401 ou 404 car le CDN a bougé)
+        if (!r2Url) {
+          console.log(`\n  [FALLBACK] Tentative récupération TCGdex pour la série ${serie.id}...`);
+          const firstSetId = serie.firstSet?.id || `${serie.id}01`;
+          const fallbackUrl = `https://assets.tcgdex.net/fr/${serie.id}/${firstSetId}/logo.webp`;
+          r2Url = await uploadUrlToR2(fallbackUrl, key);
+        }
+
         if (r2Url) {
           serie.logo = r2Url;
           count++;
@@ -197,7 +214,16 @@ async function migrateSets() {
       if (set.logo && !set.logo.startsWith(R2_PUBLIC_URL)) {
         const sourceUrl = set.logo.includes(".") ? set.logo : `${set.logo}.webp`;
         const key = `sets/${slug}/logo.webp`;
-        const r2Url = await uploadUrlToR2(sourceUrl, key);
+        let r2Url = await uploadUrlToR2(sourceUrl, key);
+        
+        // Fallback TCGdex si R2 échoue
+        if (!r2Url) {
+          console.log(`\n  [FALLBACK] Tentative récupération TCGdex logo pour le set ${set.id}...`);
+          const serieId = set.serieId || set.serie?.id || "base";
+          const fallbackUrl = `https://assets.tcgdex.net/fr/${serieId}/${set.id}/logo.webp`;
+          r2Url = await uploadUrlToR2(fallbackUrl, key);
+        }
+
         if (r2Url) {
           set.logo = r2Url;
           logoCount++;
@@ -208,7 +234,16 @@ async function migrateSets() {
       if (set.symbol && !set.symbol.startsWith(R2_PUBLIC_URL)) {
         const sourceUrl = set.symbol.includes(".") ? set.symbol : `${set.symbol}.png`;
         const key = `sets/${slug}/symbol.png`;
-        const r2Url = await uploadUrlToR2(sourceUrl, key);
+        let r2Url = await uploadUrlToR2(sourceUrl, key);
+        
+        // Fallback TCGdex si R2 échoue
+        if (!r2Url) {
+          console.log(`\n  [FALLBACK] Tentative récupération TCGdex symbole pour le set ${set.id}...`);
+          const serieId = set.serieId || set.serie?.id || "base";
+          const fallbackUrl = `https://assets.tcgdex.net/univ/${serieId}/${set.id}/symbol.png`;
+          r2Url = await uploadUrlToR2(fallbackUrl, key);
+        }
+
         if (r2Url) {
           set.symbol = r2Url;
           symbolCount++;
