@@ -86,8 +86,8 @@ const mainNavItems: NavItem[] = [
 const discoverNavItems: NavItem[] = [
   { label: "Pokedex", href: "/pokemon", icon: Store },
   {
-    label: "Smash or Pass",
-    href: "/pokemon/smash-or-pass",
+    label: "Mini-jeux",
+    href: "/pokemon/mini-games",
     icon: Dices,
   },
 ];

@@ -10,8 +10,10 @@ import {
   Shuffle,
   Sparkles,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { FavoriteButton } from "@/components/Home/FavoritesButton";
@@ -370,6 +372,15 @@ export default function PokemonMatchPage() {
         <div className="mb-3 flex flex-col gap-2 sm:mb-4">
           <div className="tcg-surface flex items-center justify-between gap-3 border-2 border-border px-4 py-2.5 shadow-[4px_4px_0px_0px_hsl(0_0%_0%/0.12)]">
             <div className="flex items-center gap-2.5">
+              <Link href="/pokemon/mini-games">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 w-8 p-0 border-2 border-border shadow-[1px_1px_0px_0px_hsl(var(--border))]"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
               <div className="flex h-8 w-8 items-center justify-center border-2 border-primary bg-primary/10 shadow-[2px_2px_0px_0px_hsl(var(--border))]">
                 <Heart className="h-4 w-4 text-primary" />
               </div>

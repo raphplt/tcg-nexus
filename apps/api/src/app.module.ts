@@ -40,6 +40,7 @@ import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
+import { MiniGameModule } from "./mini-game/mini-game.module";
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     FeedModule,
     NotificationModule,
     ScanModule,
+    MiniGameModule,
   ],
   controllers: [AppController],
   providers: [
