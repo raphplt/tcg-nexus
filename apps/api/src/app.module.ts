@@ -41,9 +41,11 @@ import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
 import { MiniGameModule } from "./mini-game/mini-game.module";
+import { StorageModule } from "./storage/storage.module";
 
 @Module({
   imports: [
+    StorageModule,
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot({ wildcard: true, delimiter: "." }),

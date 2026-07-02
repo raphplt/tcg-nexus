@@ -315,4 +315,37 @@ export const adminService = {
   async deletePokemonCard(id: string): Promise<void> {
     return authedFetch<void>("DELETE", `/pokemon-card/${id}`);
   },
+
+  async uploadPokemonSerieLogo(id: string, file: File): Promise<PokemonSerieType> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return authedFetch<PokemonSerieType>("POST", `/pokemon-series/${id}/logo`, {
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  async uploadPokemonSetLogo(id: string, file: File): Promise<PokemonSetType> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return authedFetch<PokemonSetType>("POST", `/pokemon-set/${id}/logo`, {
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
+
+  async uploadPokemonSetSymbol(id: string, file: File): Promise<PokemonSetType> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return authedFetch<PokemonSetType>("POST", `/pokemon-set/${id}/symbol`, {
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };

@@ -44,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "react-hot-toast";
 import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 type SetFormState = {
   id: string;
@@ -154,10 +155,10 @@ export function AdminPokemonSetsTable() {
     const payload: PokemonSetPayload = {
       id: form.id.trim(),
       name: form.name.trim(),
-      logo: form.logo.trim() || undefined,
-      symbol: form.symbol.trim() || undefined,
+      logo: form.logo.trim() || "",
+      symbol: form.symbol.trim() || "",
       releaseDate: form.releaseDate,
-      tcgOnline: form.tcgOnline.trim() || undefined,
+      tcgOnline: form.tcgOnline.trim() || "",
       serieId: form.serieId,
       cardCount: {
         total: numberOrUndefined(form.cardCountTotal),
@@ -187,6 +188,42 @@ export function AdminPokemonSetsTable() {
     } catch (err) {
       console.error("Unable to save set", err);
       toast.error("Enregistrement impossible");
+    }
+  };
+
+  const handleUploadLogo = async (file: File) => {
+    if (!editing) {
+      toast.error("Veuillez d'abord créer l'extension");
+      throw new Error("Veuillez d'abord créer l'extension");
+    }
+    try {
+      const response = await adminService.uploadPokemonSetLogo(editing.id, file);
+      toast.success("Logo téléversé avec succès");
+      setForm((prev) => ({ ...prev, logo: response.logo || "" }));
+      await loadSets();
+      return response.logo || "";
+    } catch (err) {
+      console.error("Upload failed", err);
+      toast.error("Erreur lors du téléversement");
+      throw err;
+    }
+  };
+
+  const handleUploadSymbol = async (file: File) => {
+    if (!editing) {
+      toast.error("Veuillez d'abord créer l'extension");
+      throw new Error("Veuillez d'abord créer l'extension");
+    }
+    try {
+      const response = await adminService.uploadPokemonSetSymbol(editing.id, file);
+      toast.success("Symbole téléversé avec succès");
+      setForm((prev) => ({ ...prev, symbol: response.symbol || "" }));
+      await loadSets();
+      return response.symbol || "";
+    } catch (err) {
+      console.error("Upload failed", err);
+      toast.error("Erreur lors du téléversement");
+      throw err;
     }
   };
 
@@ -398,24 +435,34 @@ export function AdminPokemonSetsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-logo">Logo (URL)</Label>
-              <Input
-                id="set-logo"
-                value={form.logo}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, logo: event.target.value }))
-                }
-              />
+              <Label>Logo de l'Extension</Label>
+              {editing ? (
+                <ImageUpload
+                  value={form.logo}
+                  onChange={(url) => setForm((prev) => ({ ...prev, logo: url || "" }))}
+                  onUpload={handleUploadLogo}
+                  label="Logo"
+                />
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  Veuillez d'abord créer l'extension pour pouvoir y associer un logo.
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-symbol">Symbole (URL)</Label>
-              <Input
-                id="set-symbol"
-                value={form.symbol}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, symbol: event.target.value }))
-                }
-              />
+              <Label>Symbole de l'Extension</Label>
+              {editing ? (
+                <ImageUpload
+                  value={form.symbol}
+                  onChange={(url) => setForm((prev) => ({ ...prev, symbol: url || "" }))}
+                  onUpload={handleUploadSymbol}
+                  label="Symbole"
+                />
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  Veuillez d'abord créer l'extension pour pouvoir y associer un symbole.
+                </div>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="set-tcg-online">Code TCG Online</Label>

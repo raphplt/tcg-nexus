@@ -36,6 +36,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "react-hot-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 type SerieFormState = {
   id: string;
@@ -103,7 +104,7 @@ export function AdminPokemonSeriesTable() {
     const payload: PokemonSeriePayload = {
       id: form.id.trim(),
       name: form.name.trim(),
-      logo: form.logo.trim() || undefined,
+      logo: form.logo.trim() || "",
     };
 
     try {
@@ -123,6 +124,24 @@ export function AdminPokemonSeriesTable() {
     } catch (err) {
       console.error("Unable to save serie", err);
       toast.error("Enregistrement impossible");
+    }
+  };
+
+  const handleUploadLogo = async (file: File) => {
+    if (!editing) {
+      toast.error("Veuillez d'abord créer la série");
+      throw new Error("Veuillez d'abord créer la série");
+    }
+    try {
+      const response = await adminService.uploadPokemonSerieLogo(editing.id, file);
+      toast.success("Logo téléversé avec succès");
+      setForm((prev) => ({ ...prev, logo: response.logo || "" }));
+      await loadSeries();
+      return response.logo || "";
+    } catch (err) {
+      console.error("Upload failed", err);
+      toast.error("Erreur lors du téléversement");
+      throw err;
     }
   };
 
@@ -263,14 +282,19 @@ export function AdminPokemonSeriesTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="serie-logo">Logo (URL)</Label>
-              <Input
-                id="serie-logo"
-                value={form.logo}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, logo: event.target.value }))
-                }
-              />
+              <Label>Logo de la Série</Label>
+              {editing ? (
+                <ImageUpload
+                  value={form.logo}
+                  onChange={(url) => setForm((prev) => ({ ...prev, logo: url || "" }))}
+                  onUpload={handleUploadLogo}
+                  label="Logo"
+                />
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  Veuillez d'abord créer la série pour pouvoir y associer un logo.
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter className="gap-2">
