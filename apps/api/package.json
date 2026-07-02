@@ -24,6 +24,8 @@
     "sync:cards": "ts-node -r tsconfig-paths/register ./src/scripts/trigger-card-sync.ts",
     "seed:challenges": "ts-node -r tsconfig-paths/register ./src/scripts/seed-challenges.ts",
     "fix:series-logos-db": "ts-node -r tsconfig-paths/register ./src/scripts/fix-series-logos-db.ts",
+    "sync:db-metadata": "ts-node -r tsconfig-paths/register ./src/scripts/sync-db-metadata.ts",
+    "sync:db-metadata:prod": "SEED_AUTO_CONFIRM=true node -r tsconfig-paths/register dist/scripts/sync-db-metadata.js",
     "test:seed": "ts-node -r tsconfig-paths/register ./test-seed.ts",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
