@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, RotateCcw, Award, Clock } from "lucide-react";
+import { ArrowLeft, HelpCircle, RotateCcw, Award, Clock, Loader2 } from "lucide-react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H3 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";

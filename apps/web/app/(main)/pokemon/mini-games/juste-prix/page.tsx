@@ -984,7 +984,6 @@ export default function JustePrixPage() {
             )}
           </div>
         )}
-      </div>
     </PageWrapper>
   );
 }
