@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { H1 } from "@/components/Shared/Titles";
 import { CardCard } from "@/components/Marketplace/CardCard";
@@ -9,12 +9,12 @@ import { ViewToggle } from "@/components/Marketplace/ViewToggle";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useViewMode } from "@/hooks/useViewMode";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { useMarketplaceCards, FilterState } from "@/hooks/useMarketplace";
 import MarketplaceSearch from "../_components/MarketplaceSearch";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function MarketplaceCardsPage() {
   return (
@@ -40,11 +40,11 @@ export default function MarketplaceCardsPage() {
 function MarketplaceCardsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [page, setPage] = useState(
-    parseInt(searchParams.get("page") || "1", 10),
-  );
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<any[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useViewMode("grid");
+  const observerRef = useRef<HTMLDivElement>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     search: searchParams.get("search") || "",
@@ -84,6 +84,7 @@ function MarketplaceCardsContent() {
     }
   }, [debouncedSearch, data]);
 
+  // Effect to handle URL change
   useEffect(() => {
     const newFilters: FilterState = {
       search: searchParams.get("search") || "",
@@ -104,24 +105,55 @@ function MarketplaceCardsContent() {
     };
 
     setFilters(newFilters);
-
-    const pageParam = searchParams.get("page");
-    if (pageParam) {
-      const pageNum = parseInt(pageParam, 10);
-      if (!isNaN(pageNum) && pageNum > 0) {
-        setPage(pageNum);
-      } else {
-        setPage(1);
-      }
-    } else {
-      setPage(1);
-    }
+    setPage(1);
+    setItems([]);
   }, [searchParams]);
+
+  // Accumulate items when new data is received
+  useEffect(() => {
+    if (data?.data) {
+      if (page === 1) {
+        setItems(data.data);
+      } else {
+        setItems((prev) => {
+          const existingIds = new Set(prev.map(i => i.card?.id || i.id));
+          const newItems = data.data.filter((i: any) => !existingIds.has(i.card?.id || i.id));
+          return [...prev, ...newItems];
+        });
+      }
+    }
+  }, [data, page]);
+
+  const hasMore = data ? page < data.meta.totalPages : false;
+
+  // IntersectionObserver for infinite scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting && hasMore && !isLoading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const currentTarget = observerRef.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isLoading]);
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
     const updated = { ...filters, ...newFilters };
     setFilters(updated);
     setPage(1);
+    setItems([]);
 
     const params = new URLSearchParams();
     Object.entries(updated).forEach(([key, value]) => {
@@ -132,18 +164,6 @@ function MarketplaceCardsContent() {
     router.push(`/marketplace/cards?${params.toString()}`);
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== "" && value !== null) {
-        params.set(key, String(value));
-      }
-    });
-    params.set("page", String(newPage));
-    router.push(`/marketplace/cards?${params.toString()}`, { scroll: false });
-  };
-
   const resetFilters = () => {
     const defaultFilters: FilterState = {
       search: "",
@@ -152,6 +172,7 @@ function MarketplaceCardsContent() {
     };
     setFilters(defaultFilters);
     setPage(1);
+    setItems([]);
     router.push("/marketplace/cards");
   };
 
@@ -194,7 +215,7 @@ function MarketplaceCardsContent() {
           updateFilters={updateFilters}
         />
 
-        {isLoading ? (
+        {isLoading && page === 1 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
               <Skeleton key={i} className="h-80" />
@@ -206,19 +227,19 @@ function MarketplaceCardsContent() {
               Erreur lors du chargement des cartes
             </CardContent>
           </Card>
-        ) : data && data.data.length > 0 ? (
+        ) : items.length > 0 ? (
           <>
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                {data.meta.totalItems} carte
-                {data.meta.totalItems > 1 ? "s" : ""} trouvée
-                {data.meta.totalItems > 1 ? "s" : ""}
+                {data?.meta?.totalItems || items.length} carte
+                {(data?.meta?.totalItems || items.length) > 1 ? "s" : ""} trouvée
+                {(data?.meta?.totalItems || items.length) > 1 ? "s" : ""}
               </span>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             </div>
             {viewMode === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-                {data.data.map((item: any) => {
+                {items.map((item: any) => {
                   const card = item.card || item;
                   return (
                     <CardCard
@@ -234,7 +255,7 @@ function MarketplaceCardsContent() {
               </div>
             ) : (
               <div className="flex flex-col gap-2 mb-8">
-                {data.data.map((item: any) => {
+                {items.map((item: any) => {
                   const card = item.card || item;
                   return (
                     <CardListItem
@@ -249,13 +270,11 @@ function MarketplaceCardsContent() {
                 })}
               </div>
             )}
-            {data.meta && (
-              <PaginatedNav
-                meta={data.meta}
-                page={page}
-                onPageChange={handlePageChange}
-              />
-            )}
+            
+            {/* Elément sentinelle pour le scroll infini */}
+            <div ref={observerRef} className="py-8 flex justify-center items-center">
+              {isLoading && page > 1 && <Spinner size="medium" />}
+            </div>
           </>
         ) : (
           <Card>

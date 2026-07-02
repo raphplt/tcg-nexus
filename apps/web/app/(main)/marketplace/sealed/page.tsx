@@ -2,11 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { H1 } from "@/components/Shared/Titles";
+import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { useSealedProducts } from "@/hooks/useSealedProducts";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { SealedSortBy } from "@/services/sealed-product.service";
 import {
+  SealedProduct,
   SealedProductType,
   sealedProductTypeLabels,
 } from "@/types/sealed-product";
@@ -32,9 +33,10 @@ function SealedListingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [page, setPage] = useState(
-    parseInt(searchParams.get("page") || "1", 10),
-  );
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<SealedProduct[]>([]);
+  const observerRef = useRef<HTMLDivElement>(null);
+
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [productType, setProductType] = useState<SealedProductType | undefined>(
     (searchParams.get("productType") as SealedProductType) || undefined,
@@ -87,8 +89,58 @@ function SealedListingsContent() {
     sortBy,
   });
 
-  const products = data?.data || [];
-  const meta = data?.meta;
+  // Handle searchParams url changes to reset page and items list
+  useEffect(() => {
+    setSearch(searchParams.get("search") || "");
+    setProductType((searchParams.get("productType") as SealedProductType) || undefined);
+    setSetId(searchParams.get("setId") || undefined);
+    setSeriesId(searchParams.get("seriesId") || undefined);
+    setPriceMin(searchParams.get("priceMin") || "");
+    setPriceMax(searchParams.get("priceMax") || "");
+    setSortBy((searchParams.get("sortBy") as SealedSortBy) || SealedSortBy.NAME);
+    setPage(1);
+    setItems([]);
+  }, [searchParams]);
+
+  // Accumulate loaded products
+  useEffect(() => {
+    if (data?.data) {
+      if (page === 1) {
+        setItems(data.data);
+      } else {
+        setItems((prev) => {
+          const existingIds = new Set(prev.map(i => i.id));
+          const newItems = data.data.filter(i => !existingIds.has(i.id));
+          return [...prev, ...newItems];
+        });
+      }
+    }
+  }, [data, page]);
+
+  const hasMore = data ? page < data.meta.totalPages : false;
+
+  // IntersectionObserver for infinite scrolling
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0] && entries[0].isIntersecting && hasMore && !isLoading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    const currentTarget = observerRef.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isLoading]);
 
   const updateUrl = (next: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -96,6 +148,7 @@ function SealedListingsContent() {
       if (v == null || v === "") params.delete(k);
       else params.set(k, v);
     }
+    params.delete("page");
     router.push(`?${params.toString()}`);
   };
 
@@ -108,6 +161,7 @@ function SealedListingsContent() {
     setPriceMax("");
     setSortBy(SealedSortBy.NAME);
     setPage(1);
+    setItems([]);
     router.push("?");
   };
 
@@ -291,37 +345,30 @@ function SealedListingsContent() {
           </Card>
         )}
 
-        {isLoading ? (
+        {isLoading && page === 1 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(8)].map((_, i) => (
               <Skeleton key={i} className="h-80" />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : items.length === 0 ? (
           <Card>
             <CardContent className="pt-6 text-center text-muted-foreground">
               Aucun produit scellé trouvé.
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
-              <SealedProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-
-        {meta && meta.totalPages > 1 && (
-          <div className="mt-8">
-            <PaginatedNav
-              meta={meta}
-              page={page}
-              onPageChange={(p) => {
-                setPage(p);
-                updateUrl({ page: String(p) });
-              }}
-            />
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {items.map((product) => (
+                <SealedProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            {/* Elément sentinelle pour le scroll infini */}
+            <div ref={observerRef} className="py-8 flex justify-center items-center">
+              {isLoading && page > 1 && <Spinner size="medium" />}
+            </div>
+          </>
         )}
       </div>
     </div>
