@@ -1,24 +1,58 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Award,
+  Clock,
+  HelpCircle,
+  Loader2,
+  RotateCcw,
+} from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, HelpCircle, RotateCcw, Award, Clock, Loader2 } from "lucide-react";
+import Link from "next/link";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H3 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { getCardImage } from "@/utils/images";
 
 const POPULAR_POKEMON = [
-  "Pikachu", "Dracaufeu", "Tortank", "Florizarre", "Mewtwo", "Mew", "Evoli",
-  "Aquali", "Voltali", "Pyroli", "Mentali", "Noctali", "Gengar", "Alakazam",
-  "Dracolosse", "Leviator", "Lucario", "Amphinobi", "Rayquaza", "Arceus",
-  "Salameche", "Carapuce", "Bulbizarre", "Ronflex", "Lugia", "Ho-Oh",
-  "Suicune", "Entei", "Raikou", "Carchacrok", "Gardevoir", "Ectoplasma"
+  "Pikachu",
+  "Dracaufeu",
+  "Tortank",
+  "Florizarre",
+  "Mewtwo",
+  "Mew",
+  "Evoli",
+  "Aquali",
+  "Voltali",
+  "Pyroli",
+  "Mentali",
+  "Noctali",
+  "Gengar",
+  "Alakazam",
+  "Dracolosse",
+  "Leviator",
+  "Lucario",
+  "Amphinobi",
+  "Rayquaza",
+  "Arceus",
+  "Salameche",
+  "Carapuce",
+  "Bulbizarre",
+  "Ronflex",
+  "Lugia",
+  "Ho-Oh",
+  "Suicune",
+  "Entei",
+  "Raikou",
+  "Carchacrok",
+  "Gardevoir",
+  "Ectoplasma",
 ];
 
 export default function WhosThatPokemonPage() {
@@ -31,17 +65,20 @@ export default function WhosThatPokemonPage() {
   const [maxRounds] = useState(10);
   const [timeLeft, setTimeLeft] = useState(15);
   const [gameOver, setGameOver] = useState(false);
-  const [gameState, setGameState] = useState<"playing" | "round_end">("playing");
+  const [gameState, setGameState] = useState<"playing" | "round_end">(
+    "playing",
+  );
 
   // Generate 4 options: correct name + 3 distractors
   const options = useMemo(() => {
     if (!card) return [];
     const correctName = card.name || "Pokémon";
-    const distractors = POPULAR_POKEMON
-      .filter((name) => name.toLowerCase() !== correctName.toLowerCase())
+    const distractors = POPULAR_POKEMON.filter(
+      (name) => name.toLowerCase() !== correctName.toLowerCase(),
+    )
       .sort(() => 0.5 - Math.random())
       .slice(0, 3);
-    
+
     return [correctName, ...distractors].sort(() => 0.5 - Math.random());
   }, [card]);
 
@@ -60,8 +97,8 @@ export default function WhosThatPokemonPage() {
         setCard({
           id: "fallback",
           name: "Dracaufeu",
-          image: "https://images.pokemontcg.io/cel25/4_hires.png",
-          set: { name: "Célébrations" }
+          // Pas d'image -> getCardImage renvoie le placeholder local.
+          set: { name: "Célébrations" },
         });
       }
     } catch (error) {
@@ -121,17 +158,17 @@ export default function WhosThatPokemonPage() {
   const cardImg = card ? getCardImage(card) : "";
 
   return (
-    <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6 flex flex-col items-center">
+    <PageWrapper
+      maxWidth="xl"
+      gradient="secondary"
+      className="space-y-6 flex flex-col items-center"
+    >
       <div className="w-full max-w-2xl space-y-6">
         {/* Header */}
         <div className="tcg-surface p-4 flex items-center justify-between bg-card/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <Link href="/pokemon/mini-games">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 w-8 p-0"
-              >
+              <Button size="sm" variant="outline" className="h-8 w-8 p-0">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
@@ -140,7 +177,9 @@ export default function WhosThatPokemonPage() {
             </div>
             <div>
               <H1 className="text-lg! sm:text-xl!">Qui est ce Pokémon ?</H1>
-              <p className="text-[10px] text-muted-foreground">Estime la silhouette cachée de la carte</p>
+              <p className="text-[10px] text-muted-foreground">
+                Estime la silhouette cachée de la carte
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm font-semibold">
@@ -161,16 +200,29 @@ export default function WhosThatPokemonPage() {
           >
             <Award className="h-12 w-12 mx-auto text-primary" />
             <div className="space-y-2">
-              <h2 className="text-2xl font-black uppercase tracking-tight">Partie Terminée !</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tight">
+                Partie Terminée !
+              </h2>
               <p className="text-muted-foreground text-sm">
-                Ton score final est de <span className="text-foreground font-black text-lg">{score}</span> sur <span className="text-foreground font-black text-lg">{maxRounds}</span>.
+                Ton score final est de{" "}
+                <span className="text-foreground font-black text-lg">
+                  {score}
+                </span>{" "}
+                sur{" "}
+                <span className="text-foreground font-black text-lg">
+                  {maxRounds}
+                </span>
+                .
               </p>
             </div>
             <div className="flex justify-center gap-3 pt-2">
               <Button asChild variant="outline">
                 <Link href="/pokemon/mini-games">Retour au Hub</Link>
               </Button>
-              <Button onClick={handleRestart} className="bg-gradient-to-r from-primary to-secondary text-white font-semibold">
+              <Button
+                onClick={handleRestart}
+                className="bg-gradient-to-r from-primary to-secondary text-white font-semibold"
+              >
                 <RotateCcw className="h-4 w-4 mr-2" /> Rejouer
               </Button>
             </div>
@@ -181,7 +233,9 @@ export default function WhosThatPokemonPage() {
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <Loader2 className="animate-spin h-8 w-8 text-primary" />
-                  <p className="text-xs font-semibold text-muted-foreground">Création de la silhouette...</p>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Création de la silhouette...
+                  </p>
                 </div>
               ) : (
                 <div className="flex flex-col md:flex-row items-center justify-center gap-8">
@@ -198,11 +252,21 @@ export default function WhosThatPokemonPage() {
                       <div className="relative w-[85%] h-[85%]">
                         <Image
                           src={cardImg}
-                          alt="Silhouette"
+                          alt="Carte mystère"
                           fill
                           className={`object-contain transition-all duration-700 ${
-                            revealed ? "filter-none scale-100" : "brightness-0 contrast-200 scale-95 select-none pointer-events-none"
+                            revealed
+                              ? "scale-100"
+                              : "scale-95 select-none pointer-events-none"
                           }`}
+                          style={{
+                            // Une carte est un rectangle opaque : impossible d'en faire une
+                            // vraie silhouette détourée. On masque par un flou obscurci que
+                            // l'on lève à la révélation.
+                            filter: revealed
+                              ? "none"
+                              : "blur(13px) brightness(0.5) saturate(1.15)",
+                          }}
                         />
                       </div>
                     </div>
@@ -238,7 +302,8 @@ export default function WhosThatPokemonPage() {
                           <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-500 p-4 font-bold text-sm">
                             Temps écoulé !
                           </div>
-                        ) : selectedOption.toLowerCase() === card?.name?.toLowerCase() ? (
+                        ) : selectedOption.toLowerCase() ===
+                          card?.name?.toLowerCase() ? (
                           <div className="rounded-lg border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 p-4 font-bold text-sm">
                             Bien joué ! C'est bien {card?.name} !
                           </div>
@@ -249,14 +314,19 @@ export default function WhosThatPokemonPage() {
                         )}
 
                         <div className="text-[11px] font-bold text-muted-foreground">
-                          Extension de la carte : <span className="text-foreground">{card?.set?.name || "Inconnue"}</span>
+                          Extension de la carte :{" "}
+                          <span className="text-foreground">
+                            {card?.set?.name || "Inconnue"}
+                          </span>
                         </div>
 
                         <Button
                           onClick={handleNextRound}
                           className="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold h-11"
                         >
-                          {round < maxRounds ? "Manche suivante" : "Voir les résultats"}
+                          {round < maxRounds
+                            ? "Manche suivante"
+                            : "Voir les résultats"}
                         </Button>
                       </motion.div>
                     )}

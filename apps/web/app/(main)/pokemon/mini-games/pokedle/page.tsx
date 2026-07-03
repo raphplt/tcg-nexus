@@ -1,19 +1,27 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  HelpCircle,
+  Layers,
+  Loader2,
+  RotateCcw,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Layers, RotateCcw, Search, Sparkles, HelpCircle, Loader2 } from "lucide-react";
+import Link from "next/link";
+import React, { useCallback, useEffect, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H3 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import { getCardImage } from "@/utils/images";
 import type { PokemonCardType } from "@/types/cardPokemon";
+import { getCardImage } from "@/utils/images";
 
 interface GuessRow {
   card: PokemonCardType;
@@ -38,7 +46,9 @@ export default function PokedlePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PokemonCardType[]>([]);
   const [guesses, setGuesses] = useState<GuessRow[]>([]);
-  const [gameState, setGameState] = useState<"playing" | "won" | "lost">("playing");
+  const [gameState, setGameState] = useState<"playing" | "won" | "lost">(
+    "playing",
+  );
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const maxGuesses = 6;
@@ -54,7 +64,10 @@ export default function PokedlePage() {
     try {
       let card = await pokemonCardService.getRandom();
       let attempts = 0;
-      while (attempts < 5 && (!card || !card.dexId || card.dexId.length === 0)) {
+      while (
+        attempts < 5 &&
+        (!card || !card.dexId || card.dexId.length === 0)
+      ) {
         card = await pokemonCardService.getRandom();
         attempts++;
       }
@@ -70,8 +83,8 @@ export default function PokedlePage() {
           types: ["Lightning"],
           stage: "Basic",
           rarity: "Common",
-          image: "https://images.pokemontcg.io/cel25/4_hires.png",
-          set: { name: "Célébrations" }
+          // Pas d'image -> getCardImage renvoie le placeholder local.
+          set: { name: "Célébrations" },
         } as any);
       }
     } catch (e) {
@@ -141,11 +154,15 @@ export default function PokedlePage() {
     const tRarity = targetCard.rarity || "Common";
     const gRarity = guessCard.rarity || "Common";
 
-    const nameMatch = guessCard.name?.toLowerCase() === targetCard.name?.toLowerCase();
+    const nameMatch =
+      guessCard.name?.toLowerCase() === targetCard.name?.toLowerCase();
 
     let typeCheck: "correct" | "partial" | "incorrect" = "incorrect";
     const commonTypes = gTypes.filter((t) => tTypes.includes(t));
-    if (commonTypes.length === tTypes.length && gTypes.length === tTypes.length) {
+    if (
+      commonTypes.length === tTypes.length &&
+      gTypes.length === tTypes.length
+    ) {
       typeCheck = "correct";
     } else if (commonTypes.length > 0) {
       typeCheck = "partial";
@@ -208,10 +225,15 @@ export default function PokedlePage() {
           </div>
           <div>
             <H1 className="text-lg! sm:text-xl!">Pokédle</H1>
-            <p className="text-[10px] text-muted-foreground">Devine le Pokémon mystère à partir des attributs</p>
+            <p className="text-[10px] text-muted-foreground">
+              Devine le Pokémon mystère à partir des attributs
+            </p>
           </div>
         </div>
-        <Badge variant="outline" className="border-border px-3 py-1 text-xs font-semibold">
+        <Badge
+          variant="outline"
+          className="border-border px-3 py-1 text-xs font-semibold"
+        >
           Essai {guesses.length}/{maxGuesses}
         </Badge>
       </div>
@@ -219,7 +241,9 @@ export default function PokedlePage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin h-8 w-8 text-primary" />
-          <p className="text-xs font-semibold text-muted-foreground">Choix du Pokémon mystère...</p>
+          <p className="text-xs font-semibold text-muted-foreground">
+            Choix du Pokémon mystère...
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -236,14 +260,20 @@ export default function PokedlePage() {
                       fill
                       className="object-contain transition-all duration-500"
                       style={{
-                        filter: gameState === "playing" ? `blur(${blurAmount}px)` : "none",
+                        filter:
+                          gameState === "playing"
+                            ? `blur(${blurAmount}px)`
+                            : "none",
                       }}
                     />
                   </div>
                 )}
               </CardContent>
             </Card>
-            <Badge variant="secondary" className="border border-border font-bold">
+            <Badge
+              variant="secondary"
+              className="border border-border font-bold"
+            >
               Flou : {blurAmount > 0 ? `${blurAmount}px` : "Net !"}
             </Badge>
           </div>
@@ -253,11 +283,20 @@ export default function PokedlePage() {
             {/* Game states */}
             {gameState === "won" && (
               <div className="rounded-lg border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 p-6 text-center space-y-3">
-                <h3 className="text-lg font-black uppercase">Félicitations !</h3>
+                <h3 className="text-lg font-black uppercase">
+                  Félicitations !
+                </h3>
                 <p className="text-sm font-bold">
-                  Tu as trouvé <span className="underline font-black">{targetCard?.name}</span> en {guesses.length} essai{guesses.length > 1 ? "s" : ""} !
+                  Tu as trouvé{" "}
+                  <span className="underline font-black">
+                    {targetCard?.name}
+                  </span>{" "}
+                  en {guesses.length} essai{guesses.length > 1 ? "s" : ""} !
                 </p>
-                <Button onClick={initGame} className="bg-gradient-to-r from-primary to-secondary text-white font-semibold">
+                <Button
+                  onClick={initGame}
+                  className="bg-gradient-to-r from-primary to-secondary text-white font-semibold"
+                >
                   <RotateCcw className="h-4 w-4 mr-2" /> Nouvelle partie
                 </Button>
               </div>
@@ -269,7 +308,10 @@ export default function PokedlePage() {
                 <p className="text-sm font-bold">
                   Le Pokémon mystère était {targetCard?.name}.
                 </p>
-                <Button onClick={initGame} className="bg-gradient-to-r from-primary to-secondary text-white font-semibold">
+                <Button
+                  onClick={initGame}
+                  className="bg-gradient-to-r from-primary to-secondary text-white font-semibold"
+                >
                   <RotateCcw className="h-4 w-4 mr-2" /> Réessayer
                 </Button>
               </div>
@@ -302,10 +344,15 @@ export default function PokedlePage() {
                         className="p-3 hover:bg-accent/40 cursor-pointer flex items-center justify-between font-bold text-sm"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground">#{res.dexId?.[0] || "??"}</span>
+                          <span className="text-xs text-muted-foreground">
+                            #{res.dexId?.[0] || "??"}
+                          </span>
                           <span>{res.name}</span>
                         </div>
-                        <Badge variant="outline" className="text-[10px] border border-border/50 bg-background/50">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] border border-border/50 bg-background/50"
+                        >
                           {res.set?.name || "Set"}
                         </Badge>
                       </div>
@@ -318,7 +365,9 @@ export default function PokedlePage() {
             {/* Guess Table */}
             {guesses.length > 0 && (
               <div className="space-y-3">
-                <h3 className="font-heading text-sm font-bold uppercase text-muted-foreground tracking-wider">Essais précédents</h3>
+                <h3 className="font-heading text-sm font-bold uppercase text-muted-foreground tracking-wider">
+                  Essais précédents
+                </h3>
                 <div className="overflow-x-auto border border-border rounded-xl shadow-sm bg-card">
                   <table className="w-full text-center border-collapse">
                     <thead>
@@ -333,55 +382,80 @@ export default function PokedlePage() {
                     </thead>
                     <tbody className="divide-y divide-border/40 font-semibold text-xs">
                       {guesses.map((g, idx) => (
-                        <tr key={idx} className="hover:bg-muted/10 transition-colors">
+                        <tr
+                          key={idx}
+                          className="hover:bg-muted/10 transition-colors"
+                        >
                           {/* Name */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.name === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.name === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
                             {g.card.name}
                           </td>
                           {/* Types */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.types === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : g.checks.types === "partial"
-                                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/10"
-                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.types === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : g.checks.types === "partial"
+                                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/10"
+                                  : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
                             {g.typesVal}
                           </td>
                           {/* Generation */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.generation === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
-                            Gen {g.genVal} {g.checks.generation === "higher" ? "⬆️" : g.checks.generation === "lower" ? "⬇️" : ""}
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.generation === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
+                            Gen {g.genVal}{" "}
+                            {g.checks.generation === "higher"
+                              ? "⬆️"
+                              : g.checks.generation === "lower"
+                                ? "⬇️"
+                                : ""}
                           </td>
                           {/* HP */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.hp === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
-                            {g.hpVal} {g.checks.hp === "higher" ? "⬆️" : g.checks.hp === "lower" ? "⬇️" : ""}
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.hp === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
+                            {g.hpVal}{" "}
+                            {g.checks.hp === "higher"
+                              ? "⬆️"
+                              : g.checks.hp === "lower"
+                                ? "⬇️"
+                                : ""}
                           </td>
                           {/* Stage */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.stage === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.stage === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
                             {g.stageVal}
                           </td>
                           {/* Rarity */}
-                          <td className={`p-3 font-bold ${
-                            g.checks.rarity === "correct"
-                              ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
-                              : "bg-red-500/5 text-red-500/80 border border-red-500/5"
-                          }`}>
+                          <td
+                            className={`p-3 font-bold ${
+                              g.checks.rarity === "correct"
+                                ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/10"
+                                : "bg-red-500/5 text-red-500/80 border border-red-500/5"
+                            }`}
+                          >
                             {g.rarityVal}
                           </td>
                         </tr>
