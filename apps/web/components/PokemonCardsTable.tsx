@@ -90,7 +90,7 @@ const POKEMON_RARITIES = [
 
 export function PokemonCardsTable({
   initialPage = 1,
-  itemsPerPage = 10,
+  itemsPerPage = 12,
 }: PokemonCardsTableProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
@@ -768,71 +768,50 @@ export function PokemonCardsTable({
                 <Link
                   href={`/pokemon/${card.id}`}
                   key={card.id}
-                  className="group flex flex-col h-full bg-muted/20 border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-muted/40 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg"
+                  className="group flex flex-col h-full bg-card/40 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-card/70 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-primary/5"
                 >
-                  <div className="relative aspect-3/4 w-full overflow-hidden rounded-lg bg-black/5 shadow-inner mb-3">
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-muted/40 shadow-inner mb-3">
                     <SmartImage
                       src={getCardImage(card, "low")}
                       fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={card.name || "Pokemon Card"}
-                      className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                      className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     />
+                    {/* Diagonal light sweep/holographic shimmer on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out pointer-events-none" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-1.5">
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
                       <h4 className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
                         {card.name}
                       </h4>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                      <span className="truncate">{card.set?.name}</span>
-                      <span>•</span>
-                      <span className="font-semibold text-foreground whitespace-nowrap">
-                        #{card.localId}
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                        {card.set && getSetSymbol(card.set) && (
+                          <img
+                            src={getSetSymbol(card.set)}
+                            alt=""
+                            className="w-3.5 h-3.5 object-contain flex-shrink-0"
+                            loading="lazy"
+                          />
+                        )}
+                        <span className="truncate flex-grow" title={card.set?.name}>{card.set?.name}</span>
+                        <span className="font-semibold text-foreground whitespace-nowrap">
+                          #{card.localId}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Types & Rarity */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border/20">
-                      <div className="flex gap-0.5">
-                        {card.types?.map((t) => (
-                          <Badge
-                            key={t}
-                            className={`text-[9px] px-1 py-0 font-bold uppercase rounded-sm border-none ${
-                              t === "Fire"
-                                ? "bg-orange-500 text-white"
-                                : t === "Water"
-                                  ? "bg-blue-500 text-white"
-                                  : t === "Grass"
-                                    ? "bg-green-500 text-white"
-                                    : t === "Lightning"
-                                      ? "bg-yellow-500 text-black"
-                                      : t === "Psychic"
-                                        ? "bg-purple-500 text-white"
-                                        : t === "Fighting"
-                                          ? "bg-amber-700 text-white"
-                                          : t === "Darkness"
-                                            ? "bg-gray-800 text-white border border-gray-700"
-                                            : t === "Metal"
-                                              ? "bg-slate-400 text-black"
-                                              : t === "Dragon"
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-400 text-black"
-                            }`}
-                          >
-                            {t}
-                          </Badge>
-                        ))}
-                      </div>
-                      {card.rarity && (
-                        <span
-                          className="text-[9px] font-medium text-muted-foreground truncate max-w-[80px]"
-                          title={card.rarity}
+                    {/* Rarity */}
+                    {card.rarity && (
+                      <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between">
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] font-medium text-muted-foreground bg-muted/30 border-border/40 hover:bg-muted/50 transition-colors"
                         >
                           {card.rarity}
-                        </span>
-                      )}
-                    </div>
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -848,7 +827,6 @@ export function PokemonCardsTable({
                     <TableHead>Set</TableHead>
                     <TableHead>Numéro</TableHead>
                     <TableHead>Rareté</TableHead>
-                    <TableHead>Type</TableHead>
                     <TableHead className="text-right">HP</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -894,11 +872,6 @@ export function PokemonCardsTable({
                         ) : (
                           "N/A"
                         )}
-                      </TableCell>
-                      <TableCell className="py-2">
-                        <div className="flex gap-1">
-                          {card.types ? card.types.join(", ") : "N/A"}
-                        </div>
                       </TableCell>
                       <TableCell className="text-right font-extrabold text-red-500 py-2">
                         {card.hp ? `${card.hp} HP` : "N/A"}

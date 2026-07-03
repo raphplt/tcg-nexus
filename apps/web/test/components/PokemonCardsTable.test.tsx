@@ -58,6 +58,13 @@ const mockSearch = vi.mocked(pokemonCardService.search);
 
 describe("PokemonCardsTable", () => {
   beforeEach(() => {
+    class MockIntersectionObserver {
+      observe = vi.fn();
+      disconnect = vi.fn();
+      unobserve = vi.fn();
+    }
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+
     vi.clearAllMocks();
     mockGetPaginated.mockResolvedValue(createPaginated());
     mockSearch.mockResolvedValue([]);
