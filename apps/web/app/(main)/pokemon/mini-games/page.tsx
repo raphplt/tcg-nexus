@@ -1,24 +1,23 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import {
+  ArrowRight,
+  Gamepad,
+  Gamepad2,
   Heart,
   HelpCircle,
+  Layers,
   Package,
   Sparkles,
-  Gamepad2,
-  Gamepad,
   Swords,
-  Layers,
-  ArrowRight,
 } from "lucide-react";
+import Link from "next/link";
+import React from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
-import { H1, H2 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface GameInfo {
   id: string;
@@ -34,25 +33,36 @@ const MINI_GAMES: GameInfo[] = [
   {
     id: "smash_or_pass",
     title: "Smash or Pass",
-    description: "Parcours des cartes aléatoires et swipe à droite pour les ajouter directement à tes favoris et ta wishlist.",
+    description:
+      "Parcours des cartes aléatoires et swipe à droite pour les ajouter directement à tes favoris et ta wishlist.",
     href: "/pokemon/mini-games/smash-or-pass",
     icon: Heart,
     modes: ["Solo"],
-    features: ["Wishlist directe", "Filtres par série & bloc", "Stats de session"],
+    features: [
+      "Wishlist directe",
+      "Filtres par série & bloc",
+      "Stats de session",
+    ],
   },
   {
     id: "case_opening",
     title: "Duel Case Opening",
-    description: "Affronte tes amis ou un ordinateur dans un duel de tirage de boosters Pokémon en ligne ou en local. Que le plus chanceux gagne !",
+    description:
+      "Affronte tes amis ou un ordinateur dans un duel de tirage de boosters Pokémon en ligne ou en local. Que le plus chanceux gagne !",
     href: "/pokemon/mini-games/case-opening",
     icon: Package,
     modes: ["Solo", "Local", "En ligne"],
-    features: ["Roulette style CS:GO", "Matchmaking temps réel", "Prix en direct"],
+    features: [
+      "Roulette style CS:GO",
+      "Matchmaking temps réel",
+      "Prix en direct",
+    ],
   },
   {
     id: "juste_prix",
     title: "Le Juste Prix",
-    description: "Devine le prix exact de cartes rares ou de produits scellés Pokémon. Le joueur le plus précis ou le plus rapide remporte la mise.",
+    description:
+      "Devine le prix exact de cartes rares ou de produits scellés Pokémon. Le joueur le plus précis ou le plus rapide remporte la mise.",
     href: "/pokemon/mini-games/juste-prix",
     icon: Sparkles,
     modes: ["Solo", "Local", "En ligne"],
@@ -61,16 +71,22 @@ const MINI_GAMES: GameInfo[] = [
   {
     id: "pokedle",
     title: "Pokédle",
-    description: "Devine le Pokémon mystère de la session en utilisant des indices Wordle (types, génération, HP, évolution) et une carte qui se défloute.",
+    description:
+      "Devine le Pokémon mystère de la session en utilisant des indices Wordle (types, génération, HP, évolution) et une carte qui se défloute.",
     href: "/pokemon/mini-games/pokedle",
     icon: Layers,
     modes: ["Solo"],
-    features: ["Système d'indices", "Recherche autocomplétée", "Défloutage d'image"],
+    features: [
+      "Système d'indices",
+      "Recherche autocomplétée",
+      "Défloutage d'image",
+    ],
   },
   {
     id: "whos_that_pokemon",
     title: "Qui est ce Pokémon ?",
-    description: "Retrouve la nostalgie du dessin animé ! Identifie le Pokémon caché derrière la silhouette noire de l'illustration avant la fin du chronomètre.",
+    description:
+      "Retrouve la nostalgie du dessin animé ! Identifie le Pokémon caché derrière la silhouette noire de l'illustration avant la fin du chronomètre.",
     href: "/pokemon/mini-games/whos-that-pokemon",
     icon: HelpCircle,
     modes: ["Solo"],
@@ -110,7 +126,9 @@ export default function MiniGamesHubPage() {
                 Pokémon Mini-Jeux
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-                Défie la chance, teste tes connaissances et affronte la communauté en ligne ou tes amis sur le même écran grâce à nos 5 modes de jeux inédits.
+                Défie la chance, teste tes connaissances et affronte la
+                communauté en ligne ou tes amis sur le même écran grâce à nos 5
+                modes de jeux inédits.
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-foreground">
@@ -125,7 +143,7 @@ export default function MiniGamesHubPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12"
       >
         {MINI_GAMES.map((game) => {
           const Icon = game.icon;
@@ -152,8 +170,12 @@ export default function MiniGamesHubPage() {
                                   : "bg-muted text-muted-foreground border border-border/50"
                             }`}
                           >
-                            {mode === "En ligne" && <Swords className="h-2 w-2 mr-1 inline" />}
-                            {mode === "Local" && <Gamepad className="h-2 w-2 mr-1 inline" />}
+                            {mode === "En ligne" && (
+                              <Swords className="h-2 w-2 mr-1 inline" />
+                            )}
+                            {mode === "Local" && (
+                              <Gamepad className="h-2 w-2 mr-1 inline" />
+                            )}
                             {mode}
                           </Badge>
                         ))}
@@ -173,7 +195,10 @@ export default function MiniGamesHubPage() {
                     {/* Bullet points */}
                     <ul className="space-y-1 pt-1">
                       {game.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                        <li
+                          key={idx}
+                          className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium"
+                        >
                           <span className="h-1.5 w-1.5 rounded-full bg-primary/45" />
                           {feature}
                         </li>

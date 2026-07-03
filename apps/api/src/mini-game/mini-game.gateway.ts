@@ -215,10 +215,13 @@ export class MiniGameGateway
 
       this.activeSessions.set(sessionId, session);
 
-      // Emit to both
+      // Emit to both. `selfId` = l'id du destinataire lui-même : le client
+      // n'a plus à deviner "qui suis-je" par élimination (fragile si
+      // opponent est momentanément null / à la reconnexion).
       this.server.to(opponent.socketId).emit("minigame_matched", {
         sessionId,
         gameType: data.gameType,
+        selfId: opponent.userId,
         opponentName: userName,
         opponentId: user.id,
         roundCount,
@@ -228,6 +231,7 @@ export class MiniGameGateway
       client.emit("minigame_matched", {
         sessionId,
         gameType: data.gameType,
+        selfId: user.id,
         opponentName: opponent.userName,
         opponentId: opponent.userId,
         roundCount,
