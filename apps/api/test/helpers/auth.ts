@@ -1,5 +1,10 @@
+import { INestApplication } from "@nestjs/common";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import type { Server } from "http";
 import request from "supertest";
+import { Repository } from "typeorm";
+import { UserRole } from "../../src/common/enums/user";
+import { User } from "../../src/user/entities/user.entity";
 
 export interface TestUserCredentials {
   email: string;
@@ -104,4 +109,37 @@ export function getCookieValue(
 
 export function authHeader(token: string): string {
   return `Bearer ${token}`;
+}
+
+export async function createAdminUser(
+  httpServer: Server,
+  app: INestApplication,
+  overrides: Partial<TestUserCredentials> = {},
+): Promise<TestUser> {
+  const user = await createUser(httpServer, overrides);
+  const userRepo = app.get<Repository<User>>(getRepositoryToken(User));
+  await userRepo.update(user.id, { role: UserRole.ADMIN });
+  return user;
+}
+
+export async function getPlayerId(
+  httpServer: Server,
+  accessToken: string,
+): Promise<number> {
+  const response = await request(httpServer)
+    .get("/users/me")
+    .set("Authorization", authHeader(accessToken));
+
+  if (response.status !== 200) {
+    throw new Error(
+      `getPlayerId failed: ${response.status} ${JSON.stringify(response.body)}`,
+    );
+  }
+
+  const playerId = response.body.player?.id;
+  if (playerId == null) {
+    throw new Error("Player profile missing for authenticated user");
+  }
+
+  return playerId;
 }
