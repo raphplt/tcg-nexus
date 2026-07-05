@@ -146,7 +146,13 @@ export function TournamentHeroBanner({
               disabled={(!registrationOpen || !user) && !tournament.isExternal}
               onClick={
                 tournament.isExternal
-                  ? () => window.open(tournament.externalRegistrationUrl || "", "_blank")
+                  ? () => {
+                      let url = tournament.externalRegistrationUrl || "";
+                      if (url && !/^https?:\/\//i.test(url)) {
+                        url = `https://${url}`;
+                      }
+                      window.open(url, "_blank");
+                    }
                   : onRegister
               }
             >
