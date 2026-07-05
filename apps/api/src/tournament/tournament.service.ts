@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, LessThan, Repository } from "typeorm";
+import { In, LessThan, MoreThanOrEqual, Repository } from "typeorm";
 import { UserRole } from "../common/enums/user";
 import { PaginationHelper } from "../helpers/pagination";
 import { UpdateMatchDto } from "../match/dto/update-match.dto";
@@ -468,7 +468,7 @@ export class TournamentService {
   async getUpcomingTournaments(limit: number = 10): Promise<Tournament[]> {
     return this.tournamentRepository.find({
       where: {
-        startDate: new Date(),
+        startDate: MoreThanOrEqual(new Date()),
         isPublic: true,
         status: In([
           TournamentStatus.REGISTRATION_OPEN,

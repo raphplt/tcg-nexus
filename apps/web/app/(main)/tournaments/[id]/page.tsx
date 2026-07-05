@@ -172,7 +172,11 @@ export default function TournamentDetailsPage() {
         />
 
         <div className="lg:hidden">
-          <MobileTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+          <MobileTabBar
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isExternal={tournament.isExternal}
+          />
         </div>
 
         <div className="flex gap-6">
@@ -185,6 +189,7 @@ export default function TournamentDetailsPage() {
                     onTabChange={setActiveTab}
                     participantCount={participantCount}
                     matchesCount={matchesCount}
+                    isExternal={tournament.isExternal}
                   />
                 </CardContent>
               </Card>

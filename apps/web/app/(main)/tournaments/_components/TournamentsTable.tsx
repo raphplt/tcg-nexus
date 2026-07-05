@@ -66,10 +66,18 @@ export function TournamentsTable({
 
   const { user } = useAuth();
 
-  const register = async (tournamentId: number) => {
+  const register = async (tournament: Tournament) => {
+    if (tournament.isExternal) {
+      let url = tournament.externalRegistrationUrl || "";
+      if (url && !/^https?:\/\//i.test(url)) {
+        url = `https://${url}`;
+      }
+      window.open(url, "_blank");
+      return;
+    }
     try {
       if (user) {
-        await tournamentService.register(tournamentId, user.id, "");
+        await tournamentService.register(tournament.id, user.id, "");
       } else {
         console.error("User non authentifié.");
       }
@@ -132,8 +140,15 @@ export function TournamentsTable({
               className="transition-all hover:scale-[1.01] hover:shadow-lg"
             >
               <TableCell className="font-semibold text-lg text-primary max-w-xs">
-                <div className="truncate" title={tournament.name}>
-                  {tournament.name}
+                <div className="flex items-center gap-2">
+                  <div className="truncate" title={tournament.name}>
+                    {tournament.name}
+                  </div>
+                  {tournament.isExternal && (
+                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 select-none">
+                      Externe
+                    </Badge>
+                  )}
                 </div>
               </TableCell>
               <TableCell>
@@ -187,11 +202,11 @@ export function TournamentsTable({
                   size="sm"
                   variant="secondary"
                   className="gap-1"
-                  disabled={!user}
-                  onClick={() => register(tournament.id)}
+                  disabled={!user && !tournament.isExternal}
+                  onClick={() => register(tournament)}
                 >
                   <UserPlus className="w-4 h-4" />
-                  S&apos;inscrire
+                  {tournament.isExternal ? "S'inscrire (Ext)" : "S'inscrire"}
                 </Button>
                 <Button
                   size="sm"

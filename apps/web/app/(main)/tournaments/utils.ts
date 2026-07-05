@@ -84,6 +84,12 @@ export const formSchema = z
     ageRestrictionMax: z.number().min(0).optional(),
     allowedFormats: z.array(z.string()).optional(),
     fillWithPlayers: z.boolean().optional(),
+    isExternal: z.boolean().optional(),
+    externalRegistrationUrl: z
+      .string()
+      .url("Veuillez saisir une URL valide")
+      .optional()
+      .or(z.literal("")),
   })
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
     message: "La date de fin doit être postérieure à la date de début",

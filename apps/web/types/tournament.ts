@@ -21,6 +21,8 @@ export type Tournament = {
   name: string;
   description?: string | null;
   location?: string | null;
+  isExternal?: boolean;
+  externalRegistrationUrl?: string | null;
   startDate: string;
   endDate: string;
   type: TournamentType | string;
@@ -193,6 +195,8 @@ export interface StateTransition {
 export interface CreateTournamentDto {
   name: string;
   description?: string;
+  isExternal?: boolean;
+  externalRegistrationUrl?: string;
   location?: string;
   startDate: Date;
   endDate: Date;

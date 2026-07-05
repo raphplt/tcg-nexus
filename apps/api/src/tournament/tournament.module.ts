@@ -26,6 +26,7 @@ import { TournamentOrchestrationService } from "./services/tournament-orchestrat
 import { TournamentStateService } from "./services/tournament-state.service";
 import { TournamentController } from "./tournament.controller";
 import { TournamentService } from "./tournament.service";
+import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { TournamentService } from "./tournament.service";
     TournamentOrganizerGuard,
     TournamentParticipantGuard,
     TournamentOwnerGuard,
+    ExternalTournamentSyncService,
   ],
   exports: [
     TournamentService,

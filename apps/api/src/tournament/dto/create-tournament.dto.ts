@@ -86,4 +86,12 @@ export class CreateTournamentDto {
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isExternal?: boolean;
+
+  @IsOptional()
+  @IsString()
+  externalRegistrationUrl?: string;
 }

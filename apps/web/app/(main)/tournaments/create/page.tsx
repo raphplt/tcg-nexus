@@ -98,6 +98,8 @@ export default function CreateTournamentPage() {
       currentRound: 0,
       totalRounds: 0,
       fillWithPlayers: false,
+      isExternal: false,
+      externalRegistrationUrl: "",
     },
   });
 
@@ -149,6 +151,8 @@ export default function CreateTournamentPage() {
         ageRestrictionMax: values.ageRestrictionMax,
         allowedFormats: values.allowedFormats,
         isPublic: values.isPublic,
+        isExternal: values.isExternal,
+        externalRegistrationUrl: values.isExternal ? values.externalRegistrationUrl : undefined,
         maxPlayers: shouldFillWithPlayers
           ? Math.max(values.maxPlayers || 8, 8)
           : values.maxPlayers,
@@ -398,6 +402,44 @@ export default function CreateTournamentPage() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="isExternal"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between col-span-2">
+                    <div className="space-y-0.5">
+                      <FormLabel>Tournoi externe</FormLabel>
+                      <FormDescription className="text-xs text-muted-foreground">
+                        Cochez si les inscriptions se font en dehors de la plateforme
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="shadow-none focus:ring-0"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {form.watch("isExternal") && (
+                <FormField
+                  control={form.control}
+                  name="externalRegistrationUrl"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Lien d'inscription externe</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/register" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <div className="grid grid-cols-2 gap-4 col-span-2">
                 <FormField

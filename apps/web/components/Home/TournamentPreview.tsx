@@ -3,6 +3,7 @@ import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 import { tournamentService } from "@/services/tournament.service";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -10,13 +11,13 @@ import { ArrowRight } from "lucide-react";
 
 const TournamentPreview = () => {
   const { data, isLoading, error } = useQuery({
-    queryKey: ["tournaments", "past"],
-    queryFn: () => tournamentService.getPastTournaments({ limit: 5 }),
+    queryKey: ["tournaments", "upcoming"],
+    queryFn: () => tournamentService.getUpcomingTournaments({ limit: 5 }),
   });
 
   return (
     <Card className="p-6">
-      <H2 className="mb-4">Derniers tournois</H2>
+      <H2 className="mb-4">Prochains tournois</H2>
       {isLoading && (
         <div className="flex items-center justify-center py-8 text-muted-foreground">
           Chargement...
@@ -39,7 +40,14 @@ const TournamentPreview = () => {
                 {tournament.name.charAt(0).toUpperCase() || "T"}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{tournament.name}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold truncate">{tournament.name}</div>
+                  {tournament.isExternal && (
+                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 select-none">
+                      Externe
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <ArrowRight className="w-4 h-4" />
@@ -47,7 +55,7 @@ const TournamentPreview = () => {
           ))
         ) : !isLoading && !error ? (
           <div className="text-muted-foreground text-center">
-            Aucun tournoi passés
+            Aucun tournoi à venir
           </div>
         ) : null}
       </div>

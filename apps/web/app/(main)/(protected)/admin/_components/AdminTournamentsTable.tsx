@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,8 @@ interface TournamentFormState {
   type: TournamentType | string;
   status: TournamentStatus;
   maxPlayers?: number;
+  isExternal: boolean;
+  externalRegistrationUrl: string;
 }
 
 const defaultForm: TournamentFormState = {
@@ -70,6 +73,8 @@ const defaultForm: TournamentFormState = {
   type: TournamentType.SINGLE_ELIMINATION,
   status: TournamentStatus.DRAFT,
   maxPlayers: undefined,
+  isExternal: false,
+  externalRegistrationUrl: "",
 };
 
 const statusLabels: Record<TournamentStatus, string> = {
@@ -130,6 +135,8 @@ export function AdminTournamentsTable() {
       type: tournament.type,
       status: (tournament.status as TournamentStatus) ?? TournamentStatus.DRAFT,
       maxPlayers: tournament.maxPlayers,
+      isExternal: tournament.isExternal ?? false,
+      externalRegistrationUrl: tournament.externalRegistrationUrl ?? "",
     });
     setOpenModal(true);
   };
@@ -151,6 +158,8 @@ export function AdminTournamentsTable() {
       type: form.type,
       maxPlayers: form.maxPlayers,
       isPublic: true,
+      isExternal: form.isExternal,
+      externalRegistrationUrl: form.isExternal ? form.externalRegistrationUrl : undefined,
     };
 
     try {
@@ -442,6 +451,39 @@ export function AdminTournamentsTable() {
                 }
               />
             </div>
+            <div className="grid gap-2 items-center flex-row justify-between col-span-1 md:col-span-2 border p-3 rounded-lg bg-muted/30">
+              <div className="space-y-0.5">
+                <Label htmlFor="isExternal" className="font-semibold">Tournoi externe</Label>
+                <p className="text-xs text-muted-foreground">Inscriptions hors de la plateforme</p>
+              </div>
+              <Switch
+                id="isExternal"
+                checked={form.isExternal}
+                onCheckedChange={(checked) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isExternal: checked,
+                  }))
+                }
+              />
+            </div>
+            {form.isExternal && (
+              <div className="grid gap-2 col-span-1 md:col-span-2">
+                <Label htmlFor="externalRegistrationUrl">Lien d'inscription externe</Label>
+                <Input
+                  id="externalRegistrationUrl"
+                  type="url"
+                  placeholder="https://example.com/register"
+                  value={form.externalRegistrationUrl}
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      externalRegistrationUrl: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpenModal(false)}>

@@ -111,6 +111,12 @@ export class Tournament {
   @Column({ default: true })
   isPublic: boolean;
 
+  @Column({ default: false })
+  isExternal: boolean;
+
+  @Column({ nullable: true })
+  externalRegistrationUrl?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

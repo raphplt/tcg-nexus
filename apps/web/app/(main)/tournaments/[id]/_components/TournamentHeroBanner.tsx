@@ -117,6 +117,11 @@ export function TournamentHeroBanner({
               tournament.type as keyof typeof tournamentTypeTranslation
             ] || tournament.type}
           </Badge>
+          {tournament.isExternal && (
+            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-medium">
+              Tournoi Externe
+            </Badge>
+          )}
           {tournament.isPublic === false ? (
             <Badge variant="outline" className="gap-1">
               <Lock className="size-3" /> Privé
@@ -138,12 +143,18 @@ export function TournamentHeroBanner({
           <div className="flex flex-wrap gap-3">
             <Button
               size="lg"
-              disabled={!registrationOpen || !user}
-              onClick={onRegister}
+              disabled={(!registrationOpen || !user) && !tournament.isExternal}
+              onClick={
+                tournament.isExternal
+                  ? () => window.open(tournament.externalRegistrationUrl || "", "_blank")
+                  : onRegister
+              }
             >
-              {registrationOpen
-                ? "S'inscrire au tournoi"
-                : "Inscriptions fermées"}
+              {tournament.isExternal
+                ? "S'inscrire (Externe)"
+                : registrationOpen
+                  ? "S'inscrire au tournoi"
+                  : "Inscriptions fermées"}
             </Button>
 
             {permissions.canViewAdmin && (

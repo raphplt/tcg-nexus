@@ -31,6 +31,7 @@ interface VerticalTabsProps {
   onTabChange: (tab: TabId) => void;
   participantCount?: number;
   matchesCount?: number;
+  isExternal?: boolean;
 }
 
 export function VerticalTabs({
@@ -38,6 +39,7 @@ export function VerticalTabs({
   onTabChange,
   participantCount = 0,
   matchesCount = 0,
+  isExternal = false,
 }: VerticalTabsProps) {
   const tabs: Tab[] = [
     {
@@ -45,23 +47,27 @@ export function VerticalTabs({
       label: "Aperçu",
       icon: <LayoutDashboard className="size-5" />,
     },
-    {
-      id: "participants",
-      label: "Participants",
-      icon: <Users className="size-5" />,
-      badge: participantCount,
-    },
-    {
-      id: "matches",
-      label: "Matches",
-      icon: <Swords className="size-5" />,
-      badge: matchesCount,
-    },
-    {
-      id: "rankings",
-      label: "Classement",
-      icon: <Trophy className="size-5" />,
-    },
+    ...(!isExternal
+      ? [
+          {
+            id: "participants" as TabId,
+            label: "Participants",
+            icon: <Users className="size-5" />,
+            badge: participantCount,
+          },
+          {
+            id: "matches" as TabId,
+            label: "Matches",
+            icon: <Swords className="size-5" />,
+            badge: matchesCount,
+          },
+          {
+            id: "rankings" as TabId,
+            label: "Classement",
+            icon: <Trophy className="size-5" />,
+          },
+        ]
+      : []),
     {
       id: "rules",
       label: "Règles",
@@ -119,9 +125,11 @@ export function VerticalTabs({
 export function MobileTabBar({
   activeTab,
   onTabChange,
+  isExternal = false,
 }: {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  isExternal?: boolean;
 }) {
   const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
     {
@@ -129,17 +137,21 @@ export function MobileTabBar({
       label: "Aperçu",
       icon: <LayoutDashboard className="size-4" />,
     },
-    {
-      id: "participants",
-      label: "Joueurs",
-      icon: <Users className="size-4" />,
-    },
-    { id: "matches", label: "Matches", icon: <Swords className="size-4" /> },
-    {
-      id: "rankings",
-      label: "Classement",
-      icon: <Trophy className="size-4" />,
-    },
+    ...(!isExternal
+      ? [
+          {
+            id: "participants" as TabId,
+            label: "Joueurs",
+            icon: <Users className="size-4" />,
+          },
+          { id: "matches" as TabId, label: "Matches", icon: <Swords className="size-4" /> },
+          {
+            id: "rankings" as TabId,
+            label: "Classement",
+            icon: <Trophy className="size-4" />,
+          },
+        ]
+      : []),
     { id: "rules", label: "Règles", icon: <ScrollText className="size-4" /> },
     {
       id: "organizers",
