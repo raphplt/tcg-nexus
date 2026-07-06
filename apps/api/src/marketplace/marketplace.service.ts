@@ -88,7 +88,7 @@ export class MarketplaceService {
 
     // 2. Load cart with fresh listing data
     const cart = await this.userCartService.findCartByUserId(user.id);
-    if (!cart || cart.cartItems.length === 0) {
+    if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
       throw new BadRequestException("Cart is empty");
     }
 

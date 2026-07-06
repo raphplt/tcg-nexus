@@ -10,14 +10,8 @@ import { User } from "../../src/user/entities/user.entity";
 import { Repository } from "typeorm";
 import { TestUser } from "./auth";
 
-export async function seedListingForSeller(
-  app: INestApplication,
-  seller: TestUser,
-  overrides: Partial<Listing> = {},
-): Promise<number> {
+export async function ensureCard(app: INestApplication): Promise<Card> {
   const cardRepo = app.get<Repository<Card>>(getRepositoryToken(Card));
-  const listingRepo = app.get<Repository<Listing>>(getRepositoryToken(Listing));
-
   let card = await cardRepo.findOne({ where: {} });
   if (!card) {
     card = await cardRepo.save(
@@ -27,6 +21,17 @@ export async function seedListingForSeller(
       }),
     );
   }
+  return card;
+}
+
+export async function seedListingForSeller(
+  app: INestApplication,
+  seller: TestUser,
+  overrides: Partial<Listing> = {},
+): Promise<number> {
+  const listingRepo = app.get<Repository<Listing>>(getRepositoryToken(Listing));
+
+  const card = await ensureCard(app);
 
   const listing = await listingRepo.save(
     listingRepo.create({

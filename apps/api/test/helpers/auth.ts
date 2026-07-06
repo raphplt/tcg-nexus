@@ -43,13 +43,22 @@ export async function createUser(
     lastName,
   });
 
-  if (response.status !== 201 && response.status !== 200) {
+  if (
+    response.status !== 201 &&
+    response.status !== 200 &&
+    !response.body?.user
+  ) {
     throw new Error(
       `createUser failed: ${response.status} ${JSON.stringify(response.body)}`,
     );
   }
 
   const body = response.body;
+  if (!body?.user) {
+    throw new Error(
+      `createUser: unexpected response (status ${response.status}): ${JSON.stringify(body)}`,
+    );
+  }
   const setCookies = (response.headers["set-cookie"] ??
     []) as unknown as string[];
 
