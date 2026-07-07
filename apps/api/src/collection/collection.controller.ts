@@ -119,6 +119,19 @@ export class CollectionController {
     return this.collectionService.getSetRarities(id);
   }
 
+  @Get("my/collections")
+  @ApiOperation({
+    summary: "Récupérer les collections de l'utilisateur connecté",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Collections de l'utilisateur",
+    type: [Collection],
+  })
+  async getMyCollections(@CurrentUser() user: User): Promise<Collection[]> {
+    return this.collectionService.findByUserId(user.id.toString());
+  }
+
   @Get(":id")
   @Public()
   @ApiOperation({ summary: "Récupérer une collection par son ID" })
@@ -233,18 +246,5 @@ export class CollectionController {
   ): Promise<{ message: string }> {
     await this.collectionService.delete(id, user.id);
     return { message: "Collection supprimée avec succès" };
-  }
-
-  @Get("my/collections")
-  @ApiOperation({
-    summary: "Récupérer les collections de l'utilisateur connecté",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Collections de l'utilisateur",
-    type: [Collection],
-  })
-  async getMyCollections(@CurrentUser() user: User): Promise<Collection[]> {
-    return this.collectionService.findByUserId(user.id.toString());
   }
 }

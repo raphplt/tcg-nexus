@@ -1,115 +1,118 @@
-import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
-import request from "supertest";
-import { AppModule } from "./../src/app.module";
-import { CreateTournamentDto } from "../src/tournament/dto/create-tournament.dto";
-import { TournamentType } from "../src/tournament/entities/tournament.entity";
 import type { Server } from "http";
+import request from "supertest";
+import { CreateTournamentDto } from "../src/tournament/dto/create-tournament.dto";
+import {
+  TournamentStatus,
+  TournamentType,
+} from "../src/tournament/entities/tournament.entity";
+import {
+  createAdminUser,
+  createUser,
+  getPlayerId,
+  TestUser,
+} from "./helpers/auth";
+import { createE2eApp } from "./helpers/app";
+
+jest.setTimeout(60000);
 
 describe("TournamentController (e2e)", () => {
   let app: INestApplication;
   let httpServer: Server;
-  let organizerToken: string;
-  let playerToken: string;
-  let tournamentId: number;
+  let organizer: TestUser;
+  let player: TestUser;
   let playerId: number;
+  let tournamentId: number;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    ({ app } = await createE2eApp());
     httpServer = app.getHttpServer() as Server;
 
-    // Create Organizer
-    const organizerEmail = `organizer_${Date.now()}@test.com`;
-    await request(httpServer)
-      .post("/auth/register")
-      .send({
-        email: organizerEmail,
-        password: "Password123!",
-        firstName: "Organizer",
-        lastName: "Test",
-      })
-      .expect(201);
-
-    const organizerLogin = await request(httpServer)
-      .post("/auth/login")
-      .send({
-        email: organizerEmail,
-        password: "Password123!",
-      })
-      .expect(200);
-
-    organizerToken = organizerLogin.body.access_token;
-
-    // Create Player
-    const playerEmail = `player_${Date.now()}@test.com`;
-    await request(httpServer)
-      .post("/auth/register")
-      .send({
-        email: playerEmail,
-        password: "Password123!",
-        firstName: "Player",
-        lastName: "Test",
-      })
-      .expect(201);
-
-    const playerLogin = await request(httpServer)
-      .post("/auth/login")
-      .send({
-        email: playerEmail,
-        password: "Password123!",
-      })
-      .expect(200);
-
-    playerToken = playerLogin.body.access_token;
-    playerId = playerLogin.body.user.id; // Assuming login returns user object
-  });
+    organizer = await createAdminUser(httpServer, app, {
+      firstName: "Organizer",
+      lastName: "Admin",
+    });
+    player = await createUser(httpServer, {
+      firstName: "Player",
+      lastName: "Test",
+    });
+    playerId = await getPlayerId(httpServer, player.accessToken);
+  }, 60000);
 
   afterAll(async () => {
     await app.close();
   });
 
-  it("/tournaments (POST) - Create Tournament", async () => {
+  it("POST /tournaments creates a tournament for an admin", async () => {
+    const startDate = new Date(Date.now() + 86_400_000);
+    const endDate = new Date(Date.now() + 172_800_000);
+    const registrationDeadline = new Date(Date.now() + 43_200_000);
+
     const dto: CreateTournamentDto = {
       name: "E2E Tournament",
-      startDate: new Date(Date.now() + 86400000), // Tomorrow
-      endDate: new Date(Date.now() + 172800000), // Day after tomorrow
+      startDate,
+      endDate,
+      registrationDeadline,
       type: TournamentType.SINGLE_ELIMINATION,
       minPlayers: 2,
       maxPlayers: 8,
+      isPublic: true,
     };
 
     const response = await request(httpServer)
       .post("/tournaments")
-      .set("Authorization", `Bearer ${organizerToken}`)
-      .send(dto)
-      .expect(201);
+      .set("Authorization", `Bearer ${organizer.accessToken}`)
+      .send(dto);
 
-    tournamentId = response.body.id;
+    expect(response.status).toBe(201);
+    expect(response.body.id).toEqual(expect.any(Number));
     expect(response.body.name).toBe(dto.name);
+    expect(response.body.status).toBe(TournamentStatus.DRAFT);
+    tournamentId = response.body.id;
   });
 
-  it("/tournaments/:id/register (POST) - Register Player", async () => {
-    await request(httpServer)
-      .post(`/tournaments/${tournamentId}/register`)
-      .set("Authorization", `Bearer ${playerToken}`)
-      .send({ playerId })
-      .expect(201);
-  });
-
-  it("/tournaments/:id (GET) - Verify Registration", async () => {
+  it("PATCH /tournaments/:id/status opens registration", async () => {
     const response = await request(httpServer)
-      .get(`/tournaments/${tournamentId}`)
-      .expect(200);
+      .patch(`/tournaments/${tournamentId}/status`)
+      .set("Authorization", `Bearer ${organizer.accessToken}`)
+      .send({ status: TournamentStatus.REGISTRATION_OPEN });
 
-    const registrations = response.body.registrations;
-    expect(registrations).toBeDefined();
-    // Note: Depending on implementation, registrations might be empty if not explicitly included or if user is not authorized to see them.
-    // But usually public get returns basic info.
-    // Let's check stats instead if registrations are hidden.
+    expect(response.status).toBe(200);
+    expect(response.body.status).toBe(TournamentStatus.REGISTRATION_OPEN);
+  });
+
+  it("POST /tournaments/:id/register registers a player", async () => {
+    const response = await request(httpServer)
+      .post(`/tournaments/${tournamentId}/register`)
+      .set("Authorization", `Bearer ${player.accessToken}`)
+      .send({ playerId });
+
+    expect(response.status).toBe(201);
+    expect(response.body.player.id).toBe(playerId);
+  });
+
+  it("GET /tournaments/:id exposes the registered player publicly", async () => {
+    const response = await request(httpServer).get(`/tournaments/${tournamentId}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.players).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: playerId }),
+      ]),
+    );
+  });
+
+  it("rejects tournament creation for a regular user", async () => {
+    const response = await request(httpServer)
+      .post("/tournaments")
+      .set("Authorization", `Bearer ${player.accessToken}`)
+      .send({
+        name: "Forbidden Tournament",
+        startDate: new Date(Date.now() + 86_400_000),
+        endDate: new Date(Date.now() + 172_800_000),
+        type: TournamentType.SINGLE_ELIMINATION,
+      });
+
+    expect(response.status).toBe(403);
   });
 });
