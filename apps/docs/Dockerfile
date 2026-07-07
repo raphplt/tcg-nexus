@@ -14,10 +14,6 @@ RUN npm ci --workspace=apps-docs
 # Copy source files
 COPY apps/docs /app/apps/docs
 
-# Copy configs from root
-COPY tsconfig.json /app/
-COPY turbo.json /app/
-
 RUN npm run build --workspace=apps-docs
 
 EXPOSE 3002

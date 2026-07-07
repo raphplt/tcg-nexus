@@ -18,10 +18,6 @@ COPY apps/web /app/apps/web
 COPY packages/ui /app/packages/ui
 COPY packages/typescript-config /app/packages/typescript-config
 
-# Copy configs from root
-COPY tsconfig.json /app/
-COPY turbo.json /app/
-
 RUN if [ -f .env ]; then cp .env apps/web/.env; fi
 
 RUN npm run build --workspace=web
