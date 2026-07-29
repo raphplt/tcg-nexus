@@ -148,9 +148,11 @@ export class SearchService {
     const tournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .leftJoinAndSelect("tournament.players", "players")
-      .where("tournament.name ILIKE :query", { query: `%${query}%` })
-      .orWhere("tournament.description ILIKE :query", { query: `%${query}%` })
-      .orWhere("tournament.location ILIKE :query", { query: `%${query}%` })
+      .where(
+        "(tournament.name ILIKE :query OR tournament.description ILIKE :query OR tournament.location ILIKE :query)",
+        { query: `%${query}%` },
+      )
+      .andWhere("tournament.isPublic = :isPublic", { isPublic: true })
       .limit(limit)
       .getMany();
 
@@ -350,6 +352,7 @@ export class SearchService {
     const recentTournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .andWhere("tournament.isPublic = :isPublic", { isPublic: true })
       .orderBy("tournament.createdAt", "DESC")
       .limit(limit)
       .getMany();
@@ -401,6 +404,7 @@ export class SearchService {
     const tournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .andWhere("tournament.isPublic = :isPublic", { isPublic: true })
       .orderBy("tournament.createdAt", "DESC")
       .limit(Math.ceil(limit / 2))
       .getMany();
@@ -501,6 +505,7 @@ export class SearchService {
       .createQueryBuilder("tournament")
       .leftJoinAndSelect("tournament.players", "players")
       .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
+      .andWhere("tournament.isPublic = :isPublic", { isPublic: true })
       .orderBy("tournament.createdAt", "DESC")
       .limit(Math.ceil(limit / 2))
       .getMany();

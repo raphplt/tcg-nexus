@@ -82,5 +82,9 @@ describe("SearchService", () => {
 
     const res = await service.globalSearch({ query: "pi", limit: 5 } as any);
     expect(res.results.length).toBeGreaterThan(0);
+    expect(tournamentMock.qb.andWhere).toHaveBeenCalledWith(
+      "tournament.isPublic = :isPublic",
+      { isPublic: true },
+    );
   });
 });

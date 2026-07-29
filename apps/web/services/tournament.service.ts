@@ -92,13 +92,12 @@ export const tournamentService = {
    */
   async register(
     tournamentId: number,
-    playerId: number,
     notes?: string,
   ): Promise<TournamentRegistration> {
     return authedFetch<TournamentRegistration>(
       "POST",
       `/tournaments/${tournamentId}/register`,
-      { data: { playerId, notes } },
+      { data: { notes } },
     );
   },
 
@@ -139,7 +138,7 @@ export const tournamentService = {
   ): Promise<TournamentRegistration> {
     return authedFetch<TournamentRegistration>(
       "PATCH",
-      `/tournaments/${tournamentId}/registrations/${registrationId}/checkin`,
+      `/tournaments/${tournamentId}/registrations/${registrationId}/check-in`,
     );
   },
 
@@ -204,7 +203,17 @@ export const tournamentService = {
    * Récupère les matches d'un tournoi
    */
   async getTournamentMatches(tournamentId: number): Promise<Match[]> {
-    return authedFetch<Match[]>("GET", `/tournaments/${tournamentId}/matches`);
+    const result = await authedFetch<{
+      matches: Match[];
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }>("GET", `/tournaments/${tournamentId}/matches`, {
+      params: { page: 1, limit: 1000 },
+    });
+
+    return result.matches;
   },
 
   /**
@@ -231,7 +240,7 @@ export const tournamentService = {
   ): Promise<{ availableTransitions: string[] }> {
     return authedFetch<{ availableTransitions: string[] }>(
       "GET",
-      `/tournaments/${tournamentId}/transitions`,
+      `/tournaments/${tournamentId}/state/transitions`,
     );
   },
 

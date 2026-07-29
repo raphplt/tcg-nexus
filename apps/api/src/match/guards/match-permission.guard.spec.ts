@@ -53,6 +53,40 @@ describe("MatchPermissionGuard", () => {
     await expect(guard.canActivate(ctx)).resolves.toBe(true);
   });
 
+  it("should allow an active organizer to create a match", async () => {
+    orgRepo.findOne.mockResolvedValue({ id: 99 });
+    const ctx = createContext({
+      user: { id: 1, role: UserRole.USER },
+      params: {},
+      body: { tournamentId: 5 },
+      method: "POST",
+      route: { path: "/" },
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+    expect(matchRepo.findOne).not.toHaveBeenCalled();
+    expect(orgRepo.findOne).toHaveBeenCalledWith({
+      where: {
+        tournament: { id: 5 },
+        user: { id: 1 },
+        isActive: true,
+      },
+    });
+  });
+
+  it("should reject match creation by a non-organizer", async () => {
+    orgRepo.findOne.mockResolvedValue(null);
+    const ctx = createContext({
+      user: { id: 1, role: UserRole.USER },
+      params: {},
+      body: { tournamentId: 5 },
+      method: "POST",
+      route: { path: "/" },
+    });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
+  });
+
   it("should allow players to report score only", async () => {
     matchRepo.findOne.mockResolvedValue({
       id: 10,
@@ -65,6 +99,24 @@ describe("MatchPermissionGuard", () => {
       user: { id: 1, role: UserRole.USER },
       params: { id: "10" },
       route: { path: "/report-score" },
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
+  it("should allow a participant to read their match", async () => {
+    matchRepo.findOne.mockResolvedValue({
+      id: 10,
+      tournament: { id: 5 },
+      playerA: { user: { id: 1 } },
+      playerB: { user: { id: 3 } },
+    });
+    orgRepo.findOne.mockResolvedValue(null);
+    const ctx = createContext({
+      user: { id: 1, role: UserRole.USER },
+      params: { id: "10" },
+      method: "GET",
+      route: { path: "/:id" },
     });
 
     await expect(guard.canActivate(ctx)).resolves.toBe(true);

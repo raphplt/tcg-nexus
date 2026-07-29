@@ -77,7 +77,7 @@ export function TournamentsTable({
     }
     try {
       if (user) {
-        await tournamentService.register(tournament.id, user.id, "");
+        await tournamentService.register(tournament.id, "");
       } else {
         console.error("User non authentifié.");
       }

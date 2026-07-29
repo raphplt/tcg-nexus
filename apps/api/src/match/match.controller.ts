@@ -14,8 +14,10 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { CreateMatchDto } from "./dto/create-match.dto";
 import {
@@ -40,21 +42,25 @@ export class MatchController {
   }
 
   @Post()
+  @UseGuards(MatchPermissionGuard)
   create(@Body() createMatchDto: CreateMatchDto) {
     return this.matchService.create(createMatchDto);
   }
 
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
   findAll(@Query() query: MatchQueryDto) {
     return this.matchService.findAll(query);
   }
 
   @Get(":id")
+  @UseGuards(MatchPermissionGuard)
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.matchService.findOne(id);
   }
 
   @Patch(":id")
+  @UseGuards(MatchPermissionGuard)
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMatchDto: UpdateMatchDto,
@@ -64,6 +70,7 @@ export class MatchController {
 
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(MatchPermissionGuard)
   remove(@Param("id", ParseIntPipe) id: number) {
     return this.matchService.remove(id);
   }

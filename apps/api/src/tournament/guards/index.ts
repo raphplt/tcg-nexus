@@ -5,3 +5,4 @@ export {
 } from "./tournament-organizer.guard";
 export { TournamentOwnerGuard } from "./tournament-owner.guard";
 export { TournamentParticipantGuard } from "./tournament-participant.guard";
+export { TournamentVisibilityGuard } from "./tournament-visibility.guard";

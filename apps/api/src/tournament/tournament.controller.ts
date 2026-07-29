@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,6 +12,7 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "src/common/enums/user";
@@ -21,8 +23,8 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { RegisterTournamentDto } from "./dto/register-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
-import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
 import { UpdateTournamentDto } from "./dto/update-tournament.dto";
 import { UpdateTournamentStatusDto } from "./dto/update-tournament-status.dto";
 import { TournamentStatus } from "./entities";
@@ -32,7 +34,9 @@ import {
   TournamentOrganizerRoles,
   TournamentOwnerGuard,
   TournamentParticipantGuard,
+  TournamentVisibilityGuard,
 } from "./guards";
+import { PublicTournamentDataInterceptor } from "./interceptors/public-tournament-data.interceptor";
 import { TournamentService } from "./tournament.service";
 
 @ApiTags("tournaments")
@@ -53,30 +57,37 @@ export class TournamentController {
 
   @Public()
   @Get()
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async findAll(@Query() query: TournamentQueryDto) {
-    return this.tournamentService.findAll(query);
+    return this.tournamentService.findAll({ ...query, isPublic: true });
   }
 
   @Public()
   @Get("upcoming")
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getUpcomingTournaments(@Query("limit") limit?: number) {
     return this.tournamentService.getUpcomingTournaments(limit);
   }
 
   @Public()
   @Get("past")
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getPastTournaments(@Query("limit") limit?: number) {
     return this.tournamentService.getPastTournaments(limit);
   }
 
   @Public()
   @Get(":id")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async findOne(@Param("id", ParseIntPipe) id: number) {
     return this.tournamentService.findOne(id);
   }
 
   @Public()
   @Get(":id/stats")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getTournamentStats(@Param("id", ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentStats(id);
   }
@@ -105,15 +116,20 @@ export class TournamentController {
   @HttpCode(HttpStatus.CREATED)
   async registerPlayer(
     @Param("id", ParseIntPipe) id: number,
-    @Body() registrationDto: Omit<TournamentRegistrationDto, "tournamentId">,
+    @Body() registrationDto: RegisterTournamentDto,
     @CurrentUser() user: User,
   ) {
-    const fullRegistrationDto: TournamentRegistrationDto = {
-      ...registrationDto,
+    if (!user.player?.id) {
+      throw new BadRequestException(
+        "Un profil joueur est requis pour s'inscrire à un tournoi",
+      );
+    }
+
+    return this.tournamentService.registerPlayer({
       tournamentId: id,
-      playerId: registrationDto.playerId || user.player?.id || 0,
-    };
-    return this.tournamentService.registerPlayer(fullRegistrationDto);
+      playerId: user.player.id,
+      notes: registrationDto.notes,
+    });
   }
 
   @Delete(":id/register/:playerId")
@@ -184,12 +200,16 @@ export class TournamentController {
 
   @Public()
   @Get(":id/bracket")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getBracket(@Param("id", ParseIntPipe) id: number) {
     return await this.tournamentService.getBracket(id);
   }
 
   @Public()
   @Get(":id/pairings")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getCurrentPairings(
     @Param("id", ParseIntPipe) id: number,
     @Query("round", new ParseIntPipe({ optional: true })) round?: number,
@@ -199,12 +219,16 @@ export class TournamentController {
 
   @Public()
   @Get(":id/rankings")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   async getTournamentRankings(@Param("id", ParseIntPipe) id: number) {
     return await this.tournamentService.getTournamentRankings(id);
   }
 
   @Public()
   @Get(":id/progress")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   getTournamentProgress(@Param("id", ParseIntPipe) id: number) {
     return this.tournamentService.getTournamentProgress(id);
   }
@@ -227,12 +251,21 @@ export class TournamentController {
 
   @Public()
   @Get(":id/matches")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   getTournamentMatches(
     @Param("id", ParseIntPipe) id: number,
     @Query("round", new ParseIntPipe({ optional: true })) round?: number,
     @Query("status") status?: string,
+    @Query("page", new ParseIntPipe({ optional: true })) page?: number,
+    @Query("limit", new ParseIntPipe({ optional: true })) limit?: number,
   ) {
-    return this.tournamentService.getTournamentMatches(id, { round, status });
+    return this.tournamentService.getTournamentMatches(id, {
+      round,
+      status,
+      page,
+      limit,
+    });
   }
 
   @Get(":id/matches/me")
@@ -245,6 +278,8 @@ export class TournamentController {
 
   @Public()
   @Get(":id/matches/:matchId")
+  @UseGuards(TournamentVisibilityGuard)
+  @UseInterceptors(PublicTournamentDataInterceptor)
   getTournamentMatch(
     @Param("id", ParseIntPipe) id: number,
     @Param("matchId", ParseIntPipe) matchId: number,
@@ -329,7 +364,7 @@ export class TournamentController {
     @Param("registrationId", ParseIntPipe) registrationId: number,
     @CurrentUser() user: User,
   ) {
-    return this.tournamentService.checkInPlayer(id, registrationId, user.id);
+    return this.tournamentService.checkInPlayer(id, registrationId, user);
   }
 
   @Post(":id/fill-with-players")

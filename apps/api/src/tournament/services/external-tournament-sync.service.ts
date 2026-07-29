@@ -15,57 +15,102 @@ export class ExternalTournamentSyncService implements OnModuleInit {
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async syncExternalTournaments() {
-    this.logger.log("Starting synchronization of external tournaments...");
-    try {
-      let externalTournaments: any[] = [];
-      const syncUrl = process.env.EXTERNAL_TOURNAMENT_API_URL;
+    const syncUrl = process.env.EXTERNAL_TOURNAMENT_API_URL;
+    if (!syncUrl) {
+      this.logger.debug(
+        "External tournament synchronization skipped: no API URL configured.",
+      );
+      return;
+    }
 
-      if (syncUrl) {
-        try {
-          const response = await fetch(syncUrl);
-          if (response.ok) {
-            externalTournaments = await response.json();
-          } else {
-            this.logger.warn(
-              `Failed to fetch from ${syncUrl}, status: ${response.status}. Using fallback mock data.`,
-            );
-            externalTournaments = this.getMockExternalTournaments();
-          }
-        } catch (fetchError) {
-          this.logger.error(
-            `Error fetching external tournaments from ${syncUrl}. Using fallback mock data.`,
-            fetchError,
-          );
-          externalTournaments = this.getMockExternalTournaments();
-        }
-      } else {
-        externalTournaments = this.getMockExternalTournaments();
+    this.logger.log("Starting synchronization of external tournaments...");
+
+    try {
+      const response = await fetch(syncUrl);
+      if (!response.ok) {
+        this.logger.warn(
+          `External tournament synchronization failed with status ${response.status}. No data was imported.`,
+        );
+        return;
+      }
+
+      const payload: unknown = await response.json();
+      if (!Array.isArray(payload)) {
+        this.logger.warn(
+          "External tournament synchronization returned an invalid payload. No data was imported.",
+        );
+        return;
       }
 
       let createdCount = 0;
-      for (const et of externalTournaments) {
-        // Check if tournament already exists (by name and startDate)
+      let skippedCount = 0;
+
+      for (const rawTournament of payload) {
+        if (
+          typeof rawTournament !== "object" ||
+          rawTournament === null ||
+          !("name" in rawTournament) ||
+          !("startDate" in rawTournament) ||
+          !("endDate" in rawTournament)
+        ) {
+          skippedCount++;
+          continue;
+        }
+
+        const et = rawTournament as Record<string, unknown>;
+        const name = typeof et.name === "string" ? et.name.trim() : "";
+        const startDate = new Date(String(et.startDate));
+        const endDate = new Date(String(et.endDate));
+
+        if (
+          !name ||
+          Number.isNaN(startDate.getTime()) ||
+          Number.isNaN(endDate.getTime()) ||
+          startDate >= endDate
+        ) {
+          skippedCount++;
+          continue;
+        }
+
         const exists = await this.tournamentRepository.findOne({
           where: {
-            name: et.name,
-            startDate: new Date(et.startDate),
+            name,
+            startDate,
           },
         });
 
         if (!exists) {
+          const type = Object.values(TournamentType).includes(
+            et.type as TournamentType,
+          )
+            ? (et.type as TournamentType)
+            : TournamentType.SWISS_SYSTEM;
+          const status = Object.values(TournamentStatus).includes(
+            et.status as TournamentStatus,
+          )
+            ? (et.status as TournamentStatus)
+            : TournamentStatus.REGISTRATION_OPEN;
+
           const newTournament = this.tournamentRepository.create({
-            name: et.name,
-            description: et.description || "Tournoi externe synchronisé automatiquement.",
-            location: et.location || "En ligne",
-            startDate: new Date(et.startDate),
-            endDate: new Date(et.endDate),
-            type: et.type || TournamentType.SWISS_SYSTEM,
-            status: et.status || TournamentStatus.REGISTRATION_OPEN,
+            name,
+            description:
+              typeof et.description === "string" ? et.description : undefined,
+            location:
+              typeof et.location === "string" ? et.location : "En ligne",
+            startDate,
+            endDate,
+            type,
+            status,
             isPublic: true,
             isExternal: true,
-            externalRegistrationUrl: et.externalRegistrationUrl,
-            maxPlayers: et.maxPlayers || 128,
-            minPlayers: et.minPlayers || 8,
+            externalRegistrationUrl:
+              typeof et.externalRegistrationUrl === "string"
+                ? et.externalRegistrationUrl
+                : undefined,
+            maxPlayers:
+              typeof et.maxPlayers === "number" ? et.maxPlayers : 128,
+            minPlayers:
+              typeof et.minPlayers === "number" ? et.minPlayers : 8,
           });
           await this.tournamentRepository.save(newTournament);
           createdCount++;
@@ -73,82 +118,21 @@ export class ExternalTournamentSyncService implements OnModuleInit {
       }
 
       this.logger.log(
-        `External tournaments synchronization finished. Created ${createdCount} new tournaments.`,
+        `External tournament synchronization finished. Created ${createdCount}; skipped ${skippedCount}.`,
       );
     } catch (error) {
-      this.logger.error("Error synchronizing external tournaments:", error);
+      this.logger.error(
+        "External tournament synchronization failed. No fallback data was imported.",
+        error,
+      );
     }
   }
 
   onModuleInit() {
-    // Run asynchronously to not block NestJS bootstrap
     setTimeout(() => {
       this.syncExternalTournaments().catch((err) => {
         this.logger.error("Startup external tournament sync failed", err);
       });
     }, 5000);
-  }
-
-  private getMockExternalTournaments() {
-    const today = new Date();
-
-    // Create dates in the future
-    const date1 = new Date(today);
-    date1.setDate(today.getDate() + 5);
-    const date1End = new Date(date1);
-    date1End.setHours(date1.getHours() + 8);
-
-    const date2 = new Date(today);
-    date2.setDate(today.getDate() + 12);
-    const date2End = new Date(date2);
-    date2End.setHours(date2.getHours() + 10);
-
-    const date3 = new Date(today);
-    date3.setDate(today.getDate() + 20);
-    const date3End = new Date(date3);
-    date3End.setHours(date3.getHours() + 18);
-
-    return [
-      {
-        name: "Play! Pokémon Regional Championship Paris",
-        description:
-          "Rejoignez le championnat régional officiel de Paris ! Gagnez des Championship Points et qualifiez-vous pour les Championnats du Monde.",
-        location: "Espace Champerret, Paris",
-        startDate: date1.toISOString(),
-        endDate: date1End.toISOString(),
-        type: TournamentType.SWISS_SYSTEM,
-        status: TournamentStatus.REGISTRATION_OPEN,
-        externalRegistrationUrl: "https://rk9.gg/tournament/paris-regional-2026",
-        maxPlayers: 512,
-        minPlayers: 32,
-      },
-      {
-        name: "Limitless Showdown #45",
-        description:
-          "Tournoi en ligne hebdomadaire gratuit organisé par Limitless TCG. Format Standard, rondes suisses suivies d'un top cut.",
-        location: "Online (Discord/Limitless)",
-        startDate: date2.toISOString(),
-        endDate: date2End.toISOString(),
-        type: TournamentType.SWISS_SYSTEM,
-        status: TournamentStatus.REGISTRATION_OPEN,
-        externalRegistrationUrl: "https://limitlesstcg.com/tournaments/showdown-45",
-        maxPlayers: 1024,
-        minPlayers: 64,
-      },
-      {
-        name: "Spear Pillar League - Lille Cup",
-        description:
-          "Tournoi local au magasin de cartes à Lille. Nombreuses récompenses (boosters, cartes promo).",
-        location: "Le Repaire des Cartes, Lille",
-        startDate: date3.toISOString(),
-        endDate: date3End.toISOString(),
-        type: TournamentType.SINGLE_ELIMINATION,
-        status: TournamentStatus.REGISTRATION_OPEN,
-        externalRegistrationUrl:
-          "https://www.les-repaire-des-cartes.fr/tournois/lille-cup",
-        maxPlayers: 64,
-        minPlayers: 8,
-      },
-    ];
   }
 }

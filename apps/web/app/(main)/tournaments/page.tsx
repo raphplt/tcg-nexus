@@ -180,7 +180,7 @@ export default function TournamentsPage() {
     setRegisteringTournamentId(tournamentId);
 
     try {
-      await tournamentService.register(tournamentId, user.player.id, "");
+      await tournamentService.register(tournamentId, "");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["tournaments"] }),
         queryClient.invalidateQueries({

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
@@ -79,6 +80,7 @@ describe("TournamentService", () => {
   const mockOrganizerRepo = {
     create: jest.fn(),
     save: jest.fn(),
+    findOne: jest.fn(),
   };
 
   const mockPlayerRepo = {
@@ -735,6 +737,8 @@ describe("TournamentService", () => {
         tournamentId: 1,
         round: 2,
         status: "FINISHED",
+        page: undefined,
+        limit: 100,
       });
     });
   });
@@ -911,7 +915,9 @@ describe("TournamentService", () => {
   describe("checkInPlayer", () => {
     it("should throw NotFoundException if registration missing", async () => {
       registrationRepo.findOne.mockResolvedValue(null);
-      await expect(service.checkInPlayer(1, 2, 3)).rejects.toThrow(
+      await expect(
+        service.checkInPlayer(1, 2, { id: 3 } as User),
+      ).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -923,8 +929,14 @@ describe("TournamentService", () => {
         checkedIn: false,
         player: { user: { id: 999 } },
       });
-      await expect(service.checkInPlayer(1, 2, 3)).rejects.toThrow(
-        BadRequestException,
+      organizerRepo.findOne.mockResolvedValue(null);
+      await expect(
+        service.checkInPlayer(1, 2, {
+          id: 3,
+          role: UserRole.USER,
+        } as User),
+      ).rejects.toThrow(
+        ForbiddenException,
       );
     });
 
@@ -935,7 +947,9 @@ describe("TournamentService", () => {
         checkedIn: false,
         player: { user: { id: 3 } },
       });
-      await expect(service.checkInPlayer(1, 2, 3)).rejects.toThrow(
+      await expect(
+        service.checkInPlayer(1, 2, { id: 3 } as User),
+      ).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -947,7 +961,9 @@ describe("TournamentService", () => {
         checkedIn: true,
         player: { user: { id: 3 } },
       });
-      await expect(service.checkInPlayer(1, 2, 3)).rejects.toThrow(
+      await expect(
+        service.checkInPlayer(1, 2, { id: 3 } as User),
+      ).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -963,11 +979,40 @@ describe("TournamentService", () => {
       registrationRepo.findOne.mockResolvedValue(reg);
       registrationRepo.save.mockResolvedValue({ ...reg, checkedIn: true });
 
-      const result = await service.checkInPlayer(1, 2, 3);
+      const result = await service.checkInPlayer(1, 2, {
+        id: 3,
+      } as User);
       expect(result.checkedIn).toBe(true);
       expect(registrationRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ checkedIn: true }),
       );
+    });
+
+    it("should allow an active organizer to check in a player", async () => {
+      const reg = {
+        id: 2,
+        status: RegistrationStatus.CONFIRMED,
+        checkedIn: false,
+        checkedInAt: null,
+        player: { user: { id: 9 } },
+      };
+      registrationRepo.findOne.mockResolvedValue(reg);
+      organizerRepo.findOne.mockResolvedValue({ id: 4, isActive: true });
+      registrationRepo.save.mockImplementation((value: any) => value);
+
+      const result = await service.checkInPlayer(1, 2, {
+        id: 3,
+        role: UserRole.USER,
+      } as User);
+
+      expect(result.checkedIn).toBe(true);
+      expect(organizerRepo.findOne).toHaveBeenCalledWith({
+        where: {
+          tournament: { id: 1 },
+          user: { id: 3 },
+          isActive: true,
+        },
+      });
     });
   });
 

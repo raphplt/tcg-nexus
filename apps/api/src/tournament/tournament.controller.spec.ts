@@ -1,3 +1,4 @@
+import { BadRequestException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -167,7 +168,10 @@ describe("TournamentController", () => {
       const result = await controller.findAll(query);
 
       expect(result).toEqual({ data: [], meta: { total: 0 } });
-      expect(service.findAll).toHaveBeenCalledWith(query);
+      expect(service.findAll).toHaveBeenCalledWith({
+        ...query,
+        isPublic: true,
+      });
     });
   });
 
@@ -197,9 +201,9 @@ describe("TournamentController", () => {
   });
 
   describe("registerPlayer", () => {
-    it("should register a player", async () => {
+    it("should always register the authenticated player's profile", async () => {
       const dto = { playerId: 2, notes: "hello" };
-      const user = { id: 1, player: { id: 2 } } as User;
+      const user = { id: 1, player: { id: 7 } } as User;
       mockTournamentService.registerPlayer.mockResolvedValue({
         status: "CONFIRMED",
       });
@@ -209,7 +213,7 @@ describe("TournamentController", () => {
       expect(result).toEqual({ status: "CONFIRMED" });
       expect(service.registerPlayer).toHaveBeenCalledWith({
         tournamentId: 1,
-        playerId: 2,
+        playerId: 7,
         notes: "hello",
       });
     });
@@ -229,19 +233,17 @@ describe("TournamentController", () => {
       });
     });
 
-    it("should fallback to 0 if no player id is available", async () => {
+    it("should reject registration when the user has no player profile", async () => {
       const dto = {};
       const user = { id: 1 } as User;
       mockTournamentService.registerPlayer.mockResolvedValue({
         status: "CONFIRMED",
       });
 
-      await controller.registerPlayer(99, dto as any, user);
-
-      expect(service.registerPlayer).toHaveBeenCalledWith({
-        tournamentId: 99,
-        playerId: 0,
-      });
+      await expect(
+        controller.registerPlayer(99, dto as any, user),
+      ).rejects.toThrow(BadRequestException);
+      expect(service.registerPlayer).not.toHaveBeenCalled();
     });
   });
 
@@ -498,7 +500,7 @@ describe("TournamentController", () => {
       const user = { id: 1 } as User;
       const result = controller.checkInPlayer(1, 9, user);
       expect(result).toEqual({ checkedIn: true });
-      expect(service.checkInPlayer).toHaveBeenCalledWith(1, 9, 1);
+      expect(service.checkInPlayer).toHaveBeenCalledWith(1, 9, user);
     });
   });
 

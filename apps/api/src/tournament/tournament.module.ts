@@ -19,7 +19,9 @@ import {
   TournamentOrganizerGuard,
   TournamentOwnerGuard,
   TournamentParticipantGuard,
+  TournamentVisibilityGuard,
 } from "./guards";
+import { PublicTournamentDataInterceptor } from "./interceptors/public-tournament-data.interceptor";
 import { BracketService } from "./services/bracket.service";
 import { SeedingService } from "./services/seeding.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";
@@ -56,6 +58,8 @@ import { ExternalTournamentSyncService } from "./services/external-tournament-sy
     TournamentOrganizerGuard,
     TournamentParticipantGuard,
     TournamentOwnerGuard,
+    TournamentVisibilityGuard,
+    PublicTournamentDataInterceptor,
     ExternalTournamentSyncService,
   ],
   exports: [

@@ -111,7 +111,7 @@ export default function TournamentDetailsPage() {
   const register = async () => {
     if (!tournament?.id || !user?.player?.id) return;
     try {
-      await tournamentService.register(tournament.id, user.player.id, "");
+      await tournamentService.register(tournament.id, "");
     } catch (error) {
       console.error("Erreur lors de l'inscription au tournoi :", error);
     }

@@ -12,6 +12,21 @@ import {
   TournamentType,
 } from "../entities/tournament.entity";
 
+export enum TournamentSortField {
+  START_DATE = "startDate",
+  END_DATE = "endDate",
+  NAME = "name",
+  LOCATION = "location",
+  TYPE = "type",
+  STATUS = "status",
+  CREATED_AT = "createdAt",
+}
+
+export enum SortOrder {
+  ASC = "ASC",
+  DESC = "DESC",
+}
+
 export class TournamentQueryDto {
   @IsOptional()
   @IsString()
@@ -54,10 +69,10 @@ export class TournamentQueryDto {
   limit?: number = 10;
 
   @IsOptional()
-  @IsString()
-  sortBy?: string = "startDate";
+  @IsEnum(TournamentSortField)
+  sortBy?: TournamentSortField = TournamentSortField.START_DATE;
 
   @IsOptional()
-  @IsString()
-  sortOrder?: "ASC" | "DESC" = "ASC";
+  @IsEnum(SortOrder)
+  sortOrder?: SortOrder = SortOrder.ASC;
 }

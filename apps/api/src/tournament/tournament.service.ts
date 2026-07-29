@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -631,12 +632,19 @@ export class TournamentService {
    */
   getTournamentMatches(
     tournamentId: number,
-    filters?: { round?: number; status?: string },
+    filters?: {
+      round?: number;
+      status?: string;
+      page?: number;
+      limit?: number;
+    },
   ) {
     return this.matchService.findAll({
       tournamentId,
       round: filters?.round,
       status: filters?.status as MatchStatus,
+      page: filters?.page,
+      limit: Math.min(Math.max(filters?.limit ?? 100, 1), 1000),
     });
   }
 
@@ -799,7 +807,7 @@ export class TournamentService {
   async checkInPlayer(
     tournamentId: number,
     registrationId: number,
-    userId: number,
+    user: User,
   ) {
     const registration = await this.registrationRepository.findOne({
       where: { id: registrationId, tournament: { id: tournamentId } },
@@ -810,10 +818,22 @@ export class TournamentService {
       throw new NotFoundException("Inscription non trouvée");
     }
 
-    // Vérifier que l'utilisateur peut faire le check-in
-    if (registration.player.user?.id !== userId) {
-      throw new BadRequestException(
-        "Vous ne pouvez faire le check-in que pour votre propre inscription",
+    const isOwnRegistration = registration.player.user?.id === user.id;
+    const isPlatformStaff =
+      user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
+    const organizer = isOwnRegistration
+      ? null
+      : await this.organizerRepository.findOne({
+          where: {
+            tournament: { id: tournamentId },
+            user: { id: user.id },
+            isActive: true,
+          },
+        });
+
+    if (!isOwnRegistration && !isPlatformStaff && !organizer) {
+      throw new ForbiddenException(
+        "Vous ne pouvez pas effectuer le check-in de cette inscription",
       );
     }
 
