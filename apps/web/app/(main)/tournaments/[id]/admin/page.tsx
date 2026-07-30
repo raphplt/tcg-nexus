@@ -328,7 +328,10 @@ export default function TournamentAdminPage() {
               </TabsContent>
 
               <TabsContent value="registrations" className="mt-6">
-                <RegistrationManager tournamentId={tournament.id} />
+                <RegistrationManager
+                  tournamentId={tournament.id}
+                  tournamentStatus={tournament.status}
+                />
               </TabsContent>
 
               <TabsContent value="matches" className="mt-6">

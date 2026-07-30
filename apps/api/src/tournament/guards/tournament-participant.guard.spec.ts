@@ -50,6 +50,19 @@ describe("TournamentParticipantGuard", () => {
     expect(req.tournamentPlayer.id).toBe(5);
   });
 
+  it("should allow a player with a pending registration to unregister", async () => {
+    tournamentRepo.findOne.mockResolvedValue({ id: 2 });
+    playerRepo.findOne.mockResolvedValueOnce({ id: 5, user: { id: 1 } });
+    registrationRepo.findOne.mockResolvedValueOnce({
+      id: 9,
+      status: RegistrationStatus.PENDING,
+    });
+    const req: any = { user: { id: 1 }, params: { id: "2", playerId: "5" } };
+
+    await expect(guard.canActivate(ctx(req))).resolves.toBe(true);
+    expect(req.tournamentRegistration.status).toBe(RegistrationStatus.PENDING);
+  });
+
   it("should throw when player not owned", async () => {
     tournamentRepo.findOne.mockResolvedValue({ id: 2 });
     playerRepo.findOne.mockResolvedValueOnce(null);

@@ -5,7 +5,7 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Not, Repository } from "typeorm";
 import { Player } from "../../player/entities/player.entity";
 import { Tournament } from "../entities/tournament.entity";
 import {
@@ -73,7 +73,7 @@ export class TournamentParticipantGuard implements CanActivate {
         where: {
           tournament: { id: parseInt(tournamentId) },
           player: { id: parseInt(playerId) },
-          status: RegistrationStatus.CONFIRMED,
+          status: Not(RegistrationStatus.CANCELLED),
         },
       });
 
@@ -101,7 +101,7 @@ export class TournamentParticipantGuard implements CanActivate {
         where: {
           tournament: { id: parseInt(tournamentId) },
           player: { id: player.id },
-          status: RegistrationStatus.CONFIRMED,
+          status: Not(RegistrationStatus.CANCELLED),
         },
       });
 

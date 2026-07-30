@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, Repository } from "typeorm";
+import { In, IsNull, Repository } from "typeorm";
 import { Match, MatchStatus } from "../../match/entities/match.entity";
 import {
   Tournament,
@@ -281,7 +281,7 @@ export class TournamentStateService {
     const incompleteMatches = await this.matchRepository.count({
       where: {
         tournament: { id: tournament.id },
-        status: MatchStatus.SCHEDULED,
+        status: In([MatchStatus.SCHEDULED, MatchStatus.IN_PROGRESS]),
       },
     });
 

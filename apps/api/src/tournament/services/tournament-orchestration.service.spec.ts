@@ -118,10 +118,9 @@ describe("TournamentOrchestrationService", () => {
         manager: expect.any(Object),
         seedingMethod: undefined,
       });
-      expect(mockMatchService.ensureTournamentMatchSessions).toHaveBeenCalledWith(
-        1,
-        1,
-      );
+      expect(
+        mockMatchService.ensureTournamentMatchSessions,
+      ).toHaveBeenCalledWith(1, 1);
       expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(
         1,
       );
@@ -421,7 +420,9 @@ describe("TournamentOrchestrationService", () => {
       await expect(service.finishTournament(1)).rejects.toThrow(
         "après une finale validée",
       );
-      expect(mockRankingService.updateTournamentRankings).not.toHaveBeenCalled();
+      expect(
+        mockRankingService.updateTournamentRankings,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -436,17 +437,30 @@ describe("TournamentOrchestrationService", () => {
     it("cancels when not finished", async () => {
       const tournament = baseTournament();
       tournament.status = TournamentStatus.DRAFT;
+      tournament.additionalInfo = "Informations conservées";
       mockTournamentRepository.findOne.mockResolvedValueOnce(tournament);
 
+      const manager = {
+        findOne: mockTournamentRepository.findOne,
+        update: jest.fn(),
+        save: jest.fn().mockImplementation((value) => value),
+      };
       mockDataSource.transaction.mockImplementation(async (cb: any) =>
-        cb({
-          findOne: mockTournamentRepository.findOne,
-          update: jest.fn(),
-          save: jest.fn(),
-        }),
+        cb(manager),
       );
 
-      await service.cancelTournament(1, "bad weather");
+      const result = await service.cancelTournament(1, "bad weather");
+
+      expect(manager.update).toHaveBeenCalledWith(
+        Match,
+        expect.objectContaining({
+          tournament: { id: 1 },
+          status: expect.anything(),
+        }),
+        { status: MatchStatus.CANCELLED },
+      );
+      expect(result.additionalInfo).toContain("Informations conservées");
+      expect(result.additionalInfo).toContain("Annulé: bad weather");
     });
 
     it("throws when trying to cancel a finished tournament", async () => {
@@ -465,6 +479,22 @@ describe("TournamentOrchestrationService", () => {
       await expect(service.cancelTournament(1)).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it("throws when the tournament is already cancelled", async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.CANCELLED;
+      mockTournamentRepository.findOne.mockResolvedValueOnce(tournament);
+
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: mockTournamentRepository.findOne,
+          update: jest.fn(),
+          save: jest.fn(),
+        }),
+      );
+
+      await expect(service.cancelTournament(1)).rejects.toThrow("déjà annulé");
     });
   });
 

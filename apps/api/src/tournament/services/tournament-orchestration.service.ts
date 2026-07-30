@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { DataSource, EntityManager, Repository } from "typeorm";
+import { DataSource, EntityManager, In, Repository } from "typeorm";
 import {
   Match,
   MatchPhase,
@@ -357,16 +357,24 @@ export class TournamentOrchestrationService {
         );
       }
 
+      if (tournament.status === TournamentStatus.CANCELLED) {
+        throw new BadRequestException("Ce tournoi est déjà annulé");
+      }
+
       // Annuler tous les matches en cours
       await manager.update(
         Match,
-        { tournament: { id: tournamentId }, status: MatchStatus.SCHEDULED },
+        {
+          tournament: { id: tournamentId },
+          status: In([MatchStatus.SCHEDULED, MatchStatus.IN_PROGRESS]),
+        },
         { status: MatchStatus.CANCELLED },
       );
 
       tournament.status = TournamentStatus.CANCELLED;
       if (reason) {
-        tournament.additionalInfo = `Annulé: ${reason}`;
+        tournament.additionalInfo =
+          `${tournament.additionalInfo || ""}\nAnnulé: ${reason}`.trim();
       }
 
       return manager.save(tournament);

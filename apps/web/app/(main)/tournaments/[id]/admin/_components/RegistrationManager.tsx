@@ -67,10 +67,12 @@ const getPlayerInitials = (registration: TournamentRegistration): string => {
 
 interface RegistrationManagerProps {
   tournamentId: number;
+  tournamentStatus: string;
 }
 
 export function RegistrationManager({
   tournamentId,
+  tournamentStatus,
 }: RegistrationManagerProps) {
   const queryClient = useQueryClient();
   const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>(
@@ -82,6 +84,12 @@ export function RegistrationManager({
     checkedIn: "",
   });
   const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [registrationToCancel, setRegistrationToCancel] = useState<
+    number | null
+  >(null);
+  const canManageRegistrations =
+    tournamentStatus === "registration_open" ||
+    tournamentStatus === "registration_closed";
 
   // Données des inscriptions
   const { data: registrations = [], isLoading } = useQuery<
@@ -250,6 +258,13 @@ export function RegistrationManager({
   return (
     <>
       <div className="space-y-6">
+        {!canManageRegistrations && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
+            Les inscriptions sont maintenant en lecture seule. Elles ne peuvent
+            plus être modifiées après le démarrage ou l’annulation du tournoi.
+          </div>
+        )}
+
         {/* Statistiques rapides */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card>
@@ -390,6 +405,7 @@ export function RegistrationManager({
                     variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction("confirm")}
+                    disabled={!canManageRegistrations}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Confirmer ({selectedRegistrations.length})
@@ -399,6 +415,7 @@ export function RegistrationManager({
                     variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction("cancel")}
+                    disabled={!canManageRegistrations}
                   >
                     <X className="w-4 h-4 mr-2" />
                     Annuler
@@ -408,6 +425,7 @@ export function RegistrationManager({
                     variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction("checkin")}
+                    disabled={!canManageRegistrations}
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
                     Check-in
@@ -437,6 +455,7 @@ export function RegistrationManager({
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
+                      disabled={!canManageRegistrations}
                       checked={
                         selectedRegistrations.length ===
                         filteredRegistrations.length
@@ -466,6 +485,7 @@ export function RegistrationManager({
                     <TableRow key={registration.id}>
                       <TableCell>
                         <Checkbox
+                          disabled={!canManageRegistrations}
                           checked={selectedRegistrations.includes(
                             registration.id,
                           )}
@@ -550,7 +570,10 @@ export function RegistrationManager({
                               onClick={() =>
                                 confirmMutation.mutate(registration.id)
                               }
-                              disabled={confirmMutation.isPending}
+                              disabled={
+                                !canManageRegistrations ||
+                                confirmMutation.isPending
+                              }
                             >
                               <CheckCircle className="w-3 h-3" />
                             </Button>
@@ -564,7 +587,10 @@ export function RegistrationManager({
                                 onClick={() =>
                                   checkInMutation.mutate(registration.id)
                                 }
-                                disabled={checkInMutation.isPending}
+                                disabled={
+                                  !canManageRegistrations ||
+                                  checkInMutation.isPending
+                                }
                               >
                                 <UserCheck className="w-3 h-3" />
                               </Button>
@@ -574,16 +600,13 @@ export function RegistrationManager({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                const reason = prompt(
-                                  "Raison de l'annulation (optionnelle) :",
-                                );
-                                cancelMutation.mutate({
-                                  registrationId: registration.id,
-                                  reason: reason || undefined,
-                                });
-                              }}
-                              disabled={cancelMutation.isPending}
+                              onClick={() =>
+                                setRegistrationToCancel(registration.id)
+                              }
+                              disabled={
+                                !canManageRegistrations ||
+                                cancelMutation.isPending
+                              }
                             >
                               <X className="w-3 h-3" />
                             </Button>
@@ -632,6 +655,37 @@ export function RegistrationManager({
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={executeBulkAction}>
               Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={registrationToCancel !== null}
+        onOpenChange={(open) => {
+          if (!open) setRegistrationToCancel(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler cette inscription ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le joueur sera retiré des participants confirmés et devra se
+              réinscrire pour participer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Conserver l’inscription</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (registrationToCancel === null) return;
+                cancelMutation.mutate({
+                  registrationId: registrationToCancel,
+                });
+                setRegistrationToCancel(null);
+              }}
+            >
+              Annuler l’inscription
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

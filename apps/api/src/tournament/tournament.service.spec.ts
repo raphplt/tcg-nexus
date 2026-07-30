@@ -133,6 +133,20 @@ describe("TournamentService", () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    (mockTournamentRepo as any).manager = {
+      transaction: jest.fn(async (callback: (manager: any) => unknown) =>
+        callback({
+          getRepository: (entity: unknown) => {
+            if (entity === Tournament) return mockTournamentRepo;
+            if (entity === TournamentRegistration) {
+              return mockRegistrationRepo;
+            }
+            if (entity === TournamentOrganizer) return mockOrganizerRepo;
+            throw new Error("Unexpected repository");
+          },
+        }),
+      ),
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TournamentService,
@@ -252,6 +266,20 @@ describe("TournamentService", () => {
       await expect(service.create(invalidDto, userId)).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it("should reject an unsupported format for an internal tournament", async () => {
+      const invalidDto = {
+        ...dto,
+        type: TournamentType.SWISS_SYSTEM,
+        isExternal: false,
+      };
+      tournamentRepo.create.mockReturnValue(invalidDto);
+
+      await expect(service.create(invalidDto, userId)).rejects.toThrow(
+        "élimination directe",
+      );
+      expect(tournamentRepo.save).not.toHaveBeenCalled();
     });
 
     it("should throw NotFoundException if user not found", async () => {
@@ -447,6 +475,18 @@ describe("TournamentService", () => {
       );
     });
 
+    it("should reject unregistering from a cancelled tournament", async () => {
+      tournamentRepo.findOne.mockResolvedValue({
+        id: 1,
+        status: TournamentStatus.CANCELLED,
+      });
+
+      await expect(service.unregisterPlayer(1, 1)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(registrationRepo.save).not.toHaveBeenCalled();
+    });
+
     it("should throw NotFoundException if registration not found", async () => {
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
@@ -537,6 +577,40 @@ describe("TournamentService", () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it("should validate a partial date update against existing dates", async () => {
+      jest.spyOn(service, "findOne").mockResolvedValue({
+        id: 1,
+        status: TournamentStatus.DRAFT,
+        startDate: new Date("2024-01-01"),
+        endDate: new Date("2024-01-03"),
+        type: TournamentType.SINGLE_ELIMINATION,
+      } as Tournament);
+
+      await expect(
+        service.update(1, {
+          startDate: new Date("2024-01-04"),
+        }),
+      ).rejects.toThrow("date de début");
+    });
+
+    it("should reject incoherent age restrictions", async () => {
+      jest.spyOn(service, "findOne").mockResolvedValue({
+        id: 1,
+        status: TournamentStatus.DRAFT,
+        startDate: new Date("2024-01-01"),
+        endDate: new Date("2024-01-03"),
+        type: TournamentType.SINGLE_ELIMINATION,
+        ageRestrictionMin: 12,
+        ageRestrictionMax: 18,
+      } as Tournament);
+
+      await expect(
+        service.update(1, {
+          ageRestrictionMin: 20,
+        }),
+      ).rejects.toThrow("âge minimum");
+    });
+
     it("should save updated tournament", async () => {
       const tournament = { id: 1, status: TournamentStatus.DRAFT, name: "a" };
       jest.spyOn(service, "findOne").mockResolvedValue(tournament as any);
@@ -585,7 +659,39 @@ describe("TournamentService", () => {
     it("should delegate to stateService", async () => {
       const status = TournamentStatus.REGISTRATION_OPEN;
       await service.updateStatus(1, { status });
-      expect(stateService.transitionState).toHaveBeenCalledWith(1, status);
+      expect(stateService.transitionState).toHaveBeenCalledWith(
+        1,
+        status,
+        undefined,
+      );
+    });
+
+    it("should reject direct transitions that bypass tournament startup", async () => {
+      await expect(
+        service.updateStatus(1, {
+          status: TournamentStatus.IN_PROGRESS,
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(stateService.transitionState).not.toHaveBeenCalled();
+      expect(orchestrationService.startTournament).not.toHaveBeenCalled();
+    });
+
+    it("should route cancellation through orchestration with its reason", async () => {
+      orchestrationService.cancelTournament.mockResolvedValue({
+        id: 1,
+        status: TournamentStatus.CANCELLED,
+      });
+
+      await service.updateStatus(1, {
+        status: TournamentStatus.CANCELLED,
+        reason: "Indisponibilité du lieu",
+      });
+
+      expect(orchestrationService.cancelTournament).toHaveBeenCalledWith(
+        1,
+        "Indisponibilité du lieu",
+      );
     });
   });
 
@@ -770,15 +876,13 @@ describe("TournamentService", () => {
     });
 
     it("should route an admin final score through the canonical pipeline", async () => {
-      jest
-        .spyOn(service, "getTournamentMatch")
-        .mockResolvedValue({
-          id: 10,
-          tournament: { id: 1 },
-          status: MatchStatus.SCHEDULED,
-          playerAScore: 0,
-          playerBScore: 0,
-        } as any);
+      jest.spyOn(service, "getTournamentMatch").mockResolvedValue({
+        id: 10,
+        tournament: { id: 1 },
+        status: MatchStatus.SCHEDULED,
+        playerAScore: 0,
+        playerBScore: 0,
+      } as any);
       matchService.startMatch.mockResolvedValue({
         id: 10,
         status: MatchStatus.IN_PROGRESS,
@@ -888,7 +992,13 @@ describe("TournamentService", () => {
       const reg = {
         id: 2,
         status: RegistrationStatus.PENDING,
-        tournament: { id: 1, maxPlayers: 10 },
+        tournament: {
+          id: 1,
+          maxPlayers: 10,
+          players: [],
+          status: TournamentStatus.REGISTRATION_CLOSED,
+        },
+        player: { id: 7 },
       };
       registrationRepo.findOne.mockResolvedValue(reg);
       registrationRepo.count.mockResolvedValue(0);
@@ -902,6 +1012,11 @@ describe("TournamentService", () => {
       expect(registrationRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({ status: RegistrationStatus.CONFIRMED }),
       );
+      expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          players: [expect.objectContaining({ id: 7 })],
+        }),
+      );
     });
   });
 
@@ -914,7 +1029,18 @@ describe("TournamentService", () => {
     });
 
     it("should cancel and keep notes when no reason", async () => {
-      const reg = { id: 2, status: RegistrationStatus.PENDING, notes: "" };
+      const reg = {
+        id: 2,
+        status: RegistrationStatus.PENDING,
+        notes: "",
+        checkedIn: false,
+        tournament: {
+          id: 1,
+          status: TournamentStatus.REGISTRATION_OPEN,
+          players: [],
+        },
+        player: { id: 7 },
+      };
       registrationRepo.findOne.mockResolvedValue(reg);
       registrationRepo.save.mockResolvedValue({
         ...reg,
@@ -925,7 +1051,19 @@ describe("TournamentService", () => {
     });
 
     it("should set notes when reason provided", async () => {
-      const reg = { id: 2, status: RegistrationStatus.PENDING, notes: "" };
+      const reg = {
+        id: 2,
+        status: RegistrationStatus.PENDING,
+        notes: "",
+        checkedIn: true,
+        checkedInAt: new Date(),
+        tournament: {
+          id: 1,
+          status: TournamentStatus.REGISTRATION_OPEN,
+          players: [{ id: 7 }],
+        },
+        player: { id: 7 },
+      };
       registrationRepo.findOne.mockResolvedValue(reg);
       registrationRepo.save.mockResolvedValue({
         ...reg,
@@ -941,6 +1079,9 @@ describe("TournamentService", () => {
           notes: "Annulée: test",
         }),
       );
+      expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ players: [] }),
+      );
     });
   });
 
@@ -949,9 +1090,7 @@ describe("TournamentService", () => {
       registrationRepo.findOne.mockResolvedValue(null);
       await expect(
         service.checkInPlayer(1, 2, { id: 3 } as User),
-      ).rejects.toThrow(
-        NotFoundException,
-      );
+      ).rejects.toThrow(NotFoundException);
     });
 
     it("should reject check-in for other user", async () => {
@@ -959,6 +1098,7 @@ describe("TournamentService", () => {
         id: 2,
         status: RegistrationStatus.CONFIRMED,
         checkedIn: false,
+        tournament: { status: TournamentStatus.REGISTRATION_CLOSED },
         player: { user: { id: 999 } },
       });
       organizerRepo.findOne.mockResolvedValue(null);
@@ -967,9 +1107,7 @@ describe("TournamentService", () => {
           id: 3,
           role: UserRole.USER,
         } as User),
-      ).rejects.toThrow(
-        ForbiddenException,
-      );
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it("should reject check-in if not confirmed", async () => {
@@ -977,13 +1115,12 @@ describe("TournamentService", () => {
         id: 2,
         status: RegistrationStatus.PENDING,
         checkedIn: false,
+        tournament: { status: TournamentStatus.REGISTRATION_CLOSED },
         player: { user: { id: 3 } },
       });
       await expect(
         service.checkInPlayer(1, 2, { id: 3 } as User),
-      ).rejects.toThrow(
-        BadRequestException,
-      );
+      ).rejects.toThrow(BadRequestException);
     });
 
     it("should reject if already checked in", async () => {
@@ -991,13 +1128,12 @@ describe("TournamentService", () => {
         id: 2,
         status: RegistrationStatus.CONFIRMED,
         checkedIn: true,
+        tournament: { status: TournamentStatus.REGISTRATION_CLOSED },
         player: { user: { id: 3 } },
       });
       await expect(
         service.checkInPlayer(1, 2, { id: 3 } as User),
-      ).rejects.toThrow(
-        BadRequestException,
-      );
+      ).rejects.toThrow(BadRequestException);
     });
 
     it("should set checkedIn flags and save", async () => {
@@ -1006,6 +1142,7 @@ describe("TournamentService", () => {
         status: RegistrationStatus.CONFIRMED,
         checkedIn: false,
         checkedInAt: null,
+        tournament: { status: TournamentStatus.REGISTRATION_CLOSED },
         player: { user: { id: 3 } },
       };
       registrationRepo.findOne.mockResolvedValue(reg);
@@ -1026,6 +1163,7 @@ describe("TournamentService", () => {
         status: RegistrationStatus.CONFIRMED,
         checkedIn: false,
         checkedInAt: null,
+        tournament: { status: TournamentStatus.REGISTRATION_CLOSED },
         player: { user: { id: 9 } },
       };
       registrationRepo.findOne.mockResolvedValue(reg);
@@ -1150,6 +1288,10 @@ describe("TournamentService", () => {
         { id: 1, checkedIn: false, checkedInAt: null },
         { id: 2, checkedIn: false, checkedInAt: null },
       ];
+      jest.spyOn(service, "findOne").mockResolvedValue({
+        id: 1,
+        status: TournamentStatus.REGISTRATION_CLOSED,
+      } as Tournament);
       registrationRepo.find.mockResolvedValue(regs);
       registrationRepo.save.mockImplementation(async (x: any) => x);
 

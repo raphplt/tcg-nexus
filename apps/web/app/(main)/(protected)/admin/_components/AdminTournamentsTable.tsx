@@ -86,6 +86,27 @@ const statusLabels: Record<TournamentStatus, string> = {
   [TournamentStatus.CANCELLED]: "Annulé",
 };
 
+const statusTransitions: Record<TournamentStatus, TournamentStatus[]> = {
+  [TournamentStatus.DRAFT]: [
+    TournamentStatus.REGISTRATION_OPEN,
+    TournamentStatus.CANCELLED,
+  ],
+  [TournamentStatus.REGISTRATION_OPEN]: [
+    TournamentStatus.REGISTRATION_CLOSED,
+    TournamentStatus.CANCELLED,
+  ],
+  [TournamentStatus.REGISTRATION_CLOSED]: [
+    TournamentStatus.REGISTRATION_OPEN,
+    TournamentStatus.CANCELLED,
+  ],
+  [TournamentStatus.IN_PROGRESS]: [TournamentStatus.CANCELLED],
+  [TournamentStatus.FINISHED]: [],
+  [TournamentStatus.CANCELLED]: [],
+};
+
+const getStatusTransitions = (status: string): TournamentStatus[] =>
+  statusTransitions[status as TournamentStatus] ?? [];
+
 export function AdminTournamentsTable() {
   const [data, setData] = useState<PaginatedResult<Tournament> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -159,15 +180,14 @@ export function AdminTournamentsTable() {
       maxPlayers: form.maxPlayers,
       isPublic: true,
       isExternal: form.isExternal,
-      externalRegistrationUrl: form.isExternal ? form.externalRegistrationUrl : undefined,
+      externalRegistrationUrl: form.isExternal
+        ? form.externalRegistrationUrl
+        : undefined,
     };
 
     try {
       if (editing) {
         await adminService.updateTournament(editing.id, payload);
-        if (form.status !== editing.status) {
-          await adminService.updateTournamentStatus(editing.id, form.status);
-        }
         toast.success("Tournoi mis à jour");
       } else {
         await adminService.createTournament(payload);
@@ -267,6 +287,9 @@ export function AdminTournamentsTable() {
                     <TableCell>
                       <Select
                         value={String(tournament.status)}
+                        disabled={
+                          getStatusTransitions(tournament.status).length === 0
+                        }
                         onValueChange={(value) =>
                           updateStatus(tournament, value as TournamentStatus)
                         }
@@ -275,7 +298,10 @@ export function AdminTournamentsTable() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.values(TournamentStatus).map((status) => (
+                          {[
+                            tournament.status as TournamentStatus,
+                            ...getStatusTransitions(tournament.status),
+                          ].map((status) => (
                             <SelectItem key={status} value={status}>
                               {statusLabels[status]}
                             </SelectItem>
@@ -405,8 +431,19 @@ export function AdminTournamentsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(TournamentType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type.replace("_", " ")}
+                    <SelectItem
+                      key={type}
+                      value={type}
+                      disabled={
+                        !form.isExternal &&
+                        type !== TournamentType.SINGLE_ELIMINATION
+                      }
+                    >
+                      {type.replaceAll("_", " ")}
+                      {!form.isExternal &&
+                      type !== TournamentType.SINGLE_ELIMINATION
+                        ? " — bientôt disponible"
+                        : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -414,26 +451,12 @@ export function AdminTournamentsTable() {
             </div>
             <div className="grid gap-2">
               <Label>Statut</Label>
-              <Select
-                value={form.status}
-                onValueChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    status: value as TournamentStatus,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(TournamentStatus).map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {statusLabels[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-10 items-center rounded-md border bg-muted/40 px-3">
+                <Badge variant="secondary">{statusLabels[form.status]}</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Le statut se pilote depuis les actions du tournoi.
+              </p>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="maxPlayers">Joueurs max</Label>
@@ -453,8 +476,12 @@ export function AdminTournamentsTable() {
             </div>
             <div className="grid gap-2 items-center flex-row justify-between col-span-1 md:col-span-2 border p-3 rounded-lg bg-muted/30">
               <div className="space-y-0.5">
-                <Label htmlFor="isExternal" className="font-semibold">Tournoi externe</Label>
-                <p className="text-xs text-muted-foreground">Inscriptions hors de la plateforme</p>
+                <Label htmlFor="isExternal" className="font-semibold">
+                  Tournoi externe
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Inscriptions hors de la plateforme
+                </p>
               </div>
               <Switch
                 id="isExternal"
@@ -463,13 +490,18 @@ export function AdminTournamentsTable() {
                   setForm((prev) => ({
                     ...prev,
                     isExternal: checked,
+                    type: checked
+                      ? prev.type
+                      : TournamentType.SINGLE_ELIMINATION,
                   }))
                 }
               />
             </div>
             {form.isExternal && (
               <div className="grid gap-2 col-span-1 md:col-span-2">
-                <Label htmlFor="externalRegistrationUrl">Lien d'inscription externe</Label>
+                <Label htmlFor="externalRegistrationUrl">
+                  Lien d'inscription externe
+                </Label>
                 <Input
                   id="externalRegistrationUrl"
                   type="url"

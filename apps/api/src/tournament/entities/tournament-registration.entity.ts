@@ -70,7 +70,7 @@ export class TournamentRegistration {
   checkedIn: boolean;
 
   @Column({ type: "timestamp", nullable: true })
-  checkedInAt: Date;
+  checkedInAt: Date | null;
 
   @CreateDateColumn()
   registeredAt: Date;
