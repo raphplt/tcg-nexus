@@ -397,6 +397,7 @@ export class RankingService {
     for (const [playerId, stats] of playerStats.entries()) {
       let ranking = await this.rankingRepository.findOne({
         where: { tournament: { id: tournamentId }, player: { id: playerId } },
+        relations: ["player"],
       });
 
       if (!ranking) {

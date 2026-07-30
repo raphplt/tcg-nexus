@@ -1,8 +1,11 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
-import { Match, MatchPhase } from "../../match/entities/match.entity";
-import { MatchService } from "../../match/match.service";
+import { EntityManager, Repository } from "typeorm";
+import {
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "../../match/entities/match.entity";
 import { Player } from "../../player/entities/player.entity";
 import { Ranking } from "../../ranking/entities/ranking.entity";
 import { Tournament, TournamentType } from "../entities/tournament.entity";
@@ -10,6 +13,11 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
+import {
+  SeededPlayer,
+  SeedingMethod,
+  SeedingService,
+} from "./seeding.service";
 
 export interface BracketNode {
   matchId?: number;
@@ -49,6 +57,12 @@ export interface SwissPairing {
   }[];
 }
 
+export interface GenerateBracketOptions {
+  checkInRequired?: boolean;
+  manager?: EntityManager;
+  seedingMethod?: SeedingMethod;
+}
+
 @Injectable()
 export class BracketService {
   constructor(
@@ -62,14 +76,19 @@ export class BracketService {
     private registrationRepository: Repository<TournamentRegistration>,
     @InjectRepository(Ranking)
     private rankingRepository: Repository<Ranking>,
-    private matchService: MatchService,
+    private seedingService: SeedingService,
   ) {}
 
   /**
    * Génère le bracket complet pour un tournoi selon son type
    */
-  async generateBracket(tournamentId: number): Promise<BracketStructure> {
-    const tournament = await this.tournamentRepository.findOne({
+  async generateBracket(
+    tournamentId: number,
+    options: GenerateBracketOptions = {},
+  ): Promise<BracketStructure> {
+    const tournamentRepository =
+      options.manager?.getRepository(Tournament) ?? this.tournamentRepository;
+    const tournament = await tournamentRepository.findOne({
       where: { id: tournamentId },
       relations: [
         "registrations",
@@ -82,10 +101,11 @@ export class BracketService {
       throw new BadRequestException("Tournoi non trouvé");
     }
 
-    // Récupérer les joueurs confirmés et check-in
     const confirmedPlayers = tournament.registrations
       .filter(
-        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn,
+        (reg) =>
+          reg.status === RegistrationStatus.CONFIRMED &&
+          (!options.checkInRequired || reg.checkedIn),
       )
       .map((reg) => reg.player);
 
@@ -95,23 +115,28 @@ export class BracketService {
       );
     }
 
-    // Seeding des joueurs
-    const seededPlayers = this.seedPlayers(confirmedPlayers);
+    const seededPlayers = await this.seedingService.seedPlayers(
+      confirmedPlayers,
+      tournament,
+      options.seedingMethod ?? SeedingMethod.RANDOM,
+    );
 
     let bracketStructure: BracketStructure;
 
     switch (tournament.type) {
       case TournamentType.SINGLE_ELIMINATION:
-        bracketStructure = this.generateSingleEliminationBracket(
+        bracketStructure = await this.generateSingleEliminationBracket(
           seededPlayers,
           tournament,
+          options.manager,
         );
         break;
 
       case TournamentType.DOUBLE_ELIMINATION:
-        bracketStructure = this.generateDoubleEliminationBracket(
+        bracketStructure = await this.generateDoubleEliminationBracket(
           seededPlayers,
           tournament,
+          options.manager,
         );
         break;
 
@@ -124,9 +149,10 @@ export class BracketService {
         break;
 
       case TournamentType.ROUND_ROBIN:
-        bracketStructure = this.generateRoundRobinBracket(
+        bracketStructure = await this.generateRoundRobinBracket(
           seededPlayers,
           tournament,
+          options.manager,
         );
         break;
 
@@ -138,7 +164,7 @@ export class BracketService {
 
     tournament.totalRounds = bracketStructure.totalRounds;
     tournament.currentRound = 1;
-    await this.tournamentRepository.save(tournament);
+    await tournamentRepository.save(tournament);
 
     return bracketStructure;
   }
@@ -177,8 +203,11 @@ export class BracketService {
     let sortedPlayers: Player[];
 
     if (round === 1) {
-      // Premier round : tri aléatoire ou par ranking initial
-      sortedPlayers = this.seedPlayers(confirmedPlayers);
+      sortedPlayers = await this.seedingService.seedPlayers(
+        confirmedPlayers,
+        tournament,
+        SeedingMethod.RANDOM,
+      );
     } else {
       // Rounds suivants : tri par points puis par tie-breaks
       const rankings = tournament.rankings || [];
@@ -215,12 +244,17 @@ export class BracketService {
   /**
    * Génère le bracket pour élimination simple
    */
-  private generateSingleEliminationBracket(
-    players: Player[],
+  private async generateSingleEliminationBracket(
+    players: SeededPlayer[],
     tournament: Tournament,
-  ): BracketStructure {
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
     const playerCount = players.length;
     const totalRounds = Math.ceil(Math.log2(playerCount));
+    const bracketSize = 2 ** totalRounds;
+    const bracketSlots = this.generateSeedOrder(bracketSize).map(
+      (seed) => players[seed - 1],
+    );
 
     const rounds: { index: number; matches: BracketNode[] }[] = [];
     let matchId = 1;
@@ -246,21 +280,23 @@ export class BracketService {
         // Premier round : assigner les joueurs
         if (round === 1) {
           const playerAIndex = position * 2;
-          const playerBIndex = position * 2 + 1;
+          const playerBIndex = playerAIndex + 1;
+          const playerA = bracketSlots[playerAIndex];
+          const playerB = bracketSlots[playerBIndex];
 
-          if (playerAIndex < players.length) {
+          if (playerA) {
             node.playerA = {
-              id: players[playerAIndex].id,
-              name: `${players[playerAIndex].user?.firstName || ""} ${players[playerAIndex].user?.lastName || ""}`.trim(),
-              seed: playerAIndex + 1,
+              id: playerA.id,
+              name: `${playerA.user?.firstName || ""} ${playerA.user?.lastName || ""}`.trim(),
+              seed: playerA.seed,
             };
           }
 
-          if (playerBIndex < players.length) {
+          if (playerB) {
             node.playerB = {
-              id: players[playerBIndex].id,
-              name: `${players[playerBIndex].user?.firstName || ""} ${players[playerBIndex].user?.lastName || ""}`.trim(),
-              seed: playerBIndex + 1,
+              id: playerB.id,
+              name: `${playerB.user?.firstName || ""} ${playerB.user?.lastName || ""}`.trim(),
+              seed: playerB.seed,
             };
           }
         }
@@ -272,7 +308,7 @@ export class BracketService {
     }
 
     // Créer les matches en base
-    this.createMatchesFromBracket(tournament, rounds);
+    await this.createMatchesFromBracket(tournament, rounds, manager);
 
     return {
       type: TournamentType.SINGLE_ELIMINATION,
@@ -284,10 +320,11 @@ export class BracketService {
   /**
    * Génère le bracket pour élimination double
    */
-  private generateDoubleEliminationBracket(
-    players: Player[],
+  private async generateDoubleEliminationBracket(
+    players: SeededPlayer[],
     tournament: Tournament,
-  ): BracketStructure {
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
     // Implémentation simplifiée - bracket winner + loser
     //TODO: Implémenter la logique complète du double elimination
     // const playerCount = players.length;
@@ -296,16 +333,17 @@ export class BracketService {
 
     // Pour l'instant, on génère comme un single elimination
     // TODO: Implémenter la logique complète du double elimination
-    return this.generateSingleEliminationBracket(players, tournament);
+    return this.generateSingleEliminationBracket(players, tournament, manager);
   }
 
   /**
    * Génère le bracket pour round robin
    */
-  private generateRoundRobinBracket(
-    players: Player[],
+  private async generateRoundRobinBracket(
+    players: SeededPlayer[],
     tournament: Tournament,
-  ): BracketStructure {
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
     const playerCount = players.length;
     const totalRounds = playerCount - 1;
     const rounds: { index: number; matches: BracketNode[] }[] = [];
@@ -351,7 +389,7 @@ export class BracketService {
       }
     }
 
-    this.createMatchesFromBracket(tournament, rounds);
+    await this.createMatchesFromBracket(tournament, rounds, manager);
 
     return {
       type: TournamentType.ROUND_ROBIN,
@@ -360,18 +398,15 @@ export class BracketService {
     };
   }
 
-  /**
-   * Seeding des joueurs (aléatoire par défaut)
-   */
-  private seedPlayers(players: Player[]): Player[] {
-    // TODO: Implémenter le seeding basé sur le ranking/ELO
-    // Pour l'instant, mélange aléatoire
-    const shuffled = [...players];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  private generateSeedOrder(bracketSize: number): number[] {
+    let order = [1, 2];
+
+    while (order.length < bracketSize) {
+      const seedSum = order.length * 2 + 1;
+      order = order.flatMap((seed) => [seed, seedSum - seed]);
     }
-    return shuffled;
+
+    return order;
   }
 
   /**
@@ -395,23 +430,43 @@ export class BracketService {
   /**
    * Crée les matches en base à partir du bracket
    */
-  private createMatchesFromBracket(
+  private async createMatchesFromBracket(
     tournament: Tournament,
     rounds: { index: number; matches: BracketNode[] }[],
-  ): void {
+    manager?: EntityManager,
+  ): Promise<void> {
+    const matchRepository =
+      manager?.getRepository(Match) ?? this.matchRepository;
+
     for (const round of rounds) {
       for (const node of round.matches) {
         if (node.playerA || node.playerB) {
-          void this.matchService.create({
-            tournamentId: tournament.id,
-            playerAId: node.playerA?.id,
-            playerBId: node.playerB?.id,
+          const isBye = Boolean(node.playerA) !== Boolean(node.playerB);
+          const byeWinner = node.playerA ?? node.playerB;
+          const match = matchRepository.create({
+            tournament,
+            playerA: node.playerA
+              ? ({ id: node.playerA.id } as Player)
+              : undefined,
+            playerB: node.playerB
+              ? ({ id: node.playerB.id } as Player)
+              : undefined,
+            winner:
+              isBye && byeWinner
+                ? ({ id: byeWinner.id } as Player)
+                : undefined,
             round: node.round,
             phase: node.phase,
             scheduledDate: new Date(tournament.startDate),
-            notes: `Match généré automatiquement`,
-            skipStatusCheck: true,
+            notes: isBye
+              ? "Qualification automatique (bye)"
+              : "Match généré automatiquement",
+            status: isBye ? MatchStatus.FINISHED : MatchStatus.SCHEDULED,
+            finishedAt: isBye ? new Date() : undefined,
           });
+          const savedMatch = await matchRepository.save(match);
+          node.matchId = savedMatch.id;
+          node.winnerId = savedMatch.winner?.id;
         }
       }
     }

@@ -69,6 +69,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
 
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionData, setActionData] = useState<any>({});
+  const hasSupportedEngine = tournament.type === "single_elimination";
 
   // Configuration des actions disponibles selon l'état
   const getAvailableActions = (): ActionConfig[] => {
@@ -102,7 +103,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         break;
 
       case "registration_closed":
-        if (permissions.canStartTournament) {
+        if (permissions.canStartTournament && hasSupportedEngine) {
           actions.push({
             action: "start-tournament",
             label: "Démarrer le tournoi",
@@ -111,6 +112,8 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             description: "Générer le bracket et commencer les matches",
             requiresConfirmation: true,
           });
+        }
+        if (permissions.canManageTournament) {
           actions.push({
             action: "reopen-registration",
             label: "Rouvrir les inscriptions",
@@ -276,6 +279,14 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             </Badge>
           </div>
 
+          {!hasSupportedEngine &&
+            tournament.status === "registration_closed" && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
+                Le démarrage de ce format est temporairement désactivé pendant
+                la finalisation de son moteur.
+              </div>
+            )}
+
           {/* Actions disponibles */}
           <div className="space-y-2">
             {actions.length > 0 ? (
@@ -372,7 +383,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
                         <SelectItem value="random">Aléatoire</SelectItem>
                         <SelectItem value="ranking">Par classement</SelectItem>
                         <SelectItem value="elo">Par ELO</SelectItem>
-                        <SelectItem value="manual">Manuel</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

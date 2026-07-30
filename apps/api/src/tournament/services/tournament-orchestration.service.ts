@@ -23,7 +23,7 @@ import {
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
 import { BracketService } from "./bracket.service";
-import { SeedingMethod, SeedingService } from "./seeding.service";
+import { SeedingMethod } from "./seeding.service";
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;
@@ -48,7 +48,6 @@ export class TournamentOrchestrationService {
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
     private bracketService: BracketService,
-    private seedingService: SeedingService,
     private rankingService: RankingService,
     private matchService: MatchService,
     private dataSource: DataSource,
@@ -62,10 +61,14 @@ export class TournamentOrchestrationService {
     tournamentId: number,
     options: StartTournamentOptions = {},
   ): Promise<Tournament> {
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
-        relations: ["registrations", "registrations.player", "registrations.player.user"],
+        relations: [
+          "registrations",
+          "registrations.player",
+          "registrations.player.user",
+        ],
       });
 
       if (!tournament) {
@@ -74,29 +77,45 @@ export class TournamentOrchestrationService {
 
       this.validateTournamentStart(tournament, options.checkInRequired);
 
-      const bracketStructure =
-        await this.bracketService.generateBracket(tournamentId);
+      const bracketStructure = await this.bracketService.generateBracket(
+        tournamentId,
+        {
+          checkInRequired: options.checkInRequired,
+          manager,
+          seedingMethod: options.seedingMethod,
+        },
+      );
 
       tournament.status = TournamentStatus.IN_PROGRESS;
       tournament.currentRound = 1;
       tournament.totalRounds = bracketStructure.totalRounds;
 
       const participantUserIds: number[] = (tournament.registrations ?? [])
-        .map((r) => r.player?.user?.id)
+        .filter(
+          (registration) =>
+            registration.status === RegistrationStatus.CONFIRMED &&
+            (!options.checkInRequired || registration.checkedIn),
+        )
+        .map((registration) => registration.player?.user?.id)
         .filter((id): id is number => typeof id === "number");
-
-      this.eventEmitter.emit("tournament.started", {
-        tournamentId: tournament.id,
-        name: tournament.name,
-        participantUserIds,
-      });
 
       await manager.save(tournament);
 
-      void this.rankingService.updateTournamentRankings(tournamentId);
-
-      return tournament;
+      return { participantUserIds, tournament };
     });
+
+    await Promise.all([
+      this.rankingService.updateTournamentRankings(tournamentId),
+      this.matchService.ensureTournamentMatchSessions(tournamentId, 1),
+    ]);
+
+    this.eventEmitter.emit("tournament.started", {
+      tournamentId: result.tournament.id,
+      name: result.tournament.name,
+      participantUserIds: result.participantUserIds,
+    });
+
+    return result.tournament;
   }
 
   /**
@@ -141,7 +160,7 @@ export class TournamentOrchestrationService {
         );
       }
 
-      void this.rankingService.updateTournamentRankings(tournamentId);
+      await this.rankingService.updateTournamentRankings(tournamentId);
 
       const newRound = tournament.currentRound! + 1;
       let matchesCreated = 0;
@@ -158,7 +177,7 @@ export class TournamentOrchestrationService {
 
           for (const pairing of swissPairings.pairings) {
             if (pairing.playerB) {
-              void this.matchService.create({
+              await this.matchService.create({
                 tournamentId: tournament.id,
                 playerAId: pairing.playerA.id,
                 playerBId: pairing.playerB.id,
@@ -229,10 +248,14 @@ export class TournamentOrchestrationService {
    * Termine un tournoi manuellement
    */
   async finishTournament(tournamentId: number): Promise<Tournament> {
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const tournament = await manager.findOne(Tournament, {
         where: { id: tournamentId },
-        relations: ["registrations", "registrations.player", "registrations.player.user"],
+        relations: [
+          "registrations",
+          "registrations.player",
+          "registrations.player.user",
+        ],
       });
 
       if (!tournament) {
@@ -243,18 +266,44 @@ export class TournamentOrchestrationService {
         throw new BadRequestException("Le tournoi est déjà terminé");
       }
 
-      void this.rankingService.updateTournamentRankings(tournamentId);
+      let championId: number | undefined;
+      if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
+        const finalMatches = await manager.find(Match, {
+          where: {
+            tournament: { id: tournamentId },
+            round: tournament.totalRounds,
+          },
+          relations: ["winner"],
+          order: { id: "DESC" },
+        });
+        const finalMatch = finalMatches[0];
 
-      // Marquer les joueurs non éliminés comme éliminés au round actuel
+        if (
+          !finalMatch?.winner ||
+          (finalMatch.status !== MatchStatus.FINISHED &&
+            finalMatch.status !== MatchStatus.FORFEIT)
+        ) {
+          throw new BadRequestException(
+            "Le tournoi ne peut être terminé qu'après une finale validée",
+          );
+        }
+
+        championId = finalMatch.winner.id;
+      }
+
       const activeRegistrations = await manager.find(TournamentRegistration, {
         where: {
           tournament: { id: tournamentId },
           status: RegistrationStatus.CONFIRMED,
         },
+        relations: ["player"],
       });
 
       for (const registration of activeRegistrations) {
-        if (!registration.eliminatedAt) {
+        if (
+          !registration.eliminatedAt &&
+          registration.player?.id !== championId
+        ) {
           registration.eliminatedAt = new Date();
           registration.eliminatedRound = tournament.currentRound || 0;
           await manager.save(registration);
@@ -271,14 +320,19 @@ export class TournamentOrchestrationService {
           rank: r.eliminatedRound ?? 0,
         }));
 
-      this.eventEmitter.emit("tournament.finished", {
-        tournamentId: tournament.id,
-        name: tournament.name,
-        rankings,
-      });
-
-      return manager.save(tournament);
+      const savedTournament = await manager.save(tournament);
+      return { rankings, tournament: savedTournament };
     });
+
+    await this.rankingService.updateTournamentRankings(tournamentId);
+
+    this.eventEmitter.emit("tournament.finished", {
+      tournamentId: result.tournament.id,
+      name: result.tournament.name,
+      rankings: result.rankings,
+    });
+
+    return result.tournament;
   }
 
   /**
@@ -383,6 +437,12 @@ export class TournamentOrchestrationService {
     if (tournament.status !== TournamentStatus.REGISTRATION_CLOSED) {
       throw new BadRequestException(
         'Le tournoi doit être en statut "inscriptions fermées" pour être démarré',
+      );
+    }
+
+    if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+      throw new BadRequestException(
+        "Ce format est temporairement indisponible pendant la finalisation de son moteur",
       );
     }
 

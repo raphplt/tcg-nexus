@@ -105,7 +105,11 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
       data,
     }: {
       matchId: number;
-      data: { playerAScore: number; playerBScore: number; status: string };
+      data: {
+        playerAScore?: number;
+        playerBScore?: number;
+        status: string;
+      };
     }) => {
       return tournamentService.updateMatch(tournamentId, matchId, data);
     },
@@ -160,13 +164,17 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
 
   const handleSaveScore = () => {
     if (!selectedMatch) return;
+    if (scoreA === scoreB) {
+      toast.error("Un match à élimination doit désigner un vainqueur");
+      return;
+    }
 
     updateMatchMutation.mutate({
       matchId: selectedMatch.id,
       data: {
         playerAScore: scoreA,
         playerBScore: scoreB,
-        status: scoreA !== scoreB ? "finished" : selectedMatch.status,
+        status: "finished",
       },
     });
   };
@@ -175,8 +183,6 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
     updateMatchMutation.mutate({
       matchId: match.id,
       data: {
-        playerAScore: match.playerAScore || 0,
-        playerBScore: match.playerBScore || 0,
         status: "in_progress",
       },
     });

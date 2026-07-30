@@ -376,8 +376,17 @@ export default function CreateTournamentPage() {
                       </FormControl>
                       <SelectContent>
                         {Object.values(TournamentType).map((value) => (
-                          <SelectItem key={value} value={value}>
+                          <SelectItem
+                            key={value}
+                            value={value}
+                            disabled={
+                              value !== TournamentType.SINGLE_ELIMINATION
+                            }
+                          >
                             {tournamentTypeTranslation[value]}
+                            {value !== TournamentType.SINGLE_ELIMINATION
+                              ? " — bientôt disponible"
+                              : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -23,7 +23,9 @@ const mockTournamentRepository = {
 };
 
 const mockMatchRepository = {
+  create: jest.fn((value) => value),
   find: jest.fn(),
+  save: jest.fn((value) => ({ id: 100, ...value })),
 };
 
 const mockPlayerRepository = {};
@@ -32,8 +34,10 @@ const mockRegistrationRepository = {};
 
 const mockRankingRepository = {};
 
-const mockMatchService = {
-  create: jest.fn(),
+const mockSeedingService = {
+  seedPlayers: jest.fn((players: Player[]) =>
+    players.map((player, index) => ({ ...player, seed: index + 1 })),
+  ),
 };
 
 const basePlayer = (id: number, name = `P${id}`): Player =>
@@ -72,13 +76,21 @@ describe("BracketService", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
+    mockMatchRepository.create.mockImplementation((value) => value);
+    mockMatchRepository.save.mockImplementation((value) => ({
+      id: mockMatchRepository.save.mock.calls.length,
+      ...value,
+    }));
+    mockSeedingService.seedPlayers.mockImplementation((players: Player[]) =>
+      players.map((player, index) => ({ ...player, seed: index + 1 })),
+    );
     service = new BracketService(
       mockTournamentRepository as any,
       mockMatchRepository as any,
       mockPlayerRepository as any,
       mockRegistrationRepository as any,
       mockRankingRepository as any,
-      mockMatchService as any,
+      mockSeedingService as any,
     );
   });
 
@@ -122,15 +134,82 @@ describe("BracketService", () => {
       mockTournamentRepository.findOne.mockResolvedValue(
         buildTournament(TournamentType.SINGLE_ELIMINATION, regs),
       );
-      jest
-        .spyOn<any, any>(service as any, "seedPlayers")
-        .mockReturnValue(regs.map((r) => r.player));
-
       const bracket = await service.generateBracket(1);
 
       expect(bracket.totalRounds).toBe(1);
-      expect(mockMatchService.create).toHaveBeenCalled();
+      expect(mockMatchRepository.save).toHaveBeenCalled();
       expect(mockTournamentRepository.save).toHaveBeenCalled();
+    });
+
+    it("does not require check-in when the start option is disabled", async () => {
+      const regs = [basePlayer(1), basePlayer(2)].map(
+        (player) =>
+          ({
+            status: RegistrationStatus.CONFIRMED,
+            checkedIn: false,
+            player,
+          }) as TournamentRegistration,
+      );
+      mockTournamentRepository.findOne.mockResolvedValue(
+        buildTournament(TournamentType.SINGLE_ELIMINATION, regs),
+      );
+
+      await expect(
+        service.generateBracket(1, { checkInRequired: false }),
+      ).resolves.toEqual(expect.objectContaining({ totalRounds: 1 }));
+    });
+
+    it("passes the selected method to the seeding service", async () => {
+      const regs = [basePlayer(1), basePlayer(2)].map(
+        (player) =>
+          ({
+            status: RegistrationStatus.CONFIRMED,
+            checkedIn: true,
+            player,
+          }) as TournamentRegistration,
+      );
+      const tournament = buildTournament(
+        TournamentType.SINGLE_ELIMINATION,
+        regs,
+      );
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      await service.generateBracket(1, { seedingMethod: "elo" as any });
+
+      expect(mockSeedingService.seedPlayers).toHaveBeenCalledWith(
+        regs.map((registration) => registration.player),
+        tournament,
+        "elo",
+      );
+    });
+
+    it("creates automatic bye matches for a six-player bracket", async () => {
+      const regs = Array.from({ length: 6 }, (_, index) => {
+        return {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: basePlayer(index + 1),
+        } as TournamentRegistration;
+      });
+      mockTournamentRepository.findOne.mockResolvedValue(
+        buildTournament(TournamentType.SINGLE_ELIMINATION, regs),
+      );
+
+      const bracket = await service.generateBracket(1);
+      const firstRound = bracket.rounds[0];
+      const savedMatches = mockMatchRepository.create.mock.calls.map(
+        ([match]) => match,
+      );
+
+      expect(bracket.totalRounds).toBe(3);
+      expect(firstRound.matches).toHaveLength(4);
+      expect(savedMatches).toHaveLength(4);
+      expect(
+        savedMatches.filter((match) => match.status === MatchStatus.FINISHED),
+      ).toHaveLength(2);
+      expect(
+        savedMatches.filter((match) => match.status === MatchStatus.SCHEDULED),
+      ).toHaveLength(2);
     });
 
     it("generates swiss bracket with correct rounds", async () => {
@@ -159,10 +238,6 @@ describe("BracketService", () => {
       mockTournamentRepository.findOne.mockResolvedValue(
         buildTournament(TournamentType.SWISS_SYSTEM, regs),
       );
-      jest
-        .spyOn<any, any>(service as any, "seedPlayers")
-        .mockReturnValue(regs.map((r) => r.player));
-
       const bracket = await service.generateBracket(1);
       expect(bracket.totalRounds).toBeGreaterThan(0);
       expect(bracket.type).toBe(TournamentType.SWISS_SYSTEM);
@@ -194,10 +269,6 @@ describe("BracketService", () => {
       mockTournamentRepository.findOne.mockResolvedValue(
         buildTournament(TournamentType.ROUND_ROBIN, regs),
       );
-      jest
-        .spyOn<any, any>(service as any, "seedPlayers")
-        .mockReturnValue(regs.map((r) => r.player));
-
       const bracket = await service.generateBracket(1);
 
       expect(bracket.totalRounds).toBe(3);
@@ -247,13 +318,9 @@ describe("BracketService", () => {
       mockTournamentRepository.findOne.mockResolvedValue(
         buildTournament(TournamentType.DOUBLE_ELIMINATION, regs),
       );
-      jest
-        .spyOn<any, any>(service as any, "seedPlayers")
-        .mockReturnValue(regs.map((r) => r.player));
-
       const bracket = await service.generateBracket(1);
       expect(bracket.type).toBe(TournamentType.SINGLE_ELIMINATION);
-      expect(mockMatchService.create).toHaveBeenCalled();
+      expect(mockMatchRepository.save).toHaveBeenCalled();
     });
   });
 

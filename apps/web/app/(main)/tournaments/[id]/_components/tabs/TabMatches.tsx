@@ -105,12 +105,16 @@ export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
     scoreB: number,
   ) => {
     if (!tournamentId) return;
+    if (scoreA === scoreB) {
+      toast.error("Un match à élimination doit désigner un vainqueur");
+      return;
+    }
 
     try {
       await tournamentService.updateMatch(tournamentId, matchId, {
         playerAScore: scoreA,
         playerBScore: scoreB,
-        status: scoreA !== scoreB ? "finished" : "in_progress",
+        status: "finished",
       });
       queryClient.invalidateQueries({ queryKey: ["tournament"] });
       toast.success("Score enregistré !");

@@ -718,10 +718,37 @@ export class TournamentService {
       status?: string;
     },
   ) {
-    // Vérifier que le match appartient bien au tournoi
-    await this.getTournamentMatch(tournamentId, matchId);
+    const match = await this.getTournamentMatch(tournamentId, matchId);
+    const requestedStatus = updateData.status?.toLowerCase();
+    const isFinalResult =
+      requestedStatus === MatchStatus.FINISHED ||
+      requestedStatus === MatchStatus.FORFEIT;
+    const includesScore =
+      updateData.playerAScore !== undefined ||
+      updateData.playerBScore !== undefined;
 
-    // Mettre à jour le match via le service de match
+    if (includesScore && !isFinalResult) {
+      throw new BadRequestException(
+        "Un score doit être enregistré avec un statut final",
+      );
+    }
+
+    if (isFinalResult) {
+      if (match.status === MatchStatus.SCHEDULED) {
+        await this.matchService.startMatch(matchId, {});
+      } else if (match.status !== MatchStatus.IN_PROGRESS) {
+        throw new BadRequestException(
+          "Ce résultat ne peut plus être modifié directement",
+        );
+      }
+
+      return this.matchService.reportScore(matchId, {
+        playerAScore: updateData.playerAScore ?? match.playerAScore ?? 0,
+        playerBScore: updateData.playerBScore ?? match.playerBScore ?? 0,
+        isForfeit: requestedStatus === MatchStatus.FORFEIT,
+      });
+    }
+
     return this.matchService.update(matchId, updateData as UpdateMatchDto);
   }
 

@@ -9,6 +9,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { UserRole } from "../common/enums/user";
 import { PaginationHelper } from "../helpers/pagination";
+import { MatchStatus } from "../match/entities/match.entity";
 import { MatchService } from "../match/match.service";
 import { Player } from "../player/entities/player.entity";
 import { RankingService } from "../ranking/ranking.service";
@@ -125,6 +126,8 @@ describe("TournamentService", () => {
     getMatchesByRound: jest.fn(),
     findAll: jest.fn(),
     findOne: jest.fn(),
+    reportScore: jest.fn(),
+    startMatch: jest.fn(),
     update: jest.fn(),
   };
 
@@ -766,20 +769,49 @@ describe("TournamentService", () => {
       });
     });
 
-    it("should update match after validating tournament ownership", async () => {
+    it("should route an admin final score through the canonical pipeline", async () => {
       jest
         .spyOn(service, "getTournamentMatch")
-        .mockResolvedValue({ id: 10, tournament: { id: 1 } } as any);
-      matchService.update.mockResolvedValue({ id: 10, status: "FINISHED" });
+        .mockResolvedValue({
+          id: 10,
+          tournament: { id: 1 },
+          status: MatchStatus.SCHEDULED,
+          playerAScore: 0,
+          playerBScore: 0,
+        } as any);
+      matchService.startMatch.mockResolvedValue({
+        id: 10,
+        status: MatchStatus.IN_PROGRESS,
+      });
+      matchService.reportScore.mockResolvedValue({
+        id: 10,
+        status: MatchStatus.FINISHED,
+      });
 
       const result = await service.updateTournamentMatch(1, 10, {
         playerAScore: 1,
+        playerBScore: 0,
+        status: MatchStatus.FINISHED,
       });
 
-      expect(result).toEqual({ id: 10, status: "FINISHED" });
-      expect(matchService.update).toHaveBeenCalledWith(10, {
+      expect(result).toEqual({ id: 10, status: MatchStatus.FINISHED });
+      expect(matchService.startMatch).toHaveBeenCalledWith(10, {});
+      expect(matchService.reportScore).toHaveBeenCalledWith(10, {
         playerAScore: 1,
+        playerBScore: 0,
+        isForfeit: false,
       });
+      expect(matchService.update).not.toHaveBeenCalled();
+    });
+
+    it("should reject a score without a final status", async () => {
+      jest
+        .spyOn(service, "getTournamentMatch")
+        .mockResolvedValue({ id: 10, tournament: { id: 1 } } as any);
+
+      await expect(
+        service.updateTournamentMatch(1, 10, { playerAScore: 1 }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

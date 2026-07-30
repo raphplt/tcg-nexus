@@ -24,12 +24,12 @@ const mockBracketService = {
   generateBracket: jest.fn(),
   generateSwissPairings: jest.fn(),
 };
-const mockSeedingService = {};
 const mockRankingService = {
   updateTournamentRankings: jest.fn(),
 };
 const mockMatchService = {
   create: jest.fn(),
+  ensureTournamentMatchSessions: jest.fn(),
 };
 
 const mockDataSource = {
@@ -40,7 +40,7 @@ const baseTournament = (): Tournament =>
   ({
     id: 1,
     status: TournamentStatus.REGISTRATION_CLOSED,
-    type: TournamentType.SWISS_SYSTEM,
+    type: TournamentType.SINGLE_ELIMINATION,
     name: "T",
     description: "",
     location: "",
@@ -75,7 +75,6 @@ describe("TournamentOrchestrationService", () => {
       mockMatchRepository as any,
       mockRegistrationRepository as any,
       mockBracketService as any,
-      mockSeedingService as any,
       mockRankingService as any,
       mockMatchService as any,
       mockDataSource as any,
@@ -114,7 +113,18 @@ describe("TournamentOrchestrationService", () => {
       } as any);
 
       await service.startTournament(1, { checkInRequired: true });
-      expect(mockBracketService.generateBracket).toHaveBeenCalledWith(1);
+      expect(mockBracketService.generateBracket).toHaveBeenCalledWith(1, {
+        checkInRequired: true,
+        manager: expect.any(Object),
+        seedingMethod: undefined,
+      });
+      expect(mockMatchService.ensureTournamentMatchSessions).toHaveBeenCalledWith(
+        1,
+        1,
+      );
+      expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(
+        1,
+      );
     });
 
     it("rejects start when status is not REGISTRATION_CLOSED", async () => {
@@ -185,6 +195,28 @@ describe("TournamentOrchestrationService", () => {
         BadRequestException,
       );
     });
+
+    it("rejects formats whose engine is not certified yet", async () => {
+      const tournament = baseTournament();
+      tournament.type = TournamentType.DOUBLE_ELIMINATION;
+      tournament.minPlayers = 2;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          player: { id: 1 },
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          player: { id: 2 },
+        } as any,
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      await expect(service.startTournament(1, {})).rejects.toThrow(
+        "Ce format est temporairement indisponible",
+      );
+      expect(mockBracketService.generateBracket).not.toHaveBeenCalled();
+    });
   });
 
   describe("advanceToNextRound", () => {
@@ -209,6 +241,7 @@ describe("TournamentOrchestrationService", () => {
 
     it("creates swiss pairings for next round", async () => {
       const tournament = baseTournament();
+      tournament.type = TournamentType.SWISS_SYSTEM;
       tournament.status = TournamentStatus.IN_PROGRESS;
       tournament.matches = [
         { round: 1, status: MatchStatus.FINISHED } as Match,
@@ -352,13 +385,14 @@ describe("TournamentOrchestrationService", () => {
   describe("finishTournament", () => {
     it("marks tournament finished and saves eliminations", async () => {
       const tournament = baseTournament();
+      tournament.type = TournamentType.ROUND_ROBIN;
       tournament.status = TournamentStatus.IN_PROGRESS;
       tournament.currentRound = 2;
       mockTournamentRepository.findOne.mockResolvedValueOnce(tournament);
       mockDataSource.transaction.mockImplementation(async (cb: any) =>
         cb({
           findOne: mockTournamentRepository.findOne,
-          save: jest.fn(),
+          save: jest.fn().mockImplementation((value) => value),
           find: jest.fn().mockResolvedValue([]),
           update: jest.fn(),
           transaction: mockDataSource.transaction,
@@ -369,6 +403,25 @@ describe("TournamentOrchestrationService", () => {
       expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(
         1,
       );
+    });
+
+    it("does not finish a single-elimination tournament before its final", async () => {
+      const tournament = baseTournament();
+      tournament.status = TournamentStatus.IN_PROGRESS;
+      tournament.totalRounds = 2;
+      mockTournamentRepository.findOne.mockResolvedValueOnce(tournament);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: mockTournamentRepository.findOne,
+          find: jest.fn().mockResolvedValue([]),
+          save: jest.fn(),
+        }),
+      );
+
+      await expect(service.finishTournament(1)).rejects.toThrow(
+        "après une finale validée",
+      );
+      expect(mockRankingService.updateTournamentRankings).not.toHaveBeenCalled();
     });
   });
 
