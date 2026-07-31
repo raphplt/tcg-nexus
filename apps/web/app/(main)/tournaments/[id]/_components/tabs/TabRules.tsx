@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ScrollText,
-  ShieldCheck,
   AlertCircle,
   CheckCircle2,
   Info,
+  ScrollText,
+  ShieldCheck,
 } from "lucide-react";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tournament } from "@/types/tournament";
 
 interface TabRulesProps {

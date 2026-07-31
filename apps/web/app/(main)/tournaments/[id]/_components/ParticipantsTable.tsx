@@ -1,5 +1,6 @@
-import React from "react";
 import Link from "next/link";
+import React from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -8,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Player } from "@/types/tournament";
 
 interface ParticipantsTableProps {

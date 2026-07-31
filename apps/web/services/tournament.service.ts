@@ -228,13 +228,6 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les paires d'un tournoi
-   */
-  async getPairings(tournamentId: number): Promise<Match[]> {
-    return authedFetch<Match[]>("GET", `/tournaments/${tournamentId}/pairings`);
-  },
-
-  /**
    * Récupère les matches d'un tournoi
    */
   async getTournamentMatches(tournamentId: number): Promise<Match[]> {

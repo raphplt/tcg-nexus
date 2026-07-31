@@ -146,18 +146,13 @@ export interface BracketMatch {
     seed?: number;
   };
   winnerId?: number;
+  status?: Match["status"];
+  playerAScore?: number;
+  playerBScore?: number;
+  scheduledDate?: string;
   nextMatchId?: number;
   nextSlot?: "A" | "B";
   phase: "qualification" | "quarter_final" | "semi_final" | "final";
-}
-
-export interface SwissPairing {
-  round: number;
-  pairings: {
-    playerA: Player;
-    playerB?: Player;
-    tableNumber: number;
-  }[];
 }
 
 export interface TournamentProgress {

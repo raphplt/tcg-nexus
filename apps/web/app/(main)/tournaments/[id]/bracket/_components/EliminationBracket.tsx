@@ -1,11 +1,11 @@
 "use client";
 
+import { Crown, Medal, Target, Trophy } from "lucide-react";
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Crown, Medal, Target } from "lucide-react";
-import { BracketStructure, BracketMatch } from "@/types/tournament";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { BracketMatch, BracketStructure } from "@/types/tournament";
 
 interface EliminationBracketProps {
   bracket: BracketStructure;
@@ -38,9 +38,13 @@ function BracketMatchComponent({
   };
 
   const getStatusColor = () => {
-    if (match.winnerId) return "border-green-200 bg-green-50";
-    if (match.playerA && match.playerB) return "border-blue-200 bg-blue-50";
-    return "border-gray-200 bg-gray-50";
+    if (["finished", "forfeit"].includes(match.status ?? "")) {
+      return "border-emerald-500/40 bg-emerald-500/5";
+    }
+    if (match.status === "in_progress") {
+      return "border-primary/60 bg-primary/5";
+    }
+    return "border-border bg-card";
   };
 
   const isWinner = (playerId?: number) => {
@@ -80,8 +84,8 @@ function BracketMatchComponent({
           <div
             className={`flex items-center gap-2 p-2 rounded ${
               isWinner(match.playerA?.id)
-                ? "bg-green-100 border border-green-300"
-                : "bg-white"
+                ? "border border-emerald-500/40 bg-emerald-500/10"
+                : "bg-muted/40"
             }`}
           >
             <Avatar className="w-6 h-6">
@@ -113,8 +117,8 @@ function BracketMatchComponent({
           <div
             className={`flex items-center gap-2 p-2 rounded ${
               isWinner(match.playerB?.id)
-                ? "bg-green-100 border border-green-300"
-                : "bg-white"
+                ? "border border-emerald-500/40 bg-emerald-500/10"
+                : "bg-muted/40"
             }`}
           >
             <Avatar className="w-6 h-6">
@@ -138,15 +142,27 @@ function BracketMatchComponent({
           </div>
         </div>
 
-        {/* Status */}
-        <div className="mt-2 text-center">
-          {match.winnerId ? (
+        <div className="mt-3 flex items-center justify-between border-t pt-2 text-xs">
+          <span className="text-muted-foreground">
+            {match.status === "finished" || match.status === "forfeit"
+              ? `${match.playerAScore ?? 0} – ${match.playerBScore ?? 0}`
+              : "Score à venir"}
+          </span>
+          {match.status === "finished" ? (
             <Badge variant="default" className="text-xs">
               Terminé
             </Badge>
-          ) : match.playerA && match.playerB ? (
+          ) : match.status === "forfeit" ? (
+            <Badge variant="destructive" className="text-xs">
+              Forfait
+            </Badge>
+          ) : match.status === "in_progress" ? (
             <Badge variant="secondary" className="text-xs">
-              En attente
+              En cours
+            </Badge>
+          ) : match.playerA && match.playerB ? (
+            <Badge variant="outline" className="text-xs">
+              Programmé
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs">
@@ -189,7 +205,7 @@ export function EliminationBracket({
               </h3>
               <Badge variant="outline" className="mt-1">
                 {round.matches.length} match
-                {round.matches.length > 1 ? "es" : ""}
+                {round.matches.length > 1 ? "s" : ""}
               </Badge>
             </div>
 
@@ -206,8 +222,8 @@ export function EliminationBracket({
                   />
 
                   {roundIndex < bracket.rounds.length - 1 && (
-                    <div className="absolute top-1/2 -right-4 w-8 h-px bg-gray-300 transform -translate-y-1/2">
-                      <div className="absolute right-0 top-1/2 w-2 h-2 bg-gray-300 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute top-1/2 -right-4 h-px w-8 -translate-y-1/2 bg-border">
+                      <div className="absolute right-0 top-1/2 h-2 w-2 translate-x-1/2 -translate-y-1/2 rounded-full bg-border" />
                     </div>
                   )}
                 </div>
@@ -223,16 +239,16 @@ export function EliminationBracket({
           <CardContent className="p-4">
             <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                <div className="h-3 w-3 rounded border border-emerald-500/40 bg-emerald-500/10" />
                 <span>Vainqueur</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-50 border border-blue-200 rounded"></div>
-                <span>En attente</span>
+                <div className="h-3 w-3 rounded border border-primary/60 bg-primary/5" />
+                <span>En cours</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-50 border border-gray-200 rounded"></div>
-                <span>À venir</span>
+                <div className="h-3 w-3 rounded border border-border bg-card" />
+                <span>Programmé ou à venir</span>
               </div>
             </div>
           </CardContent>

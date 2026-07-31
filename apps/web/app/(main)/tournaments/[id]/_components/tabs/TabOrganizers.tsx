@@ -1,21 +1,21 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
-  Users,
-  Mail,
-  Bell,
-  UserCircle,
-  MessageSquare,
   AlertCircle,
+  Bell,
   CheckCircle2,
   Clock,
+  Mail,
+  MessageSquare,
+  UserCircle,
+  Users,
 } from "lucide-react";
-import { Organizer, Notification } from "@/types/tournament";
+import React from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Notification, Organizer } from "@/types/tournament";
 
 interface TabOrganizersProps {
   organizers: Organizer[];

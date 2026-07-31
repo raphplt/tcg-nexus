@@ -1,9 +1,16 @@
 "use client";
 
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Play,
+  Settings,
+  SkipForward,
+  Square,
+  X,
+} from "lucide-react";
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +21,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,20 +32,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Play,
-  Square,
-  X,
-  SkipForward,
-  Settings,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
-import { Tournament } from "@/types/tournament";
-import { useTournament } from "@/hooks/useTournament";
-import { usePermissions } from "@/hooks/usePermissions";
+import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTournament } from "@/hooks/useTournament";
+import { Tournament } from "@/types/tournament";
+import { tournamentStatusTranslation } from "@/utils/tournaments";
 
 interface TournamentControlsProps {
   tournament: Tournament;
@@ -56,12 +57,10 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
   const permissions = usePermissions(user, tournament);
   const {
     startTournament,
-    finishTournament,
     cancelTournament,
     advanceRound,
     updateStatus,
     isStarting,
-    isFinishing,
     isCancelling,
     isAdvancing,
     isUpdatingStatus,
@@ -69,7 +68,8 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
 
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionData, setActionData] = useState<any>({});
-  const hasSupportedEngine = tournament.type === "single_elimination";
+  const hasSupportedEngine =
+    !tournament.isExternal && tournament.type === "single_elimination";
 
   // Configuration des actions disponibles selon l'état
   const getAvailableActions = (): ActionConfig[] => {
@@ -109,7 +109,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             label: "Démarrer le tournoi",
             icon: <Play className="w-4 h-4" />,
             variant: "default",
-            description: "Générer le bracket et commencer les matches",
+            description: "Générer le tableau et commencer les matchs",
             requiresConfirmation: true,
           });
         }
@@ -144,22 +144,13 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
           if (allCurrentRoundFinished && currentRound < totalRounds) {
             actions.push({
               action: "advance-round",
-              label: `Passer au Round ${currentRound + 1}`,
+              label: `Passer à la ronde ${currentRound + 1}`,
               icon: <SkipForward className="w-4 h-4" />,
               variant: "default",
-              description: `Générer les matches du round ${currentRound + 1}/${totalRounds}`,
+              description: `Générer les matchs de la ronde ${currentRound + 1}/${totalRounds}`,
               requiresConfirmation: true,
             });
           }
-
-          actions.push({
-            action: "finish-tournament",
-            label: "Terminer le tournoi",
-            icon: <CheckCircle className="w-4 h-4" />,
-            variant: "outline",
-            description: "Finaliser le tournoi et calculer les résultats",
-            requiresConfirmation: true,
-          });
         }
         break;
     }
@@ -199,9 +190,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         break;
       case "advance-round":
         advanceRound();
-        break;
-      case "finish-tournament":
-        finishTournament();
         break;
       case "cancel-tournament":
         cancelTournament(actionData.reason);
@@ -248,11 +236,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
   const actions = getAvailableActions();
   const statusInfo = getStatusInfo();
   const isLoading =
-    isStarting ||
-    isFinishing ||
-    isCancelling ||
-    isAdvancing ||
-    isUpdatingStatus;
+    isStarting || isCancelling || isAdvancing || isUpdatingStatus;
 
   if (!permissions.canViewAdmin) {
     return null;
@@ -273,8 +257,10 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             <span className="text-sm font-medium">Statut :</span>
             <Badge className={statusInfo.color}>
               {statusInfo.icon}
-              <span className="ml-1 capitalize">
-                {tournament.status.replace("_", " ")}
+              <span className="ml-1">
+                {tournamentStatusTranslation[
+                  tournament.status as keyof typeof tournamentStatusTranslation
+                ] ?? tournament.status}
               </span>
             </Badge>
           </div>
@@ -282,8 +268,8 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
           {!hasSupportedEngine &&
             tournament.status === "registration_closed" && (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
-                Le démarrage de ce format est temporairement désactivé pendant
-                la finalisation de son moteur.
+                Ce format est publié dans Nexus, mais son déroulement est géré
+                sur la plateforme externe de l’organisateur.
               </div>
             )}
 
@@ -320,7 +306,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             <div className="pt-4 border-t">
               <div className="text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span>Round actuel :</span>
+                  <span>Ronde actuelle :</span>
                   <span className="font-medium">
                     {tournament.currentRound}/{tournament.totalRounds}
                   </span>

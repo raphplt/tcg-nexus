@@ -20,7 +20,7 @@ export function MatchesTable({ matches, formatDate }: MatchesTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>#</TableHead>
-          <TableHead>Round</TableHead>
+          <TableHead>Ronde</TableHead>
           <TableHead className="hidden md:table-cell">Phase</TableHead>
           <TableHead>Statut</TableHead>
           <TableHead className="hidden lg:table-cell">Planifié</TableHead>

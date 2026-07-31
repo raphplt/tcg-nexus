@@ -1,12 +1,26 @@
 "use client";
 
-import React from "react";
-import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  BarChart3,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Target,
+  TrendingUp,
+  Trophy,
+  User,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import React from "react";
+import { H1 } from "@/components/Shared/Titles";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -15,25 +29,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ArrowLeft,
-  Trophy,
-  Clock,
-  CheckCircle,
-  X,
-  TrendingUp,
-  Target,
-  Calendar,
-  User,
-  BarChart3,
-} from "lucide-react";
-import { H1 } from "@/components/Shared/Titles";
-import { useTournament } from "@/hooks/useTournament";
-import { useRankings } from "@/hooks/useRankings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRankings } from "@/hooks/useRankings";
+import { useTournament } from "@/hooks/useTournament";
 import { matchService } from "@/services/match.service";
 import { Match } from "@/types/tournament";
-import Link from "next/link";
 
 export default function PlayerDashboardPage() {
   const { id } = useParams();
@@ -130,7 +130,7 @@ export default function PlayerDashboardPage() {
 
   if (!user?.player) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-4xl mx-auto text-center">
           <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Profil joueur requis</h1>
@@ -146,10 +146,10 @@ export default function PlayerDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+    <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -158,7 +158,7 @@ export default function PlayerDashboardPage() {
           </Button>
 
           <div className="flex-1">
-            <H1 className="mb-2">Mon Dashboard - {tournament?.name}</H1>
+            <H1 className="mb-2">Mon parcours — {tournament?.name}</H1>
             <p className="text-muted-foreground">
               Suivi de votre participation au tournoi
             </p>
@@ -254,7 +254,7 @@ export default function PlayerDashboardPage() {
                     <div className="flex items-center gap-2">
                       {getStatusIcon(nextMatch.status)}
                       <span className="font-medium">
-                        Round {nextMatch.round}
+                        Ronde {nextMatch.round}
                       </span>
                     </div>
 
@@ -290,11 +290,11 @@ export default function PlayerDashboardPage() {
                   Mes matches
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent className="overflow-x-auto p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Round</TableHead>
+                      <TableHead>Ronde</TableHead>
                       <TableHead>Adversaire</TableHead>
                       <TableHead>Résultat</TableHead>
                       <TableHead>Score</TableHead>
@@ -304,7 +304,7 @@ export default function PlayerDashboardPage() {
                   </TableHeader>
                   <TableBody>
                     {playerMatches.length > 0 ? (
-                      playerMatches
+                      [...playerMatches]
                         .sort((a, b) => a.round - b.round)
                         .map((match) => {
                           const opponent = getOpponent(match);
@@ -314,7 +314,7 @@ export default function PlayerDashboardPage() {
                             <TableRow key={match.id}>
                               <TableCell>
                                 <Badge variant="outline">
-                                  Round {match.round}
+                                  Ronde {match.round}
                                 </Badge>
                               </TableCell>
 
@@ -325,7 +325,9 @@ export default function PlayerDashboardPage() {
                                       {opponent?.name[0] || "?"}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <span>{opponent?.name || "TBD"}</span>
+                                  <span>
+                                    {opponent?.name || "À déterminer"}
+                                  </span>
                                 </div>
                               </TableCell>
 
@@ -390,7 +392,7 @@ export default function PlayerDashboardPage() {
                 <Link href={`/tournaments/${id}/bracket`}>
                   <div className="text-center">
                     <Trophy className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Bracket</div>
+                    <div className="font-medium">Tableau</div>
                     <div className="text-xs text-muted-foreground">
                       Voir la progression
                     </div>
@@ -414,7 +416,7 @@ export default function PlayerDashboardPage() {
                 <Link href={`/tournaments/${id}/matches`}>
                   <div className="text-center">
                     <Clock className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Tous les matches</div>
+                    <div className="font-medium">Tous les matchs</div>
                     <div className="text-xs text-muted-foreground">
                       Voir le planning
                     </div>

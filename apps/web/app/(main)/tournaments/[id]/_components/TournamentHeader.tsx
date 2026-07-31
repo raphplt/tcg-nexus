@@ -1,18 +1,18 @@
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { H1 } from "@/components/Shared/Titles";
 import {
-  Calendar,
-  MapPin,
-  Lock,
   BadgeCheck,
+  BarChart3,
+  Calendar,
+  ListChecks,
+  Lock,
+  MapPin,
   Settings2,
   Trophy,
-  BarChart3,
-  ListChecks,
 } from "lucide-react";
 import Link from "next/link";
+import React from "react";
+import { H1 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tournament } from "@/types/tournament";
 import {
   tournamentStatusTranslation,
@@ -103,7 +103,7 @@ export function TournamentHeader({
         {tournament.status === "in_progress" && (
           <Button variant="secondary" className="shadow-md" asChild>
             <Link href={`/tournaments/${tournament.id}/bracket`}>
-              <Trophy className="size-4 mr-2" /> Voir le bracket
+              <Trophy className="size-4 mr-2" /> Voir le tableau
             </Link>
           </Button>
         )}

@@ -1,57 +1,58 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
+  AlertTriangle,
   ArrowLeft,
+  Grid3X3,
   Maximize2,
   Minimize2,
-  Download,
   RefreshCw,
-  Trophy,
-  Target,
-  Grid3X3,
   Swords,
+  Trophy,
 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { H1 } from "@/components/Shared/Titles";
-import { useTournament } from "@/hooks/useTournament";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 import { useBracket } from "@/hooks/useBracket";
+import { useTournament } from "@/hooks/useTournament";
 import { tournamentService } from "@/services/tournament.service";
 import { EliminationBracket } from "./_components/EliminationBracket";
-import { SwissPairings } from "./_components/SwissPairings";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function BracketPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { tournament, isLoading: tournamentLoading } = useTournament(
-    id as string,
-  );
+  const {
+    tournament,
+    progress,
+    isLoading: tournamentLoading,
+  } = useTournament(id as string);
   const {
     bracket,
-    pairings,
     isLoading: bracketLoading,
-    currentRound,
     totalMatches,
     completedMatches,
     progressPercentage,
     isSwiss,
     isRoundRobin,
     isElimination,
+    error,
+    refetch,
   } = useBracket(id as string);
 
   const { data: myMatch } = useQuery({
     queryKey: ["tournament", id, "matches", "me"],
     queryFn: () => tournamentService.getMyPendingMatch(id as string),
-    enabled: Boolean(id),
+    enabled: Boolean(id && user?.player?.id),
     refetchInterval: 15_000,
   });
 
@@ -59,7 +60,7 @@ export default function BracketPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -70,13 +71,14 @@ export default function BracketPage() {
     );
   }
 
-  if (!tournament || !bracket) {
+  if (!tournament || error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Bracket non disponible</h1>
+          <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive" />
+          <h1 className="text-2xl font-bold mb-4">Tableau indisponible</h1>
           <p className="text-muted-foreground mb-4">
-            Le bracket n'a pas encore été généré ou le tournoi n'a pas démarré.
+            Les données du tableau n’ont pas pu être chargées.
           </p>
           <Button asChild>
             <Link href={`/tournaments/${id}`}>Retour au tournoi</Link>
@@ -86,10 +88,12 @@ export default function BracketPage() {
     );
   }
 
+  if (!bracket) return null;
+
   const getBracketTypeIcon = () => {
     switch (bracket.type) {
       case "single_elimination":
-        return <Target className="w-5 h-5" />;
+        return <Trophy className="w-5 h-5" />;
       case "double_elimination":
         return <Trophy className="w-5 h-5" />;
       case "swiss_system":
@@ -110,7 +114,7 @@ export default function BracketPage() {
       case "swiss_system":
         return "Système suisse";
       case "round_robin":
-        return "Round robin";
+        return "Toutes rondes";
       default:
         return "Inconnu";
     }
@@ -118,12 +122,12 @@ export default function BracketPage() {
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4 ${isFullscreen ? "fixed inset-0 z-50 bg-background" : ""}`}
+      className={`min-h-screen bg-background px-4 py-10 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
             {!isFullscreen && (
               <Button variant="ghost" size="sm" asChild>
                 <Link href={`/tournaments/${id}`}>
@@ -136,28 +140,53 @@ export default function BracketPage() {
             <div>
               <H1 className="flex items-center gap-2 mb-2">
                 {getBracketTypeIcon()}
-                Bracket - {tournament.name}
+                Tableau — {tournament.name}
               </H1>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <Badge variant="outline">{getBracketTypeName()}</Badge>
                 <span>
-                  {completedMatches}/{totalMatches} matches terminés
+                  {progress?.completedMatches ?? completedMatches}/
+                  {progress?.totalMatches ?? totalMatches} matchs terminés
                 </span>
-                <span>{progressPercentage}% complété</span>
+                <span>
+                  {Math.round(
+                    progress?.progressPercentage ?? progressPercentage,
+                  )}
+                  % terminé
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Exporter
+          <div className="flex items-center gap-2 self-end lg:self-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isRefreshing}
+              onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  await refetch();
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              Actualiser
             </Button>
 
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsFullscreen(!isFullscreen)}
+              aria-label={
+                isFullscreen
+                  ? "Quitter le plein écran"
+                  : "Afficher en plein écran"
+              }
             >
               {isFullscreen ? (
                 <Minimize2 className="w-4 h-4" />
@@ -176,12 +205,12 @@ export default function BracketPage() {
                 <Swords className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">
-                    Tu as un match en attente — Round {myMatch.round}
+                    Tu as un match en attente — ronde {myMatch.round}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {myMatch.status === "in_progress"
                       ? "Reprends la partie en cours"
-                      : "Lance ta partie online"}
+                      : "Lance ta partie en ligne"}
                   </p>
                 </div>
               </div>
@@ -196,68 +225,54 @@ export default function BracketPage() {
           </Card>
         )}
 
-        {/* Contenu du bracket */}
-        <Card className="min-h-[600px]">
-          <CardContent className="p-6">
-            {isElimination && (
-              <EliminationBracket
-                bracket={bracket}
-                onMatchClick={(matchId) =>
-                  router.push(`/tournaments/${id}/matches/${matchId}`)
-                }
-                interactive={true}
-              />
-            )}
-
-            {isSwiss && pairings && (
-              <SwissPairings
-                pairings={pairings}
-                currentRound={currentRound}
-                onMatchClick={(matchId) =>
-                  router.push(`/tournaments/${id}/matches/${matchId}`)
-                }
-                interactive={true}
-              />
-            )}
-
-            {isRoundRobin && (
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-4">
-                  Grille Round Robin
-                </h3>
-                <p className="text-muted-foreground">
-                  Interface Round Robin à implémenter
-                </p>
-                {/* TODO: Implémenter RoundRobinGrid */}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Navigation par rounds pour Swiss/Round Robin */}
-        {(isSwiss || isRoundRobin) && bracket.rounds.length > 1 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Navigation par rounds</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {bracket.rounds.map((round) => (
-                  <Button
-                    key={round.index}
-                    variant={
-                      selectedRound === round.index ? "default" : "outline"
-                    }
-                    size="sm"
-                    onClick={() => setSelectedRound(round.index)}
+        {bracket.rounds.length === 0 ? (
+          <Card>
+            <CardContent className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
+              <Trophy className="mb-4 h-10 w-10 text-muted-foreground" />
+              <h2 className="text-xl font-semibold">
+                {tournament.isExternal
+                  ? "Résultats gérés sur une plateforme externe"
+                  : "Le tableau sera généré au démarrage"}
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                {tournament.isExternal
+                  ? "Nexus présente cet événement sans inventer de résultats qui ne sont pas synchronisés. Consultez la plateforme de l’organisateur pour le suivi en direct."
+                  : "Une fois les inscriptions fermées et le tournoi lancé, les affiches, scores et vainqueurs apparaîtront ici automatiquement."}
+              </p>
+              {tournament.isExternal && tournament.externalRegistrationUrl && (
+                <Button className="mt-5" asChild>
+                  <a
+                    href={tournament.externalRegistrationUrl}
+                    target="_blank"
+                    rel="noreferrer"
                   >
-                    Round {round.index}
-                    <Badge variant="secondary" className="ml-2">
-                      {round.matches.length}
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
+                    Ouvrir le site de l’organisateur
+                  </a>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              {isElimination && (
+                <EliminationBracket
+                  bracket={bracket}
+                  onMatchClick={(matchId) =>
+                    router.push(`/tournaments/${id}/matches/${matchId}`)
+                  }
+                  interactive={true}
+                />
+              )}
+
+              {(isSwiss || isRoundRobin) && (
+                <div className="py-12 text-center">
+                  <p className="font-medium">Suivi des rondes externalisé</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Ce format n’est pas orchestré par le moteur Nexus.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

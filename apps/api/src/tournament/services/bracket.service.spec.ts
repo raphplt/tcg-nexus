@@ -5,7 +5,6 @@ import {
   MatchStatus,
 } from "../../match/entities/match.entity";
 import { Player } from "../../player/entities/player.entity";
-import { Ranking } from "../../ranking/entities/ranking.entity";
 import {
   Tournament,
   TournamentStatus,
@@ -27,12 +26,6 @@ const mockMatchRepository = {
   find: jest.fn(),
   save: jest.fn((value) => ({ id: 100, ...value })),
 };
-
-const mockPlayerRepository = {};
-
-const mockRegistrationRepository = {};
-
-const mockRankingRepository = {};
 
 const mockSeedingService = {
   seedPlayers: jest.fn((players: Player[]) =>
@@ -87,9 +80,6 @@ describe("BracketService", () => {
     service = new BracketService(
       mockTournamentRepository as any,
       mockMatchRepository as any,
-      mockPlayerRepository as any,
-      mockRegistrationRepository as any,
-      mockRankingRepository as any,
       mockSeedingService as any,
     );
   });
@@ -139,6 +129,39 @@ describe("BracketService", () => {
       expect(bracket.totalRounds).toBe(1);
       expect(mockMatchRepository.save).toHaveBeenCalled();
       expect(mockTournamentRepository.save).toHaveBeenCalled();
+    });
+
+    it("returns persisted match status and scores in the public bracket", async () => {
+      mockTournamentRepository.findOne.mockResolvedValue({
+        ...buildTournament(TournamentType.SINGLE_ELIMINATION, []),
+        totalRounds: 1,
+        matches: [
+          {
+            id: 12,
+            round: 1,
+            phase: MatchPhase.FINAL,
+            status: MatchStatus.FINISHED,
+            playerAScore: 2,
+            playerBScore: 1,
+            playerA: basePlayer(1),
+            playerB: basePlayer(2),
+            winner: basePlayer(1),
+            scheduledDate: new Date("2026-07-31T18:00:00Z"),
+          },
+        ],
+      });
+
+      const bracket = await service.getBracket(1);
+
+      expect(bracket.rounds[0].matches[0]).toEqual(
+        expect.objectContaining({
+          matchId: 12,
+          status: MatchStatus.FINISHED,
+          playerAScore: 2,
+          playerBScore: 1,
+          winnerId: 1,
+        }),
+      );
     });
 
     it("does not require check-in when the start option is disabled", async () => {
@@ -212,7 +235,11 @@ describe("BracketService", () => {
       ).toHaveLength(2);
     });
 
-    it("generates swiss bracket with correct rounds", async () => {
+    it.each([
+      TournamentType.SWISS_SYSTEM,
+      TournamentType.ROUND_ROBIN,
+      TournamentType.DOUBLE_ELIMINATION,
+    ])("rejects non-orchestrated format %s", async (type) => {
       const regs: TournamentRegistration[] = [
         {
           status: RegistrationStatus.CONFIRMED,
@@ -236,47 +263,11 @@ describe("BracketService", () => {
         } as any,
       ];
       mockTournamentRepository.findOne.mockResolvedValue(
-        buildTournament(TournamentType.SWISS_SYSTEM, regs),
+        buildTournament(type, regs),
       );
-      const bracket = await service.generateBracket(1);
-      expect(bracket.totalRounds).toBeGreaterThan(0);
-      expect(bracket.type).toBe(TournamentType.SWISS_SYSTEM);
-    });
-
-    it("generates round robin bracket and rotates players", async () => {
-      const regs: TournamentRegistration[] = [
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(1),
-        } as any,
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(2),
-        } as any,
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(3),
-        } as any,
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(4),
-        } as any,
-      ];
-      mockTournamentRepository.findOne.mockResolvedValue(
-        buildTournament(TournamentType.ROUND_ROBIN, regs),
+      await expect(service.generateBracket(1)).rejects.toThrow(
+        "Seul le format à élimination directe est orchestré par Nexus",
       );
-      const bracket = await service.generateBracket(1);
-
-      expect(bracket.totalRounds).toBe(3);
-      const totalMatches = bracket.rounds.reduce(
-        (acc, r) => acc + r.matches.length,
-        0,
-      );
-      expect(totalMatches).toBe(6);
     });
 
     it("throws for unsupported tournament type", async () => {
@@ -300,179 +291,6 @@ describe("BracketService", () => {
       await expect(service.generateBracket(1)).rejects.toThrow(
         BadRequestException,
       );
-    });
-
-    it("generates double elimination using single elimination fallback", async () => {
-      const regs: TournamentRegistration[] = [
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(1),
-        } as any,
-        {
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-          player: basePlayer(2),
-        } as any,
-      ];
-      mockTournamentRepository.findOne.mockResolvedValue(
-        buildTournament(TournamentType.DOUBLE_ELIMINATION, regs),
-      );
-      const bracket = await service.generateBracket(1);
-      expect(bracket.type).toBe(TournamentType.SINGLE_ELIMINATION);
-      expect(mockMatchRepository.save).toHaveBeenCalled();
-    });
-  });
-
-  describe("generateSwissPairings", () => {
-    it("returns pairings ordered by rankings on subsequent rounds", async () => {
-      const players = [basePlayer(1), basePlayer(2)];
-      const tournament: Tournament = {
-        id: 1,
-        type: TournamentType.SWISS_SYSTEM,
-        registrations: [
-          {
-            player: players[0],
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-          } as any,
-          {
-            player: players[1],
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-          } as any,
-        ],
-        rankings: [
-          { player: { id: 1 }, points: 5, winRate: 80 } as any,
-          { player: { id: 2 }, points: 3, winRate: 50 } as any,
-        ],
-      } as Tournament;
-
-      mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      mockMatchRepository.find.mockResolvedValue([]);
-      const pairings = await service.generateSwissPairings(1, 2);
-
-      expect(pairings.pairings[0].playerA.id).toBe(1);
-    });
-
-    it("uses winRate tie-breaker when points equal", async () => {
-      const players = [basePlayer(1), basePlayer(2)];
-      const tournament: Tournament = {
-        id: 5,
-        type: TournamentType.SWISS_SYSTEM,
-        registrations: players.map((p) => ({
-          player: p,
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-        })) as any,
-        rankings: [
-          { player: { id: 1 }, points: 3, winRate: 40 } as any,
-          { player: { id: 2 }, points: 3, winRate: 60 } as any,
-        ],
-      } as any;
-
-      mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      mockMatchRepository.find.mockResolvedValue([]);
-
-      const pairings = await service.generateSwissPairings(5, 2);
-      expect(pairings.pairings[0].playerA.id).toBe(2); // higher winRate first
-    });
-
-    it("creates bye when odd player count", async () => {
-      const players = [basePlayer(1), basePlayer(2), basePlayer(3)];
-      const tournament: Tournament = {
-        id: 2,
-        type: TournamentType.SWISS_SYSTEM,
-        name: "Swiss",
-        description: "",
-        location: "",
-        status: TournamentStatus.REGISTRATION_CLOSED,
-        startDate: new Date(),
-        endDate: new Date(),
-        currentRound: 1,
-        totalRounds: 3,
-        pricing: {} as any,
-        rewards: [],
-        organizers: [],
-        matches: [],
-        registrations: players.map((p) => ({
-          player: p,
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-        })) as any,
-        rankings: [],
-      } as unknown as Tournament;
-
-      mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      mockMatchRepository.find.mockResolvedValue([]);
-      const pairings = await service.generateSwissPairings(2, 1);
-      expect(pairings.pairings.some((p) => !p.playerB)).toBe(true);
-    });
-
-    it("avoids rematches when possible", async () => {
-      const players = [
-        basePlayer(1),
-        basePlayer(2),
-        basePlayer(3),
-        basePlayer(4),
-      ];
-      const tournament: Tournament = {
-        id: 3,
-        type: TournamentType.SWISS_SYSTEM,
-        registrations: players.map((p) => ({
-          player: p,
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-        })) as any,
-        rankings: [
-          { player: { id: 1 }, points: 4, winRate: 50 } as any,
-          { player: { id: 2 }, points: 3, winRate: 50 } as any,
-          { player: { id: 3 }, points: 2, winRate: 50 } as any,
-          { player: { id: 4 }, points: 1, winRate: 50 } as any,
-        ],
-      } as any;
-
-      mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      mockMatchRepository.find.mockResolvedValue([
-        {
-          playerA: { id: 1 },
-          playerB: { id: 2 },
-        } as any,
-      ]);
-
-      const pairings = await service.generateSwissPairings(3, 2);
-      // player 1 should not be paired with player 2 due to previous match
-      expect(pairings.pairings[0].playerA.id).toBe(1);
-      expect(pairings.pairings[0].playerB?.id).toBe(3);
-    });
-
-    it("falls back to first available opponent when all are rematches", async () => {
-      const players = [basePlayer(1), basePlayer(2)];
-      const tournament: Tournament = {
-        id: 4,
-        type: TournamentType.SWISS_SYSTEM,
-        registrations: players.map((p) => ({
-          player: p,
-          status: RegistrationStatus.CONFIRMED,
-          checkedIn: true,
-        })) as any,
-        rankings: [
-          { player: { id: 1 }, points: 1, winRate: 50 } as any,
-          { player: { id: 2 }, points: 0, winRate: 50 } as any,
-        ],
-      } as any;
-
-      mockTournamentRepository.findOne.mockResolvedValue(tournament);
-      mockMatchRepository.find.mockResolvedValue([
-        {
-          playerA: { id: 1 },
-          playerB: { id: 2 },
-        } as any,
-      ]);
-
-      const pairings = await service.generateSwissPairings(4, 2);
-      expect(pairings.pairings[0].playerA.id).toBe(1);
-      expect(pairings.pairings[0].playerB?.id).toBe(2);
     });
   });
 
@@ -557,11 +375,6 @@ describe("BracketService", () => {
       expect(final).toBe(MatchPhase.FINAL);
       expect(semi).toBe(MatchPhase.SEMI_FINAL);
       expect(qual).toBe(MatchPhase.QUARTER_FINAL);
-    });
-
-    it("calculates swiss rounds count", () => {
-      const rounds = (service as any).calculateSwissRounds(5);
-      expect(rounds).toBeGreaterThan(0);
     });
   });
 });

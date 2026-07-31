@@ -53,7 +53,7 @@ export interface TabMatchesProps {
 }
 
 export const getPlayerName = (player: any): string => {
-  if (!player) return "TBD";
+  if (!player) return "À déterminer";
   if (player.user) {
     return `${player.user.firstName} ${player.user.lastName}`;
   }
@@ -94,6 +94,18 @@ export const formSchema = z
   .refine((data) => new Date(data.startDate) <= new Date(data.endDate), {
     message: "La date de fin doit être postérieure à la date de début",
     path: ["endDate"],
-  });
+  })
+  .refine((data) => !data.isExternal || Boolean(data.externalRegistrationUrl), {
+    message: "Le lien de la plateforme externe est requis",
+    path: ["externalRegistrationUrl"],
+  })
+  .refine(
+    (data) =>
+      data.isExternal || data.type === TournamentType.SINGLE_ELIMINATION,
+    {
+      message: "Ce format nécessite une gestion externe",
+      path: ["type"],
+    },
+  );
 
 export type FormValues = z.infer<typeof formSchema>;

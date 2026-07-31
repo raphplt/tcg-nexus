@@ -1,22 +1,22 @@
 "use client";
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  Info,
-  Trophy,
   Calendar,
-  MapPin,
-  Users,
   Clock,
+  Info,
+  MapPin,
   Target,
+  Trophy,
+  Users,
 } from "lucide-react";
+import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tournament } from "@/types/tournament";
 import { formatPricing } from "@/utils/price";
 import {
-  tournamentTypeTranslation,
   tournamentStatusTranslation,
+  tournamentTypeTranslation,
 } from "@/utils/tournaments";
 
 interface TabOverviewProps {

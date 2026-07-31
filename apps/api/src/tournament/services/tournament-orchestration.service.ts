@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, In, Repository } from "typeorm";
 import {
   Match,
@@ -143,6 +143,12 @@ export class TournamentOrchestrationService {
         throw new BadRequestException("Le tournoi doit être en cours");
       }
 
+      if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+        throw new BadRequestException(
+          "Ce format est suivi sur la plateforme externe de l’organisateur",
+        );
+      }
+
       // Vérifier que tous les matches du round actuel sont terminés
       const currentRoundMatches = tournament.matches.filter(
         (match) => match.round === tournament.currentRound,
@@ -167,48 +173,14 @@ export class TournamentOrchestrationService {
       let playersAdvanced = 0;
       let playersEliminated = 0;
 
-      if (tournament.type === TournamentType.SWISS_SYSTEM) {
-        // Générer les paires pour le round suivant
-        if (newRound <= tournament.totalRounds!) {
-          const swissPairings = await this.bracketService.generateSwissPairings(
-            tournamentId,
-            newRound,
-          );
-
-          for (const pairing of swissPairings.pairings) {
-            if (pairing.playerB) {
-              await this.matchService.create({
-                tournamentId: tournament.id,
-                playerAId: pairing.playerA.id,
-                playerBId: pairing.playerB.id,
-                round: newRound,
-                phase: MatchPhase.QUALIFICATION,
-                scheduledDate: new Date(),
-                notes: `Round ${newRound} - Table ${pairing.tableNumber}`,
-              });
-              matchesCreated++;
-            }
-          }
-
-          playersAdvanced = swissPairings.pairings.length;
-        }
-      } else if (tournament.type === TournamentType.ROUND_ROBIN) {
-        playersAdvanced = tournament.registrations.filter(
-          (reg) => reg.status === RegistrationStatus.CONFIRMED,
-        ).length;
-      } else if (
-        tournament.type === TournamentType.SINGLE_ELIMINATION ||
-        tournament.type === TournamentType.DOUBLE_ELIMINATION
-      ) {
-        const result = await this.advanceEliminationRound(
-          tournament,
-          newRound,
-          manager,
-        );
-        matchesCreated = result.matchesCreated;
-        playersAdvanced = result.playersAdvanced;
-        playersEliminated = result.playersEliminated;
-      }
+      const result = await this.advanceEliminationRound(
+        tournament,
+        newRound,
+        manager,
+      );
+      matchesCreated = result.matchesCreated;
+      playersAdvanced = result.playersAdvanced;
+      playersEliminated = result.playersEliminated;
 
       if (
         newRound > tournament.totalRounds! ||
@@ -417,18 +389,28 @@ export class TournamentOrchestrationService {
       (reg) => reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
     ).length;
 
-    let progressPercentage = 0;
-    if (tournament.totalRounds && tournament.totalRounds > 0) {
-      progressPercentage =
-        ((tournament.currentRound || 0) / tournament.totalRounds) * 100;
-    }
+    const confirmedPlayerCount = tournament.registrations.filter(
+      (registration) => registration.status === RegistrationStatus.CONFIRMED,
+    ).length;
+    const expectedEliminationMatches =
+      confirmedPlayerCount >= 2
+        ? 2 ** Math.ceil(Math.log2(confirmedPlayerCount)) - 1
+        : 0;
+    const totalMatches =
+      tournament.type === TournamentType.SINGLE_ELIMINATION
+        ? Math.max(expectedEliminationMatches, tournament.matches.length)
+        : tournament.matches.length;
+    const progressPercentage =
+      totalMatches > 0
+        ? Math.min(100, (completedMatches / totalMatches) * 100)
+        : 0;
 
     return {
       status: tournament.status,
       currentRound: tournament.currentRound || 0,
       totalRounds: tournament.totalRounds || 0,
       completedMatches,
-      totalMatches: tournament.matches.length,
+      totalMatches,
       activePlayers,
       eliminatedPlayers,
       progressPercentage,
@@ -448,9 +430,15 @@ export class TournamentOrchestrationService {
       );
     }
 
+    if (tournament.isExternal) {
+      throw new BadRequestException(
+        "Un tournoi externe doit être géré sur la plateforme de l’organisateur",
+      );
+    }
+
     if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
       throw new BadRequestException(
-        "Ce format est temporairement indisponible pendant la finalisation de son moteur",
+        "Seul le format à élimination directe est orchestré par Nexus",
       );
     }
 
@@ -580,13 +568,6 @@ export class TournamentOrchestrationService {
           reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
       );
       return activeRegistrations.length <= 1;
-    }
-
-    if (
-      tournament.type === TournamentType.SWISS_SYSTEM ||
-      tournament.type === TournamentType.ROUND_ROBIN
-    ) {
-      return currentRound > (tournament.totalRounds || 0);
     }
 
     return false;

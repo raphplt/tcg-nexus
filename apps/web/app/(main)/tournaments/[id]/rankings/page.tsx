@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  Trophy,
-  Download,
-  RefreshCw,
-  Medal,
   Crown,
+  Download,
+  Medal,
+  RefreshCw,
+  Trophy,
 } from "lucide-react";
-import { H1 } from "@/components/Shared/Titles";
-import { useTournament } from "@/hooks/useTournament";
-import { useRankings } from "@/hooks/useRankings";
-import { RankingsDisplay } from "./_components/RankingsDisplay";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import React, { useState } from "react";
+import { H1 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRankings } from "@/hooks/useRankings";
+import { useTournament } from "@/hooks/useTournament";
+import { RankingsDisplay } from "./_components/RankingsDisplay";
 
 export default function RankingsPage() {
   const { id } = useParams();

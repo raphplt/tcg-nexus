@@ -4,13 +4,13 @@ import {
   TournamentStatus,
   TournamentType,
 } from "../entities/tournament.entity";
+import { PricingType } from "../entities/tournament-pricing.entity";
+import { RewardType } from "../entities/tournament-reward.entity";
 import {
   BulkRegistrationAction,
   BulkRegistrationActionDto,
 } from "./bulk-registration-action.dto";
 import { BulkStartMatchesDto } from "./bulk-start-matches.dto";
-import { PricingType } from "../entities/tournament-pricing.entity";
-import { RewardType } from "../entities/tournament-reward.entity";
 import { CreateTournamentDto } from "./create-tournament.dto";
 import {
   CreateFullTournamentDto,
@@ -62,6 +62,23 @@ describe("Tournament DTO coverage", () => {
 
     const errors = validateSync(dto);
     expect(errors).toHaveLength(0);
+  });
+
+  it("should require a valid URL for an external tournament", () => {
+    const missingUrl = plainToInstance(CreateTournamentDto, {
+      name: "External",
+      startDate: new Date("2024-01-01"),
+      endDate: new Date("2024-01-02"),
+      type: TournamentType.SWISS_SYSTEM,
+      isExternal: true,
+    });
+    const valid = plainToInstance(CreateTournamentDto, {
+      ...missingUrl,
+      externalRegistrationUrl: "https://organizer.example/tournament/42",
+    });
+
+    expect(validateSync(missingUrl).length).toBeGreaterThan(0);
+    expect(validateSync(valid)).toHaveLength(0);
   });
 
   it("should transform and default TournamentQueryDto", () => {

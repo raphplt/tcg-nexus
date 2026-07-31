@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { tournamentService } from "@/services/tournament.service";
-import { BracketStructure, SwissPairing, Match } from "@/types/tournament";
+import { BracketStructure } from "@/types/tournament";
 
 export function useBracket(tournamentId: string) {
   const id = parseInt(tournamentId);
@@ -10,23 +10,11 @@ export function useBracket(tournamentId: string) {
     data: bracket,
     isLoading: bracketLoading,
     error: bracketError,
+    refetch: refetchBracket,
   } = useQuery<BracketStructure>({
     queryKey: ["tournament", tournamentId, "bracket"],
     queryFn: () => tournamentService.getBracket(id),
     enabled: !!id,
-  });
-
-  // Pairings pour Swiss/Round Robin
-  const {
-    data: pairings,
-    isLoading: pairingsLoading,
-    error: pairingsError,
-  } = useQuery<SwissPairing | Match[]>({
-    queryKey: ["tournament", tournamentId, "pairings"],
-    queryFn: () => tournamentService.getPairings(id),
-    enabled:
-      !!id &&
-      (bracket?.type === "swiss_system" || bracket?.type === "round_robin"),
   });
 
   // Helper functions
@@ -35,8 +23,8 @@ export function useBracket(tournamentId: string) {
 
     // Trouver le round avec des matches en cours ou non terminés
     for (const round of bracket.rounds) {
-      const hasActiveMatches = round.matches.some(
-        (match) => !match.winnerId && (match.playerA || match.playerB),
+      const hasActiveMatches = round.matches.some((match) =>
+        ["scheduled", "in_progress"].includes(match.status ?? "scheduled"),
       );
       if (hasActiveMatches) return round.index;
     }
@@ -61,7 +49,10 @@ export function useBracket(tournamentId: string) {
     return (
       bracket?.rounds.reduce(
         (total, round) =>
-          total + round.matches.filter((match) => match.winnerId).length,
+          total +
+          round.matches.filter((match) =>
+            ["finished", "forfeit"].includes(match.status ?? ""),
+          ).length,
         0,
       ) || 0
     );
@@ -82,9 +73,8 @@ export function useBracket(tournamentId: string) {
   return {
     // Données
     bracket,
-    pairings,
-    isLoading: bracketLoading || pairingsLoading,
-    error: bracketError || pairingsError,
+    isLoading: bracketLoading,
+    error: bracketError,
 
     // Computed values
     currentRound: getCurrentRound(),
@@ -95,6 +85,9 @@ export function useBracket(tournamentId: string) {
     // Helpers
     getMatchByRound,
     goToRound,
+    refetch: async () => {
+      await refetchBracket();
+    },
 
     // Swiss specific
     isSwiss: bracket?.type === "swiss_system",

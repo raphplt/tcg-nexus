@@ -1,10 +1,36 @@
 "use client";
 
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  Eye,
+  Filter,
+  Play,
+  RotateCcw,
+  Search,
+  Trophy,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { H1 } from "@/components/Shared/Titles";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,36 +48,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  ArrowLeft,
-  Filter,
-  Search,
-  Play,
-  Clock,
-  CheckCircle,
-  X,
-  Trophy,
-  Eye,
-  RotateCcw,
-} from "lucide-react";
-import { H1 } from "@/components/Shared/Titles";
-import { useTournament } from "@/hooks/useTournament";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMatches } from "@/hooks/useMatches";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTournament } from "@/hooks/useTournament";
 import { ResetMatchDialog } from "./_components/ResetMatchDialog";
 
 export default function MatchesPage() {
@@ -63,6 +63,7 @@ export default function MatchesPage() {
     matches,
     stats,
     isLoading,
+    error,
     startMatch,
     startMatches,
     resetMatch,
@@ -74,20 +75,16 @@ export default function MatchesPage() {
   const [bulkStartOpen, setBulkStartOpen] = useState(false);
 
   const [filters, setFilters] = useState({
-    round: "",
-    status: "",
-    player: "",
+    round: "all",
+    status: "all",
     search: "",
   });
 
   const filteredMatches = matches.filter((match) => {
-    if (filters.round && match.round.toString() !== filters.round) return false;
-    if (filters.status && match.status !== filters.status) return false;
-    if (filters.player) {
-      const playerId = parseInt(filters.player);
-      if (match.playerA?.id !== playerId && match.playerB?.id !== playerId)
-        return false;
-    }
+    if (filters.round !== "all" && match.round.toString() !== filters.round)
+      return false;
+    if (filters.status !== "all" && match.status !== filters.status)
+      return false;
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const playerAName = match.playerA?.name?.toLowerCase() || "";
@@ -118,6 +115,8 @@ export default function MatchesPage() {
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "forfeit":
         return <X className="w-4 h-4 text-red-500" />;
+      case "cancelled":
+        return <X className="w-4 h-4 text-muted-foreground" />;
       default:
         return <Clock className="w-4 h-4 text-gray-500" />;
     }
@@ -133,6 +132,8 @@ export default function MatchesPage() {
         return <Badge variant="default">Terminé</Badge>;
       case "forfeit":
         return <Badge variant="destructive">Forfait</Badge>;
+      case "cancelled":
+        return <Badge variant="secondary">Annulé</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -165,7 +166,7 @@ export default function MatchesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/3"></div>
@@ -176,11 +177,28 @@ export default function MatchesPage() {
     );
   }
 
+  if (error || !tournament) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-16">
+        <div className="mx-auto max-w-xl text-center">
+          <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive" />
+          <h1 className="text-2xl font-bold">Matchs indisponibles</h1>
+          <p className="mt-2 text-muted-foreground">
+            La liste des matchs n’a pas pu être chargée.
+          </p>
+          <Button className="mt-5" asChild>
+            <Link href={`/tournaments/${id}`}>Retour au tournoi</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+    <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -189,9 +207,9 @@ export default function MatchesPage() {
           </Button>
 
           <div className="flex-1">
-            <H1 className="mb-2">Matches - {tournament?.name}</H1>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>{matches.length} matches au total</span>
+            <H1 className="mb-2">Matchs — {tournament.name}</H1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span>{matches.length} matchs au total</span>
               <span>{stats.finished} terminés</span>
               <span>{stats.inProgress} en cours</span>
               <span>{stats.scheduled} programmés</span>
@@ -201,7 +219,7 @@ export default function MatchesPage() {
           <Button variant="outline" asChild>
             <Link href={`/tournaments/${id}/bracket`}>
               <Trophy className="w-4 h-4 mr-2" />
-              Voir le bracket
+              Voir le tableau
             </Link>
           </Button>
         </div>
@@ -269,7 +287,7 @@ export default function MatchesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="round">Round</Label>
+                <Label htmlFor="round">Ronde</Label>
                 <Select
                   value={filters.round}
                   onValueChange={(value) =>
@@ -277,13 +295,13 @@ export default function MatchesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Tous les rounds" />
+                    <SelectValue placeholder="Toutes les rondes" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les rounds</SelectItem>
+                    <SelectItem value="all">Toutes les rondes</SelectItem>
                     {rounds.map((round) => (
                       <SelectItem key={round} value={round.toString()}>
-                        Round {round}
+                        Ronde {round}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -302,11 +320,12 @@ export default function MatchesPage() {
                     <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les statuts</SelectItem>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
                     <SelectItem value="scheduled">Programmé</SelectItem>
                     <SelectItem value="in_progress">En cours</SelectItem>
                     <SelectItem value="finished">Terminé</SelectItem>
                     <SelectItem value="forfeit">Forfait</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -316,9 +335,8 @@ export default function MatchesPage() {
                   variant="outline"
                   onClick={() =>
                     setFilters({
-                      round: "",
-                      status: "",
-                      player: "",
+                      round: "all",
+                      status: "all",
                       search: "",
                     })
                   }
@@ -333,12 +351,12 @@ export default function MatchesPage() {
 
         {/* Liste des matches */}
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Match</TableHead>
-                  <TableHead>Round</TableHead>
+                  <TableHead>Ronde</TableHead>
                   <TableHead>Phase</TableHead>
                   <TableHead>Joueurs</TableHead>
                   <TableHead>Score</TableHead>
@@ -359,7 +377,7 @@ export default function MatchesPage() {
                     >
                       <TableCell className="font-medium">#{match.id}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">Round {match.round}</Badge>
+                        <Badge variant="outline">Ronde {match.round}</Badge>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm">
@@ -375,7 +393,7 @@ export default function MatchesPage() {
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-sm">
-                              {match.playerA?.name || "TBD"}
+                              {match.playerA?.name || "À déterminer"}
                             </span>
                           </div>
                           <span className="text-xs text-muted-foreground">
@@ -388,7 +406,7 @@ export default function MatchesPage() {
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-sm">
-                              {match.playerB?.name || "TBD"}
+                              {match.playerB?.name || "À déterminer"}
                             </span>
                           </div>
                         </div>
@@ -469,7 +487,11 @@ export default function MatchesPage() {
                     <TableCell colSpan={8} className="text-center py-8">
                       <div className="text-muted-foreground">
                         <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>Aucun match trouvé avec ces filtres</p>
+                        <p>
+                          {matches.length === 0
+                            ? "Les matchs apparaîtront au démarrage du tournoi."
+                            : "Aucun match ne correspond à ces filtres."}
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -496,7 +518,7 @@ export default function MatchesPage() {
                     <Play className="w-4 h-4 mr-2" />
                     {isStarting
                       ? "Démarrage..."
-                      : `Démarrer les matchs du round (${startableMatches.length})`}
+                      : `Démarrer les matchs de la ronde (${startableMatches.length})`}
                   </Button>
                 </div>
               </CardContent>
@@ -522,9 +544,10 @@ export default function MatchesPage() {
               Démarrer tous les matchs prêts ?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Les {startableMatches.length} matchs programmés du round courant
-              passeront simultanément au statut « en cours ». Les joueurs
-              concernés seront immédiatement autorisés à rejoindre leur table.
+              Les {startableMatches.length} matchs programmés de la ronde
+              courante passeront simultanément au statut « en cours ». Les
+              joueurs concernés seront immédiatement autorisés à rejoindre leur
+              table.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

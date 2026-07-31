@@ -4,11 +4,14 @@ import {
   IsBoolean,
   IsDate,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Max,
   Min,
+  ValidateIf,
 } from "class-validator";
 import { TournamentType } from "../entities/tournament.entity";
 
@@ -91,7 +94,11 @@ export class CreateTournamentDto {
   @IsBoolean()
   isExternal?: boolean;
 
-  @IsOptional()
-  @IsString()
+  @ValidateIf(
+    (dto: CreateTournamentDto) =>
+      dto.isExternal === true || dto.externalRegistrationUrl !== undefined,
+  )
+  @IsNotEmpty()
+  @IsUrl({ require_protocol: true })
   externalRegistrationUrl?: string;
 }

@@ -592,14 +592,9 @@ export class TournamentService {
     const tournament = await this.findOne(tournamentId);
     const targetRound = round || tournament.currentRound || 1;
 
-    if (tournament.type === TournamentType.SWISS_SYSTEM) {
-      return this.bracketService.generateSwissPairings(
-        tournamentId,
-        targetRound,
-      );
-    } else {
-      return this.matchService.getMatchesByRound(tournamentId, targetRound);
-    }
+    // Une lecture publique ne doit jamais recalculer ni randomiser des
+    // appariements. Les matchs persistés constituent l'unique source de vérité.
+    return this.matchService.getMatchesByRound(tournamentId, targetRound);
   }
 
   /**
@@ -1182,6 +1177,16 @@ export class TournamentService {
     tournament: Tournament,
     enforceSupportedFormat = false,
   ): void {
+    if (
+      enforceSupportedFormat &&
+      tournament.isExternal &&
+      !tournament.externalRegistrationUrl
+    ) {
+      throw new BadRequestException(
+        "Le lien de la plateforme externe est requis",
+      );
+    }
+
     if (
       enforceSupportedFormat &&
       !tournament.isExternal &&

@@ -285,6 +285,20 @@ describe("TournamentService", () => {
       expect(tournamentRepo.save).not.toHaveBeenCalled();
     });
 
+    it("should require a platform URL for an external tournament", async () => {
+      const invalidDto = {
+        ...dto,
+        type: TournamentType.SWISS_SYSTEM,
+        isExternal: true,
+      };
+      tournamentRepo.create.mockReturnValue(invalidDto);
+
+      await expect(service.create(invalidDto, userId)).rejects.toThrow(
+        "Le lien de la plateforme externe est requis",
+      );
+      expect(tournamentRepo.save).not.toHaveBeenCalled();
+    });
+
     it("should throw NotFoundException if user not found", async () => {
       tournamentRepo.create.mockReturnValue(dto);
       tournamentRepo.save.mockResolvedValue({ id: 1, ...dto });
@@ -853,18 +867,19 @@ describe("TournamentService", () => {
   });
 
   describe("getCurrentPairings", () => {
-    it("should generate swiss pairings when SWISS_SYSTEM", async () => {
+    it("should read persisted pairings for swiss tournaments", async () => {
       jest.spyOn(service, "findOne").mockResolvedValue({
         id: 1,
         type: TournamentType.SWISS_SYSTEM,
         currentRound: 2,
       } as any);
-      bracketService.generateSwissPairings.mockResolvedValue([{ id: "p" }]);
+      matchService.getMatchesByRound.mockResolvedValue([{ id: "p" }]);
 
       const result = await service.getCurrentPairings(1);
 
       expect(result).toEqual([{ id: "p" }]);
-      expect(bracketService.generateSwissPairings).toHaveBeenCalledWith(1, 2);
+      expect(matchService.getMatchesByRound).toHaveBeenCalledWith(1, 2);
+      expect(bracketService.generateSwissPairings).not.toHaveBeenCalled();
     });
 
     it("should use matchService.getMatchesByRound for non-swiss", async () => {

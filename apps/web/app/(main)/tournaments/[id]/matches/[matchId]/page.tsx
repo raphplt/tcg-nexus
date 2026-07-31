@@ -1,30 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertTriangle,
   ArrowLeft,
   Calendar,
   Clock,
-  Trophy,
   Play,
   RotateCcw,
-  AlertTriangle,
+  Trophy,
 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import React, { useState } from "react";
+import GameBoard from "@/components/match/GameBoard";
 import { H1 } from "@/components/Shared/Titles";
-import { tournamentService } from "@/services/tournament.service";
-import { Match } from "@/types/tournament";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMatches } from "@/hooks/useMatches";
 import { useMatchPermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { tournamentService } from "@/services/tournament.service";
+import { Match } from "@/types/tournament";
 import { MatchScoreForm } from "../_components/MatchScoreForm";
-import Link from "next/link";
-import GameBoard from "@/components/match/GameBoard";
 import { ResetMatchDialog } from "../_components/ResetMatchDialog";
 
 export default function MatchPage() {
@@ -104,7 +104,7 @@ export default function MatchPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-4xl mx-auto space-y-6">
           <Skeleton className="h-8 w-1/3" />
           <Skeleton className="h-64 w-full" />
@@ -116,7 +116,7 @@ export default function MatchPage() {
 
   if (error || !match) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-4xl mx-auto text-center">
           <AlertTriangle className="w-16 h-16 mx-auto text-destructive mb-4" />
           <h1 className="text-2xl font-bold mb-2">Match non trouvé</h1>
@@ -132,10 +132,10 @@ export default function MatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+    <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -145,12 +145,12 @@ export default function MatchPage() {
 
           <div className="flex-1">
             <H1 className="mb-2">
-              Match #{match.id} - {getPhaseLabel(match.phase)}
+              Match #{match.id} — {getPhaseLabel(match.phase)}
             </H1>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Trophy className="w-4 h-4" />
-                Round {match.round}
+                Ronde {match.round}
               </span>
               {match.scheduledDate && (
                 <span className="flex items-center gap-1">
@@ -162,7 +162,7 @@ export default function MatchPage() {
           </div>
 
           {/* Actions rapides */}
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {canSafelyStart && (
               <Button
                 variant="outline"
@@ -224,7 +224,7 @@ export default function MatchPage() {
                 </div>
 
                 <div>
-                  <span className="text-sm text-muted-foreground">Round :</span>
+                  <span className="text-sm text-muted-foreground">Ronde :</span>
                   <p className="font-medium">{match.round}</p>
                 </div>
 
@@ -259,7 +259,7 @@ export default function MatchPage() {
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/tournaments/${id}/bracket`}>
                     <Trophy className="w-4 h-4 mr-2" />
-                    Voir le bracket
+                    Voir le tableau
                   </Link>
                 </Button>
 
@@ -284,9 +284,9 @@ export default function MatchPage() {
                     <CardTitle>Mode administration</CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm text-muted-foreground">
-                    Le plateau online est reserve aux deux joueurs du match. Les
-                    outils ci-dessous restent disponibles comme filet de
-                    securite pour l'administration.
+                    Le plateau en ligne est réservé aux deux joueurs du match.
+                    Les outils ci-dessous permettent à l’organisation de saisir
+                    ou corriger un résultat si nécessaire.
                   </CardContent>
                 </Card>
                 <MatchScoreForm
@@ -300,8 +300,8 @@ export default function MatchPage() {
             ) : (
               <Card>
                 <CardContent className="py-8 text-sm text-muted-foreground">
-                  Le jeu en ligne est accessible uniquement aux deux joueurs du
-                  match.
+                  Cette page permet de suivre le résultat. Le plateau de jeu est
+                  accessible uniquement aux deux joueurs concernés.
                 </CardContent>
               </Card>
             )}

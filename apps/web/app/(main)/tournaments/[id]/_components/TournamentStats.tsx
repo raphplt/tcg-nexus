@@ -1,9 +1,9 @@
+import { Info, Settings2, Trophy, Users } from "lucide-react";
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Trophy, Settings2, Info } from "lucide-react";
 import {
-  tournamentTypeTranslation,
   tournamentStatusTranslation,
+  tournamentTypeTranslation,
 } from "@/utils/tournaments";
 
 interface TournamentStatsProps {

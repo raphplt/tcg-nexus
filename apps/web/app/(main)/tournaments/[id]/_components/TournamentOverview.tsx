@@ -1,6 +1,6 @@
+import { Info, Trophy } from "lucide-react";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, Trophy } from "lucide-react";
 import { Tournament } from "@/types/tournament";
 
 interface TournamentOverviewProps {

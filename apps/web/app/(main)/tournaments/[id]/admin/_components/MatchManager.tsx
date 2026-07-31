@@ -1,11 +1,32 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  Clock,
+  Edit,
+  Filter,
+  PlayCircle,
+  RefreshCw,
+  Swords,
+  Trophy,
+  XCircle,
+} from "lucide-react";
+import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,29 +42,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Swords,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  PlayCircle,
-  Filter,
-  Edit,
-  Trophy,
-  RefreshCw,
-} from "lucide-react";
 import { tournamentService } from "@/services/tournament.service";
 import { Match, Tournament } from "@/types/tournament";
-import toast from "react-hot-toast";
 
 interface MatchManagerProps {
   tournamentId: number;
@@ -148,7 +148,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
   }, [matches]);
 
   const getPlayerName = (player: any) => {
-    if (!player) return "TBD";
+    if (!player) return "À déterminer";
     if (player.user) {
       return `${player.user.firstName} ${player.user.lastName}`;
     }
@@ -255,7 +255,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Swords className="size-5 text-primary" />
-              Gestion des matches
+              Gestion des matchs
             </CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="size-4 text-muted-foreground" />
@@ -274,13 +274,13 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
               </Select>
               <Select value={roundFilter} onValueChange={setRoundFilter}>
                 <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Round" />
+                  <SelectValue placeholder="Ronde" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les rounds</SelectItem>
+                  <SelectItem value="all">Toutes les rondes</SelectItem>
                   {rounds.map((round) => (
                     <SelectItem key={round} value={round.toString()}>
-                      Round {round}
+                      Ronde {round}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -289,7 +289,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-lg border overflow-hidden">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
@@ -297,7 +297,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                   <TableHead>Joueur A</TableHead>
                   <TableHead className="text-center">Score</TableHead>
                   <TableHead>Joueur B</TableHead>
-                  <TableHead>Round</TableHead>
+                  <TableHead>Ronde</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -367,7 +367,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">Round {match.round}</Badge>
+                        <Badge variant="outline">Ronde {match.round}</Badge>
                       </TableCell>
                       <TableCell>
                         {matchStatus && (
@@ -432,7 +432,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           <DialogHeader>
             <DialogTitle>Modifier le score</DialogTitle>
             <DialogDescription>
-              Match #{selectedMatch?.id} - Round {selectedMatch?.round}
+              Match #{selectedMatch?.id} — ronde {selectedMatch?.round}
             </DialogDescription>
           </DialogHeader>
 
@@ -472,7 +472,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
 
           {scoreA === scoreB && (
             <p className="text-sm text-amber-600 text-center">
-              ⚠️ Score égalité - le match ne sera pas marqué comme terminé
+              Une égalité n’est pas autorisée en élimination directe.
             </p>
           )}
 

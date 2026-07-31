@@ -1,31 +1,21 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ArrowLeft,
+  Check,
+  CheckCircle,
+  ChevronsUpDown,
+  CircleAlert,
+  ShieldAlert,
+  Users,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import usePlacesAutocomplete from "use-places-autocomplete";
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -35,30 +25,39 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  CircleAlert,
-  CheckCircle,
-  ArrowLeft,
-  ShieldAlert,
-  ChevronsUpDown,
-  Check,
-  Users,
-} from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { tournamentService } from "@/services/tournament.service";
+import { UserRole } from "@/types/auth";
+import { CreateTournamentDto } from "@/types/tournament";
 import {
   TournamentStatus,
   TournamentType,
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
-import { tournamentService } from "@/services/tournament.service";
-import { useAuth } from "@/contexts/AuthContext";
-import { CreateTournamentDto } from "@/types/tournament";
-import { UserRole } from "@/types/auth";
-import { cn } from "@/lib/utils";
-import { formSchema, FormValues } from "../utils";
+import { FormValues, formSchema } from "../utils";
 
 export default function CreateTournamentPage() {
   const { user } = useAuth();
@@ -102,6 +101,7 @@ export default function CreateTournamentPage() {
       externalRegistrationUrl: "",
     },
   });
+  const isExternal = form.watch("isExternal");
 
   const handleLocationSelect = (
     address: string,
@@ -152,7 +152,9 @@ export default function CreateTournamentPage() {
         allowedFormats: values.allowedFormats,
         isPublic: values.isPublic,
         isExternal: values.isExternal,
-        externalRegistrationUrl: values.isExternal ? values.externalRegistrationUrl : undefined,
+        externalRegistrationUrl: values.isExternal
+          ? values.externalRegistrationUrl
+          : undefined,
         maxPlayers: shouldFillWithPlayers
           ? Math.max(values.maxPlayers || 8, 8)
           : values.maxPlayers,
@@ -365,10 +367,7 @@ export default function CreateTournamentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type de tournoi</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Choisir un type" />
@@ -380,17 +379,25 @@ export default function CreateTournamentPage() {
                             key={value}
                             value={value}
                             disabled={
+                              !isExternal &&
                               value !== TournamentType.SINGLE_ELIMINATION
                             }
                           >
                             {tournamentTypeTranslation[value]}
-                            {value !== TournamentType.SINGLE_ELIMINATION
-                              ? " — bientôt disponible"
+                            {!isExternal &&
+                            value !== TournamentType.SINGLE_ELIMINATION
+                              ? " — gestion externe uniquement"
                               : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormDescription>
+                      Nexus orchestre actuellement les tournois internes à
+                      élimination directe. Les autres formats peuvent être
+                      publiés lorsque leur gestion est externe.
+                    </FormDescription>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -420,13 +427,27 @@ export default function CreateTournamentPage() {
                     <div className="space-y-0.5">
                       <FormLabel>Tournoi externe</FormLabel>
                       <FormDescription className="text-xs text-muted-foreground">
-                        Cochez si les inscriptions se font en dehors de la plateforme
+                        La plateforme publie l’événement, mais n’en orchestre ni
+                        les inscriptions ni les matchs.
                       </FormDescription>
                     </div>
                     <FormControl>
                       <Switch
                         checked={field.value}
-                        onCheckedChange={field.onChange}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (
+                            !checked &&
+                            form.getValues("type") !==
+                              TournamentType.SINGLE_ELIMINATION
+                          ) {
+                            form.setValue(
+                              "type",
+                              TournamentType.SINGLE_ELIMINATION,
+                              { shouldValidate: true },
+                            );
+                          }
+                        }}
                         className="shadow-none focus:ring-0"
                       />
                     </FormControl>
@@ -434,7 +455,7 @@ export default function CreateTournamentPage() {
                 )}
               />
 
-              {form.watch("isExternal") && (
+              {isExternal && (
                 <FormField
                   control={form.control}
                   name="externalRegistrationUrl"
@@ -442,7 +463,10 @@ export default function CreateTournamentPage() {
                     <FormItem className="col-span-2">
                       <FormLabel>Lien d'inscription externe</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://example.com/register" {...field} />
+                        <Input
+                          placeholder="https://example.com/register"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

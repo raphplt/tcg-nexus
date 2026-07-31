@@ -7,17 +7,9 @@ import {
   MatchStatus,
 } from "../../match/entities/match.entity";
 import { Player } from "../../player/entities/player.entity";
-import { Ranking } from "../../ranking/entities/ranking.entity";
 import { Tournament, TournamentType } from "../entities/tournament.entity";
-import {
-  RegistrationStatus,
-  TournamentRegistration,
-} from "../entities/tournament-registration.entity";
-import {
-  SeededPlayer,
-  SeedingMethod,
-  SeedingService,
-} from "./seeding.service";
+import { RegistrationStatus } from "../entities/tournament-registration.entity";
+import { SeededPlayer, SeedingMethod, SeedingService } from "./seeding.service";
 
 export interface BracketNode {
   matchId?: number;
@@ -34,6 +26,10 @@ export interface BracketNode {
     seed?: number;
   };
   winnerId?: number;
+  status?: MatchStatus;
+  playerAScore?: number;
+  playerBScore?: number;
+  scheduledDate?: Date;
   nextMatchId?: number;
   nextSlot?: "A" | "B";
   phase: MatchPhase;
@@ -45,15 +41,6 @@ export interface BracketStructure {
   rounds: {
     index: number;
     matches: BracketNode[];
-  }[];
-}
-
-export interface SwissPairing {
-  round: number;
-  pairings: {
-    playerA: Player;
-    playerB?: Player; // null pour bye
-    tableNumber: number;
   }[];
 }
 
@@ -70,12 +57,6 @@ export class BracketService {
     private tournamentRepository: Repository<Tournament>,
     @InjectRepository(Match)
     private matchRepository: Repository<Match>,
-    @InjectRepository(Player)
-    private playerRepository: Repository<Player>,
-    @InjectRepository(TournamentRegistration)
-    private registrationRepository: Repository<TournamentRegistration>,
-    @InjectRepository(Ranking)
-    private rankingRepository: Repository<Ranking>,
     private seedingService: SeedingService,
   ) {}
 
@@ -101,6 +82,12 @@ export class BracketService {
       throw new BadRequestException("Tournoi non trouvé");
     }
 
+    if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+      throw new BadRequestException(
+        "Seul le format à élimination directe est orchestré par Nexus",
+      );
+    }
+
     const confirmedPlayers = tournament.registrations
       .filter(
         (reg) =>
@@ -121,124 +108,17 @@ export class BracketService {
       options.seedingMethod ?? SeedingMethod.RANDOM,
     );
 
-    let bracketStructure: BracketStructure;
-
-    switch (tournament.type) {
-      case TournamentType.SINGLE_ELIMINATION:
-        bracketStructure = await this.generateSingleEliminationBracket(
-          seededPlayers,
-          tournament,
-          options.manager,
-        );
-        break;
-
-      case TournamentType.DOUBLE_ELIMINATION:
-        bracketStructure = await this.generateDoubleEliminationBracket(
-          seededPlayers,
-          tournament,
-          options.manager,
-        );
-        break;
-
-      case TournamentType.SWISS_SYSTEM:
-        bracketStructure = {
-          type: TournamentType.SWISS_SYSTEM,
-          totalRounds: this.calculateSwissRounds(seededPlayers.length),
-          rounds: [],
-        };
-        break;
-
-      case TournamentType.ROUND_ROBIN:
-        bracketStructure = await this.generateRoundRobinBracket(
-          seededPlayers,
-          tournament,
-          options.manager,
-        );
-        break;
-
-      default:
-        throw new BadRequestException(
-          `Type de tournoi non supporté: ${tournament.type as string}`,
-        );
-    }
+    const bracketStructure = await this.generateSingleEliminationBracket(
+      seededPlayers,
+      tournament,
+      options.manager,
+    );
 
     tournament.totalRounds = bracketStructure.totalRounds;
     tournament.currentRound = 1;
     await tournamentRepository.save(tournament);
 
     return bracketStructure;
-  }
-
-  /**
-   * Génère les paires pour le round suivant en Swiss
-   */
-  async generateSwissPairings(
-    tournamentId: number,
-    round: number,
-  ): Promise<SwissPairing> {
-    const tournament = await this.tournamentRepository.findOne({
-      where: { id: tournamentId },
-      relations: [
-        "registrations",
-        "registrations.player",
-        "registrations.player.user",
-        "rankings",
-      ],
-    });
-
-    if (!tournament) {
-      throw new BadRequestException("Tournoi non trouvé");
-    }
-
-    if (tournament.type !== TournamentType.SWISS_SYSTEM) {
-      throw new BadRequestException("Ce tournoi n'est pas en système suisse");
-    }
-
-    const confirmedPlayers = tournament.registrations
-      .filter(
-        (reg) => reg.status === RegistrationStatus.CONFIRMED && reg.checkedIn,
-      )
-      .map((reg) => reg.player);
-
-    let sortedPlayers: Player[];
-
-    if (round === 1) {
-      sortedPlayers = await this.seedingService.seedPlayers(
-        confirmedPlayers,
-        tournament,
-        SeedingMethod.RANDOM,
-      );
-    } else {
-      // Rounds suivants : tri par points puis par tie-breaks
-      const rankings = tournament.rankings || [];
-      sortedPlayers = confirmedPlayers.sort((a, b) => {
-        const rankingA = rankings.find((r) => r.player.id === a.id);
-        const rankingB = rankings.find((r) => r.player.id === b.id);
-
-        const pointsA = rankingA?.points || 0;
-        const pointsB = rankingB?.points || 0;
-
-        if (pointsA !== pointsB) {
-          return pointsB - pointsA; // Plus de points en premier
-        }
-
-        // Tie-break par winRate
-        const winRateA = rankingA?.winRate || 0;
-        const winRateB = rankingB?.winRate || 0;
-        return winRateB - winRateA;
-      });
-    }
-
-    // Générer les paires en évitant les re-matchs
-    const pairings = await this.createSwissPairings(
-      sortedPlayers,
-      tournamentId,
-    );
-
-    return {
-      round,
-      pairings,
-    };
   }
 
   /**
@@ -317,87 +197,6 @@ export class BracketService {
     };
   }
 
-  /**
-   * Génère le bracket pour élimination double
-   */
-  private async generateDoubleEliminationBracket(
-    players: SeededPlayer[],
-    tournament: Tournament,
-    manager?: EntityManager,
-  ): Promise<BracketStructure> {
-    // Implémentation simplifiée - bracket winner + loser
-    //TODO: Implémenter la logique complète du double elimination
-    // const playerCount = players.length;
-    // const winnerRounds = Math.ceil(Math.log2(playerCount));
-    // const loserRounds = (winnerRounds - 1) * 2;
-
-    // Pour l'instant, on génère comme un single elimination
-    // TODO: Implémenter la logique complète du double elimination
-    return this.generateSingleEliminationBracket(players, tournament, manager);
-  }
-
-  /**
-   * Génère le bracket pour round robin
-   */
-  private async generateRoundRobinBracket(
-    players: SeededPlayer[],
-    tournament: Tournament,
-    manager?: EntityManager,
-  ): Promise<BracketStructure> {
-    const playerCount = players.length;
-    const totalRounds = playerCount - 1;
-    const rounds: { index: number; matches: BracketNode[] }[] = [];
-
-    // Algorithme round-robin standard
-    for (let round = 1; round <= totalRounds; round++) {
-      const matches: BracketNode[] = [];
-      const matchesInRound = Math.floor(playerCount / 2);
-
-      for (let match = 0; match < matchesInRound; match++) {
-        const playerAIndex = match;
-        const playerBIndex = playerCount - 1 - match;
-
-        if (playerAIndex !== playerBIndex) {
-          matches.push({
-            matchId: (round - 1) * matchesInRound + match + 1,
-            round,
-            position: match,
-            playerA: {
-              id: players[playerAIndex].id,
-              name: `${players[playerAIndex].user?.firstName || ""} ${players[playerAIndex].user?.lastName || ""}`.trim(),
-              seed: playerAIndex + 1,
-            },
-            playerB: {
-              id: players[playerBIndex].id,
-              name: `${players[playerBIndex].user?.firstName || ""} ${players[playerBIndex].user?.lastName || ""}`.trim(),
-              seed: playerBIndex + 1,
-            },
-            phase: MatchPhase.QUALIFICATION,
-          });
-        }
-      }
-
-      rounds.push({ index: round, matches });
-
-      // Rotation des joueurs (sauf le premier)
-      if (round < totalRounds) {
-        const temp = players[1];
-        for (let i = 1; i < playerCount - 1; i++) {
-          players[i] = players[i + 1];
-        }
-        players[playerCount - 1] = temp;
-      }
-    }
-
-    await this.createMatchesFromBracket(tournament, rounds, manager);
-
-    return {
-      type: TournamentType.ROUND_ROBIN,
-      totalRounds,
-      rounds,
-    };
-  }
-
   private generateSeedOrder(bracketSize: number): number[] {
     let order = [1, 2];
 
@@ -407,14 +206,6 @@ export class BracketService {
     }
 
     return order;
-  }
-
-  /**
-   * Calcule le nombre de rounds pour un tournoi Swiss
-   */
-  private calculateSwissRounds(playerCount: number): number {
-    // Formule standard : log2(playerCount) arrondi à l'entier supérieur
-    return Math.ceil(Math.log2(playerCount));
   }
 
   /**
@@ -452,9 +243,7 @@ export class BracketService {
               ? ({ id: node.playerB.id } as Player)
               : undefined,
             winner:
-              isBye && byeWinner
-                ? ({ id: byeWinner.id } as Player)
-                : undefined,
+              isBye && byeWinner ? ({ id: byeWinner.id } as Player) : undefined,
             round: node.round,
             phase: node.phase,
             scheduledDate: new Date(tournament.startDate),
@@ -470,76 +259,6 @@ export class BracketService {
         }
       }
     }
-  }
-
-  /**
-   * Crée les paires Swiss en évitant les re-matchs
-   */
-  private async createSwissPairings(
-    sortedPlayers: Player[],
-    tournamentId: number,
-  ): Promise<SwissPairing["pairings"]> {
-    const pairings: SwissPairing["pairings"] = [];
-    const availablePlayers = [...sortedPlayers];
-    let tableNumber = 1;
-
-    // Récupérer les matchs précédents pour éviter les re-matchs
-    const previousMatches = await this.matchRepository.find({
-      where: { tournament: { id: tournamentId } },
-      relations: ["playerA", "playerB"],
-    });
-
-    const hasPlayedAgainst = (playerA: Player, playerB: Player): boolean => {
-      return previousMatches.some(
-        (match) =>
-          (match.playerA?.id === playerA.id &&
-            match.playerB?.id === playerB.id) ||
-          (match.playerA?.id === playerB.id &&
-            match.playerB?.id === playerA.id),
-      );
-    };
-
-    while (availablePlayers.length > 1) {
-      const playerA = availablePlayers.shift()!;
-      let playerB: Player | undefined;
-      let playerBIndex = -1;
-
-      // Chercher un adversaire qui n'a pas encore joué contre playerA
-      for (let i = 0; i < availablePlayers.length; i++) {
-        if (!hasPlayedAgainst(playerA, availablePlayers[i])) {
-          playerB = availablePlayers[i];
-          playerBIndex = i;
-          break;
-        }
-      }
-
-      // Si aucun adversaire inédit, prendre le premier disponible
-      if (!playerB && availablePlayers.length > 0) {
-        playerB = availablePlayers[0];
-        playerBIndex = 0;
-      }
-
-      if (playerB) {
-        availablePlayers.splice(playerBIndex, 1);
-      }
-
-      pairings.push({
-        playerA,
-        playerB,
-        tableNumber: tableNumber++,
-      });
-    }
-
-    // Joueur restant reçoit un bye
-    if (availablePlayers.length === 1) {
-      pairings.push({
-        playerA: availablePlayers[0],
-        playerB: undefined, // bye
-        tableNumber: tableNumber++,
-      });
-    }
-
-    return pairings;
   }
 
   /**
@@ -566,12 +285,14 @@ export class BracketService {
     const matchesByRound = new Map<number, Match[]>();
 
     // Grouper les matches par round
-    tournament.matches.forEach((match) => {
-      if (!matchesByRound.has(match.round)) {
-        matchesByRound.set(match.round, []);
-      }
-      matchesByRound.get(match.round)!.push(match);
-    });
+    [...tournament.matches]
+      .sort((a, b) => a.round - b.round || a.id - b.id)
+      .forEach((match) => {
+        if (!matchesByRound.has(match.round)) {
+          matchesByRound.set(match.round, []);
+        }
+        matchesByRound.get(match.round)!.push(match);
+      });
 
     // Convertir en structure de bracket
     for (const [roundNumber, matches] of matchesByRound) {
@@ -592,6 +313,10 @@ export class BracketService {
             }
           : undefined,
         winnerId: match.winner?.id,
+        status: match.status,
+        playerAScore: match.playerAScore,
+        playerBScore: match.playerBScore,
+        scheduledDate: match.scheduledDate,
         phase: match.phase,
       }));
 

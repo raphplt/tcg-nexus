@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import { Award, Medal, TrendingUp, Trophy } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Medal, Award, TrendingUp } from "lucide-react";
 import { Ranking } from "@/types/tournament";
 
 interface TabRankingsProps {

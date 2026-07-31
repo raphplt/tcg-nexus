@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Award, Medal, RefreshCw, TrendingUp, Trophy } from "lucide-react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Medal, Award, TrendingUp, RefreshCw } from "lucide-react";
 import { tournamentService } from "@/services/tournament.service";
 import { Ranking, Tournament } from "@/types/tournament";
 
