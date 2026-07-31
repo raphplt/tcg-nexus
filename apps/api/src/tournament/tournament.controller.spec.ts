@@ -5,6 +5,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Player } from "../player/entities/player.entity";
 import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { BulkRegistrationAction } from "./dto/bulk-registration-action.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { Tournament, TournamentStatus } from "./entities/tournament.entity";
 import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
@@ -45,7 +46,9 @@ describe("TournamentController", () => {
     getTournamentMatches: jest.fn(),
     getTournamentMatch: jest.fn(),
     updateTournamentMatch: jest.fn(),
+    startTournamentMatchesInBulk: jest.fn(),
     getTournamentRegistrations: jest.fn(),
+    updateRegistrationsInBulk: jest.fn(),
     confirmRegistration: jest.fn(),
     cancelRegistration: jest.fn(),
     checkInPlayer: jest.fn(),
@@ -469,6 +472,48 @@ describe("TournamentController", () => {
         1,
         "CONFIRMED",
       );
+    });
+  });
+
+  describe("startTournamentMatchesInBulk", () => {
+    it("should delegate all selected match identifiers", () => {
+      mockTournamentService.startTournamentMatchesInBulk.mockReturnValue({
+        startedCount: 2,
+        matches: [],
+      });
+
+      const result = controller.startTournamentMatchesInBulk(1, {
+        matchIds: [4, 5],
+      });
+
+      expect(result).toEqual({ startedCount: 2, matches: [] });
+      expect(service.startTournamentMatchesInBulk).toHaveBeenCalledWith(
+        1,
+        [4, 5],
+      );
+    });
+  });
+
+  describe("updateRegistrationsInBulk", () => {
+    it("should delegate the complete action", () => {
+      const action = {
+        registrationIds: [2, 3],
+        action: BulkRegistrationAction.CONFIRM,
+      };
+      mockTournamentService.updateRegistrationsInBulk.mockReturnValue({
+        action: BulkRegistrationAction.CONFIRM,
+        updatedCount: 2,
+        registrations: [],
+      });
+
+      const result = controller.updateRegistrationsInBulk(1, action);
+
+      expect(result).toEqual({
+        action: BulkRegistrationAction.CONFIRM,
+        updatedCount: 2,
+        registrations: [],
+      });
+      expect(service.updateRegistrationsInBulk).toHaveBeenCalledWith(1, action);
     });
   });
 

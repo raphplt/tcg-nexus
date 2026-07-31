@@ -6,7 +6,7 @@ import {
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Deck } from "src/deck/entities/deck.entity";
-import { DataSource, EntityManager, Repository } from "typeorm";
+import { DataSource, EntityManager, In, Repository } from "typeorm";
 import { Player } from "../player/entities/player.entity";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { RankingService } from "../ranking/ranking.service";
@@ -303,9 +303,15 @@ export class MatchService {
       updateMatchDto.status === MatchStatus.FINISHED ||
       updateMatchDto.status === MatchStatus.FORFEIT;
 
-    if (includesScore || isFinalStatus) {
+    if (
+      includesScore ||
+      isFinalStatus ||
+      updateMatchDto.status === MatchStatus.IN_PROGRESS
+    ) {
       throw new BadRequestException(
-        "Utilisez le flux de saisie de résultat pour enregistrer un score final",
+        updateMatchDto.status === MatchStatus.IN_PROGRESS
+          ? "Utilisez l'action de démarrage pour commencer un match"
+          : "Utilisez le flux de saisie de résultat pour enregistrer un score final",
       );
     }
 
@@ -349,29 +355,105 @@ export class MatchService {
   // Démarrer un match
   async startMatch(id: number, startMatchDto: StartMatchDto): Promise<Match> {
     const match = await this.findOne(id);
-    if (match.status !== MatchStatus.SCHEDULED) {
+    const result = await this.startMatches(
+      match.tournament.id,
+      [id],
+      startMatchDto,
+    );
+    return result.matches[0];
+  }
+
+  async startMatches(
+    tournamentId: number,
+    matchIds: number[],
+    startMatchDto: StartMatchDto = {},
+  ): Promise<{ startedCount: number; matches: Match[] }> {
+    const uniqueMatchIds = [...new Set(matchIds)];
+    if (
+      uniqueMatchIds.length === 0 ||
+      uniqueMatchIds.length !== matchIds.length
+    ) {
       throw new BadRequestException(
-        "Seuls les matches programmés peuvent être démarrés",
+        "La sélection de matches doit contenir des identifiants uniques",
       );
     }
-    if (!match.playerA || !match.playerB) {
-      throw new BadRequestException(
-        "Le match doit avoir deux joueurs pour être démarré",
-      );
+
+    const matches = await this.dataSource.transaction<Match[]>(
+      async (manager: EntityManager) => {
+        const tournament = await manager.findOne(Tournament, {
+          where: { id: tournamentId },
+          lock: { mode: "pessimistic_write" },
+        });
+        if (!tournament) {
+          throw new NotFoundException("Tournoi non trouvé");
+        }
+        if (tournament.status !== TournamentStatus.IN_PROGRESS) {
+          throw new BadRequestException(
+            "Les matches ne peuvent être démarrés que pendant un tournoi en cours",
+          );
+        }
+
+        const selectedMatches = await manager.find(Match, {
+          where: {
+            id: In(uniqueMatchIds),
+            tournament: { id: tournamentId },
+          },
+          relations: [
+            "tournament",
+            "playerA",
+            "playerA.user",
+            "playerB",
+            "playerB.user",
+          ],
+          order: { id: "ASC" },
+        });
+
+        if (selectedMatches.length !== uniqueMatchIds.length) {
+          throw new NotFoundException(
+            "Un ou plusieurs matches sont introuvables dans ce tournoi",
+          );
+        }
+
+        const invalidMatch = selectedMatches.find(
+          (selectedMatch) =>
+            selectedMatch.status !== MatchStatus.SCHEDULED ||
+            selectedMatch.round !== tournament.currentRound ||
+            !selectedMatch.playerA ||
+            !selectedMatch.playerB,
+        );
+        if (invalidMatch) {
+          throw new BadRequestException(
+            `Le match ${invalidMatch.id} n'est pas prêt à être démarré dans le round courant`,
+          );
+        }
+
+        const startedAt = new Date();
+        for (const selectedMatch of selectedMatches) {
+          selectedMatch.status = MatchStatus.IN_PROGRESS;
+          selectedMatch.startedAt = startedAt;
+          if (startMatchDto.notes) {
+            selectedMatch.notes = startMatchDto.notes;
+          }
+        }
+
+        const savedMatches = await manager.save(Match, selectedMatches);
+        for (const savedMatch of savedMatches) {
+          await this.createOnlineSessionWithManager(savedMatch, manager);
+        }
+        return savedMatches;
+      },
+    );
+
+    for (const match of matches) {
+      this.eventEmitter.emit("match.ready", {
+        matchId: match.id,
+        tournamentId: match.tournament?.id ?? tournamentId,
+        playerAUserId: match.playerA?.user?.id ?? null,
+        playerBUserId: match.playerB?.user?.id ?? null,
+      });
     }
-    match.status = MatchStatus.IN_PROGRESS;
-    match.startedAt = new Date();
-    if (startMatchDto.notes) {
-      match.notes = startMatchDto.notes;
-    }
-    const savedMatch = await this.matchRepository.save(match);
-    this.eventEmitter.emit("match.ready", {
-      matchId: match.id,
-      tournamentId: match.tournament?.id ?? null,
-      playerAUserId: match.playerA?.user?.id ?? null,
-      playerBUserId: match.playerB?.user?.id ?? null,
-    });
-    return savedMatch;
+
+    return { startedCount: matches.length, matches };
   }
 
   // Reporter un score
@@ -382,107 +464,104 @@ export class MatchService {
     const result = await this.dataSource.transaction<{
       match: Match;
       tournamentFinished: boolean;
-    }>(
-      async (manager: EntityManager) => {
-        const lockedMatch = await manager.findOne(Match, {
-          where: { id },
-          lock: { mode: "pessimistic_write" },
-        });
+    }>(async (manager: EntityManager) => {
+      const lockedMatch = await manager.findOne(Match, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+      });
 
-        if (!lockedMatch) {
-          throw new NotFoundException("Match non trouvé");
-        }
+      if (!lockedMatch) {
+        throw new NotFoundException("Match non trouvé");
+      }
 
-        const match = await manager.findOne(Match, {
-          where: { id },
-          relations: [
-            "tournament",
-            "playerA",
-            "playerA.user",
-            "playerB",
-            "playerB.user",
-            "winner",
-          ],
-        });
+      const match = await manager.findOne(Match, {
+        where: { id },
+        relations: [
+          "tournament",
+          "playerA",
+          "playerA.user",
+          "playerB",
+          "playerB.user",
+          "winner",
+        ],
+      });
 
-        if (!match) {
-          throw new NotFoundException("Match non trouvé");
-        }
+      if (!match) {
+        throw new NotFoundException("Match non trouvé");
+      }
 
-        if (match.status !== MatchStatus.IN_PROGRESS) {
-          throw new BadRequestException(
-            "Seuls les matches en cours peuvent recevoir des scores",
-          );
-        }
-
-        const { playerAScore, playerBScore, isForfeit, notes } = reportScoreDto;
-        const isElimination =
-          match.tournament.type === TournamentType.SINGLE_ELIMINATION ||
-          match.tournament.type === TournamentType.DOUBLE_ELIMINATION;
-
-        if (playerAScore === playerBScore && (isForfeit || isElimination)) {
-          throw new BadRequestException(
-            isElimination
-              ? "Un match à élimination doit désigner un vainqueur"
-              : "Un forfait doit désigner un vainqueur",
-          );
-        }
-
-        match.playerAScore = playerAScore;
-        match.playerBScore = playerBScore;
-        match.finishedAt = new Date();
-
-        if (isForfeit) {
-          match.status = MatchStatus.FORFEIT;
-          // Si forfait, on infère le vainqueur par le score fourni
-          match.winner =
-            playerAScore > playerBScore
-              ? (match.playerA ?? null)
-              : (match.playerB ?? null);
-        } else {
-          match.status = MatchStatus.FINISHED;
-          if (playerAScore > playerBScore) {
-            match.winner = match.playerA ?? null;
-          } else if (playerBScore > playerAScore) {
-            match.winner = match.playerB ?? null;
-          } else {
-            match.winner = undefined;
-          }
-        }
-
-        if (notes) {
-          match.notes = notes;
-        }
-
-        const savedMatch = await manager.save(Match, match);
-
-        if (match.winner) {
-          await this.updateRankings(match, manager);
-        }
-        await this.createMatchStatistics(match, manager);
-
-        // Vérifier si le tournoi peut avancer automatiquement
-        const tournamentFinished = await this.checkTournamentProgression(
-          match,
-          manager,
+      if (match.status !== MatchStatus.IN_PROGRESS) {
+        throw new BadRequestException(
+          "Seuls les matches en cours peuvent recevoir des scores",
         );
+      }
 
-        if (savedMatch.winner?.user?.id) {
-          this.eventEmitter.emit("challenge.action", {
-            userId: savedMatch.winner.user.id,
-            action: "WIN_MATCH",
-          });
+      const { playerAScore, playerBScore, isForfeit, notes } = reportScoreDto;
+      const isElimination =
+        match.tournament.type === TournamentType.SINGLE_ELIMINATION ||
+        match.tournament.type === TournamentType.DOUBLE_ELIMINATION;
+
+      if (playerAScore === playerBScore && (isForfeit || isElimination)) {
+        throw new BadRequestException(
+          isElimination
+            ? "Un match à élimination doit désigner un vainqueur"
+            : "Un forfait doit désigner un vainqueur",
+        );
+      }
+
+      match.playerAScore = playerAScore;
+      match.playerBScore = playerBScore;
+      match.finishedAt = new Date();
+
+      if (isForfeit) {
+        match.status = MatchStatus.FORFEIT;
+        // Si forfait, on infère le vainqueur par le score fourni
+        match.winner =
+          playerAScore > playerBScore
+            ? (match.playerA ?? null)
+            : (match.playerB ?? null);
+      } else {
+        match.status = MatchStatus.FINISHED;
+        if (playerAScore > playerBScore) {
+          match.winner = match.playerA ?? null;
+        } else if (playerBScore > playerAScore) {
+          match.winner = match.playerB ?? null;
+        } else {
+          match.winner = undefined;
         }
+      }
 
-        return { match: savedMatch, tournamentFinished };
-      },
-    );
+      if (notes) {
+        match.notes = notes;
+      }
+
+      const savedMatch = await manager.save(Match, match);
+
+      if (match.winner) {
+        await this.updateRankings(match, manager);
+      }
+      await this.createMatchStatistics(match, manager);
+
+      // Vérifier si le tournoi peut avancer automatiquement
+      const tournamentFinished = await this.checkTournamentProgression(
+        match,
+        manager,
+      );
+
+      if (savedMatch.winner?.user?.id) {
+        this.eventEmitter.emit("challenge.action", {
+          userId: savedMatch.winner.user.id,
+          action: "WIN_MATCH",
+        });
+      }
+
+      return { match: savedMatch, tournamentFinished };
+    });
 
     if (result.tournamentFinished) {
-      const rankings =
-        await this.rankingService.updateTournamentRankings(
-          result.match.tournament.id,
-        );
+      const rankings = await this.rankingService.updateTournamentRankings(
+        result.match.tournament.id,
+      );
       const tournament = await this.tournamentRepository.findOne({
         where: { id: result.match.tournament.id },
         relations: [
@@ -514,36 +593,70 @@ export class MatchService {
 
   // Annuler un résultat de match (pour les juges)
   async resetMatch(id: number, resetMatchDto: ResetMatchDto): Promise<Match> {
-    const match = await this.findOne(id);
-    if (
-      match.status !== MatchStatus.FINISHED &&
-      match.status !== MatchStatus.FORFEIT
-    ) {
-      throw new BadRequestException(
-        "Seuls les matches terminés peuvent être réinitialisés",
-      );
-    }
+    const result = await this.dataSource.transaction<{
+      match: Match;
+      tournamentId: number;
+    }>(async (manager: EntityManager) => {
+      const lockedMatch = await manager.findOne(Match, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!lockedMatch) {
+        throw new NotFoundException("Match non trouvé");
+      }
 
-    return this.dataSource.transaction<Match>(
-      async (manager: EntityManager) => {
-        match.status = MatchStatus.SCHEDULED;
-        match.playerAScore = 0;
-        match.playerBScore = 0;
-        match.winner = undefined;
-        match.startedAt = undefined;
-        match.finishedAt = undefined;
+      const match = await manager.findOne(Match, {
+        where: { id },
+        relations: ["tournament", "playerA", "playerB", "winner"],
+      });
+      if (!match) {
+        throw new NotFoundException("Match non trouvé");
+      }
 
-        if (resetMatchDto.reason) {
-          match.notes = `Réinitialisé: ${resetMatchDto.reason}`;
-        }
+      if (
+        match.status !== MatchStatus.FINISHED &&
+        match.status !== MatchStatus.FORFEIT
+      ) {
+        throw new BadRequestException(
+          "Seuls les matches terminés peuvent être réinitialisés",
+        );
+      }
 
-        const savedMatch = await manager.save(Match, match);
+      if (match.tournament.status !== TournamentStatus.IN_PROGRESS) {
+        throw new BadRequestException(
+          "Un résultat ne peut plus être réinitialisé après la fin ou l'annulation du tournoi",
+        );
+      }
 
-        await manager.delete(Statistics, { match: { id } });
+      if (match.round !== match.tournament.currentRound) {
+        throw new BadRequestException(
+          "Ce résultat ne peut plus être réinitialisé car le tournoi a déjà progressé au round suivant",
+        );
+      }
 
-        return savedMatch;
-      },
-    );
+      match.status = MatchStatus.SCHEDULED;
+      match.playerAScore = 0;
+      match.playerBScore = 0;
+      match.winner = undefined;
+      match.startedAt = undefined;
+      match.finishedAt = undefined;
+
+      if (resetMatchDto.reason) {
+        match.notes = `Réinitialisé: ${resetMatchDto.reason}`;
+      }
+
+      const savedMatch = await manager.save(Match, match);
+
+      await manager.delete(Statistics, { match: { id } });
+
+      return {
+        match: savedMatch,
+        tournamentId: match.tournament.id,
+      };
+    });
+
+    await this.rankingService.updateTournamentRankings(result.tournamentId);
+    return result.match;
   }
 
   // Récupérer les matches d'un tournoi par round

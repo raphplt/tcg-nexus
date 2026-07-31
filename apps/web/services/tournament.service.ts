@@ -28,6 +28,14 @@ export interface MyPendingTournamentMatch {
   onlineSession: { id: number; status: string } | null;
 }
 
+export type BulkRegistrationAction = "confirm" | "cancel" | "check_in";
+
+export interface BulkRegistrationActionResult {
+  action: BulkRegistrationAction;
+  updatedCount: number;
+  registrations: TournamentRegistration[];
+}
+
 export const tournamentService = {
   /**
    * Récupère un tournoi par son ID
@@ -126,6 +134,21 @@ export const tournamentService = {
       "PATCH",
       `/tournaments/${tournamentId}/registrations/${registrationId}/cancel`,
       { data: { reason } },
+    );
+  },
+
+  async updateRegistrationsInBulk(
+    tournamentId: number,
+    data: {
+      registrationIds: number[];
+      action: BulkRegistrationAction;
+      reason?: string;
+    },
+  ): Promise<BulkRegistrationActionResult> {
+    return authedFetch<BulkRegistrationActionResult>(
+      "POST",
+      `/tournaments/${tournamentId}/registrations/bulk-action`,
+      { data },
     );
   },
 
@@ -346,6 +369,17 @@ export const tournamentService = {
       "PATCH",
       `/tournaments/${tournamentId}/matches/${matchId}`,
       { data },
+    );
+  },
+
+  async startMatchesInBulk(
+    tournamentId: number,
+    matchIds: number[],
+  ): Promise<{ startedCount: number; matches: Match[] }> {
+    return authedFetch<{ startedCount: number; matches: Match[] }>(
+      "POST",
+      `/tournaments/${tournamentId}/matches/bulk-start`,
+      { data: { matchIds } },
     );
   },
 };

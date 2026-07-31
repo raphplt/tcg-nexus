@@ -7,11 +7,14 @@ import {
   StartMatchDto,
   ResetMatchDto,
 } from "@/types/tournament";
+import { extractApiErrorMessage } from "@/utils/api-error";
 import toast from "react-hot-toast";
 
 export function useMatches(tournamentId: string) {
   const queryClient = useQueryClient();
   const id = parseInt(tournamentId);
+  const refreshMatchQueries = () =>
+    queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
 
   // Tous les matches du tournoi
   const {
@@ -33,17 +36,31 @@ export function useMatches(tournamentId: string) {
       matchId: number;
       data?: StartMatchDto;
     }) => matchService.startMatch(matchId, data),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Match démarré !");
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", tournamentId, "matches"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", tournamentId, "progress"],
-      });
+      await refreshMatchQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible de démarrer ce match."),
+      );
+    },
+  });
+
+  const startMatchesMutation = useMutation({
+    mutationFn: (matchIds: number[]) =>
+      tournamentService.startMatchesInBulk(id, matchIds),
+    onSuccess: async (result) => {
+      toast.success(`${result.startedCount} match(s) démarré(s).`);
+      await refreshMatchQueries();
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          "Les matches n'ont pas pu être démarrés.",
+        ),
+      );
     },
   });
 
@@ -55,24 +72,28 @@ export function useMatches(tournamentId: string) {
       matchId: number;
       score: ReportScoreDto;
     }) => matchService.reportScore(matchId, score),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Score enregistré !");
-      queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
+      await refreshMatchQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible d'enregistrer le score."),
+      );
     },
   });
 
   const resetMatchMutation = useMutation({
     mutationFn: ({ matchId, data }: { matchId: number; data: ResetMatchDto }) =>
       matchService.resetMatch(matchId, data),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Match réinitialisé");
-      queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
+      await refreshMatchQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible de réinitialiser le match."),
+      );
     },
   });
 
@@ -116,13 +137,14 @@ export function useMatches(tournamentId: string) {
     // Actions
     startMatch: (matchId: number, data?: StartMatchDto) =>
       startMatchMutation.mutate({ matchId, data }),
+    startMatches: (matchIds: number[]) => startMatchesMutation.mutate(matchIds),
     reportScore: (matchId: number, score: ReportScoreDto) =>
       reportScoreMutation.mutate({ matchId, score }),
     resetMatch: (matchId: number, data: ResetMatchDto) =>
       resetMatchMutation.mutate({ matchId, data }),
 
     // États des mutations
-    isStarting: startMatchMutation.isPending,
+    isStarting: startMatchMutation.isPending || startMatchesMutation.isPending,
     isReporting: reportScoreMutation.isPending,
     isResetting: resetMatchMutation.isPending,
 

@@ -46,7 +46,10 @@ import {
 } from "lucide-react";
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
+import { extractApiErrorMessage } from "@/utils/api-error";
 import toast from "react-hot-toast";
+
+type BulkAction = "confirm" | "cancel" | "check_in";
 
 // Helper function to get player display name
 const getPlayerName = (registration: TournamentRegistration): string => {
@@ -83,13 +86,22 @@ export function RegistrationManager({
     search: "",
     checkedIn: "",
   });
-  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
   const [registrationToCancel, setRegistrationToCancel] = useState<
     number | null
   >(null);
   const canManageRegistrations =
     tournamentStatus === "registration_open" ||
     tournamentStatus === "registration_closed";
+  const refreshTournamentQueries = () =>
+    Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["tournament", tournamentId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["tournament", String(tournamentId)],
+      }),
+    ]);
 
   // Données des inscriptions
   const { data: registrations = [], isLoading } = useQuery<
@@ -104,12 +116,14 @@ export function RegistrationManager({
   const confirmMutation = useMutation({
     mutationFn: (registrationId: number) =>
       tournamentService.confirmRegistration(tournamentId, registrationId),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Inscription confirmée !");
-      queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
+      await refreshTournamentQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible de confirmer l'inscription."),
+      );
     },
   });
 
@@ -126,24 +140,56 @@ export function RegistrationManager({
         registrationId,
         reason,
       ),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Inscription annulée");
-      queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
+      await refreshTournamentQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible d'annuler l'inscription."),
+      );
     },
   });
 
   const checkInMutation = useMutation({
     mutationFn: (registrationId: number) =>
       tournamentService.checkIn(tournamentId, registrationId),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Check-in effectué !");
-      queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
+      await refreshTournamentQueries();
     },
-    onError: (error: any) => {
-      toast.error(`Erreur : ${error.response?.data?.message || error.message}`);
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(error, "Impossible d'effectuer le check-in."),
+      );
+    },
+  });
+
+  const bulkMutation = useMutation({
+    mutationFn: (action: BulkAction) =>
+      tournamentService.updateRegistrationsInBulk(tournamentId, {
+        registrationIds: selectedRegistrations,
+        action,
+      }),
+    onSuccess: async (result) => {
+      const labels: Record<BulkAction, string> = {
+        confirm: "confirmée(s)",
+        cancel: "annulée(s)",
+        check_in: "enregistrée(s) au check-in",
+      };
+      toast.success(
+        `${result.updatedCount} inscription(s) ${labels[result.action]}.`,
+      );
+      setSelectedRegistrations([]);
+      await refreshTournamentQueries();
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          "L'action groupée n'a pas pu être appliquée.",
+        ),
+      );
     },
   });
 
@@ -195,37 +241,54 @@ export function RegistrationManager({
     });
   };
 
-  const handleBulkAction = (action: string) => {
+  const selectedRegistrationRecords = registrations.filter((registration) =>
+    selectedRegistrations.includes(registration.id),
+  );
+  const canConfirmSelection =
+    selectedRegistrationRecords.length > 0 &&
+    selectedRegistrationRecords.every(
+      (registration) =>
+        registration.status === "pending" ||
+        registration.status === "waitlisted" ||
+        registration.status === "cancelled",
+    );
+  const canCancelSelection =
+    selectedRegistrationRecords.length > 0 &&
+    selectedRegistrationRecords.every(
+      (registration) =>
+        registration.status !== "cancelled" &&
+        registration.status !== "eliminated",
+    );
+  const canCheckInSelection =
+    selectedRegistrationRecords.length > 0 &&
+    selectedRegistrationRecords.every(
+      (registration) =>
+        registration.status === "confirmed" && !registration.checkedIn,
+    );
+
+  const handleBulkAction = (action: BulkAction) => {
     setBulkAction(action);
+  };
+
+  const updateFilters = (nextFilters: typeof filters) => {
+    setFilters(nextFilters);
+    setSelectedRegistrations([]);
   };
 
   const executeBulkAction = () => {
     if (!bulkAction || selectedRegistrations.length === 0) return;
 
-    selectedRegistrations.forEach((regId) => {
-      switch (bulkAction) {
-        case "confirm":
-          confirmMutation.mutate(regId);
-          break;
-        case "cancel":
-          cancelMutation.mutate({
-            registrationId: regId,
-            reason: "Action groupée",
-          });
-          break;
-        case "checkin":
-          checkInMutation.mutate(regId);
-          break;
-      }
-    });
-
-    setSelectedRegistrations([]);
+    bulkMutation.mutate(bulkAction);
     setBulkAction(null);
   };
 
   const exportRegistrations = () => {
+    const escapeCsvCell = (value: string | number) =>
+      `"${String(value).replaceAll('"', '""')}"`;
     const csv = [
-      ["Joueur", "Statut", "Check-in", "Inscription", "Notes"].join(","),
+      ["Joueur", "Statut", "Check-in", "Inscription", "Notes"]
+        .map(escapeCsvCell)
+        .join(","),
       ...filteredRegistrations.map((reg) =>
         [
           getPlayerName(reg),
@@ -233,11 +296,15 @@ export function RegistrationManager({
           reg.checkedIn ? "Oui" : "Non",
           new Date(reg.registeredAt).toLocaleDateString(),
           reg.notes || "",
-        ].join(","),
+        ]
+          .map(escapeCsvCell)
+          .join(","),
       ),
     ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -329,7 +396,7 @@ export function RegistrationManager({
                     className="pl-8"
                     value={filters.search}
                     onChange={(e) =>
-                      setFilters({ ...filters, search: e.target.value })
+                      updateFilters({ ...filters, search: e.target.value })
                     }
                   />
                 </div>
@@ -340,7 +407,7 @@ export function RegistrationManager({
                 <Select
                   value={filters.status || "all"}
                   onValueChange={(value) =>
-                    setFilters({
+                    updateFilters({
                       ...filters,
                       status: value === "all" ? "" : value,
                     })
@@ -363,7 +430,7 @@ export function RegistrationManager({
                 <Select
                   value={filters.checkedIn || "all"}
                   onValueChange={(value) =>
-                    setFilters({
+                    updateFilters({
                       ...filters,
                       checkedIn: value === "all" ? "" : value,
                     })
@@ -384,7 +451,7 @@ export function RegistrationManager({
                 <Button
                   variant="outline"
                   onClick={() =>
-                    setFilters({ status: "", search: "", checkedIn: "" })
+                    updateFilters({ status: "", search: "", checkedIn: "" })
                   }
                   className="w-full"
                 >
@@ -405,7 +472,11 @@ export function RegistrationManager({
                     variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction("confirm")}
-                    disabled={!canManageRegistrations}
+                    disabled={
+                      !canManageRegistrations ||
+                      !canConfirmSelection ||
+                      bulkMutation.isPending
+                    }
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Confirmer ({selectedRegistrations.length})
@@ -415,7 +486,11 @@ export function RegistrationManager({
                     variant="outline"
                     size="sm"
                     onClick={() => handleBulkAction("cancel")}
-                    disabled={!canManageRegistrations}
+                    disabled={
+                      !canManageRegistrations ||
+                      !canCancelSelection ||
+                      bulkMutation.isPending
+                    }
                   >
                     <X className="w-4 h-4 mr-2" />
                     Annuler
@@ -424,8 +499,12 @@ export function RegistrationManager({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleBulkAction("checkin")}
-                    disabled={!canManageRegistrations}
+                    onClick={() => handleBulkAction("check_in")}
+                    disabled={
+                      !canManageRegistrations ||
+                      !canCheckInSelection ||
+                      bulkMutation.isPending
+                    }
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
                     Check-in
@@ -457,9 +536,11 @@ export function RegistrationManager({
                     <Checkbox
                       disabled={!canManageRegistrations}
                       checked={
+                        filteredRegistrations.length > 0 &&
                         selectedRegistrations.length ===
-                        filteredRegistrations.length
+                          filteredRegistrations.length
                       }
+                      aria-label="Sélectionner toutes les inscriptions filtrées"
                       onCheckedChange={(checked) => {
                         if (checked) {
                           setSelectedRegistrations(
@@ -486,6 +567,9 @@ export function RegistrationManager({
                       <TableCell>
                         <Checkbox
                           disabled={!canManageRegistrations}
+                          aria-label={`Sélectionner l'inscription de ${getPlayerName(
+                            registration,
+                          )}`}
                           checked={selectedRegistrations.includes(
                             registration.id,
                           )}
@@ -567,6 +651,10 @@ export function RegistrationManager({
                             <Button
                               variant="outline"
                               size="sm"
+                              aria-label={`Confirmer l'inscription de ${getPlayerName(
+                                registration,
+                              )}`}
+                              title="Confirmer l'inscription"
                               onClick={() =>
                                 confirmMutation.mutate(registration.id)
                               }
@@ -584,6 +672,10 @@ export function RegistrationManager({
                               <Button
                                 variant="outline"
                                 size="sm"
+                                aria-label={`Effectuer le check-in de ${getPlayerName(
+                                  registration,
+                                )}`}
+                                title="Effectuer le check-in"
                                 onClick={() =>
                                   checkInMutation.mutate(registration.id)
                                 }
@@ -600,6 +692,10 @@ export function RegistrationManager({
                             <Button
                               variant="outline"
                               size="sm"
+                              aria-label={`Annuler l'inscription de ${getPlayerName(
+                                registration,
+                              )}`}
+                              title="Annuler l'inscription"
                               onClick={() =>
                                 setRegistrationToCancel(registration.id)
                               }
@@ -643,7 +739,7 @@ export function RegistrationManager({
               {bulkAction === "cancel" && (
                 <p>Annuler {selectedRegistrations.length} inscription(s) ?</p>
               )}
-              {bulkAction === "checkin" && (
+              {bulkAction === "check_in" && (
                 <p>
                   Effectuer le check-in pour {selectedRegistrations.length}{" "}
                   joueur(s) ?
@@ -653,8 +749,11 @@ export function RegistrationManager({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={executeBulkAction}>
-              Confirmer
+            <AlertDialogAction
+              onClick={executeBulkAction}
+              disabled={bulkMutation.isPending}
+            >
+              {bulkMutation.isPending ? "Application..." : "Confirmer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

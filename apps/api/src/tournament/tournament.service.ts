@@ -17,6 +17,10 @@ import { Player } from "../player/entities/player.entity";
 import { RankingService } from "../ranking/ranking.service";
 import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import {
+  BulkRegistrationAction,
+  BulkRegistrationActionDto,
+} from "./dto/bulk-registration-action.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { TournamentRegistrationDto } from "./dto/tournament-registration.dto";
 import { UpdateTournamentDto } from "./dto/update-tournament.dto";
@@ -716,6 +720,15 @@ export class TournamentService {
       updateData.playerAScore !== undefined ||
       updateData.playerBScore !== undefined;
 
+    if (requestedStatus === MatchStatus.IN_PROGRESS) {
+      if (match.status !== MatchStatus.SCHEDULED) {
+        throw new BadRequestException(
+          "Seul un match programmé peut être démarré",
+        );
+      }
+      return this.matchService.startMatch(matchId, {});
+    }
+
     if (includesScore && !isFinalResult) {
       throw new BadRequestException(
         "Un score doit être enregistré avec un statut final",
@@ -741,6 +754,10 @@ export class TournamentService {
     return this.matchService.update(matchId, updateData as UpdateMatchDto);
   }
 
+  startTournamentMatchesInBulk(tournamentId: number, matchIds: number[]) {
+    return this.matchService.startMatches(tournamentId, matchIds);
+  }
+
   /**
    * Récupère les inscriptions d'un tournoi
    */
@@ -758,62 +775,166 @@ export class TournamentService {
     return queryBuilder.orderBy("registration.registeredAt", "ASC").getMany();
   }
 
+  async updateRegistrationsInBulk(
+    tournamentId: number,
+    actionDto: BulkRegistrationActionDto,
+  ): Promise<{
+    action: BulkRegistrationAction;
+    updatedCount: number;
+    registrations: TournamentRegistration[];
+  }> {
+    return this.tournamentRepository.manager.transaction(async (manager) => {
+      const tournamentRepository = manager.getRepository(Tournament);
+      const registrationRepository = manager.getRepository(
+        TournamentRegistration,
+      );
+
+      const lockedTournament = await tournamentRepository.findOne({
+        where: { id: tournamentId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!lockedTournament) {
+        throw new NotFoundException("Tournoi non trouvé");
+      }
+
+      const tournament = await tournamentRepository.findOne({
+        where: { id: tournamentId },
+        relations: ["players"],
+      });
+      if (!tournament) {
+        throw new NotFoundException("Tournoi non trouvé");
+      }
+      this.ensureRegistrationsCanBeManaged(tournament);
+
+      const registrations = await registrationRepository.find({
+        where: {
+          id: In(actionDto.registrationIds),
+          tournament: { id: tournamentId },
+        },
+        relations: ["player"],
+      });
+
+      if (registrations.length !== actionDto.registrationIds.length) {
+        throw new NotFoundException(
+          "Une ou plusieurs inscriptions sont introuvables dans ce tournoi",
+        );
+      }
+
+      switch (actionDto.action) {
+        case BulkRegistrationAction.CONFIRM: {
+          const invalidRegistration = registrations.find(
+            (registration) =>
+              registration.status === RegistrationStatus.CONFIRMED ||
+              registration.status === RegistrationStatus.ELIMINATED,
+          );
+          if (invalidRegistration) {
+            throw new BadRequestException(
+              `L'inscription ${invalidRegistration.id} ne peut pas être confirmée`,
+            );
+          }
+
+          const confirmedCount = await registrationRepository.count({
+            where: {
+              tournament: { id: tournamentId },
+              status: RegistrationStatus.CONFIRMED,
+            },
+          });
+          if (
+            tournament.maxPlayers &&
+            confirmedCount + registrations.length > tournament.maxPlayers
+          ) {
+            throw new BadRequestException(
+              `La confirmation dépasserait la capacité du tournoi (${tournament.maxPlayers} joueurs)`,
+            );
+          }
+
+          tournament.players = tournament.players || [];
+          for (const registration of registrations) {
+            registration.status = RegistrationStatus.CONFIRMED;
+            registration.checkedIn = false;
+            registration.checkedInAt = null;
+            if (
+              !tournament.players.some(
+                (player) => player.id === registration.player.id,
+              )
+            ) {
+              tournament.players.push(registration.player);
+            }
+          }
+          await tournamentRepository.save(tournament);
+          break;
+        }
+
+        case BulkRegistrationAction.CANCEL: {
+          const invalidRegistration = registrations.find(
+            (registration) =>
+              registration.status === RegistrationStatus.CANCELLED ||
+              registration.status === RegistrationStatus.ELIMINATED,
+          );
+          if (invalidRegistration) {
+            throw new BadRequestException(
+              `L'inscription ${invalidRegistration.id} ne peut pas être annulée`,
+            );
+          }
+
+          const cancelledPlayerIds = new Set(
+            registrations.map((registration) => registration.player.id),
+          );
+          tournament.players = (tournament.players || []).filter(
+            (player) => !cancelledPlayerIds.has(player.id),
+          );
+          for (const registration of registrations) {
+            registration.status = RegistrationStatus.CANCELLED;
+            registration.checkedIn = false;
+            registration.checkedInAt = null;
+            if (actionDto.reason) {
+              registration.notes = `Annulée: ${actionDto.reason}`;
+            }
+          }
+          await tournamentRepository.save(tournament);
+          break;
+        }
+
+        case BulkRegistrationAction.CHECK_IN: {
+          const invalidRegistration = registrations.find(
+            (registration) =>
+              registration.status !== RegistrationStatus.CONFIRMED ||
+              registration.checkedIn,
+          );
+          if (invalidRegistration) {
+            throw new BadRequestException(
+              `L'inscription ${invalidRegistration.id} ne peut pas être enregistrée au check-in`,
+            );
+          }
+
+          const checkedInAt = new Date();
+          for (const registration of registrations) {
+            registration.checkedIn = true;
+            registration.checkedInAt = checkedInAt;
+          }
+          break;
+        }
+      }
+
+      const savedRegistrations =
+        await registrationRepository.save(registrations);
+      return {
+        action: actionDto.action,
+        updatedCount: savedRegistrations.length,
+        registrations: savedRegistrations,
+      };
+    });
+  }
+
   /**
    * Confirme une inscription
    */
   async confirmRegistration(tournamentId: number, registrationId: number) {
-    const registration = await this.registrationRepository.findOne({
-      where: { id: registrationId, tournament: { id: tournamentId } },
-      relations: ["tournament", "tournament.players", "player"],
+    const result = await this.updateRegistrationsInBulk(tournamentId, {
+      registrationIds: [registrationId],
+      action: BulkRegistrationAction.CONFIRM,
     });
-
-    if (!registration) {
-      throw new NotFoundException("Inscription non trouvée");
-    }
-
-    if (registration.status === RegistrationStatus.CONFIRMED) {
-      throw new BadRequestException("Cette inscription est déjà confirmée");
-    }
-
-    this.ensureRegistrationsCanBeManaged(registration.tournament);
-
-    const confirmedCount = await this.registrationRepository.count({
-      where: {
-        tournament: { id: tournamentId },
-        status: RegistrationStatus.CONFIRMED,
-      },
-    });
-
-    if (
-      registration.tournament.maxPlayers &&
-      confirmedCount >= registration.tournament.maxPlayers
-    ) {
-      throw new BadRequestException("Le tournoi est complet");
-    }
-
-    return this.tournamentRepository.manager.transaction(async (manager) => {
-      const registrationRepository = manager.getRepository(
-        TournamentRegistration,
-      );
-      const tournamentRepository = manager.getRepository(Tournament);
-
-      registration.status = RegistrationStatus.CONFIRMED;
-      registration.checkedIn = false;
-      registration.checkedInAt = null;
-      const savedRegistration = await registrationRepository.save(registration);
-
-      registration.tournament.players = registration.tournament.players || [];
-      if (
-        !registration.tournament.players.some(
-          (player) => player.id === registration.player.id,
-        )
-      ) {
-        registration.tournament.players.push(registration.player);
-        await tournamentRepository.save(registration.tournament);
-      }
-
-      return savedRegistration;
-    });
+    return result.registrations[0];
   }
 
   /**
@@ -824,42 +945,12 @@ export class TournamentService {
     registrationId: number,
     reason?: string,
   ) {
-    const registration = await this.registrationRepository.findOne({
-      where: { id: registrationId, tournament: { id: tournamentId } },
-      relations: ["tournament", "tournament.players", "player"],
+    const result = await this.updateRegistrationsInBulk(tournamentId, {
+      registrationIds: [registrationId],
+      action: BulkRegistrationAction.CANCEL,
+      reason,
     });
-
-    if (!registration) {
-      throw new NotFoundException("Inscription non trouvée");
-    }
-
-    if (registration.status === RegistrationStatus.CANCELLED) {
-      throw new BadRequestException("Cette inscription est déjà annulée");
-    }
-
-    this.ensureRegistrationsCanBeManaged(registration.tournament);
-
-    return this.tournamentRepository.manager.transaction(async (manager) => {
-      const registrationRepository = manager.getRepository(
-        TournamentRegistration,
-      );
-      const tournamentRepository = manager.getRepository(Tournament);
-
-      registration.status = RegistrationStatus.CANCELLED;
-      registration.checkedIn = false;
-      registration.checkedInAt = null;
-      if (reason) {
-        registration.notes = `Annulée: ${reason}`;
-      }
-
-      const savedRegistration = await registrationRepository.save(registration);
-      registration.tournament.players = (
-        registration.tournament.players || []
-      ).filter((player) => player.id !== registration.player.id);
-      await tournamentRepository.save(registration.tournament);
-
-      return savedRegistration;
-    });
+    return result.registrations[0];
   }
 
   /**
@@ -910,10 +1001,11 @@ export class TournamentService {
       throw new BadRequestException("Check-in déjà effectué");
     }
 
-    registration.checkedIn = true;
-    registration.checkedInAt = new Date();
-
-    return this.registrationRepository.save(registration);
+    const result = await this.updateRegistrationsInBulk(tournamentId, {
+      registrationIds: [registrationId],
+      action: BulkRegistrationAction.CHECK_IN,
+    });
+    return result.registrations[0];
   }
 
   // Remplir un tournoi avec des joueurs aléatoires (admin only)

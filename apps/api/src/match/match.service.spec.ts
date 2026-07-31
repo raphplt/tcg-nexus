@@ -341,6 +341,15 @@ describe("MatchService", () => {
       expect(mockMatchRepository.save).not.toHaveBeenCalled();
     });
 
+    it("should reject direct transitions to in-progress", async () => {
+      mockMatchRepository.findOne.mockResolvedValue(mockMatch);
+
+      await expect(
+        service.update(1, { status: MatchStatus.IN_PROGRESS }),
+      ).rejects.toThrow("action de démarrage");
+      expect(mockMatchRepository.save).not.toHaveBeenCalled();
+    });
+
     it("should update non-score fields when status is not finished", async () => {
       const scheduledDate = new Date();
       mockMatchRepository.findOne.mockResolvedValue(mockMatch);
@@ -529,10 +538,7 @@ describe("MatchService", () => {
       ]);
       mockTournamentRepository.findOne.mockResolvedValue({
         ...mockTournament,
-        registrations: [
-          { player: mockPlayerA },
-          { player: mockPlayerB },
-        ],
+        registrations: [{ player: mockPlayerA }, { player: mockPlayerB }],
       });
 
       await service.reportScore(1, {
@@ -670,70 +676,126 @@ describe("MatchService", () => {
   });
 
   describe("startMatch", () => {
-    it("should start a scheduled match", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
+    it("should delegate a single match to the transactional startup pipeline", async () => {
+      const scheduledMatch = {
         ...mockMatch,
         status: MatchStatus.SCHEDULED,
-      } as any);
-      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
+      } as Match;
+      jest.spyOn(service, "findOne").mockResolvedValue(scheduledMatch);
+      const startMatchesSpy = jest
+        .spyOn(service, "startMatches")
+        .mockResolvedValue({
+          startedCount: 1,
+          matches: [{ ...scheduledMatch, status: MatchStatus.IN_PROGRESS }],
+        });
 
       const result = await service.startMatch(1, { notes: "Starting" });
 
       expect(result.status).toBe(MatchStatus.IN_PROGRESS);
-      expect(result.startedAt).toBeDefined();
-    });
-
-    it("should throw BadRequestException if match not scheduled", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
-        ...mockMatch,
-        status: MatchStatus.FINISHED,
-      } as any);
-
-      await expect(service.startMatch(1, {})).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should throw BadRequestException if a player is missing", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
-        ...mockMatch,
-        playerB: null as any,
-      } as any);
-
-      await expect(service.startMatch(1, {} as any)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should emit match.ready event when transitioning to IN_PROGRESS", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
-        ...mockMatch,
-        status: MatchStatus.SCHEDULED,
-      } as any);
-      mockMatchRepository.save.mockImplementation((m) => Promise.resolve(m));
-
-      const eventEmitter = (service as any).eventEmitter;
-      await service.startMatch(1, {});
-
-      expect(eventEmitter.emit).toHaveBeenCalledWith("match.ready", {
-        matchId: mockMatch.id,
-        tournamentId: mockTournament.id,
-        playerAUserId: mockPlayerA.user.id,
-        playerBUserId: mockPlayerB.user.id,
+      expect(startMatchesSpy).toHaveBeenCalledWith(mockTournament.id, [1], {
+        notes: "Starting",
       });
+    });
+
+    it("should start several current-round matches atomically", async () => {
+      const matches = [
+        { ...mockMatch, id: 1, status: MatchStatus.SCHEDULED },
+        { ...mockMatch, id: 2, status: MatchStatus.SCHEDULED },
+      ];
+      const manager = {
+        findOne: jest.fn().mockResolvedValue({
+          ...mockTournament,
+          status: TournamentStatus.IN_PROGRESS,
+          currentRound: 1,
+        }),
+        find: jest.fn().mockResolvedValue(matches),
+        save: jest
+          .fn()
+          .mockImplementation((_entity: unknown, values: Match[]) => values),
+      };
+      mockDataSource.transaction.mockImplementation(async (callback: any) =>
+        callback(manager),
+      );
+      jest
+        .spyOn<any, any>(service as any, "createOnlineSessionWithManager")
+        .mockResolvedValue(undefined);
+
+      const result = await service.startMatches(1, [1, 2]);
+
+      expect(result.startedCount).toBe(2);
+      expect(result.matches.every((match) => match.startedAt)).toBe(true);
+      expect(manager.save).toHaveBeenCalledTimes(1);
+      const eventEmitter = (service as any).eventEmitter;
+      expect(eventEmitter.emit).toHaveBeenCalledTimes(2);
+    });
+
+    it("should reject startup outside an active tournament", async () => {
+      mockDataSource.transaction.mockImplementation(async (callback: any) =>
+        callback({
+          findOne: jest.fn().mockResolvedValue({
+            ...mockTournament,
+            status: TournamentStatus.REGISTRATION_CLOSED,
+          }),
+        }),
+      );
+
+      await expect(service.startMatches(1, [1])).rejects.toThrow(
+        "tournoi en cours",
+      );
+    });
+
+    it("should reject a match from another round or without both players", async () => {
+      const manager = {
+        findOne: jest.fn().mockResolvedValue({
+          ...mockTournament,
+          status: TournamentStatus.IN_PROGRESS,
+          currentRound: 2,
+        }),
+        find: jest.fn().mockResolvedValue([
+          {
+            ...mockMatch,
+            round: 1,
+            status: MatchStatus.SCHEDULED,
+          },
+        ]),
+      };
+      mockDataSource.transaction.mockImplementation(async (callback: any) =>
+        callback(manager),
+      );
+
+      await expect(service.startMatches(1, [1])).rejects.toThrow(
+        "round courant",
+      );
+    });
+
+    it("should reject duplicate match identifiers", async () => {
+      await expect(service.startMatches(1, [1, 1])).rejects.toThrow(
+        "identifiants uniques",
+      );
+
+      expect(mockDataSource.transaction).not.toHaveBeenCalled();
     });
   });
 
   describe("resetMatch", () => {
     it("should reset a finished match transactionally", async () => {
-      mockMatchRepository.findOne.mockResolvedValue({
+      const finishedMatch = {
         ...mockMatch,
+        tournament: {
+          ...mockTournament,
+          status: TournamentStatus.IN_PROGRESS,
+          currentRound: 1,
+        },
         status: MatchStatus.FINISHED,
-      });
+      };
 
       mockDataSource.transaction.mockImplementation(
         async (cb: (manager: any) => Promise<unknown>) => {
           const manager = {
+            findOne: jest
+              .fn()
+              .mockResolvedValueOnce({ id: finishedMatch.id })
+              .mockResolvedValueOnce(finishedMatch),
             save: jest
               .fn()
               .mockImplementation((entity, data) =>
@@ -744,19 +806,86 @@ describe("MatchService", () => {
           return cb(manager);
         },
       );
+      mockRankingService.updateTournamentRankings.mockResolvedValue([]);
 
-      await service.resetMatch(1, { reason: "Mistake" });
+      const result = await service.resetMatch(1, { reason: "Mistake" });
+
+      expect(result.status).toBe(MatchStatus.SCHEDULED);
+      expect(result.notes).toBe("Réinitialisé: Mistake");
       expect(mockDataSource.transaction).toHaveBeenCalled();
+      expect(mockRankingService.updateTournamentRankings).toHaveBeenCalledWith(
+        mockTournament.id,
+      );
     });
 
     it("should throw BadRequestException if match is not finished", async () => {
-      mockMatchRepository.findOne.mockResolvedValue({
+      const scheduledMatch = {
         ...mockMatch,
         status: MatchStatus.SCHEDULED,
-      });
+      };
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: jest
+            .fn()
+            .mockResolvedValueOnce({ id: scheduledMatch.id })
+            .mockResolvedValueOnce(scheduledMatch),
+        }),
+      );
 
-      await expect(service.resetMatch(1, {})).rejects.toThrow(
+      await expect(service.resetMatch(1, { reason: "Erreur" })).rejects.toThrow(
         BadRequestException,
+      );
+    });
+
+    it("should reject a reset after the tournament progressed", async () => {
+      const previousRoundMatch = {
+        ...mockMatch,
+        tournament: {
+          ...mockTournament,
+          status: TournamentStatus.IN_PROGRESS,
+          currentRound: 2,
+        },
+        round: 1,
+        status: MatchStatus.FINISHED,
+      };
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: jest
+            .fn()
+            .mockResolvedValueOnce({ id: previousRoundMatch.id })
+            .mockResolvedValueOnce(previousRoundMatch),
+        }),
+      );
+
+      await expect(service.resetMatch(1, { reason: "Erreur" })).rejects.toThrow(
+        "round suivant",
+      );
+      expect(
+        mockRankingService.updateTournamentRankings,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should reject a reset after tournament completion", async () => {
+      const finalMatch = {
+        ...mockMatch,
+        tournament: {
+          ...mockTournament,
+          status: TournamentStatus.FINISHED,
+          currentRound: 1,
+        },
+        status: MatchStatus.FINISHED,
+      };
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: jest
+            .fn()
+            .mockResolvedValueOnce({ id: finalMatch.id })
+            .mockResolvedValueOnce(finalMatch),
+        }),
+      );
+
+      await expect(service.resetMatch(1, { reason: "Erreur" })).rejects.toThrow(
+        "fin",
       );
     });
   });

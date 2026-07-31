@@ -4,6 +4,11 @@ import {
   TournamentStatus,
   TournamentType,
 } from "../entities/tournament.entity";
+import {
+  BulkRegistrationAction,
+  BulkRegistrationActionDto,
+} from "./bulk-registration-action.dto";
+import { BulkStartMatchesDto } from "./bulk-start-matches.dto";
 import { PricingType } from "../entities/tournament-pricing.entity";
 import { RewardType } from "../entities/tournament-reward.entity";
 import { CreateTournamentDto } from "./create-tournament.dto";
@@ -18,6 +23,32 @@ import { TournamentQueryDto } from "./tournament-query.dto";
 import { TournamentRegistrationDto as RegistrationDtoStandalone } from "./tournament-registration.dto";
 
 describe("Tournament DTO coverage", () => {
+  it("should validate a unique list of matches to start", () => {
+    const validDto = plainToInstance(BulkStartMatchesDto, {
+      matchIds: [1, 2],
+    });
+    expect(validateSync(validDto)).toHaveLength(0);
+
+    const invalidDto = plainToInstance(BulkStartMatchesDto, {
+      matchIds: [1, 1],
+    });
+    expect(validateSync(invalidDto).length).toBeGreaterThan(0);
+  });
+
+  it("should validate an atomic bulk registration action", () => {
+    const validDto = plainToInstance(BulkRegistrationActionDto, {
+      registrationIds: [1, 2],
+      action: BulkRegistrationAction.CONFIRM,
+    });
+    expect(validateSync(validDto)).toHaveLength(0);
+
+    const invalidDto = plainToInstance(BulkRegistrationActionDto, {
+      registrationIds: [1, 1],
+      action: "unknown",
+    });
+    expect(validateSync(invalidDto).length).toBeGreaterThan(0);
+  });
+
   it("should validate CreateTournamentDto with basic fields", () => {
     const dto = plainToInstance(CreateTournamentDto, {
       name: "Test",

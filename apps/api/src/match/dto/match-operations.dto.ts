@@ -1,9 +1,11 @@
 import {
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from "class-validator";
 import { MatchStatus } from "../entities/match.entity";
@@ -37,7 +39,8 @@ export class StartMatchDto {
 }
 
 export class ResetMatchDto {
-  @IsOptional()
   @IsString()
-  reason?: string;
+  @IsNotEmpty()
+  @MaxLength(300)
+  reason: string;
 }

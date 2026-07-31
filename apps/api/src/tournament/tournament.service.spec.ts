@@ -15,6 +15,7 @@ import { Player } from "../player/entities/player.entity";
 import { RankingService } from "../ranking/ranking.service";
 import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { BulkRegistrationAction } from "./dto/bulk-registration-action.dto";
 import {
   Tournament,
   TournamentStatus,
@@ -128,6 +129,7 @@ describe("TournamentService", () => {
     findOne: jest.fn(),
     reportScore: jest.fn(),
     startMatch: jest.fn(),
+    startMatches: jest.fn(),
     update: jest.fn(),
   };
 
@@ -917,6 +919,39 @@ describe("TournamentService", () => {
         service.updateTournamentMatch(1, 10, { playerAScore: 1 }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it("should route an in-progress status through match startup", async () => {
+      jest.spyOn(service, "getTournamentMatch").mockResolvedValue({
+        id: 10,
+        status: MatchStatus.SCHEDULED,
+        tournament: { id: 1 },
+      } as any);
+      matchService.startMatch.mockResolvedValue({
+        id: 10,
+        status: MatchStatus.IN_PROGRESS,
+      });
+
+      await service.updateTournamentMatch(1, 10, {
+        status: MatchStatus.IN_PROGRESS,
+      });
+
+      expect(matchService.startMatch).toHaveBeenCalledWith(10, {});
+      expect(matchService.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("startTournamentMatchesInBulk", () => {
+    it("should delegate to the canonical match startup pipeline", async () => {
+      matchService.startMatches.mockResolvedValue({
+        startedCount: 2,
+        matches: [],
+      });
+
+      const result = await service.startTournamentMatchesInBulk(1, [2, 3]);
+
+      expect(result.startedCount).toBe(2);
+      expect(matchService.startMatches).toHaveBeenCalledWith(1, [2, 3]);
+    });
   });
 
   describe("getTournamentRegistrations", () => {
@@ -958,130 +993,255 @@ describe("TournamentService", () => {
   });
 
   describe("confirmRegistration", () => {
-    it("should throw NotFoundException if registration missing", async () => {
-      registrationRepo.findOne.mockResolvedValue(null);
-      await expect(service.confirmRegistration(1, 2)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("should throw BadRequestException if already confirmed", async () => {
-      registrationRepo.findOne.mockResolvedValue({
+    it("should use the atomic registration action pipeline", async () => {
+      const registration = {
         id: 2,
         status: RegistrationStatus.CONFIRMED,
-        tournament: { id: 1 },
-      });
-      await expect(service.confirmRegistration(1, 2)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should throw BadRequestException if tournament full", async () => {
-      registrationRepo.findOne.mockResolvedValue({
-        id: 2,
-        status: RegistrationStatus.PENDING,
-        tournament: { id: 1, maxPlayers: 1 },
-      });
-      registrationRepo.count.mockResolvedValue(1);
-      await expect(service.confirmRegistration(1, 2)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should confirm and save", async () => {
-      const reg = {
-        id: 2,
-        status: RegistrationStatus.PENDING,
-        tournament: {
-          id: 1,
-          maxPlayers: 10,
-          players: [],
-          status: TournamentStatus.REGISTRATION_CLOSED,
-        },
-        player: { id: 7 },
       };
-      registrationRepo.findOne.mockResolvedValue(reg);
-      registrationRepo.count.mockResolvedValue(0);
-      registrationRepo.save.mockResolvedValue({
-        ...reg,
-        status: RegistrationStatus.CONFIRMED,
-      });
+      const actionSpy = jest
+        .spyOn(service, "updateRegistrationsInBulk")
+        .mockResolvedValue({
+          action: BulkRegistrationAction.CONFIRM,
+          updatedCount: 1,
+          registrations: [registration as TournamentRegistration],
+        });
 
       const result = await service.confirmRegistration(1, 2);
-      expect(result.status).toBe(RegistrationStatus.CONFIRMED);
-      expect(registrationRepo.save).toHaveBeenCalledWith(
+
+      expect(result).toBe(registration);
+      expect(actionSpy).toHaveBeenCalledWith(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CONFIRM,
+      });
+    });
+  });
+
+  describe("updateRegistrationsInBulk", () => {
+    const lockedTournament = { id: 1 };
+    const tournament = {
+      id: 1,
+      status: TournamentStatus.REGISTRATION_CLOSED,
+      maxPlayers: 4,
+      players: [{ id: 10 }],
+    };
+
+    it("should confirm registrations atomically and synchronize players", async () => {
+      const registrations = [
+        {
+          id: 2,
+          status: RegistrationStatus.PENDING,
+          checkedIn: false,
+          player: { id: 11 },
+        },
+        {
+          id: 3,
+          status: RegistrationStatus.WAITLISTED,
+          checkedIn: false,
+          player: { id: 12 },
+        },
+      ];
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce({ ...tournament, players: [{ id: 10 }] });
+      registrationRepo.find.mockResolvedValue(registrations);
+      registrationRepo.count.mockResolvedValue(1);
+      registrationRepo.save.mockImplementation(async (value: any) => value);
+      tournamentRepo.save.mockImplementation(async (value: any) => value);
+
+      const result = await service.updateRegistrationsInBulk(1, {
+        registrationIds: [2, 3],
+        action: BulkRegistrationAction.CONFIRM,
+      });
+
+      expect(result.updatedCount).toBe(2);
+      expect(result.registrations).toEqual([
         expect.objectContaining({ status: RegistrationStatus.CONFIRMED }),
-      );
+        expect.objectContaining({ status: RegistrationStatus.CONFIRMED }),
+      ]);
       expect(tournamentRepo.save).toHaveBeenCalledWith(
         expect.objectContaining({
-          players: [expect.objectContaining({ id: 7 })],
+          players: [
+            expect.objectContaining({ id: 10 }),
+            expect.objectContaining({ id: 11 }),
+            expect.objectContaining({ id: 12 }),
+          ],
         }),
       );
+    });
+
+    it("should roll back the whole selection when one registration is missing", async () => {
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce(tournament);
+      registrationRepo.find.mockResolvedValue([
+        {
+          id: 2,
+          status: RegistrationStatus.PENDING,
+          player: { id: 11 },
+        },
+      ]);
+
+      await expect(
+        service.updateRegistrationsInBulk(1, {
+          registrationIds: [2, 999],
+          action: BulkRegistrationAction.CONFIRM,
+        }),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(registrationRepo.save).not.toHaveBeenCalled();
+      expect(tournamentRepo.save).not.toHaveBeenCalled();
+    });
+
+    it("should reject confirmations exceeding tournament capacity", async () => {
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce({ ...tournament, maxPlayers: 2 });
+      registrationRepo.find.mockResolvedValue([
+        {
+          id: 2,
+          status: RegistrationStatus.PENDING,
+          player: { id: 11 },
+        },
+        {
+          id: 3,
+          status: RegistrationStatus.PENDING,
+          player: { id: 12 },
+        },
+      ]);
+      registrationRepo.count.mockResolvedValue(1);
+
+      await expect(
+        service.updateRegistrationsInBulk(1, {
+          registrationIds: [2, 3],
+          action: BulkRegistrationAction.CONFIRM,
+        }),
+      ).rejects.toThrow("capacité");
+
+      expect(registrationRepo.save).not.toHaveBeenCalled();
+    });
+
+    it("should reject a selection containing an already confirmed registration", async () => {
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce(tournament);
+      registrationRepo.find.mockResolvedValue([
+        {
+          id: 2,
+          status: RegistrationStatus.CONFIRMED,
+          player: { id: 11 },
+        },
+      ]);
+
+      await expect(
+        service.updateRegistrationsInBulk(1, {
+          registrationIds: [2],
+          action: BulkRegistrationAction.CONFIRM,
+        }),
+      ).rejects.toThrow("ne peut pas être confirmée");
+
+      expect(registrationRepo.save).not.toHaveBeenCalled();
+    });
+
+    it("should cancel registrations and remove their players atomically", async () => {
+      const registrations = [
+        {
+          id: 2,
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          checkedInAt: new Date(),
+          notes: "",
+          player: { id: 11 },
+        },
+      ];
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce({
+          ...tournament,
+          players: [{ id: 10 }, { id: 11 }],
+        });
+      registrationRepo.find.mockResolvedValue(registrations);
+      registrationRepo.save.mockImplementation(async (value: any) => value);
+      tournamentRepo.save.mockImplementation(async (value: any) => value);
+
+      const result = await service.updateRegistrationsInBulk(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CANCEL,
+        reason: "Absence confirmée",
+      });
+
+      expect(result.registrations[0]).toEqual(
+        expect.objectContaining({
+          status: RegistrationStatus.CANCELLED,
+          checkedIn: false,
+          checkedInAt: null,
+          notes: "Annulée: Absence confirmée",
+        }),
+      );
+      expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ players: [{ id: 10 }] }),
+      );
+    });
+
+    it("should check in all selected confirmed registrations at once", async () => {
+      const registrations = [
+        {
+          id: 2,
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: false,
+          checkedInAt: null,
+          player: { id: 11 },
+        },
+        {
+          id: 3,
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: false,
+          checkedInAt: null,
+          player: { id: 12 },
+        },
+      ];
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce(tournament);
+      registrationRepo.find.mockResolvedValue(registrations);
+      registrationRepo.save.mockImplementation(async (value: any) => value);
+
+      const result = await service.updateRegistrationsInBulk(1, {
+        registrationIds: [2, 3],
+        action: BulkRegistrationAction.CHECK_IN,
+      });
+
+      expect(result.updatedCount).toBe(2);
+      expect(result.registrations.every((item) => item.checkedIn)).toBe(true);
+      expect(result.registrations[0].checkedInAt).toEqual(
+        result.registrations[1].checkedInAt,
+      );
+      expect(tournamentRepo.save).not.toHaveBeenCalled();
     });
   });
 
   describe("cancelRegistration", () => {
-    it("should throw NotFoundException if registration missing", async () => {
-      registrationRepo.findOne.mockResolvedValue(null);
-      await expect(service.cancelRegistration(1, 2)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("should cancel and keep notes when no reason", async () => {
-      const reg = {
+    it("should use the atomic pipeline and forward the reason", async () => {
+      const registration = {
         id: 2,
-        status: RegistrationStatus.PENDING,
-        notes: "",
-        checkedIn: false,
-        tournament: {
-          id: 1,
-          status: TournamentStatus.REGISTRATION_OPEN,
-          players: [],
-        },
-        player: { id: 7 },
-      };
-      registrationRepo.findOne.mockResolvedValue(reg);
-      registrationRepo.save.mockResolvedValue({
-        ...reg,
-        status: RegistrationStatus.CANCELLED,
-      });
-      const result = await service.cancelRegistration(1, 2);
-      expect(result.status).toBe(RegistrationStatus.CANCELLED);
-    });
-
-    it("should set notes when reason provided", async () => {
-      const reg = {
-        id: 2,
-        status: RegistrationStatus.PENDING,
-        notes: "",
-        checkedIn: true,
-        checkedInAt: new Date(),
-        tournament: {
-          id: 1,
-          status: TournamentStatus.REGISTRATION_OPEN,
-          players: [{ id: 7 }],
-        },
-        player: { id: 7 },
-      };
-      registrationRepo.findOne.mockResolvedValue(reg);
-      registrationRepo.save.mockResolvedValue({
-        ...reg,
         status: RegistrationStatus.CANCELLED,
         notes: "Annulée: test",
-      });
+      };
+      const actionSpy = jest
+        .spyOn(service, "updateRegistrationsInBulk")
+        .mockResolvedValue({
+          action: BulkRegistrationAction.CANCEL,
+          updatedCount: 1,
+          registrations: [registration as TournamentRegistration],
+        });
 
       const result = await service.cancelRegistration(1, 2, "test");
-      expect(result.notes).toBe("Annulée: test");
-      expect(registrationRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          status: RegistrationStatus.CANCELLED,
-          notes: "Annulée: test",
-        }),
-      );
-      expect(tournamentRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ players: [] }),
-      );
+
+      expect(result).toBe(registration);
+      expect(actionSpy).toHaveBeenCalledWith(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CANCEL,
+        reason: "test",
+      });
     });
   });
 
@@ -1146,15 +1306,22 @@ describe("TournamentService", () => {
         player: { user: { id: 3 } },
       };
       registrationRepo.findOne.mockResolvedValue(reg);
-      registrationRepo.save.mockResolvedValue({ ...reg, checkedIn: true });
+      jest.spyOn(service, "updateRegistrationsInBulk").mockResolvedValue({
+        action: BulkRegistrationAction.CHECK_IN,
+        updatedCount: 1,
+        registrations: [
+          { ...reg, checkedIn: true } as unknown as TournamentRegistration,
+        ],
+      });
 
       const result = await service.checkInPlayer(1, 2, {
         id: 3,
       } as User);
       expect(result.checkedIn).toBe(true);
-      expect(registrationRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ checkedIn: true }),
-      );
+      expect(service.updateRegistrationsInBulk).toHaveBeenCalledWith(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CHECK_IN,
+      });
     });
 
     it("should allow an active organizer to check in a player", async () => {
@@ -1168,7 +1335,13 @@ describe("TournamentService", () => {
       };
       registrationRepo.findOne.mockResolvedValue(reg);
       organizerRepo.findOne.mockResolvedValue({ id: 4, isActive: true });
-      registrationRepo.save.mockImplementation((value: any) => value);
+      jest.spyOn(service, "updateRegistrationsInBulk").mockResolvedValue({
+        action: BulkRegistrationAction.CHECK_IN,
+        updatedCount: 1,
+        registrations: [
+          { ...reg, checkedIn: true } as unknown as TournamentRegistration,
+        ],
+      });
 
       const result = await service.checkInPlayer(1, 2, {
         id: 3,

@@ -23,6 +23,8 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { User } from "../user/entities/user.entity";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
+import { BulkRegistrationActionDto } from "./dto/bulk-registration-action.dto";
+import { BulkStartMatchesDto } from "./dto/bulk-start-matches.dto";
 import { RegisterTournamentDto } from "./dto/register-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { UpdateTournamentDto } from "./dto/update-tournament.dto";
@@ -311,6 +313,24 @@ export class TournamentController {
     );
   }
 
+  @Post(":id/matches/bulk-start")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
+  startTournamentMatchesInBulk(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() startDto: BulkStartMatchesDto,
+  ) {
+    return this.tournamentService.startTournamentMatchesInBulk(
+      id,
+      startDto.matchIds,
+    );
+  }
+
   @Get(":id/registrations")
   @UseGuards(TournamentOrganizerGuard)
   @TournamentOrganizerRoles(
@@ -323,6 +343,21 @@ export class TournamentController {
     @Query("status") status?: string,
   ) {
     return this.tournamentService.getTournamentRegistrations(id, status);
+  }
+
+  @Post(":id/registrations/bulk-action")
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
+  updateRegistrationsInBulk(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() actionDto: BulkRegistrationActionDto,
+  ) {
+    return this.tournamentService.updateRegistrationsInBulk(id, actionDto);
   }
 
   @Patch(":id/registrations/:registrationId/confirm")

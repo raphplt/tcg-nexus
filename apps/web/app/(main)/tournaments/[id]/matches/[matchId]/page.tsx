@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MatchScoreForm } from "../_components/MatchScoreForm";
 import Link from "next/link";
 import GameBoard from "@/components/match/GameBoard";
+import { ResetMatchDialog } from "../_components/ResetMatchDialog";
 
 export default function MatchPage() {
   const { id, matchId } = useParams();
@@ -50,6 +51,18 @@ export default function MatchPage() {
     id as string,
   );
   const permissions = useMatchPermissions(user, match);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const canSafelyStart =
+    permissions.canStartMatch &&
+    match?.tournament?.status === "in_progress" &&
+    match?.round === match?.tournament?.currentRound &&
+    match?.status === "scheduled" &&
+    Boolean(match?.playerA && match?.playerB);
+  const canSafelyReset =
+    permissions.canResetMatch &&
+    match?.tournament?.status === "in_progress" &&
+    match?.round === match?.tournament?.currentRound &&
+    (match?.status === "finished" || match?.status === "forfeit");
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
@@ -85,10 +98,7 @@ export default function MatchPage() {
 
   const handleResetMatch = () => {
     if (match) {
-      const reason = prompt("Raison de la réinitialisation :");
-      if (reason) {
-        resetMatch(match.id, { reason });
-      }
+      setResetDialogOpen(true);
     }
   };
 
@@ -153,7 +163,7 @@ export default function MatchPage() {
 
           {/* Actions rapides */}
           <div className="flex gap-2">
-            {permissions.canStartMatch && match.status === "scheduled" && (
+            {canSafelyStart && (
               <Button
                 variant="outline"
                 size="sm"
@@ -165,18 +175,17 @@ export default function MatchPage() {
               </Button>
             )}
 
-            {permissions.canResetMatch &&
-              (match.status === "finished" || match.status === "forfeit") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetMatch}
-                  disabled={isResetting}
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  {isResetting ? "Reset..." : "Reset"}
-                </Button>
-              )}
+            {canSafelyReset && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetMatch}
+                disabled={isResetting}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {isResetting ? "Réinitialisation..." : "Réinitialiser"}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -299,6 +308,15 @@ export default function MatchPage() {
           </div>
         </div>
       </div>
+      <ResetMatchDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        isPending={isResetting}
+        onConfirm={(reason) => {
+          resetMatch(match.id, { reason });
+          setResetDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

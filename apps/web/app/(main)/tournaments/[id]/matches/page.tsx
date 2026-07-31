@@ -24,6 +24,16 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ArrowLeft,
   Filter,
   Search,
@@ -42,16 +52,26 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ResetMatchDialog } from "./_components/ResetMatchDialog";
 
 export default function MatchesPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { tournament } = useTournament(id as string);
-  const { matches, stats, isLoading, startMatch, resetMatch } = useMatches(
-    id as string,
-  );
+  const {
+    matches,
+    stats,
+    isLoading,
+    startMatch,
+    startMatches,
+    resetMatch,
+    isStarting,
+    isResetting,
+  } = useMatches(id as string);
   const permissions = usePermissions(user, tournament);
+  const [matchToReset, setMatchToReset] = useState<number | null>(null);
+  const [bulkStartOpen, setBulkStartOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     round: "",
@@ -80,6 +100,13 @@ export default function MatchesPage() {
     }
     return true;
   });
+  const startableMatches = matches.filter(
+    (match) =>
+      tournament?.status === "in_progress" &&
+      match.status === "scheduled" &&
+      match.round === tournament.currentRound &&
+      Boolean(match.playerA && match.playerB),
+  );
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -393,32 +420,42 @@ export default function MatchesPage() {
                           <Button variant="outline" size="sm" asChild>
                             <Link
                               href={`/tournaments/${id}/matches/${match.id}`}
+                              aria-label={`Voir le match ${match.id}`}
+                              title="Voir le match"
                             >
                               <Eye className="w-3 h-3" />
                             </Link>
                           </Button>
 
                           {permissions.canStartMatches &&
-                            match.status === "scheduled" && (
+                            tournament?.status === "in_progress" &&
+                            match.status === "scheduled" &&
+                            match.round === tournament.currentRound &&
+                            match.playerA &&
+                            match.playerB && (
                               <Button
                                 variant="outline"
                                 size="sm"
+                                aria-label={`Démarrer le match ${match.id}`}
+                                title="Démarrer le match"
                                 onClick={() => startMatch(match.id)}
+                                disabled={isStarting}
                               >
                                 <Play className="w-3 h-3" />
                               </Button>
                             )}
 
                           {permissions.canResetMatches &&
+                            tournament?.status === "in_progress" &&
+                            match.round === tournament.currentRound &&
                             (match.status === "finished" ||
                               match.status === "forfeit") && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  const reason = prompt("Raison du reset :");
-                                  if (reason) resetMatch(match.id, { reason });
-                                }}
+                                aria-label={`Réinitialiser le match ${match.id}`}
+                                title="Réinitialiser le match"
+                                onClick={() => setMatchToReset(match.id)}
                               >
                                 <RotateCcw className="w-3 h-3" />
                               </Button>
@@ -443,31 +480,67 @@ export default function MatchesPage() {
         </Card>
 
         {/* Actions rapides pour les organisateurs */}
-        {permissions.canStartMatches && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Actions rapides</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const scheduledMatches = matches.filter(
-                      (m) => m.status === "scheduled",
-                    );
-                    scheduledMatches.forEach((match) => startMatch(match.id));
-                  }}
-                  disabled={stats.scheduled === 0}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Démarrer tous les matches programmés ({stats.scheduled})
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {permissions.canStartMatches &&
+          tournament?.status === "in_progress" && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Actions rapides</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setBulkStartOpen(true)}
+                    disabled={startableMatches.length === 0 || isStarting}
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {isStarting
+                      ? "Démarrage..."
+                      : `Démarrer les matchs du round (${startableMatches.length})`}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
       </div>
+      <ResetMatchDialog
+        open={matchToReset !== null}
+        isPending={isResetting}
+        onOpenChange={(open) => {
+          if (!open) setMatchToReset(null);
+        }}
+        onConfirm={(reason) => {
+          if (matchToReset === null) return;
+          resetMatch(matchToReset, { reason });
+          setMatchToReset(null);
+        }}
+      />
+      <AlertDialog open={bulkStartOpen} onOpenChange={setBulkStartOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Démarrer tous les matchs prêts ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Les {startableMatches.length} matchs programmés du round courant
+              passeront simultanément au statut « en cours ». Les joueurs
+              concernés seront immédiatement autorisés à rejoindre leur table.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isStarting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={startableMatches.length === 0 || isStarting}
+              onClick={() => {
+                startMatches(startableMatches.map((match) => match.id));
+                setBulkStartOpen(false);
+              }}
+            >
+              {isStarting ? "Démarrage..." : "Démarrer les matchs"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
