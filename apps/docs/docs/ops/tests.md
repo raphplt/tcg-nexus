@@ -8,7 +8,13 @@ title: Tests & qualité
 - Watch : `npm run test:watch`
 - Couverture : `npm run test:cov`
 - E2E : `npm run test:e2e`
+- E2E tournoi sur PostgreSQL éphémère : `npm run test:e2e:tournament`
 - Lint : `npm run lint`
+
+Le script E2E tournoi démarre une base dédiée sur le port `55432`, attend son
+état de santé, exécute les scénarios séquentiels et concurrents, puis détruit
+le conteneur et ses données même si Jest échoue. Il nécessite Docker, mais ne
+touche jamais à la base de développement configurée dans `.env`.
 
 ## Front (Next.js)
 

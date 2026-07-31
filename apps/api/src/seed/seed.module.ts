@@ -18,7 +18,7 @@ import {
 } from "src/marketplace/entities";
 import { Match } from "src/match/entities/match.entity";
 import { OnlineMatchSession } from "src/match/entities/online-match-session.entity";
-import { MatchService } from "src/match/match.service";
+import { MatchModule } from "src/match/match.module";
 import { Player } from "src/player/entities/player.entity";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
@@ -31,8 +31,7 @@ import { TournamentOrganizer } from "src/tournament/entities/tournament-organize
 import { TournamentPricing } from "src/tournament/entities/tournament-pricing.entity";
 import { TournamentRegistration } from "src/tournament/entities/tournament-registration.entity";
 import { TournamentReward } from "src/tournament/entities/tournament-reward.entity";
-import { BracketService } from "src/tournament/services/bracket.service";
-import { SeedingService } from "src/tournament/services/seeding.service";
+import { TournamentModule } from "src/tournament/tournament.module";
 import { User } from "src/user/entities/user.entity";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
@@ -69,9 +68,11 @@ import { SeedService } from "./seed.service";
       Faq,
     ]),
     ConfigModule,
+    MatchModule,
     SealedProductModule,
+    TournamentModule,
   ],
   controllers: [SeedController],
-  providers: [SeedService, SeedingService, BracketService, MatchService],
+  providers: [SeedService],
 })
 export class SeedModule {}

@@ -6,13 +6,13 @@ import {
   TournamentStatus,
   TournamentType,
 } from "../src/tournament/entities/tournament.entity";
+import { createE2eApp } from "./helpers/app";
 import {
   createAdminUser,
   createUser,
   getPlayerId,
   TestUser,
 } from "./helpers/auth";
-import { createE2eApp } from "./helpers/app";
 
 jest.setTimeout(60000);
 
@@ -40,7 +40,7 @@ describe("TournamentController (e2e)", () => {
   }, 60000);
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   it("POST /tournaments creates a tournament for an admin", async () => {
@@ -92,13 +92,13 @@ describe("TournamentController (e2e)", () => {
   });
 
   it("GET /tournaments/:id exposes the registered player publicly", async () => {
-    const response = await request(httpServer).get(`/tournaments/${tournamentId}`);
+    const response = await request(httpServer).get(
+      `/tournaments/${tournamentId}`,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body.players).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: playerId }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ id: playerId })]),
     );
   });
 

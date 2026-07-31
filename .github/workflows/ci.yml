@@ -59,10 +59,9 @@ jobs:
               working-directory: apps/api
               run: npm test -- --coverage --passWithNoTests
 
-            - name: Run backend e2e tests
+            - name: Run tournament E2E tests on ephemeral PostgreSQL
               working-directory: apps/api
-              run: npm run test:e2e -- --passWithNoTests
-              continue-on-error: true
+              run: npm run test:e2e:tournament
 
             - name: Build backend
               working-directory: apps/api
