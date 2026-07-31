@@ -23,10 +23,21 @@ const PRIVATE_USER_FIELDS = new Set([
 ]);
 
 const PRIVATE_ORGANIZER_FIELDS = new Set(["email", "phone"]);
+const PRIVATE_REGISTRATION_FIELDS = new Set([
+  "notes",
+  "paidAmount",
+  "paymentCompleted",
+  "paymentDueDate",
+  "confirmationCode",
+  "payments",
+]);
 
 @Injectable()
 export class PublicTournamentDataInterceptor implements NestInterceptor {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<unknown> {
     return next.handle().pipe(map((value) => this.sanitize(value)));
   }
 
@@ -44,12 +55,20 @@ export class PublicTournamentDataInterceptor implements NestInterceptor {
       "email" in record && ("firstName" in record || "lastName" in record);
     const isOrganizer =
       "email" in record && "name" in record && "role" in record;
+    const isRegistration =
+      "registeredAt" in record &&
+      "checkedIn" in record &&
+      "status" in record &&
+      "player" in record;
 
     return Object.fromEntries(
       Object.entries(record)
         .filter(([key]) => !PRIVATE_ACCOUNT_FIELDS.has(key))
         .filter(([key]) => !isUser || !PRIVATE_USER_FIELDS.has(key))
         .filter(([key]) => !isOrganizer || !PRIVATE_ORGANIZER_FIELDS.has(key))
+        .filter(
+          ([key]) => !isRegistration || !PRIVATE_REGISTRATION_FIELDS.has(key),
+        )
         .map(([key, nestedValue]) => [key, this.sanitize(nestedValue)]),
     );
   }

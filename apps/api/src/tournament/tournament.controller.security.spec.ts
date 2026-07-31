@@ -97,4 +97,13 @@ describe("TournamentController Security", () => {
     ) as unknown;
     expect(controllerMetadata).toBeDefined();
   });
+
+  it("should protect global check-in with the organizer guard", () => {
+    const guards = Reflect.getMetadata(
+      "__guards__",
+      TournamentController.prototype.checkInAllPlayers,
+    ) as unknown[];
+
+    expect(guards).toContain(TournamentOrganizerGuard);
+  });
 });

@@ -38,16 +38,18 @@ const statusLabels: Record<
 export function TabParticipants({ registrations }: TabParticipantsProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredRegistrations = registrations.filter((r) => {
+  const participantRegistrations = registrations.filter(
+    (registration) =>
+      registration.status === "confirmed" ||
+      registration.status === "eliminated",
+  );
+  const filteredRegistrations = participantRegistrations.filter((r) => {
     const player = r.player;
     const name = player?.user
       ? `${player.user.firstName} ${player.user.lastName}`
       : player?.name || "";
-    const email = player?.user?.email || "";
     const query = searchQuery.toLowerCase();
-    return (
-      name.toLowerCase().includes(query) || email.toLowerCase().includes(query)
-    );
+    return name.toLowerCase().includes(query);
   });
 
   const confirmedCount = registrations.filter(
@@ -56,9 +58,7 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
   const waitlistedCount = registrations.filter(
     (registration) => registration.status === "waitlisted",
   ).length;
-  const activeRegistrationCount = registrations.filter(
-    (registration) => registration.status !== "cancelled",
-  ).length;
+  const participantCount = participantRegistrations.length;
 
   const getInitials = (registration: TournamentRegistration) => {
     const player = registration.player;
@@ -86,10 +86,8 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                 <Users className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{activeRegistrationCount}</p>
-                <p className="text-xs text-muted-foreground">
-                  Inscriptions actives
-                </p>
+                <p className="text-2xl font-bold">{participantCount}</p>
+                <p className="text-xs text-muted-foreground">Participants</p>
               </div>
             </div>
           </CardContent>
@@ -148,7 +146,6 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Joueur</TableHead>
-                  <TableHead className="hidden sm:table-cell">Email</TableHead>
                   <TableHead className="text-right">Statut</TableHead>
                 </TableRow>
               </TableHeader>
@@ -169,7 +166,7 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                               {getInitials(registration)}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
+                          <div className="min-w-0">
                             {registration.player?.user?.id ? (
                               <Link
                                 href={`/users/${registration.player.user.id}`}
@@ -182,14 +179,8 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                                 {getDisplayName(registration)}
                               </p>
                             )}
-                            <p className="text-xs text-muted-foreground sm:hidden">
-                              {registration.player?.user?.email || "-"}
-                            </p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell text-muted-foreground">
-                        {registration.player?.user?.email || "-"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Badge
@@ -208,10 +199,10 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={3}
                       className="h-32 text-center text-muted-foreground"
                     >
-                      {registrations.length === 0
+                      {participantRegistrations.length === 0
                         ? "Aucun participant inscrit pour le moment."
                         : "Aucun résultat trouvé pour cette recherche."}
                     </TableCell>

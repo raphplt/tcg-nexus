@@ -1,21 +1,25 @@
 "use client";
 
-import React from "react";
+import { ArrowLeft, BarChart3, Eye, Swords, Trophy, Users } from "lucide-react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, Trophy, BarChart3, Eye, Swords } from "lucide-react";
+import React, { useEffect } from "react";
 import { H1 } from "@/components/Shared/Titles";
-import { useTournament } from "@/hooks/useTournament";
-import { usePermissions } from "@/hooks/usePermissions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTournament } from "@/hooks/useTournament";
+import {
+  tournamentStatusTranslation,
+  tournamentTypeTranslation,
+} from "@/utils/tournaments";
 import { TournamentControls } from "../_components/TournamentControls";
-import { RegistrationManager } from "./_components/RegistrationManager";
 import { MatchManager } from "./_components/MatchManager";
 import { RankingsManager } from "./_components/RankingsManager";
-import Link from "next/link";
+import { RegistrationManager } from "./_components/RegistrationManager";
 
 export default function TournamentAdminPage() {
   const { id } = useParams();
@@ -26,21 +30,23 @@ export default function TournamentAdminPage() {
   );
   const permissions = usePermissions(user, tournament);
 
-  // Rediriger si pas de permissions
-  if (!isLoading && !permissions.canViewAdmin) {
-    router.push(`/tournaments/${id}`);
-    return null;
-  }
+  useEffect(() => {
+    if (!isLoading && tournament && !permissions.canViewAdmin) {
+      router.replace(`/tournaments/${id}`);
+    }
+  }, [id, isLoading, permissions.canViewAdmin, router, tournament]);
+
+  if (!isLoading && tournament && !permissions.canViewAdmin) return null;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            <div className="h-8 bg-muted rounded w-1/3"></div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="h-64 bg-gray-200 rounded"></div>
-              <div className="lg:col-span-3 h-96 bg-gray-200 rounded"></div>
+              <div className="h-64 bg-muted rounded"></div>
+              <div className="lg:col-span-3 h-96 bg-muted rounded"></div>
             </div>
           </div>
         </div>
@@ -50,7 +56,7 @@ export default function TournamentAdminPage() {
 
   if (error || !tournament) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <div className="min-h-screen bg-background py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-2xl font-bold text-destructive mb-4">Erreur</h1>
           <p className="text-muted-foreground">
@@ -76,10 +82,10 @@ export default function TournamentAdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -88,14 +94,22 @@ export default function TournamentAdminPage() {
           </Button>
 
           <div className="flex-1">
-            <H1 className="mb-2">Administration - {tournament.name}</H1>
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Badge variant="outline">Administration</Badge>
+              <Badge variant="secondary">
+                {tournamentStatusTranslation[
+                  tournament.status as keyof typeof tournamentStatusTranslation
+                ] || tournament.status}
+              </Badge>
+            </div>
+            <H1 className="mb-2">{tournament.name}</H1>
             <p className="text-muted-foreground">
               {formatDate(tournament.startDate)} •{" "}
               {tournament.location || "Lieu non spécifié"}
             </p>
           </div>
 
-          <Button asChild>
+          <Button variant="outline" asChild>
             <Link href={`/tournaments/${id}`}>
               <Eye className="w-4 h-4 mr-2" />
               Vue publique
@@ -145,7 +159,7 @@ export default function TournamentAdminPage() {
                           {progress.completedMatches}
                         </div>
                         <div className="text-muted-foreground">
-                          Matches terminés
+                          Matchs terminés
                         </div>
                       </div>
                     </div>
@@ -154,7 +168,7 @@ export default function TournamentAdminPage() {
                       <>
                         <div className="text-center p-2 bg-blue-50 dark:bg-blue-950 rounded border">
                           <div className="font-bold text-blue-800 dark:text-blue-200">
-                            Round {progress.currentRound}
+                            Ronde {progress.currentRound}
                           </div>
                           <div className="text-blue-600 dark:text-blue-400 text-sm">
                             sur {progress.totalRounds}
@@ -191,14 +205,13 @@ export default function TournamentAdminPage() {
                                     : "text-yellow-700 dark:text-yellow-300"
                                 }`}
                               >
-                                {finishedMatches}/{totalMatches} matches
-                                terminés
+                                {finishedMatches}/{totalMatches} matchs terminés
                               </div>
                               {allFinished &&
                                 progress.currentRound <
                                   progress.totalRounds && (
                                   <div className="text-green-600 dark:text-green-400 text-xs mt-1">
-                                    ✓ Prêt pour le round suivant
+                                    Prêt pour la ronde suivante
                                   </div>
                                 )}
                             </div>
@@ -234,7 +247,7 @@ export default function TournamentAdminPage() {
                   className="flex items-center gap-2"
                 >
                   <Swords className="w-4 h-4" />
-                  <span className="hidden sm:inline">Matches</span>
+                  <span className="hidden sm:inline">Matchs</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="rankings"
@@ -257,8 +270,10 @@ export default function TournamentAdminPage() {
                           <span className="text-sm text-muted-foreground">
                             Type :
                           </span>
-                          <p className="font-medium capitalize">
-                            {tournament.type.replace("_", " ")}
+                          <p className="font-medium">
+                            {tournamentTypeTranslation[
+                              tournament.type as keyof typeof tournamentTypeTranslation
+                            ] || tournament.type}
                           </p>
                         </div>
                         <div>
@@ -273,7 +288,7 @@ export default function TournamentAdminPage() {
                         </div>
                         <div>
                           <span className="text-sm text-muted-foreground">
-                            Inscription jusqu'au :
+                            Inscriptions jusqu’au :
                           </span>
                           <p className="font-medium">
                             {formatDate(

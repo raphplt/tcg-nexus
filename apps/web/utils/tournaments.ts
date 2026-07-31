@@ -21,16 +21,16 @@ export enum TournamentFormat {
 
 // Traductions
 export const tournamentTypeTranslation = {
-  [TournamentType.SINGLE_ELIMINATION]: "Elimination simple",
-  [TournamentType.DOUBLE_ELIMINATION]: "Elimination double",
+  [TournamentType.SINGLE_ELIMINATION]: "Élimination directe",
+  [TournamentType.DOUBLE_ELIMINATION]: "Double élimination",
   [TournamentType.SWISS_SYSTEM]: "Système suisse",
-  [TournamentType.ROUND_ROBIN]: "Tournoi en round robin",
+  [TournamentType.ROUND_ROBIN]: "Toutes rondes",
 };
 
 export const tournamentStatusTranslation = {
   [TournamentStatus.DRAFT]: "Brouillon",
-  [TournamentStatus.REGISTRATION_OPEN]: "Inscription ouverte",
-  [TournamentStatus.REGISTRATION_CLOSED]: "Inscription fermée",
+  [TournamentStatus.REGISTRATION_OPEN]: "Inscriptions ouvertes",
+  [TournamentStatus.REGISTRATION_CLOSED]: "Inscriptions fermées",
   [TournamentStatus.IN_PROGRESS]: "En cours",
   [TournamentStatus.FINISHED]: "Terminé",
   [TournamentStatus.CANCELLED]: "Annulé",

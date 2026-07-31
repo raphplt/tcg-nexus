@@ -1,15 +1,15 @@
 "use client";
 
-import React from "react";
-import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Users,
+  ScrollText,
   Swords,
   Trophy,
-  ScrollText,
   UserCircle,
+  Users,
 } from "lucide-react";
+import React from "react";
+import { cn } from "@/lib/utils";
 
 export type TabId =
   | "overview"
@@ -57,7 +57,7 @@ export function VerticalTabs({
           },
           {
             id: "matches" as TabId,
-            label: "Matches",
+            label: "Matchs",
             icon: <Swords className="size-5" />,
             badge: matchesCount,
           },
@@ -144,7 +144,11 @@ export function MobileTabBar({
             label: "Joueurs",
             icon: <Users className="size-4" />,
           },
-          { id: "matches" as TabId, label: "Matches", icon: <Swords className="size-4" /> },
+          {
+            id: "matches" as TabId,
+            label: "Matchs",
+            icon: <Swords className="size-4" />,
+          },
           {
             id: "rankings" as TabId,
             label: "Classement",

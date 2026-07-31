@@ -34,6 +34,21 @@ describe("PublicTournamentDataInterceptor", () => {
               phone: "0102030405",
             },
           ],
+          registrations: [
+            {
+              id: 12,
+              status: "confirmed",
+              registeredAt: new Date("2026-07-01T10:00:00Z"),
+              checkedIn: true,
+              notes: "Internal organizer note",
+              paidAmount: 25,
+              paymentCompleted: true,
+              paymentDueDate: new Date("2026-07-02T10:00:00Z"),
+              confirmationCode: "SECRET-CODE",
+              payments: [{ id: 99, amount: 25 }],
+              player: { id: 4 },
+            },
+          ],
         }),
     };
 
@@ -50,6 +65,13 @@ describe("PublicTournamentDataInterceptor", () => {
       id: 3,
       name: "Tournament staff",
       role: "judge",
+    });
+    expect(result.registrations[0]).toEqual({
+      id: 12,
+      status: "confirmed",
+      registeredAt: new Date("2026-07-01T10:00:00Z"),
+      checkedIn: true,
+      player: { id: 4 },
     });
   });
 });

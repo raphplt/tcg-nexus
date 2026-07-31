@@ -90,6 +90,7 @@ export function RegistrationManager({
   const [registrationToCancel, setRegistrationToCancel] = useState<
     number | null
   >(null);
+  const [showCheckInAllDialog, setShowCheckInAllDialog] = useState(false);
   const canManageRegistrations =
     tournamentStatus === "registration_open" ||
     tournamentStatus === "registration_closed";
@@ -100,6 +101,9 @@ export function RegistrationManager({
       }),
       queryClient.invalidateQueries({
         queryKey: ["tournament", String(tournamentId)],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["tournament", tournamentId, "registrations"],
       }),
     ]);
 
@@ -197,6 +201,25 @@ export function RegistrationManager({
     },
   });
 
+  const checkInAllMutation = useMutation({
+    mutationFn: () => tournamentService.checkInAllPlayers(tournamentId),
+    onSuccess: async (result) => {
+      setShowCheckInAllDialog(false);
+      toast.success(
+        `${result.checkedInCount} joueur(s) enregistré(s) au check-in.`,
+      );
+      await refreshTournamentQueries();
+    },
+    onError: (error: unknown) => {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          "Le check-in global n'a pas pu être effectué.",
+        ),
+      );
+    },
+  });
+
   // Filtrage des inscriptions
   const filteredRegistrations = registrations.filter((reg) => {
     if (filters.status && reg.status !== filters.status) return false;
@@ -270,6 +293,10 @@ export function RegistrationManager({
       (registration) =>
         registration.status === "confirmed" && !registration.checkedIn,
     );
+  const uncheckedConfirmedCount = registrations.filter(
+    (registration) =>
+      registration.status === "confirmed" && !registration.checkedIn,
+  ).length;
 
   const handleBulkAction = (action: BulkAction) => {
     setBulkAction(action);
@@ -435,7 +462,9 @@ export function RegistrationManager({
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="confirmed">Confirmées</SelectItem>
                     <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="waitlisted">Liste d’attente</SelectItem>
                     <SelectItem value="cancelled">Annulées</SelectItem>
+                    <SelectItem value="eliminated">Éliminées</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -476,7 +505,7 @@ export function RegistrationManager({
             </div>
 
             {/* Actions bulk */}
-            <div className="flex items-center gap-3 pt-4 border-t">
+            <div className="flex flex-wrap items-center gap-3 pt-4 border-t">
               <span className="text-sm text-muted-foreground">
                 {selectedRegistrations.length} sélectionnée(s)
               </span>
@@ -527,7 +556,20 @@ export function RegistrationManager({
                 </>
               )}
 
-              <div className="ml-auto">
+              <div className="flex flex-wrap gap-2 sm:ml-auto">
+                {uncheckedConfirmedCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCheckInAllDialog(true)}
+                    disabled={
+                      !canManageRegistrations || checkInAllMutation.isPending
+                    }
+                  >
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Check-in des absents ({uncheckedConfirmedCount})
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -770,6 +812,37 @@ export function RegistrationManager({
               disabled={bulkMutation.isPending}
             >
               {bulkMutation.isPending ? "Application..." : "Confirmer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={showCheckInAllDialog}
+        onOpenChange={setShowCheckInAllDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Effectuer le check-in global ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Les {uncheckedConfirmedCount} participant(s) confirmé(s) sans
+              check-in seront enregistrés en une seule opération.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={checkInAllMutation.isPending}>
+              Annuler
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                checkInAllMutation.mutate();
+              }}
+              disabled={checkInAllMutation.isPending}
+            >
+              {checkInAllMutation.isPending
+                ? "Enregistrement…"
+                : "Confirmer le check-in"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

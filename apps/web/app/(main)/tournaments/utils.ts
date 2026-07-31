@@ -1,6 +1,6 @@
+import z from "zod";
 import { Match } from "@/types/tournament";
 import { TournamentStatus, TournamentType } from "@/utils/tournaments";
-import z from "zod";
 
 export const statusColor: Record<
   string,
@@ -36,7 +36,7 @@ export const typeOptions = [
   { label: "Standard", value: "single_elimination" },
   { label: "Double élimination", value: "double_elimination" },
   { label: "Système suisse", value: "swiss_system" },
-  { label: "Round Robin", value: "round_robin" },
+  { label: "Toutes rondes", value: "round_robin" },
 ];
 
 export const sortOptions = [

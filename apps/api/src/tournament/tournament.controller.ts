@@ -22,9 +22,9 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { User } from "../user/entities/user.entity";
-import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { BulkRegistrationActionDto } from "./dto/bulk-registration-action.dto";
 import { BulkStartMatchesDto } from "./dto/bulk-start-matches.dto";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { RegisterTournamentDto } from "./dto/register-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { UpdateTournamentDto } from "./dto/update-tournament.dto";
@@ -415,7 +415,12 @@ export class TournamentController {
 
   @Post(":id/check-in-all")
   @HttpCode(HttpStatus.OK)
-  @Roles(UserRole.ADMIN)
+  @UseGuards(TournamentOrganizerGuard)
+  @TournamentOrganizerRoles(
+    OrganizerRole.OWNER,
+    OrganizerRole.ADMIN,
+    OrganizerRole.MODERATOR,
+  )
   async checkInAllPlayers(@Param("id", ParseIntPipe) id: number) {
     return this.tournamentService.checkInAllPlayers(id);
   }

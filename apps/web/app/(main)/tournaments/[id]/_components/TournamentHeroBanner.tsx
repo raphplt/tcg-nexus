@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Calendar,
@@ -10,15 +9,12 @@ import {
   MapPin,
   Settings2,
   Swords,
-  Trophy,
   UserCheck,
   UserMinus,
-  UserPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
-import toast from "react-hot-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +28,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { tournamentService } from "@/services/tournament.service";
-import { UserRole } from "@/types/auth";
 import { Tournament } from "@/types/tournament";
 import {
   tournamentStatusTranslation,
@@ -68,12 +62,9 @@ export function TournamentHeroBanner({
   onUnregister,
   formatDate,
 }: TournamentHeroBannerProps) {
-  const [isFillingPlayers, setIsFillingPlayers] = useState(false);
-  const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUnregistering, setIsUnregistering] = useState(false);
   const [showUnregisterDialog, setShowUnregisterDialog] = useState(false);
-  const queryClient = useQueryClient();
   const registrationOpen = tournament.status === "registration_open";
   const registrationClosed = tournament.status === "registration_closed";
   const statusColor =
@@ -85,10 +76,13 @@ export function TournamentHeroBanner({
     ) || [];
   const participantCount =
     confirmedRegistrations.length || tournament.players?.length || 0;
+  const waitlistedCount =
+    tournament.registrations?.filter(
+      (registration) => registration.status === "waitlisted",
+    ).length || 0;
   const maxPlayers = tournament.maxPlayers || "∞";
   const matchesCount = tournament.matches?.length || 0;
 
-  const isAdmin = user?.role === UserRole.ADMIN;
   const currentRegistration = tournament.registrations?.find(
     (registration) =>
       registration.player?.id === user?.player?.id &&
@@ -116,42 +110,6 @@ export function TournamentHeroBanner({
       // Le parent affiche le message d'erreur et la confirmation reste ouverte.
     } finally {
       setIsUnregistering(false);
-    }
-  };
-
-  const handleFillWithPlayers = async () => {
-    if (!tournament?.id) return;
-    setIsFillingPlayers(true);
-    try {
-      const result = await tournamentService.fillWithPlayers(tournament.id, 8);
-      toast.success(
-        `${result.registeredCount} joueur(s) inscrit(s) avec succès.`,
-      );
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", tournament.id.toString()],
-      });
-    } catch (error: any) {
-      toast.error(error?.message || "Erreur lors de l'inscription des joueurs");
-    } finally {
-      setIsFillingPlayers(false);
-    }
-  };
-
-  const handleCheckInAll = async () => {
-    if (!tournament?.id) return;
-    setIsCheckingIn(true);
-    try {
-      const result = await tournamentService.checkInAllPlayers(tournament.id);
-      toast.success(
-        `${result.checkedInCount} joueurs ont fait leur check-in !`,
-      );
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", tournament.id.toString()],
-      });
-    } catch (error: any) {
-      toast.error(error?.message || "Erreur lors du check-in");
-    } finally {
-      setIsCheckingIn(false);
     }
   };
 
@@ -260,43 +218,6 @@ export function TournamentHeroBanner({
                   </Link>
                 </Button>
               )}
-
-              {/* Bouton admin pour remplir avec 8 joueurs */}
-              {isAdmin && registrationOpen && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={handleFillWithPlayers}
-                  disabled={isFillingPlayers}
-                  className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
-                >
-                  {isFillingPlayers ? (
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                  ) : (
-                    <UserPlus className="size-4 mr-2" />
-                  )}
-                  Remplir (8 joueurs)
-                </Button>
-              )}
-
-              {isAdmin &&
-                (registrationOpen || registrationClosed) &&
-                participantCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleCheckInAll}
-                    disabled={isCheckingIn}
-                    className="border-green-500/30 text-green-600 hover:bg-green-500/10"
-                  >
-                    {isCheckingIn ? (
-                      <Loader2 className="size-4 mr-2 animate-spin" />
-                    ) : (
-                      <UserCheck className="size-4 mr-2" />
-                    )}
-                    Check-in global
-                  </Button>
-                )}
             </div>
           </div>
 
@@ -319,23 +240,23 @@ export function TournamentHeroBanner({
               <CardContent className="p-3 text-center">
                 <Users className="size-5 mx-auto mb-1 text-primary" />
                 <p className="text-lg font-bold">{participantCount}</p>
-                <p className="text-xs text-muted-foreground">/ {maxPlayers}</p>
+                <p className="text-xs text-muted-foreground">
+                  Participants / {maxPlayers}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="surface-muted">
+              <CardContent className="p-3 text-center">
+                <Clock3 className="size-5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold">{waitlistedCount}</p>
+                <p className="text-xs text-muted-foreground">Liste d’attente</p>
               </CardContent>
             </Card>
             <Card className="surface-muted">
               <CardContent className="p-3 text-center">
                 <Swords className="size-5 mx-auto mb-1 text-primary" />
                 <p className="text-lg font-bold">{matchesCount}</p>
-                <p className="text-xs text-muted-foreground">matches</p>
-              </CardContent>
-            </Card>
-            <Card className="surface-muted">
-              <CardContent className="p-3 text-center">
-                <Trophy className="size-5 mx-auto mb-1 text-primary" />
-                <p className="text-lg font-bold">
-                  {tournament.currentRound || 0}/{tournament.totalRounds || "-"}
-                </p>
-                <p className="text-xs text-muted-foreground">rounds</p>
+                <p className="text-xs text-muted-foreground">Matchs</p>
               </CardContent>
             </Card>
           </div>
