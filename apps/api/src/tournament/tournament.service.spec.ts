@@ -14,8 +14,8 @@ import { MatchService } from "../match/match.service";
 import { Player } from "../player/entities/player.entity";
 import { RankingService } from "../ranking/ranking.service";
 import { User } from "../user/entities/user.entity";
-import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { BulkRegistrationAction } from "./dto/bulk-registration-action.dto";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import {
   Tournament,
   TournamentStatus,
@@ -144,6 +144,7 @@ describe("TournamentService", () => {
               return mockRegistrationRepo;
             }
             if (entity === TournamentOrganizer) return mockOrganizerRepo;
+            if (entity === Player) return mockPlayerRepo;
             throw new Error("Unexpected repository");
           },
         }),
@@ -320,6 +321,11 @@ describe("TournamentService", () => {
       const result = await service.registerPlayer(dto);
 
       expect(result.status).toBe(RegistrationStatus.CONFIRMED);
+      expect(tournamentRepo.manager.transaction).toHaveBeenCalledTimes(1);
+      expect(tournamentRepo.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: tournamentId },
+        lock: { mode: "pessimistic_write" },
+      });
       expect(registrationRepo.save).toHaveBeenCalled();
     });
 
@@ -445,6 +451,34 @@ describe("TournamentService", () => {
         BadRequestException,
       );
     });
+
+    it("should reactivate a late cancelled registration as pending", async () => {
+      const tournament = {
+        id: tournamentId,
+        status: TournamentStatus.REGISTRATION_OPEN,
+        allowLateRegistration: true,
+        requiresApproval: false,
+        registrationDeadline: new Date(Date.now() - 60_000),
+        players: [{ id: playerId }],
+      };
+      tournamentRepo.findOne.mockResolvedValue(tournament);
+      playerRepo.findOne.mockResolvedValue({ id: playerId });
+      registrationRepo.findOne.mockResolvedValue({
+        id: 12,
+        status: RegistrationStatus.CANCELLED,
+      });
+      registrationRepo.count.mockResolvedValue(0);
+      registrationRepo.save.mockImplementation(
+        async (registration: any) => registration,
+      );
+
+      const result = await service.registerPlayer(dto as any);
+
+      expect(result.status).toBe(RegistrationStatus.PENDING);
+      expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ players: [] }),
+      );
+    });
   });
 
   describe("unregisterPlayer", () => {
@@ -455,18 +489,31 @@ describe("TournamentService", () => {
       });
       registrationRepo.findOne.mockResolvedValue({
         id: 1,
-        status: RegistrationStatus.CONFIRMED,
       });
-      registrationRepo.save.mockResolvedValue({});
+      registrationRepo.find.mockResolvedValue([
+        {
+          id: 1,
+          status: RegistrationStatus.CONFIRMED,
+          player: { id: 1 },
+        },
+      ]);
+      registrationRepo.save.mockImplementation(
+        async (registrations: any) => registrations,
+      );
 
       await service.unregisterPlayer(1, 1);
 
-      expect(registrationRepo.save).toHaveBeenCalledWith(
+      expect(registrationRepo.save).toHaveBeenCalledWith([
         expect.objectContaining({ status: RegistrationStatus.CANCELLED }),
-      );
+      ]);
+      expect(tournamentRepo.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: 1 },
+        lock: { mode: "pessimistic_write" },
+      });
     });
 
     it("should throw BadRequestException if tournament in progress", async () => {
+      registrationRepo.findOne.mockResolvedValue({ id: 1 });
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.IN_PROGRESS,
@@ -478,6 +525,7 @@ describe("TournamentService", () => {
     });
 
     it("should reject unregistering from a cancelled tournament", async () => {
+      registrationRepo.findOne.mockResolvedValue({ id: 1 });
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.CANCELLED,
@@ -502,14 +550,18 @@ describe("TournamentService", () => {
     });
 
     it("should throw BadRequestException if already cancelled", async () => {
+      registrationRepo.findOne.mockResolvedValue({ id: 1 });
       tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.REGISTRATION_OPEN,
       });
-      registrationRepo.findOne.mockResolvedValue({
-        id: 1,
-        status: RegistrationStatus.CANCELLED,
-      });
+      registrationRepo.find.mockResolvedValue([
+        {
+          id: 1,
+          status: RegistrationStatus.CANCELLED,
+          player: { id: 1 },
+        },
+      ]);
 
       await expect(service.unregisterPlayer(1, 1)).rejects.toThrow(
         BadRequestException,
@@ -1361,21 +1413,21 @@ describe("TournamentService", () => {
 
   describe("fillWithRandomPlayers", () => {
     it("should reject when registration not open", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
+      tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.DRAFT,
-      } as any);
+      });
       await expect(service.fillWithRandomPlayers(1, 2)).rejects.toThrow(
         BadRequestException,
       );
     });
 
     it("should reject when no available players", async () => {
-      jest.spyOn(service, "findOne").mockResolvedValue({
+      tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.REGISTRATION_OPEN,
         maxPlayers: 10,
-      } as any);
+      });
       registrationRepo.find.mockResolvedValue([]);
 
       const qb = {
@@ -1398,7 +1450,7 @@ describe("TournamentService", () => {
         status: TournamentStatus.REGISTRATION_OPEN,
         maxPlayers: 1,
       };
-      jest.spyOn(service, "findOne").mockResolvedValue(tournament as any);
+      tournamentRepo.findOne.mockResolvedValue(tournament);
       registrationRepo.find.mockResolvedValue([]);
 
       const qb = {
@@ -1419,6 +1471,10 @@ describe("TournamentService", () => {
 
       expect(result.registeredCount).toBe(1);
       expect(registrationRepo.save).toHaveBeenCalledTimes(1);
+      expect(tournamentRepo.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: 1 },
+        lock: { mode: "pessimistic_write" },
+      });
       expect(result.registrations[0]).toEqual(
         expect.objectContaining({
           tournament,
@@ -1434,8 +1490,10 @@ describe("TournamentService", () => {
         status: TournamentStatus.REGISTRATION_OPEN,
         maxPlayers: 10,
       };
-      jest.spyOn(service, "findOne").mockResolvedValue(tournament as any);
-      registrationRepo.find.mockResolvedValue([{ player: { id: 123 } }]);
+      tournamentRepo.findOne.mockResolvedValue(tournament);
+      registrationRepo.find.mockResolvedValue([
+        { player: { id: 123 }, status: RegistrationStatus.CANCELLED },
+      ]);
 
       const qb = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -1461,16 +1519,21 @@ describe("TournamentService", () => {
         { id: 1, checkedIn: false, checkedInAt: null },
         { id: 2, checkedIn: false, checkedInAt: null },
       ];
-      jest.spyOn(service, "findOne").mockResolvedValue({
+      tournamentRepo.findOne.mockResolvedValue({
         id: 1,
         status: TournamentStatus.REGISTRATION_CLOSED,
-      } as Tournament);
+      });
       registrationRepo.find.mockResolvedValue(regs);
       registrationRepo.save.mockImplementation(async (x: any) => x);
 
       const result = await service.checkInAllPlayers(1);
       expect(result.checkedInCount).toBe(2);
-      expect(registrationRepo.save).toHaveBeenCalledTimes(2);
+      expect(registrationRepo.save).toHaveBeenCalledTimes(1);
+      expect(registrationRepo.save).toHaveBeenCalledWith(regs);
+      expect(tournamentRepo.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        lock: { mode: "pessimistic_write" },
+      });
     });
   });
 
