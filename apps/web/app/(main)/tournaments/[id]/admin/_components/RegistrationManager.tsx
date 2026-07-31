@@ -1,13 +1,35 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle,
+  Download,
+  Filter,
+  Search,
+  UserCheck,
+  Users,
+  UserX,
+  X,
+} from "lucide-react";
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -23,31 +45,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Users,
-  Search,
-  Download,
-  CheckCircle,
-  X,
-  UserCheck,
-  UserX,
-  Filter,
-} from "lucide-react";
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
 import { extractApiErrorMessage } from "@/utils/api-error";
-import toast from "react-hot-toast";
 
 type BulkAction = "confirm" | "cancel" | "check_in";
 
@@ -178,7 +178,11 @@ export function RegistrationManager({
         check_in: "enregistrée(s) au check-in",
       };
       toast.success(
-        `${result.updatedCount} inscription(s) ${labels[result.action]}.`,
+        `${result.updatedCount} inscription(s) ${labels[result.action]}${
+          result.promotedCount > 0
+            ? ` ${result.promotedCount} joueur(s) promu(s) depuis la liste d'attente.`
+            : ""
+        }`,
       );
       setSelectedRegistrations([]);
       await refreshTournamentQueries();
@@ -213,6 +217,7 @@ export function RegistrationManager({
     total: registrations.length,
     confirmed: registrations.filter((r) => r.status === "confirmed").length,
     pending: registrations.filter((r) => r.status === "pending").length,
+    waitlisted: registrations.filter((r) => r.status === "waitlisted").length,
     cancelled: registrations.filter((r) => r.status === "cancelled").length,
     checkedIn: registrations.filter((r) => r.checkedIn).length,
   };
@@ -333,7 +338,7 @@ export function RegistrationManager({
         )}
 
         {/* Statistiques rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -356,6 +361,16 @@ export function RegistrationManager({
                 {stats.pending}
               </div>
               <div className="text-sm text-muted-foreground">En attente</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600">
+                {stats.waitlisted}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Liste d’attente
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -647,7 +662,8 @@ export function RegistrationManager({
 
                       <TableCell>
                         <div className="flex gap-1">
-                          {registration.status === "pending" && (
+                          {(registration.status === "pending" ||
+                            registration.status === "waitlisted") && (
                             <Button
                               variant="outline"
                               size="sm"

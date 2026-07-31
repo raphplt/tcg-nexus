@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import { CheckCircle, Clock3, Search, Users } from "lucide-react";
 import Link from "next/link";
+import React, { useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -14,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Search, CheckCircle } from "lucide-react";
 import { TournamentRegistration } from "@/types/tournament";
 
 interface TabParticipantsProps {
@@ -53,6 +53,12 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
   const confirmedCount = registrations.filter(
     (r) => r.status === "confirmed",
   ).length;
+  const waitlistedCount = registrations.filter(
+    (registration) => registration.status === "waitlisted",
+  ).length;
+  const activeRegistrationCount = registrations.filter(
+    (registration) => registration.status !== "cancelled",
+  ).length;
 
   const getInitials = (registration: TournamentRegistration) => {
     const player = registration.player;
@@ -80,9 +86,9 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                 <Users className="size-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{registrations.length}</p>
+                <p className="text-2xl font-bold">{activeRegistrationCount}</p>
                 <p className="text-xs text-muted-foreground">
-                  Participants inscrits
+                  Inscriptions actives
                 </p>
               </div>
             </div>
@@ -105,15 +111,11 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Search className="size-5 text-blue-500" />
+                <Clock3 className="size-5 text-blue-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {filteredRegistrations.length}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Résultats affichés
-                </p>
+                <p className="text-2xl font-bold">{waitlistedCount}</p>
+                <p className="text-xs text-muted-foreground">Liste d’attente</p>
               </div>
             </div>
           </CardContent>

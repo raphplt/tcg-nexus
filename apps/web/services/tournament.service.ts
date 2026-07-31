@@ -1,5 +1,4 @@
-import { authedFetch } from "@/utils/fetch";
-import { PaginationParams, PaginatedResult } from "@/types/pagination";
+import { PaginatedResult, PaginationParams } from "@/types/pagination";
 import {
   BracketStructure,
   CreateTournamentDto,
@@ -9,6 +8,7 @@ import {
   Tournament,
   TournamentRegistration,
 } from "@/types/tournament";
+import { authedFetch } from "@/utils/fetch";
 
 export interface TournamentQueryParams extends PaginationParams {
   search?: string;
@@ -34,6 +34,8 @@ export interface BulkRegistrationActionResult {
   action: BulkRegistrationAction;
   updatedCount: number;
   registrations: TournamentRegistration[];
+  promotedCount: number;
+  promotedRegistrations: TournamentRegistration[];
 }
 
 export const tournamentService = {
@@ -106,6 +108,16 @@ export const tournamentService = {
       "POST",
       `/tournaments/${tournamentId}/register`,
       { data: { notes } },
+    );
+  },
+
+  /**
+   * Quitte un tournoi ou sa liste d'attente
+   */
+  async unregister(tournamentId: number, playerId: number): Promise<void> {
+    return authedFetch<void>(
+      "DELETE",
+      `/tournaments/${tournamentId}/register/${playerId}`,
     );
   },
 

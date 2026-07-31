@@ -1,32 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  Calendar,
-  MapPin,
-  Lock,
   BadgeCheck,
-  Users,
-  Trophy,
-  Swords,
-  Settings2,
-  UserPlus,
+  Calendar,
+  Clock3,
   Loader2,
+  Lock,
+  MapPin,
+  Settings2,
+  Swords,
+  Trophy,
   UserCheck,
+  UserMinus,
+  UserPlus,
+  Users,
 } from "lucide-react";
+import Link from "next/link";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { tournamentService } from "@/services/tournament.service";
+import { UserRole } from "@/types/auth";
 import { Tournament } from "@/types/tournament";
 import {
   tournamentStatusTranslation,
   tournamentTypeTranslation,
 } from "@/utils/tournaments";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { UserRole } from "@/types/auth";
-import { tournamentService } from "@/services/tournament.service";
-import toast from "react-hot-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface TournamentHeroBannerProps {
   tournament: Tournament;
@@ -34,7 +46,8 @@ interface TournamentHeroBannerProps {
     canViewAdmin: boolean;
   };
   user: any;
-  onRegister: () => void;
+  onRegister: () => Promise<void>;
+  onUnregister: () => Promise<void>;
   formatDate: (date?: string | null) => string;
 }
 
@@ -52,29 +65,68 @@ export function TournamentHeroBanner({
   permissions,
   user,
   onRegister,
+  onUnregister,
   formatDate,
 }: TournamentHeroBannerProps) {
   const [isFillingPlayers, setIsFillingPlayers] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isUnregistering, setIsUnregistering] = useState(false);
+  const [showUnregisterDialog, setShowUnregisterDialog] = useState(false);
   const queryClient = useQueryClient();
   const registrationOpen = tournament.status === "registration_open";
   const registrationClosed = tournament.status === "registration_closed";
   const statusColor =
     statusColorMap[tournament.status || ""] ?? "bg-muted text-muted-foreground";
 
+  const confirmedRegistrations =
+    tournament.registrations?.filter(
+      (registration) => registration.status === "confirmed",
+    ) || [];
   const participantCount =
-    tournament.registrations?.length || tournament.players?.length || 0;
+    confirmedRegistrations.length || tournament.players?.length || 0;
   const maxPlayers = tournament.maxPlayers || "∞";
   const matchesCount = tournament.matches?.length || 0;
 
   const isAdmin = user?.role === UserRole.ADMIN;
+  const currentRegistration = tournament.registrations?.find(
+    (registration) =>
+      registration.player?.id === user?.player?.id &&
+      registration.status !== "cancelled",
+  );
+  const tournamentIsFull = Boolean(
+    tournament.maxPlayers && participantCount >= tournament.maxPlayers,
+  );
+
+  const handleRegister = async () => {
+    setIsRegistering(true);
+    try {
+      await onRegister();
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleUnregister = async () => {
+    setIsUnregistering(true);
+    try {
+      await onUnregister();
+      setShowUnregisterDialog(false);
+    } catch {
+      // Le parent affiche le message d'erreur et la confirmation reste ouverte.
+    } finally {
+      setIsUnregistering(false);
+    }
+  };
 
   const handleFillWithPlayers = async () => {
     if (!tournament?.id) return;
     setIsFillingPlayers(true);
     try {
-      await tournamentService.fillWithPlayers(tournament.id, 8);
-      toast.success("8 joueurs inscrits avec succès !");
+      const result = await tournamentService.fillWithPlayers(tournament.id, 8);
+      toast.success(
+        `${result.registeredCount} joueur(s) inscrit(s) avec succès.`,
+      );
       queryClient.invalidateQueries({
         queryKey: ["tournament", tournament.id.toString()],
       });
@@ -104,153 +156,224 @@ export function TournamentHeroBanner({
   };
 
   return (
-    <div className="panel-hero relative overflow-hidden">
-      <div className="relative p-6 md:p-8">
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <Badge variant="outline" className={`${statusColor} font-medium`}>
-            {tournamentStatusTranslation[
-              tournament.status as keyof typeof tournamentStatusTranslation
-            ] || tournament.status}
-          </Badge>
-          <Badge variant="secondary">
-            {tournamentTypeTranslation[
-              tournament.type as keyof typeof tournamentTypeTranslation
-            ] || tournament.type}
-          </Badge>
-          {tournament.isExternal && (
-            <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-medium">
-              Tournoi Externe
+    <>
+      <div className="panel-hero relative overflow-hidden">
+        <div className="relative p-6 md:p-8">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <Badge variant="outline" className={`${statusColor} font-medium`}>
+              {tournamentStatusTranslation[
+                tournament.status as keyof typeof tournamentStatusTranslation
+              ] || tournament.status}
             </Badge>
-          )}
-          {tournament.isPublic === false ? (
-            <Badge variant="outline" className="gap-1">
-              <Lock className="size-3" /> Privé
+            <Badge variant="secondary">
+              {tournamentTypeTranslation[
+                tournament.type as keyof typeof tournamentTypeTranslation
+              ] || tournament.type}
             </Badge>
-          ) : (
-            <Badge variant="outline">Public</Badge>
-          )}
-          {tournament.requiresApproval && (
-            <Badge variant="outline" className="gap-1">
-              <BadgeCheck className="size-3" /> Validation requise
-            </Badge>
-          )}
-        </div>
-
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
-            {tournament.name}
-          </h1>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              size="lg"
-              disabled={(!registrationOpen || !user) && !tournament.isExternal}
-              onClick={
-                tournament.isExternal
-                  ? () => {
-                      let url = tournament.externalRegistrationUrl || "";
-                      if (url && !/^https?:\/\//i.test(url)) {
-                        url = `https://${url}`;
-                      }
-                      window.open(url, "_blank");
-                    }
-                  : onRegister
-              }
-            >
-              {tournament.isExternal
-                ? "S'inscrire (Externe)"
-                : registrationOpen
-                  ? "S'inscrire au tournoi"
-                  : "Inscriptions fermées"}
-            </Button>
-
-            {permissions.canViewAdmin && (
-              <Button variant="outline" size="lg" asChild>
-                <Link href={`/tournaments/${tournament.id}/admin`}>
-                  <Settings2 className="size-4 mr-2" />
-                  Administration
-                </Link>
-              </Button>
-            )}
-
-            {/* Bouton admin pour remplir avec 8 joueurs */}
-            {isAdmin && registrationOpen && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleFillWithPlayers}
-                disabled={isFillingPlayers}
-                className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+            {tournament.isExternal && (
+              <Badge
+                variant="secondary"
+                className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-medium"
               >
-                {isFillingPlayers ? (
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                ) : (
-                  <UserPlus className="size-4 mr-2" />
-                )}
-                Remplir (8 joueurs)
-              </Button>
+                Tournoi Externe
+              </Badge>
             )}
+            {tournament.isPublic === false ? (
+              <Badge variant="outline" className="gap-1">
+                <Lock className="size-3" /> Privé
+              </Badge>
+            ) : (
+              <Badge variant="outline">Public</Badge>
+            )}
+            {tournament.requiresApproval && (
+              <Badge variant="outline" className="gap-1">
+                <BadgeCheck className="size-3" /> Validation requise
+              </Badge>
+            )}
+          </div>
 
-            {isAdmin &&
-              (registrationOpen || registrationClosed) &&
-              participantCount > 0 && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight">
+              {tournament.name}
+            </h1>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                size="lg"
+                disabled={
+                  ((!registrationOpen || !user || !!currentRegistration) &&
+                    !tournament.isExternal) ||
+                  isRegistering
+                }
+                onClick={
+                  tournament.isExternal
+                    ? () => {
+                        let url = tournament.externalRegistrationUrl || "";
+                        if (url && !/^https?:\/\//i.test(url)) {
+                          url = `https://${url}`;
+                        }
+                        window.open(url, "_blank");
+                      }
+                    : handleRegister
+                }
+              >
+                {isRegistering ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : currentRegistration?.status === "waitlisted" ? (
+                  <Clock3 className="size-4 mr-2" />
+                ) : currentRegistration ? (
+                  <UserCheck className="size-4 mr-2" />
+                ) : null}
+                {tournament.isExternal
+                  ? "S'inscrire (Externe)"
+                  : currentRegistration?.status === "confirmed"
+                    ? "Inscription confirmée"
+                    : currentRegistration?.status === "pending"
+                      ? "Validation en attente"
+                      : currentRegistration?.status === "waitlisted"
+                        ? "Sur liste d'attente"
+                        : registrationOpen
+                          ? tournamentIsFull
+                            ? "Rejoindre la liste d'attente"
+                            : "S'inscrire au tournoi"
+                          : "Inscriptions fermées"}
+              </Button>
+
+              {!tournament.isExternal &&
+                currentRegistration &&
+                (registrationOpen || registrationClosed) && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => setShowUnregisterDialog(true)}
+                    disabled={isUnregistering}
+                  >
+                    <UserMinus className="size-4 mr-2" />
+                    Se désinscrire
+                  </Button>
+                )}
+
+              {permissions.canViewAdmin && (
+                <Button variant="outline" size="lg" asChild>
+                  <Link href={`/tournaments/${tournament.id}/admin`}>
+                    <Settings2 className="size-4 mr-2" />
+                    Administration
+                  </Link>
+                </Button>
+              )}
+
+              {/* Bouton admin pour remplir avec 8 joueurs */}
+              {isAdmin && registrationOpen && (
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={handleCheckInAll}
-                  disabled={isCheckingIn}
-                  className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                  onClick={handleFillWithPlayers}
+                  disabled={isFillingPlayers}
+                  className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
                 >
-                  {isCheckingIn ? (
+                  {isFillingPlayers ? (
                     <Loader2 className="size-4 mr-2 animate-spin" />
                   ) : (
-                    <UserCheck className="size-4 mr-2" />
+                    <UserPlus className="size-4 mr-2" />
                   )}
-                  Check-in global
+                  Remplir (8 joueurs)
                 </Button>
               )}
+
+              {isAdmin &&
+                (registrationOpen || registrationClosed) &&
+                participantCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleCheckInAll}
+                    disabled={isCheckingIn}
+                    className="border-green-500/30 text-green-600 hover:bg-green-500/10"
+                  >
+                    {isCheckingIn ? (
+                      <Loader2 className="size-4 mr-2 animate-spin" />
+                    ) : (
+                      <UserCheck className="size-4 mr-2" />
+                    )}
+                    Check-in global
+                  </Button>
+                )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="size-4" />
+              {formatDate(tournament.startDate)} –{" "}
+              {formatDate(tournament.endDate)}
+            </span>
+            {tournament.location && (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="size-4" />
+                {tournament.location}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-6 max-w-md">
+            <Card className="surface-muted">
+              <CardContent className="p-3 text-center">
+                <Users className="size-5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold">{participantCount}</p>
+                <p className="text-xs text-muted-foreground">/ {maxPlayers}</p>
+              </CardContent>
+            </Card>
+            <Card className="surface-muted">
+              <CardContent className="p-3 text-center">
+                <Swords className="size-5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold">{matchesCount}</p>
+                <p className="text-xs text-muted-foreground">matches</p>
+              </CardContent>
+            </Card>
+            <Card className="surface-muted">
+              <CardContent className="p-3 text-center">
+                <Trophy className="size-5 mx-auto mb-1 text-primary" />
+                <p className="text-lg font-bold">
+                  {tournament.currentRound || 0}/{tournament.totalRounds || "-"}
+                </p>
+                <p className="text-xs text-muted-foreground">rounds</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-          <span className="inline-flex items-center gap-1.5">
-            <Calendar className="size-4" />
-            {formatDate(tournament.startDate)} –{" "}
-            {formatDate(tournament.endDate)}
-          </span>
-          {tournament.location && (
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin className="size-4" />
-              {tournament.location}
-            </span>
-          )}
-        </div>
-
-        <div className="grid grid-cols-3 gap-3 mb-6 max-w-md">
-          <Card className="surface-muted">
-            <CardContent className="p-3 text-center">
-              <Users className="size-5 mx-auto mb-1 text-primary" />
-              <p className="text-lg font-bold">{participantCount}</p>
-              <p className="text-xs text-muted-foreground">/ {maxPlayers}</p>
-            </CardContent>
-          </Card>
-          <Card className="surface-muted">
-            <CardContent className="p-3 text-center">
-              <Swords className="size-5 mx-auto mb-1 text-primary" />
-              <p className="text-lg font-bold">{matchesCount}</p>
-              <p className="text-xs text-muted-foreground">matches</p>
-            </CardContent>
-          </Card>
-          <Card className="surface-muted">
-            <CardContent className="p-3 text-center">
-              <Trophy className="size-5 mx-auto mb-1 text-primary" />
-              <p className="text-lg font-bold">
-                {tournament.currentRound || 0}/{tournament.totalRounds || "-"}
-              </p>
-              <p className="text-xs text-muted-foreground">rounds</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </div>
+
+      <AlertDialog
+        open={showUnregisterDialog}
+        onOpenChange={setShowUnregisterDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Quitter ce tournoi ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Votre inscription sera annulée. Si vous occupiez une place
+              confirmée, la première personne sur liste d’attente pourra être
+              promue automatiquement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUnregistering}>
+              Conserver mon inscription
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                void handleUnregister();
+              }}
+              disabled={isUnregistering}
+            >
+              {isUnregistering && (
+                <Loader2 className="size-4 mr-2 animate-spin" />
+              )}
+              Confirmer la désinscription
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

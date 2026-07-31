@@ -1,30 +1,32 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Info } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { tournamentService } from "@/services/tournament.service";
+import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Info } from "lucide-react";
-import { Tournament } from "@/types/tournament";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import { tournamentService } from "@/services/tournament.service";
+import { Tournament } from "@/types/tournament";
+import { extractApiErrorMessage } from "@/utils/api-error";
 
 import { TournamentHeroBanner } from "./_components/TournamentHeroBanner";
 import {
-  VerticalTabs,
-  MobileTabBar,
-  type TabId,
-} from "./_components/VerticalTabs";
-import {
+  TabMatches,
+  TabOrganizers,
   TabOverview,
   TabParticipants,
-  TabMatches,
   TabRankings,
   TabRules,
-  TabOrganizers,
 } from "./_components/tabs";
+import {
+  MobileTabBar,
+  type TabId,
+  VerticalTabs,
+} from "./_components/VerticalTabs";
 
 function formatDate(date?: string | null) {
   if (!date) return "-";
@@ -94,6 +96,7 @@ const ErrorView = ({ message }: { message?: string }) => (
 export default function TournamentDetailsPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   const {
@@ -111,13 +114,50 @@ export default function TournamentDetailsPage() {
   const register = async () => {
     if (!tournament?.id || !user?.player?.id) return;
     try {
-      await tournamentService.register(tournament.id, "");
+      const registration = await tournamentService.register(tournament.id, "");
+      const messages = {
+        confirmed: "Votre inscription est confirmée.",
+        pending:
+          "Votre demande d'inscription attend la validation de l'organisation.",
+        waitlisted:
+          "Le tournoi est complet : vous avez rejoint la liste d'attente.",
+      } as const;
+      toast.success(
+        messages[registration.status as keyof typeof messages] ??
+          "Votre inscription a bien été enregistrée.",
+      );
+      await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     } catch (error) {
-      console.error("Erreur lors de l'inscription au tournoi :", error);
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          "Impossible de vous inscrire au tournoi.",
+        ),
+      );
     }
   };
 
-  const participantCount = tournament?.registrations?.length || 0;
+  const unregister = async () => {
+    if (!tournament?.id || !user?.player?.id) return;
+    try {
+      await tournamentService.unregister(tournament.id, user.player.id);
+      toast.success("Vous avez quitté le tournoi.");
+      await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
+    } catch (error) {
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          "Impossible de vous désinscrire du tournoi.",
+        ),
+      );
+      throw error;
+    }
+  };
+
+  const participantCount =
+    tournament?.registrations?.filter(
+      (registration) => registration.status === "confirmed",
+    ).length || 0;
   const matchesCount = tournament?.matches?.length || 0;
 
   const renderTabContent = useMemo(() => {
@@ -168,6 +208,7 @@ export default function TournamentDetailsPage() {
           permissions={permissions}
           user={user}
           onRegister={register}
+          onUnregister={unregister}
           formatDate={formatDate}
         />
 

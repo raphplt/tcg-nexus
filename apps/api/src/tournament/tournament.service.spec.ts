@@ -353,17 +353,30 @@ describe("TournamentService", () => {
       );
     });
 
-    it("should throw BadRequestException if tournament is full", async () => {
+    it("should place the player on the waitlist if tournament is full", async () => {
       tournamentRepo.findOne.mockResolvedValue({
         id: tournamentId,
         status: TournamentStatus.REGISTRATION_OPEN,
         maxPlayers: 10,
+        players: Array.from({ length: 10 }, (_, index) => ({ id: index + 10 })),
       });
       playerRepo.findOne.mockResolvedValue({ id: playerId });
+      registrationRepo.findOne.mockResolvedValue(null);
       registrationRepo.count.mockResolvedValue(10);
+      registrationRepo.create.mockReturnValue({});
+      registrationRepo.save.mockImplementation(
+        async (registration: any) => registration,
+      );
 
-      await expect(service.registerPlayer(dto)).rejects.toThrow(
-        BadRequestException,
+      const result = await service.registerPlayer(dto);
+
+      expect(result.status).toBe(RegistrationStatus.WAITLISTED);
+      expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          players: expect.not.arrayContaining([
+            expect.objectContaining({ id: playerId }),
+          ]),
+        }),
       );
     });
 
@@ -1056,6 +1069,8 @@ describe("TournamentService", () => {
           action: BulkRegistrationAction.CONFIRM,
           updatedCount: 1,
           registrations: [registration as TournamentRegistration],
+          promotedCount: 0,
+          promotedRegistrations: [],
         });
 
       const result = await service.confirmRegistration(1, 2);
@@ -1211,7 +1226,10 @@ describe("TournamentService", () => {
           ...tournament,
           players: [{ id: 10 }, { id: 11 }],
         });
-      registrationRepo.find.mockResolvedValue(registrations);
+      registrationRepo.find
+        .mockResolvedValueOnce(registrations)
+        .mockResolvedValueOnce([]);
+      registrationRepo.count.mockResolvedValue(1);
       registrationRepo.save.mockImplementation(async (value: any) => value);
       tournamentRepo.save.mockImplementation(async (value: any) => value);
 
@@ -1230,6 +1248,108 @@ describe("TournamentService", () => {
         }),
       );
       expect(tournamentRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ players: [{ id: 10 }] }),
+      );
+      expect(result.promotedCount).toBe(0);
+    });
+
+    it("should promote the oldest waitlisted player when a slot is released", async () => {
+      const cancelledRegistration = {
+        id: 2,
+        status: RegistrationStatus.CONFIRMED,
+        checkedIn: true,
+        checkedInAt: new Date(),
+        player: { id: 11 },
+      };
+      const waitlistedRegistration = {
+        id: 3,
+        status: RegistrationStatus.WAITLISTED,
+        registeredAt: new Date("2026-07-01T10:00:00Z"),
+        checkedIn: false,
+        checkedInAt: null,
+        player: { id: 12, user: { id: 120 } },
+      };
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce({
+          ...tournament,
+          maxPlayers: 2,
+          players: [{ id: 10 }, { id: 11 }],
+        });
+      registrationRepo.find
+        .mockResolvedValueOnce([cancelledRegistration])
+        .mockResolvedValueOnce([waitlistedRegistration]);
+      registrationRepo.count.mockResolvedValue(1);
+      registrationRepo.save.mockImplementation(async (value: any) => value);
+      tournamentRepo.save.mockImplementation(async (value: any) => value);
+
+      const result = await service.updateRegistrationsInBulk(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CANCEL,
+      });
+
+      expect(result.promotedCount).toBe(1);
+      expect(result.promotedRegistrations[0].status).toBe(
+        RegistrationStatus.CONFIRMED,
+      );
+      expect(registrationRepo.find).toHaveBeenNthCalledWith(2, {
+        where: {
+          tournament: { id: 1 },
+          status: RegistrationStatus.WAITLISTED,
+        },
+        relations: ["player", "player.user"],
+        order: { registeredAt: "ASC", id: "ASC" },
+        take: 1,
+      });
+      expect(tournamentRepo.save).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          players: [
+            expect.objectContaining({ id: 10 }),
+            expect.objectContaining({ id: 12 }),
+          ],
+        }),
+      );
+    });
+
+    it("should send a promoted player to approval when required", async () => {
+      const waitlistedRegistration = {
+        id: 3,
+        status: RegistrationStatus.WAITLISTED,
+        registeredAt: new Date("2026-07-01T10:00:00Z"),
+        checkedIn: false,
+        checkedInAt: null,
+        player: { id: 12, user: { id: 120 } },
+      };
+      tournamentRepo.findOne
+        .mockResolvedValueOnce(lockedTournament)
+        .mockResolvedValueOnce({
+          ...tournament,
+          maxPlayers: 2,
+          requiresApproval: true,
+          players: [{ id: 10 }, { id: 11 }],
+        });
+      registrationRepo.find
+        .mockResolvedValueOnce([
+          {
+            id: 2,
+            status: RegistrationStatus.CONFIRMED,
+            player: { id: 11 },
+          },
+        ])
+        .mockResolvedValueOnce([waitlistedRegistration]);
+      registrationRepo.count.mockResolvedValue(1);
+      registrationRepo.save.mockImplementation(async (value: any) => value);
+      tournamentRepo.save.mockImplementation(async (value: any) => value);
+
+      const result = await service.updateRegistrationsInBulk(1, {
+        registrationIds: [2],
+        action: BulkRegistrationAction.CANCEL,
+      });
+
+      expect(result.promotedRegistrations[0].status).toBe(
+        RegistrationStatus.PENDING,
+      );
+      expect(tournamentRepo.save).toHaveBeenLastCalledWith(
         expect.objectContaining({ players: [{ id: 10 }] }),
       );
     });
@@ -1284,6 +1404,8 @@ describe("TournamentService", () => {
           action: BulkRegistrationAction.CANCEL,
           updatedCount: 1,
           registrations: [registration as TournamentRegistration],
+          promotedCount: 0,
+          promotedRegistrations: [],
         });
 
       const result = await service.cancelRegistration(1, 2, "test");
@@ -1364,6 +1486,8 @@ describe("TournamentService", () => {
         registrations: [
           { ...reg, checkedIn: true } as unknown as TournamentRegistration,
         ],
+        promotedCount: 0,
+        promotedRegistrations: [],
       });
 
       const result = await service.checkInPlayer(1, 2, {
@@ -1393,6 +1517,8 @@ describe("TournamentService", () => {
         registrations: [
           { ...reg, checkedIn: true } as unknown as TournamentRegistration,
         ],
+        promotedCount: 0,
+        promotedRegistrations: [],
       });
 
       const result = await service.checkInPlayer(1, 2, {

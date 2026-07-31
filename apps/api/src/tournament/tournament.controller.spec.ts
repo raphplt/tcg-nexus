@@ -4,8 +4,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Player } from "../player/entities/player.entity";
 import { User } from "../user/entities/user.entity";
-import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { BulkRegistrationAction } from "./dto/bulk-registration-action.dto";
+import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { TournamentQueryDto } from "./dto/tournament-query.dto";
 import { Tournament, TournamentStatus } from "./entities/tournament.entity";
 import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
@@ -504,6 +504,8 @@ describe("TournamentController", () => {
         action: BulkRegistrationAction.CONFIRM,
         updatedCount: 2,
         registrations: [],
+        promotedCount: 0,
+        promotedRegistrations: [],
       });
 
       const result = controller.updateRegistrationsInBulk(1, action);
@@ -512,6 +514,8 @@ describe("TournamentController", () => {
         action: BulkRegistrationAction.CONFIRM,
         updatedCount: 2,
         registrations: [],
+        promotedCount: 0,
+        promotedRegistrations: [],
       });
       expect(service.updateRegistrationsInBulk).toHaveBeenCalledWith(1, action);
     });
