@@ -3,11 +3,13 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
+import { ListingStatus } from "../common/enums/listing-status";
 import { CardState } from "../common/enums/pokemonCardsType";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
@@ -21,7 +23,6 @@ import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { MarketplaceService } from "./marketplace.service";
 import { StripeService } from "./stripe.service";
 
@@ -66,6 +67,7 @@ describe("MarketplaceService", () => {
     addGroupBy: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     having: jest.fn().mockReturnThis(),
+    andHaving: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
     getCount: jest.fn().mockResolvedValue(0),
     getRawAndEntities: jest.fn().mockResolvedValue({ entities: [], raw: [] }),
@@ -670,7 +672,12 @@ describe("MarketplaceService", () => {
         createdAt: new Date(),
       });
       listingRepo.find.mockResolvedValue([
-        { id: 1, expiresAt: new Date(Date.now() + 10000) },
+        {
+          id: 1,
+          status: ListingStatus.ACTIVE,
+          quantityAvailable: 2,
+          expiresAt: new Date(Date.now() + 10000),
+        },
       ]);
       const orderQb = createMockQb();
       orderQb.getMany.mockResolvedValue([
@@ -742,7 +749,7 @@ describe("MarketplaceService", () => {
         "(listing.cardState = :cardState OR listing.id IS NULL)",
         { cardState: "NM" },
       );
-      expect(qb.having).toHaveBeenCalledWith(
+      expect(qb.andHaving).toHaveBeenCalledWith(
         expect.stringContaining("<= :priceMax"),
         expect.objectContaining({ priceMax: 50 }),
       );

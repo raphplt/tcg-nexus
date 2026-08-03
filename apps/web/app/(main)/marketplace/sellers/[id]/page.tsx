@@ -1,26 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronLeft,
+  ChevronRight,
   MessageCircle,
   Package,
+  Search,
   ShoppingBag,
   Star,
   TrendingUp,
-  ChevronLeft,
-  ChevronRight,
-  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { ViewToggle } from "@/components/Marketplace/ViewToggle";
 import { H1, H2 } from "@/components/Shared/Titles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -30,22 +40,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useViewMode } from "@/hooks/useViewMode";
 import { marketplaceService } from "@/services/marketplace.service";
+import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
-import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
-import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
-import { useDebounce } from "@/hooks/useDebounce";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const getSealedConditionColor = (condition: string | null | undefined) => {
   switch (condition) {
@@ -187,17 +187,15 @@ export default function SellerPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                {seller.email && (
-                  <a href={`mailto:${seller.email}`}>
-                    <Badge
-                      variant="outline"
-                      className="cursor-pointer hover:bg-accent"
-                    >
-                      <MessageCircle className="w-3 h-3 mr-1" />
-                      Contacter
-                    </Badge>
-                  </a>
-                )}
+                <Link href={`/users/${seller.id}`}>
+                  <Badge
+                    variant="outline"
+                    className="cursor-pointer hover:bg-accent"
+                  >
+                    <MessageCircle className="w-3 h-3 mr-1" />
+                    Voir le profil
+                  </Badge>
+                </Link>
               </div>
             </div>
           </CardContent>

@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  ShoppingBag,
-  Search,
   ChevronLeft,
   ChevronRight,
   Edit,
-  Trash2,
   Eye,
   EyeOff,
+  Search,
+  ShoppingBag,
+  Trash2,
 } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/useDebounce";
 import { marketplaceService } from "@/services/marketplace.service";
 import { Listing } from "@/types/listing";
-import { toast } from "react-hot-toast";
-import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/useDebounce";
-import { formatPrice } from "@/utils/price";
 import { getCardImage } from "@/utils/images";
-import Image from "next/image";
+import { formatPrice } from "@/utils/price";
 
 export const ProfileSales = () => {
   const router = useRouter();
@@ -42,12 +42,7 @@ export const ProfileSales = () => {
         page,
         limit: 10,
         search: debouncedSearch,
-        cardState:
-          statusFilter === "all"
-            ? undefined
-            : statusFilter === "active"
-              ? "active"
-              : "inactive",
+        status: statusFilter === "all" ? undefined : statusFilter,
         sortBy: "createdAt",
         sortOrder: "DESC",
       });
@@ -66,20 +61,23 @@ export const ProfileSales = () => {
   }, [loadListings]);
 
   const handleToggleStatus = async (listing: Listing) => {
+    const newStatus = listing.status === "inactive" ? "active" : "inactive";
+
     try {
-      const newQuantity = listing.quantityAvailable > 0 ? 0 : 1;
       await marketplaceService.updateListing(listing.id.toString(), {
-        quantityAvailable: newQuantity,
+        status: newStatus,
       });
 
       // Optimistic update
       setListings((prev) =>
         prev.map((l) =>
-          l.id === listing.id ? { ...l, quantityAvailable: newQuantity } : l,
+          l.id === listing.id ? { ...l, status: newStatus } : l,
         ),
       );
 
-      toast.success(newQuantity > 0 ? "Vente réactivée" : "Vente désactivée");
+      toast.success(
+        newStatus === "active" ? "Vente réactivée" : "Vente désactivée",
+      );
     } catch {
       toast.error("Erreur lors de la modification");
     }
@@ -195,19 +193,30 @@ export const ProfileSales = () => {
                   size="icon"
                   onClick={() => handleToggleStatus(listing)}
                   title={
-                    listing.quantityAvailable > 0 ? "Désactiver" : "Activer"
+                    listing.status === "inactive"
+                      ? "Remettre en vente"
+                      : "Retirer de la vente"
+                  }
+                  aria-label={
+                    listing.status === "inactive"
+                      ? "Remettre l'annonce en vente"
+                      : "Retirer l'annonce de la vente"
                   }
                 >
-                  {listing.quantityAvailable > 0 ? (
-                    <Eye className="w-4 h-4" />
-                  ) : (
+                  {listing.status === "inactive" ? (
                     <EyeOff className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
                   )}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => router.push(`/marketplace/${listing.id}/edit`)}
+                  title="Modifier l'annonce"
+                  aria-label="Modifier l'annonce"
+                  onClick={() =>
+                    router.push(`/marketplace/listings/${listing.id}/edit`)
+                  }
                 >
                   <Edit className="w-4 h-4" />
                 </Button>

@@ -5,11 +5,14 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
 import { DataSource, FindOptionsWhere, MoreThan, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
+import { Languages } from "../common/enums/languages";
+import { ListingStatus } from "../common/enums/listing-status";
 import { ProductKind } from "../common/enums/product-kind";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
@@ -31,7 +34,6 @@ import {
 } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { StripeService } from "./stripe.service";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -44,6 +46,8 @@ export interface FindAllListingsParams {
   sortOrder?: "ASC" | "DESC";
   search?: string;
   cardState?: string;
+  language?: Languages;
+  status?: ListingStatus;
   currency?: string;
   priceMin?: number;
   priceMax?: number;
@@ -319,6 +323,7 @@ export class MarketplaceService {
       sortOrder = "DESC",
       search,
       cardState,
+      language,
       currency,
       priceMin,
       priceMax,
@@ -334,7 +339,10 @@ export class MarketplaceService {
       .where("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
         now: new Date(),
       })
-      .andWhere("listing.quantityAvailable > 0");
+      .andWhere("listing.quantityAvailable > 0")
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      });
 
     if (sellerId) {
       qb.andWhere("seller.id = :sellerId", { sellerId });
@@ -350,6 +358,9 @@ export class MarketplaceService {
     }
     if (cardState) {
       qb.andWhere("listing.cardState = :cardState", { cardState });
+    }
+    if (language) {
+      qb.andWhere("listing.language = :language", { language });
     }
     if (currency) {
       qb.andWhere("listing.currency = :currency", { currency });
@@ -447,6 +458,8 @@ export class MarketplaceService {
       sortOrder = "DESC",
       search,
       cardState,
+      language,
+      status,
       currency,
       productKind,
     } = params;
@@ -470,6 +483,14 @@ export class MarketplaceService {
 
     if (cardState) {
       qb.andWhere("listing.cardState = :cardState", { cardState });
+    }
+
+    if (language) {
+      qb.andWhere("listing.language = :language", { language });
+    }
+
+    if (status) {
+      qb.andWhere("listing.status = :status", { status });
     }
 
     if (currency) {
@@ -518,7 +539,10 @@ export class MarketplaceService {
       .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
         now: new Date(),
       })
-      .andWhere("listing.quantityAvailable > 0");
+      .andWhere("listing.quantityAvailable > 0")
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      });
 
     if (currency) {
       statsQb.andWhere("listing.currency = :currency", { currency });
@@ -754,6 +778,9 @@ export class MarketplaceService {
         now: new Date(),
       })
       .andWhere("listing.quantityAvailable > 0")
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      })
       .groupBy("seller.id")
       .addGroupBy("seller.firstName")
       .addGroupBy("seller.lastName")
@@ -805,11 +832,11 @@ export class MarketplaceService {
   async getSellerStatistics(sellerId: number) {
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },
+      // L'email n'est jamais exposé : la page vendeur est publique.
       select: [
         "id",
         "firstName",
         "lastName",
-        "email",
         "avatarUrl",
         "isPro",
         "createdAt",
@@ -854,7 +881,10 @@ export class MarketplaceService {
       seller,
       totalListings: listings.length,
       activeListings: listings.filter(
-        (l) => !l.expiresAt || new Date(l.expiresAt) > new Date(),
+        (l) =>
+          l.status === ListingStatus.ACTIVE &&
+          l.quantityAvailable > 0 &&
+          (!l.expiresAt || new Date(l.expiresAt) > new Date()),
       ).length,
       totalSales: orders.length,
       totalRevenue: Math.round(totalRevenue * 100) / 100,
@@ -920,8 +950,8 @@ export class MarketplaceService {
       .leftJoin(
         Listing,
         "listing",
-        "listing.pokemonCard.id = card.id AND (listing.expiresAt IS NULL OR listing.expiresAt > :now) AND listing.quantityAvailable > 0",
-        { now: new Date() },
+        "listing.pokemonCard.id = card.id AND (listing.expiresAt IS NULL OR listing.expiresAt > :now) AND listing.quantityAvailable > 0 AND listing.status = :activeStatus",
+        { now: new Date(), activeStatus: ListingStatus.ACTIVE },
       )
       .select([
         "card.id",
@@ -975,15 +1005,14 @@ export class MarketplaceService {
         cardState,
       });
     }
+    // Un filtre de prix n'a de sens que sur les cartes réellement en vente :
+    // une carte sans annonce est exclue au lieu d'être conservée.
     if (typeof priceMin === "number") {
-      qb.having("MIN(listing.price) >= :priceMin OR COUNT(listing.id) = 0", {
-        priceMin,
-      });
+      qb.having("MIN(listing.price) >= :priceMin", { priceMin });
     }
     if (typeof priceMax === "number") {
-      qb.having("MIN(listing.price) <= :priceMax OR COUNT(listing.id) = 0", {
-        priceMax,
-      });
+      // andHaving, sinon le second having écrase le premier.
+      qb.andHaving("MIN(listing.price) <= :priceMax", { priceMax });
     }
 
     // Sorting with safeguards

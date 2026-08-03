@@ -1,13 +1,15 @@
-import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import type { CardPricing } from "@/types/cardPokemon";
-import { Listing } from "@/types/listing";
-import { fetcher, authedFetch } from "@/utils/fetch";
-import { PokemonCardType } from "@/types/cardPokemon";
 import { User } from "@/types/auth";
+import type { CardPricing } from "@/types/cardPokemon";
+import { PokemonCardType } from "@/types/cardPokemon";
+import { Listing } from "@/types/listing";
+import type { PaginatedResult, PaginationParams } from "@/types/pagination";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface MarketplaceQueryParams extends PaginationParams {
   search?: string;
   cardState?: string;
+  language?: string;
+  status?: "active" | "inactive";
   currency?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
@@ -69,7 +71,6 @@ export interface SellerStatistics {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
     avatarUrl: string;
     isPro: boolean;
     createdAt: string;
@@ -100,7 +101,14 @@ export const marketplaceService = {
    * @param id ID du listing
    */
   async getListingById(id: string): Promise<Listing> {
-    return fetcher<Listing>(`/listings/${id}`);
+    return fetcher<Listing>(`/marketplace/listings/${id}`);
+  },
+
+  /**
+   * Crée une annonce (carte ou produit scellé)
+   */
+  async createListing(data: Record<string, unknown>): Promise<Listing> {
+    return authedFetch<Listing>("POST", "/marketplace/listings", { data });
   },
 
   /**
@@ -111,7 +119,7 @@ export const marketplaceService = {
   ): Promise<PaginatedResult<Listing>> {
     return authedFetch<PaginatedResult<Listing>>(
       "GET",
-      "/listings/my-listings",
+      "/marketplace/listings/my-listings",
       {
         params: params as any,
       },
@@ -122,14 +130,16 @@ export const marketplaceService = {
    * Met à jour un listing
    */
   async updateListing(id: string, data: Partial<Listing>): Promise<Listing> {
-    return authedFetch<Listing>("PATCH", `/listings/${id}`, { data });
+    return authedFetch<Listing>("PATCH", `/marketplace/listings/${id}`, {
+      data,
+    });
   },
 
   /**
    * Supprime un listing
    */
   async deleteListing(id: string): Promise<void> {
-    return authedFetch<void>("DELETE", `/listings/${id}`);
+    return authedFetch<void>("DELETE", `/marketplace/listings/${id}`);
   },
 
   /**

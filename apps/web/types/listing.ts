@@ -1,8 +1,11 @@
-import { CardState } from "@/utils/enums";
 import { Currency } from "@/store/currency.store";
+import { CardState } from "@/utils/enums";
 import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
 import { ProductKind, SealedCondition, SealedProduct } from "./sealed-product";
+
+/** Intention du vendeur : annonce publiée ou retirée de la vente. */
+export type ListingStatus = "active" | "inactive";
 
 export interface Listing {
   id: number;
@@ -13,9 +16,11 @@ export interface Listing {
   price: number;
   currency: Currency;
   quantityAvailable: number;
+  status: ListingStatus;
   cardState?: CardState | null;
   sealedCondition?: SealedCondition | null;
   description?: string;
+  language?: string;
   createdAt: Date;
   expiresAt: Date;
 }

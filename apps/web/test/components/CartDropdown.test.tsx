@@ -49,6 +49,7 @@ const baseListing = (overrides?: Partial<Listing>): Listing => ({
   price: 10,
   currency: Currency.USD,
   quantityAvailable: 3,
+  status: "active",
   cardState: CardState.NM,
   createdAt: new Date(),
   expiresAt: new Date(),

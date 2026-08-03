@@ -7,6 +7,8 @@ import {
   IsString,
   Min,
 } from "class-validator";
+import { Languages } from "src/common/enums/languages";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { ProductKind } from "src/common/enums/product-kind";
 
 export class FindAllListingsQuery {
@@ -17,6 +19,15 @@ export class FindAllListingsQuery {
   @IsOptional()
   @IsString()
   cardState?: string;
+
+  @IsOptional()
+  @IsEnum(Languages)
+  language?: Languages;
+
+  /** Réservé à l'espace vendeur : filtre ses annonces publiées / retirées. */
+  @IsOptional()
+  @IsEnum(ListingStatus)
+  status?: ListingStatus;
 
   @IsOptional()
   @IsString()

@@ -68,6 +68,7 @@ const sampleOrder: Order = {
         price: 60,
         currency: Currency.EUR,
         quantityAvailable: 5,
+        status: "active",
         cardState: CardState.NM,
         createdAt: new Date(),
         expiresAt: new Date(),
