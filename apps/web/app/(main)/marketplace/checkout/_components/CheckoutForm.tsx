@@ -25,7 +25,6 @@ import { useCartStore } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 
 interface Props {
-  /** Commande déjà créée côté serveur, avec son stock réservé. */
   orderId: number;
   amount: number;
   currency: string;
@@ -41,7 +40,7 @@ export default function CheckoutForm({
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const { formatPrice } = useCurrencyStore();
+  const { formatExact } = useCurrencyStore();
   const { fetchCart } = useCartStore();
 
   const [message, setMessage] = useState<string | null>(null);
@@ -61,8 +60,6 @@ export default function CheckoutForm({
     setIsLoading(true);
     setMessage(null);
 
-    // La commande existe déjà : en cas de redirection, l'acheteur revient sur
-    // sa page de commande, que le webhook aura confirmée entre-temps.
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -86,14 +83,11 @@ export default function CheckoutForm({
     }
 
     try {
-      // Le serveur revérifie le paiement auprès de Stripe avant de valider.
       await paymentService.confirmOrder(orderId);
       await fetchCart();
       toast.success("Commande confirmée !");
       router.push(`/orders/${orderId}`);
     } catch {
-      // Le paiement a réussi : la commande sera confirmée par le webhook
-      // Stripe. Aucun risque de débit sans commande, elle existe déjà.
       toast.success("Paiement reçu, confirmation en cours.");
       router.push(`/orders/${orderId}`);
     }
@@ -119,7 +113,7 @@ export default function CheckoutForm({
       )}
 
       <Button disabled={isLoading || !stripe || !elements} className="w-full">
-        {isLoading ? "Traitement..." : `Payer ${formatPrice(amount, currency)}`}
+        {isLoading ? "Traitement..." : `Payer ${formatExact(amount, currency)}`}
       </Button>
 
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
@@ -129,7 +123,7 @@ export default function CheckoutForm({
             <AlertDialogDescription>
               Vous êtes sur le point de payer{" "}
               <span className="font-semibold text-foreground">
-                {formatPrice(amount, currency)}
+                {formatExact(amount, currency)}
               </span>{" "}
               pour la commande #{orderId}.
             </AlertDialogDescription>

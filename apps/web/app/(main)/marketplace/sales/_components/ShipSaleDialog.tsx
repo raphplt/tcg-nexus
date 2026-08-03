@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { SellerSale } from "@/types/order";
 
-/** Transporteurs courants pour l'envoi de cartes en France. */
 const CARRIERS = [
   "La Poste",
   "Colissimo",

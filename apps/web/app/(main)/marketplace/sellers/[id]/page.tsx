@@ -362,7 +362,7 @@ export default function SellerPage() {
                         key={listing.id}
                         product={listing.sealedProduct}
                         price={parseFloat(listing.price.toString())}
-                        quantity={listing.quantityAvailable}
+                        quantityAvailable={listing.quantityAvailable}
                         currency={listing.currency}
                         condition={listing.sealedCondition ?? undefined}
                         listingId={listing.id}

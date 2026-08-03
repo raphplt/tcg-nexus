@@ -10,8 +10,6 @@ export enum Currency {
   CAD = "CAD",
 }
 
-// Taux de change statiques basés sur l'EUR (1 EUR = x Currency)
-// Ces taux sont approximatifs pour la démo
 const EXCHANGE_RATES: Record<Currency, number> = {
   [Currency.EUR]: 1,
   [Currency.USD]: 1.08,
@@ -26,6 +24,7 @@ interface CurrencyState {
   setCurrency: (currency: Currency) => void;
   convertPrice: (price: number, fromCurrency: string) => number;
   formatPrice: (price: number, fromCurrency: string) => string;
+  formatExact: (price: number, currency: string) => string;
 }
 
 export const useCurrencyStore = create<CurrencyState>()(
@@ -48,13 +47,27 @@ export const useCurrencyStore = create<CurrencyState>()(
         return priceInEur * rateTo;
       },
       formatPrice: (price: number, fromCurrency: string) => {
-        const convertedPrice = get().convertPrice(price, fromCurrency);
         const targetCurrency = get().currency;
+        const convertedPrice = get().convertPrice(price, fromCurrency);
 
-        return new Intl.NumberFormat(undefined, {
+        const formatted = new Intl.NumberFormat(undefined, {
           style: "currency",
           currency: targetCurrency,
         }).format(convertedPrice);
+
+        const isConverted = !!fromCurrency && fromCurrency !== targetCurrency;
+        return isConverted ? `≈ ${formatted}` : formatted;
+      },
+
+      formatExact: (price: number, currency: string) => {
+        try {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency: currency || Currency.EUR,
+          }).format(price);
+        } catch {
+          return `${price} ${currency}`;
+        }
       },
     }),
     {

@@ -24,7 +24,6 @@ export class FindAllListingsQuery {
   @IsEnum(Languages)
   language?: Languages;
 
-  /** Réservé à l'espace vendeur : filtre ses annonces publiées / retirées. */
   @IsOptional()
   @IsEnum(ListingStatus)
   status?: ListingStatus;

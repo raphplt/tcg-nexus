@@ -30,7 +30,7 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { API_BASE_URL } from "@/utils/fetch";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl } from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl } from "@/utils/sealedImage";
 
 interface GuessItem {
   type: "card" | "sealed";
@@ -470,7 +470,7 @@ export default function JustePrixPage() {
       return getCardImage(data);
     }
     // Produit scellé : URL CDN via le helper dédié (l'ancien bucket r2.dev est coupé en prod).
-    return getSealedImageUrl(data) || "/images/sealed-default.png";
+    return getSealedImageUrl(data) || SEALED_PLACEHOLDER;
   }, [currentItem]);
 
   const correctPriceForReveal = useMemo(() => {

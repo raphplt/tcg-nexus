@@ -151,8 +151,6 @@ describe("NotificationListener", () => {
       "Vente réalisée",
       expect.any(String),
       "marketplace.sale",
-      // Le vendeur est envoyé sur ses ventes : la commande appartient à
-      // l'acheteur et lui est inaccessible.
       expect.objectContaining({ link: "/marketplace/sales", orderId: 42 }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);

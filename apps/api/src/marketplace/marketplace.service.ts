@@ -223,8 +223,22 @@ export class MarketplaceService {
         "You are not allowed to update this listing",
       );
     }
+    const previousPrice = Number(listing.price);
+    const previousCurrency = listing.currency;
+
     Object.assign(listing, updateListingDto);
-    return this.listingRepository.save(listing);
+    const saved = await this.listingRepository.save(listing);
+
+    const priceChanged =
+      Number(saved.price) !== previousPrice ||
+      saved.currency !== previousCurrency;
+
+    if (priceChanged) {
+      const withRelations = await this.findOne(saved.id);
+      await this.recordPriceHistory(withRelations);
+    }
+
+    return saved;
   }
 
   async delete(id: number, user: User): Promise<void> {
@@ -311,9 +325,7 @@ export class MarketplaceService {
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
   }
 
-  /**
-   * Get card statistics including price history, min/max/avg prices
-   */
+  // agrégats dans une seule devise : sans param, celle qui a le plus d'annonces
   async getCardStatistics(
     cardId: string,
     currency?: string,
@@ -325,43 +337,65 @@ export class MarketplaceService {
       select: ["id", "pricing"],
     });
 
-    // Use SQL aggregates instead of loading all listings into memory
-    const statsQb = this.listingRepository
-      .createQueryBuilder("listing")
+    const emptyStats = (statsCurrency: string | null) => ({
+      cardId,
+      totalListings: 0,
+      minPrice: null,
+      maxPrice: null,
+      avgPrice: null,
+      currency: statsCurrency,
+      availableCurrencies: [] as string[],
+      priceHistory: [],
+      marketPricing: card?.pricing || null,
+    });
+
+    const baseQuery = () => {
+      const qb = this.listingRepository
+        .createQueryBuilder("listing")
+        .where("listing.pokemonCard.id = :cardId", { cardId })
+        .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
+          now: new Date(),
+        })
+        .andWhere("listing.quantityAvailable > 0")
+        .andWhere("listing.status = :activeStatus", {
+          activeStatus: ListingStatus.ACTIVE,
+        });
+      if (cardState) {
+        qb.andWhere("listing.cardState = :cardState", { cardState });
+      }
+      return qb;
+    };
+
+    const currencyRows = await baseQuery()
+      .select("listing.currency", "currency")
+      .addSelect("COUNT(listing.id)", "count")
+      .groupBy("listing.currency")
+      .orderBy("count", "DESC")
+      .getRawMany();
+
+    const availableCurrencies = currencyRows.map((row) => String(row.currency));
+
+    if (availableCurrencies.length === 0) {
+      return emptyStats(currency || null);
+    }
+
+    const statsCurrency = currency ?? availableCurrencies[0];
+    if (!availableCurrencies.includes(statsCurrency)) {
+      return { ...emptyStats(statsCurrency), availableCurrencies };
+    }
+
+    const stats = await baseQuery()
+      .andWhere("listing.currency = :statsCurrency", { statsCurrency })
       .select("COUNT(listing.id)", "totalListings")
       .addSelect("MIN(listing.price)", "minPrice")
       .addSelect("MAX(listing.price)", "maxPrice")
       .addSelect("AVG(listing.price)", "avgPrice")
-      .where("listing.pokemonCard.id = :cardId", { cardId })
-      .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
-        now: new Date(),
-      })
-      .andWhere("listing.quantityAvailable > 0")
-      .andWhere("listing.status = :activeStatus", {
-        activeStatus: ListingStatus.ACTIVE,
-      });
+      .getRawOne();
 
-    if (currency) {
-      statsQb.andWhere("listing.currency = :currency", { currency });
-    }
-    if (cardState) {
-      statsQb.andWhere("listing.cardState = :cardState", { cardState });
-    }
-
-    const stats = await statsQb.getRawOne();
     const totalListings = parseInt(stats.totalListings, 10) || 0;
 
     if (totalListings === 0) {
-      return {
-        cardId,
-        totalListings: 0,
-        minPrice: null,
-        maxPrice: null,
-        avgPrice: null,
-        currency: currency || null,
-        priceHistory: [],
-        marketPricing: card?.pricing || null,
-      };
+      return { ...emptyStats(statsCurrency), availableCurrencies };
     }
 
     const minPrice = parseFloat(stats.minPrice);
@@ -374,11 +408,9 @@ export class MarketplaceService {
     const priceHistoryWhere: FindOptionsWhere<PriceHistory> = {
       pokemonCard: { id: cardId },
       recordedAt: MoreThan(ninetyDaysAgo),
+      currency: statsCurrency as any,
     };
 
-    if (currency) {
-      priceHistoryWhere.currency = currency as any;
-    }
     if (cardState) {
       priceHistoryWhere.cardState = cardState as any;
     }
@@ -395,7 +427,8 @@ export class MarketplaceService {
       minPrice,
       maxPrice,
       avgPrice: Math.round(avgPrice * 100) / 100,
-      currency: currency || null,
+      currency: statsCurrency,
+      availableCurrencies,
       priceHistory: priceHistory.map((h) => ({
         price: parseFloat(h.price.toString()),
         currency: h.currency,
@@ -516,10 +549,6 @@ export class MarketplaceService {
   /**
    * Get best sellers (users with most sales)
    * Falls back to sellers with most active listings if no sales found
-   *
-   * Le chiffre d'affaires est calculé sur les lignes du vendeur, pas sur le
-   * total des commandes : une commande multi-vendeurs ne doit pas être
-   * attribuée en entier à chacun d'eux.
    */
   async getBestSellers(limit: number = 10) {
     const sellersFromOrders = await this.orderItemRepository
@@ -621,7 +650,6 @@ export class MarketplaceService {
         totalRevenue: parseFloat(String(seller.total_revenue)) || 0,
         currency: seller.currency ?? null,
       })),
-      // Vendeurs sans vente : on ne leur invente pas de chiffre d'affaires.
       ...sellersFromListingsFiltered.map((seller) => ({
         seller: {
           id: seller.seller_id,
@@ -646,7 +674,6 @@ export class MarketplaceService {
   async getSellerStatistics(sellerId: number) {
     const seller = await this.userRepository.findOne({
       where: { id: sellerId },
-      // L'email n'est jamais exposé : la page vendeur est publique.
       select: [
         "id",
         "firstName",
@@ -674,7 +701,6 @@ export class MarketplaceService {
       order: { createdAt: "DESC" },
     });
 
-    // Le chiffre d'affaires vient des lignes du vendeur, ventilé par devise.
     const { totalSales, revenueByCurrency } =
       await this.orderService.getSellerRevenue(sellerId);
 
@@ -695,7 +721,6 @@ export class MarketplaceService {
           (!l.expiresAt || new Date(l.expiresAt) > new Date()),
       ).length,
       totalSales,
-      /** Null si le vendeur a vendu dans plusieurs devises : voir revenueByCurrency. */
       totalRevenue,
       currency: primaryCurrency,
       revenueByCurrency,
@@ -819,13 +844,10 @@ export class MarketplaceService {
         cardState,
       });
     }
-    // Un filtre de prix n'a de sens que sur les cartes réellement en vente :
-    // une carte sans annonce est exclue au lieu d'être conservée.
     if (typeof priceMin === "number") {
       qb.having("MIN(listing.price) >= :priceMin", { priceMin });
     }
     if (typeof priceMax === "number") {
-      // andHaving, sinon le second having écrase le premier.
       qb.andHaving("MIN(listing.price) <= :priceMax", { priceMax });
     }
 

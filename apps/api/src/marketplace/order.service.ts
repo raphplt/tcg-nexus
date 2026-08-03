@@ -44,7 +44,6 @@ import {
 } from "./entities/payment-transaction.entity";
 import { StripeService } from "./stripe.service";
 
-/** Durée pendant laquelle le stock reste réservé sans paiement confirmé. */
 const RESERVATION_TTL_MINUTES = 20;
 
 const ORDER_RELATIONS = [
@@ -64,14 +63,6 @@ export interface CheckoutResult {
   currency: Currency;
 }
 
-/**
- * Cycle de vie d'une commande, de la réservation de stock au suivi
- * d'expédition.
- *
- * L'ordre des opérations est volontairement : commande + réservation du
- * stock d'abord, paiement ensuite. L'inverse expose l'acheteur à être
- * débité sans commande si le stock a disparu entre-temps.
- */
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -92,15 +83,6 @@ export class OrderService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  // ---------------------------------------------------------------------
-  // Checkout
-  // ---------------------------------------------------------------------
-
-  /**
-   * Crée une commande PENDING, réserve le stock, puis ouvre un PaymentIntent
-   * rattaché à cette commande. Le client n'est jamais débité avant que sa
-   * commande n'existe.
-   */
   async startCheckout(
     dto: StartCheckoutDto,
     user: User,
@@ -133,8 +115,6 @@ export class OrderService {
       user,
     );
 
-    // Le PaymentIntent est créé après la réservation : si Stripe échoue, on
-    // rend le stock au lieu de laisser une commande orpheline.
     try {
       const paymentIntent = await this.stripeService.createPaymentIntent(
         Number(order.totalAmount),
@@ -173,11 +153,7 @@ export class OrderService {
     }
   }
 
-  /**
-   * Réserve le stock et matérialise la commande dans une seule transaction.
-   * Le verrou pessimiste empêche deux acheteurs de prendre le dernier
-   * exemplaire simultanément.
-   */
+  // verrou pessimiste : deux acheteurs ne peuvent pas prendre le dernier exemplaire
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
@@ -214,7 +190,6 @@ export class OrderService {
           );
         }
 
-        // Le prix retenu est celui de la base, jamais celui envoyé par le client.
         totalAmount += Number(freshListing.price) * item.quantity;
       }
 
@@ -250,10 +225,6 @@ export class OrderService {
     });
   }
 
-  /**
-   * Fige tout ce dont la commande aura besoin plus tard : l'annonce peut
-   * être modifiée ou supprimée, la commande doit rester lisible.
-   */
   private buildOrderItemSnapshot(item: CartItem): Partial<OrderItem> {
     const { listing } = item;
     const isSealed =
@@ -295,15 +266,6 @@ export class OrderService {
     );
   }
 
-  // ---------------------------------------------------------------------
-  // Confirmation du paiement
-  // ---------------------------------------------------------------------
-
-  /**
-   * Confirme une commande à partir de l'état réel du PaymentIntent chez
-   * Stripe. Appelée au retour du checkout ; le webhook fait la même chose de
-   * son côté, la première des deux gagne.
-   */
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {
     const order = await this.findOrderById(orderId, user.id);
 
@@ -339,10 +301,7 @@ export class OrderService {
     return this.findOrderById(orderId, user.id);
   }
 
-  /**
-   * Applique le passage à PAID de façon idempotente, après avoir vérifié que
-   * le paiement correspond bien à la commande (montant, devise, acheteur).
-   */
+  // idempotent : webhook et retour client peuvent arriver dans n'importe quel ordre
   private async markOrderPaid(
     paymentIntentId: string,
     intent: {
@@ -383,10 +342,6 @@ export class OrderService {
     this.recordSaleSignals(order);
   }
 
-  /**
-   * Un PaymentIntent ne vaut que pour la commande qui l'a ouvert : on refuse
-   * tout écart de montant, de devise ou d'identité.
-   */
   private assertPaymentMatchesOrder(
     order: Order,
     intent: {
@@ -480,10 +435,6 @@ export class OrderService {
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Webhooks Stripe — source de vérité du paiement
-  // ---------------------------------------------------------------------
-
   async handlePaymentSucceeded(
     paymentIntentId: string,
     intent?: {
@@ -548,14 +499,6 @@ export class OrderService {
     });
   }
 
-  // ---------------------------------------------------------------------
-  // Machine d'état
-  // ---------------------------------------------------------------------
-
-  /**
-   * Change le statut d'une commande en respectant les transitions autorisées
-   * et en rendant le stock une seule fois.
-   */
   async transitionOrder(
     orderId: number,
     nextStatus: OrderStatus,
@@ -619,7 +562,6 @@ export class OrderService {
     });
   }
 
-  /** Restitue le stock réservé. Le drapeau stockReleased rend l'opération rejouable. */
   private async releaseStock(
     order: Order,
     manager: EntityManager,
@@ -652,10 +594,6 @@ export class OrderService {
     }
   }
 
-  /**
-   * Libère les commandes dont la réservation a expiré sans paiement.
-   * Sans cela, un panier abandonné bloquerait le stock indéfiniment.
-   */
   async expireStaleReservations(): Promise<number> {
     const staleOrders = await this.orderRepository.find({
       where: {
@@ -675,10 +613,6 @@ export class OrderService {
 
     return staleOrders.length;
   }
-
-  // ---------------------------------------------------------------------
-  // Lecture
-  // ---------------------------------------------------------------------
 
   async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {
     return this.orderRepository.find({
@@ -750,14 +684,6 @@ export class OrderService {
     );
   }
 
-  // ---------------------------------------------------------------------
-  // Espace vendeur
-  // ---------------------------------------------------------------------
-
-  /**
-   * Ventes à traiter par un vendeur : ses lignes de commande payées, avec
-   * l'adresse de livraison et l'acheteur.
-   */
   async findSalesBySellerId(
     sellerId: number,
     params: { page?: number; limit?: number; fulfillmentStatus?: string } = {},
@@ -769,7 +695,6 @@ export class OrderService {
       .leftJoinAndSelect("orderItem.order", "order")
       .leftJoinAndSelect("order.buyer", "buyer")
       .where("orderItem.seller_id = :sellerId", { sellerId })
-      // Une commande non payée n'a pas à apparaître dans les ventes à traiter.
       .andWhere("order.status IN (:...statuses)", {
         statuses: [
           OrderStatus.PAID,
@@ -793,10 +718,6 @@ export class OrderService {
     );
   }
 
-  /**
-   * Fait avancer l'expédition d'une ligne. Seul le vendeur de la ligne peut
-   * la modifier, et seulement selon les transitions autorisées.
-   */
   async updateFulfillment(
     orderItemId: number,
     dto: UpdateFulfillmentDto,
@@ -849,10 +770,6 @@ export class OrderService {
     return saved;
   }
 
-  /**
-   * Aligne le statut global de la commande sur celui de ses lignes : une
-   * commande multi-vendeurs n'est expédiée que lorsque tout est parti.
-   */
   private async syncOrderStatusFromFulfillment(orderId: number): Promise<void> {
     const items = await this.orderItemRepository.find({
       where: { order: { id: orderId } },
@@ -883,18 +800,12 @@ export class OrderService {
     try {
       await this.transitionOrder(orderId, target, { allowNoop: true });
     } catch (err) {
-      // Une transition invalide ici (commande remboursée, par ex.) ne doit
-      // pas faire échouer la mise à jour d'expédition du vendeur.
       this.logger.warn(
         `Could not sync order ${orderId} to ${target}: ${(err as Error).message}`,
       );
     }
   }
 
-  /**
-   * Chiffre d'affaires d'un vendeur, calculé sur ses propres lignes et
-   * ventilé par devise : additionner des EUR et des USD n'aurait aucun sens.
-   */
   async getSellerRevenue(sellerId: number): Promise<{
     totalSales: number;
     revenueByCurrency: Record<string, number>;
@@ -932,7 +843,6 @@ export class OrderService {
     return { totalSales, revenueByCurrency };
   }
 
-  /** Ventes réalisées par plusieurs vendeurs, en une requête. */
   async getSalesTotalsBySellerIds(
     sellerIds: number[],
   ): Promise<Map<number, { totalSales: number; totalRevenue: number }>> {

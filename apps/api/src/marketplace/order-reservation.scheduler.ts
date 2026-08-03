@@ -2,10 +2,6 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { OrderService } from "./order.service";
 
-/**
- * Rend le stock des commandes restées impayées. Sans ce balayage, un panier
- * abandonné au moment du paiement immobiliserait ses annonces indéfiniment.
- */
 @Injectable()
 export class OrderReservationScheduler {
   private readonly logger = new Logger(OrderReservationScheduler.name);

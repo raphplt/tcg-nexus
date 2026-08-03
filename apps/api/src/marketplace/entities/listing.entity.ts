@@ -59,7 +59,6 @@ export class Listing {
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
 
-  /** Annonce publiée ou retirée de la vente par son vendeur. */
   @Column({
     type: "enum",
     enum: ListingStatus,

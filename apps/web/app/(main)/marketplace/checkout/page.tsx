@@ -14,7 +14,7 @@ import { CheckoutSession, paymentService } from "@/services/payment.service";
 import { useCartStore, useCartTotal } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 import CheckoutForm from "./_components/CheckoutForm";
 import ShippingAddressForm from "./_components/ShippingAddressForm";
 
@@ -25,7 +25,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, isLoading, fetchCart } = useCartStore();
   const total = useCartTotal();
-  const { formatPrice, currency } = useCurrencyStore();
+  const { formatExact, currency } = useCurrencyStore();
 
   const [session, setSession] = useState<CheckoutSession | null>(null);
   const [shippingAddress, setShippingAddress] = useState("");
@@ -68,8 +68,6 @@ export default function CheckoutPage() {
 
   const cartItems = cart?.cartItems ?? [];
 
-  // Une fois la commande créée, le panier est vidé : on ne redirige donc que
-  // tant qu'aucune session de paiement n'est ouverte.
   if (!session && cartItems.length === 0) {
     return (
       <div className="container mx-auto py-10 text-center space-y-4">
@@ -127,7 +125,7 @@ export default function CheckoutPage() {
                       !!item.listing.sealedProduct;
                     const imageUrl = isSealed
                       ? getSealedImageUrl(item.listing.sealedProduct) ||
-                        "/images/sealed-default.png"
+                        SEALED_PLACEHOLDER
                       : getCardImage(item.listing.pokemonCard);
                     const productName = isSealed
                       ? getSealedName(item.listing.sealedProduct) ||
@@ -157,7 +155,7 @@ export default function CheckoutPage() {
                               Qté: {item.quantity}
                             </span>
                             <span className="font-medium">
-                              {formatPrice(
+                              {formatExact(
                                 item.listing.price * item.quantity,
                                 item.listing.currency,
                               )}
@@ -175,7 +173,7 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span>{formatPrice(displayAmount, displayCurrency)}</span>
+                  <span>{formatExact(displayAmount, displayCurrency)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
@@ -184,7 +182,7 @@ export default function CheckoutPage() {
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{formatPrice(displayAmount, displayCurrency)}</span>
+                  <span>{formatExact(displayAmount, displayCurrency)}</span>
                 </div>
               </div>
             </CardContent>

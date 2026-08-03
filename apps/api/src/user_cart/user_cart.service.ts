@@ -120,7 +120,6 @@ export class UserCartService {
       throw new BadRequestException("You cannot add your own listing to cart");
     }
 
-    // Vérifier que l'annonce n'est pas expirée
     if (listing.expiresAt && new Date(listing.expiresAt) <= new Date()) {
       throw new BadRequestException("This listing has expired");
     }
@@ -135,8 +134,6 @@ export class UserCartService {
     // Récupérer ou créer le panier
     const cart = await this.findOrCreateCart(userId);
 
-    // Le paiement est unique par commande : refuser un mélange de devises
-    // dès l'ajout plutôt qu'au checkout.
     await this.assertSameCurrency(cart.id, listing);
 
     // Vérifier si l'item existe déjà dans le panier
@@ -171,10 +168,6 @@ export class UserCartService {
     return this.cartItemRepository.save(cartItem);
   }
 
-  /**
-   * Refuse l'ajout d'une annonce dont la devise diffère de celle déjà
-   * présente dans le panier.
-   */
   private async assertSameCurrency(
     cartId: number,
     listing: Listing,

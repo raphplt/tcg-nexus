@@ -48,10 +48,6 @@ export const getFulfillmentLabel = (status: FulfillmentStatus): string =>
 export const getFulfillmentColor = (status: FulfillmentStatus): string =>
   FULFILLMENT_STYLES[status] ?? "bg-gray-500";
 
-/**
- * Image d'une ligne de commande. Le snapshot fait foi ; l'annonce n'est
- * consultée que pour reconstruire une URL d'image complète.
- */
 export const getOrderItemImage = (item: OrderItem): string => {
   if (item.productKind === "sealed") {
     return (
@@ -66,7 +62,6 @@ export const getOrderItemImage = (item: OrderItem): string => {
     : SEALED_PLACEHOLDER;
 };
 
-/** Lien produit, seulement si l'annonce d'origine existe encore. */
 export const getOrderItemUrl = (item: OrderItem): string | null => {
   if (item.productKind === "sealed" && item.listing?.sealedProduct?.id) {
     return `/marketplace/sealed/${item.listing.sealedProduct.id}`;

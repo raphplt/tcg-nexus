@@ -4,7 +4,6 @@ import { User } from "./auth";
 import { PokemonCardType } from "./cardPokemon";
 import { ProductKind, SealedCondition, SealedProduct } from "./sealed-product";
 
-/** Intention du vendeur : annonce publiée ou retirée de la vente. */
 export type ListingStatus = "active" | "inactive";
 
 export interface Listing {

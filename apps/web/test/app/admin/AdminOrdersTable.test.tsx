@@ -46,7 +46,6 @@ const sampleOrder: Order = {
       id: 1,
       quantity: 2,
       unitPrice: 60,
-      // Instantané figé à l'achat, indépendant de l'annonce.
       productKind: "card" as const,
       productName: "Pikachu",
       productImage: "/pikachu",

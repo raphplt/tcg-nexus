@@ -4,7 +4,6 @@ import { authedFetch } from "@/utils/fetch";
 
 export interface SellerRevenue {
   totalSales: number;
-  /** Chiffre d'affaires ventilé par devise : on n'additionne pas EUR et USD. */
   revenueByCurrency: Record<string, number>;
 }
 
@@ -15,7 +14,6 @@ export interface UpdateFulfillmentDto {
 }
 
 export const salesService = {
-  /** Ventes à traiter par le vendeur connecté. */
   async getMySales(
     params: {
       page?: number;

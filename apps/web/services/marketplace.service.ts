@@ -104,9 +104,6 @@ export const marketplaceService = {
     return fetcher<Listing>(`/marketplace/listings/${id}`);
   },
 
-  /**
-   * Crée une annonce (carte ou produit scellé)
-   */
   async createListing(data: Record<string, unknown>): Promise<Listing> {
     return authedFetch<Listing>("POST", "/marketplace/listings", { data });
   },

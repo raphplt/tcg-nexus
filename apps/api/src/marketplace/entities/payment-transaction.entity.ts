@@ -47,10 +47,6 @@ export class PaymentTransaction {
   @Column({ type: "enum", enum: PaymentStatus })
   status: PaymentStatus;
 
-  /**
-   * Identifiant du PaymentIntent Stripe. Unique : un même paiement ne peut
-   * jamais être rattaché à deux commandes.
-   */
   @Index({ unique: true })
   @Column({ type: "varchar", length: 255, nullable: true })
   transactionId: string;
@@ -58,7 +54,6 @@ export class PaymentTransaction {
   @Column("decimal", { precision: 12, scale: 2 })
   amount: number;
 
-  /** Devise du paiement, vérifiée contre celle de la commande. */
   @Column({ type: "enum", enum: Currency, nullable: true })
   currency: Currency | null;
 

@@ -15,10 +15,6 @@ jest.setTimeout(60000);
 
 const SHIPPING_ADDRESS = "12 rue des Cartes, 75001 Paris, France";
 
-/**
- * Stripe est simulé, mais le PaymentIntent renvoyé porte les mêmes métadonnées
- * qu'en réel : c'est précisément ce que le serveur revérifie.
- */
 const stripeServiceMock = {
   onModuleInit: jest.fn(),
   createPaymentIntent: jest.fn(),
@@ -96,7 +92,6 @@ describe("Order flow (e2e)", () => {
 
       await addToCart(listingId, 2).expect(201);
 
-      // 1. Checkout : la commande existe avant tout débit.
       const checkout = await startCheckout();
       expect(checkout.status).toBe(201);
       expect(checkout.body.orderId).toEqual(expect.any(Number));
@@ -104,13 +99,11 @@ describe("Order flow (e2e)", () => {
 
       const orderId = checkout.body.orderId;
 
-      // 2. Le stock est immédiatement réservé.
       const afterReservation = await listingRepo.findOneByOrFail({
         id: listingId,
       });
       expect(afterReservation.quantityAvailable).toBe(1);
 
-      // 3. La commande est en attente et connaît l'adresse de livraison.
       const pending = await request(httpServer)
         .get(`/marketplace/orders/${orderId}`)
         .set(authAs(buyer))
@@ -118,20 +111,17 @@ describe("Order flow (e2e)", () => {
       expect(pending.body.status).toBe(OrderStatus.PENDING);
       expect(pending.body.shippingAddress).toBe(SHIPPING_ADDRESS);
 
-      // 4. La ligne porte l'instantané du produit.
       const item = pending.body.orderItems[0];
       expect(item.productName).toEqual(expect.any(String));
       expect(item.sellerName).toContain("Seller");
       expect(Number(item.unitPrice)).toBe(20);
 
-      // 5. Le panier a été vidé.
       const cart = await request(httpServer)
         .get("/user-cart/me")
         .set(authAs(buyer))
         .expect(200);
       expect(cart.body.cartItems ?? []).toHaveLength(0);
 
-      // 6. Confirmation : le serveur relit le paiement chez Stripe.
       const intentId = stripeServiceMock.createPaymentIntent.mock.results[0]
         .value as Promise<{ id: string }>;
       const { id: paymentIntentId } = await intentId;
@@ -149,7 +139,6 @@ describe("Order flow (e2e)", () => {
         .expect(201);
       expect(confirmed.body.status).toBe(OrderStatus.PAID);
 
-      // 7. Le vendeur voit la vente à traiter, avec l'adresse.
       const sales = await request(httpServer)
         .get("/marketplace/sales")
         .set(authAs(seller))
@@ -159,7 +148,6 @@ describe("Order flow (e2e)", () => {
       expect(sale.fulfillmentStatus).toBe(FulfillmentStatus.TO_SHIP);
       expect(sale.order.shippingAddress).toBe(SHIPPING_ADDRESS);
 
-      // 8. Le vendeur expédie avec un numéro de suivi.
       await request(httpServer)
         .patch(`/marketplace/sales/${sale.id}/fulfillment`)
         .set(authAs(seller))
@@ -170,7 +158,6 @@ describe("Order flow (e2e)", () => {
         })
         .expect(200);
 
-      // 9. L'acheteur suit son colis, la commande est passée à expédiée.
       const shipped = await request(httpServer)
         .get(`/marketplace/orders/${orderId}`)
         .set(authAs(buyer))
@@ -261,7 +248,6 @@ describe("Order flow (e2e)", () => {
       });
 
       await addToCart(listingId, 1).expect(201);
-      // Le stock disparaît entre la mise au panier et le paiement.
       await listingRepo.update({ id: listingId }, { quantityAvailable: 0 });
 
       const checkout = await startCheckout();

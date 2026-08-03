@@ -22,7 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/services/marketplace.service";
 import { Listing, ListingStatus } from "@/types/listing";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 import { cardStates, currencyOptions, languages } from "@/utils/variables";
 
 interface FormState {
@@ -158,7 +158,7 @@ export default function EditListingPage() {
     ? getSealedName(listing.sealedProduct) || "Produit scellé"
     : (listing.pokemonCard?.name ?? "Carte");
   const productImage = isSealed
-    ? getSealedImageUrl(listing.sealedProduct) || "/images/sealed-default.png"
+    ? getSealedImageUrl(listing.sealedProduct) || SEALED_PLACEHOLDER
     : getCardImage(listing.pokemonCard);
 
   return (

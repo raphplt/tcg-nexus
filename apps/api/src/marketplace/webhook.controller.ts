@@ -62,8 +62,6 @@ export class WebhookController {
           this.logger.log(
             `PaymentIntent succeeded: ${paymentIntent.id} for amount ${paymentIntent.amount}`,
           );
-          // L'événement Stripe fait foi : montant, devise et metadata sont
-          // revérifiés contre la commande avant de la passer à PAID.
           await this.orderService.handlePaymentSucceeded(paymentIntent.id, {
             amount: paymentIntent.amount,
             currency: paymentIntent.currency,

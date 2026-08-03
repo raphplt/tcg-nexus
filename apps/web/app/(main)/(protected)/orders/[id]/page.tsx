@@ -23,7 +23,6 @@ import {
   getOrderStatusLabel,
 } from "@/utils/order";
 
-/** Regroupe les lignes par vendeur : chacun expédie son propre colis. */
 function groupBySeller(items: OrderItem[]): Map<string, OrderItem[]> {
   const groups = new Map<string, OrderItem[]>();
   for (const item of items) {
@@ -35,7 +34,7 @@ function groupBySeller(items: OrderItem[]): Map<string, OrderItem[]> {
 
 export default function OrderDetailsPage() {
   const { id } = useParams<{ id: string }>();
-  const { formatPrice } = useCurrencyStore();
+  const { formatExact } = useCurrencyStore();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,7 +104,7 @@ export default function OrderDetailsPage() {
                 {getOrderStatusLabel(order.status)}
               </Badge>
               <span className="text-2xl font-bold">
-                {formatPrice(order.totalAmount, order.currency)}
+                {formatExact(order.totalAmount, order.currency)}
               </span>
             </div>
           </div>
@@ -220,13 +219,13 @@ export default function OrderDetailsPage() {
 
                         <div className="text-right shrink-0">
                           <p className="font-medium">
-                            {formatPrice(
+                            {formatExact(
                               item.unitPrice * item.quantity,
                               order.currency,
                             )}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {formatPrice(item.unitPrice, order.currency)}{" "}
+                            {formatExact(item.unitPrice, order.currency)}{" "}
                             l&apos;unité
                           </p>
                         </div>
@@ -243,7 +242,7 @@ export default function OrderDetailsPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Sous-total</span>
-              <span>{formatPrice(order.totalAmount, order.currency)}</span>
+              <span>{formatExact(order.totalAmount, order.currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Livraison</span>
@@ -251,7 +250,7 @@ export default function OrderDetailsPage() {
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t">
               <span>Total</span>
-              <span>{formatPrice(order.totalAmount, order.currency)}</span>
+              <span>{formatExact(order.totalAmount, order.currency)}</span>
             </div>
           </div>
         </CardContent>

@@ -268,6 +268,40 @@ describe("MarketplaceService", () => {
       expect(res).toBeDefined();
       expect(listingRepo.save).toHaveBeenCalled();
     });
+
+    it("records a price history point when the price changes", async () => {
+      const priced = { ...listing, price: 100, currency: Currency.EUR };
+      listingRepo.findOne
+        .mockResolvedValueOnce(priced)
+        .mockResolvedValueOnce({
+          ...priced,
+          price: 200,
+          pokemonCard: { id: "c1" },
+        });
+      listingRepo.save.mockImplementation(async (l: Listing) => l);
+      priceHistoryRepo.create.mockImplementation((data: any) => data);
+
+      await service.update(10, { price: 200 } as UpdateListingDto, owner);
+
+      expect(priceHistoryRepo.save).toHaveBeenCalled();
+    });
+
+    it("does not record history when the price is unchanged", async () => {
+      listingRepo.findOne.mockResolvedValue({
+        ...listing,
+        price: 100,
+        currency: Currency.EUR,
+      });
+      listingRepo.save.mockImplementation(async (l: Listing) => l);
+
+      await service.update(
+        10,
+        { description: "nouvelle description" } as UpdateListingDto,
+        owner,
+      );
+
+      expect(priceHistoryRepo.save).not.toHaveBeenCalled();
+    });
   });
 
   describe("delete ownership", () => {
@@ -420,15 +454,29 @@ describe("MarketplaceService", () => {
   });
 
   describe("getCardStatistics", () => {
+    const mockStatsQueries = (
+      currencyRows: Array<{ currency: string; count: string }>,
+      aggregates: Record<string, string | null> | null,
+    ) => {
+      const currencyQb = createMockQb();
+      currencyQb.getRawMany.mockResolvedValue(currencyRows);
+      const statsQb = createMockQb();
+      statsQb.getRawOne.mockResolvedValue(aggregates);
+
+      mockListingRepo.createQueryBuilder
+        .mockReturnValueOnce(currencyQb)
+        .mockReturnValueOnce(statsQb);
+
+      return { currencyQb, statsQb };
+    };
+
     it("calculates average, min, max correctly", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
+      mockStatsQueries([{ currency: "EUR", count: "3" }], {
         totalListings: "3",
         minPrice: "10",
         maxPrice: "30",
         avgPrice: "20",
       });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([
         { price: 15, recordedAt: new Date() },
       ]);
@@ -439,41 +487,59 @@ describe("MarketplaceService", () => {
       expect(stats.maxPrice).toBe(30);
       expect(stats.avgPrice).toBe(20);
       expect(stats.totalListings).toBe(3);
+      expect(stats.currency).toBe("EUR");
       expect(stats.priceHistory).toHaveLength(1);
     });
 
     it("handles empty listings", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
-        totalListings: "0",
-        minPrice: null,
-        maxPrice: null,
-        avgPrice: null,
-      });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
+      mockStatsQueries([], null);
 
       const stats = await service.getCardStatistics("c1");
       expect(stats.totalListings).toBe(0);
       expect(stats.minPrice).toBeNull();
     });
 
+    it("aggregates in a single currency instead of mixing them", async () => {
+      const { statsQb } = mockStatsQueries(
+        [
+          { currency: "USD", count: "5" },
+          { currency: "EUR", count: "2" },
+        ],
+        {
+          totalListings: "5",
+          minPrice: "8",
+          maxPrice: "12",
+          avgPrice: "10",
+        },
+      );
+      mockPriceHistoryRepo.find.mockResolvedValue([]);
+
+      const stats = await service.getCardStatistics("c1");
+
+      expect(stats.currency).toBe("USD");
+      expect(stats.availableCurrencies).toEqual(["USD", "EUR"]);
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
+        "listing.currency = :statsCurrency",
+        { statsCurrency: "USD" },
+      );
+    });
+
     it("applies currency and cardState filters", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
+      const { statsQb } = mockStatsQueries([{ currency: "EUR", count: "1" }], {
         totalListings: "1",
         minPrice: "5",
         maxPrice: "5",
         avgPrice: "5",
       });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([]);
 
       await service.getCardStatistics("card", "EUR", "NM");
 
-      expect(qb.andWhere).toHaveBeenCalledWith("listing.currency = :currency", {
-        currency: "EUR",
-      });
-      expect(qb.andWhere).toHaveBeenCalledWith(
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
+        "listing.currency = :statsCurrency",
+        { statsCurrency: "EUR" },
+      );
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
         "listing.cardState = :cardState",
         { cardState: "NM" },
       );
@@ -485,6 +551,16 @@ describe("MarketplaceService", () => {
           }),
         }),
       );
+    });
+
+    it("returns no aggregate when the requested currency has no listing", async () => {
+      mockStatsQueries([{ currency: "EUR", count: "3" }], null);
+
+      const stats = await service.getCardStatistics("c1", "JPY");
+
+      expect(stats.totalListings).toBe(0);
+      expect(stats.currency).toBe("JPY");
+      expect(stats.availableCurrencies).toEqual(["EUR"]);
     });
   });
 
@@ -587,7 +663,6 @@ describe("MarketplaceService", () => {
       const result = await service.getBestSellers(10);
       expect(result).toHaveLength(1);
       expect(result[0].seller.firstName).toBe("Alice");
-      // La valeur du stock en vitrine n'est pas un chiffre d'affaires.
       expect(result[0].totalRevenue).toBe(0);
     });
   });

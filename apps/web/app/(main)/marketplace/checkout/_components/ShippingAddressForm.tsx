@@ -27,10 +27,6 @@ interface Props {
   error: string | null;
 }
 
-/**
- * Première étape du checkout : l'adresse est requise avant même d'ouvrir le
- * paiement, puisqu'elle est figée sur la commande côté serveur.
- */
 export default function ShippingAddressForm({
   onSubmit,
   isSubmitting,
@@ -129,8 +125,6 @@ export default function ShippingAddressForm({
             </PopoverContent>
           </Popover>
         ) : (
-          // L'autocomplétion Google peut être indisponible : la saisie libre
-          // reste possible plutôt que de bloquer la commande.
           <Input
             id="shipping-address"
             value={address}

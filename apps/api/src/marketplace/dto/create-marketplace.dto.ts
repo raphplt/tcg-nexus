@@ -49,7 +49,6 @@ export class CreateListingDto {
   @IsString()
   description?: string;
 
-  /** Langue d'impression de l'exemplaire vendu. */
   @IsOptional()
   @IsEnum(Languages)
   language?: Languages;

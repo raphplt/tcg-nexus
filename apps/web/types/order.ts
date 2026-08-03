@@ -10,7 +10,6 @@ export enum OrderStatus {
   REFUNDED = "Refunded",
 }
 
-/** Avancement de l'expédition, propre à chaque vendeur d'une commande. */
 export enum FulfillmentStatus {
   TO_SHIP = "to_ship",
   PREPARING = "preparing",
@@ -21,13 +20,11 @@ export enum FulfillmentStatus {
 
 export interface OrderItem {
   id: number;
-  /** Annonce d'origine, absente si elle a été supprimée depuis. */
   listing?: Listing | null;
   seller?: User | null;
   unitPrice: number;
   quantity: number;
 
-  // Instantané figé au moment de l'achat : toujours renseigné.
   productKind: "card" | "sealed";
   productName: string;
   productImage: string | null;
@@ -55,7 +52,6 @@ export interface Order {
   orderItems: OrderItem[];
 }
 
-/** Une ligne vendue, telle que la voit le vendeur dans son espace. */
 export interface SellerSale extends OrderItem {
   order: Order;
 }

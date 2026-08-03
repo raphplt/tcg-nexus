@@ -29,7 +29,7 @@ interface OrderListProps {
 }
 
 export default function OrderList({ orders }: OrderListProps) {
-  const { formatPrice } = useCurrencyStore();
+  const { formatExact } = useCurrencyStore();
 
   if (orders.length === 0) {
     return (
@@ -74,7 +74,7 @@ export default function OrderList({ orders }: OrderListProps) {
               </div>
               <div className="text-right">
                 <p className="font-bold text-lg">
-                  {formatPrice(order.totalAmount, order.currency)}
+                  {formatExact(order.totalAmount, order.currency)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {order.orderItems.length} article
@@ -157,7 +157,7 @@ export default function OrderList({ orders }: OrderListProps) {
                             </div>
                           </div>
                           <div className="text-right font-medium">
-                            {formatPrice(item.unitPrice, order.currency)}
+                            {formatExact(item.unitPrice, order.currency)}
                           </div>
                         </div>
                       );

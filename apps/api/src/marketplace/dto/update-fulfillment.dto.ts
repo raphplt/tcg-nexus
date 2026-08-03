@@ -13,7 +13,6 @@ export class UpdateFulfillmentDto {
   @IsEnum(FulfillmentStatus)
   fulfillmentStatus: FulfillmentStatus;
 
-  /** Obligatoire pour passer une ligne à "expédiée". */
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

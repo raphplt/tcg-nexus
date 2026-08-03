@@ -135,7 +135,6 @@ describe("OrderService", () => {
 
       const result = await service.startCheckout(dto, buyer);
 
-      // La commande existe et le stock est décrémenté avant tout appel à Stripe.
       expect(manager.decrement).toHaveBeenCalledWith(
         Listing,
         { id: 10 },
@@ -187,7 +186,6 @@ describe("OrderService", () => {
     it("prices the order from the database, not from the cart snapshot", async () => {
       const item = buildCartItem();
       userCartService.findCartByUserId.mockResolvedValue({ cartItems: [item] });
-      // Le vendeur a augmenté son prix depuis la mise au panier.
       manager.findOne.mockResolvedValue({
         id: 10,
         price: 25,
@@ -269,7 +267,6 @@ describe("OrderService", () => {
           quantityAvailable: 5,
           expiresAt: null,
         })
-        // relecture de la commande dans transitionOrder
         .mockResolvedValueOnce({
           id: 100,
           status: OrderStatus.PENDING,
@@ -592,7 +589,6 @@ describe("OrderService", () => {
       expect(item.fulfillmentStatus).toBe(FulfillmentStatus.SHIPPED);
       expect(item.carrier).toBe("Colissimo");
       expect(item.shippedAt).toBeInstanceOf(Date);
-      // La commande complète bascule en expédiée puisque toutes ses lignes le sont.
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         "order.shipped",
         expect.objectContaining({ orderId: 100 }),

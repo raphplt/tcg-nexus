@@ -61,8 +61,6 @@ describe("WebhookController", () => {
     } as any);
 
     expect(res).toEqual({ received: true });
-    // Le montant et la devise de l'événement sont transmis pour être
-    // revérifiés contre la commande.
     expect(orderService.handlePaymentSucceeded).toHaveBeenCalledWith("pi", {
       amount: 1000,
       currency: "eur",

@@ -18,7 +18,7 @@ interface SealedProductCardProps {
   product: SealedProduct;
   className?: string;
   price?: number;
-  quantity?: number;
+  quantityAvailable?: number;
   currency?: string;
   condition?: string;
   listingId?: string | number;
@@ -28,7 +28,7 @@ export function SealedProductCard({
   product,
   className,
   price,
-  quantity,
+  quantityAvailable,
   currency = "EUR",
   condition,
   listingId,
@@ -91,9 +91,10 @@ export function SealedProductCard({
                 {formattedCondition}
               </Badge>
             )}
-            {quantity !== undefined && (
+            {quantityAvailable !== undefined && (
               <Badge variant="secondary" className="text-xs">
-                {quantity} offre{quantity > 1 ? "s" : ""}
+                {quantityAvailable} exemplaire
+                {quantityAvailable > 1 ? "s" : ""} en stock
               </Badge>
             )}
           </div>
