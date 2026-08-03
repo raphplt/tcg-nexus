@@ -5,9 +5,9 @@ import { AdminOrdersTable } from "@/app/(main)/(protected)/admin/_components/Adm
 import { adminService } from "@/services/admin.service";
 import { UserRole } from "@/types/auth";
 import { Rarity } from "@/types/listing";
-import { type Order, OrderStatus } from "@/types/order";
-import { ProductKind } from "@/types/sealed-product";
+import { FulfillmentStatus, type Order, OrderStatus } from "@/types/order";
 import type { PaginatedResult } from "@/types/pagination";
+import { ProductKind } from "@/types/sealed-product";
 import { CardState, Currency } from "@/utils/enums";
 
 vi.mock("@/services/admin.service", () => ({
@@ -38,6 +38,7 @@ const sampleOrder: Order = {
   totalAmount: 120,
   status: OrderStatus.PAID,
   currency: "EUR",
+  shippingAddress: "12 rue des Cartes, 75001 Paris",
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   orderItems: [
@@ -45,6 +46,19 @@ const sampleOrder: Order = {
       id: 1,
       quantity: 2,
       unitPrice: 60,
+      // Instantané figé à l'achat, indépendant de l'annonce.
+      productKind: "card" as const,
+      productName: "Pikachu",
+      productImage: "/pikachu",
+      productCondition: CardState.NM,
+      productLanguage: "fr",
+      productSetName: "Base",
+      sellerName: "Bob Seller",
+      fulfillmentStatus: FulfillmentStatus.TO_SHIP,
+      carrier: null,
+      trackingNumber: null,
+      shippedAt: null,
+      deliveredAt: null,
       listing: {
         id: 99,
         seller: {

@@ -45,6 +45,8 @@ export interface MarketplaceSalePayload {
   buyerUserId: number;
   orderId: number;
   total: number;
+  /** Devise de la commande : le montant n'est pas toujours en euros. */
+  currency?: string;
 }
 export interface OrderShippedPayload {
   buyerUserId: number;
@@ -61,6 +63,18 @@ export class NotificationListener {
     private readonly emailService: EmailNotificationService,
     private readonly userService: UserService,
   ) {}
+
+  /** Formate un montant dans sa devise réelle plutôt qu'en euros par défaut. */
+  private formatAmount(amount: number, currency = "EUR"): string {
+    try {
+      return new Intl.NumberFormat("fr-FR", {
+        style: "currency",
+        currency,
+      }).format(amount);
+    } catch {
+      return `${amount} ${currency}`;
+    }
+  }
 
   private async safeCreate(
     userId: number,
@@ -231,11 +245,14 @@ export class NotificationListener {
 
   @OnEvent("marketplace.sale")
   async onMarketplaceSale(payload: MarketplaceSalePayload): Promise<void> {
-    const link = `/marketplace/orders/${payload.orderId}`;
+    // Le vendeur atterrit sur ses ventes à préparer, pas sur la commande de
+    // l'acheteur à laquelle il n'a pas accès.
+    const link = "/marketplace/sales";
+    const amount = this.formatAmount(payload.total, payload.currency);
     await this.safeCreate(
       payload.sellerUserId,
       "Vente réalisée",
-      `Vous avez vendu pour ${payload.total} €.`,
+      `Vous avez vendu pour ${amount}.`,
       "marketplace.sale",
       { link, orderId: payload.orderId, total: payload.total },
     );
@@ -249,7 +266,7 @@ export class NotificationListener {
 
   @OnEvent("order.shipped")
   async onOrderShipped(payload: OrderShippedPayload): Promise<void> {
-    const link = `/marketplace/orders/${payload.orderId}`;
+    const link = `/orders/${payload.orderId}`;
     await this.safeCreate(
       payload.buyerUserId,
       "Commande expédiée",

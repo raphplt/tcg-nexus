@@ -9,7 +9,7 @@ export const PROTECTED_ROUTES = [
   "/marketplace/create",
   "/marketplace/checkout",
   "/marketplace/listings",
-  "/marketplace/orders",
+  "/marketplace/sales",
   "/cart",
   "/orders",
   "/tournaments/create",

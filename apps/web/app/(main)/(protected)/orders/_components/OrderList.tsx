@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Package, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -13,9 +14,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useCurrencyStore } from "@/store/currency.store";
-import { Order, OrderStatus } from "@/types/order";
-import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import { Order } from "@/types/order";
+import {
+  getFulfillmentColor,
+  getFulfillmentLabel,
+  getOrderItemImage,
+  getOrderItemUrl,
+  getOrderStatusColor,
+  getOrderStatusLabel,
+} from "@/utils/order";
 
 interface OrderListProps {
   orders: Order[];
@@ -24,45 +31,17 @@ interface OrderListProps {
 export default function OrderList({ orders }: OrderListProps) {
   const { formatPrice } = useCurrencyStore();
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.PAID:
-        return "bg-green-500 hover:bg-green-600";
-      case OrderStatus.PENDING:
-        return "bg-yellow-500 hover:bg-yellow-600";
-      case OrderStatus.SHIPPED:
-        return "bg-blue-500 hover:bg-blue-600";
-      case OrderStatus.CANCELLED:
-        return "bg-red-500 hover:bg-red-600";
-      case OrderStatus.REFUNDED:
-        return "bg-gray-500 hover:bg-gray-600";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
-  const getStatusLabel = (status: OrderStatus) => {
-    switch (status) {
-      case OrderStatus.PAID:
-        return "Payée";
-      case OrderStatus.PENDING:
-        return "En attente";
-      case OrderStatus.SHIPPED:
-        return "Expédiée";
-      case OrderStatus.CANCELLED:
-        return "Annulée";
-      case OrderStatus.REFUNDED:
-        return "Remboursée";
-      default:
-        return status;
-    }
-  };
-
   if (orders.length === 0) {
     return (
       <Card>
-        <CardContent className="p-8 text-center text-muted-foreground">
-          Vous n'avez pas encore passé de commande.
+        <CardContent className="p-8 text-center space-y-3">
+          <Package className="mx-auto h-10 w-10 text-muted-foreground" />
+          <p className="text-muted-foreground">
+            Vous n&apos;avez pas encore passé de commande.
+          </p>
+          <Link href="/marketplace" className="text-primary hover:underline">
+            Découvrir la marketplace
+          </Link>
         </CardContent>
       </Card>
     );
@@ -76,9 +55,14 @@ export default function OrderList({ orders }: OrderListProps) {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">Commande #{order.id}</span>
-                  <Badge className={getStatusColor(order.status)}>
-                    {getStatusLabel(order.status)}
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="font-semibold hover:text-primary"
+                  >
+                    Commande #{order.id}
+                  </Link>
+                  <Badge className={getOrderStatusColor(order.status)}>
+                    {getOrderStatusLabel(order.status)}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -109,78 +93,75 @@ export default function OrderList({ orders }: OrderListProps) {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="divide-y">
-                    {order.orderItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-4 flex items-center gap-4"
-                      >
-                        {(() => {
-                          const isSealed =
-                            item.listing.productKind === "sealed" ||
-                            !!item.listing.sealedProduct;
-                          const productUrl = isSealed
-                            ? `/marketplace/sealed/${item.listing.sealedProduct?.id}`
-                            : `/marketplace/cards/${item.listing.pokemonCard?.id}`;
-                          const imageUrl = isSealed
-                            ? getSealedImageUrl(item.listing.sealedProduct) ||
-                              "/images/sealed-default.png"
-                            : getCardImage(item.listing.pokemonCard);
-                          const productName = isSealed
-                            ? getSealedName(item.listing.sealedProduct) ||
-                              "Produit scellé"
-                            : item.listing.pokemonCard?.name ||
-                              "Carte inconnue";
-                          const productSub = isSealed
-                            ? item.listing.sealedProduct?.pokemonSet?.name
-                            : item.listing.pokemonCard?.set?.name;
-                          const condition = isSealed
-                            ? item.listing.sealedCondition
-                            : item.listing.cardState;
+                    {order.orderItems.map((item) => {
+                      const productUrl = getOrderItemUrl(item);
 
-                          return (
-                            <>
-                              <div className="relative w-16 h-24 flex-shrink-0">
-                                <Image
-                                  src={imageUrl}
-                                  alt={productName}
-                                  fill
-                                  className="object-contain rounded"
-                                />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <Link
-                                  href={productUrl}
-                                  className="font-medium hover:text-primary truncate block"
-                                >
-                                  {productName}
-                                </Link>
-                                {productSub && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {productSub}
-                                  </p>
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-4 flex items-start gap-4"
+                        >
+                          <div className="relative w-16 h-24 shrink-0">
+                            <Image
+                              src={getOrderItemImage(item)}
+                              alt={item.productName}
+                              fill
+                              className="object-contain rounded"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            {productUrl ? (
+                              <Link
+                                href={productUrl}
+                                className="font-medium hover:text-primary truncate block"
+                              >
+                                {item.productName}
+                              </Link>
+                            ) : (
+                              <span className="font-medium truncate block">
+                                {item.productName}
+                              </span>
+                            )}
+                            {item.productSetName && (
+                              <p className="text-sm text-muted-foreground">
+                                {item.productSetName}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {item.productCondition && (
+                                <Badge variant="outline" className="text-xs">
+                                  {item.productCondition}
+                                </Badge>
+                              )}
+                              <span className="text-sm text-muted-foreground">
+                                x{item.quantity}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                Vendu par {item.sellerName}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              <Badge
+                                className={getFulfillmentColor(
+                                  item.fulfillmentStatus,
                                 )}
-                                <div className="flex items-center gap-2 mt-1">
-                                  {condition && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
-                                      {condition}
-                                    </Badge>
-                                  )}
-                                  <span className="text-sm text-muted-foreground">
-                                    x{item.quantity}
-                                  </span>
-                                </div>
-                              </div>
-                            </>
-                          );
-                        })()}
-                        <div className="text-right font-medium">
-                          {formatPrice(item.unitPrice, order.currency)}
+                              >
+                                {getFulfillmentLabel(item.fulfillmentStatus)}
+                              </Badge>
+                              {item.trackingNumber && (
+                                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Truck className="h-3 w-3" />
+                                  {item.carrier} · {item.trackingNumber}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right font-medium">
+                            {formatPrice(item.unitPrice, order.currency)}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>

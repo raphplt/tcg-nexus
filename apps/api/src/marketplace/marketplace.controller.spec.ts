@@ -5,7 +5,6 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { User } from "../user/entities/user.entity";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
@@ -16,12 +15,6 @@ describe("MarketplaceController", () => {
 
   const mockMarketplaceService = {
     create: jest.fn(),
-    createOrder: jest.fn(),
-    findOrdersByBuyerId: jest.fn(),
-    findOrderById: jest.fn(),
-    findAllOrders: jest.fn(),
-    findOrderByIdAsAdmin: jest.fn(),
-    updateOrderStatus: jest.fn(),
     findAll: jest.fn(),
     findBySellerId: jest.fn(),
     findOne: jest.fn(),
@@ -85,65 +78,6 @@ describe("MarketplaceController", () => {
       expect(result).toEqual({ id: 1, ...dto });
       expect(service.create).toHaveBeenCalledWith(dto, user);
     });
-  });
-
-  describe("createOrder", () => {
-    it("should create an order", async () => {
-      const dto: CreateOrderDto = {
-        paymentIntentId: "pi_123",
-        shippingAddress: "123 Main St",
-      };
-      const user = { id: 1 } as User;
-      mockMarketplaceService.createOrder.mockResolvedValue({ id: 1 });
-
-      const result = await controller.createOrder(dto, user);
-
-      expect(result).toEqual({ id: 1 });
-      expect(service.createOrder).toHaveBeenCalledWith(dto, user);
-    });
-  });
-
-  describe("getMyOrders", () => {
-    it("should return user orders", async () => {
-      const user = { id: 1 } as User;
-      mockMarketplaceService.findOrdersByBuyerId.mockResolvedValue([]);
-
-      const result = await controller.getMyOrders(user);
-
-      expect(result).toEqual([]);
-      expect(service.findOrdersByBuyerId).toHaveBeenCalledWith(user.id);
-    });
-  });
-
-  it("should get order by id", async () => {
-    mockMarketplaceService.findOrderById.mockResolvedValue({ id: 2 });
-    await expect(
-      controller.getOrderById("2", { id: 1 } as any),
-    ).resolves.toEqual({
-      id: 2,
-    });
-  });
-
-  it("should get all orders as admin", async () => {
-    mockMarketplaceService.findAllOrders.mockResolvedValue({ data: [] });
-    await expect(controller.getAllOrders({} as any)).resolves.toEqual({
-      data: [],
-    });
-  });
-
-  it("should get order as admin by id", async () => {
-    mockMarketplaceService.findOrderByIdAsAdmin.mockResolvedValue({ id: 5 });
-    await expect(controller.getOrderAsAdmin(5)).resolves.toEqual({ id: 5 });
-  });
-
-  it("should update order status", async () => {
-    mockMarketplaceService.updateOrderStatus.mockResolvedValue({
-      id: 7,
-      status: "PAID",
-    });
-    await expect(
-      controller.updateOrderStatus(7, { status: "PAID" } as any),
-    ).resolves.toEqual({ id: 7, status: "PAID" });
   });
 
   describe("getAllListings", () => {

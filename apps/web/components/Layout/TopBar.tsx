@@ -1,6 +1,13 @@
 "use client";
 
-import { LogOut, Settings, Shield, ShoppingCart, User } from "lucide-react";
+import {
+  LogOut,
+  Package,
+  Settings,
+  Shield,
+  ShoppingCart,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -119,7 +126,12 @@ export function TopBar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/orders" className="flex items-center">
-                  <ShoppingCart className="mr-2 h-4 w-4" /> Mes Commandes
+                  <ShoppingCart className="mr-2 h-4 w-4" /> Mes commandes
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/marketplace/sales" className="flex items-center">
+                  <Package className="mr-2 h-4 w-4" /> Mes ventes
                 </Link>
               </DropdownMenuItem>
               {user.role === "admin" && (

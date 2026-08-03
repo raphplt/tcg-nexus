@@ -1,6 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { MarketplaceService } from "./marketplace.service";
+import { OrderService } from "./order.service";
 import { StripeService } from "./stripe.service";
 import { WebhookController } from "./webhook.controller";
 
@@ -9,18 +9,18 @@ describe("WebhookController", () => {
   const stripeService = {
     constructEventFromPayload: jest.fn(),
   } as unknown as StripeService;
-  const marketplaceService = {
-    handleStripeEvent: jest.fn(),
+  const orderService = {
     handlePaymentSucceeded: jest.fn(),
     handlePaymentFailed: jest.fn(),
-  } as unknown as MarketplaceService;
+    handlePaymentRefunded: jest.fn(),
+  } as unknown as OrderService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WebhookController],
       providers: [
         { provide: StripeService, useValue: stripeService },
-        { provide: MarketplaceService, useValue: marketplaceService },
+        { provide: OrderService, useValue: orderService },
       ],
     }).compile();
 
@@ -46,7 +46,14 @@ describe("WebhookController", () => {
   it("should handle event and return received", async () => {
     (stripeService.constructEventFromPayload as jest.Mock).mockResolvedValue({
       type: "payment_intent.succeeded",
-      data: { object: { id: "pi", amount: 1000 } },
+      data: {
+        object: {
+          id: "pi",
+          amount: 1000,
+          currency: "eur",
+          metadata: { orderId: "5" },
+        },
+      },
     });
 
     const res = await controller.handleWebhook("sig", {
@@ -54,7 +61,13 @@ describe("WebhookController", () => {
     } as any);
 
     expect(res).toEqual({ received: true });
-    expect(stripeService.constructEventFromPayload).toHaveBeenCalled();
+    // Le montant et la devise de l'événement sont transmis pour être
+    // revérifiés contre la commande.
+    expect(orderService.handlePaymentSucceeded).toHaveBeenCalledWith("pi", {
+      amount: 1000,
+      currency: "eur",
+      metadata: { orderId: "5" },
+    });
   });
 
   it("should propagate error from stripe construction", async () => {
