@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, LogOut, ShoppingCart, Shield, Settings } from "lucide-react";
+import { User, LogOut, ShoppingCart, Shield, Settings, ClipboardList } from "lucide-react";
 import { getUserInitials, getUserDisplayName } from "@/utils/text";
 import { NotificationBell } from "./NotificationBell";
+import CartDropdown from "@/components/Marketplace/CartDropdown";
 
 export function TopBar() {
   const [mounted, setMounted] = useState(false);
@@ -61,6 +62,7 @@ export function TopBar() {
       <div className="flex items-center gap-2">
         <CurrencySelector />
         <ThemeToggle />
+        {isAuthenticated && <CartDropdown />}
         {isAuthenticated && <NotificationBell />}
 
         {isAuthLoading ? (
@@ -116,8 +118,13 @@ export function TopBar() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <Link href="/cart" className="flex items-center">
+                  <ShoppingCart className="mr-2 h-4 w-4" /> Mon panier
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/orders" className="flex items-center">
-                  <ShoppingCart className="mr-2 h-4 w-4" /> Mes Commandes
+                  <ClipboardList className="mr-2 h-4 w-4" /> Mes commandes
                 </Link>
               </DropdownMenuItem>
               {user.role === "admin" && (

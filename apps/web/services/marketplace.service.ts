@@ -100,7 +100,7 @@ export const marketplaceService = {
    * @param id ID du listing
    */
   async getListingById(id: string): Promise<Listing> {
-    return fetcher<Listing>(`/listings/${id}`);
+    return fetcher<Listing>(`/marketplace/listings/${id}`);
   },
 
   /**
@@ -111,7 +111,7 @@ export const marketplaceService = {
   ): Promise<PaginatedResult<Listing>> {
     return authedFetch<PaginatedResult<Listing>>(
       "GET",
-      "/listings/my-listings",
+      "/marketplace/listings/my-listings",
       {
         params: params as any,
       },
@@ -122,14 +122,16 @@ export const marketplaceService = {
    * Met à jour un listing
    */
   async updateListing(id: string, data: Partial<Listing>): Promise<Listing> {
-    return authedFetch<Listing>("PATCH", `/listings/${id}`, { data });
+    return authedFetch<Listing>("PATCH", `/marketplace/listings/${id}`, {
+      data,
+    });
   },
 
   /**
    * Supprime un listing
    */
   async deleteListing(id: string): Promise<void> {
-    return authedFetch<void>("DELETE", `/listings/${id}`);
+    return authedFetch<void>("DELETE", `/marketplace/listings/${id}`);
   },
 
   /**

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { paymentService } from "@/services/payment.service";
+import { useCartStore } from "@/store/cart.store";
 import { Loader2, Package, Calendar, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,24 +11,121 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import toast from "react-hot-toast";
+import {
+  clearCheckoutShippingAddress,
+  loadCheckoutShippingAddress,
+} from "../checkout/utils";
 import { getStatusColor, getStatusLabel } from "./utils";
 
+function OrdersPageFallback() {
+  return (
+    <div className="flex justify-center py-20">
+      <Loader2 className="h-8 w-8 animate-spin" />
+    </div>
+  );
+}
+
 export default function OrdersPage() {
+  return (
+    <Suspense fallback={<OrdersPageFallback />}>
+      <OrdersPageContent />
+    </Suspense>
+  );
+}
+
+function OrdersPageContent() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const clearCart = useCartStore((state) => state.clearCart);
+  const fetchCart = useCartStore((state) => state.fetchCart);
+  const finalizedRef = useRef(false);
+
+  const loadOrders = async () => {
+    const data = await paymentService.getMyOrders();
+    setOrders(data);
+  };
 
   useEffect(() => {
-    paymentService
-      .getMyOrders()
-      .then(setOrders)
-      .catch((err) => console.error(err))
-      .finally(() => setIsLoading(false));
-  }, []);
+    const paymentIntentId = searchParams.get("payment_intent");
+    const redirectStatus = searchParams.get("redirect_status");
 
-  if (isLoading) {
+    const finalizeRedirectPayment = async () => {
+      if (!paymentIntentId || finalizedRef.current) {
+        setIsLoading(true);
+        try {
+          await loadOrders();
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      finalizedRef.current = true;
+      setIsFinalizing(true);
+      setIsLoading(true);
+
+      try {
+        if (redirectStatus && redirectStatus !== "succeeded") {
+          toast.error("Le paiement n'a pas abouti. Votre panier est intact.");
+        } else {
+          const shippingAddress =
+            loadCheckoutShippingAddress() || "Adresse non renseignée";
+
+          try {
+            await paymentService.createOrder({
+              paymentIntentId,
+              shippingAddress,
+            });
+            clearCheckoutShippingAddress();
+            await clearCart();
+            toast.success("Commande passée avec succès !");
+          } catch (err: any) {
+            const message = err?.response?.data?.message as string | undefined;
+            // Idempotent: payment already converted (cart emptied) or refresh
+            if (
+              message?.toLowerCase().includes("cart is empty") ||
+              message?.toLowerCase().includes("panier")
+            ) {
+              clearCheckoutShippingAddress();
+              await fetchCart();
+            } else {
+              console.error(err);
+              toast.error(
+                message ||
+                  "Paiement reçu mais création de commande échouée. Contactez le support.",
+              );
+            }
+          }
+        }
+
+        await loadOrders();
+        router.replace("/marketplace/orders");
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsFinalizing(false);
+        setIsLoading(false);
+      }
+    };
+
+    void finalizeRedirectPayment();
+  }, [searchParams, clearCart, fetchCart, router]);
+
+  if (isLoading || isFinalizing) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex flex-col items-center justify-center gap-3 py-20">
         <Loader2 className="h-8 w-8 animate-spin" />
+        {isFinalizing && (
+          <p className="text-sm text-muted-foreground">
+            Finalisation de votre commande...
+          </p>
+        )}
       </div>
     );
   }
@@ -37,7 +136,7 @@ export default function OrdersPage() {
         <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
         <h1 className="text-2xl font-bold mb-4">Aucune commande trouvée</h1>
         <p className="text-muted-foreground mb-6">
-          Vous n'avez pas encore passé de commande.
+          Vous n&apos;avez pas encore passé de commande.
         </p>
         <Button asChild>
           <Link href="/marketplace">Découvrir le marketplace</Link>
@@ -51,7 +150,7 @@ export default function OrdersPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Mes Commandes</h1>
         <p className="text-muted-foreground">
-          Retrouvez l'historique de toutes vos commandes
+          Retrouvez l&apos;historique de toutes vos commandes
         </p>
       </div>
 

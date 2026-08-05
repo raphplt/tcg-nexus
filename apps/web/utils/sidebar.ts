@@ -1,4 +1,5 @@
 import {
+  ClipboardList,
   Dices,
   FolderHeart,
   HelpCircle,
@@ -53,6 +54,11 @@ const mainNavItems: NavItem[] = [
         label: "Créer une annonce",
         href: "/marketplace/create",
         icon: PenLine,
+      },
+      {
+        label: "Mon panier",
+        href: "/cart",
+        icon: ShoppingCart,
       },
     ],
   },
@@ -120,9 +126,15 @@ const userNavItems: NavItem[] = [
     requireAuth: true,
   },
   {
+    label: "Mon panier",
+    href: "/cart",
+    icon: ShoppingCart,
+    requireAuth: true,
+  },
+  {
     label: "Mes commandes",
     href: "/orders",
-    icon: ShoppingCart,
+    icon: ClipboardList,
     requireAuth: true,
   },
   {

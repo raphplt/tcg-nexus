@@ -175,7 +175,7 @@ const CardForm = () => {
     };
 
     try {
-      const result = await authedFetch("POST", "/listings", {
+      const result = await authedFetch("POST", "/marketplace/listings", {
         data: creationData,
       });
 

@@ -76,6 +76,25 @@ export class MarketplaceService {
   private readonly logger = new Logger(MarketplaceService.name);
 
   async createOrder(createOrderDto: CreateOrderDto, user: User) {
+    // Idempotency: payment already converted into an order
+    const existingPayment = await this.paymentTransactionRepository.findOne({
+      where: { transactionId: createOrderDto.paymentIntentId },
+      relations: [
+        "order",
+        "order.buyer",
+        "order.orderItems",
+        "order.orderItems.listing",
+      ],
+    });
+    if (existingPayment?.order) {
+      if (existingPayment.order.buyer?.id !== user.id) {
+        throw new ForbiddenException(
+          "This payment belongs to another user",
+        );
+      }
+      return existingPayment.order;
+    }
+
     // 1. Verify Stripe PaymentIntent before anything else
     const paymentIntent = await this.stripeService.retrievePaymentIntent(
       createOrderDto.paymentIntentId,

@@ -42,6 +42,10 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  clearCheckoutShippingAddress,
+  saveCheckoutShippingAddress,
+} from "../utils";
 
 export default function CheckoutForm() {
   const stripe = useStripe();
@@ -106,6 +110,10 @@ export default function CheckoutForm() {
 
     setIsLoading(true);
 
+    // Persist shipping address before a possible Stripe redirect
+    // (Amazon Pay, 3DS, etc.) so the return page can finalize the order.
+    saveCheckoutShippingAddress(shippingAddress);
+
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -123,6 +131,7 @@ export default function CheckoutForm() {
           paymentIntentId: paymentIntent.id,
           shippingAddress,
         });
+        clearCheckoutShippingAddress();
         await clearCart();
         toast.success("Commande passée avec succès !");
         router.push("/marketplace/orders");
@@ -134,6 +143,7 @@ export default function CheckoutForm() {
         setIsLoading(false);
       }
     } else {
+      // Redirect in progress (Amazon Pay / 3DS) — order finalized on return URL
       setMessage("Statut du paiement : " + paymentIntent?.status);
       setIsLoading(false);
     }

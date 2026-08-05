@@ -17,7 +17,7 @@ const Test = () => {
     try {
       const response = await authedFetch<{ data: Listing[] }>(
         "GET",
-        "/listings",
+        "/marketplace/listings",
       );
       setListings(response.data);
     } catch {
@@ -40,7 +40,7 @@ const Test = () => {
         cardState: "NM",
         expiresAt: "2024-12-31T23:59:59.000Z",
       };
-      await authedFetch("POST", "/listings", { data: testData });
+      await authedFetch("POST", "/marketplace/listings", { data: testData });
       await fetchListings();
     } catch {
       setError("Erreur lors de la création de la vente");
