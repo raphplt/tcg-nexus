@@ -9,6 +9,7 @@ export interface CheckoutSession {
   orderId: number;
   clientSecret: string;
   amount: number;
+  shippingAmount: number;
   currency: string;
 }
 

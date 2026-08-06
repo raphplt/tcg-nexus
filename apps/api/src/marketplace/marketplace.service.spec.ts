@@ -267,13 +267,11 @@ describe("MarketplaceService", () => {
 
     it("records a price history point when the price changes", async () => {
       const priced = { ...listing, price: 100, currency: Currency.EUR };
-      listingRepo.findOne
-        .mockResolvedValueOnce(priced)
-        .mockResolvedValueOnce({
-          ...priced,
-          price: 200,
-          pokemonCard: { id: "c1" },
-        });
+      listingRepo.findOne.mockResolvedValueOnce(priced).mockResolvedValueOnce({
+        ...priced,
+        price: 200,
+        pokemonCard: { id: "c1" },
+      });
       listingRepo.save.mockImplementation(async (l: Listing) => l);
       priceHistoryRepo.create.mockImplementation((data: any) => data);
 

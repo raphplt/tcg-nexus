@@ -35,7 +35,8 @@ const sampleOrder: Order = {
     lastName: "Lovelace",
     role: UserRole.USER,
   },
-  totalAmount: 120,
+  totalAmount: 122.5,
+  shippingAmount: 2.5,
   status: OrderStatus.PAID,
   currency: "EUR",
   shippingAddress: "12 rue des Cartes, 75001 Paris",
@@ -46,6 +47,8 @@ const sampleOrder: Order = {
       id: 1,
       quantity: 2,
       unitPrice: 60,
+      shippingCost: 2.5,
+      handlingTimeDays: 3,
       productKind: "card" as const,
       productName: "Pikachu",
       productImage: "/pikachu",
@@ -81,6 +84,8 @@ const sampleOrder: Order = {
         price: 60,
         currency: Currency.EUR,
         quantityAvailable: 5,
+        shippingCost: 0,
+        handlingTimeDays: 3,
         status: "active",
         cardState: CardState.NM,
         createdAt: new Date(),
@@ -130,7 +135,7 @@ describe("AdminOrdersTable", () => {
     );
     await screen.findByText(/Pikachu/);
     // Use getAllByText since the amount appears multiple times in the dialog
-    expect(screen.getAllByText(/120\.00\s*EUR/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/122\.50\s*EUR/i).length).toBeGreaterThan(0);
   });
 
   it("met à jour le statut d'une commande", async () => {

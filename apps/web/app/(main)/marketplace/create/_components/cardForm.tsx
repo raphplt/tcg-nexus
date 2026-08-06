@@ -12,6 +12,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -101,6 +102,8 @@ const CardForm = () => {
       cardId: undefined as unknown as string,
       price: 0,
       quantityAvailable: 1,
+      shippingCost: 0,
+      handlingTimeDays: 3,
       cardState: "NM",
       description: "",
       currency: Currency.EUR,
@@ -170,6 +173,8 @@ const CardForm = () => {
       currency: data.currency,
       description: data.description || "",
       quantityAvailable: data.quantityAvailable,
+      shippingCost: data.shippingCost,
+      handlingTimeDays: data.handlingTimeDays,
       cardState: data.cardState,
       expiresAt: isoDate,
     };
@@ -573,6 +578,60 @@ const CardForm = () => {
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(e.target.valueAsNumber || 1)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="shippingCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frais de port</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0"
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 0)
+                        }
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Facturés une seule fois par commande. 0 pour les offrir.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="handlingTimeDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Délai d'expédition (jours ouvrés)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="30"
+                        step="1"
+                        placeholder="3"
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 3)
                         }
                       />
                     </FormControl>

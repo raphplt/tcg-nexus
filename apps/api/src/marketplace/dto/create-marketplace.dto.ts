@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Max,
   Min,
 } from "class-validator";
 import { Languages } from "src/common/enums/languages";
@@ -44,6 +45,18 @@ export class CreateListingDto {
   @IsInt()
   @Min(1)
   quantityAvailable?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  shippingCost?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(30)
+  handlingTimeDays?: number;
 
   @IsOptional()
   @IsString()

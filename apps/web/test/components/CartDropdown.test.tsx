@@ -1,16 +1,16 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartDropdown from "@/components/Marketplace/CartDropdown";
 import { cartService } from "@/services/cart.service";
 import { useCartStore } from "@/store/cart.store";
-import { useCurrencyStore, Currency } from "@/store/currency.store";
-import type { Listing } from "@/types/listing";
-import type { UserCart } from "@/types/cart";
-import { CardState } from "@/utils/enums";
+import { Currency, useCurrencyStore } from "@/store/currency.store";
 import { UserRole } from "@/types/auth";
+import type { UserCart } from "@/types/cart";
+import type { Listing } from "@/types/listing";
 import { Rarity } from "@/types/listing";
 import { ProductKind } from "@/types/sealed-product";
+import { CardState } from "@/utils/enums";
 
 vi.mock("@/services/cart.service", () => ({
   cartService: {
@@ -49,6 +49,8 @@ const baseListing = (overrides?: Partial<Listing>): Listing => ({
   price: 10,
   currency: Currency.USD,
   quantityAvailable: 3,
+  shippingCost: 0,
+  handlingTimeDays: 3,
   status: "active",
   cardState: CardState.NM,
   createdAt: new Date(),

@@ -8,7 +8,6 @@ import { SealedEvent } from "./entities/sealed-event.entity";
 
 @Injectable()
 export class SealedEventService {
-
   constructor(
     @InjectRepository(SealedEvent)
     private readonly sealedEventRepository: Repository<SealedEvent>,

@@ -124,6 +124,11 @@ export function SealedListingsTable({
                     </TableCell>
                     <TableCell className="font-semibold">
                       {formatPrice(Number(listing.price), listing.currency)}
+                      <p className="text-xs font-normal text-muted-foreground">
+                        {listing.shippingCost > 0
+                          ? `+ ${formatPrice(Number(listing.shippingCost), listing.currency)} de port`
+                          : "Port offert"}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <Button

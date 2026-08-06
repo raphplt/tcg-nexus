@@ -5,6 +5,7 @@ import { authedFetch } from "@/utils/fetch";
 export interface SellerRevenue {
   totalSales: number;
   revenueByCurrency: Record<string, number>;
+  shippingByCurrency: Record<string, number>;
 }
 
 export interface UpdateFulfillmentDto {

@@ -38,6 +38,9 @@ import {
 import { StripeService } from "./stripe.service";
 
 const RESERVATION_TTL_MINUTES = 20;
+const DEFAULT_HANDLING_TIME_DAYS = 3;
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
 
 const ORDER_RELATIONS = [
   "buyer",
@@ -53,6 +56,7 @@ export interface CheckoutResult {
   orderId: number;
   clientSecret: string | null;
   amount: number;
+  shippingAmount: number;
   currency: Currency;
 }
 
@@ -87,7 +91,9 @@ export class OrderService {
 
     for (const item of cartItems) {
       if (item.listing.seller && item.listing.seller.id === user.id) {
-        throw new BadRequestException("Vous ne pouvez pas acheter votre propre annonce");
+        throw new BadRequestException(
+          "Vous ne pouvez pas acheter votre propre annonce",
+        );
       }
     }
 
@@ -133,6 +139,7 @@ export class OrderService {
         orderId: order.id,
         clientSecret: paymentIntent.client_secret,
         amount: Number(order.totalAmount),
+        shippingAmount: Number(order.shippingAmount),
         currency,
       };
     } catch (err) {
@@ -152,7 +159,8 @@ export class OrderService {
     user: User,
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
-      let totalAmount = 0;
+      let itemsAmount = 0;
+      const freshListings = new Map<number, Listing>();
 
       for (const item of cartItems) {
         const freshListing = await manager.findOne(Listing, {
@@ -181,8 +189,17 @@ export class OrderService {
           );
         }
 
-        totalAmount += Number(freshListing.price) * item.quantity;
+        freshListings.set(item.listing.id, freshListing);
+        itemsAmount += Number(freshListing.price) * item.quantity;
       }
+
+      const shippingByCartItem = this.allocateShipping(
+        cartItems,
+        freshListings,
+      );
+      const shippingAmount = round2(
+        [...shippingByCartItem.values()].reduce((sum, cost) => sum + cost, 0),
+      );
 
       const reservationExpiresAt = new Date(
         Date.now() + RESERVATION_TTL_MINUTES * 60 * 1000,
@@ -190,14 +207,21 @@ export class OrderService {
 
       const order = manager.create(Order, {
         buyer: user,
-        totalAmount,
+        totalAmount: round2(itemsAmount + shippingAmount),
+        shippingAmount,
         status: OrderStatus.PENDING,
         currency,
         shippingAddress,
         reservationExpiresAt,
         stockReleased: false,
         orderItems: cartItems.map((item) =>
-          manager.create(OrderItem, this.buildOrderItemSnapshot(item)),
+          manager.create(OrderItem, {
+            ...this.buildOrderItemSnapshot(item),
+            shippingCost: shippingByCartItem.get(item.id) ?? 0,
+            handlingTimeDays:
+              freshListings.get(item.listing.id)?.handlingTimeDays ??
+              DEFAULT_HANDLING_TIME_DAYS,
+          }),
         ),
       });
 
@@ -214,6 +238,43 @@ export class OrderService {
 
       return savedOrder;
     });
+  }
+
+  /**
+   * Un vendeur expédie un seul colis : on ne facture qu'une fois ses frais de
+   * port, au tarif le plus élevé qu'il déclare dans la commande. Le montant est
+   * porté par la ligne concernée, les autres lignes du même vendeur sont à 0.
+   */
+  private allocateShipping(
+    cartItems: CartItem[],
+    freshListings: Map<number, Listing>,
+  ): Map<number, number> {
+    const shippingByCartItem = new Map<number, number>(
+      cartItems.map((item) => [item.id, 0]),
+    );
+    const costliestBySeller = new Map<
+      string,
+      { itemId: number; cost: number }
+    >();
+
+    for (const item of cartItems) {
+      const listing = freshListings.get(item.listing.id);
+      const cost = Number(listing?.shippingCost ?? 0);
+      const sellerKey = item.listing.seller?.id
+        ? `seller:${item.listing.seller.id}`
+        : `listing:${item.listing.id}`;
+
+      const current = costliestBySeller.get(sellerKey);
+      if (!current || cost > current.cost) {
+        costliestBySeller.set(sellerKey, { itemId: item.id, cost });
+      }
+    }
+
+    for (const { itemId, cost } of costliestBySeller.values()) {
+      shippingByCartItem.set(itemId, round2(cost));
+    }
+
+    return shippingByCartItem;
   }
 
   private buildOrderItemSnapshot(item: CartItem): Partial<OrderItem> {
@@ -266,7 +327,9 @@ export class OrderService {
     });
 
     if (!payment?.transactionId) {
-      throw new BadRequestException("Aucun paiement n'est rattaché à cette commande");
+      throw new BadRequestException(
+        "Aucun paiement n'est rattaché à cette commande",
+      );
     }
 
     if (order.status !== OrderStatus.PENDING) {
@@ -348,7 +411,9 @@ export class OrderService {
       this.logger.warn(
         `Payment amount mismatch on order ${order.id}: Stripe=${intent.amount}, expected=${expectedAmountCents}`,
       );
-      throw new BadRequestException("Le montant payé ne correspond pas à la commande");
+      throw new BadRequestException(
+        "Le montant payé ne correspond pas à la commande",
+      );
     }
 
     if (
@@ -367,7 +432,9 @@ export class OrderService {
       this.logger.warn(
         `PaymentIntent ${paymentIntentId} references order ${metadataOrderId}, not ${order.id}`,
       );
-      throw new BadRequestException("Ce paiement ne correspond pas à cette commande");
+      throw new BadRequestException(
+        "Ce paiement ne correspond pas à cette commande",
+      );
     }
 
     const metadataUserId = intent.metadata?.userId;
@@ -379,7 +446,9 @@ export class OrderService {
       this.logger.warn(
         `PaymentIntent ${paymentIntentId} was created by user ${metadataUserId}, order belongs to ${order.buyer.id}`,
       );
-      throw new BadRequestException("Ce paiement ne correspond pas à cet acheteur");
+      throw new BadRequestException(
+        "Ce paiement ne correspond pas à cet acheteur",
+      );
     }
   }
 
@@ -624,7 +693,9 @@ export class OrderService {
     }
 
     if (order.buyer.id !== userId) {
-      throw new ForbiddenException("Vous ne pouvez consulter que vos propres commandes");
+      throw new ForbiddenException(
+        "Vous ne pouvez consulter que vos propres commandes",
+      );
     }
 
     return order;
@@ -720,11 +791,15 @@ export class OrderService {
     });
 
     if (!orderItem) {
-      throw new NotFoundException(`Ligne de commande ${orderItemId} introuvable`);
+      throw new NotFoundException(
+        `Ligne de commande ${orderItemId} introuvable`,
+      );
     }
 
     if (orderItem.seller?.id !== seller.id) {
-      throw new ForbiddenException("Vous ne pouvez traiter que vos propres ventes");
+      throw new ForbiddenException(
+        "Vous ne pouvez traiter que vos propres ventes",
+      );
     }
 
     if (orderItem.order.status === OrderStatus.PENDING) {
@@ -800,12 +875,17 @@ export class OrderService {
   async getSellerRevenue(sellerId: number): Promise<{
     totalSales: number;
     revenueByCurrency: Record<string, number>;
+    shippingByCurrency: Record<string, number>;
   }> {
     const rows = await this.orderItemRepository
       .createQueryBuilder("orderItem")
       .leftJoin("orderItem.order", "order")
       .select("order.currency", "currency")
-      .addSelect("SUM(orderItem.unitPrice * orderItem.quantity)", "revenue")
+      .addSelect(
+        "SUM(orderItem.unitPrice * orderItem.quantity + orderItem.shippingCost)",
+        "revenue",
+      )
+      .addSelect("SUM(orderItem.shippingCost)", "shipping")
       .addSelect("COUNT(DISTINCT order.id)", "sales")
       .where("orderItem.seller_id = :sellerId", { sellerId })
       .andWhere("order.status IN (:...statuses)", {
@@ -822,16 +902,17 @@ export class OrderService {
       .getRawMany();
 
     const revenueByCurrency: Record<string, number> = {};
+    const shippingByCurrency: Record<string, number> = {};
     let totalSales = 0;
 
     for (const row of rows) {
       const currency = String(row.currency ?? Currency.EUR);
-      revenueByCurrency[currency] =
-        Math.round((parseFloat(row.revenue) || 0) * 100) / 100;
+      revenueByCurrency[currency] = round2(parseFloat(row.revenue) || 0);
+      shippingByCurrency[currency] = round2(parseFloat(row.shipping) || 0);
       totalSales += parseInt(String(row.sales), 10) || 0;
     }
 
-    return { totalSales, revenueByCurrency };
+    return { totalSales, revenueByCurrency, shippingByCurrency };
   }
 
   async getSalesTotalsBySellerIds(

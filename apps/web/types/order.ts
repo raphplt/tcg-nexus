@@ -24,6 +24,8 @@ export interface OrderItem {
   seller?: User | null;
   unitPrice: number;
   quantity: number;
+  shippingCost: number;
+  handlingTimeDays: number;
 
   productKind: "card" | "sealed";
   productName: string;
@@ -44,6 +46,7 @@ export interface Order {
   id: number;
   buyer: User;
   totalAmount: number;
+  shippingAmount: number;
   status: OrderStatus;
   currency: string;
   shippingAddress: string;

@@ -219,9 +219,7 @@ export class MarketplaceService {
       this.logger.warn(
         `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
       );
-      throw new ForbiddenException(
-        "Vous ne pouvez pas modifier cette annonce",
-      );
+      throw new ForbiddenException("Vous ne pouvez pas modifier cette annonce");
     }
     const previousPrice = Number(listing.price);
     const previousCurrency = listing.currency;

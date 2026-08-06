@@ -50,6 +50,13 @@ export class OrderItem {
   @Column({ type: "int" })
   quantity: number;
 
+  // part des frais de port portée par cette ligne : un seul colis par vendeur
+  @Column("decimal", { precision: 10, scale: 2, default: 0 })
+  shippingCost: number;
+
+  @Column({ type: "int", default: 3 })
+  handlingTimeDays: number;
+
   @Column({ type: "enum", enum: ProductKind, default: ProductKind.CARD })
   productKind: ProductKind;
 

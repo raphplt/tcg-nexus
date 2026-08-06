@@ -59,6 +59,12 @@ export class Listing {
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
 
+  @Column("decimal", { precision: 10, scale: 2, default: 0 })
+  shippingCost: number;
+
+  @Column({ type: "int", default: 3 })
+  handlingTimeDays: number;
+
   @Column({
     type: "enum",
     enum: ListingStatus,

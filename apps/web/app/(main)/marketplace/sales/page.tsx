@@ -26,6 +26,7 @@ import {
   getOrderItemImage,
 } from "@/utils/order";
 import { formatPrice } from "@/utils/price";
+import { formatHandlingTime } from "@/utils/shipping";
 import ShipSaleDialog from "./_components/ShipSaleDialog";
 
 const FILTERS: Array<{ label: string; value: FulfillmentStatus | "all" }> = [
@@ -142,8 +143,9 @@ export default function SellerSalesPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Montant perçu par TCG Nexus sur vos ventes payées. Le reversement
-              vers votre compte bancaire n&apos;est pas implémenté.
+              Articles et frais de port compris. Montant perçu par TCG Nexus sur
+              vos ventes payées : le reversement vers votre compte bancaire
+              n&apos;est pas implémenté.
             </p>
           </CardContent>
         </Card>
@@ -227,7 +229,15 @@ export default function SellerSalesPage() {
                       sale.unitPrice * sale.quantity,
                       sale.order?.currency ?? "EUR",
                     )}
+                    {sale.shippingCost > 0 &&
+                      ` + ${formatPrice(sale.shippingCost, sale.order?.currency ?? "EUR")} de port`}
                   </p>
+                  {sale.fulfillmentStatus === FulfillmentStatus.TO_SHIP && (
+                    <p className="text-sm text-muted-foreground">
+                      {formatHandlingTime(sale.handlingTimeDays)} — annoncé à
+                      l&apos;acheteur
+                    </p>
+                  )}
 
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

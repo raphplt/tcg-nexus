@@ -48,6 +48,9 @@ export class Order {
   @Column("decimal", { precision: 12, scale: 2 })
   totalAmount: number;
 
+  @Column("decimal", { precision: 12, scale: 2, default: 0 })
+  shippingAmount: number;
+
   @Index()
   @Column({ type: "enum", enum: OrderStatus })
   status: OrderStatus;

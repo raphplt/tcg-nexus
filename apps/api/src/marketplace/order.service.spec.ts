@@ -198,6 +198,61 @@ describe("OrderService", () => {
       expect(manager.save.mock.calls[0][1].totalAmount).toBe(50);
     });
 
+    it("charges a seller's shipping once, at their highest declared rate", async () => {
+      const bobA = buildCartItem();
+      const bobB = { ...buildCartItem(), id: 2 };
+      bobB.listing = { ...bobB.listing, id: 11 };
+      const carol = { ...buildCartItem(), id: 3 };
+      carol.listing = { ...carol.listing, id: 12, seller: { id: 3 } };
+
+      userCartService.findCartByUserId.mockResolvedValue({
+        cartItems: [bobA, bobB, carol],
+      });
+      const shippingByListing: Record<number, number> = {
+        10: 3,
+        11: 4.5,
+        12: 2,
+      };
+      manager.findOne.mockImplementation(async (_cls: any, options: any) => ({
+        id: options.where.id,
+        price: 10,
+        quantityAvailable: 5,
+        expiresAt: null,
+        shippingCost: shippingByListing[options.where.id],
+        handlingTimeDays: 5,
+      }));
+
+      await service.startCheckout(dto, buyer);
+
+      const savedOrder = manager.save.mock.calls[0][1];
+      // 4.50 pour Bob (le plus cher de ses deux annonces) + 2 pour Carol
+      expect(savedOrder.shippingAmount).toBe(6.5);
+      expect(savedOrder.totalAmount).toBe(66.5);
+      expect(savedOrder.orderItems.map((i: any) => i.shippingCost)).toEqual([
+        0, 4.5, 2,
+      ]);
+      expect(savedOrder.orderItems[0].handlingTimeDays).toBe(5);
+    });
+
+    it("keeps free shipping free", async () => {
+      userCartService.findCartByUserId.mockResolvedValue({
+        cartItems: [buildCartItem()],
+      });
+      manager.findOne.mockResolvedValue({
+        id: 10,
+        price: 10,
+        quantityAvailable: 5,
+        expiresAt: null,
+        shippingCost: 0,
+      });
+
+      await service.startCheckout(dto, buyer);
+
+      const savedOrder = manager.save.mock.calls[0][1];
+      expect(savedOrder.shippingAmount).toBe(0);
+      expect(savedOrder.totalAmount).toBe(20);
+    });
+
     it("rejects an empty cart", async () => {
       userCartService.findCartByUserId.mockResolvedValue({ cartItems: [] });
       await expect(service.startCheckout(dto, buyer)).rejects.toThrow(

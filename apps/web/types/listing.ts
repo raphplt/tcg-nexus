@@ -15,6 +15,8 @@ export interface Listing {
   price: number;
   currency: Currency;
   quantityAvailable: number;
+  shippingCost: number;
+  handlingTimeDays: number;
   status: ListingStatus;
   cardState?: CardState | null;
   sealedCondition?: SealedCondition | null;

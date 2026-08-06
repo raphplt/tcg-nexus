@@ -50,6 +50,7 @@ import {
   getSealedName,
   SEALED_PLACEHOLDER,
 } from "@/utils/sealedImage";
+import { estimateShipping } from "@/utils/shipping";
 
 export default function CartPage() {
   const router = useRouter();
@@ -144,6 +145,11 @@ export default function CartPage() {
   }
 
   const cartItems = cart?.cartItems || [];
+  const cartCurrency = cartItems[0]?.listing.currency ?? currency;
+  const shipping = estimateShipping(cartItems);
+  const sellerCount = new Set(
+    cartItems.map((item) => item.listing.seller?.id ?? `l${item.listing.id}`),
+  ).size;
 
   return (
     <div className="bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
@@ -400,13 +406,24 @@ export default function CartPage() {
                       {itemsCount > 1 ? "s" : ""})
                     </span>
                     <span className="font-semibold">
-                      {formatPrice(total, currency)}
+                      {formatPrice(total, cartCurrency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">
+                      Frais de port ({sellerCount} vendeur
+                      {sellerCount > 1 ? "s" : ""})
+                    </span>
+                    <span className="font-semibold">
+                      {shipping === 0
+                        ? "Offerts"
+                        : formatPrice(shipping, cartCurrency)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t">
                     <span className="text-lg font-semibold">Total</span>
                     <span className="text-2xl font-bold text-primary">
-                      {formatPrice(total, currency)}
+                      {formatPrice(total + shipping, cartCurrency)}
                     </span>
                   </div>
                   <Button

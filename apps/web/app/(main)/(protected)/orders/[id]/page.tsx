@@ -22,6 +22,7 @@ import {
   getOrderStatusColor,
   getOrderStatusLabel,
 } from "@/utils/order";
+import { formatHandlingTime } from "@/utils/shipping";
 
 function groupBySeller(items: OrderItem[]): Map<string, OrderItem[]> {
   const groups = new Map<string, OrderItem[]>();
@@ -206,12 +207,20 @@ export default function OrderDetailsPage() {
                                 {item.carrier} · suivi {item.trackingNumber}
                               </span>
                             )}
-                            {item.shippedAt && (
+                            {item.shippedAt ? (
                               <span className="text-xs text-muted-foreground">
                                 Expédiée le{" "}
-                                {format(new Date(item.shippedAt), "d MMM yyyy", {
-                                  locale: fr,
-                                })}
+                                {format(
+                                  new Date(item.shippedAt),
+                                  "d MMM yyyy",
+                                  {
+                                    locale: fr,
+                                  },
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {formatHandlingTime(item.handlingTimeDays)}
                               </span>
                             )}
                           </div>
@@ -242,11 +251,20 @@ export default function OrderDetailsPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Sous-total</span>
-              <span>{formatExact(order.totalAmount, order.currency)}</span>
+              <span>
+                {formatExact(
+                  order.totalAmount - order.shippingAmount,
+                  order.currency,
+                )}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Livraison</span>
-              <span>Offerte</span>
+              <span className="text-muted-foreground">Frais de port</span>
+              <span>
+                {order.shippingAmount === 0
+                  ? "Offerts"
+                  : formatExact(order.shippingAmount, order.currency)}
+              </span>
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t">
               <span>Total</span>

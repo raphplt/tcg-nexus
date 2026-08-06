@@ -14,7 +14,12 @@ import { CheckoutSession, paymentService } from "@/services/payment.service";
 import { useCartStore, useCartTotal } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import {
+  getSealedImageUrl,
+  getSealedName,
+  SEALED_PLACEHOLDER,
+} from "@/utils/sealedImage";
+import { estimateShipping } from "@/utils/shipping";
 import CheckoutForm from "./_components/CheckoutForm";
 import ShippingAddressForm from "./_components/ShippingAddressForm";
 
@@ -98,7 +103,9 @@ export default function CheckoutPage() {
     );
   }
 
-  const displayAmount = session ? session.amount : total;
+  const estimatedShipping = estimateShipping(cartItems);
+  const displayShipping = session ? session.shippingAmount : estimatedShipping;
+  const displayAmount = session ? session.amount : total + estimatedShipping;
   const displayCurrency = session ? session.currency : currency;
 
   return (
@@ -173,11 +180,20 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span>{formatExact(displayAmount, displayCurrency)}</span>
+                  <span>
+                    {formatExact(
+                      displayAmount - displayShipping,
+                      displayCurrency,
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Livraison</span>
-                  <span>Offerte</span>
+                  <span className="text-muted-foreground">Frais de port</span>
+                  <span>
+                    {displayShipping === 0
+                      ? "Offerts"
+                      : formatExact(displayShipping, displayCurrency)}
+                  </span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-lg">
