@@ -5,13 +5,14 @@ import { fr } from "date-fns/locale";
 import { ArrowLeft, Loader2, MapPin, Store, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { paymentService } from "@/services/payment.service";
+import { useCartStore } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import {
@@ -34,22 +35,60 @@ function groupBySeller(items: OrderItem[]): Map<string, OrderItem[]> {
 }
 
 export default function OrderDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      }
+    >
+      <OrderDetailsContent />
+    </Suspense>
+  );
+}
+
+function OrderDetailsContent() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const { formatExact } = useCurrencyStore();
+  const { fetchCart } = useCartStore();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Stripe renvoie ici après un paiement par redirection (3DS, Amazon Pay) :
+  // sans cette confirmation la commande resterait Pending jusqu'au webhook.
+  const cameBackFromStripe = !!searchParams.get("payment_intent");
+  const redirectFailed =
+    !!searchParams.get("redirect_status") &&
+    searchParams.get("redirect_status") !== "succeeded";
+
   useEffect(() => {
-    paymentService
-      .getOrderById(Number(id))
-      .then(setOrder)
-      .catch(() =>
-        setError("Cette commande est introuvable ou ne vous appartient pas."),
-      )
-      .finally(() => setIsLoading(false));
-  }, [id]);
+    const load = async () => {
+      const orderId = Number(id);
+
+      if (cameBackFromStripe && !redirectFailed) {
+        try {
+          await paymentService.confirmOrder(orderId);
+          await fetchCart();
+        } catch {
+          // le webhook Stripe fera foi
+        }
+      }
+
+      try {
+        setOrder(await paymentService.getOrderById(orderId));
+      } catch {
+        setError("Cette commande est introuvable ou ne vous appartient pas.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    load();
+  }, [id, cameBackFromStripe, redirectFailed, fetchCart]);
 
   if (isLoading) {
     return (

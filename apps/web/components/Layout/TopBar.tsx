@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ClipboardList,
   LogOut,
   Package,
   Settings,
@@ -69,6 +70,7 @@ export function TopBar() {
       <div className="flex items-center gap-2">
         <CurrencySelector />
         <ThemeToggle />
+        {isAuthenticated && <CartDropdown />}
         {isAuthenticated && <NotificationBell />}
         {isAuthenticated && <CartDropdown />}
 
@@ -125,8 +127,13 @@ export function TopBar() {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <Link href="/cart" className="flex items-center">
+                  <ShoppingCart className="mr-2 h-4 w-4" /> Mon panier
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/orders" className="flex items-center">
-                  <ShoppingCart className="mr-2 h-4 w-4" /> Mes commandes
+                  <ClipboardList className="mr-2 h-4 w-4" /> Mes commandes
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
