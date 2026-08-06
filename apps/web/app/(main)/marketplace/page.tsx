@@ -4,9 +4,9 @@ import {
   ArrowRight,
   Flame,
   Package,
+  Sparkles,
   Star,
   TrendingUp,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
@@ -15,12 +15,20 @@ import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBread
 import { SealedProductsPreview } from "@/components/Marketplace/SealedProductsPreview";
 import SetCard from "@/components/Marketplace/SetCard";
 import { H1, H2 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
-import { Badge } from "@/components/ui/badge";
+import { sealedConditionLabels } from "@/types/sealed-product";
+import { getCardImage } from "@/utils/images";
 import { formatPrice } from "@/utils/price";
+import {
+  getSealedImageUrl,
+  getSealedName,
+  SEALED_PLACEHOLDER,
+} from "@/utils/sealedImage";
 
 export default function MarketplaceHomePage() {
   const {
@@ -273,13 +281,13 @@ export default function MarketplaceHomePage() {
                     const isCard = listing.productKind === "card";
                     const productName = isCard
                       ? listing.pokemonCard?.name
-                      : listing.sealedProduct?.nameEn;
+                      : getSealedName(listing.sealedProduct);
                     const productSetName = isCard
                       ? listing.pokemonCard?.set?.name
                       : listing.sealedProduct?.pokemonSet?.name;
                     const productImage = isCard
-                      ? listing.pokemonCard?.image
-                      : listing.sealedProduct?.image;
+                      ? getCardImage(listing.pokemonCard, "low")
+                      : getSealedImageUrl(listing.sealedProduct);
                     const productLink = isCard
                       ? `/marketplace/cards/${listing.pokemonCard?.id}`
                       : `/marketplace/sealed/${listing.sealedProduct?.id}`;
@@ -290,16 +298,14 @@ export default function MarketplaceHomePage() {
                         href={productLink}
                         className="flex gap-3 items-start group hover:bg-accent/50 p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
                       >
-                        <div className="relative w-12 h-16 bg-accent/40 rounded flex items-center justify-center overflow-hidden shrink-0 border border-border/40">
-                          {productImage ? (
-                            <img
-                              src={productImage}
-                              alt={productName || ""}
-                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
-                            />
-                          ) : (
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          )}
+                        <div className="relative w-12 h-16 bg-accent/40 rounded overflow-hidden shrink-0 border border-border/40">
+                          <SmartImage
+                            src={productImage || SEALED_PLACEHOLDER}
+                            fallbackSrc={SEALED_PLACEHOLDER}
+                            alt={productName || ""}
+                            noSkeleton
+                            className="object-contain group-hover:scale-105 transition-transform duration-200"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
@@ -325,7 +331,9 @@ export default function MarketplaceHomePage() {
                                 variant="outline"
                                 className="text-[10px] py-0 px-1 font-medium bg-background/50"
                               >
-                                {listing.sealedCondition}
+                                {sealedConditionLabels[
+                                  listing.sealedCondition
+                                ] ?? listing.sealedCondition}
                               </Badge>
                             )}
                           </div>

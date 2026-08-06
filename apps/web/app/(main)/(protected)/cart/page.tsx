@@ -13,7 +13,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { getCardStateColor } from "@/app/(main)/marketplace/utils";
+import {
+  getCardStateColor,
+  getConditionLabel,
+} from "@/app/(main)/marketplace/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -295,7 +298,9 @@ export default function CartPage() {
                                   </p>
                                 )}
                                 <p className="text-sm text-muted-foreground md:hidden">
-                                  {condition ? `${condition} · ` : ""}
+                                  {condition
+                                    ? `${getConditionLabel(condition)} · `
+                                    : ""}
                                   {formatPrice(
                                     item.listing.price,
                                     item.listing.currency,
@@ -308,7 +313,7 @@ export default function CartPage() {
                                 variant="outline"
                                 className={getCardStateColor(condition ?? "")}
                               >
-                                {condition ?? ""}
+                                {getConditionLabel(condition)}
                               </Badge>
                             </TableCell>
                             <TableCell>

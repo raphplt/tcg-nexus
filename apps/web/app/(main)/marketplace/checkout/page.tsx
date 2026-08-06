@@ -6,6 +6,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getConditionLabel } from "@/app/(main)/marketplace/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -139,7 +140,8 @@ export default function CheckoutPage() {
                         "Produit scellé"
                       : item.listing.pokemonCard?.name;
                     const productSub = isSealed
-                      ? item.listing.sealedCondition || "Neuf"
+                      ? getConditionLabel(item.listing.sealedCondition) ||
+                        "Neuf"
                       : item.listing.pokemonCard?.set?.name;
 
                     return (

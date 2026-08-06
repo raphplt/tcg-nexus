@@ -1,4 +1,12 @@
+import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { CardState } from "@/utils/enums";
+
+export const getConditionLabel = (
+  condition: string | null | undefined,
+): string => {
+  if (!condition) return "";
+  return sealedConditionLabels[condition as SealedCondition] ?? condition;
+};
 
 export const getCardStateColor = (cardState: string | null | undefined) => {
   switch (cardState) {
