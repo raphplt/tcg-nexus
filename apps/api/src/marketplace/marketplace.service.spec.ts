@@ -19,7 +19,10 @@ import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { Listing } from "./entities/listing.entity";
 import { Order, OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
-import { PaymentTransaction } from "./entities/payment-transaction.entity";
+import {
+  PaymentStatus,
+  PaymentTransaction,
+} from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { MarketplaceService } from "./marketplace.service";
@@ -31,6 +34,7 @@ describe("MarketplaceService", () => {
   let orderRepo: any;
   let userCartService: any;
   let priceHistoryRepo: any;
+  let eventEmitter: any;
 
   // Mock definitions needed in scope
   let mockListingRepo: any;
@@ -82,6 +86,7 @@ describe("MarketplaceService", () => {
       delete: jest.fn(),
       find: jest.fn(),
       count: jest.fn(),
+      increment: jest.fn().mockResolvedValue(undefined),
       createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
@@ -107,6 +112,7 @@ describe("MarketplaceService", () => {
     mockPaymentTransactionRepo = {
       create: jest.fn(),
       save: jest.fn(),
+      findOne: jest.fn().mockResolvedValue(null),
     };
 
     mockOrderItemRepo = {
@@ -206,6 +212,7 @@ describe("MarketplaceService", () => {
     orderRepo = module.get(getRepositoryToken(Order));
     userCartService = module.get(UserCartService);
     priceHistoryRepo = module.get(getRepositoryToken(PriceHistory));
+    eventEmitter = module.get(EventEmitter2);
 
     jest.clearAllMocks();
   });
@@ -834,6 +841,163 @@ describe("MarketplaceService", () => {
       const res = await service.updateOrderStatus(1, OrderStatus.PAID);
       expect(service.findOrderByIdAsAdmin).toHaveBeenCalledWith(1);
       expect(res.status).toBe(OrderStatus.PAID);
+    });
+
+    it("updateOrderStatus emits order.shipped when transitioning to SHIPPED", async () => {
+      const order = { id: 1, status: OrderStatus.PAID, buyer: { id: 7 } };
+      jest
+        .spyOn(service, "findOrderByIdAsAdmin")
+        .mockResolvedValue(order as any);
+      mockOrderRepo.save.mockResolvedValue({
+        ...order,
+        status: OrderStatus.SHIPPED,
+      });
+
+      await service.updateOrderStatus(1, OrderStatus.SHIPPED);
+
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        "order.shipped",
+        expect.objectContaining({ buyerUserId: 7, orderId: 1 }),
+      );
+    });
+
+    it("updateOrderStatus does not re-emit order.shipped when already shipped", async () => {
+      const order = { id: 1, status: OrderStatus.SHIPPED, buyer: { id: 7 } };
+      jest
+        .spyOn(service, "findOrderByIdAsAdmin")
+        .mockResolvedValue(order as any);
+      mockOrderRepo.save.mockResolvedValue({ ...order });
+
+      await service.updateOrderStatus(1, OrderStatus.SHIPPED);
+
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("payment webhooks", () => {
+    describe("handlePaymentSucceeded", () => {
+      it("does nothing when no matching payment transaction is found", async () => {
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
+
+        await service.handlePaymentSucceeded("pi_missing");
+
+        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
+        expect(mockOrderRepo.save).not.toHaveBeenCalled();
+      });
+
+      it("marks payment completed and order paid when pending", async () => {
+        const order = { id: 5, status: OrderStatus.PENDING };
+        const payment = {
+          id: 1,
+          status: PaymentStatus.INITIATED,
+          order,
+        };
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
+
+        await service.handlePaymentSucceeded("pi_123");
+
+        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: PaymentStatus.COMPLETED }),
+        );
+        expect(mockOrderRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: OrderStatus.PAID }),
+        );
+      });
+
+      it("does not resave payment or order when already completed/paid", async () => {
+        const order = { id: 5, status: OrderStatus.PAID };
+        const payment = {
+          id: 1,
+          status: PaymentStatus.COMPLETED,
+          order,
+        };
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
+
+        await service.handlePaymentSucceeded("pi_123");
+
+        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
+        expect(mockOrderRepo.save).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("handlePaymentFailed", () => {
+      it("does nothing when no matching payment transaction is found", async () => {
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
+
+        await service.handlePaymentFailed("pi_missing");
+
+        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
+        expect(mockOrderRepo.save).not.toHaveBeenCalled();
+      });
+
+      it("marks payment failed, cancels order and restores stock", async () => {
+        const order = {
+          id: 5,
+          status: OrderStatus.PENDING,
+          orderItems: [{ quantity: 2, listing: { id: 42 } }],
+        };
+        const payment = { id: 1, status: PaymentStatus.INITIATED, order };
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
+
+        await service.handlePaymentFailed("pi_123");
+
+        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: PaymentStatus.FAILED }),
+        );
+        expect(mockOrderRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: OrderStatus.CANCELLED }),
+        );
+        expect(mockListingRepo.increment).toHaveBeenCalledWith(
+          { id: 42 },
+          "quantityAvailable",
+          2,
+        );
+      });
+    });
+
+    describe("handlePaymentRefunded", () => {
+      it("does nothing when no matching payment transaction is found", async () => {
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
+
+        await service.handlePaymentRefunded("pi_missing");
+
+        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
+        expect(mockOrderRepo.save).not.toHaveBeenCalled();
+      });
+
+      it("marks payment refunded, refunds order and restores stock", async () => {
+        const order = {
+          id: 5,
+          status: OrderStatus.PAID,
+          orderItems: [{ quantity: 1, listing: { id: 42 } }],
+        };
+        const payment = { id: 1, status: PaymentStatus.COMPLETED, order };
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
+
+        await service.handlePaymentRefunded("pi_123");
+
+        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: PaymentStatus.REFUNDED }),
+        );
+        expect(mockOrderRepo.save).toHaveBeenCalledWith(
+          expect.objectContaining({ status: OrderStatus.REFUNDED }),
+        );
+        expect(mockListingRepo.increment).toHaveBeenCalledWith(
+          { id: 42 },
+          "quantityAvailable",
+          1,
+        );
+      });
+
+      it("does not restore stock when order has no items", async () => {
+        const order = { id: 5, status: OrderStatus.PAID };
+        const payment = { id: 1, status: PaymentStatus.COMPLETED, order };
+        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
+
+        await service.handlePaymentRefunded("pi_123");
+
+        expect(mockListingRepo.increment).not.toHaveBeenCalled();
+      });
     });
   });
 });

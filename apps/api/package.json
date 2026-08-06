@@ -136,6 +136,25 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageReporters": [
+      "text",
+      "text-summary",
+      "lcov"
+    ],
+    "coverageThreshold": {
+      "**/marketplace/marketplace.service.ts": {
+        "statements": 40,
+        "branches": 40,
+        "functions": 40,
+        "lines": 40
+      },
+      "**/tournament/tournament.service.ts": {
+        "statements": 40,
+        "branches": 40,
+        "functions": 40,
+        "lines": 40
+      }
+    },
     "testEnvironment": "node"
   }
 }

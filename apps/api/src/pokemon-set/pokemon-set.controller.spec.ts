@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { R2StorageService } from "../common/r2-storage.service";
 import { PokemonSet } from "./entities/pokemon-set.entity";
 import { PokemonSetController } from "./pokemon-set.controller";
 import { PokemonSetService } from "./pokemon-set.service";
@@ -15,6 +16,11 @@ describe("PokemonSetController", () => {
     remove: jest.fn(),
   };
 
+  const mockR2StorageService = {
+    uploadFile: jest.fn(),
+    deleteFile: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PokemonSetController],
@@ -26,6 +32,10 @@ describe("PokemonSetController", () => {
         {
           provide: getRepositoryToken(PokemonSet),
           useValue: {},
+        },
+        {
+          provide: R2StorageService,
+          useValue: mockR2StorageService,
         },
       ],
     }).compile();

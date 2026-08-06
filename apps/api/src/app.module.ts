@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -14,6 +14,7 @@ import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { BadgeModule } from "./badge/badge.module";
 import { CardModule } from "./card/card.module";
 import { CardStateModule } from "./card-state/card-state.module";
+import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { CollectionModule } from "./collection/collection.module";
 import { CollectionItemModule } from "./collection-item/collection-item.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
@@ -118,4 +119,8 @@ import { StorageModule } from "./storage/storage.module";
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+  }
+}
