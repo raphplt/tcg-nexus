@@ -7,31 +7,21 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
-import { DataSource, FindOptionsWhere, MoreThan, Repository } from "typeorm";
+import { FindOptionsWhere, MoreThan, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
-import { Currency } from "../common/enums/currency";
+import { Languages } from "../common/enums/languages";
+import { ListingStatus } from "../common/enums/listing-status";
 import { ProductKind } from "../common/enums/product-kind";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
-import { UserCartService } from "../user_cart/user_cart.service";
-import { CardPopularityService } from "./card-popularity.service";
-import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
-import { CardEventType } from "./entities/card-event.entity";
 import { Listing } from "./entities/listing.entity";
-import { Order, OrderStatus } from "./entities/order.entity";
+import { OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
-import {
-  PaymentMethod,
-  PaymentStatus,
-  PaymentTransaction,
-} from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
-import { StripeService } from "./stripe.service";
-import { EventEmitter2 } from "@nestjs/event-emitter";
+import { OrderService } from "./order.service";
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -44,6 +34,8 @@ export interface FindAllListingsParams {
   sortOrder?: "ASC" | "DESC";
   search?: string;
   cardState?: string;
+  language?: Languages;
+  status?: ListingStatus;
   currency?: string;
   priceMin?: number;
   priceMax?: number;
@@ -58,224 +50,14 @@ export class MarketplaceService {
     private readonly priceHistoryRepository: Repository<PriceHistory>,
     @InjectRepository(Card)
     private readonly pokemonCardRepository: Repository<Card>,
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
-    @InjectRepository(PaymentTransaction)
-    private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly stripeService: StripeService,
-    private readonly userCartService: UserCartService,
-    private readonly cardPopularityService: CardPopularityService,
-    private readonly dataSource: DataSource,
-    private readonly eventEmitter: EventEmitter2,
+    private readonly orderService: OrderService,
   ) {}
 
   private readonly logger = new Logger(MarketplaceService.name);
-
-  async createOrder(createOrderDto: CreateOrderDto, user: User) {
-    // Idempotency: payment already converted into an order
-    const existingPayment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: createOrderDto.paymentIntentId },
-      relations: [
-        "order",
-        "order.buyer",
-        "order.orderItems",
-        "order.orderItems.listing",
-      ],
-    });
-    if (existingPayment?.order) {
-      if (existingPayment.order.buyer?.id !== user.id) {
-        throw new ForbiddenException(
-          "This payment belongs to another user",
-        );
-      }
-      return existingPayment.order;
-    }
-
-    // 1. Verify Stripe PaymentIntent before anything else
-    const paymentIntent = await this.stripeService.retrievePaymentIntent(
-      createOrderDto.paymentIntentId,
-    );
-    if (paymentIntent.status !== "succeeded") {
-      throw new BadRequestException(
-        `Payment not completed. Status: ${paymentIntent.status}`,
-      );
-    }
-
-    // 2. Load cart with fresh listing data
-    const cart = await this.userCartService.findCartByUserId(user.id);
-    if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
-      throw new BadRequestException("Cart is empty");
-    }
-
-    // 3. Self-purchase check
-    for (const item of cart.cartItems) {
-      if (item.listing.seller && item.listing.seller.id === user.id) {
-        throw new BadRequestException("You cannot purchase your own listing");
-      }
-    }
-
-    // 4. Determine currency from cart items
-    const currencies = [
-      ...new Set(cart.cartItems.map((item) => item.listing.currency)),
-    ];
-    if (currencies.length > 1) {
-      throw new BadRequestException(
-        "All items in cart must use the same currency",
-      );
-    }
-    const orderCurrency = currencies[0];
-
-    // 5. Recalculate total server-side and verify against Stripe amount
-    let totalAmount = 0;
-    for (const item of cart.cartItems) {
-      totalAmount += Number(item.listing.price) * item.quantity;
-    }
-
-    const expectedAmountCents = Math.round(totalAmount * 100);
-    if (paymentIntent.amount !== expectedAmountCents) {
-      this.logger.warn(
-        `Payment amount mismatch: Stripe=${paymentIntent.amount}, Server=${expectedAmountCents}, user=${user.id}`,
-      );
-      throw new BadRequestException("Payment amount does not match cart total");
-    }
-
-    // 6. Execute order creation inside a transaction
-    return this.dataSource.transaction(async (manager) => {
-      // Re-verify stock with pessimistic lock to prevent race conditions
-      for (const item of cart.cartItems) {
-        const freshListing = await manager.findOne(Listing, {
-          where: { id: item.listing.id },
-          lock: { mode: "pessimistic_write" },
-        });
-
-        if (!freshListing) {
-          throw new BadRequestException(
-            `Listing ${item.listing.id} is no longer available`,
-          );
-        }
-
-        if (freshListing.quantityAvailable < item.quantity) {
-          throw new BadRequestException(
-            `Not enough quantity for "${item.listing.pokemonCard?.name || "item"}". Available: ${freshListing.quantityAvailable}, Requested: ${item.quantity}`,
-          );
-        }
-      }
-
-      // Create Order
-      const order = manager.create(Order, {
-        buyer: user,
-        totalAmount,
-        status: OrderStatus.PAID,
-        currency: orderCurrency,
-        orderItems: cart.cartItems.map((item) =>
-          manager.create(OrderItem, {
-            listing: item.listing,
-            quantity: item.quantity,
-            unitPrice: item.listing.price,
-          }),
-        ),
-      });
-      const savedOrder = await manager.save(Order, order);
-
-      // Emit marketplace.sale events grouped by seller
-      const sellerTotals = new Map<number, number>();
-      for (const item of cart.cartItems) {
-        const sellerId = item.listing.seller?.id;
-        if (!sellerId) continue;
-        const previous = sellerTotals.get(sellerId) ?? 0;
-        sellerTotals.set(
-          sellerId,
-          previous + Number(item.listing.price) * item.quantity,
-        );
-      }
-      for (const [sellerUserId, sellerTotal] of sellerTotals.entries()) {
-        this.eventEmitter.emit("marketplace.sale", {
-          sellerUserId,
-          buyerUserId: user.id,
-          orderId: savedOrder.id,
-          total: sellerTotal,
-        });
-      }
-
-      // Create Payment Transaction
-      const payment = manager.create(PaymentTransaction, {
-        order: savedOrder,
-        method: PaymentMethod.CREDIT_CARD,
-        status: PaymentStatus.COMPLETED,
-        transactionId: createOrderDto.paymentIntentId,
-        amount: totalAmount,
-      });
-      await manager.save(PaymentTransaction, payment);
-
-      // Decrement stock
-      for (const item of cart.cartItems) {
-        await manager.decrement(
-          Listing,
-          { id: item.listing.id },
-          "quantityAvailable",
-          item.quantity,
-        );
-      }
-
-      // Clear cart
-      await this.userCartService.clearCart(user.id);
-
-      // Emit sale events for popularity tracking (fire-and-forget, cards only)
-      for (const item of cart.cartItems) {
-        const cardId = item.listing.pokemonCard?.id;
-        if (!cardId) continue;
-        this.cardPopularityService
-          .recordEvent(
-            {
-              cardId,
-              eventType: CardEventType.SALE,
-              context: { listingId: item.listing.id },
-            },
-            user.id,
-          )
-          .catch((err) =>
-            this.logger.warn(`Failed to record sale event: ${err.message}`),
-          );
-      }
-
-      return savedOrder;
-    });
-  }
-
-  async findAllOrders(params: AdminOrderQueryDto) {
-    const { page = 1, limit = 20, status, buyerId, sellerId } = params;
-    const qb = this.orderRepository
-      .createQueryBuilder("order")
-      .leftJoinAndSelect("order.buyer", "buyer")
-      .leftJoinAndSelect("order.orderItems", "orderItem")
-      .leftJoinAndSelect("orderItem.listing", "listing")
-      .leftJoinAndSelect("listing.seller", "seller")
-      .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
-      .leftJoinAndSelect("listing.sealedProduct", "sealedProduct")
-      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
-      .leftJoinAndSelect("order.payments", "payment");
-
-    if (status) {
-      qb.andWhere("order.status = :status", { status });
-    }
-    if (buyerId) {
-      qb.andWhere("buyer.id = :buyerId", { buyerId });
-    }
-    if (sellerId) {
-      qb.andWhere("seller.id = :sellerId", { sellerId });
-    }
-
-    return PaginationHelper.paginateQueryBuilder(
-      qb,
-      { page, limit },
-      "order.createdAt",
-      "DESC",
-    );
-  }
 
   async create(createListingDto: CreateListingDto, user: User) {
     const productKind = createListingDto.productKind ?? ProductKind.CARD;
@@ -283,18 +65,18 @@ export class MarketplaceService {
     if (productKind === ProductKind.CARD) {
       if (!createListingDto.pokemonCardId) {
         throw new BadRequestException(
-          "pokemonCardId is required for card listings",
+          "pokemonCardId est obligatoire pour une annonce de carte",
         );
       }
       if (!createListingDto.cardState) {
         throw new BadRequestException(
-          "cardState is required for card listings",
+          "L'état de la carte est obligatoire pour une annonce de carte",
         );
       }
     } else {
       if (!createListingDto.sealedProductId) {
         throw new BadRequestException(
-          "sealedProductId is required for sealed listings",
+          "sealedProductId est obligatoire pour une annonce de produit scellé",
         );
       }
     }
@@ -338,6 +120,7 @@ export class MarketplaceService {
       sortOrder = "DESC",
       search,
       cardState,
+      language,
       currency,
       priceMin,
       priceMax,
@@ -353,7 +136,10 @@ export class MarketplaceService {
       .where("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
         now: new Date(),
       })
-      .andWhere("listing.quantityAvailable > 0");
+      .andWhere("listing.quantityAvailable > 0")
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      });
 
     if (sellerId) {
       qb.andWhere("seller.id = :sellerId", { sellerId });
@@ -369,6 +155,9 @@ export class MarketplaceService {
     }
     if (cardState) {
       qb.andWhere("listing.cardState = :cardState", { cardState });
+    }
+    if (language) {
+      qb.andWhere("listing.language = :language", { language });
     }
     if (currency) {
       qb.andWhere("listing.currency = :currency", { currency });
@@ -412,7 +201,7 @@ export class MarketplaceService {
         "sealedProduct.pokemonSet",
       ],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     return listing;
   }
 
@@ -425,17 +214,29 @@ export class MarketplaceService {
       where: { id },
       relations: ["seller"],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
       this.logger.warn(
         `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
       );
-      throw new ForbiddenException(
-        "You are not allowed to update this listing",
-      );
+      throw new ForbiddenException("Vous ne pouvez pas modifier cette annonce");
     }
+    const previousPrice = Number(listing.price);
+    const previousCurrency = listing.currency;
+
     Object.assign(listing, updateListingDto);
-    return this.listingRepository.save(listing);
+    const saved = await this.listingRepository.save(listing);
+
+    const priceChanged =
+      Number(saved.price) !== previousPrice ||
+      saved.currency !== previousCurrency;
+
+    if (priceChanged) {
+      const withRelations = await this.findOne(saved.id);
+      await this.recordPriceHistory(withRelations);
+    }
+
+    return saved;
   }
 
   async delete(id: number, user: User): Promise<void> {
@@ -443,13 +244,13 @@ export class MarketplaceService {
       where: { id },
       relations: ["seller"],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
       this.logger.warn(
         `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
       );
       throw new ForbiddenException(
-        "You are not allowed to delete this listing",
+        "Vous ne pouvez pas supprimer cette annonce",
       );
     }
     await this.listingRepository.softRemove(listing);
@@ -466,6 +267,8 @@ export class MarketplaceService {
       sortOrder = "DESC",
       search,
       cardState,
+      language,
+      status,
       currency,
       productKind,
     } = params;
@@ -491,6 +294,14 @@ export class MarketplaceService {
       qb.andWhere("listing.cardState = :cardState", { cardState });
     }
 
+    if (language) {
+      qb.andWhere("listing.language = :language", { language });
+    }
+
+    if (status) {
+      qb.andWhere("listing.status = :status", { status });
+    }
+
     if (currency) {
       qb.andWhere("listing.currency = :currency", { currency });
     }
@@ -512,9 +323,7 @@ export class MarketplaceService {
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
   }
 
-  /**
-   * Get card statistics including price history, min/max/avg prices
-   */
+  // agrégats dans une seule devise : sans param, celle qui a le plus d'annonces
   async getCardStatistics(
     cardId: string,
     currency?: string,
@@ -526,40 +335,65 @@ export class MarketplaceService {
       select: ["id", "pricing"],
     });
 
-    // Use SQL aggregates instead of loading all listings into memory
-    const statsQb = this.listingRepository
-      .createQueryBuilder("listing")
+    const emptyStats = (statsCurrency: string | null) => ({
+      cardId,
+      totalListings: 0,
+      minPrice: null,
+      maxPrice: null,
+      avgPrice: null,
+      currency: statsCurrency,
+      availableCurrencies: [] as string[],
+      priceHistory: [],
+      marketPricing: card?.pricing || null,
+    });
+
+    const baseQuery = () => {
+      const qb = this.listingRepository
+        .createQueryBuilder("listing")
+        .where("listing.pokemonCard.id = :cardId", { cardId })
+        .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
+          now: new Date(),
+        })
+        .andWhere("listing.quantityAvailable > 0")
+        .andWhere("listing.status = :activeStatus", {
+          activeStatus: ListingStatus.ACTIVE,
+        });
+      if (cardState) {
+        qb.andWhere("listing.cardState = :cardState", { cardState });
+      }
+      return qb;
+    };
+
+    const currencyRows = await baseQuery()
+      .select("listing.currency", "currency")
+      .addSelect("COUNT(listing.id)", "count")
+      .groupBy("listing.currency")
+      .orderBy("count", "DESC")
+      .getRawMany();
+
+    const availableCurrencies = currencyRows.map((row) => String(row.currency));
+
+    if (availableCurrencies.length === 0) {
+      return emptyStats(currency || null);
+    }
+
+    const statsCurrency = currency ?? availableCurrencies[0];
+    if (!availableCurrencies.includes(statsCurrency)) {
+      return { ...emptyStats(statsCurrency), availableCurrencies };
+    }
+
+    const stats = await baseQuery()
+      .andWhere("listing.currency = :statsCurrency", { statsCurrency })
       .select("COUNT(listing.id)", "totalListings")
       .addSelect("MIN(listing.price)", "minPrice")
       .addSelect("MAX(listing.price)", "maxPrice")
       .addSelect("AVG(listing.price)", "avgPrice")
-      .where("listing.pokemonCard.id = :cardId", { cardId })
-      .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
-        now: new Date(),
-      })
-      .andWhere("listing.quantityAvailable > 0");
+      .getRawOne();
 
-    if (currency) {
-      statsQb.andWhere("listing.currency = :currency", { currency });
-    }
-    if (cardState) {
-      statsQb.andWhere("listing.cardState = :cardState", { cardState });
-    }
-
-    const stats = await statsQb.getRawOne();
     const totalListings = parseInt(stats.totalListings, 10) || 0;
 
     if (totalListings === 0) {
-      return {
-        cardId,
-        totalListings: 0,
-        minPrice: null,
-        maxPrice: null,
-        avgPrice: null,
-        currency: currency || null,
-        priceHistory: [],
-        marketPricing: card?.pricing || null,
-      };
+      return { ...emptyStats(statsCurrency), availableCurrencies };
     }
 
     const minPrice = parseFloat(stats.minPrice);
@@ -572,11 +406,9 @@ export class MarketplaceService {
     const priceHistoryWhere: FindOptionsWhere<PriceHistory> = {
       pokemonCard: { id: cardId },
       recordedAt: MoreThan(ninetyDaysAgo),
+      currency: statsCurrency as any,
     };
 
-    if (currency) {
-      priceHistoryWhere.currency = currency as any;
-    }
     if (cardState) {
       priceHistoryWhere.cardState = cardState as any;
     }
@@ -593,7 +425,8 @@ export class MarketplaceService {
       minPrice,
       maxPrice,
       avgPrice: Math.round(avgPrice * 100) / 100,
-      currency: currency || null,
+      currency: statsCurrency,
+      availableCurrencies,
       priceHistory: priceHistory.map((h) => ({
         price: parseFloat(h.price.toString()),
         currency: h.currency,
@@ -716,12 +549,10 @@ export class MarketplaceService {
    * Falls back to sellers with most active listings if no sales found
    */
   async getBestSellers(limit: number = 10) {
-    const sellersFromOrders = await this.orderRepository
-      .createQueryBuilder("order")
-      .leftJoinAndSelect("order.buyer", "buyer")
-      .leftJoin("order.orderItems", "orderItem")
-      .leftJoin("orderItem.listing", "listing")
-      .leftJoin("listing.seller", "seller")
+    const sellersFromOrders = await this.orderItemRepository
+      .createQueryBuilder("orderItem")
+      .leftJoin("orderItem.order", "order")
+      .leftJoin("orderItem.seller", "seller")
       .select([
         "seller.id",
         "seller.firstName",
@@ -730,15 +561,25 @@ export class MarketplaceService {
         "seller.isPro",
       ])
       .addSelect("COUNT(DISTINCT order.id)", "total_sales")
-      .addSelect("SUM(order.totalAmount)", "total_revenue")
+      .addSelect(
+        "SUM(orderItem.unitPrice * orderItem.quantity)",
+        "total_revenue",
+      )
+      .addSelect("order.currency", "currency")
       .where("order.status IN (:...statuses)", {
-        statuses: ["Paid", "Shipped"],
+        statuses: [
+          OrderStatus.PAID,
+          OrderStatus.SHIPPED,
+          OrderStatus.DELIVERED,
+        ],
       })
+      .andWhere("seller.id IS NOT NULL")
       .groupBy("seller.id")
       .addGroupBy("seller.firstName")
       .addGroupBy("seller.lastName")
       .addGroupBy("seller.avatarUrl")
       .addGroupBy("seller.isPro")
+      .addGroupBy("order.currency")
       .orderBy("total_sales", "DESC")
       .limit(limit)
       .getRawMany();
@@ -754,6 +595,7 @@ export class MarketplaceService {
         },
         totalSales: parseInt(String(seller.total_sales), 10) || 0,
         totalRevenue: parseFloat(String(seller.total_revenue)) || 0,
+        currency: seller.currency ?? null,
       }));
     }
 
@@ -773,6 +615,9 @@ export class MarketplaceService {
         now: new Date(),
       })
       .andWhere("listing.quantityAvailable > 0")
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      })
       .groupBy("seller.id")
       .addGroupBy("seller.firstName")
       .addGroupBy("seller.lastName")
@@ -801,6 +646,7 @@ export class MarketplaceService {
         },
         totalSales: parseInt(String(seller.total_sales), 10) || 0,
         totalRevenue: parseFloat(String(seller.total_revenue)) || 0,
+        currency: seller.currency ?? null,
       })),
       ...sellersFromListingsFiltered.map((seller) => ({
         seller: {
@@ -811,7 +657,9 @@ export class MarketplaceService {
           isPro: seller.seller_isPro,
         },
         totalSales: 0,
-        totalRevenue: parseFloat(String(seller.total_listing_value)) || 0,
+        totalRevenue: 0,
+        activeListings: parseInt(String(seller.active_listings), 10) || 0,
+        currency: null,
       })),
     ].slice(0, limit);
 
@@ -828,7 +676,6 @@ export class MarketplaceService {
         "id",
         "firstName",
         "lastName",
-        "email",
         "avatarUrl",
         "isPro",
         "createdAt",
@@ -836,7 +683,7 @@ export class MarketplaceService {
     });
 
     if (!seller) {
-      throw new NotFoundException(`Seller with id ${sellerId} not found`);
+      throw new NotFoundException(`Vendeur ${sellerId} introuvable`);
     }
 
     const listings = await this.listingRepository.find({
@@ -852,32 +699,33 @@ export class MarketplaceService {
       order: { createdAt: "DESC" },
     });
 
-    const orders = await this.orderRepository
-      .createQueryBuilder("order")
-      .leftJoin("order.orderItems", "orderItem")
-      .leftJoin("orderItem.listing", "listing")
-      .where("listing.seller.id = :sellerId", { sellerId })
-      .andWhere("order.status IN (:...statuses)", {
-        statuses: ["Paid", "Shipped"],
-      })
-      .getMany();
+    const { totalSales, revenueByCurrency } =
+      await this.orderService.getSellerRevenue(sellerId);
 
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + parseFloat(order.totalAmount.toString()),
-      0,
-    );
-    const avgOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+    const currencies = Object.keys(revenueByCurrency);
+    const primaryCurrency = currencies.length === 1 ? currencies[0] : null;
+    const totalRevenue = primaryCurrency
+      ? revenueByCurrency[primaryCurrency]
+      : null;
 
     return {
       sellerId,
       seller,
       totalListings: listings.length,
       activeListings: listings.filter(
-        (l) => !l.expiresAt || new Date(l.expiresAt) > new Date(),
+        (l) =>
+          l.status === ListingStatus.ACTIVE &&
+          l.quantityAvailable > 0 &&
+          (!l.expiresAt || new Date(l.expiresAt) > new Date()),
       ).length,
-      totalSales: orders.length,
-      totalRevenue: Math.round(totalRevenue * 100) / 100,
-      avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+      totalSales,
+      totalRevenue,
+      currency: primaryCurrency,
+      revenueByCurrency,
+      avgOrderValue:
+        totalRevenue !== null && totalSales > 0
+          ? Math.round((totalRevenue / totalSales) * 100) / 100
+          : null,
       listings: listings.slice(0, 20), // Return recent listings
     };
   }
@@ -939,8 +787,8 @@ export class MarketplaceService {
       .leftJoin(
         Listing,
         "listing",
-        "listing.pokemonCard.id = card.id AND (listing.expiresAt IS NULL OR listing.expiresAt > :now) AND listing.quantityAvailable > 0",
-        { now: new Date() },
+        "listing.pokemonCard.id = card.id AND (listing.expiresAt IS NULL OR listing.expiresAt > :now) AND listing.quantityAvailable > 0 AND listing.status = :activeStatus",
+        { now: new Date(), activeStatus: ListingStatus.ACTIVE },
       )
       .select([
         "card.id",
@@ -995,14 +843,10 @@ export class MarketplaceService {
       });
     }
     if (typeof priceMin === "number") {
-      qb.having("MIN(listing.price) >= :priceMin OR COUNT(listing.id) = 0", {
-        priceMin,
-      });
+      qb.having("MIN(listing.price) >= :priceMin", { priceMin });
     }
     if (typeof priceMax === "number") {
-      qb.having("MIN(listing.price) <= :priceMax OR COUNT(listing.id) = 0", {
-        priceMax,
-      });
+      qb.andHaving("MIN(listing.price) <= :priceMax", { priceMax });
     }
 
     // Sorting with safeguards
@@ -1059,179 +903,5 @@ export class MarketplaceService {
       validated.page,
       validated.limit,
     );
-  }
-
-  async findOrdersByBuyerId(buyerId: number): Promise<Order[]> {
-    return this.orderRepository.find({
-      where: { buyer: { id: buyerId } },
-      relations: [
-        "orderItems",
-        "orderItems.listing",
-        "orderItems.listing.pokemonCard",
-        "orderItems.listing.sealedProduct",
-        "payments",
-      ],
-      order: { createdAt: "DESC" },
-    });
-  }
-
-  async findOrderById(id: number, userId: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { id },
-      relations: [
-        "buyer",
-        "orderItems",
-        "orderItems.listing",
-        "orderItems.listing.pokemonCard",
-        "orderItems.listing.sealedProduct",
-        "payments",
-      ],
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
-
-    if (order.buyer.id !== userId) {
-      throw new ForbiddenException("You can only access your own orders");
-    }
-
-    return order;
-  }
-
-  async findOrderByIdAsAdmin(id: number): Promise<Order> {
-    const order = await this.orderRepository.findOne({
-      where: { id },
-      relations: [
-        "buyer",
-        "orderItems",
-        "orderItems.listing",
-        "orderItems.listing.seller",
-        "orderItems.listing.pokemonCard",
-        "orderItems.listing.sealedProduct",
-        "payments",
-      ],
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
-
-    return order;
-  }
-
-  async updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
-    const order = await this.findOrderByIdAsAdmin(id);
-    const wasShipped = order.status === OrderStatus.SHIPPED;
-    order.status = status;
-    const saved = await this.orderRepository.save(order);
-    if (!wasShipped && status === OrderStatus.SHIPPED && order.buyer?.id) {
-      this.eventEmitter.emit("order.shipped", {
-        buyerUserId: order.buyer.id,
-        orderId: order.id,
-        trackingNumber: undefined,
-      });
-    }
-    return saved;
-  }
-
-  /**
-   * Handle Stripe payment_intent.succeeded webhook
-   */
-  async handlePaymentSucceeded(paymentIntentId: string): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order"],
-    });
-
-    if (!payment) {
-      this.logger.warn(
-        `No payment transaction found for PaymentIntent ${paymentIntentId}`,
-      );
-      return;
-    }
-
-    if (payment.status !== PaymentStatus.COMPLETED) {
-      payment.status = PaymentStatus.COMPLETED;
-      await this.paymentTransactionRepository.save(payment);
-    }
-
-    if (payment.order && payment.order.status === OrderStatus.PENDING) {
-      payment.order.status = OrderStatus.PAID;
-      await this.orderRepository.save(payment.order);
-    }
-  }
-
-  /**
-   * Handle Stripe payment_intent.payment_failed webhook
-   */
-  async handlePaymentFailed(paymentIntentId: string): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order", "order.orderItems", "order.orderItems.listing"],
-    });
-
-    if (!payment) {
-      this.logger.warn(
-        `No payment transaction found for failed PaymentIntent ${paymentIntentId}`,
-      );
-      return;
-    }
-
-    payment.status = PaymentStatus.FAILED;
-    await this.paymentTransactionRepository.save(payment);
-
-    if (payment.order) {
-      payment.order.status = OrderStatus.CANCELLED;
-      await this.orderRepository.save(payment.order);
-
-      // Restore stock for cancelled order
-      await this.restoreOrderStock(payment.order);
-    }
-  }
-
-  /**
-   * Handle Stripe charge.refunded webhook
-   */
-  async handlePaymentRefunded(paymentIntentId: string): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order", "order.orderItems", "order.orderItems.listing"],
-    });
-
-    if (!payment) {
-      this.logger.warn(
-        `No payment transaction found for refunded PaymentIntent ${paymentIntentId}`,
-      );
-      return;
-    }
-
-    payment.status = PaymentStatus.REFUNDED;
-    await this.paymentTransactionRepository.save(payment);
-
-    if (payment.order) {
-      payment.order.status = OrderStatus.REFUNDED;
-      await this.orderRepository.save(payment.order);
-
-      // Restore stock for refunded order
-      await this.restoreOrderStock(payment.order);
-    }
-  }
-
-  /**
-   * Restore listing stock when an order is cancelled or refunded
-   */
-  private async restoreOrderStock(order: Order): Promise<void> {
-    if (!order.orderItems) return;
-
-    for (const item of order.orderItems) {
-      if (item.listing) {
-        await this.listingRepository.increment(
-          { id: item.listing.id },
-          "quantityAvailable",
-          item.quantity,
-        );
-      }
-    }
   }
 }

@@ -13,8 +13,22 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { getCardStateColor } from "@/app/(main)/marketplace/utils";
+import {
+  getCardStateColor,
+  getConditionLabel,
+} from "@/app/(main)/marketplace/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +48,12 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import {
+  getSealedImageUrl,
+  getSealedName,
+  SEALED_PLACEHOLDER,
+} from "@/utils/sealedImage";
+import { estimateShipping } from "@/utils/shipping";
 
 export default function CartPage() {
   const router = useRouter();
@@ -45,6 +64,7 @@ export default function CartPage() {
   const itemsCount = useCartItemsCount();
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null);
   const [removingItemId, setRemovingItemId] = useState<number | null>(null);
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCart();
@@ -95,10 +115,6 @@ export default function CartPage() {
   };
 
   const handleClearCart = async () => {
-    if (!confirm("Êtes-vous sûr de vouloir vider votre panier ?")) {
-      return;
-    }
-
     try {
       await clearCart();
       toast.success("Panier vidé");
@@ -107,6 +123,8 @@ export default function CartPage() {
         (error as { response?: { data?: { message?: string } } })?.response
           ?.data?.message || "Erreur lors du vidage du panier";
       toast.error(errorMessage);
+    } finally {
+      setIsClearDialogOpen(false);
     }
   };
 
@@ -130,6 +148,11 @@ export default function CartPage() {
   }
 
   const cartItems = cart?.cartItems || [];
+  const cartCurrency = cartItems[0]?.listing.currency ?? currency;
+  const shipping = estimateShipping(cartItems);
+  const sellerCount = new Set(
+    cartItems.map((item) => item.listing.seller?.id ?? `l${item.listing.id}`),
+  ).size;
 
   return (
     <div className="bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
@@ -142,14 +165,36 @@ export default function CartPage() {
             </p>
           </div>
           {cartItems.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleClearCart}
-              className="text-destructive hover:text-destructive"
+            <AlertDialog
+              open={isClearDialogOpen}
+              onOpenChange={setIsClearDialogOpen}
             >
-              <X className="w-4 h-4 mr-2" />
-              Vider le panier
-            </Button>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="text-destructive hover:text-destructive"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Vider le panier
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Vider votre panier ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Les {itemsCount} article{itemsCount > 1 ? "s" : ""} en
+                    seront retirés. Les annonces restent disponibles sur la
+                    marketplace.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearCart}>
+                    Vider le panier
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
 
@@ -184,11 +229,15 @@ export default function CartPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[100px]">Image</TableHead>
+                        <TableHead className="hidden w-[100px] sm:table-cell">
+                          Image
+                        </TableHead>
                         <TableHead>Article</TableHead>
-                        <TableHead>État</TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          État
+                        </TableHead>
                         <TableHead className="text-center">Quantité</TableHead>
-                        <TableHead className="text-right">
+                        <TableHead className="hidden text-right md:table-cell">
                           Prix unitaire
                         </TableHead>
                         <TableHead className="text-right">Total</TableHead>
@@ -208,7 +257,7 @@ export default function CartPage() {
                           : `/marketplace/cards/${item.listing.pokemonCard?.id}`;
                         const imageUrl = isSealed
                           ? getSealedImageUrl(item.listing.sealedProduct) ||
-                            "/images/sealed-default.png"
+                            SEALED_PLACEHOLDER
                           : getCardImage(item.listing.pokemonCard);
                         const productName = isSealed
                           ? getSealedName(item.listing.sealedProduct) ||
@@ -223,7 +272,7 @@ export default function CartPage() {
 
                         return (
                           <TableRow key={item.id}>
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                               <Link href={productUrl} className="block">
                                 <div className="relative w-16 h-24">
                                   <Image
@@ -248,14 +297,23 @@ export default function CartPage() {
                                     {productSub}
                                   </p>
                                 )}
+                                <p className="text-sm text-muted-foreground md:hidden">
+                                  {condition
+                                    ? `${getConditionLabel(condition)} · `
+                                    : ""}
+                                  {formatPrice(
+                                    item.listing.price,
+                                    item.listing.currency,
+                                  )}
+                                </p>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden md:table-cell">
                               <Badge
                                 variant="outline"
                                 className={getCardStateColor(condition ?? "")}
                               >
-                                {condition ?? ""}
+                                {getConditionLabel(condition)}
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -308,7 +366,7 @@ export default function CartPage() {
                                 </p>
                               )}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="hidden text-right md:table-cell">
                               {formatPrice(
                                 item.listing.price,
                                 item.listing.currency,
@@ -353,13 +411,24 @@ export default function CartPage() {
                       {itemsCount > 1 ? "s" : ""})
                     </span>
                     <span className="font-semibold">
-                      {formatPrice(total, currency)}
+                      {formatPrice(total, cartCurrency)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">
+                      Frais de port ({sellerCount} vendeur
+                      {sellerCount > 1 ? "s" : ""})
+                    </span>
+                    <span className="font-semibold">
+                      {shipping === 0
+                        ? "Offerts"
+                        : formatPrice(shipping, cartCurrency)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t">
                     <span className="text-lg font-semibold">Total</span>
                     <span className="text-2xl font-bold text-primary">
-                      {formatPrice(total, currency)}
+                      {formatPrice(total + shipping, cartCurrency)}
                     </span>
                   </div>
                   <Button

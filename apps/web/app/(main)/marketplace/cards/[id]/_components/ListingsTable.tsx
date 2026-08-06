@@ -1,3 +1,5 @@
+import { Loader2, ShoppingCart } from "lucide-react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCurrencyStore } from "@/store/currency.store";
-import { getCardStateColor } from "../../../utils";
 import { cardStates } from "@/utils/variables";
-import { Loader2, ShoppingCart } from "lucide-react";
-import Link from "next/link";
+import { getCardStateColor } from "../../../utils";
 
 interface ListingsTableProps {
   listings: any[];
@@ -129,6 +129,11 @@ export function ListingsTable({
                   </TableCell>
                   <TableCell className="font-semibold">
                     {formatPrice(listing.price, listing.currency)}
+                    <p className="text-xs font-normal text-muted-foreground">
+                      {listing.shippingCost > 0
+                        ? `+ ${formatPrice(listing.shippingCost, listing.currency)} de port`
+                        : "Port offert"}
+                    </p>
                   </TableCell>
                   <TableCell>{listing.quantityAvailable}</TableCell>
                   <TableCell>

@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Currency } from "../../common/enums/currency";
 import { Order } from "./order.entity";
 
 export enum PaymentMethod {
@@ -45,11 +47,15 @@ export class PaymentTransaction {
   @Column({ type: "enum", enum: PaymentStatus })
   status: PaymentStatus;
 
-  @Column({ nullable: true })
+  @Index({ unique: true })
+  @Column({ type: "varchar", length: 255, nullable: true })
   transactionId: string;
 
   @Column("decimal", { precision: 12, scale: 2 })
   amount: number;
+
+  @Column({ type: "enum", enum: Currency, nullable: true })
+  currency: Currency | null;
 
   @CreateDateColumn()
   createdAt: Date;

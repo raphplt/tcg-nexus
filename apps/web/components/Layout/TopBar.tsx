@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  ClipboardList,
+  LogOut,
+  Package,
+  Settings,
+  Shield,
+  ShoppingCart,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import SearchBar from "./SearchBar";
+import { useEffect, useState } from "react";
+import CartDropdown from "@/components/Marketplace/CartDropdown";
 import { CurrencySelector } from "@/components/Shared/CurrencySelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,12 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, LogOut, ShoppingCart, Shield, Settings, ClipboardList } from "lucide-react";
-import { getUserInitials, getUserDisplayName } from "@/utils/text";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserDisplayName, getUserInitials } from "@/utils/text";
 import { NotificationBell } from "./NotificationBell";
-import CartDropdown from "@/components/Marketplace/CartDropdown";
+import SearchBar from "./SearchBar";
 
 export function TopBar() {
   const [mounted, setMounted] = useState(false);
@@ -125,6 +133,11 @@ export function TopBar() {
               <DropdownMenuItem asChild>
                 <Link href="/orders" className="flex items-center">
                   <ClipboardList className="mr-2 h-4 w-4" /> Mes commandes
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/marketplace/sales" className="flex items-center">
+                  <Package className="mr-2 h-4 w-4" /> Mes ventes
                 </Link>
               </DropdownMenuItem>
               {user.role === "admin" && (

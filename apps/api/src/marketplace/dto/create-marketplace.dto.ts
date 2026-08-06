@@ -5,8 +5,11 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Max,
   Min,
 } from "class-validator";
+import { Languages } from "src/common/enums/languages";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { CardState } from "src/common/enums/pokemonCardsType";
 import { ProductKind } from "src/common/enums/product-kind";
 import { SealedCondition } from "src/common/enums/sealed-condition";
@@ -44,8 +47,28 @@ export class CreateListingDto {
   quantityAvailable?: number;
 
   @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  shippingCost?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(30)
+  handlingTimeDays?: number;
+
+  @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsEnum(Languages)
+  language?: Languages;
+
+  @IsOptional()
+  @IsEnum(ListingStatus)
+  status?: ListingStatus;
 
   /** Requis si productKind = card */
   @IsOptional()

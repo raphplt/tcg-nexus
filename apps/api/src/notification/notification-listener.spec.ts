@@ -1,8 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { EmailNotificationService } from "./email-notification.service";
-import { NotificationListener } from "./notification-listener";
-import { NotificationService } from "./notification.service";
 import { UserService } from "../user/user.service";
+import { EmailNotificationService } from "./email-notification.service";
+import { NotificationService } from "./notification.service";
+import { NotificationListener } from "./notification-listener";
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("hashed"),
@@ -144,15 +144,28 @@ describe("NotificationListener", () => {
       buyerUserId: 1,
       orderId: 42,
       total: 12.5,
+      currency: "EUR",
     });
     expect(notificationService.createNotification).toHaveBeenCalledWith(
       9,
       "Vente réalisée",
       expect.any(String),
       "marketplace.sale",
-      expect.objectContaining({ link: "/marketplace/orders/42", orderId: 42 }),
+      expect.objectContaining({ link: "/marketplace/sales", orderId: 42 }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
+  });
+
+  it("formats the sale amount in the order currency", async () => {
+    await listener.onMarketplaceSale({
+      sellerUserId: 9,
+      buyerUserId: 1,
+      orderId: 42,
+      total: 30,
+      currency: "USD",
+    });
+    const body = notificationService.createNotification.mock.calls[0][2];
+    expect(body).toContain("$");
   });
 
   it("handles order.shipped: notif + email for buyer", async () => {
@@ -167,7 +180,7 @@ describe("NotificationListener", () => {
       expect.any(String),
       "order.shipped",
       expect.objectContaining({
-        link: "/marketplace/orders/42",
+        link: "/orders/42",
         trackingNumber: "TRK123",
       }),
     );

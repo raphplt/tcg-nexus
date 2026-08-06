@@ -16,6 +16,7 @@ import { CardGame } from "src/common/enums/cardGame";
 import { Currency } from "src/common/enums/currency";
 import { DeckCardRole } from "src/common/enums/deckCardRole";
 import { EnergyType } from "src/common/enums/energyType";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { CardState, PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { TrainerType } from "src/common/enums/trainerType";
 import { UserRole } from "src/common/enums/user";
@@ -1360,6 +1361,16 @@ export class SeedService {
         // Quantité disponible entre 1 et 5
         const quantityAvailable = Math.floor(Math.random() * 5) + 1;
 
+        const shippingCost =
+          Math.random() < 0.3
+            ? 0
+            : Math.round((Math.random() * 4.5 + 1.5) * 100) / 100;
+
+        const handlingTimeDays = Math.floor(Math.random() * 5) + 1;
+
+        const status =
+          Math.random() < 0.1 ? ListingStatus.INACTIVE : ListingStatus.ACTIVE;
+
         // Créer le listing
         const listing = this.listingRepository.create({
           seller: randomSeller,
@@ -1367,6 +1378,9 @@ export class SeedService {
           price: price,
           currency: currency,
           quantityAvailable: quantityAvailable,
+          shippingCost: shippingCost,
+          handlingTimeDays: handlingTimeDays,
+          status: status,
           cardState: cardState,
           expiresAt: undefined,
         });

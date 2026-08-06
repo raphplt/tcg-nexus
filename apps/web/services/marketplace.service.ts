@@ -1,13 +1,15 @@
-import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import type { CardPricing } from "@/types/cardPokemon";
-import { Listing } from "@/types/listing";
-import { fetcher, authedFetch } from "@/utils/fetch";
-import { PokemonCardType } from "@/types/cardPokemon";
 import { User } from "@/types/auth";
+import type { CardPricing } from "@/types/cardPokemon";
+import { PokemonCardType } from "@/types/cardPokemon";
+import { Listing } from "@/types/listing";
+import type { PaginatedResult, PaginationParams } from "@/types/pagination";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface MarketplaceQueryParams extends PaginationParams {
   search?: string;
   cardState?: string;
+  language?: string;
+  status?: "active" | "inactive";
   currency?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
@@ -69,7 +71,6 @@ export interface SellerStatistics {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
     avatarUrl: string;
     isPro: boolean;
     createdAt: string;
@@ -101,6 +102,10 @@ export const marketplaceService = {
    */
   async getListingById(id: string): Promise<Listing> {
     return fetcher<Listing>(`/marketplace/listings/${id}`);
+  },
+
+  async createListing(data: Record<string, unknown>): Promise<Listing> {
+    return authedFetch<Listing>("POST", "/marketplace/listings", { data });
   },
 
   /**

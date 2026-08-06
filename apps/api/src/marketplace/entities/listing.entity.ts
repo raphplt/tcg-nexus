@@ -1,5 +1,6 @@
 import { Card } from "src/card/entities/card.entity";
 import { Languages } from "src/common/enums/languages";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { CardState } from "src/common/enums/pokemonCardsType";
 import { ProductKind } from "src/common/enums/product-kind";
 import { SealedCondition } from "src/common/enums/sealed-condition";
@@ -57,6 +58,19 @@ export class Listing {
 
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
+
+  @Column("decimal", { precision: 10, scale: 2, default: 0 })
+  shippingCost: number;
+
+  @Column({ type: "int", default: 3 })
+  handlingTimeDays: number;
+
+  @Column({
+    type: "enum",
+    enum: ListingStatus,
+    default: ListingStatus.ACTIVE,
+  })
+  status: ListingStatus;
 
   /** État de la carte. Nullable pour les listings de produits scellés. */
   @Column({ type: "enum", enum: CardState, nullable: true })

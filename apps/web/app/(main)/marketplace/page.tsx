@@ -4,9 +4,9 @@ import {
   ArrowRight,
   Flame,
   Package,
+  Sparkles,
   Star,
   TrendingUp,
-  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
@@ -15,12 +15,20 @@ import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBread
 import { SealedProductsPreview } from "@/components/Marketplace/SealedProductsPreview";
 import SetCard from "@/components/Marketplace/SetCard";
 import { H1, H2 } from "@/components/Shared/Titles";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
-import { Badge } from "@/components/ui/badge";
+import { sealedConditionLabels } from "@/types/sealed-product";
+import { getCardImage } from "@/utils/images";
 import { formatPrice } from "@/utils/price";
+import {
+  getSealedImageUrl,
+  getSealedName,
+  SEALED_PLACEHOLDER,
+} from "@/utils/sealedImage";
 
 export default function MarketplaceHomePage() {
   const {
@@ -89,14 +97,14 @@ export default function MarketplaceHomePage() {
                 </Button>
               </div>
               {loadingTrending ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[...Array(3)].map((_, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[...Array(8)].map((_, i) => (
                     <Skeleton key={i} className="h-80" />
                   ))}
                 </div>
               ) : trendingCards && trendingCards.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {trendingCards.slice(0, 3).map((item) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {trendingCards.slice(0, 8).map((item) => (
                     <CardCard
                       key={item.card.id}
                       card={item.card}
@@ -131,14 +139,14 @@ export default function MarketplaceHomePage() {
                 </Button>
               </div>
               {loadingPopular ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[...Array(3)].map((_, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {[...Array(8)].map((_, i) => (
                     <Skeleton key={i} className="h-80" />
                   ))}
                 </div>
               ) : popularCards && popularCards.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {popularCards.slice(0, 3).map((item) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {popularCards.slice(0, 8).map((item) => (
                     <CardCard
                       key={item.card.id}
                       card={item.card}
@@ -158,48 +166,11 @@ export default function MarketplaceHomePage() {
               )}
             </section>
 
-            {/* Bannière Produits scellés */}
-            <div className="relative overflow-hidden rounded-2xl border bg-linear-to-r from-primary/20 via-secondary/20 to-primary/10 p-8 md:p-10">
-              <div className="absolute -right-8 -top-8 opacity-10">
-                <Package className="w-48 h-48" />
-              </div>
-              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-2 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wide">
-                    <Package className="w-4 h-4" />
-                    Marketplace scellé
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-bold">
-                    Boosters, displays, ETB & decks préconstruits
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Toute la collection de produits scellés, avec prix du marché
-                    et historique. Achetez auprès de vendeurs de confiance ou
-                    mettez vos propres produits en vente.
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button asChild size="lg">
-                    <Link href="/marketplace/sealed">
-                      Parcourir les scellés
-                      <ArrowRight className="ml-2 w-4 h-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link href="/marketplace/sealed?sortBy=popularity">
-                      <Star className="mr-2 w-4 h-4" />
-                      Populaires
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
             {/* Produits scellés (toggle populaires/récents) */}
             <SealedProductsPreview
               defaultMode="popular"
-              limit={6}
-              gridCols="grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+              limit={8}
+              gridCols="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
             />
 
             {/* Sets */}
@@ -217,14 +188,14 @@ export default function MarketplaceHomePage() {
                 </Button>
               </div>
               {loadingSets ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {[...Array(12)].map((_, i) => (
                     <Skeleton key={i} className="h-32" />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {physicalSets.slice(0, 8).map((set) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {physicalSets.slice(0, 12).map((set) => (
                     <SetCard key={set.id} set={set} />
                   ))}
                 </div>
@@ -238,8 +209,8 @@ export default function MarketplaceHomePage() {
                   <Sparkles className="w-6 h-6 text-primary animate-pulse" />
                   <H2>Extensions Pokémon TCG Pocket (Mobile)</H2>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {pocketSets.slice(0, 8).map((set) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                  {pocketSets.slice(0, 12).map((set) => (
                     <SetCard key={set.id} set={set} />
                   ))}
                 </div>
@@ -248,7 +219,7 @@ export default function MarketplaceHomePage() {
           </div>
 
           {/* Colonne Latérale (Droite - 1/4) */}
-          <div className="space-y-8">
+          <div className="space-y-8 lg:sticky lg:top-4 lg:self-start">
             {/* Dernières offres */}
             <Card className="border bg-card/40 backdrop-blur-xs">
               <CardHeader className="pb-3 border-b border-border/40">
@@ -273,13 +244,13 @@ export default function MarketplaceHomePage() {
                     const isCard = listing.productKind === "card";
                     const productName = isCard
                       ? listing.pokemonCard?.name
-                      : listing.sealedProduct?.nameEn;
+                      : getSealedName(listing.sealedProduct);
                     const productSetName = isCard
                       ? listing.pokemonCard?.set?.name
                       : listing.sealedProduct?.pokemonSet?.name;
                     const productImage = isCard
-                      ? listing.pokemonCard?.image
-                      : listing.sealedProduct?.image;
+                      ? getCardImage(listing.pokemonCard, "low")
+                      : getSealedImageUrl(listing.sealedProduct);
                     const productLink = isCard
                       ? `/marketplace/cards/${listing.pokemonCard?.id}`
                       : `/marketplace/sealed/${listing.sealedProduct?.id}`;
@@ -290,16 +261,14 @@ export default function MarketplaceHomePage() {
                         href={productLink}
                         className="flex gap-3 items-start group hover:bg-accent/50 p-2 rounded-lg transition-all duration-200 border border-transparent hover:border-border"
                       >
-                        <div className="relative w-12 h-16 bg-accent/40 rounded flex items-center justify-center overflow-hidden shrink-0 border border-border/40">
-                          {productImage ? (
-                            <img
-                              src={productImage}
-                              alt={productName || ""}
-                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200"
-                            />
-                          ) : (
-                            <Package className="w-6 h-6 text-muted-foreground" />
-                          )}
+                        <div className="relative w-12 h-16 bg-accent/40 rounded overflow-hidden shrink-0 border border-border/40">
+                          <SmartImage
+                            src={productImage || SEALED_PLACEHOLDER}
+                            fallbackSrc={SEALED_PLACEHOLDER}
+                            alt={productName || ""}
+                            noSkeleton
+                            className="object-contain group-hover:scale-105 transition-transform duration-200"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
@@ -307,6 +276,10 @@ export default function MarketplaceHomePage() {
                           </h4>
                           <p className="text-xs text-muted-foreground truncate">
                             {productSetName}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            par {listing.seller?.firstName}{" "}
+                            {listing.seller?.lastName}
                           </p>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className="text-xs font-bold text-primary">
@@ -325,7 +298,9 @@ export default function MarketplaceHomePage() {
                                 variant="outline"
                                 className="text-[10px] py-0 px-1 font-medium bg-background/50"
                               >
-                                {listing.sealedCondition}
+                                {sealedConditionLabels[
+                                  listing.sealedCondition
+                                ] ?? listing.sealedCondition}
                               </Badge>
                             )}
                           </div>
@@ -361,12 +336,15 @@ export default function MarketplaceHomePage() {
                     </div>
                   ))
                 ) : bestSellers && bestSellers.length > 0 ? (
-                  bestSellers.slice(0, 5).map((seller) => (
+                  bestSellers.map((seller, index) => (
                     <Link
                       key={seller.seller.id}
                       href={`/marketplace/sellers/${seller.seller.id}`}
                       className="flex gap-3 items-center p-2 rounded-lg hover:bg-accent/50 transition-all duration-200 border border-transparent hover:border-border group"
                     >
+                      <span className="w-5 shrink-0 text-center text-sm font-bold text-muted-foreground tabular-nums">
+                        {index + 1}
+                      </span>
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-accent shrink-0 relative flex items-center justify-center border border-border/60">
                         {seller.seller.avatarUrl ? (
                           <img

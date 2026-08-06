@@ -7,6 +7,8 @@ import {
   IsString,
   Min,
 } from "class-validator";
+import { Languages } from "src/common/enums/languages";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { ProductKind } from "src/common/enums/product-kind";
 
 export class FindAllListingsQuery {
@@ -17,6 +19,14 @@ export class FindAllListingsQuery {
   @IsOptional()
   @IsString()
   cardState?: string;
+
+  @IsOptional()
+  @IsEnum(Languages)
+  language?: Languages;
+
+  @IsOptional()
+  @IsEnum(ListingStatus)
+  status?: ListingStatus;
 
   @IsOptional()
   @IsString()

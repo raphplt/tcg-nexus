@@ -11,20 +11,14 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { Public } from "src/auth/decorators/public.decorator";
-import { UserRole } from "src/common/enums/user";
 import { User } from "src/user/entities/user.entity";
-import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { CreateOrderDto } from "./dto/create-order.dto";
 import { FindAllListingsQuery } from "./dto/ind-all-listings-query.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
-import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
 import { MarketplaceService } from "./marketplace.service";
 
 @ApiTags("marketplace")
@@ -41,57 +35,6 @@ export class MarketplaceController {
     @CurrentUser() user: User,
   ) {
     return this.marketplaceService.create(createListingDto, user);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @Post("orders")
-  createOrder(
-    @Body() createOrderDto: CreateOrderDto,
-    @CurrentUser() user: User,
-  ) {
-    return this.marketplaceService.createOrder(createOrderDto, user);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @Get("orders")
-  getMyOrders(@CurrentUser() user: User) {
-    return this.marketplaceService.findOrdersByBuyerId(user.id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @Get("orders/:id")
-  getOrderById(@Param("id") id: string, @CurrentUser() user: User) {
-    return this.marketplaceService.findOrderById(+id, user.id);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
-  @Get("admin/orders")
-  getAllOrders(@Query() query: AdminOrderQueryDto) {
-    return this.marketplaceService.findAllOrders(query);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
-  @Get("admin/orders/:id")
-  getOrderAsAdmin(@Param("id", ParseIntPipe) id: number) {
-    return this.marketplaceService.findOrderByIdAsAdmin(id);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
-  @Patch("admin/orders/:id/status")
-  updateOrderStatus(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() dto: UpdateOrderStatusDto,
-  ) {
-    return this.marketplaceService.updateOrderStatus(id, dto.status);
   }
 
   @Get("listings")

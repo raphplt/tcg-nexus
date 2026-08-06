@@ -86,6 +86,8 @@ export const sealedProductService = {
     price: number;
     currency: string;
     quantityAvailable?: number;
+    shippingCost?: number;
+    handlingTimeDays?: number;
     sealedCondition?: SealedCondition;
     description?: string;
   }): Promise<Listing> {

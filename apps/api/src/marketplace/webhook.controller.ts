@@ -10,7 +10,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import Stripe from "stripe";
 import { Public } from "../auth/decorators/public.decorator";
-import { MarketplaceService } from "./marketplace.service";
+import { OrderService } from "./order.service";
 import { StripeService } from "./stripe.service";
 
 @ApiTags("webhook")
@@ -20,7 +20,7 @@ export class WebhookController {
 
   constructor(
     private readonly stripeService: StripeService,
-    private readonly marketplaceService: MarketplaceService,
+    private readonly orderService: OrderService,
   ) {}
 
   @Public()
@@ -62,9 +62,11 @@ export class WebhookController {
           this.logger.log(
             `PaymentIntent succeeded: ${paymentIntent.id} for amount ${paymentIntent.amount}`,
           );
-          await this.marketplaceService.handlePaymentSucceeded(
-            paymentIntent.id,
-          );
+          await this.orderService.handlePaymentSucceeded(paymentIntent.id, {
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
+            metadata: paymentIntent.metadata,
+          });
           break;
         }
 
@@ -73,7 +75,7 @@ export class WebhookController {
           this.logger.warn(
             `PaymentIntent failed: ${paymentIntent.id} — ${paymentIntent.last_payment_error?.message}`,
           );
-          await this.marketplaceService.handlePaymentFailed(paymentIntent.id);
+          await this.orderService.handlePaymentFailed(paymentIntent.id);
           break;
         }
 
@@ -83,7 +85,7 @@ export class WebhookController {
             `Charge refunded: ${charge.id} for PaymentIntent ${charge.payment_intent}`,
           );
           if (charge.payment_intent) {
-            await this.marketplaceService.handlePaymentRefunded(
+            await this.orderService.handlePaymentRefunded(
               charge.payment_intent as string,
             );
           }

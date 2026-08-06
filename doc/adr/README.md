@@ -19,6 +19,7 @@ Chaque ADR suit la structure standard inspirée de Michael Nygard :
 | [ADR-002](./002-jwt-refresh-rotation.md) | JWT access token court + refresh token rotatif avec période de grâce | Accepté |
 | [ADR-003](./003-state-management.md) | Séparation server state (React Query) / client state (Zustand) / contexte (React Context) | Accepté |
 | [ADR-004](./004-typeorm-synchronize.md) | Désactivation de `synchronize` TypeORM en production et passage aux migrations | Accepté |
+| [ADR-005](./005-reversement-vendeurs.md) | Encaissement plateforme sans reversement automatisé aux vendeurs | Accepté |
 
 ## Convention
 

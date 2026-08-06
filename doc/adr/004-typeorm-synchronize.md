@@ -75,3 +75,14 @@ Elle est **dangereuse en production** :
 - Tant que la première migration de baseline n'a pas été générée, il faut savoir activer `DATABASE_SYNCHRONIZE=true` manuellement pour un premier déploiement. C'est documenté et volontairement explicite.
 - Chaque évolution d'entité nécessite maintenant la génération d'une migration — discipline à intégrer dans la revue de PR.
 - Les développeurs doivent se rappeler que l'état de leur DB locale peut diverger de la prod s'ils rajoutent une entité sans migration. Un script `npm run db:migrate` facilitera la routine.
+
+## Mise en œuvre (2026-08)
+
+Le point 2 de la décision est désormais appliqué :
+
+- `apps/api/src/data-source.ts` expose une `DataSource` dédiée au CLI TypeORM (`synchronize: false`, entités et migrations résolues en `src/` ou `dist/` selon le contexte).
+- Les scripts `migration:generate`, `migration:run`, `migration:revert`, `migration:show` sont disponibles dans `apps/api/package.json`.
+- `AppModule` charge `src/migrations/*` et n'exécute les migrations au démarrage que si `DATABASE_MIGRATIONS_RUN=true`, pour ne jamais surprendre un environnement de développement.
+- La première migration versionnée est `1785974400000-MarketplaceCheckout` (schéma du parcours d'achat marketplace).
+
+La procédure est décrite dans `doc/migrations.md`.

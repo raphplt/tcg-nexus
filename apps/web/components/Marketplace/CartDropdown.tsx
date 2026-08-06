@@ -21,7 +21,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
 
 const CartDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,7 +83,7 @@ const CartDropdown = () => {
                         item.listing.productKind === "sealed" ||
                         item.listing.sealedProduct
                           ? getSealedImageUrl(item.listing.sealedProduct) ||
-                            "/images/sealed-default.png"
+                            SEALED_PLACEHOLDER
                           : getCardImage(item.listing.pokemonCard)
                       }
                       alt={

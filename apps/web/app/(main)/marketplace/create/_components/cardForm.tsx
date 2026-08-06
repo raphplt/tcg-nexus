@@ -1,48 +1,7 @@
 "use client";
 
+import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
-import { authedFetch } from "@utils/fetch";
-import React, { useEffect, useMemo, useState } from "react";
-import * as z from "zod";
-import { Form } from "@components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "react-hot-toast";
-import { Label } from "@components/ui/label";
-import { Input } from "@components/ui/input";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
-import {
-  AlertCircle,
-  Check,
-  Filter,
-  Loader2,
-  RefreshCcw,
-  Search,
-  Tag,
-  Layers,
-  ShoppingCart,
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { FormSchema } from "../utils";
-import { cardStates, currencyOptions } from "@/utils/variables";
-import { Currency } from "@/utils/enums";
-import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/useDebounce";
-import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
 import {
   Card,
   CardContent,
@@ -50,16 +9,58 @@ import {
   CardHeader,
   CardTitle,
 } from "@components/ui/card";
-import { Badge } from "@components/ui/badge";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@components/ui/form";
+import { Input } from "@components/ui/input";
+import { Label } from "@components/ui/label";
 import { Separator } from "@components/ui/separator";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { authedFetch } from "@utils/fetch";
+import {
+  AlertCircle,
+  Check,
+  Filter,
+  Layers,
+  Loader2,
+  RefreshCcw,
+  Search,
+  ShoppingCart,
+  Tag,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-hot-toast";
+import * as z from "zod";
+import { PaginatedNav } from "@/components/Shared/PaginatedNav";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
+import { useDebounce } from "@/hooks/useDebounce";
+import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
 import {
   PokemonCardType,
   PokemonSerieType,
   PokemonSetType,
 } from "@/types/cardPokemon";
-import Image from "next/image";
-import { PaginatedNav } from "@/components/Shared/PaginatedNav";
-import { Textarea } from "@/components/ui/textarea";
+import { Currency } from "@/utils/enums";
+import { cardStates, currencyOptions } from "@/utils/variables";
+import { FormSchema } from "../utils";
 
 const CardForm = () => {
   const [loading, setLoading] = useState(false);
@@ -101,6 +102,8 @@ const CardForm = () => {
       cardId: undefined as unknown as string,
       price: 0,
       quantityAvailable: 1,
+      shippingCost: 0,
+      handlingTimeDays: 3,
       cardState: "NM",
       description: "",
       currency: Currency.EUR,
@@ -170,6 +173,8 @@ const CardForm = () => {
       currency: data.currency,
       description: data.description || "",
       quantityAvailable: data.quantityAvailable,
+      shippingCost: data.shippingCost,
+      handlingTimeDays: data.handlingTimeDays,
       cardState: data.cardState,
       expiresAt: isoDate,
     };
@@ -573,6 +578,60 @@ const CardForm = () => {
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(e.target.valueAsNumber || 1)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="shippingCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frais de port</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0"
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 0)
+                        }
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Facturés une seule fois par commande. 0 pour les offrir.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="handlingTimeDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Délai d'expédition (jours ouvrés)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="30"
+                        step="1"
+                        placeholder="3"
+                        className="h-11"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.valueAsNumber || 3)
                         }
                       />
                     </FormControl>

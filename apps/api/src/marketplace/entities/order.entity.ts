@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -17,9 +18,23 @@ export enum OrderStatus {
   PENDING = "Pending",
   PAID = "Paid",
   SHIPPED = "Shipped",
+  DELIVERED = "Delivered",
   CANCELLED = "Cancelled",
   REFUNDED = "Refunded",
 }
+
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELLED],
+  [OrderStatus.PAID]: [
+    OrderStatus.SHIPPED,
+    OrderStatus.CANCELLED,
+    OrderStatus.REFUNDED,
+  ],
+  [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED, OrderStatus.REFUNDED],
+  [OrderStatus.DELIVERED]: [OrderStatus.REFUNDED],
+  [OrderStatus.CANCELLED]: [],
+  [OrderStatus.REFUNDED]: [],
+};
 
 @Entity()
 export class Order {
@@ -33,11 +48,25 @@ export class Order {
   @Column("decimal", { precision: 12, scale: 2 })
   totalAmount: number;
 
+  @Column("decimal", { precision: 12, scale: 2, default: 0 })
+  shippingAmount: number;
+
+  @Index()
   @Column({ type: "enum", enum: OrderStatus })
   status: OrderStatus;
 
   @Column({ type: "enum", enum: Currency })
   currency: Currency;
+
+  @Column({ type: "text", default: "" })
+  shippingAddress: string;
+
+  @Column({ type: "timestamp", nullable: true })
+  reservationExpiresAt: Date | null;
+
+  /** garde-fou contre un rejeu de webhook */
+  @Column({ type: "boolean", default: false })
+  stockReleased: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
