@@ -138,6 +138,7 @@ erDiagram
   LISTING ||--o{ ORDER_ITEM : "sold in"
 
   USER ||--o{ ORDER : "buys"
+  USER ||--o{ ORDER_ITEM : "sells"
   ORDER ||--o{ ORDER_ITEM : "contains"
   ORDER ||--o{ PAYMENT_TRANSACTION : "pays via"
 
@@ -153,27 +154,45 @@ erDiagram
     decimal price
     enum currency
     int quantityAvailable
+    enum status "active|inactive"
     enum cardState "nullable"
     enum sealedCondition "nullable"
     string description
     enum language
     timestamp expiresAt
+    timestamp deletedAt "soft delete"
   }
 
   ORDER {
     int id PK
     int buyer_id FK
     decimal totalAmount
-    enum status "PENDING|PAID|SHIPPED|CANCELLED|REFUNDED"
+    enum status "Pending|Paid|Shipped|Delivered|Cancelled|Refunded"
     enum currency
+    text shippingAddress
+    timestamp reservationExpiresAt "nullable"
+    bool stockReleased "stock déjà restitué"
   }
 
   ORDER_ITEM {
     int id PK
     int order_id FK
-    int listing_id FK
+    int listing_id FK "nullable, SET NULL"
+    int seller_id FK "nullable, SET NULL"
     decimal unitPrice
     int quantity
+    enum productKind "snapshot"
+    string productName "snapshot"
+    string productImage "snapshot"
+    string productCondition "snapshot"
+    string productLanguage "snapshot"
+    string productSetName "snapshot"
+    string sellerName "snapshot"
+    enum fulfillmentStatus "to_ship|preparing|shipped|delivered|cancelled"
+    string carrier "nullable"
+    string trackingNumber "nullable"
+    timestamp shippedAt "nullable"
+    timestamp deliveredAt "nullable"
   }
 
   PAYMENT_TRANSACTION {
@@ -181,8 +200,9 @@ erDiagram
     int order_id FK
     enum method "CreditCard|PayPal|BankTransfer|Crypto"
     enum status "Initiated|Completed|Failed|Refunded"
-    string transactionId "Stripe PaymentIntent id"
+    string transactionId UK "Stripe PaymentIntent id"
     decimal amount
+    enum currency "nullable"
   }
 
   PRICE_HISTORY {
@@ -208,6 +228,12 @@ Indices importants sur `LISTING` (définis via `@Index` dans l'entité) :
 - `(pokemonCard, currency, cardState)` (résolution rapide pour la page détail d'une carte)
 - `(sealedProduct, currency)` (idem scellé)
 - `productKind` (filtre discriminator)
+
+Points de conception côté commandes :
+
+- `ORDER_ITEM` recopie le produit et le vendeur au moment de l'achat (colonnes `product*`, `sellerName`). Les clés `listing_id` et `seller_id` sont donc nullables avec `ON DELETE SET NULL` : la suppression d'une annonce ou d'un compte ne détruit pas l'historique d'achat.
+- `transactionId` est en index **unique** : un webhook Stripe rejoué ne peut pas créer une seconde transaction pour le même `PaymentIntent`.
+- `stockReleased` garantit que le stock réservé n'est restitué qu'une seule fois, quel que soit le nombre de déclencheurs d'annulation (webhook, cron d'expiration, action admin).
 
 ## 4. Collection et wishlist
 

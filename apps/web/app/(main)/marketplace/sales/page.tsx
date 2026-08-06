@@ -20,12 +20,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SellerRevenue, salesService } from "@/services/sales.service";
 import { FulfillmentStatus, SellerSale } from "@/types/order";
-import { formatPrice } from "@/utils/price";
 import {
   getFulfillmentColor,
   getFulfillmentLabel,
   getOrderItemImage,
 } from "@/utils/order";
+import { formatPrice } from "@/utils/price";
 import ShipSaleDialog from "./_components/ShipSaleDialog";
 
 const FILTERS: Array<{ label: string; value: FulfillmentStatus | "all" }> = [
@@ -69,7 +69,10 @@ export default function SellerSalesPage() {
   }, [loadSales]);
 
   useEffect(() => {
-    salesService.getMyRevenue().then(setRevenue).catch(() => setRevenue(null));
+    salesService
+      .getMyRevenue()
+      .then(setRevenue)
+      .catch(() => setRevenue(null));
   }, []);
 
   const applyFulfillment = async (
@@ -123,10 +126,10 @@ export default function SellerSalesPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Chiffre d&apos;affaires
+              Encaissé pour vous
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             {currencies.length === 0 ? (
               <p className="text-3xl font-bold">—</p>
             ) : (
@@ -138,6 +141,10 @@ export default function SellerSalesPage() {
                 ))}
               </div>
             )}
+            <p className="text-xs text-muted-foreground">
+              Montant perçu par TCG Nexus sur vos ventes payées. Le reversement
+              vers votre compte bancaire n&apos;est pas implémenté.
+            </p>
           </CardContent>
         </Card>
       </div>
