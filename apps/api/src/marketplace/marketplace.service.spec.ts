@@ -18,7 +18,7 @@ import { CardPopularityService } from "./card-popularity.service";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { Listing } from "./entities/listing.entity";
-import { Order, OrderStatus } from "./entities/order.entity";
+import { Order } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
@@ -29,8 +29,6 @@ import { StripeService } from "./stripe.service";
 describe("MarketplaceService", () => {
   let service: MarketplaceService;
   let listingRepo: any;
-  let orderRepo: any;
-  let userCartService: any;
   let priceHistoryRepo: any;
 
   // Mock definitions needed in scope
@@ -214,8 +212,6 @@ describe("MarketplaceService", () => {
 
     service = module.get<MarketplaceService>(MarketplaceService);
     listingRepo = module.get(getRepositoryToken(Listing));
-    orderRepo = module.get(getRepositoryToken(Order));
-    userCartService = module.get(UserCartService);
     priceHistoryRepo = module.get(getRepositoryToken(PriceHistory));
 
     jest.clearAllMocks();

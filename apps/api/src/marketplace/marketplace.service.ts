@@ -65,18 +65,18 @@ export class MarketplaceService {
     if (productKind === ProductKind.CARD) {
       if (!createListingDto.pokemonCardId) {
         throw new BadRequestException(
-          "pokemonCardId is required for card listings",
+          "pokemonCardId est obligatoire pour une annonce de carte",
         );
       }
       if (!createListingDto.cardState) {
         throw new BadRequestException(
-          "cardState is required for card listings",
+          "L'état de la carte est obligatoire pour une annonce de carte",
         );
       }
     } else {
       if (!createListingDto.sealedProductId) {
         throw new BadRequestException(
-          "sealedProductId is required for sealed listings",
+          "sealedProductId est obligatoire pour une annonce de produit scellé",
         );
       }
     }
@@ -201,7 +201,7 @@ export class MarketplaceService {
         "sealedProduct.pokemonSet",
       ],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     return listing;
   }
 
@@ -214,13 +214,13 @@ export class MarketplaceService {
       where: { id },
       relations: ["seller"],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
       this.logger.warn(
         `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
       );
       throw new ForbiddenException(
-        "You are not allowed to update this listing",
+        "Vous ne pouvez pas modifier cette annonce",
       );
     }
     const previousPrice = Number(listing.price);
@@ -246,13 +246,13 @@ export class MarketplaceService {
       where: { id },
       relations: ["seller"],
     });
-    if (!listing) throw new NotFoundException("Listing not found");
+    if (!listing) throw new NotFoundException("Annonce introuvable");
     if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
       this.logger.warn(
         `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
       );
       throw new ForbiddenException(
-        "You are not allowed to delete this listing",
+        "Vous ne pouvez pas supprimer cette annonce",
       );
     }
     await this.listingRepository.softRemove(listing);
@@ -685,7 +685,7 @@ export class MarketplaceService {
     });
 
     if (!seller) {
-      throw new NotFoundException(`Seller with id ${sellerId} not found`);
+      throw new NotFoundException(`Vendeur ${sellerId} introuvable`);
     }
 
     const listings = await this.listingRepository.find({

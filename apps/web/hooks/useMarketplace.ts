@@ -9,9 +9,9 @@ import {
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
+import { Listing } from "@/types/listing";
 import { PaginatedResult } from "@/types/pagination";
 import type { SealedProduct } from "@/types/sealed-product";
-import { Listing } from "@/types/listing";
 
 export interface FilterState {
   search: string;
@@ -131,7 +131,9 @@ export function useMarketplaceCards(
   });
 
   // Récupère les cartes avec données marketplace
-  const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<any>>(
+  const { data, isLoading, error, refetch } = usePaginatedQuery<
+    PaginatedResult<any>
+  >(
     [
       "marketplace-cards",
       page,
@@ -163,5 +165,6 @@ export function useMarketplaceCards(
     data,
     isLoading,
     error,
+    refetch,
   };
 }

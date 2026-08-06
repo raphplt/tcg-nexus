@@ -2,12 +2,11 @@ import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "crypto";
 import { Card } from "src/card/entities/card.entity";
-import { Between, LessThanOrEqual, Repository } from "typeorm";
+import { LessThanOrEqual, Repository } from "typeorm";
 import { CreateCardEventDto } from "./dto/card-popularity.dto";
 import { CardEvent, CardEventType } from "./entities/card-event.entity";
 import { CardPopularityMetrics } from "./entities/card-popularity-metrics.entity";
 import { Listing } from "./entities/listing.entity";
-import { Order } from "./entities/order.entity";
 
 @Injectable()
 export class CardPopularityService {
@@ -45,8 +44,6 @@ export class CardPopularityService {
     private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
-    @InjectRepository(Order)
-    private readonly orderRepository: Repository<Order>,
   ) {}
 
   /**
@@ -64,7 +61,7 @@ export class CardPopularityService {
     });
 
     if (!card) {
-      throw new BadRequestException("Card not found");
+      throw new BadRequestException("Carte introuvable");
     }
 
     // Hash IP address for GDPR compliance

@@ -11,10 +11,9 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
-import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerGuard } from "@nestjs/throttler";
 import { CurrentUser } from "src/auth/decorators/current-user.decorator";
 import { Public } from "src/auth/decorators/public.decorator";
-import { UserRole } from "src/common/enums/user";
 import { User } from "src/user/entities/user.entity";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateListingDto } from "./dto/create-marketplace.dto";

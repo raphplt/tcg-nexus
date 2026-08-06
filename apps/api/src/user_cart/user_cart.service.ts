@@ -85,12 +85,12 @@ export class UserCartService {
     });
 
     if (!cart) {
-      throw new NotFoundException(`Cart with id ${id} not found`);
+      throw new NotFoundException(`Panier ${id} introuvable`);
     }
 
     // Vérifier que le panier appartient à l'utilisateur si userId est fourni
     if (userId !== undefined && cart.user.id !== userId) {
-      throw new BadRequestException("You can only access your own cart");
+      throw new BadRequestException("Vous ne pouvez consulter que votre propre panier");
     }
 
     return cart;
@@ -111,23 +111,23 @@ export class UserCartService {
 
     if (!listing) {
       throw new NotFoundException(
-        `Listing with id ${createCartItemDto.listingId} not found`,
+        `Annonce ${createCartItemDto.listingId} introuvable`,
       );
     }
 
     // Vérifier que l'utilisateur n'achète pas sa propre annonce
     if (listing.seller.id === userId) {
-      throw new BadRequestException("You cannot add your own listing to cart");
+      throw new BadRequestException("Vous ne pouvez pas ajouter votre propre annonce au panier");
     }
 
     if (listing.expiresAt && new Date(listing.expiresAt) <= new Date()) {
-      throw new BadRequestException("This listing has expired");
+      throw new BadRequestException("Cette annonce a expiré");
     }
 
     // Vérifier la disponibilité
     if (listing.quantityAvailable < createCartItemDto.quantity) {
       throw new BadRequestException(
-        `Not enough quantity available. Available: ${listing.quantityAvailable}, Requested: ${createCartItemDto.quantity}`,
+        `Stock insuffisant : ${listing.quantityAvailable} disponible(s), ${createCartItemDto.quantity} demandé(s)`,
       );
     }
 
@@ -150,7 +150,7 @@ export class UserCartService {
 
       if (listing.quantityAvailable < newQuantity) {
         throw new BadRequestException(
-          `Not enough quantity available. Available: ${listing.quantityAvailable}, Total requested: ${newQuantity}`,
+          `Stock insuffisant : ${listing.quantityAvailable} disponible(s), ${newQuantity} au total dans votre panier`,
         );
       }
 
@@ -179,7 +179,7 @@ export class UserCartService {
 
     if (existing && existing.listing.currency !== listing.currency) {
       throw new BadRequestException(
-        `Your cart is in ${existing.listing.currency}. Empty it before adding an item priced in ${listing.currency}.`,
+        `Votre panier est en ${existing.listing.currency}. Videz-le avant d'ajouter un article en ${listing.currency}.`,
       );
     }
   }
@@ -198,13 +198,13 @@ export class UserCartService {
     });
 
     if (!cartItem) {
-      throw new NotFoundException(`Cart item with id ${itemId} not found`);
+      throw new NotFoundException(`Article ${itemId} introuvable dans le panier`);
     }
 
     // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
-        "You can only update items in your own cart",
+        "Vous ne pouvez modifier que les articles de votre propre panier",
       );
     }
 
@@ -213,7 +213,7 @@ export class UserCartService {
       // Vérifier la disponibilité
       if (cartItem.listing.quantityAvailable < updateCartItemDto.quantity) {
         throw new BadRequestException(
-          `Not enough quantity available. Available: ${cartItem.listing.quantityAvailable}, Requested: ${updateCartItemDto.quantity}`,
+          `Stock insuffisant : ${cartItem.listing.quantityAvailable} disponible(s), ${updateCartItemDto.quantity} demandé(s)`,
         );
       }
 
@@ -233,13 +233,13 @@ export class UserCartService {
     });
 
     if (!cartItem) {
-      throw new NotFoundException(`Cart item with id ${itemId} not found`);
+      throw new NotFoundException(`Article ${itemId} introuvable dans le panier`);
     }
 
     // Vérifier que le panier appartient à l'utilisateur
     if (cartItem.cart.user.id !== userId) {
       throw new BadRequestException(
-        "You can only remove items from your own cart",
+        "Vous ne pouvez retirer que les articles de votre propre panier",
       );
     }
 

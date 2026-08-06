@@ -7,14 +7,7 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import {
-  DataSource,
-  EntityManager,
-  In,
-  LessThan,
-  QueryFailedError,
-  Repository,
-} from "typeorm";
+import { DataSource, EntityManager, LessThan, Repository } from "typeorm";
 import { Currency } from "../common/enums/currency";
 import {
   FULFILLMENT_TRANSITIONS,
@@ -74,8 +67,6 @@ export class OrderService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(PaymentTransaction)
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
-    @InjectRepository(Listing)
-    private readonly listingRepository: Repository<Listing>,
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
@@ -91,19 +82,19 @@ export class OrderService {
     const cartItems = cart?.cartItems ?? [];
 
     if (cartItems.length === 0) {
-      throw new BadRequestException("Cart is empty");
+      throw new BadRequestException("Votre panier est vide");
     }
 
     for (const item of cartItems) {
       if (item.listing.seller && item.listing.seller.id === user.id) {
-        throw new BadRequestException("You cannot purchase your own listing");
+        throw new BadRequestException("Vous ne pouvez pas acheter votre propre annonce");
       }
     }
 
     const currencies = [...new Set(cartItems.map((i) => i.listing.currency))];
     if (currencies.length > 1) {
       throw new BadRequestException(
-        "All items in cart must use the same currency",
+        "Tous les articles du panier doivent être dans la même devise",
       );
     }
     const currency = currencies[0];
@@ -171,7 +162,7 @@ export class OrderService {
 
         if (!freshListing) {
           throw new BadRequestException(
-            `Listing ${item.listing.id} is no longer available`,
+            `L'annonce ${item.listing.id} n'est plus disponible`,
           );
         }
 
@@ -180,13 +171,13 @@ export class OrderService {
           new Date(freshListing.expiresAt) <= new Date()
         ) {
           throw new BadRequestException(
-            `"${this.describeItem(item)}" is no longer for sale`,
+            `"${this.describeItem(item)}" n'est plus en vente`,
           );
         }
 
         if (freshListing.quantityAvailable < item.quantity) {
           throw new BadRequestException(
-            `Not enough quantity for "${this.describeItem(item)}". Available: ${freshListing.quantityAvailable}, Requested: ${item.quantity}`,
+            `Stock insuffisant pour "${this.describeItem(item)}" : ${freshListing.quantityAvailable} disponible(s), ${item.quantity} demandé(s)`,
           );
         }
 
@@ -275,7 +266,7 @@ export class OrderService {
     });
 
     if (!payment?.transactionId) {
-      throw new BadRequestException("No payment attached to this order");
+      throw new BadRequestException("Aucun paiement n'est rattaché à cette commande");
     }
 
     if (order.status !== OrderStatus.PENDING) {
@@ -288,7 +279,7 @@ export class OrderService {
 
     if (paymentIntent.status !== "succeeded") {
       throw new BadRequestException(
-        `Payment not completed. Status: ${paymentIntent.status}`,
+        `Le paiement n'est pas abouti (statut : ${paymentIntent.status})`,
       );
     }
 
@@ -357,7 +348,7 @@ export class OrderService {
       this.logger.warn(
         `Payment amount mismatch on order ${order.id}: Stripe=${intent.amount}, expected=${expectedAmountCents}`,
       );
-      throw new BadRequestException("Payment amount does not match the order");
+      throw new BadRequestException("Le montant payé ne correspond pas à la commande");
     }
 
     if (
@@ -367,7 +358,7 @@ export class OrderService {
         `Payment currency mismatch on order ${order.id}: Stripe=${intent.currency}, expected=${order.currency}`,
       );
       throw new BadRequestException(
-        "Payment currency does not match the order",
+        "La devise du paiement ne correspond pas à la commande",
       );
     }
 
@@ -376,7 +367,7 @@ export class OrderService {
       this.logger.warn(
         `PaymentIntent ${paymentIntentId} references order ${metadataOrderId}, not ${order.id}`,
       );
-      throw new BadRequestException("Payment does not belong to this order");
+      throw new BadRequestException("Ce paiement ne correspond pas à cette commande");
     }
 
     const metadataUserId = intent.metadata?.userId;
@@ -388,7 +379,7 @@ export class OrderService {
       this.logger.warn(
         `PaymentIntent ${paymentIntentId} was created by user ${metadataUserId}, order belongs to ${order.buyer.id}`,
       );
-      throw new BadRequestException("Payment does not belong to this buyer");
+      throw new BadRequestException("Ce paiement ne correspond pas à cet acheteur");
     }
   }
 
@@ -512,20 +503,20 @@ export class OrderService {
       });
 
       if (!order) {
-        throw new NotFoundException(`Order with id ${orderId} not found`);
+        throw new NotFoundException(`Commande ${orderId} introuvable`);
       }
 
       if (order.status === nextStatus) {
         if (options.allowNoop) return order;
         throw new BadRequestException(
-          `Order is already in status ${nextStatus}`,
+          `La commande est déjà au statut ${nextStatus}`,
         );
       }
 
       const allowed = ORDER_STATUS_TRANSITIONS[order.status] ?? [];
       if (!allowed.includes(nextStatus)) {
         throw new BadRequestException(
-          `Cannot move an order from ${order.status} to ${nextStatus}`,
+          `Une commande ne peut pas passer de ${order.status} à ${nextStatus}`,
         );
       }
 
@@ -629,11 +620,11 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
+      throw new NotFoundException(`Commande ${id} introuvable`);
     }
 
     if (order.buyer.id !== userId) {
-      throw new ForbiddenException("You can only access your own orders");
+      throw new ForbiddenException("Vous ne pouvez consulter que vos propres commandes");
     }
 
     return order;
@@ -646,7 +637,7 @@ export class OrderService {
     });
 
     if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
+      throw new NotFoundException(`Commande ${id} introuvable`);
     }
 
     return order;
@@ -729,28 +720,28 @@ export class OrderService {
     });
 
     if (!orderItem) {
-      throw new NotFoundException(`Order item ${orderItemId} not found`);
+      throw new NotFoundException(`Ligne de commande ${orderItemId} introuvable`);
     }
 
     if (orderItem.seller?.id !== seller.id) {
-      throw new ForbiddenException("You can only fulfil your own sales");
+      throw new ForbiddenException("Vous ne pouvez traiter que vos propres ventes");
     }
 
     if (orderItem.order.status === OrderStatus.PENDING) {
-      throw new BadRequestException("This order has not been paid yet");
+      throw new BadRequestException("Cette commande n'a pas encore été payée");
     }
 
     const allowed = FULFILLMENT_TRANSITIONS[orderItem.fulfillmentStatus] ?? [];
     if (!allowed.includes(dto.fulfillmentStatus)) {
       throw new BadRequestException(
-        `Cannot move a sale from ${orderItem.fulfillmentStatus} to ${dto.fulfillmentStatus}`,
+        `Une vente ne peut pas passer de ${orderItem.fulfillmentStatus} à ${dto.fulfillmentStatus}`,
       );
     }
 
     if (dto.fulfillmentStatus === FulfillmentStatus.SHIPPED) {
       if (!dto.carrier || !dto.trackingNumber) {
         throw new BadRequestException(
-          "Carrier and tracking number are required to mark a sale as shipped",
+          "Le transporteur et le numéro de suivi sont obligatoires pour marquer une vente comme expédiée",
         );
       }
       orderItem.carrier = dto.carrier;

@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   ChevronLeft,
   ChevronRight,
   Edit,
@@ -12,6 +13,16 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,12 +43,15 @@ export const ProfileSales = () => {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
   >("all");
+  const [error, setError] = useState<string | null>(null);
+  const [listingToDelete, setListingToDelete] = useState<Listing | null>(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
   const loadListings = React.useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const result = await marketplaceService.getMyListings({
         page,
         limit: 10,
@@ -48,9 +62,10 @@ export const ProfileSales = () => {
       });
       setListings(result.data);
       setTotalPages(result.meta.totalPages);
-    } catch (error) {
-      console.error("Erreur chargement ventes:", error);
-      toast.error("Impossible de charger vos ventes");
+    } catch {
+      setError(
+        "Impossible de charger vos annonces. Réessayez dans un instant.",
+      );
     } finally {
       setLoading(false);
     }
@@ -84,14 +99,14 @@ export const ProfileSales = () => {
   };
 
   const handleDelete = async (listing: Listing) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette vente ?")) return;
-
     try {
       await marketplaceService.deleteListing(listing.id.toString());
       setListings((prev) => prev.filter((l) => l.id !== listing.id));
-      toast.success("Vente supprimée");
+      toast.success("Annonce supprimée");
     } catch {
       toast.error("Erreur lors de la suppression");
+    } finally {
+      setListingToDelete(null);
     }
   };
 
@@ -150,10 +165,22 @@ export const ProfileSales = () => {
             <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
+      ) : error ? (
+        <div className="text-center py-12 space-y-4">
+          <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
+          <p className="text-muted-foreground">{error}</p>
+          <Button variant="outline" onClick={loadListings}>
+            Réessayer
+          </Button>
+        </div>
       ) : listings.length === 0 ? (
-        <div className="text-center py-12">
-          <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Aucune vente trouvée</p>
+        <div className="text-center py-12 space-y-4">
+          <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground" />
+          <p className="text-muted-foreground">
+            {search || statusFilter !== "all"
+              ? "Aucune annonce ne correspond à ces critères."
+              : "Vous n'avez encore publié aucune annonce."}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -224,7 +251,9 @@ export const ProfileSales = () => {
                   variant="ghost"
                   size="icon"
                   className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                  onClick={() => handleDelete(listing)}
+                  title="Supprimer l'annonce"
+                  aria-label="Supprimer l'annonce"
+                  onClick={() => setListingToDelete(listing)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -257,6 +286,30 @@ export const ProfileSales = () => {
           )}
         </div>
       )}
+
+      <AlertDialog
+        open={!!listingToDelete}
+        onOpenChange={(open) => !open && setListingToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette annonce ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {listingToDelete?.pokemonCard?.name} ne sera plus visible sur la
+              marketplace. Les commandes déjà passées sur cette annonce restent
+              consultables.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => listingToDelete && handleDelete(listingToDelete)}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
