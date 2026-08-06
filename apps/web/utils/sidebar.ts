@@ -9,6 +9,7 @@ import {
   Library,
   Medal,
   Package,
+  PackageCheck,
   PenLine,
   Plus,
   Search,
@@ -135,6 +136,12 @@ const userNavItems: NavItem[] = [
     label: "Mes commandes",
     href: "/orders",
     icon: ClipboardList,
+    requireAuth: true,
+  },
+  {
+    label: "Mes ventes",
+    href: "/marketplace/sales",
+    icon: PackageCheck,
     requireAuth: true,
   },
   {

@@ -72,7 +72,6 @@ export function TopBar() {
         <ThemeToggle />
         {isAuthenticated && <CartDropdown />}
         {isAuthenticated && <NotificationBell />}
-        {isAuthenticated && <CartDropdown />}
 
         {isAuthLoading ? (
           <Skeleton className="h-8 w-8 rounded-full" />
