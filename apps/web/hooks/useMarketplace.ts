@@ -82,11 +82,11 @@ export function useMarketplaceHome() {
   const { data: recentListings, isLoading: loadingRecentListings } = useQuery<
     PaginatedResult<Listing>
   >({
-    queryKey: ["marketplace", "recent-listings", 5],
+    queryKey: ["marketplace", "recent-listings", 8],
     queryFn: () =>
       marketplaceService.getPaginated({
         page: 1,
-        limit: 5,
+        limit: 8,
         sortBy: "createdAt",
         sortOrder: "DESC",
       }),
