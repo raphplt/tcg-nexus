@@ -22,7 +22,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tcg-nexus.org";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "TCG Nexus — La plateforme ultime du jeu de cartes",
+    default: "TCG Nexus - La plateforme ultime du jeu de cartes",
     template: "%s · TCG Nexus",
   },
   description:
