@@ -343,12 +343,14 @@ export class CollectionService {
         .createQueryBuilder("card")
         .leftJoinAndSelect("card.set", "set")
         .leftJoinAndSelect("set.serie", "serie")
+        .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
         .leftJoinAndSelect(
           "card.collectionItems",
           "item",
           "item.collection.id = :collectionId",
           { collectionId },
         )
+        .leftJoinAndSelect("item.cardState", "cardState")
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
@@ -368,7 +370,7 @@ export class CollectionService {
         queryBuilder.andWhere("card.rarity = :rarity", { rarity });
       }
       if (cardState) {
-        queryBuilder.andWhere("item.cardState.code = :cardState", {
+        queryBuilder.andWhere("cardState.code = :cardState", {
           cardState,
         });
       }
@@ -384,6 +386,7 @@ export class CollectionService {
           id: item?.id ?? null,
           quantity: item?.quantity ?? 0,
           added_at: item?.added_at ?? null,
+          cardState: item?.cardState ?? null,
           pokemonCard: {
             id: card.id,
             name: card.name,
@@ -393,6 +396,8 @@ export class CollectionService {
             category: card.category,
             updated: card.updated,
             set: card.set,
+            hp: card.pokemonDetails?.hp,
+            types: card.pokemonDetails?.types,
           },
         };
       });
@@ -420,6 +425,7 @@ export class CollectionService {
       .leftJoinAndSelect("item.cardState", "cardState")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
+      .leftJoinAndSelect("pokemonCard.pokemonDetails", "pokemonDetails")
       .where("item.collection.id = :collectionId", { collectionId });
 
     // Ajouter la recherche si fournie
@@ -473,8 +479,19 @@ export class CollectionService {
 
     const totalPages = Math.ceil(totalItems / limit);
 
+    const data = items.map((item) => ({
+      ...item,
+      pokemonCard: item.pokemonCard
+        ? {
+            ...item.pokemonCard,
+            hp: item.pokemonCard.pokemonDetails?.hp,
+            types: item.pokemonCard.pokemonDetails?.types,
+          }
+        : item.pokemonCard,
+    }));
+
     return {
-      data: items,
+      data: data as any,
       meta: {
         totalItems,
         itemCount: items.length,

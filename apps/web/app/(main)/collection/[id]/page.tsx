@@ -375,7 +375,7 @@ const CollectionDetailPage = () => {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {item.cardState?.name || "?"}
+                              {item.cardState?.label || "?"}
                             </Badge>
                           </TableCell>
                           <TableCell>

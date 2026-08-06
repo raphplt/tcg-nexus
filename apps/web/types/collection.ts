@@ -20,6 +20,6 @@ export interface CollectionItemType {
   collectionId: number;
   cardState: {
     id: number;
-    name: string;
-  };
+    label: string;
+  } | null;
 }
