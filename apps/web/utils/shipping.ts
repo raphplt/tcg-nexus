@@ -4,11 +4,6 @@ type ShippableItem = {
   listing: Pick<Listing, "id" | "shippingCost" | "seller">;
 };
 
-/**
- * Estimation des frais de port du panier. Le serveur refait ce calcul au
- * checkout et fait autorité : un vendeur n'expédie qu'un colis, facturé à son
- * tarif le plus élevé dans la commande.
- */
 export function estimateShipping(items: ShippableItem[]): number {
   const costBySeller = new Map<string, number>();
 
