@@ -8,6 +8,7 @@ import {
   ChevronRight,
   MapPin,
   Package,
+  Plus,
   Truck,
 } from "lucide-react";
 import Image from "next/image";
@@ -108,9 +109,17 @@ export default function SellerSalesPage() {
             Préparez et expédiez les commandes reçues.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/profile">Gérer mes annonces</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/profile">Gérer mes annonces</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/marketplace/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Vendre une carte
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,13 +194,21 @@ export default function SellerSalesPage() {
         </Card>
       ) : sales.length === 0 ? (
         <Card>
-          <CardContent className="p-10 text-center space-y-3">
+          <CardContent className="p-10 text-center space-y-4">
             <Package className="mx-auto h-10 w-10 text-muted-foreground" />
             <p className="text-muted-foreground">
               {filter === "all"
-                ? "Vous n'avez encore rien vendu."
+                ? "Vous n'avez encore rien vendu. Publiez une annonce pour commencer."
                 : "Aucune vente dans cet état."}
             </p>
+            {filter === "all" && (
+              <Button asChild>
+                <Link href="/marketplace/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Vendre une carte
+                </Link>
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
