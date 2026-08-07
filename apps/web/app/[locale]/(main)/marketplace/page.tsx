@@ -8,6 +8,7 @@ import {
   Star,
   TrendingUp,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
@@ -31,6 +32,7 @@ import {
 } from "@/utils/sealedImage";
 
 export default function MarketplaceHomePage() {
+  const t = useTranslations("Marketplace");
   const {
     popularCards,
     trendingCards,
@@ -54,27 +56,26 @@ export default function MarketplaceHomePage() {
         <MarketplaceBreadcrumb />
         <div className="text-center space-y-4">
           <H1 className="text-4xl md:text-5xl font-bold" variant="primary">
-            Marketplace TCG Nexus
+            {t("hero.title")}
           </H1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Découvrez, achetez et vendez vos cartes Pokémon. Trouvez les
-            meilleures offres et les meilleurs vendeurs de la communauté.
+            {t("hero.subtitle")}
           </p>
           <div className="flex flex-wrap gap-4 justify-center mt-6">
             <Button asChild size="lg">
               <Link href="/marketplace/cards">
-                Explorer les cartes
+                {t("hero.browseCards")}
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/marketplace/sealed">
-                Produits scellés
+                {t("hero.sealedProducts")}
                 <Package className="ml-2 w-4 h-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/marketplace/create">Vendre une carte</Link>
+              <Link href="/marketplace/create">{t("hero.sellCard")}</Link>
             </Button>
           </div>
         </div>
@@ -119,7 +120,7 @@ export default function MarketplaceHomePage() {
               ) : (
                 <Card>
                   <CardContent className="py-12 text-center text-muted-foreground">
-                    Aucune carte en tendance pour le moment
+                    {t("empty.trending")}
                   </CardContent>
                 </Card>
               )}
@@ -160,7 +161,7 @@ export default function MarketplaceHomePage() {
               ) : (
                 <Card>
                   <CardContent className="py-12 text-center text-muted-foreground">
-                    Aucune carte populaire pour le moment
+                    {t("empty.popular")}
                   </CardContent>
                 </Card>
               )}
@@ -178,7 +179,7 @@ export default function MarketplaceHomePage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <Package className="w-6 h-6 text-primary" />
-                  <H2>Séries et extensions</H2>
+                  <H2>{t("sections.seriesAndSets")}</H2>
                 </div>
                 <Button variant="ghost" asChild>
                   <Link href="/marketplace/cards">
@@ -207,7 +208,7 @@ export default function MarketplaceHomePage() {
               <section>
                 <div className="flex items-center gap-3 mb-6">
                   <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                  <H2>Extensions Pokémon TCG Pocket (Mobile)</H2>
+                  <H2>{t("sections.pocketSets")}</H2>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {pocketSets.slice(0, 12).map((set) => (
@@ -225,7 +226,7 @@ export default function MarketplaceHomePage() {
               <CardHeader className="pb-3 border-b border-border/40">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-                  Dernières offres
+                  {t("sections.latestListings")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
@@ -310,7 +311,7 @@ export default function MarketplaceHomePage() {
                   })
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Aucune offre récente
+                    {t("empty.listings")}
                   </p>
                 )}
               </CardContent>
@@ -377,7 +378,7 @@ export default function MarketplaceHomePage() {
                   ))
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Aucun vendeur pour le moment
+                    {t("empty.sellers")}
                   </p>
                 )}
               </CardContent>

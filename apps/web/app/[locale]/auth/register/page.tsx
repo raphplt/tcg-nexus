@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useTranslations } from "next-intl";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { registerSchema } from "./utils";
+import { createRegisterSchema, type RegisterFormValues } from "./utils";
 import { ArrowLeft, Home } from "lucide-react";
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
-
 const RegisterPage = () => {
+  const t = useTranslations("Auth.register");
+  const tv = useTranslations("Auth.validation");
   const { register, isLoading } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+
+  const registerSchema = useMemo(() => createRegisterSchema(tv), [tv]);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -53,7 +55,7 @@ const RegisterPage = () => {
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Une erreur est survenue lors de l'inscription";
+          ?.message || t("genericError");
       setError(errorMessage);
     }
   };
@@ -68,7 +70,7 @@ const RegisterPage = () => {
           className="hover:bg-secondary/50 transition-colors z-40"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          {t("back")}
         </Button>
         <Button
           variant="ghost"
@@ -77,7 +79,7 @@ const RegisterPage = () => {
           className="hover:bg-secondary/50 transition-colors z-40"
         >
           <Home className="h-4 w-4 mr-2" />
-          Accueil
+          {t("home")}
         </Button>
       </div>
 
@@ -93,10 +95,10 @@ const RegisterPage = () => {
       <Card className="w-full max-w-md relative z-10 bg-background/95 backdrop-blur-sm border border-primary/20 shadow-2xl">
         <CardHeader className="space-y-1 pb-6">
           <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Inscription
+            {t("title")}
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">
-            Créez votre compte TCG Nexus
+            {t("subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -114,7 +116,7 @@ const RegisterPage = () => {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prénom</FormLabel>
+                      <FormLabel>{t("firstName")}</FormLabel>
                       <FormControl>
                         <Input
                           type="text"
@@ -133,7 +135,7 @@ const RegisterPage = () => {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nom</FormLabel>
+                      <FormLabel>{t("lastName")}</FormLabel>
                       <FormControl>
                         <Input
                           type="text"
@@ -153,11 +155,11 @@ const RegisterPage = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="votre@email.com"
+                        placeholder={t("emailPlaceholder")}
                         {...field}
                         disabled={isLoading}
                       />
@@ -172,7 +174,7 @@ const RegisterPage = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mot de passe</FormLabel>
+                    <FormLabel>{t("password")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
@@ -191,7 +193,7 @@ const RegisterPage = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmer le mot de passe</FormLabel>
+                    <FormLabel>{t("confirmPassword")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
@@ -210,19 +212,19 @@ const RegisterPage = () => {
                 className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Inscription..." : "S'inscrire"}
+                {isLoading ? t("submitting") : t("submit")}
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 pt-6">
           <div className="text-sm text-center text-muted-foreground">
-            Déjà un compte ?{" "}
+            {t("hasAccount")}{" "}
             <Link
               href="/auth/login"
               className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
             >
-              Se connecter
+              {t("signIn")}
             </Link>
           </div>
         </CardFooter>

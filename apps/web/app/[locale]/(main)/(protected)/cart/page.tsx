@@ -8,6 +8,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
@@ -55,6 +56,7 @@ import {
 import { estimateShipping } from "@/utils/shipping";
 
 export default function CartPage() {
+  const t = useTranslations("Cart");
   const router = useRouter();
   const { cart, isLoading, fetchCart, updateItem, removeItem, clearCart } =
     useCartStore();
@@ -79,7 +81,7 @@ export default function CartPage() {
 
     if (newQuantity > cartItem.listing.quantityAvailable) {
       toast.error(
-        `Quantité maximale disponible : ${cartItem.listing.quantityAvailable}`,
+        t("maxQuantity", { max: cartItem.listing.quantityAvailable }),
       );
       return;
     }
@@ -87,11 +89,11 @@ export default function CartPage() {
     setUpdatingItemId(itemId);
     try {
       await updateItem(itemId, { quantity: newQuantity });
-      toast.success("Quantité mise à jour");
+      toast.success(t("quantityUpdated"));
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Erreur lors de la mise à jour de la quantité";
+          ?.data?.message || t("quantityUpdateError");
       toast.error(errorMessage);
     } finally {
       setUpdatingItemId(null);
@@ -102,11 +104,11 @@ export default function CartPage() {
     setRemovingItemId(itemId);
     try {
       await removeItem(itemId);
-      toast.success("Article retiré du panier");
+      toast.success(t("itemRemoved"));
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Erreur lors de la suppression de l'article";
+          ?.data?.message || t("itemRemoveError");
       toast.error(errorMessage);
     } finally {
       setRemovingItemId(null);
@@ -116,11 +118,11 @@ export default function CartPage() {
   const handleClearCart = async () => {
     try {
       await clearCart();
-      toast.success("Panier vidé");
+      toast.success(t("cartCleared"));
     } catch (error: unknown) {
       const errorMessage =
         (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Erreur lors du vidage du panier";
+          ?.data?.message || t("cartClearError");
       toast.error(errorMessage);
     } finally {
       setIsClearDialogOpen(false);
@@ -158,9 +160,9 @@ export default function CartPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Mon Panier</h1>
+            <h1 className="text-3xl font-bold">{t("title")}</h1>
             <p className="text-muted-foreground mt-1">
-              {itemsCount} article{itemsCount > 1 ? "s" : ""} dans votre panier
+              {t("itemsInCart", { count: itemsCount })}
             </p>
           </div>
           {cartItems.length > 0 && (
@@ -174,22 +176,20 @@ export default function CartPage() {
                   className="text-destructive hover:text-destructive"
                 >
                   <X className="w-4 h-4 mr-2" />
-                  Vider le panier
+                  {t("clearCart")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Vider votre panier ?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("clearConfirmTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Les {itemsCount} article{itemsCount > 1 ? "s" : ""} en
-                    seront retirés. Les annonces restent disponibles sur la
-                    marketplace.
+                    {t("clearConfirmDescription", { count: itemsCount })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                   <AlertDialogAction onClick={handleClearCart}>
-                    Vider le panier
+                    {t("clearCart")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -204,14 +204,13 @@ export default function CartPage() {
                 <ShoppingCart className="w-16 h-16 text-muted-foreground" />
                 <div>
                   <h2 className="text-2xl font-semibold mb-2">
-                    Votre panier est vide
+                    {t("emptyTitle")}
                   </h2>
                   <p className="text-muted-foreground mb-6">
-                    Explorez notre marketplace pour trouver des cartes à ajouter
-                    à votre panier
+                    {t("emptyDescription")}
                   </p>
                   <Button onClick={() => router.push("/marketplace")}>
-                    Découvrir le marketplace
+                    {t("emptyAction")}
                   </Button>
                 </div>
               </div>
@@ -233,13 +232,17 @@ export default function CartPage() {
                         </TableHead>
                         <TableHead>Article</TableHead>
                         <TableHead className="hidden md:table-cell">
-                          État
+                          {t("condition")}
                         </TableHead>
-                        <TableHead className="text-center">Quantité</TableHead>
+                        <TableHead className="text-center">
+                          {t("quantity")}
+                        </TableHead>
                         <TableHead className="hidden text-right md:table-cell">
                           Prix unitaire
                         </TableHead>
-                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">
+                          {t("total")}
+                        </TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -260,7 +263,7 @@ export default function CartPage() {
                           : getCardImage(item.listing.pokemonCard);
                         const productName = isSealed
                           ? getSealedName(item.listing.sealedProduct) ||
-                            "Produit scellé"
+                            t("sealedProduct")
                           : item.listing.pokemonCard?.name || "Carte inconnue";
                         const productSub = isSealed
                           ? item.listing.sealedProduct?.pokemonSet?.name
@@ -406,8 +409,7 @@ export default function CartPage() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">
-                      Sous-total ({itemsCount} article
-                      {itemsCount > 1 ? "s" : ""})
+                      {t("subtotal", { count: itemsCount })}
                     </span>
                     <span className="font-semibold">
                       {formatPrice(total, cartCurrency)}
@@ -415,17 +417,16 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">
-                      Frais de port ({sellerCount} vendeur
-                      {sellerCount > 1 ? "s" : ""})
+                      {t("shipping", { count: sellerCount })}
                     </span>
                     <span className="font-semibold">
                       {shipping === 0
-                        ? "Offerts"
+                        ? t("shippingFree")
                         : formatPrice(shipping, cartCurrency)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t">
-                    <span className="text-lg font-semibold">Total</span>
+                    <span className="text-lg font-semibold">{t("total")}</span>
                     <span className="text-2xl font-bold text-primary">
                       {formatPrice(total + shipping, cartCurrency)}
                     </span>
@@ -435,7 +436,7 @@ export default function CartPage() {
                     size="lg"
                     onClick={() => router.push("/marketplace/checkout")}
                   >
-                    Passer la commande
+                    {t("checkout")}
                   </Button>
                 </CardContent>
               </Card>
@@ -445,10 +446,9 @@ export default function CartPage() {
               ) && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Stock limité</AlertTitle>
+                  <AlertTitle>{t("limitedStockTitle")}</AlertTitle>
                   <AlertDescription>
-                    Certains articles ont atteint leur quantité maximale
-                    disponible.
+                    {t("limitedStockDescription")}
                   </AlertDescription>
                 </Alert>
               )}

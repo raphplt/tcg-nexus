@@ -1,7 +1,8 @@
+import type { SupportedLocale } from "@/i18n/config";
 import { permanentRedirect } from "@/i18n/navigation";
 
 interface PageProps {
-  params: Promise<{ id: string; locale: string }>;
+  params: Promise<{ id: string; locale: SupportedLocale }>;
 }
 
 /**

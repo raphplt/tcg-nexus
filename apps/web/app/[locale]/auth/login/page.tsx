@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useTranslations } from "next-intl";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { CircleAlert, Eye, EyeOff, ArrowLeft, Home } from "lucide-react";
-import { loginSchema } from "./utils";
+import { createLoginSchema, type LoginFormValues } from "./utils";
 
 const DEV_ACCOUNTS = [
   {
@@ -48,14 +48,16 @@ const DEV_ACCOUNTS = [
 
 const isDev = process.env.NODE_ENV === "development";
 
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 const LoginPage = () => {
+  const t = useTranslations("Auth.login");
+  const tv = useTranslations("Auth.validation");
   const { login, isLoading } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const loginSchema = useMemo(() => createLoginSchema(tv), [tv]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -72,7 +74,7 @@ const LoginPage = () => {
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Une erreur est survenue lors de la connexion";
+          ?.message || t("genericError");
       setError(errorMessage);
     }
   };
@@ -84,7 +86,7 @@ const LoginPage = () => {
     } catch (err: unknown) {
       const errorMessage =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "Une erreur est survenue lors de la connexion";
+          ?.message || t("genericError");
       setError(errorMessage);
     }
   };
@@ -99,7 +101,7 @@ const LoginPage = () => {
           className="hover:bg-secondary/50 transition-colors z-40"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          {t("back")}
         </Button>
         <Button
           variant="ghost"
@@ -108,7 +110,7 @@ const LoginPage = () => {
           className="hover:bg-secondary/50 transition-colors z-40"
         >
           <Home className="h-4 w-4 mr-2" />
-          Accueil
+          {t("home")}
         </Button>
       </div>
 
@@ -123,10 +125,10 @@ const LoginPage = () => {
       <Card className="w-full max-w-md relative z-10 bg-background/95 backdrop-blur-sm border border-primary/20 shadow-2xl">
         <CardHeader className="space-y-1 pb-6">
           <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Connexion
+            {t("title")}
           </CardTitle>
           <CardDescription className="text-center text-muted-foreground">
-            Connectez-vous à votre compte TCG Nexus
+            {t("subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -144,11 +146,11 @@ const LoginPage = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t("email")}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="votre@email.com"
+                        placeholder={t("emailPlaceholder")}
                         {...field}
                         disabled={isLoading}
                       />
@@ -163,7 +165,7 @@ const LoginPage = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mot de passe</FormLabel>
+                    <FormLabel>{t("password")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -198,7 +200,7 @@ const LoginPage = () => {
                 className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Connexion..." : "Se connecter"}
+                {isLoading ? t("submitting") : t("submit")}
               </Button>
               <div className="flex items-center mt-2">
                 <input
@@ -213,14 +215,14 @@ const LoginPage = () => {
                   htmlFor="rememberMe"
                   className="text-sm select-none cursor-pointer"
                 >
-                  Se souvenir de moi
+                  {t("rememberMe")}
                 </label>
               </div>
 
               {isDev && (
                 <div className="pt-4 border-t border-border/40">
                   <p className="text-xs text-muted-foreground mb-3 text-center">
-                    🔧 Mode Développement - Connexion Rapide 🔧
+                    {t("devMode")}
                   </p>
                   <div className="flex flex-col gap-2">
                     {DEV_ACCOUNTS.map((account) => (
@@ -235,8 +237,10 @@ const LoginPage = () => {
                         disabled={isLoading}
                         className="text-xs"
                       >
-                        Se connecter en tant que {account.role} ({account.email}
-                        )
+                        {t("loginAs", {
+                          role: account.role,
+                          email: account.email,
+                        })}
                       </Button>
                     ))}
                   </div>
@@ -247,12 +251,12 @@ const LoginPage = () => {
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 pt-6">
           <div className="text-sm text-center text-muted-foreground">
-            Pas encore de compte ?{" "}
+            {t("noAccount")}{" "}
             <Link
               href="/auth/register"
               className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
             >
-              S&apos;inscrire
+              {t("signUp")}
             </Link>
           </div>
         </CardFooter>

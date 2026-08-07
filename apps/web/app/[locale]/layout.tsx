@@ -7,7 +7,11 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import ClientProviders from "@/components/ClientProviders";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
-import { LOCALE_TAGS, SUPPORTED_LOCALES } from "@/i18n/config";
+import {
+  LOCALE_TAGS,
+  SUPPORTED_LOCALES,
+  type SupportedLocale,
+} from "@/i18n/config";
 import { routing } from "@/i18n/routing";
 
 const inter = Inter({
@@ -31,7 +35,7 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: SupportedLocale }>;
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "Metadata" });
@@ -60,7 +64,7 @@ export async function generateMetadata({
     },
     openGraph: {
       type: "website",
-      locale: LOCALE_TAGS[locale as keyof typeof LOCALE_TAGS],
+      locale: LOCALE_TAGS[locale],
       alternateLocale: SUPPORTED_LOCALES.filter((l) => l !== locale).map(
         (l) => LOCALE_TAGS[l],
       ),

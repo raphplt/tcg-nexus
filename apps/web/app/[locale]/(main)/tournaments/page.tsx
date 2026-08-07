@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -54,7 +54,8 @@ const resolveBadgeVariant = (
     | undefined) || fallback;
 
 const formatDate = (date: string | undefined, locale: string) => {
-  if (!date) return "Date à confirmer";
+  const t = useTranslations("Tournaments");
+  if (!date) return t("dateToBeConfirmed");
   return new Date(date).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
@@ -72,6 +73,7 @@ const getTournamentTypeLabel = (type: string) =>
   type;
 
 export default function TournamentsPage() {
+  const t = useTranslations("Tournaments");
   const locale = useLocale();
   const { user } = useAuth();
   const router = useRouter();
@@ -190,10 +192,7 @@ export default function TournamentsPage() {
       ]);
       router.push(`/tournaments/${tournamentId}`);
     } catch (registrationError) {
-      console.error(
-        "Erreur lors de l'inscription au tournoi :",
-        registrationError,
-      );
+      console.error(t("registerError"), registrationError);
     } finally {
       setRegisteringTournamentId(null);
     }
@@ -210,17 +209,15 @@ export default function TournamentsPage() {
           <div className="tcg-surface tcg-surface--hero tcg-surface--hero-tournaments p-8">
             <div className="space-y-6">
               <Badge className="rounded-full border-0 bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
-                Tournois Pokémon
+                {t("hero.title")}
               </Badge>
 
               <div className="space-y-4">
                 <H1 className="max-w-3xl text-4xl font-black leading-tight md:text-5xl">
-                  Découvrez les tournois à venir et rejoignez les bonnes tables
-                  au bon moment.
+                  {t("hero.subtitle")}
                 </H1>
                 <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                  Retrouvez les inscriptions ouvertes, les événements en cours
-                  et les accès aux matches depuis un parcours plus direct.
+                  {t("hero.description")}
                 </p>
               </div>
 
@@ -230,18 +227,18 @@ export default function TournamentsPage() {
                   onClick={() => router.push("/tournaments/create")}
                   disabled={!user?.isPro}
                 >
-                  Créer un tournoi
+                  {t("hero.create")}
                   <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link href="#listing">
-                    Explorer le calendrier
+                    {t("hero.browseCalendar")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="ghost">
                   <Link href="/play">
-                    Aller à Jouer
+                    {t("hero.goToPlay")}
                     <Swords className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -249,17 +246,17 @@ export default function TournamentsPage() {
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <OverviewMetric
-                  label="Tournois référencés"
+                  label={t("stats.listed")}
                   value={String(totalTournaments)}
                   detail="Catalogue total"
                 />
                 <OverviewMetric
-                  label="Ouverts ou imminents"
+                  label={t("stats.openOrSoon")}
                   value={String(upcoming.length)}
-                  detail="À suivre maintenant"
+                  detail={t("stats.followNow")}
                 />
                 <OverviewMetric
-                  label="Actifs dans la liste"
+                  label={t("stats.activeInList")}
                   value={String(activeCount)}
                   detail="Tables en cours"
                 />
@@ -269,17 +266,17 @@ export default function TournamentsPage() {
                 <QuickNote
                   icon={ShieldCheck}
                   title="Inscriptions ouvertes"
-                  text="Repérez rapidement les événements que vous pouvez rejoindre maintenant."
+                  text={t("highlights.joinNow")}
                 />
                 <QuickNote
                   icon={CalendarClock}
                   title="Calendrier clair"
-                  text="Dates, lieux et formats ressortent tout de suite, sans surcharge."
+                  text={t("highlights.clearInfo")}
                 />
                 <QuickNote
                   icon={Swords}
                   title="Accès au match"
-                  text="Quand une table est prête, le lien vers la partie reste facile à retrouver."
+                  text={t("highlights.easyAccess")}
                 />
               </div>
             </div>
@@ -290,7 +287,7 @@ export default function TournamentsPage() {
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    À la une
+                    {t("spotlight.title")}
                   </span>
                   <Badge className="border-0 bg-white/10 text-white hover:bg-white/10">
                     Focus
@@ -308,7 +305,7 @@ export default function TournamentsPage() {
                       </h2>
                       <p className="text-sm leading-6 text-muted-foreground">
                         {spotlightTournament.description ||
-                          "Le prochain rendez-vous à suivre ou à rejoindre dans la scène tournoi."}
+                          t("spotlight.subtitle")}
                       </p>
                     </div>
 
@@ -334,7 +331,7 @@ export default function TournamentsPage() {
 
                     <Button asChild variant="secondary" className="w-full">
                       <Link href={`/tournaments/${spotlightTournament.id}`}>
-                        Ouvrir la fiche tournoi
+                        {t("spotlight.open")}
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
@@ -342,11 +339,10 @@ export default function TournamentsPage() {
                 ) : (
                   <div className="space-y-2">
                     <p className="text-lg font-semibold">
-                      Aucun tournoi à mettre en avant
+                      {t("spotlight.emptyTitle")}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Crée un nouvel événement ou ouvre les inscriptions pour
-                      faire remonter le prochain rendez-vous.
+                      {t("spotlight.emptyDescription")}
                     </p>
                   </div>
                 )}
@@ -360,18 +356,18 @@ export default function TournamentsPage() {
                   value={
                     spotlightTournament
                       ? formatDate(spotlightTournament.startDate, locale)
-                      : "À confirmer"
+                      : t("toBeConfirmed")
                   }
                   icon={CalendarClock}
                 />
                 <MiniStat
-                  label="Tournois récents"
+                  label={t("recent.title")}
                   value={String(past.length)}
                   icon={Trophy}
                 />
                 <MiniStat
                   label="Recherche rapide"
-                  value="Filtres simplifiés"
+                  value={t("filters.title")}
                   icon={Search}
                 />
               </CardContent>
@@ -383,9 +379,9 @@ export default function TournamentsPage() {
           <Card className="tcg-surface">
             <CardContent className="space-y-5 p-6">
               <SectionHeading
-                eyebrow="En ce moment"
+                eyebrow={t("upcoming.title")}
                 title="Tournois à ne pas manquer"
-                description="Une lecture rapide des événements les plus utiles pour s'inscrire ou suivre le live."
+                description={t("upcoming.subtitle")}
               />
 
               {loadingUpcoming ? (
@@ -395,7 +391,7 @@ export default function TournamentsPage() {
                   ))}
                 </div>
               ) : upcomingError ? (
-                <SoftEmptyState message="Impossible de charger les prochains tournois." />
+                <SoftEmptyState message={t("upcoming.error")} />
               ) : upcoming.length ? (
                 <div className="space-y-3">
                   {upcoming.slice(0, 4).map((tournament) => (
@@ -403,7 +399,7 @@ export default function TournamentsPage() {
                   ))}
                 </div>
               ) : (
-                <SoftEmptyState message="Aucun tournoi à venir pour le moment." />
+                <SoftEmptyState message={t("upcoming.empty")} />
               )}
             </CardContent>
           </Card>
@@ -412,9 +408,9 @@ export default function TournamentsPage() {
             <Card className="tcg-surface">
               <CardContent className="space-y-5 p-6">
                 <SectionHeading
-                  eyebrow="Récap"
+                  eyebrow={t("results.title")}
                   title="Derniers résultats"
-                  description="Les derniers tournois terminés, sans la lourdeur d'une grosse table."
+                  description={t("results.subtitle")}
                 />
 
                 {loadingPast ? (
@@ -424,7 +420,7 @@ export default function TournamentsPage() {
                     ))}
                   </div>
                 ) : pastError ? (
-                  <SoftEmptyState message="Impossible de charger les résultats récents." />
+                  <SoftEmptyState message={t("results.error")} />
                 ) : past.length ? (
                   <div className="space-y-3">
                     {past.slice(0, 3).map((tournament) => (
@@ -432,7 +428,7 @@ export default function TournamentsPage() {
                     ))}
                   </div>
                 ) : (
-                  <SoftEmptyState message="Pas encore de résultats à afficher." />
+                  <SoftEmptyState message={t("results.empty")} />
                 )}
               </CardContent>
             </Card>
@@ -444,16 +440,15 @@ export default function TournamentsPage() {
                 </Badge>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold leading-tight">
-                    Retrouvez vos parties au même endroit.
+                    {t("play.title")}
                   </h3>
                   <p className="text-sm leading-6 text-muted-foreground">
-                    La page `Jouer` rassemble les matches attribués au joueur et
-                    l’accès direct au plateau en ligne.
+                    {t("play.description")}
                   </p>
                 </div>
                 <Button asChild>
                   <Link href="/play">
-                    Ouvrir le hub de jeu
+                    {t("play.open")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -467,7 +462,7 @@ export default function TournamentsPage() {
             <SectionHeading
               eyebrow="Annuaire"
               title="Explorer les tournois"
-              description="Recherchez par nom, statut ou lieu pour trouver rapidement le bon événement."
+              description={t("filters.searchHelp")}
             />
             <Badge className="border-0 bg-foreground text-background hover:bg-foreground">
               {totalTournaments} tournois
@@ -495,7 +490,7 @@ export default function TournamentsPage() {
           ) : error ? (
             <Card className="tcg-surface border-destructive/40">
               <CardContent className="p-8 text-sm text-destructive">
-                Erreur lors du chargement des tournois.
+                {t("list.error")}
               </CardContent>
             </Card>
           ) : browseItems.length ? (
@@ -516,15 +511,12 @@ export default function TournamentsPage() {
           ) : (
             <Card className="tcg-surface">
               <CardContent className="space-y-3 p-8 text-center">
-                <p className="text-lg font-semibold">
-                  Aucun tournoi sur ce filtre.
-                </p>
+                <p className="text-lg font-semibold">{t("list.emptyTitle")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Élargissez la recherche ou réinitialisez les filtres pour
-                  retrouver les événements disponibles.
+                  {t("list.emptyDescription")}
                 </p>
                 <Button variant="outline" onClick={resetFilters}>
-                  Réinitialiser les filtres
+                  {t("list.resetFilters")}
                 </Button>
               </CardContent>
             </Card>
@@ -628,6 +620,7 @@ function SectionHeading({
 }
 
 function UpcomingRow({ tournament }: { tournament: Tournament }) {
+  const t = useTranslations("Tournaments");
   const locale = useLocale();
   return (
     <Link
@@ -649,7 +642,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-4 w-4 text-primary" />
-              {tournament.location || "Lieu à confirmer"}
+              {tournament.location || t("locationToBeConfirmed")}
             </span>
             <span className="inline-flex items-center gap-1">
               <Users2 className="h-4 w-4 text-primary" />
@@ -716,6 +709,7 @@ function TournamentBrowseCard({
   isRegistering: boolean;
   canRegister: boolean;
 }) {
+  const t = useTranslations("Tournaments");
   const locale = useLocale();
   return (
     <Card className="tcg-surface tcg-surface--hover">
@@ -745,19 +739,18 @@ function TournamentBrowseCard({
             {getTournamentTypeLabel(tournament.type)}
           </Badge>
           <Badge variant="outline">
-            {tournament.location || "Lieu à confirmer"}
+            {tournament.location || t("locationToBeConfirmed")}
           </Badge>
         </div>
 
         <p className="min-h-16 text-sm leading-6 text-muted-foreground">
-          {tournament.description ||
-            "Toutes les informations essentielles du tournoi, de l'inscription jusqu'aux matches en ligne."}
+          {tournament.description || t("card.description")}
         </p>
 
         <div className="flex flex-wrap gap-3">
           <Button asChild>
             <Link href={`/tournaments/${tournament.id}`}>
-              Voir le tournoi
+              {t("card.view")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

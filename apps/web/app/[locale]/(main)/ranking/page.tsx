@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDown,
@@ -30,9 +31,9 @@ import { DeckFormat } from "@/types/deckFormat";
 import { authedFetch } from "@/utils/fetch";
 
 const PERIODS = [
-  { value: "week", label: "Semaine" },
-  { value: "month", label: "Mois" },
-  { value: "all-time", label: "All-time" },
+  { value: "week", labelKey: "periodWeek" },
+  { value: "month", labelKey: "periodMonth" },
+  { value: "all-time", labelKey: "periodAllTime" },
 ] as const;
 
 const LIMIT = 20;
@@ -141,6 +142,7 @@ function RankingRow({
   player: GlobalRankingPlayer;
   isCurrentUser: boolean;
 }) {
+  const t = useTranslations("Ranking");
   return (
     <div
       className={`group flex items-center gap-4 rounded-lg border px-4 py-3 transition-colors ${
@@ -169,7 +171,7 @@ function RankingRow({
           {player.pseudo}
           {isCurrentUser && (
             <span className="ml-2 text-xs font-medium text-primary">
-              (vous)
+              {t("you")}
             </span>
           )}
         </p>
@@ -190,6 +192,7 @@ function RankingRow({
 }
 
 function StickyUserRow({ player }: { player: GlobalRankingPlayer }) {
+  const t = useTranslations("Ranking");
   return (
     <div className="sticky bottom-0 z-20 border-t border-primary/30 bg-background/95 px-2 py-2 backdrop-blur-sm">
       <div className="flex items-center gap-4 rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-lg shadow-primary/5">
@@ -210,10 +213,10 @@ function StickyUserRow({ player }: { player: GlobalRankingPlayer }) {
             <p className="truncate font-semibold">
               {player.pseudo}
               <span className="ml-2 text-xs font-medium text-primary">
-                (vous)
+                {t("you")}
               </span>
             </p>
-            <p className="text-xs text-muted-foreground">Votre position</p>
+            <p className="text-xs text-muted-foreground">{t("yourPosition")}</p>
           </div>
         </div>
         <p className="shrink-0 text-lg font-black tabular-nums text-primary">
@@ -226,6 +229,7 @@ function StickyUserRow({ player }: { player: GlobalRankingPlayer }) {
 }
 
 export default function RankingPage() {
+  const t = useTranslations("Ranking");
   const { user, isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [period, setPeriod] = useState<string>("all-time");
@@ -292,12 +296,10 @@ export default function RankingPage() {
 
             <div className="space-y-4">
               <H1 className="max-w-3xl text-4xl font-black leading-tight md:text-5xl">
-                Classement global des joueurs
+                {t("title")}
               </H1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                Retrouvez les meilleurs joueurs de la communauté. Le score ELO
-                est mis à jour après chaque match classé et chaque tournoi
-                terminé.
+                {t("subtitle")}
               </p>
             </div>
 
@@ -305,7 +307,7 @@ export default function RankingPage() {
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Période
+                  {t("period")}
                 </span>
                 {PERIODS.map((p) => (
                   <Button
@@ -317,14 +319,14 @@ export default function RankingPage() {
                       setPage(1);
                     }}
                   >
-                    {p.label}
+                    {t(p.labelKey)}
                   </Button>
                 ))}
               </div>
               {formats && formats.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Format
+                    {t("format")}
                   </span>
                   <Button
                     size="sm"
@@ -334,7 +336,7 @@ export default function RankingPage() {
                       setPage(1);
                     }}
                   >
-                    Tous
+                    {t("allFormats")}
                   </Button>
                   {formats.map((f) => (
                     <Button
@@ -359,7 +361,7 @@ export default function RankingPage() {
                 <div className="flex items-center gap-2">
                   <UserIcon className="h-5 w-5 text-primary" />
                   <span className="font-semibold text-primary">
-                    Votre position
+                    {t("yourPosition")}
                   </span>
                 </div>
                 {myPosition.rank > 0 ? (
@@ -377,7 +379,7 @@ export default function RankingPage() {
                   </>
                 ) : (
                   <span className="text-sm text-muted-foreground">
-                    Non classé sur ce format pour cette période
+                    {t("unranked")}
                   </span>
                 )}
               </div>
@@ -401,9 +403,11 @@ export default function RankingPage() {
               {/* Table Header */}
               <div className="flex items-center gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 <div className="w-9 text-center">#</div>
-                <div className="flex-1">Joueur</div>
+                <div className="flex-1">{t("player")}</div>
                 <div className="w-16 text-right">ELO</div>
-                <div className="hidden w-24 text-right sm:block">Tendance</div>
+                <div className="hidden w-24 text-right sm:block">
+                  {t("trend")}
+                </div>
                 <div className="block w-6 sm:hidden" />
               </div>
 
@@ -416,11 +420,11 @@ export default function RankingPage() {
                 </div>
               ) : error ? (
                 <div className="p-8 text-center text-sm text-destructive">
-                  Erreur lors du chargement du classement.
+                  {t("loadError")}
                 </div>
               ) : tableRows.length === 0 && top3.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  Aucun joueur classé pour le moment.
+                  {t("empty")}
                 </div>
               ) : (
                 <div className="space-y-0.5 p-2">
@@ -451,7 +455,7 @@ export default function RankingPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Précédent
+                {t("previous")}
               </Button>
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(totalPages, 7) }).map((_, i) => {
@@ -484,7 +488,7 @@ export default function RankingPage() {
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               >
-                Suivant
+                {t("next")}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

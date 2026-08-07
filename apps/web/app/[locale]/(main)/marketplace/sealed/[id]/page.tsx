@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "@/i18n/navigation";
 import { use, useEffect, useState } from "react";
@@ -29,6 +30,7 @@ interface PageProps {
 }
 
 export default function SealedProductDetailPage({ params }: PageProps) {
+  const t = useTranslations("SealedDetail");
   const { id } = use(params);
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -58,7 +60,7 @@ export default function SealedProductDetailPage({ params }: PageProps) {
 
   const handleAddToCart = async (listing: Listing) => {
     if (!isAuthenticated) {
-      toast.error("Vous devez être connecté pour ajouter au panier");
+      toast.error(t("loginRequired"));
       router.push("/auth/login");
       return;
     }
@@ -72,10 +74,9 @@ export default function SealedProductDetailPage({ params }: PageProps) {
     try {
       sealedEventTracker.trackAddToCart(id, listing.id);
       await addItem({ listingId: listing.id, quantity });
-      toast.success("Article ajouté au panier !");
+      toast.success(t("addedToCart"));
     } catch (error: any) {
-      const message =
-        error?.response?.data?.message || "Erreur lors de l'ajout au panier";
+      const message = error?.response?.data?.message || t("addError");
       toast.error(message);
     } finally {
       setAddingToListingId(null);
@@ -114,7 +115,7 @@ export default function SealedProductDetailPage({ params }: PageProps) {
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                        Pas d'image disponible
+                        {t("noImage")}
                       </div>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -28,6 +29,7 @@ import {
 } from "@/utils/sealedImage";
 
 const CartDropdown = () => {
+  const t = useTranslations("Cart");
   const [isOpen, setIsOpen] = useState(false);
   const { cart, isLoading, fetchCart, removeItem } = useCartStore();
   const { formatPrice, currency } = useCurrencyStore();
@@ -70,7 +72,7 @@ const CartDropdown = () => {
           </div>
         ) : cartItems.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            Votre panier est vide
+            {t("emptyTitle")}
           </div>
         ) : (
           <>
@@ -105,7 +107,7 @@ const CartDropdown = () => {
                       {item.listing.productKind === "sealed" ||
                       item.listing.sealedProduct
                         ? getSealedName(item.listing.sealedProduct) ||
-                          "Produit scellé"
+                          t("sealedProduct")
                         : item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -142,7 +144,7 @@ const CartDropdown = () => {
               </div>
               <Button asChild className="w-full" size="sm">
                 <Link href="/cart" onClick={() => setIsOpen(false)}>
-                  Voir le panier
+                  {t("viewCart")}
                 </Link>
               </Button>
             </div>

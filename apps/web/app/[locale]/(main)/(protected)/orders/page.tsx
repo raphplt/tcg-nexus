@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { paymentService } from "@/services/payment.service";
 import { Order } from "@/types/order";
@@ -8,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function OrdersPage() {
+  const t = useTranslations("Orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +21,7 @@ export default function OrdersPage() {
         setOrders(data);
       } catch (err) {
         console.error("Failed to fetch orders", err);
-        setError(
-          "Impossible de charger vos commandes. Veuillez réessayer plus tard.",
-        );
+        setError(t("loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -52,7 +52,7 @@ export default function OrdersPage() {
 
   return (
     <div className="container mx-auto py-10 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Mes Commandes</h1>
+      <h1 className="text-3xl font-bold mb-8">{t("title")}</h1>
       <OrderList orders={orders} />
     </div>
   );

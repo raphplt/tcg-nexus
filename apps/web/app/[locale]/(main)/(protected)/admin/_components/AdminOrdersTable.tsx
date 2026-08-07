@@ -35,8 +35,8 @@ import {
 import { AdminOrderFilters, adminService } from "@/services/admin.service";
 import { Order, OrderStatus } from "@/types/order";
 import { PaginatedResult } from "@/types/pagination";
-import { getFulfillmentLabel } from "@/utils/order";
-import { useLocale } from "next-intl";
+import { getFulfillmentKey } from "@/utils/order";
+import { useLocale, useTranslations } from "next-intl";
 
 const statusOptions = Object.values(OrderStatus);
 
@@ -59,6 +59,7 @@ interface StatusModalState {
 }
 
 export function AdminOrdersTable() {
+  const tStatus = useTranslations("OrderStatus");
   const locale = useLocale();
   const [filters, setFilters] = useState<AdminOrderFilters>({
     page: 1,
@@ -323,8 +324,10 @@ export function AdminOrdersTable() {
                                         </TableCell>
                                         <TableCell>{item.sellerName}</TableCell>
                                         <TableCell>
-                                          {getFulfillmentLabel(
-                                            item.fulfillmentStatus,
+                                          {tStatus(
+                                            getFulfillmentKey(
+                                              item.fulfillmentStatus,
+                                            ),
                                           )}
                                         </TableCell>
                                         <TableCell>{item.quantity}</TableCell>

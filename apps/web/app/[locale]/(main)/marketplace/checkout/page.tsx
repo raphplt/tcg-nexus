@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { AlertCircle, Loader2 } from "lucide-react";
@@ -28,6 +29,7 @@ const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 export default function CheckoutPage() {
+  const t = useTranslations("Checkout");
   const router = useRouter();
   const { cart, isLoading, fetchCart } = useCartStore();
   const total = useCartTotal();
@@ -55,8 +57,7 @@ export default function CheckoutPage() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ||
-        "Impossible de démarrer le paiement. Réessayez dans un instant.";
+          ?.message || t("startError");
       setError(message);
     } finally {
       setIsStarting(false);
@@ -78,11 +79,9 @@ export default function CheckoutPage() {
     return (
       <div className="container mx-auto py-10 text-center space-y-4">
         <h1 className="text-2xl font-bold">Votre panier est vide</h1>
-        <p className="text-muted-foreground">
-          Retournez sur la marketplace pour ajouter des articles.
-        </p>
+        <p className="text-muted-foreground">{t("emptyCart")}</p>
         <Button onClick={() => router.push("/marketplace")}>
-          Découvrir la marketplace
+          {t("browseMarketplace")}
         </Button>
       </div>
     );
@@ -111,7 +110,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8 text-center">Paiement</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">{t("title")}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
         <div className="order-2 lg:order-1">
@@ -137,7 +136,7 @@ export default function CheckoutPage() {
                       : getCardImage(item.listing.pokemonCard);
                     const productName = isSealed
                       ? getSealedName(item.listing.sealedProduct) ||
-                        "Produit scellé"
+                        t("sealedProduct")
                       : item.listing.pokemonCard?.name;
                     const productSub = isSealed
                       ? getConditionLabel(item.listing.sealedCondition) ||

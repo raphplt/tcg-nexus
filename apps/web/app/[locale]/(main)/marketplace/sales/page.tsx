@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -23,22 +24,24 @@ import { SellerRevenue, salesService } from "@/services/sales.service";
 import { FulfillmentStatus, SellerSale } from "@/types/order";
 import {
   getFulfillmentColor,
-  getFulfillmentLabel,
+  getFulfillmentKey,
   getOrderItemImage,
 } from "@/utils/order";
 import { formatPrice } from "@/utils/price";
 import { formatHandlingTime } from "@/utils/shipping";
 import ShipSaleDialog from "./_components/ShipSaleDialog";
 
-const FILTERS: Array<{ label: string; value: FulfillmentStatus | "all" }> = [
-  { label: "Toutes", value: "all" },
-  { label: "À expédier", value: FulfillmentStatus.TO_SHIP },
-  { label: "En préparation", value: FulfillmentStatus.PREPARING },
-  { label: "Expédiées", value: FulfillmentStatus.SHIPPED },
-  { label: "Livrées", value: FulfillmentStatus.DELIVERED },
+const FILTERS: Array<{ labelKey: string; value: FulfillmentStatus | "all" }> = [
+  { labelKey: "filterAll", value: "all" },
+  { labelKey: "filterToShip", value: FulfillmentStatus.TO_SHIP },
+  { labelKey: "filterPreparing", value: FulfillmentStatus.PREPARING },
+  { labelKey: "filterShipped", value: FulfillmentStatus.SHIPPED },
+  { labelKey: "filterDelivered", value: FulfillmentStatus.DELIVERED },
 ];
 
 export default function SellerSalesPage() {
+  const t = useTranslations("Sales");
+  const tStatus = useTranslations("OrderStatus");
   const [sales, setSales] = useState<SellerSale[]>([]);
   const [revenue, setRevenue] = useState<SellerRevenue | null>(null);
   const [filter, setFilter] = useState<FulfillmentStatus | "all">("all");
@@ -60,7 +63,7 @@ export default function SellerSalesPage() {
       setSales(result.data);
       setTotalPages(result.meta.totalPages);
     } catch {
-      setError("Impossible de charger vos ventes. Réessayez dans un instant.");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -87,12 +90,12 @@ export default function SellerSalesPage() {
         fulfillmentStatus,
         ...extra,
       });
-      toast.success("Vente mise à jour");
+      toast.success(t("saleUpdated"));
       await loadSales();
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "La mise à jour a échoué.";
+          ?.message || t("updateFailed");
       toast.error(message);
       throw err;
     }
@@ -104,10 +107,8 @@ export default function SellerSalesPage() {
     <div className="container mx-auto max-w-5xl py-10 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Mes ventes</h1>
-          <p className="text-muted-foreground mt-1">
-            Préparez et expédiez les commandes reçues.
-          </p>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
@@ -116,7 +117,7 @@ export default function SellerSalesPage() {
           <Button asChild>
             <Link href="/marketplace/create">
               <Plus className="mr-2 h-4 w-4" />
-              Vendre une carte
+              {t("sellCard")}
             </Link>
           </Button>
         </div>
@@ -126,7 +127,7 @@ export default function SellerSalesPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ventes réalisées
+              {t("salesCount")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -136,7 +137,7 @@ export default function SellerSalesPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Encaissé pour vous
+              {t("collected")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -152,9 +153,7 @@ export default function SellerSalesPage() {
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Articles et frais de port compris. Montant perçu par TCG Nexus sur
-              vos ventes payées : le reversement vers votre compte bancaire
-              n&apos;est pas implémenté.
+              {t("collectedHelp")}
             </p>
           </CardContent>
         </Card>
@@ -171,7 +170,7 @@ export default function SellerSalesPage() {
               setPage(1);
             }}
           >
-            {item.label}
+            {t(item.labelKey)}
           </Button>
         ))}
       </div>
@@ -188,7 +187,7 @@ export default function SellerSalesPage() {
             <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
             <span className="text-sm">{error}</span>
             <Button size="sm" variant="outline" onClick={loadSales}>
-              Réessayer
+              {t("retry")}
             </Button>
           </CardContent>
         </Card>
@@ -197,15 +196,13 @@ export default function SellerSalesPage() {
           <CardContent className="p-10 text-center space-y-4">
             <Package className="mx-auto h-10 w-10 text-muted-foreground" />
             <p className="text-muted-foreground">
-              {filter === "all"
-                ? "Vous n'avez encore rien vendu. Publiez une annonce pour commencer."
-                : "Aucune vente dans cet état."}
+              {filter === "all" ? t("emptyAll") : t("emptyFiltered")}
             </p>
             {filter === "all" && (
               <Button asChild>
                 <Link href="/marketplace/create">
                   <Plus className="mr-2 h-4 w-4" />
-                  Vendre une carte
+                  {t("sellCard")}
                 </Link>
               </Button>
             )}
@@ -231,12 +228,12 @@ export default function SellerSalesPage() {
                     <Badge
                       className={getFulfillmentColor(sale.fulfillmentStatus)}
                     >
-                      {getFulfillmentLabel(sale.fulfillmentStatus)}
+                      {tStatus(getFulfillmentKey(sale.fulfillmentStatus))}
                     </Badge>
                   </div>
 
                   <p className="text-sm text-muted-foreground">
-                    Commande #{sale.order?.id} ·{" "}
+                    {t("orderNumber", { id: sale.order?.id ?? "" })} ·{" "}
                     {sale.order?.createdAt &&
                       format(new Date(sale.order.createdAt), "d MMMM yyyy", {
                         locale: fr,
@@ -259,7 +256,7 @@ export default function SellerSalesPage() {
                   <div className="flex items-start gap-2 text-sm">
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      {sale.order?.shippingAddress || "Adresse non renseignée"}
+                      {sale.order?.shippingAddress || t("noAddress")}
                     </span>
                   </div>
 
@@ -280,13 +277,13 @@ export default function SellerSalesPage() {
                         applyFulfillment(sale, FulfillmentStatus.PREPARING)
                       }
                     >
-                      En préparation
+                      {t("markPreparing")}
                     </Button>
                   )}
                   {(sale.fulfillmentStatus === FulfillmentStatus.TO_SHIP ||
                     sale.fulfillmentStatus === FulfillmentStatus.PREPARING) && (
                     <Button size="sm" onClick={() => setSaleToShip(sale)}>
-                      Marquer expédiée
+                      {t("markShipped")}
                     </Button>
                   )}
                   {sale.fulfillmentStatus === FulfillmentStatus.SHIPPED && (
@@ -297,7 +294,7 @@ export default function SellerSalesPage() {
                         applyFulfillment(sale, FulfillmentStatus.DELIVERED)
                       }
                     >
-                      Marquer livrée
+                      {t("markDelivered")}
                     </Button>
                   )}
                 </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 import { Package, Truck } from "lucide-react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
@@ -15,13 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useCurrencyStore } from "@/store/currency.store";
 import { Order } from "@/types/order";
+import { formatDateTime } from "@/utils/format";
 import {
   getFulfillmentColor,
-  getFulfillmentLabel,
+  getFulfillmentKey,
   getOrderItemImage,
   getOrderItemUrl,
   getOrderStatusColor,
-  getOrderStatusLabel,
+  getOrderStatusKey,
 } from "@/utils/order";
 
 interface OrderListProps {
@@ -29,6 +29,9 @@ interface OrderListProps {
 }
 
 export default function OrderList({ orders }: OrderListProps) {
+  const t = useTranslations("Orders");
+  const locale = useLocale();
+  const tStatus = useTranslations("OrderStatus");
   const { formatExact } = useCurrencyStore();
 
   if (orders.length === 0) {
@@ -36,11 +39,9 @@ export default function OrderList({ orders }: OrderListProps) {
       <Card>
         <CardContent className="p-8 text-center space-y-3">
           <Package className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            Vous n&apos;avez pas encore passé de commande.
-          </p>
+          <p className="text-muted-foreground">{t("emptyTitle")}</p>
           <Link href="/marketplace" className="text-primary hover:underline">
-            Découvrir la marketplace
+            {t("browseMarketplace")}
           </Link>
         </CardContent>
       </Card>
@@ -59,16 +60,18 @@ export default function OrderList({ orders }: OrderListProps) {
                     href={`/orders/${order.id}`}
                     className="font-semibold hover:text-primary"
                   >
-                    Commande #{order.id}
+                    {t("orderNumber", { id: order.id })}
                   </Link>
                   <Badge className={getOrderStatusColor(order.status)}>
-                    {getOrderStatusLabel(order.status)}
+                    {tStatus(getOrderStatusKey(order.status))}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Passée le{" "}
-                  {format(new Date(order.createdAt), "d MMMM yyyy 'à' HH:mm", {
-                    locale: fr,
+                  {t("placedOn", {
+                    date: formatDateTime(order.createdAt, locale, {
+                      dateStyle: "long",
+                      timeStyle: "short",
+                    }),
                   })}
                 </p>
               </div>
@@ -77,8 +80,7 @@ export default function OrderList({ orders }: OrderListProps) {
                   {formatExact(order.totalAmount, order.currency)}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {order.orderItems.length} article
-                  {order.orderItems.length > 1 ? "s" : ""}
+                  {t("itemCount", { count: order.orderItems.length })}
                 </p>
               </div>
             </div>
@@ -88,7 +90,7 @@ export default function OrderList({ orders }: OrderListProps) {
               <AccordionItem value={`order-${order.id}`} className="border-b-0">
                 <AccordionTrigger className="px-4 py-2 hover:no-underline">
                   <span className="text-sm text-muted-foreground">
-                    Voir les détails
+                    {t("viewDetails")}
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
@@ -137,7 +139,7 @@ export default function OrderList({ orders }: OrderListProps) {
                                 x{item.quantity}
                               </span>
                               <span className="text-sm text-muted-foreground">
-                                Vendu par {item.sellerName}
+                                {t("soldBy", { seller: item.sellerName })}
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -146,7 +148,9 @@ export default function OrderList({ orders }: OrderListProps) {
                                   item.fulfillmentStatus,
                                 )}
                               >
-                                {getFulfillmentLabel(item.fulfillmentStatus)}
+                                {tStatus(
+                                  getFulfillmentKey(item.fulfillmentStatus),
+                                )}
                               </Badge>
                               {item.trackingNumber && (
                                 <span className="flex items-center gap-1 text-xs text-muted-foreground">

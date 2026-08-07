@@ -109,5 +109,277 @@
     "sellers": "Sellers",
     "sellerDetail": "Seller profile",
     "create": "Create a listing"
+  },
+  "Auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Sign in to your TCG Nexus account",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "rememberMe": "Remember me",
+      "noAccount": "No account yet?",
+      "signUp": "Sign up",
+      "back": "Back",
+      "home": "Home",
+      "genericError": "Something went wrong while signing in",
+      "devMode": "🔧 Development mode - Quick sign in 🔧",
+      "loginAs": "Sign in as {role} ({email})"
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Create your TCG Nexus account",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Sign up",
+      "submitting": "Signing up...",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "back": "Back",
+      "home": "Home",
+      "genericError": "Something went wrong while signing up"
+    },
+    "validation": {
+      "invalidEmail": "Invalid email format",
+      "emailRequired": "Email is required",
+      "passwordMinLength": "Password must be at least 6 characters",
+      "passwordComplexity": "Password must contain at least one uppercase letter, one lowercase letter and one digit",
+      "firstNameRequired": "First name is required",
+      "firstNameMinLength": "First name must be at least 2 characters",
+      "lastNameRequired": "Last name is required",
+      "lastNameMinLength": "Last name must be at least 2 characters",
+      "confirmPasswordRequired": "Password confirmation is required",
+      "passwordsDoNotMatch": "Passwords do not match"
+    }
+  },
+  "OrderStatus": {
+    "orderStatus": {
+      "Pending": "Awaiting payment",
+      "Paid": "Paid",
+      "Shipped": "Shipped",
+      "Delivered": "Delivered",
+      "Cancelled": "Cancelled",
+      "Refunded": "Refunded"
+    },
+    "fulfillment": {
+      "to_ship": "To ship",
+      "preparing": "Preparing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "Marketplace": {
+    "hero": {
+      "title": "TCG Nexus Marketplace",
+      "subtitle": "Discover, buy and sell your Pokémon cards. Find the best offers and the best sellers in the community.",
+      "browseCards": "Browse cards",
+      "sealedProducts": "Sealed products",
+      "sellCard": "Sell a card"
+    },
+    "sections": {
+      "seriesAndSets": "Series and sets",
+      "pocketSets": "Pokémon TCG Pocket sets (Mobile)",
+      "latestListings": "Latest listings"
+    },
+    "empty": {
+      "trending": "No trending card at the moment",
+      "popular": "No popular card at the moment",
+      "listings": "No recent listing",
+      "sellers": "No seller at the moment"
+    }
+  },
+  "MarketplaceCards": {
+    "title": "Card catalogue",
+    "subtitle": "Browse our complete collection of Pokémon cards",
+    "loadError": "Could not load the cards. Please try again in a moment.",
+    "retry": "Try again",
+    "noResults": "No card matches these filters"
+  },
+  "Cart": {
+    "title": "My cart",
+    "itemsInCart": "{count, plural, =0 {No item} one {# item} other {# items}} in your cart",
+    "clearCart": "Clear cart",
+    "clearConfirmTitle": "Clear your cart?",
+    "clearConfirmDescription": "{count, plural, one {The # item will be removed} other {All # items will be removed}}. The listings stay available on the marketplace.",
+    "cancel": "Cancel",
+    "quantity": "Quantity",
+    "total": "Total",
+    "condition": "Condition",
+    "subtotal": "Subtotal ({count, plural, one {# item} other {# items}})",
+    "shipping": "Shipping ({count, plural, one {# seller} other {# sellers}})",
+    "shippingFree": "Free",
+    "checkout": "Place order",
+    "limitedStockTitle": "Limited stock",
+    "limitedStockDescription": "Some items have reached their maximum available quantity.",
+    "maxQuantity": "Maximum available quantity: {max}",
+    "quantityUpdated": "Quantity updated",
+    "quantityUpdateError": "Could not update the quantity",
+    "itemRemoved": "Item removed from cart",
+    "itemRemoveError": "Could not remove the item",
+    "cartCleared": "Cart cleared",
+    "cartClearError": "Could not clear the cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyDescription": "Browse our marketplace to find cards to add to your cart",
+    "emptyAction": "Browse the marketplace",
+    "sealedProduct": "Sealed product",
+    "viewCart": "View cart"
+  },
+  "Checkout": {
+    "title": "Checkout",
+    "emptyCart": "Go back to the marketplace to add items.",
+    "browseMarketplace": "Browse the marketplace",
+    "startError": "Could not start the payment. Please try again in a moment.",
+    "sealedProduct": "Sealed product"
+  },
+  "Orders": {
+    "title": "My orders",
+    "loadError": "Could not load your orders. Please try again later.",
+    "orderNumber": "Order #{id}",
+    "placedOn": "Placed on {date}",
+    "itemCount": "{count, plural, one {# item} other {# items}}",
+    "viewDetails": "View details",
+    "emptyTitle": "You have not placed any order yet.",
+    "browseMarketplace": "Browse the marketplace",
+    "soldBy": "Sold by {seller}"
+  },
+  "Sales": {
+    "title": "My sales",
+    "subtitle": "Prepare and ship the orders you received.",
+    "sellCard": "Sell a card",
+    "salesCount": "Completed sales",
+    "collected": "Collected for you",
+    "collectedHelp": "Items and shipping included. Amount collected by TCG Nexus on your paid sales: payout to your bank account is not implemented.",
+    "retry": "Try again",
+    "markPreparing": "Preparing",
+    "markShipped": "Mark as shipped",
+    "markDelivered": "Mark as delivered",
+    "orderNumber": "Order #{id}",
+    "loadError": "Could not load your sales. Please try again in a moment.",
+    "saleUpdated": "Sale updated",
+    "updateFailed": "The update failed.",
+    "emptyAll": "You have not sold anything yet. Publish a listing to get started.",
+    "emptyFiltered": "No sale with this status.",
+    "noAddress": "No address provided",
+    "filterAll": "All",
+    "filterToShip": "To ship",
+    "filterPreparing": "Preparing",
+    "filterShipped": "Shipped",
+    "filterDelivered": "Delivered"
+  },
+  "Sealed": {
+    "sortNewest": "Newest",
+    "sortPopularity": "Popularity",
+    "sortPriceDesc": "Price, high to low",
+    "reset": "Reset",
+    "loadError": "Could not load the sealed products. Please try again in a moment.",
+    "retry": "Try again",
+    "noResults": "No sealed product found.",
+    "searchPlaceholder": "Search a product...",
+    "typePlaceholder": "Product type",
+    "seriesPlaceholder": "Series"
+  },
+  "SealedDetail": {
+    "noImage": "No image available",
+    "noImageShort": "No image",
+    "loginRequired": "You must be signed in to add to the cart",
+    "addedToCart": "Item added to cart!",
+    "addError": "Could not add to the cart"
+  },
+  "CardCard": {
+    "marketPrice": "Market price",
+    "popularityTooltip": "Popularity computed over 90 days",
+    "momentumTooltip": "Recent momentum (7 days vs 30 days)"
+  },
+  "Tournaments": {
+    "hero": {
+      "title": "Pokémon tournaments",
+      "subtitle": "Discover upcoming tournaments and join the right tables at the right time.",
+      "description": "Find open registrations, ongoing events and match access through a more direct path.",
+      "create": "Create a tournament",
+      "browseCalendar": "Browse the calendar",
+      "goToPlay": "Go to Play"
+    },
+    "stats": {
+      "listed": "Listed tournaments",
+      "openOrSoon": "Open or starting soon",
+      "followNow": "Worth following now",
+      "activeInList": "Active in the list"
+    },
+    "highlights": {
+      "joinNow": "Quickly spot the events you can join right now.",
+      "clearInfo": "Dates, venues and formats stand out immediately, without clutter.",
+      "easyAccess": "When a table is ready, the link to the game stays easy to find."
+    },
+    "spotlight": {
+      "title": "Featured",
+      "subtitle": "The next event to follow or join on the tournament scene.",
+      "open": "Open tournament page",
+      "emptyTitle": "No tournament to feature",
+      "emptyDescription": "Create a new event or open registrations to surface the next one."
+    },
+    "upcoming": {
+      "title": "Right now",
+      "subtitle": "A quick read of the most useful events to register for or follow live.",
+      "error": "Could not load upcoming tournaments.",
+      "empty": "No upcoming tournament at the moment."
+    },
+    "results": {
+      "title": "Recap",
+      "subtitle": "The latest finished tournaments, without a heavy table.",
+      "error": "Could not load recent results.",
+      "empty": "No result to show yet."
+    },
+    "recent": {
+      "title": "Recent tournaments"
+    },
+    "filters": {
+      "title": "Simplified filters",
+      "searchHelp": "Search by name, status or venue to quickly find the right event."
+    },
+    "play": {
+      "title": "Find your games in one place.",
+      "description": "The `Play` page gathers the matches assigned to the player and direct access to the online board.",
+      "open": "Open the play hub"
+    },
+    "list": {
+      "error": "Could not load the tournaments.",
+      "emptyTitle": "No tournament for this filter.",
+      "emptyDescription": "Broaden your search or reset the filters to find available events.",
+      "resetFilters": "Reset filters"
+    },
+    "card": {
+      "description": "All the essential tournament information, from registration to online matches.",
+      "view": "View tournament"
+    },
+    "toBeConfirmed": "To be confirmed",
+    "dateToBeConfirmed": "Date to be confirmed",
+    "locationToBeConfirmed": "Venue to be confirmed",
+    "registerError": "Could not register to the tournament:"
+  },
+  "Ranking": {
+    "title": "Global player leaderboard",
+    "subtitle": "Find the best players in the community. The ELO score is updated after each ranked match and each finished tournament.",
+    "period": "Period",
+    "periodWeek": "Week",
+    "periodMonth": "Month",
+    "periodAllTime": "All-time",
+    "format": "Format",
+    "allFormats": "All",
+    "player": "Player",
+    "trend": "Trend",
+    "yourPosition": "Your position",
+    "you": "(you)",
+    "unranked": "Unranked in this format for this period",
+    "loadError": "Could not load the leaderboard.",
+    "empty": "No ranked player at the moment.",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ArrowLeft, Loader2, MapPin, Store, Truck } from "lucide-react";
@@ -17,11 +18,11 @@ import { useCurrencyStore } from "@/store/currency.store";
 import { Order, OrderItem, OrderStatus } from "@/types/order";
 import {
   getFulfillmentColor,
-  getFulfillmentLabel,
+  getFulfillmentKey,
   getOrderItemImage,
   getOrderItemUrl,
   getOrderStatusColor,
-  getOrderStatusLabel,
+  getOrderStatusKey,
 } from "@/utils/order";
 import { formatHandlingTime } from "@/utils/shipping";
 
@@ -49,6 +50,7 @@ export default function OrderDetailsPage() {
 }
 
 function OrderDetailsContent() {
+  const tStatus = useTranslations("OrderStatus");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const { formatExact } = useCurrencyStore();
@@ -141,7 +143,7 @@ function OrderDetailsContent() {
             </div>
             <div className="flex flex-col items-start sm:items-end gap-2">
               <Badge className={getOrderStatusColor(order.status)}>
-                {getOrderStatusLabel(order.status)}
+                {tStatus(getOrderStatusKey(order.status))}
               </Badge>
               <span className="text-2xl font-bold">
                 {formatExact(order.totalAmount, order.currency)}
@@ -238,7 +240,9 @@ function OrderDetailsContent() {
                                 item.fulfillmentStatus,
                               )}
                             >
-                              {getFulfillmentLabel(item.fulfillmentStatus)}
+                              {tStatus(
+                                getFulfillmentKey(item.fulfillmentStatus),
+                              )}
                             </Badge>
                             {item.trackingNumber && (
                               <span className="flex items-center gap-1 text-xs text-muted-foreground">

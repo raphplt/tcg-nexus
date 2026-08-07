@@ -109,5 +109,277 @@
     "sellers": "Vendeurs",
     "sellerDetail": "Profil vendeur",
     "create": "Créer une vente"
+  },
+  "Auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Connectez-vous à votre compte TCG Nexus",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "submitting": "Connexion...",
+      "rememberMe": "Se souvenir de moi",
+      "noAccount": "Pas encore de compte ?",
+      "signUp": "S'inscrire",
+      "back": "Retour",
+      "home": "Accueil",
+      "genericError": "Une erreur est survenue lors de la connexion",
+      "devMode": "🔧 Mode Développement - Connexion Rapide 🔧",
+      "loginAs": "Se connecter en tant que {role} ({email})"
+    },
+    "register": {
+      "title": "Inscription",
+      "subtitle": "Créez votre compte TCG Nexus",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "S'inscrire",
+      "submitting": "Inscription...",
+      "hasAccount": "Déjà un compte ?",
+      "signIn": "Se connecter",
+      "back": "Retour",
+      "home": "Accueil",
+      "genericError": "Une erreur est survenue lors de l'inscription"
+    },
+    "validation": {
+      "invalidEmail": "Format d'email invalide",
+      "emailRequired": "L'email est requis",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+      "passwordComplexity": "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre",
+      "firstNameRequired": "Le prénom est requis",
+      "firstNameMinLength": "Le prénom doit contenir au moins 2 caractères",
+      "lastNameRequired": "Le nom est requis",
+      "lastNameMinLength": "Le nom doit contenir au moins 2 caractères",
+      "confirmPasswordRequired": "La confirmation du mot de passe est requise",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
+    }
+  },
+  "OrderStatus": {
+    "orderStatus": {
+      "Pending": "En attente de paiement",
+      "Paid": "Payée",
+      "Shipped": "Expédiée",
+      "Delivered": "Livrée",
+      "Cancelled": "Annulée",
+      "Refunded": "Remboursée"
+    },
+    "fulfillment": {
+      "to_ship": "À expédier",
+      "preparing": "En préparation",
+      "shipped": "Expédiée",
+      "delivered": "Livrée",
+      "cancelled": "Annulée"
+    }
+  },
+  "Marketplace": {
+    "hero": {
+      "title": "Marketplace TCG Nexus",
+      "subtitle": "Découvrez, achetez et vendez vos cartes Pokémon. Trouvez les meilleures offres et les meilleurs vendeurs de la communauté.",
+      "browseCards": "Explorer les cartes",
+      "sealedProducts": "Produits scellés",
+      "sellCard": "Vendre une carte"
+    },
+    "sections": {
+      "seriesAndSets": "Séries et extensions",
+      "pocketSets": "Extensions Pokémon TCG Pocket (Mobile)",
+      "latestListings": "Dernières offres"
+    },
+    "empty": {
+      "trending": "Aucune carte en tendance pour le moment",
+      "popular": "Aucune carte populaire pour le moment",
+      "listings": "Aucune offre récente",
+      "sellers": "Aucun vendeur pour le moment"
+    }
+  },
+  "MarketplaceCards": {
+    "title": "Catalogue de cartes",
+    "subtitle": "Explorez notre collection complète de cartes Pokémon",
+    "loadError": "Impossible de charger les cartes. Réessayez dans un instant.",
+    "retry": "Réessayer",
+    "noResults": "Aucune carte trouvée avec ces critères"
+  },
+  "Cart": {
+    "title": "Mon panier",
+    "itemsInCart": "{count, plural, =0 {Aucun article} one {# article} other {# articles}} dans votre panier",
+    "clearCart": "Vider le panier",
+    "clearConfirmTitle": "Vider votre panier ?",
+    "clearConfirmDescription": "{count, plural, one {Le # article en sera retiré} other {Les # articles en seront retirés}}. Les annonces restent disponibles sur la marketplace.",
+    "cancel": "Annuler",
+    "quantity": "Quantité",
+    "total": "Total",
+    "condition": "État",
+    "subtotal": "Sous-total ({count, plural, one {# article} other {# articles}})",
+    "shipping": "Frais de port ({count, plural, one {# vendeur} other {# vendeurs}})",
+    "shippingFree": "Offerts",
+    "checkout": "Passer la commande",
+    "limitedStockTitle": "Stock limité",
+    "limitedStockDescription": "Certains articles ont atteint leur quantité maximale disponible.",
+    "maxQuantity": "Quantité maximale disponible : {max}",
+    "quantityUpdated": "Quantité mise à jour",
+    "quantityUpdateError": "Erreur lors de la mise à jour de la quantité",
+    "itemRemoved": "Article retiré du panier",
+    "itemRemoveError": "Erreur lors de la suppression de l'article",
+    "cartCleared": "Panier vidé",
+    "cartClearError": "Erreur lors du vidage du panier",
+    "emptyTitle": "Votre panier est vide",
+    "emptyDescription": "Explorez notre marketplace pour trouver des cartes à ajouter à votre panier",
+    "emptyAction": "Découvrir le marketplace",
+    "sealedProduct": "Produit scellé",
+    "viewCart": "Voir le panier"
+  },
+  "Checkout": {
+    "title": "Paiement",
+    "emptyCart": "Retournez sur la marketplace pour ajouter des articles.",
+    "browseMarketplace": "Découvrir la marketplace",
+    "startError": "Impossible de démarrer le paiement. Réessayez dans un instant.",
+    "sealedProduct": "Produit scellé"
+  },
+  "Orders": {
+    "title": "Mes commandes",
+    "loadError": "Impossible de charger vos commandes. Veuillez réessayer plus tard.",
+    "orderNumber": "Commande #{id}",
+    "placedOn": "Passée le {date}",
+    "itemCount": "{count, plural, one {# article} other {# articles}}",
+    "viewDetails": "Voir les détails",
+    "emptyTitle": "Vous n'avez pas encore passé de commande.",
+    "browseMarketplace": "Découvrir la marketplace",
+    "soldBy": "Vendu par {seller}"
+  },
+  "Sales": {
+    "title": "Mes ventes",
+    "subtitle": "Préparez et expédiez les commandes reçues.",
+    "sellCard": "Vendre une carte",
+    "salesCount": "Ventes réalisées",
+    "collected": "Encaissé pour vous",
+    "collectedHelp": "Articles et frais de port compris. Montant perçu par TCG Nexus sur vos ventes payées : le reversement vers votre compte bancaire n'est pas implémenté.",
+    "retry": "Réessayer",
+    "markPreparing": "En préparation",
+    "markShipped": "Marquer expédiée",
+    "markDelivered": "Marquer livrée",
+    "orderNumber": "Commande #{id}",
+    "loadError": "Impossible de charger vos ventes. Réessayez dans un instant.",
+    "saleUpdated": "Vente mise à jour",
+    "updateFailed": "La mise à jour a échoué.",
+    "emptyAll": "Vous n'avez encore rien vendu. Publiez une annonce pour commencer.",
+    "emptyFiltered": "Aucune vente dans cet état.",
+    "noAddress": "Adresse non renseignée",
+    "filterAll": "Toutes",
+    "filterToShip": "À expédier",
+    "filterPreparing": "En préparation",
+    "filterShipped": "Expédiées",
+    "filterDelivered": "Livrées"
+  },
+  "Sealed": {
+    "sortNewest": "Plus récents",
+    "sortPopularity": "Popularité",
+    "sortPriceDesc": "Prix décroissant",
+    "reset": "Réinitialiser",
+    "loadError": "Impossible de charger les produits scellés. Réessayez dans un instant.",
+    "retry": "Réessayer",
+    "noResults": "Aucun produit scellé trouvé.",
+    "searchPlaceholder": "Rechercher un produit...",
+    "typePlaceholder": "Type de produit",
+    "seriesPlaceholder": "Série"
+  },
+  "SealedDetail": {
+    "noImage": "Pas d'image disponible",
+    "noImageShort": "Pas d'image",
+    "loginRequired": "Vous devez être connecté pour ajouter au panier",
+    "addedToCart": "Article ajouté au panier !",
+    "addError": "Erreur lors de l'ajout au panier"
+  },
+  "CardCard": {
+    "marketPrice": "Prix de référence",
+    "popularityTooltip": "Popularité calculée sur 90 jours",
+    "momentumTooltip": "Momentum récent (7 jours vs 30 jours)"
+  },
+  "Tournaments": {
+    "hero": {
+      "title": "Tournois Pokémon",
+      "subtitle": "Découvrez les tournois à venir et rejoignez les bonnes tables au bon moment.",
+      "description": "Retrouvez les inscriptions ouvertes, les événements en cours et les accès aux matches depuis un parcours plus direct.",
+      "create": "Créer un tournoi",
+      "browseCalendar": "Explorer le calendrier",
+      "goToPlay": "Aller à Jouer"
+    },
+    "stats": {
+      "listed": "Tournois référencés",
+      "openOrSoon": "Ouverts ou imminents",
+      "followNow": "À suivre maintenant",
+      "activeInList": "Actifs dans la liste"
+    },
+    "highlights": {
+      "joinNow": "Repérez rapidement les événements que vous pouvez rejoindre maintenant.",
+      "clearInfo": "Dates, lieux et formats ressortent tout de suite, sans surcharge.",
+      "easyAccess": "Quand une table est prête, le lien vers la partie reste facile à retrouver."
+    },
+    "spotlight": {
+      "title": "À la une",
+      "subtitle": "Le prochain rendez-vous à suivre ou à rejoindre dans la scène tournoi.",
+      "open": "Ouvrir la fiche tournoi",
+      "emptyTitle": "Aucun tournoi à mettre en avant",
+      "emptyDescription": "Crée un nouvel événement ou ouvre les inscriptions pour faire remonter le prochain rendez-vous."
+    },
+    "upcoming": {
+      "title": "En ce moment",
+      "subtitle": "Une lecture rapide des événements les plus utiles pour s'inscrire ou suivre le live.",
+      "error": "Impossible de charger les prochains tournois.",
+      "empty": "Aucun tournoi à venir pour le moment."
+    },
+    "results": {
+      "title": "Récap",
+      "subtitle": "Les derniers tournois terminés, sans la lourdeur d'une grosse table.",
+      "error": "Impossible de charger les résultats récents.",
+      "empty": "Pas encore de résultats à afficher."
+    },
+    "recent": {
+      "title": "Tournois récents"
+    },
+    "filters": {
+      "title": "Filtres simplifiés",
+      "searchHelp": "Recherchez par nom, statut ou lieu pour trouver rapidement le bon événement."
+    },
+    "play": {
+      "title": "Retrouvez vos parties au même endroit.",
+      "description": "La page `Jouer` rassemble les matches attribués au joueur et l'accès direct au plateau en ligne.",
+      "open": "Ouvrir le hub de jeu"
+    },
+    "list": {
+      "error": "Erreur lors du chargement des tournois.",
+      "emptyTitle": "Aucun tournoi sur ce filtre.",
+      "emptyDescription": "Élargissez la recherche ou réinitialisez les filtres pour retrouver les événements disponibles.",
+      "resetFilters": "Réinitialiser les filtres"
+    },
+    "card": {
+      "description": "Toutes les informations essentielles du tournoi, de l'inscription jusqu'aux matches en ligne.",
+      "view": "Voir le tournoi"
+    },
+    "toBeConfirmed": "À confirmer",
+    "dateToBeConfirmed": "Date à confirmer",
+    "locationToBeConfirmed": "Lieu à confirmer",
+    "registerError": "Erreur lors de l'inscription au tournoi :"
+  },
+  "Ranking": {
+    "title": "Classement global des joueurs",
+    "subtitle": "Retrouvez les meilleurs joueurs de la communauté. Le score ELO est mis à jour après chaque match classé et chaque tournoi terminé.",
+    "period": "Période",
+    "periodWeek": "Semaine",
+    "periodMonth": "Mois",
+    "periodAllTime": "All-time",
+    "format": "Format",
+    "allFormats": "Tous",
+    "player": "Joueur",
+    "trend": "Tendance",
+    "yourPosition": "Votre position",
+    "you": "(vous)",
+    "unranked": "Non classé sur ce format pour cette période",
+    "loadError": "Erreur lors du chargement du classement.",
+    "empty": "Aucun joueur classé pour le moment.",
+    "previous": "Précédent",
+    "next": "Suivant"
   }
 }

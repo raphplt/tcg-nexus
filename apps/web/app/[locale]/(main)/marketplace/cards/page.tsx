@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -40,6 +41,7 @@ export default function MarketplaceCardsPage() {
 }
 
 function MarketplaceCardsContent() {
+  const t = useTranslations("MarketplaceCards");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
@@ -201,10 +203,10 @@ function MarketplaceCardsContent() {
         </div>
         <div className="mb-8">
           <H1 className="text-center mb-2" variant="primary">
-            Catalogue de cartes
+            {t("title")}
           </H1>
           <p className="text-center text-muted-foreground text-lg">
-            Explorez notre collection complète de cartes Pokémon
+            {t("subtitle")}
           </p>
         </div>
 
@@ -228,11 +230,9 @@ function MarketplaceCardsContent() {
         ) : error ? (
           <Card className="border-destructive">
             <CardContent className="py-12 text-center space-y-4">
-              <p className="text-destructive">
-                Impossible de charger les cartes. Réessayez dans un instant.
-              </p>
+              <p className="text-destructive">{t("loadError")}</p>
               <Button variant="outline" onClick={() => refetch()}>
-                Réessayer
+                {t("retry")}
               </Button>
             </CardContent>
           </Card>
@@ -292,7 +292,7 @@ function MarketplaceCardsContent() {
         ) : (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              Aucune carte trouvée avec ces critères
+              {t("noResults")}
             </CardContent>
           </Card>
         )}

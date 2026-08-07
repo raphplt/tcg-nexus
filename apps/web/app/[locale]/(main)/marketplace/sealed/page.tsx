@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -31,6 +32,7 @@ import {
 } from "@/types/sealed-product";
 
 function SealedListingsContent() {
+  const t = useTranslations("Sealed");
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -183,7 +185,7 @@ function SealedListingsContent() {
             <div className="md:col-span-2">
               <Label className="text-xs">Recherche</Label>
               <Input
-                placeholder="Rechercher un produit..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -205,7 +207,7 @@ function SealedListingsContent() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Type de produit" />
+                  <SelectValue placeholder={t("typePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les types</SelectItem>
@@ -235,23 +237,23 @@ function SealedListingsContent() {
                 <SelectContent>
                   <SelectItem value={SealedSortBy.NAME}>Nom</SelectItem>
                   <SelectItem value={SealedSortBy.RECENT}>
-                    Plus récents
+                    {t("sortNewest")}
                   </SelectItem>
                   <SelectItem value={SealedSortBy.POPULARITY}>
-                    Popularité
+                    {t("sortPopularity")}
                   </SelectItem>
                   <SelectItem value={SealedSortBy.PRICE_ASC}>
                     Prix croissant
                   </SelectItem>
                   <SelectItem value={SealedSortBy.PRICE_DESC}>
-                    Prix décroissant
+                    {t("sortPriceDesc")}
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label className="text-xs">Série</Label>
+              <Label className="text-xs">{t("seriesPlaceholder")}</Label>
               <Select
                 value={seriesId ?? "all"}
                 onValueChange={(value) => {
@@ -262,7 +264,7 @@ function SealedListingsContent() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Série" />
+                  <SelectValue placeholder={t("seriesPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les séries</SelectItem>
@@ -336,7 +338,7 @@ function SealedListingsContent() {
                 className="w-full"
                 onClick={resetFilters}
               >
-                Réinitialiser
+                {t("reset")}
               </Button>
             </div>
           </CardContent>
@@ -345,12 +347,9 @@ function SealedListingsContent() {
         {error && (
           <Card className="mb-6 border-destructive">
             <CardContent className="pt-6 text-center space-y-4">
-              <p className="text-destructive">
-                Impossible de charger les produits scellés. Réessayez dans un
-                instant.
-              </p>
+              <p className="text-destructive">{t("loadError")}</p>
               <Button variant="outline" onClick={() => refetch()}>
-                Réessayer
+                {t("retry")}
               </Button>
             </CardContent>
           </Card>
@@ -365,7 +364,7 @@ function SealedListingsContent() {
         ) : items.length === 0 ? (
           <Card>
             <CardContent className="pt-6 text-center text-muted-foreground">
-              Aucun produit scellé trouvé.
+              {t("noResults")}
             </CardContent>
           </Card>
         ) : (
