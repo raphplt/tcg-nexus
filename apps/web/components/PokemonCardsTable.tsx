@@ -766,7 +766,7 @@ export function PokemonCardsTable({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
               {currentData.data.map((card) => (
                 <Link
-                  href={`/pokemon/${card.id}`}
+                  href={`/marketplace/cards/${card.id}`}
                   key={card.id}
                   className="group flex flex-col h-full bg-card/40 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-card/70 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-primary/5"
                 >
@@ -837,7 +837,7 @@ export function PokemonCardsTable({
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
                     >
                       <TableCell className="py-2">
-                        <Link href={`/pokemon/${card.id}`}>
+                        <Link href={`/marketplace/cards/${card.id}`}>
                           <Image
                             src={getCardImage(card, "low")}
                             alt={card.name || "Pokemon Card"}
@@ -849,7 +849,7 @@ export function PokemonCardsTable({
                       </TableCell>
                       <TableCell className="font-semibold text-foreground py-2">
                         <Link
-                          href={`/pokemon/${card.id}`}
+                          href={`/marketplace/cards/${card.id}`}
                           className="hover:text-primary transition-colors"
                         >
                           {card.name || "N/A"}

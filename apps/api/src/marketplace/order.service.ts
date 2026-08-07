@@ -35,12 +35,11 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import { round2 } from "./price.helper";
+import { SHIPPING_POLICY } from "./shipping-policy";
 import { StripeService } from "./stripe.service";
 
 const RESERVATION_TTL_MINUTES = 20;
-const DEFAULT_HANDLING_TIME_DAYS = 3;
-
-const round2 = (value: number) => Math.round(value * 100) / 100;
 
 const ORDER_RELATIONS = [
   "buyer",
@@ -220,7 +219,7 @@ export class OrderService {
             shippingCost: shippingByCartItem.get(item.id) ?? 0,
             handlingTimeDays:
               freshListings.get(item.listing.id)?.handlingTimeDays ??
-              DEFAULT_HANDLING_TIME_DAYS,
+              SHIPPING_POLICY.handlingTimeDays,
           }),
         ),
       });

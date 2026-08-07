@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { PriceChart } from "@/components/Marketplace/PriceChart";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cardEventTracker } from "@/services/card-event-tracker.service";
-import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import { useCardDetails } from "@/hooks/useCardDetails";
-import { useCartStore } from "@/store/cart.store";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import { CardImage } from "./_components/CardImage";
-import { CardInfo } from "./_components/CardInfo";
-import { MarketStats } from "./_components/MarketStats";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
+import { PriceChart } from "@/components/Marketplace/PriceChart";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCardDetails } from "@/hooks/useCardDetails";
+import { cardEventTracker } from "@/services/card-event-tracker.service";
+import { useCartStore } from "@/store/cart.store";
+import { BuyBox } from "./_components/BuyBox";
+import { CardDetailsPanel } from "./_components/CardDetailsPanel";
+import { CardGallery } from "./_components/CardGallery";
+import { CardHeading } from "./_components/CardHeading";
 import { ListingsTable } from "./_components/ListingsTable";
 
 export default function CardDetailPage() {
@@ -31,16 +32,24 @@ export default function CardDetailPage() {
   const {
     card,
     stats,
-    listings: filteredListings,
+    listings,
+    minPriceListing,
     priceHistory,
     isGoodDeal,
     loadingCard,
+    loadingStats,
     loadingListings,
   } = useCardDetails({
     cardId: id as string,
     currencyFilter,
     cardStateFilter,
   });
+
+  const hasNoOfferAtAll =
+    !loadingListings &&
+    listings.length === 0 &&
+    currencyFilter === "all" &&
+    cardStateFilter === "all";
 
   const handleAddToCart = async (listingId: number) => {
     if (!isAuthenticated) {
@@ -51,17 +60,11 @@ export default function CardDetailPage() {
 
     setAddingToListingId(listingId);
     try {
-      // Track l'événement
       if (id) {
         cardEventTracker.trackAddToCart(id as string, listingId);
       }
 
-      // Ajouter au panier
-      await addItem({
-        listingId,
-        quantity: 1,
-      });
-
+      await addItem({ listingId, quantity: 1 });
       toast.success("Article ajouté au panier !");
     } catch (error: any) {
       const errorMessage =
@@ -74,63 +77,84 @@ export default function CardDetailPage() {
 
   if (loadingCard) {
     return (
-      <div className="flex flex-col gap-6 max-w-7xl mx-auto py-12 px-4">
-        <Skeleton className="h-96 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-12">
+        <Skeleton className="h-[480px] lg:col-span-5" />
+        <div className="space-y-4 lg:col-span-7">
+          <Skeleton className="h-12 w-2/3" />
+          <Skeleton className="h-64 w-full" />
+        </div>
       </div>
     );
   }
 
   if (!card) {
     return (
-      <Alert variant="destructive" className="max-w-2xl mx-auto mt-12">
-        <AlertTitle>Erreur</AlertTitle>
+      <Alert variant="destructive" className="mx-auto mt-12 max-w-2xl">
+        <AlertTitle>Carte introuvable</AlertTitle>
         <AlertDescription>
-          Carte non trouvée. Veuillez réessayer plus tard.
+          Cette carte n&apos;existe pas ou n&apos;est plus référencée.
         </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-8 px-4">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-muted/20">
+      <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
         <MarketplaceBreadcrumb />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <CardImage card={card} />
 
-          <div className="space-y-6">
-            <CardInfo card={card} />
-            {stats && (
-              <MarketStats
-                stats={stats}
-                isGoodDeal={!!isGoodDeal}
-                marketPricing={stats.marketPricing || card?.pricing}
-                cardName={card?.name}
-              />
-            )}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <CardGallery card={card} />
+          </div>
+
+          <div className="space-y-6 lg:col-span-7">
+            <CardHeading card={card} />
+            <BuyBox
+              totalListings={stats?.totalListings ?? 0}
+              minPrice={stats?.minPrice ?? null}
+              maxPrice={stats?.maxPrice ?? null}
+              avgPrice={stats?.avgPrice ?? null}
+              currency={stats?.currency ?? null}
+              bestListing={minPriceListing}
+              isGoodDeal={!!isGoodDeal}
+              loading={loadingStats || loadingListings}
+              marketPricing={stats?.marketPricing ?? card.pricing}
+              cardName={card.name}
+              onAddToCart={handleAddToCart}
+              isAdding={
+                minPriceListing != null &&
+                addingToListingId === minPriceListing.id
+              }
+              isCartLoading={isCartLoading}
+            />
           </div>
         </div>
 
-        {stats && priceHistory.length > 0 && (
-          <PriceChart
-            data={priceHistory}
-            currency={stats.currency || "EUR"}
-            showTrend={true}
+        {/* Sans aucune offre ni filtre actif, la BuyBox suffit à porter le message */}
+        {!hasNoOfferAtAll && (
+          <ListingsTable
+            listings={listings}
+            loading={loadingListings}
+            currencyFilter={currencyFilter}
+            setCurrencyFilter={setCurrencyFilter}
+            cardStateFilter={cardStateFilter}
+            setCardStateFilter={setCardStateFilter}
+            onAddToCart={handleAddToCart}
+            addingToListingId={addingToListingId}
+            isCartLoading={isCartLoading}
           />
         )}
 
-        <ListingsTable
-          listings={filteredListings}
-          loading={loadingListings}
-          currencyFilter={currencyFilter}
-          setCurrencyFilter={setCurrencyFilter}
-          cardStateFilter={cardStateFilter}
-          setCardStateFilter={setCardStateFilter}
-          onAddToCart={handleAddToCart}
-          addingToListingId={addingToListingId}
-          isCartLoading={isCartLoading}
-        />
+        {priceHistory.length > 1 && (
+          <PriceChart
+            data={priceHistory}
+            currency={stats?.currency || "EUR"}
+            showTrend
+          />
+        )}
+
+        <CardDetailsPanel card={card} />
       </div>
     </div>
   );

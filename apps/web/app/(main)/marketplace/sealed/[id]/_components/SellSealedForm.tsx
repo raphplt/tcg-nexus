@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { currencyOptions } from "@/utils/variables";
+import { ShippingPolicyNotice } from "../../../_components/ShippingPolicyNotice";
 
 interface SellSealedFormProps {
   sealedProductId: string;
@@ -35,8 +36,6 @@ export default function SellSealedForm({
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("EUR");
   const [quantity, setQuantity] = useState(1);
-  const [shippingCost, setShippingCost] = useState("0");
-  const [handlingTimeDays, setHandlingTimeDays] = useState(3);
   const [condition, setCondition] = useState<SealedCondition>(
     SealedCondition.SEALED,
   );
@@ -64,8 +63,6 @@ export default function SellSealedForm({
         price: priceNum,
         currency,
         quantityAvailable: quantity,
-        shippingCost: Number(shippingCost) || 0,
-        handlingTimeDays,
         sealedCondition: condition,
         description: description || undefined,
       });
@@ -148,32 +145,7 @@ export default function SellSealedForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="sealed-shipping">Frais de port</Label>
-          <Input
-            id="sealed-shipping"
-            type="number"
-            step="0.01"
-            min="0"
-            value={shippingCost}
-            onChange={(e) => setShippingCost(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label htmlFor="sealed-handling">Expédition sous (jours)</Label>
-          <Input
-            id="sealed-handling"
-            type="number"
-            min="1"
-            max="30"
-            value={handlingTimeDays}
-            onChange={(e) =>
-              setHandlingTimeDays(parseInt(e.target.value, 10) || 3)
-            }
-          />
-        </div>
-      </div>
+      <ShippingPolicyNotice productKind="sealed" />
 
       <div className="space-y-1">
         <Label htmlFor="sealed-description">Description (optionnelle)</Label>

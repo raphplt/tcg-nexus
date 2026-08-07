@@ -28,13 +28,13 @@ import {
   SEALED_PLACEHOLDER,
 } from "@/utils/sealedImage";
 import { cardStates, currencyOptions, languages } from "@/utils/variables";
+import { PriceSuggestionHint } from "../../../_components/PriceSuggestionHint";
+import { ShippingPolicyNotice } from "../../../_components/ShippingPolicyNotice";
 
 interface FormState {
   price: string;
   currency: string;
   quantityAvailable: string;
-  shippingCost: string;
-  handlingTimeDays: string;
   cardState: string;
   language: string;
   status: ListingStatus;
@@ -61,8 +61,6 @@ export default function EditListingPage() {
           price: String(data.price),
           currency: data.currency,
           quantityAvailable: String(data.quantityAvailable),
-          shippingCost: String(data.shippingCost ?? 0),
-          handlingTimeDays: String(data.handlingTimeDays ?? 3),
           cardState: data.cardState ?? "",
           language: data.language ?? "fr",
           status: data.status ?? "active",
@@ -84,8 +82,6 @@ export default function EditListingPage() {
 
     const price = Number(form.price);
     const quantity = Number(form.quantityAvailable);
-    const shippingCost = Number(form.shippingCost);
-    const handlingTimeDays = Number(form.handlingTimeDays);
 
     if (!Number.isFinite(price) || price <= 0) {
       toast.error("Le prix doit être supérieur à 0.");
@@ -95,23 +91,12 @@ export default function EditListingPage() {
       toast.error("La quantité doit être d'au moins 1.");
       return;
     }
-    if (!Number.isFinite(shippingCost) || shippingCost < 0) {
-      toast.error("Les frais de port ne peuvent pas être négatifs.");
-      return;
-    }
-    if (!Number.isInteger(handlingTimeDays) || handlingTimeDays < 1) {
-      toast.error("Le délai d'expédition doit être d'au moins 1 jour.");
-      return;
-    }
-
     setIsSaving(true);
     try {
       await marketplaceService.updateListing(id, {
         price,
         currency: form.currency as Listing["currency"],
         quantityAvailable: quantity,
-        shippingCost,
-        handlingTimeDays,
         status: form.status,
         language: form.language,
         description: form.description,
@@ -226,6 +211,16 @@ export default function EditListingPage() {
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
                   required
                 />
+                {!isSealed && (
+                  <PriceSuggestionHint
+                    cardId={listing.pokemonCard?.id}
+                    cardState={form.cardState || undefined}
+                    currency={form.currency}
+                    onApply={(price) =>
+                      setForm({ ...form, price: String(price) })
+                    }
+                  />
+                )}
               </div>
 
               <div className="space-y-2">
@@ -259,43 +254,6 @@ export default function EditListingPage() {
                   value={form.quantityAvailable}
                   onChange={(e) =>
                     setForm({ ...form, quantityAvailable: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="shippingCost">Frais de port</Label>
-                <Input
-                  id="shippingCost"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.shippingCost}
-                  onChange={(e) =>
-                    setForm({ ...form, shippingCost: e.target.value })
-                  }
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Facturés une seule fois par commande, même si l&apos;acheteur
-                  prend plusieurs de vos annonces. 0 pour les offrir.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="handlingTimeDays">
-                  Délai d&apos;expédition (jours ouvrés)
-                </Label>
-                <Input
-                  id="handlingTimeDays"
-                  type="number"
-                  min="1"
-                  max="30"
-                  step="1"
-                  value={form.handlingTimeDays}
-                  onChange={(e) =>
-                    setForm({ ...form, handlingTimeDays: e.target.value })
                   }
                   required
                 />
@@ -365,6 +323,8 @@ export default function EditListingPage() {
                 </Select>
               </div>
             </div>
+
+            <ShippingPolicyNotice productKind={isSealed ? "sealed" : "card"} />
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>

@@ -20,6 +20,7 @@ import { CreateListingDto } from "./dto/create-marketplace.dto";
 import { FindAllListingsQuery } from "./dto/ind-all-listings-query.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { MarketplaceService } from "./marketplace.service";
+import { getShippingPolicy } from "./shipping-policy";
 
 @ApiTags("marketplace")
 @Controller("marketplace")
@@ -118,6 +119,25 @@ export class MarketplaceController {
     @Query("cardState") cardState?: string,
   ) {
     return this.marketplaceService.getCardStatistics(id, currency, cardState);
+  }
+
+  @Get("cards/:id/price-suggestion")
+  @Public()
+  @ApiQuery({ name: "currency", required: false, type: String })
+  @ApiQuery({ name: "cardState", required: false, type: String })
+  getPriceSuggestion(
+    @Param("id") id: string,
+    @Query("currency") currency?: string,
+    @Query("cardState") cardState?: string,
+  ) {
+    return this.marketplaceService.getPriceSuggestion(id, cardState, currency);
+  }
+
+  /** Barème d'expédition appliqué par la plateforme (frais + délai). */
+  @Get("shipping-policy")
+  @Public()
+  getShippingPolicy() {
+    return getShippingPolicy();
   }
 
   // Meilleurs vendeurs

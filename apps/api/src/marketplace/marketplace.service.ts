@@ -9,6 +9,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
 import { FindOptionsWhere, MoreThan, Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
+import { Currency } from "../common/enums/currency";
 import { Languages } from "../common/enums/languages";
 import { ListingStatus } from "../common/enums/listing-status";
 import { ProductKind } from "../common/enums/product-kind";
@@ -22,6 +23,8 @@ import { OrderStatus } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { OrderService } from "./order.service";
+import { getMarketReferencePrice, round2 } from "./price.helper";
+import { getShippingCost, SHIPPING_POLICY } from "./shipping-policy";
 
 export interface FindAllListingsParams {
   sellerId?: number;
@@ -91,6 +94,9 @@ export class MarketplaceService {
     const listing = this.listingRepository.create({
       ...rest,
       productKind,
+      // Frais de port et délai imposés par la plateforme, jamais par le vendeur
+      shippingCost: getShippingCost(productKind),
+      handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
       seller: user,
       pokemonCard: pokemonCardId ? ({ id: pokemonCardId } as Card) : null,
       sealedProduct:
@@ -433,6 +439,94 @@ export class MarketplaceService {
         recordedAt: h.recordedAt,
       })),
       marketPricing: card?.pricing || null,
+    };
+  }
+
+  /**
+   * Prix conseillé au vendeur qui met une carte en vente. On privilégie les
+   * annonces actives du même état, puis tous états confondus, et à défaut le
+   * prix de référence du marché externe.
+   */
+  async getPriceSuggestion(
+    cardId: string,
+    cardState?: string,
+    currency: string = Currency.EUR,
+  ) {
+    const card = await this.pokemonCardRepository.findOne({
+      where: { id: cardId },
+      select: ["id", "pricing"],
+    });
+    if (!card) throw new NotFoundException("Carte introuvable");
+
+    const sameState = cardState
+      ? await this.aggregateActiveListingPrices(cardId, currency, cardState)
+      : null;
+    const allStates = await this.aggregateActiveListingPrices(cardId, currency);
+    const marketPrice = getMarketReferencePrice(card.pricing, currency);
+
+    const listings = sameState && sameState.count > 0 ? sameState : allStates;
+    const basis =
+      sameState && sameState.count > 0
+        ? "same-state"
+        : allStates.count > 0
+          ? "all-states"
+          : marketPrice !== null
+            ? "market"
+            : null;
+
+    const suggestedPrice =
+      basis === "market" ? marketPrice : basis ? listings.avgPrice : null;
+
+    return {
+      cardId,
+      cardState: cardState ?? null,
+      currency,
+      basis,
+      suggestedPrice,
+      listings,
+      marketPrice,
+    };
+  }
+
+  /** Agrégats de prix sur les annonces actives d'une carte. */
+  private async aggregateActiveListingPrices(
+    cardId: string,
+    currency: string,
+    cardState?: string,
+  ) {
+    const qb = this.listingRepository
+      .createQueryBuilder("listing")
+      .where("listing.pokemonCard.id = :cardId", { cardId })
+      .andWhere("listing.currency = :currency", { currency })
+      .andWhere("listing.status = :activeStatus", {
+        activeStatus: ListingStatus.ACTIVE,
+      })
+      .andWhere("listing.quantityAvailable > 0")
+      .andWhere("(listing.expiresAt IS NULL OR listing.expiresAt > :now)", {
+        now: new Date(),
+      });
+
+    if (cardState) {
+      qb.andWhere("listing.cardState = :cardState", { cardState });
+    }
+
+    const raw = await qb
+      .select("COUNT(listing.id)", "count")
+      .addSelect("MIN(listing.price)", "minPrice")
+      .addSelect("MAX(listing.price)", "maxPrice")
+      .addSelect("AVG(listing.price)", "avgPrice")
+      .getRawOne();
+
+    const count = parseInt(raw?.count, 10) || 0;
+    if (count === 0) {
+      return { count: 0, minPrice: null, maxPrice: null, avgPrice: null };
+    }
+
+    return {
+      count,
+      minPrice: round2(parseFloat(raw.minPrice)),
+      maxPrice: round2(parseFloat(raw.maxPrice)),
+      avgPrice: round2(parseFloat(raw.avgPrice)),
     };
   }
 

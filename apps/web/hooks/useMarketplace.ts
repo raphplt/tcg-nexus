@@ -4,6 +4,8 @@ import {
   BestSeller,
   marketplaceService,
   PopularCard,
+  PriceSuggestion,
+  ShippingPolicy,
   TrendingCard,
 } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
@@ -167,4 +169,34 @@ export function useMarketplaceCards(
     error,
     refetch,
   };
+}
+
+/**
+ * Prix conseillé pour mettre une carte en vente (moyenne des annonces
+ * actives, à défaut prix de référence du marché).
+ */
+export function usePriceSuggestion(
+  cardId?: string,
+  cardState?: string,
+  currency?: string,
+) {
+  return useQuery<PriceSuggestion>({
+    queryKey: ["marketplace", "price-suggestion", cardId, cardState, currency],
+    queryFn: () =>
+      marketplaceService.getPriceSuggestion(
+        cardId as string,
+        cardState,
+        currency,
+      ),
+    enabled: Boolean(cardId),
+  });
+}
+
+/** Barème d'expédition imposé par la plateforme */
+export function useShippingPolicy() {
+  return useQuery<ShippingPolicy>({
+    queryKey: ["marketplace", "shipping-policy"],
+    queryFn: () => marketplaceService.getShippingPolicy(),
+    staleTime: 1000 * 60 * 60,
+  });
 }

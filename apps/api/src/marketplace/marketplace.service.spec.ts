@@ -11,6 +11,7 @@ import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
 import { ListingStatus } from "../common/enums/listing-status";
 import { CardState } from "../common/enums/pokemonCardsType";
+import { ProductKind } from "../common/enums/product-kind";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
@@ -24,6 +25,7 @@ import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
 import { MarketplaceService } from "./marketplace.service";
 import { OrderService } from "./order.service";
+import { SHIPPING_POLICY } from "./shipping-policy";
 import { StripeService } from "./stripe.service";
 
 describe("MarketplaceService", () => {
@@ -444,6 +446,119 @@ describe("MarketplaceService", () => {
       await expect(
         service.create({} as any, { id: 1 } as User),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it("applies the platform shipping policy instead of seller values", async () => {
+      const dto = {
+        pokemonCardId: "c1",
+        price: 10,
+        currency: Currency.EUR,
+        cardState: CardState.NM,
+        // Valeurs qu'un client tenterait de forcer
+        shippingCost: 42,
+        handlingTimeDays: 25,
+      } as CreateListingDto;
+
+      listingRepo.create.mockImplementation((data: any) => data);
+      listingRepo.save.mockResolvedValue({ id: 1 });
+      listingRepo.findOne.mockResolvedValue({ id: 1 });
+
+      await service.create(dto, { id: 1 } as User);
+
+      expect(listingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shippingCost: SHIPPING_POLICY.rates[ProductKind.CARD].cost,
+          handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
+        }),
+      );
+    });
+
+    it("applies the sealed rate for sealed listings", async () => {
+      const dto = {
+        sealedProductId: "s1",
+        productKind: ProductKind.SEALED,
+        price: 60,
+        currency: Currency.EUR,
+      } as CreateListingDto;
+
+      listingRepo.create.mockImplementation((data: any) => data);
+      listingRepo.save.mockResolvedValue({ id: 2 });
+      listingRepo.findOne.mockResolvedValue({ id: 2 });
+
+      await service.create(dto, { id: 1 } as User);
+
+      expect(listingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shippingCost: SHIPPING_POLICY.rates[ProductKind.SEALED].cost,
+        }),
+      );
+    });
+  });
+
+  describe("getPriceSuggestion", () => {
+    const mockAggregates = (
+      sameState: Record<string, string> | null,
+      allStates: Record<string, string> | null,
+    ) => {
+      const sameStateQb = createMockQb();
+      sameStateQb.getRawOne.mockResolvedValue(sameState);
+      const allStatesQb = createMockQb();
+      allStatesQb.getRawOne.mockResolvedValue(allStates);
+
+      mockListingRepo.createQueryBuilder
+        .mockReturnValueOnce(sameStateQb)
+        .mockReturnValueOnce(allStatesQb);
+    };
+
+    it("suggests the average of listings in the same state", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: null,
+      });
+      mockAggregates(
+        { count: "3", minPrice: "10", maxPrice: "20", avgPrice: "15.005" },
+        { count: "5", minPrice: "8", maxPrice: "30", avgPrice: "18" },
+      );
+
+      const result = await service.getPriceSuggestion("c1", CardState.NM);
+
+      expect(result.basis).toBe("same-state");
+      expect(result.suggestedPrice).toBe(15.01);
+      expect(result.listings.count).toBe(3);
+    });
+
+    it("falls back to all states then to the market price", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: { cardmarket: { trend: 12.3 } },
+      });
+      mockAggregates({ count: "0" }, { count: "0" });
+
+      const result = await service.getPriceSuggestion("c1", CardState.NM);
+
+      expect(result.basis).toBe("market");
+      expect(result.suggestedPrice).toBe(12.3);
+    });
+
+    it("returns no suggestion when nothing is available", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: null,
+      });
+      mockAggregates({ count: "0" }, { count: "0" });
+
+      const result = await service.getPriceSuggestion("c1");
+
+      expect(result.basis).toBeNull();
+      expect(result.suggestedPrice).toBeNull();
+    });
+
+    it("throws when the card does not exist", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getPriceSuggestion("unknown")).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -93,7 +93,7 @@ export function MarketplaceBreadcrumb() {
       );
 
       // Add card detail if on specific card page
-      if (pathname.match(/^\/marketplace\/cards\/\d+$/)) {
+      if (pathname.match(/^\/marketplace\/cards\/[^/]+$/)) {
         breadcrumbs.push(
           <BreadcrumbSeparator key="sep-3" />,
           <BreadcrumbItem key="card-detail">
