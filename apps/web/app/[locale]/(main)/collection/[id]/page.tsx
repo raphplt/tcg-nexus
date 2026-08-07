@@ -45,9 +45,10 @@ import { PokemonCardType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/types/pagination";
 import { getCardImage } from "@/utils/images";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const CollectionDetailPage = () => {
+  const t = useTranslations("CollectionDetail");
   const locale = useLocale();
   const { id } = useParams();
   const [collection, setCollection] = useState<Collection | null>(null);
@@ -65,10 +66,7 @@ const CollectionDetailPage = () => {
         const collectionData = await collectionService.getById(id as string);
         setCollection(collectionData);
       } catch (error) {
-        console.error(
-          "Erreur lors de la récupération de la collection :",
-          error,
-        );
+        console.error(t("loadError"), error);
       } finally {
         setLoading(false);
       }
@@ -204,7 +202,7 @@ const CollectionDetailPage = () => {
                   {collection.name}
                 </CardTitle>
                 <CardDescription className="text-base mb-4">
-                  {collection.description || "Aucune description"}
+                  {collection.description || t("noDescription")}
                 </CardDescription>
               </div>
               <Badge
@@ -214,12 +212,12 @@ const CollectionDetailPage = () => {
                 {collection.isPublic ? (
                   <>
                     <Eye className="h-3 w-3 mr-1" />
-                    Public
+                    {t("public")}
                   </>
                 ) : (
                   <>
                     <Lock className="h-3 w-3 mr-1" />
-                    Privé
+                    {t("private")}
                   </>
                 )}
               </Badge>
@@ -229,30 +227,17 @@ const CollectionDetailPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Package className="h-4 w-4" />
-                <span>
-                  <strong className="text-foreground">
-                    {meta?.totalItems || 0}
-                  </strong>{" "}
-                  carte{meta?.totalItems !== 1 ? "s" : ""}
-                </span>
+                <span>{t("cardCount", { count: meta?.totalItems || 0 })}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  Créée le{" "}
-                  <strong className="text-foreground">
-                    {formatDate(collection.created_at)}
-                  </strong>
+                  {t("createdOn", { date: formatDate(collection.created_at) })}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>
-                  Propriétaire:{" "}
-                  <strong className="text-foreground">
-                    {collection.user.firstName}
-                  </strong>
-                </span>
+                <span>{t("owner", { name: collection.user.firstName })}</span>
               </div>
             </div>
           </CardContent>
@@ -266,7 +251,7 @@ const CollectionDetailPage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   type="text"
-                  placeholder="Rechercher une carte (nom, rareté, set)..."
+                  placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
@@ -274,13 +259,17 @@ const CollectionDetailPage = () => {
               </div>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="added_at">Date d'ajout</SelectItem>
-                  <SelectItem value="pokemonCard.name">Nom</SelectItem>
-                  <SelectItem value="pokemonCard.rarity">Rareté</SelectItem>
-                  <SelectItem value="quantity">Quantité</SelectItem>
+                  <SelectItem value="added_at">{t("sortAddedAt")}</SelectItem>
+                  <SelectItem value="pokemonCard.name">
+                    {t("sortName")}
+                  </SelectItem>
+                  <SelectItem value="pokemonCard.rarity">
+                    {t("sortRarity")}
+                  </SelectItem>
+                  <SelectItem value="quantity">{t("sortQuantity")}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -288,11 +277,11 @@ const CollectionDetailPage = () => {
                 onValueChange={(value: "ASC" | "DESC") => setSortOrder(value)}
               >
                 <SelectTrigger className="w-full sm:w-[140px]">
-                  <SelectValue placeholder="Ordre" />
+                  <SelectValue placeholder={t("order")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ASC">Croissant</SelectItem>
-                  <SelectItem value="DESC">Décroissant</SelectItem>
+                  <SelectItem value="ASC">{t("orderAsc")}</SelectItem>
+                  <SelectItem value="DESC">{t("orderDesc")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -306,9 +295,7 @@ const CollectionDetailPage = () => {
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">
-                    Chargement des cartes...
-                  </p>
+                  <p className="text-muted-foreground">{t("loadingCards")}</p>
                 </div>
               </div>
             </CardContent>
@@ -319,14 +306,10 @@ const CollectionDetailPage = () => {
               <div className="text-center py-12">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-semibold mb-2">
-                  {debouncedSearch
-                    ? "Aucune carte trouvée"
-                    : "Aucune carte dans cette collection"}
+                  {debouncedSearch ? t("noResults") : t("empty")}
                 </p>
                 <p className="text-muted-foreground">
-                  {debouncedSearch
-                    ? "Essayez avec d'autres mots-clés"
-                    : "Commencez par ajouter des cartes à votre collection"}
+                  {debouncedSearch ? t("tryOtherKeywords") : t("startAdding")}
                 </p>
               </div>
             </CardContent>
@@ -504,15 +487,16 @@ const CollectionDetailPage = () => {
                     </PaginationContent>
                   </Pagination>
                   <div className="text-center mt-4 text-sm text-muted-foreground">
-                    Page {meta.currentPage} sur {meta.totalPages} (
-                    {meta.totalItems} carte{meta.totalItems !== 1 ? "s" : ""} au
-                    total)
+                    {t("pagination", {
+                      page: meta.currentPage,
+                      pages: meta.totalPages,
+                      count: meta.totalItems,
+                    })}
                   </div>
                 </>
               ) : (
                 <div className="text-center text-sm text-muted-foreground">
-                  {meta.totalItems} carte{meta.totalItems !== 1 ? "s" : ""} au
-                  total
+                  {t("cardCountTotal", { count: meta.totalItems })}
                 </div>
               )}
             </CardContent>

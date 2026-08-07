@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Loader2, ShieldCheck, ShoppingCart, Tag, Truck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export function BuyBox({
   isAdding,
   isCartLoading,
 }: BuyBoxProps) {
+  const t = useTranslations("BuyBox");
   const { formatPrice } = useCurrencyStore();
   const displayCurrency = currency || bestListing?.currency || "EUR";
   const showReferences = hasReferencePrices(marketPricing);
@@ -69,7 +71,7 @@ export function BuyBox({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  À partir de
+                  {t("startingAt")}
                 </span>
                 {isGoodDeal && (
                   <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white gap-1">
@@ -95,7 +97,7 @@ export function BuyBox({
                 <Truck className="w-3.5 h-3.5" />
                 {bestListing.shippingCost > 0
                   ? `+ ${formatPrice(bestListing.shippingCost, bestListing.currency)} de frais de port`
-                  : "Frais de port offerts"}
+                  : t("freeShipping")}
                 {bestListing.handlingTimeDays
                   ? ` · expédié sous ${bestListing.handlingTimeDays} j`
                   : ""}
@@ -118,7 +120,7 @@ export function BuyBox({
                 ) : (
                   <ShoppingCart className="w-4 h-4" />
                 )}
-                Ajouter au panier
+                {t("addToCart")}
               </Button>
               <Button variant="outline" size="lg" className="w-full" asChild>
                 <a href="#offres">
@@ -130,14 +132,14 @@ export function BuyBox({
 
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              Paiement sécurisé, vendeur vérifié par TCG Nexus
+              {t("secureNotice")}
             </p>
 
             <Separator />
 
             <dl className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <dt className="text-muted-foreground">Prix moyen</dt>
+                <dt className="text-muted-foreground">{t("averagePrice")}</dt>
                 <dd className="font-semibold tabular-nums">
                   {avgPrice !== null
                     ? formatPrice(avgPrice, displayCurrency)
@@ -145,7 +147,7 @@ export function BuyBox({
                 </dd>
               </div>
               <div>
-                <dt className="text-muted-foreground">Prix le plus haut</dt>
+                <dt className="text-muted-foreground">{t("highestPrice")}</dt>
                 <dd className="font-semibold tabular-nums">
                   {maxPrice !== null
                     ? formatPrice(maxPrice, displayCurrency)
@@ -157,16 +159,11 @@ export function BuyBox({
         ) : (
           <div className="space-y-4">
             <div className="space-y-1">
-              <p className="font-semibold">Aucune offre en vente</p>
-              <p className="text-sm text-muted-foreground">
-                Personne ne propose cette carte pour le moment. Soyez le premier
-                vendeur.
-              </p>
+              <p className="font-semibold">{t("noListingsTitle")}</p>
+              <p className="text-sm text-muted-foreground">{t("noListings")}</p>
             </div>
             <Button className="w-full" asChild>
-              <Link href="/marketplace/create">
-                Mettre cette carte en vente
-              </Link>
+              <Link href="/marketplace/create">{t("sellThisCard")}</Link>
             </Button>
           </div>
         )}
@@ -191,7 +188,7 @@ export function BuyBox({
             href="/marketplace/create"
             className="font-medium text-primary hover:underline"
           >
-            Mettez-la en vente
+            {t("sellIt")}
           </Link>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useMemo } from "react";
@@ -59,6 +60,7 @@ export function ListingsTable({
   addingToListingId,
   isCartLoading,
 }: ListingsTableProps) {
+  const t = useTranslations("ListingsTable");
   const { formatPrice } = useCurrencyStore();
 
   // Les offres les moins chères port compris arrivent en tête
@@ -80,20 +82,20 @@ export function ListingsTable({
     >
       <div className="flex flex-col gap-4 border-b p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Offres des vendeurs</h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
           <p className="text-sm text-muted-foreground">
             {loading
-              ? "Chargement des offres…"
+              ? t("loading")
               : `${sortedListings.length} offre${sortedListings.length > 1 ? "s" : ""} disponible${sortedListings.length > 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex gap-2">
           <Select value={cardStateFilter} onValueChange={setCardStateFilter}>
             <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="État" />
+              <SelectValue placeholder={t("condition")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les états</SelectItem>
+              <SelectItem value="all">{t("allConditions")}</SelectItem>
               {cardStates.map((cs) => (
                 <SelectItem key={cs.value} value={cs.value}>
                   {cs.label}
@@ -106,7 +108,7 @@ export function ListingsTable({
               <SelectValue placeholder="Devise" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes devises</SelectItem>
+              <SelectItem value="all">{t("allCurrencies")}</SelectItem>
               <SelectItem value="EUR">EUR</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
             </SelectContent>
@@ -125,14 +127,16 @@ export function ListingsTable({
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Vendeur</TableHead>
-                <TableHead>État</TableHead>
-                <TableHead className="hidden md:table-cell">Langue</TableHead>
+                <TableHead>{t("seller")}</TableHead>
+                <TableHead>{t("condition")}</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  {t("language")}
+                </TableHead>
                 <TableHead className="hidden sm:table-cell text-right">
                   Dispo.
                 </TableHead>
-                <TableHead className="text-right">Prix</TableHead>
-                <TableHead className="text-right">Total</TableHead>
+                <TableHead className="text-right">{t("price")}</TableHead>
+                <TableHead className="text-right">{t("total")}</TableHead>
                 <TableHead className="w-[1%]" />
               </TableRow>
             </TableHeader>
@@ -211,11 +215,11 @@ export function ListingsTable({
                         {addingToListingId === listing.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : soldOut ? (
-                          "Épuisé"
+                          t("soldOut")
                         ) : (
                           <>
                             <ShoppingCart className="w-4 h-4" />
-                            <span className="hidden sm:inline">Ajouter</span>
+                            <span className="hidden sm:inline">{t("add")}</span>
                           </>
                         )}
                       </Button>
@@ -228,10 +232,8 @@ export function ListingsTable({
         </div>
       ) : (
         <div className="p-12 text-center">
-          <p className="font-medium">Aucune offre ne correspond aux filtres</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Élargissez votre recherche ou proposez vous-même cette carte.
-          </p>
+          <p className="font-medium">{t("noMatch")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("emptyHelp")}</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
             <Link href="/marketplace/create">Mettre cette carte en vente</Link>
           </Button>

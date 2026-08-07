@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { collectionService } from "@/services/collection.service";
 import { Collection } from "@/types/collection";
@@ -17,6 +18,7 @@ import Image from "next/image";
 import { getCardImage } from "@/utils/images";
 
 const Page = () => {
+  const t = useTranslations("Collections");
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -74,9 +76,7 @@ const Page = () => {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">
-              Chargement de vos collections...
-            </p>
+            <p className="text-muted-foreground">{t("loading")}</p>
           </div>
         </div>
       </PageWrapper>
@@ -91,11 +91,10 @@ const Page = () => {
     <PageWrapper gradient="secondary">
       <div className="text-center mb-12">
         <H1 className="mb-4" variant="primary">
-          Mes Collections
+          {t("title")}
         </H1>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-          Gérez vos collections de cartes Pokémon et découvrez de nouvelles
-          cartes avec notre fonctionnalité de swipe
+          {t("subtitle")}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
@@ -119,7 +118,7 @@ const Page = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
-            placeholder="Rechercher une collection..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input pl-10 pr-4 py-3 border-2 border-border/50 focus:border-primary/50 rounded-lg bg-background/80 backdrop-blur-sm"
@@ -134,12 +133,10 @@ const Page = () => {
               <Plus className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold mb-2">
-              {searchQuery ? "Aucune collection trouvée" : "Aucune collection"}
+              {searchQuery ? t("noResults") : t("empty")}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchQuery
-                ? "Essayez avec d'autres mots-clés"
-                : "Créez votre première collection pour commencer"}
+              {searchQuery ? t("tryOtherKeywords") : t("createFirst")}
             </p>
           </div>
         </div>
@@ -163,7 +160,7 @@ const Page = () => {
                         src={image1}
                         alt={
                           collection.items[0]?.pokemonCard?.name ||
-                          "Carte Pokémon"
+                          t("pokemonCard")
                         }
                         width={100}
                         height={100}
@@ -173,7 +170,7 @@ const Page = () => {
                         src={image2}
                         alt={
                           collection.items[1]?.pokemonCard?.name ||
-                          "Carte Pokémon"
+                          t("pokemonCard")
                         }
                         width={100}
                         height={100}
@@ -183,7 +180,7 @@ const Page = () => {
                         src={image3}
                         alt={
                           collection.items[2]?.pokemonCard?.name ||
-                          "Carte Pokémon"
+                          t("pokemonCard")
                         }
                         width={100}
                         height={100}
@@ -209,7 +206,7 @@ const Page = () => {
                       className="text-xs"
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      {collection.isPublic ? "Public" : "Privé"}
+                      {collection.isPublic ? t("public") : t("private")}
                     </Badge>
                   </div>
                 </div>
@@ -222,17 +219,21 @@ const Page = () => {
 
                 <CardContent className="pt-0">
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                    {collection.description || "Aucune description"}
+                    {collection.description || t("noDescription")}
                   </p>
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Lock className="h-3 w-3 mr-1" />
-                      <span>{collection.isPublic ? "Public" : "Privé"}</span>
+                      <span>
+                        {collection.isPublic ? t("public") : t("private")}
+                      </span>
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <Users className="h-3 w-3 mr-1" />
-                      <span>~{collection.items.length} cartes</span>
+                      <span>
+                        {t("cardCount", { count: collection.items.length })}
+                      </span>
                     </div>
                   </div>
 
@@ -246,7 +247,7 @@ const Page = () => {
                     }}
                   >
                     <Eye className="mr-2 h-3 w-3" />
-                    Voir la collection
+                    {t("view")}
                   </Button>
                 </CardContent>
               </Card>

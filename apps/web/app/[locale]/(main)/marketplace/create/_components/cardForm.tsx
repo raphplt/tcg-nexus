@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import {
@@ -64,6 +65,7 @@ import { ShippingPolicyNotice } from "../../_components/ShippingPolicyNotice";
 import { FormSchema } from "../utils";
 
 const CardForm = () => {
+  const t = useTranslations("CreateListing");
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
@@ -145,11 +147,9 @@ const CardForm = () => {
   if (!isAuthenticated || !user) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground mb-4">
-          Vous devez être connecté pour créer une vente.
-        </p>
+        <p className="text-muted-foreground mb-4">{t("loginRequired")}</p>
         <Link href="/auth/login">
-          <Button>Se connecter</Button>
+          <Button>{t("signIn")}</Button>
         </Link>
       </div>
     );
@@ -157,7 +157,7 @@ const CardForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     if (!user?.id) {
-      toast.error("Erreur d'authentification. Veuillez vous reconnecter.");
+      toast.error(t("authError"));
       return;
     }
 
@@ -184,22 +184,22 @@ const CardForm = () => {
       if (result && typeof result === "object" && "id" in result) {
         form.reset();
         setSelectedCard(null);
-        toast.success("La vente a été créée avec succès !");
+        toast.success(t("success"));
         // Use the pokemonCardId (UUID) for the redirect, not the listing id
         router.push(`/marketplace/cards/${data.cardId}`);
       } else {
-        toast.error("Une erreur est survenue lors de la création de la vente.");
+        toast.error(t("error"));
       }
     } catch (error: any) {
       console.error("Erreur création vente:", error);
 
       if (error.response?.status === 401) {
-        toast.error("Session expirée. Veuillez vous reconnecter.");
+        toast.error(t("sessionExpired"));
         router.push("/auth/login");
       } else if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Une erreur est survenue lors de la création de la vente.");
+        toast.error(t("error"));
       }
     } finally {
       setLoading(false);
@@ -215,7 +215,7 @@ const CardForm = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
                 <Check className="w-5 h-5 text-primary" />
-                <CardTitle className="text-lg">Carte sélectionnée</CardTitle>
+                <CardTitle className="text-lg">{t("selectedCard")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -257,7 +257,7 @@ const CardForm = () => {
                     }}
                     className="text-destructive hover:text-destructive"
                   >
-                    Changer de carte
+                    {t("changeCard")}
                   </Button>
                 </div>
               </div>
@@ -273,11 +273,9 @@ const CardForm = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Filter className="w-5 h-5 text-primary" />
-                    Sélection de la carte
+                    {t("cardSelection")}
                   </CardTitle>
-                  <CardDescription>
-                    Utilisez les filtres pour trouver précisément votre carte.
-                  </CardDescription>
+                  <CardDescription>{t("cardSelectionHelp")}</CardDescription>
                 </div>
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="animate-pulse">
@@ -291,11 +289,11 @@ const CardForm = () => {
               {/* Search & Sort */}
               <div className="flex flex-col lg:flex-row gap-3">
                 <div className="flex-1">
-                  <Label className="sr-only">Rechercher</Label>
+                  <Label className="sr-only">{t("search")}</Label>
                   <div className="relative">
                     <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
                     <Input
-                      placeholder="Nom, numéro, extension..."
+                      placeholder={t("searchPlaceholder")}
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       className="pl-9 h-11"
@@ -307,13 +305,15 @@ const CardForm = () => {
                   onValueChange={(value) => updateFilters({ sortBy: value })}
                 >
                   <SelectTrigger className="w-full lg:w-48 h-11">
-                    <SelectValue placeholder="Trier par" />
+                    <SelectValue placeholder={t("sortBy")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="name">Nom</SelectItem>
-                    <SelectItem value="localId">Numéro</SelectItem>
-                    <SelectItem value="price">Prix</SelectItem>
-                    <SelectItem value="popularity">Popularité</SelectItem>
+                    <SelectItem value="name">{t("name")}</SelectItem>
+                    <SelectItem value="localId">{t("number")}</SelectItem>
+                    <SelectItem value="price">{t("price")}</SelectItem>
+                    <SelectItem value="popularity">
+                      {t("popularity")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Select
@@ -326,8 +326,8 @@ const CardForm = () => {
                     <SelectValue placeholder="Ordre" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ASC">Croissant</SelectItem>
-                    <SelectItem value="DESC">Décroissant</SelectItem>
+                    <SelectItem value="ASC">{t("ascending")}</SelectItem>
+                    <SelectItem value="DESC">{t("descending")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -335,8 +335,8 @@ const CardForm = () => {
               {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                 <FilterSelect
-                  label="Série"
-                  placeholder="Toutes les séries"
+                  label={t("series")}
+                  placeholder={t("allSeries")}
                   value={filters.serieId || "all"}
                   onChange={(value) =>
                     updateFilters({
@@ -353,7 +353,7 @@ const CardForm = () => {
 
                 <FilterSelect
                   label="Extension"
-                  placeholder="Toutes les extensions"
+                  placeholder={t("allSets")}
                   value={filters.setId || "all"}
                   onChange={(value) =>
                     updateFilters({
@@ -367,7 +367,7 @@ const CardForm = () => {
                 />
 
                 <div className="space-y-1.5">
-                  <Label>Rareté</Label>
+                  <Label>{t("rarity")}</Label>
                   <Input
                     placeholder="Ex: Rare Holo"
                     value={filters.rarity || ""}
@@ -381,7 +381,7 @@ const CardForm = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="invisible">Actions</Label>
+                  <Label className="invisible">{t("actions")}</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -397,7 +397,7 @@ const CardForm = () => {
                     }}
                   >
                     <RefreshCcw className="w-4 h-4 mr-2" />
-                    Réinitialiser
+                    {t("reset")}
                   </Button>
                 </div>
               </div>
@@ -445,7 +445,7 @@ const CardForm = () => {
                             )}
                             <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Badge className="bg-primary text-primary-foreground">
-                                Sélectionner
+                                {t("select")}
                               </Badge>
                             </div>
                           </div>
@@ -472,7 +472,7 @@ const CardForm = () => {
               ) : (
                 <div className="flex items-center gap-3 rounded-lg border border-dashed p-6 text-muted-foreground">
                   <AlertCircle className="w-5 h-5" />
-                  Aucune carte ne correspond à ces critères.
+                  {t("noResults")}
                 </div>
               )}
 
@@ -490,11 +490,9 @@ const CardForm = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Tag className="w-5 h-5 text-primary" />
-              Détails de la vente
+              {t("listingDetails")}
             </CardTitle>
-            <CardDescription>
-              Définissez le prix, l'état et la quantité de votre carte.
-            </CardDescription>
+            <CardDescription>{t("listingDetailsHelp")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -503,7 +501,7 @@ const CardForm = () => {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prix</FormLabel>
+                    <FormLabel>{t("price")}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
@@ -540,7 +538,7 @@ const CardForm = () => {
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Devise</FormLabel>
+                    <FormLabel>{t("currency")}</FormLabel>
                     <Select
                       value={field.value || Currency.EUR}
                       onValueChange={(value) => {
@@ -549,7 +547,7 @@ const CardForm = () => {
                     >
                       <FormControl>
                         <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Choisissez une devise" />
+                          <SelectValue placeholder={t("chooseCurrency")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -572,7 +570,7 @@ const CardForm = () => {
                 name="quantityAvailable"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre de cartes</FormLabel>
+                    <FormLabel>{t("cardCount")}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -596,7 +594,7 @@ const CardForm = () => {
                 name="cardState"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>État de la carte</FormLabel>
+                    <FormLabel>{t("cardCondition")}</FormLabel>
                     <Select
                       value={field.value}
                       onValueChange={(value) => {
@@ -605,11 +603,11 @@ const CardForm = () => {
                     >
                       <FormControl>
                         <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Choisissez un état">
+                          <SelectValue placeholder={t("chooseCondition")}>
                             {field.value
                               ? cardStates.find((s) => s.value === field.value)
                                   ?.label
-                              : "Choisissez un état"}
+                              : t("chooseCondition")}
                           </SelectValue>
                         </SelectTrigger>
                       </FormControl>
@@ -637,7 +635,7 @@ const CardForm = () => {
                   <FormLabel>Description (optionnel)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Décrivez l'état de la carte, ses particularités..."
+                      placeholder={t("descriptionPlaceholder")}
                       className="min-h-[100px] resize-none"
                       {...field}
                     />
@@ -652,7 +650,7 @@ const CardForm = () => {
         {/* Actions */}
         <div className="flex justify-end gap-3">
           <Button variant="secondary" type="button" asChild>
-            <Link href="/marketplace">Annuler</Link>
+            <Link href="/marketplace">{t("cancel")}</Link>
           </Button>
           <Button
             disabled={loading || !selectedCard}
@@ -664,7 +662,7 @@ const CardForm = () => {
             ) : (
               <>
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                Créer la vente
+                {t("submit")}
               </>
             )}
           </Button>
@@ -690,6 +688,7 @@ const FilterSelect = ({
   onChange,
   options = [],
 }: FilterSelectProps) => {
+  const t = useTranslations("CreateListing");
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -698,7 +697,7 @@ const FilterSelect = ({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tous</SelectItem>
+          <SelectItem value="all">{t("all")}</SelectItem>
           {options.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
               {opt.label}

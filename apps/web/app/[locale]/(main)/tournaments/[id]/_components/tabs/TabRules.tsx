@@ -7,6 +7,7 @@ import {
   ScrollText,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tournament } from "@/types/tournament";
@@ -16,6 +17,7 @@ interface TabRulesProps {
 }
 
 export function TabRules({ tournament }: TabRulesProps) {
+  const t = useTranslations("TournamentRules");
   return (
     <div className="space-y-6">
       {/* Règles principales */}
@@ -23,7 +25,7 @@ export function TabRules({ tournament }: TabRulesProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ScrollText className="size-5 text-primary" />
-            Règlement du tournoi
+            {t("title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -36,11 +38,9 @@ export function TabRules({ tournament }: TabRulesProps) {
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <ScrollText className="size-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
-                Aucun règlement spécifique n'a été défini pour ce tournoi.
-              </p>
+              <p className="text-muted-foreground">{t("noRules")}</p>
               <p className="text-sm text-muted-foreground/70 mt-2">
-                Les règles standards s'appliquent.
+                {t("standardRules")}
               </p>
             </div>
           )}
@@ -53,7 +53,7 @@ export function TabRules({ tournament }: TabRulesProps) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Info className="size-5 text-primary" />
-              Informations complémentaires
+              {t("additionalInfo")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -69,7 +69,7 @@ export function TabRules({ tournament }: TabRulesProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ShieldCheck className="size-5 text-primary" />
-            Conditions de participation
+            {t("participationConditions")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -82,12 +82,12 @@ export function TabRules({ tournament }: TabRulesProps) {
                   <AlertCircle className="size-5 text-yellow-500" />
                 )
               }
-              label="Accessibilité"
-              value={tournament.isPublic ? "Tournoi public" : "Tournoi privé"}
+              label={t("accessibility")}
+              value={
+                tournament.isPublic ? "Tournoi public" : t("privateTournament")
+              }
               description={
-                tournament.isPublic
-                  ? "Ouvert à tous les joueurs"
-                  : "Sur invitation uniquement"
+                tournament.isPublic ? t("openToAll") : t("inviteOnly")
               }
             />
             <ConditionItem
@@ -106,8 +106,8 @@ export function TabRules({ tournament }: TabRulesProps) {
               }
               description={
                 tournament.requiresApproval
-                  ? "Un organisateur doit valider votre inscription"
-                  : "Inscription automatique après paiement"
+                  ? t("approvalRequired")
+                  : t("autoRegistration")
               }
             />
             <ConditionItem
@@ -121,13 +121,13 @@ export function TabRules({ tournament }: TabRulesProps) {
               label="Inscriptions tardives"
               value={
                 tournament.allowLateRegistration
-                  ? "Autorisées"
-                  : "Non autorisées"
+                  ? t("allowed")
+                  : t("notAllowed")
               }
               description={
                 tournament.allowLateRegistration
-                  ? "Vous pouvez rejoindre après la date limite"
-                  : "Respectez la date limite d'inscription"
+                  ? t("lateJoinAllowed")
+                  : t("lateJoinNotAllowed")
               }
             />
             <ConditionItem
@@ -147,7 +147,7 @@ export function TabRules({ tournament }: TabRulesProps) {
               description={
                 tournament.pricing?.refundable
                   ? "Sous certaines conditions"
-                  : "Aucun remboursement possible"
+                  : t("noRefund")
               }
             />
           </div>
@@ -164,19 +164,10 @@ export function TabRules({ tournament }: TabRulesProps) {
         </CardHeader>
         <CardContent>
           <ul className="space-y-3">
-            <ReminderItem>
-              Assurez-vous d'avoir un deck valide selon le format du tournoi.
-            </ReminderItem>
-            <ReminderItem>
-              Présentez-vous au moins 15 minutes avant le début du tournoi.
-            </ReminderItem>
-            <ReminderItem>
-              En cas d'absence, prévenez les organisateurs dès que possible.
-            </ReminderItem>
-            <ReminderItem>
-              Respectez les règles de fair-play et de courtoisie envers les
-              autres participants.
-            </ReminderItem>
+            <ReminderItem>{t("conditionDeck")}</ReminderItem>
+            <ReminderItem>{t("conditionArrival")}</ReminderItem>
+            <ReminderItem>{t("conditionAbsence")}</ReminderItem>
+            <ReminderItem>{t("conditionFairPlay")}</ReminderItem>
           </ul>
         </CardContent>
       </Card>

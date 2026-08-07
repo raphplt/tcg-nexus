@@ -34,9 +34,10 @@ import { useRankings } from "@/hooks/useRankings";
 import { useTournament } from "@/hooks/useTournament";
 import { matchService } from "@/services/match.service";
 import { Match } from "@/types/tournament";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function PlayerDashboardPage() {
+  const t = useTranslations("TournamentPlayer");
   const locale = useLocale();
   const { id } = useParams();
   const { user } = useAuth();
@@ -135,12 +136,14 @@ export default function PlayerDashboardPage() {
       <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-4xl mx-auto text-center">
           <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Profil joueur requis</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {t("playerProfileRequiredTitle")}
+          </h1>
           <p className="text-muted-foreground mb-4">
-            Vous devez avoir un profil joueur pour accéder à cette page.
+            {t("playerProfileRequired")}
           </p>
           <Button asChild>
-            <Link href={`/tournaments/${id}`}>Retour au tournoi</Link>
+            <Link href={`/tournaments/${id}`}>{t("backToTournament")}</Link>
           </Button>
         </div>
       </div>
@@ -155,15 +158,13 @@ export default function PlayerDashboardPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour au tournoi
+              {t("backToTournament")}
             </Link>
           </Button>
 
           <div className="flex-1">
             <H1 className="mb-2">Mon parcours — {tournament?.name}</H1>
-            <p className="text-muted-foreground">
-              Suivi de votre participation au tournoi
-            </p>
+            <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
 
@@ -175,7 +176,7 @@ export default function PlayerDashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  Mon profil
+                  {t("myProfile")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center">
@@ -204,7 +205,7 @@ export default function PlayerDashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
-                  Mes statistiques
+                  {t("myStats")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -215,7 +216,7 @@ export default function PlayerDashboardPage() {
                   </div>
                   <div className="p-2 bg-red-50 rounded">
                     <div className="font-bold text-red-700">{losses}</div>
-                    <div className="text-xs text-red-600">Défaites</div>
+                    <div className="text-xs text-red-600">{t("losses")}</div>
                   </div>
                   <div className="p-2 bg-yellow-50 rounded">
                     <div className="font-bold text-yellow-700">{draws}</div>
@@ -274,7 +275,7 @@ export default function PlayerDashboardPage() {
 
                     <Button className="w-full" asChild>
                       <Link href={`/tournaments/${id}/matches/${nextMatch.id}`}>
-                        Voir le match
+                        {t("viewMatch")}
                       </Link>
                     </Button>
                   </div>
@@ -289,7 +290,7 @@ export default function PlayerDashboardPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="w-5 h-5" />
-                  Mes matches
+                  {t("myMatches")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto p-0">
@@ -297,8 +298,8 @@ export default function PlayerDashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Ronde</TableHead>
-                      <TableHead>Adversaire</TableHead>
-                      <TableHead>Résultat</TableHead>
+                      <TableHead>{t("opponent")}</TableHead>
+                      <TableHead>{t("result")}</TableHead>
                       <TableHead>Score</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
@@ -328,7 +329,7 @@ export default function PlayerDashboardPage() {
                                     </AvatarFallback>
                                   </Avatar>
                                   <span>
-                                    {opponent?.name || "À déterminer"}
+                                    {opponent?.name || t("toBeDetermined")}
                                   </span>
                                 </div>
                               </TableCell>
@@ -378,7 +379,7 @@ export default function PlayerDashboardPage() {
                         <TableCell colSpan={6} className="text-center py-8">
                           <div className="text-muted-foreground">
                             <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p>Aucun match programmé pour le moment</p>
+                            <p>{t("noMatches")}</p>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -394,9 +395,9 @@ export default function PlayerDashboardPage() {
                 <Link href={`/tournaments/${id}/bracket`}>
                   <div className="text-center">
                     <Trophy className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Tableau</div>
+                    <div className="font-medium">{t("bracket")}</div>
                     <div className="text-xs text-muted-foreground">
-                      Voir la progression
+                      {t("viewProgress")}
                     </div>
                   </div>
                 </Link>
@@ -406,9 +407,9 @@ export default function PlayerDashboardPage() {
                 <Link href={`/tournaments/${id}/rankings`}>
                   <div className="text-center">
                     <TrendingUp className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Classements</div>
+                    <div className="font-medium">{t("rankings")}</div>
                     <div className="text-xs text-muted-foreground">
-                      Voir ma position
+                      {t("viewPosition")}
                     </div>
                   </div>
                 </Link>
@@ -420,7 +421,7 @@ export default function PlayerDashboardPage() {
                     <Clock className="w-6 h-6 mx-auto mb-2" />
                     <div className="font-medium">Tous les matchs</div>
                     <div className="text-xs text-muted-foreground">
-                      Voir le planning
+                      {t("viewSchedule")}
                     </div>
                   </div>
                 </Link>

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { H1, H2 } from "@components/Shared/Titles";
 import { Skeleton } from "@components/ui/skeleton";
 import { usePaginatedQuery } from "@hooks/usePaginatedQuery";
@@ -18,6 +19,7 @@ import TrendingDecks from "./_components/TrendingDecks";
 import UserDecks from "./_components/UserDecks";
 
 export default function DecksPage() {
+  const t = useTranslations("Decks");
   const [page, setPage] = useState(1);
   const [formatList, setFormatList] = useState<[] | DeckFormat[]>([]);
   const [filters, setFilters] = useState<DecksFiltersTypes>({
@@ -51,7 +53,7 @@ export default function DecksPage() {
   );
 
   const formatOptions = [
-    { label: "Tous", value: "ALL" },
+    { label: t("allFormats"), value: "ALL" },
     ...formatList.map((data) => ({
       label: data.type,
       value: data.id.toString(),
@@ -59,10 +61,10 @@ export default function DecksPage() {
   ];
 
   const sortOptions = [
-    { label: "Date de création", value: "createdAt" },
-    { label: "Nom", value: "name" },
-    { label: "Type", value: "format.type" },
-    { label: "Vues", value: "views" },
+    { label: t("sortCreatedAt"), value: "createdAt" },
+    { label: t("sortName"), value: "name" },
+    { label: t("sortType"), value: "format.type" },
+    { label: t("sortViews"), value: "views" },
   ];
 
   useEffect(() => {
@@ -78,10 +80,9 @@ export default function DecksPage() {
     <PageWrapper gradient="secondary">
       <div className="space-y-12">
         <div className="text-center space-y-4">
-          <H1 variant="primary">Decks</H1>
+          <H1 variant="primary">{t("title")}</H1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Découvrez les meilleurs decks de la communauté, créez les vôtres et
-            partagez vos stratégies.
+            {t("subtitle")}
           </p>
         </div>
         <TrendingDecks />
@@ -90,7 +91,8 @@ export default function DecksPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <H2 className="flex items-center gap-2">
-              <Library className="w-6 h-6 text-primary" /> Tous les Decks
+              <Library className="w-6 h-6 text-primary" />
+              {t("allDecks")}
             </H2>
           </div>
 
@@ -113,7 +115,7 @@ export default function DecksPage() {
             </div>
           ) : error ? (
             <div className="text-center text-red-500 py-12">
-              Une erreur est survenue lors du chargement des decks.
+              {t("loadError")}
             </div>
           ) : (
             <>

@@ -19,9 +19,10 @@ import { useEffect, useState } from "react";
 import { supportTicketService } from "@/services/support-ticket.service";
 import { SupportTicket } from "@/types/support-ticket";
 import { PaginatedResult } from "@/types/pagination";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function SupportPage() {
+  const t = useTranslations("Support");
   const locale = useLocale();
   const [data, setData] = useState<PaginatedResult<SupportTicket> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,11 +42,8 @@ export default function SupportPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <H1 variant="primary">Support</H1>
-            <p className="text-muted-foreground">
-              Besoin d&apos;aide ? Créez un ticket et notre équipe vous
-              répondra.
-            </p>
+            <H1 variant="primary">{t("title")}</H1>
+            <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
           <Button asChild>
             <Link href="/support/create">
@@ -65,8 +63,8 @@ export default function SupportPage() {
           <EmptyState
             icon={MessageSquare}
             title="Aucun ticket"
-            description="Vous n'avez pas encore créé de ticket de support."
-            action={{ label: "Créer un ticket", href: "/support/create" }}
+            description={t("empty")}
+            action={{ label: t("create"), href: "/support/create" }}
           />
         ) : (
           <div className="space-y-3">
@@ -105,7 +103,7 @@ export default function SupportPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  Précédent
+                  {t("previous")}
                 </Button>
                 <span className="flex items-center text-sm text-muted-foreground px-3">
                   Page {page} / {data.meta.totalPages}
@@ -128,11 +126,12 @@ export default function SupportPage() {
 }
 
 function TicketStatusBadge({ status }: { status: string }) {
+  const t = useTranslations("Support");
   if (status === "closed") {
     return (
       <Badge variant="secondary" className="gap-1">
         <CheckCircle2 className="w-3 h-3" />
-        Fermé
+        {t("closed")}
       </Badge>
     );
   }

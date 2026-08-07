@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -60,6 +61,7 @@ import {
 import { FormValues, formSchema } from "../utils";
 
 export default function CreateTournamentPage() {
+  const t = useTranslations("CreateTournament");
   const { user } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -173,14 +175,12 @@ export default function CreateTournamentPage() {
         await tournamentService.fillWithPlayers(tournament.id, 8);
       }
 
-      setSuccess("Tournoi créé avec succès !");
+      setSuccess(t("success"));
       setTimeout(() => {
         router.push(`/tournaments/${tournament.id}`);
       }, 1500);
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        "Erreur lors de la création du tournoi.";
+      const message = err?.response?.data?.message || t("error");
       setError(message);
     }
   };
@@ -194,10 +194,7 @@ export default function CreateTournamentPage() {
         <Alert variant="destructive">
           <ShieldAlert className="h-5 w-5" />
           <AlertTitle>Accès refusé</AlertTitle>
-          <AlertDescription>
-            Vous devez être un organisateur professionnel pour accéder à cette
-            page.
-          </AlertDescription>
+          <AlertDescription>{t("organizerRequired")}</AlertDescription>
         </Alert>
       </div>
     );
@@ -213,7 +210,7 @@ export default function CreateTournamentPage() {
       </div>
 
       <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl shadow-lg p-8 space-y-6">
-        <h2 className="text-3xl font-bold text-center">Créer un Tournoi</h2>
+        <h2 className="text-3xl font-bold text-center">{t("title")}</h2>
 
         {error && (
           <Alert variant="destructive">
@@ -237,9 +234,9 @@ export default function CreateTournamentPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Nom du tournoi</FormLabel>
+                    <FormLabel>{t("name")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nom du tournoi" {...field} />
+                      <Input placeholder={t("name")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -251,9 +248,12 @@ export default function CreateTournamentPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t("description")}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Description du tournoi" {...field} />
+                      <Input
+                        placeholder={t("descriptionPlaceholder")}
+                        {...field}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -264,7 +264,7 @@ export default function CreateTournamentPage() {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lieu</FormLabel>
+                    <FormLabel>{t("location")}</FormLabel>
                     <Popover open={locationOpen} onOpenChange={setLocationOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -277,7 +277,7 @@ export default function CreateTournamentPage() {
                           >
                             {field.value ||
                               placesValue ||
-                              "Rechercher une adresse..."}
+                              t("addressPlaceholder")}
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </FormControl>
@@ -285,7 +285,7 @@ export default function CreateTournamentPage() {
                       <PopoverContent className="w-100 p-0">
                         <Command>
                           <CommandInput
-                            placeholder="Rechercher une adresse..."
+                            placeholder={t("addressPlaceholder")}
                             value={placesValue}
                             onValueChange={setPlacesValue}
                           />
@@ -326,7 +326,7 @@ export default function CreateTournamentPage() {
                 name="registrationDeadline"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date limite d'inscription</FormLabel>
+                    <FormLabel>{t("registrationDeadline")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -339,7 +339,7 @@ export default function CreateTournamentPage() {
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date de début</FormLabel>
+                    <FormLabel>{t("startDate")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -352,7 +352,7 @@ export default function CreateTournamentPage() {
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date de fin</FormLabel>
+                    <FormLabel>{t("endDate")}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -366,11 +366,11 @@ export default function CreateTournamentPage() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type de tournoi</FormLabel>
+                    <FormLabel>{t("type")}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Choisir un type" />
+                          <SelectValue placeholder={t("typePlaceholder")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -392,11 +392,7 @@ export default function CreateTournamentPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription>
-                      Nexus orchestre actuellement les tournois internes à
-                      élimination directe. Les autres formats peuvent être
-                      publiés lorsque leur gestion est externe.
-                    </FormDescription>
+                    <FormDescription>{t("formatNotice")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -407,7 +403,7 @@ export default function CreateTournamentPage() {
                 name="isPublic"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between col-span-2">
-                    <FormLabel>Tournoi public</FormLabel>
+                    <FormLabel>{t("isPublic")}</FormLabel>
                     <FormControl>
                       <Switch
                         checked={field.value}
@@ -425,10 +421,9 @@ export default function CreateTournamentPage() {
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between col-span-2">
                     <div className="space-y-0.5">
-                      <FormLabel>Tournoi externe</FormLabel>
+                      <FormLabel>{t("isExternal")}</FormLabel>
                       <FormDescription className="text-xs text-muted-foreground">
-                        La plateforme publie l’événement, mais n’en orchestre ni
-                        les inscriptions ni les matchs.
+                        {t("externalNotice")}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -461,7 +456,7 @@ export default function CreateTournamentPage() {
                   name="externalRegistrationUrl"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>Lien d'inscription externe</FormLabel>
+                      <FormLabel>{t("externalLink")}</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://example.com/register"
@@ -480,7 +475,7 @@ export default function CreateTournamentPage() {
                   name="ageRestrictionMin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Âge minimum</FormLabel>
+                      <FormLabel>{t("minAge")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -504,7 +499,7 @@ export default function CreateTournamentPage() {
                   name="ageRestrictionMax"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Âge maximum</FormLabel>
+                      <FormLabel>{t("maxAge")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -535,11 +530,10 @@ export default function CreateTournamentPage() {
                         <div className="space-y-0.5">
                           <FormLabel className="flex items-center gap-2 text-amber-600">
                             <Users className="h-4 w-4" />
-                            Remplir avec 8 joueurs (Admin)
+                            {t("fillWithPlayers")}
                           </FormLabel>
                           <FormDescription className="text-xs text-muted-foreground">
-                            Ouvre automatiquement les inscriptions et inscrit 8
-                            joueurs aléatoires
+                            {t("fillWithPlayersHelp")}
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -557,7 +551,7 @@ export default function CreateTournamentPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Création en cours..." : "Créer le tournoi"}
+              {isLoading ? t("submitting") : t("submit")}
             </Button>
           </form>
         </Form>

@@ -114,8 +114,7 @@ vi.mock("@/i18n/navigation", () => ({
   Link: (() => {
     const LocalizedLinkMock = React.forwardRef<HTMLAnchorElement, any>(
       ({ href, locale: _locale, children, ...rest }, ref) => {
-        const path =
-          typeof href === "string" ? href : (href?.pathname ?? "");
+        const path = typeof href === "string" ? href : (href?.pathname ?? "");
         return (
           <a href={path} ref={ref} {...rest}>
             {children}

@@ -10,6 +10,7 @@ import {
   Square,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import {
   AlertDialog,
@@ -53,6 +54,7 @@ interface ActionConfig {
 }
 
 export function TournamentControls({ tournament }: TournamentControlsProps) {
+  const t = useTranslations("TournamentControls");
   const { user } = useAuth();
   const permissions = usePermissions(user, tournament);
   const {
@@ -80,10 +82,10 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         if (permissions.canManageTournament) {
           actions.push({
             action: "open-registration",
-            label: "Ouvrir les inscriptions",
+            label: t("openRegistrations"),
             icon: <Play className="w-4 h-4" />,
             variant: "default",
-            description: "Permettre aux joueurs de s'inscrire au tournoi",
+            description: t("openRegistrationsHelp"),
             requiresConfirmation: false,
           });
         }
@@ -93,10 +95,10 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         if (permissions.canManageTournament) {
           actions.push({
             action: "close-registration",
-            label: "Fermer les inscriptions",
+            label: t("closeRegistrations"),
             icon: <Square className="w-4 h-4" />,
             variant: "outline",
-            description: "Arrêter les nouvelles inscriptions",
+            description: t("closeRegistrationsHelp"),
             requiresConfirmation: false,
           });
         }
@@ -106,20 +108,20 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         if (permissions.canStartTournament && hasSupportedEngine) {
           actions.push({
             action: "start-tournament",
-            label: "Démarrer le tournoi",
+            label: t("start"),
             icon: <Play className="w-4 h-4" />,
             variant: "default",
-            description: "Générer le tableau et commencer les matchs",
+            description: t("startHelp"),
             requiresConfirmation: true,
           });
         }
         if (permissions.canManageTournament) {
           actions.push({
             action: "reopen-registration",
-            label: "Rouvrir les inscriptions",
+            label: t("reopenRegistrations"),
             icon: <Clock className="w-4 h-4" />,
             variant: "outline",
-            description: "Permettre de nouvelles inscriptions",
+            description: t("reopenRegistrationsHelp"),
             requiresConfirmation: false,
           });
         }
@@ -163,10 +165,10 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
     ) {
       actions.push({
         action: "cancel-tournament",
-        label: "Annuler le tournoi",
+        label: t("cancel"),
         icon: <X className="w-4 h-4" />,
         variant: "destructive",
-        description: "Annuler définitivement le tournoi",
+        description: t("cancelHelp"),
         requiresConfirmation: true,
       });
     }
@@ -248,7 +250,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            Contrôles du tournoi
+            {t("title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -268,8 +270,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
           {!hasSupportedEngine &&
             tournament.status === "registration_closed" && (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-100">
-                Ce format est publié dans Nexus, mais son déroulement est géré
-                sur la plateforme externe de l’organisateur.
+                {t("externalNotice")}
               </div>
             )}
 
@@ -296,7 +297,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
               ))
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Aucune action disponible pour le moment
+                {t("noActions")}
               </p>
             )}
           </div>
@@ -343,10 +344,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             <AlertDialogDescription>
               {confirmAction === "start-tournament" && (
                 <div className="space-y-4">
-                  <p>
-                    Êtes-vous sûr de vouloir démarrer le tournoi ? Cette action
-                    générera le bracket et ne pourra pas être annulée.
-                  </p>
+                  <p>{t("startConfirm")}</p>
 
                   <div className="space-y-2">
                     <Label htmlFor="seeding-method">Méthode de seeding :</Label>
@@ -376,17 +374,11 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
               )}
 
               {confirmAction === "advance-round" && (
-                <p>
-                  Passer au round suivant ? Assurez-vous que tous les matches du
-                  round actuel sont terminés.
-                </p>
+                <p>{t("nextRoundConfirm")}</p>
               )}
 
               {confirmAction === "finish-tournament" && (
-                <p>
-                  Terminer le tournoi ? Les classements finaux seront calculés
-                  et le tournoi sera marqué comme terminé.
-                </p>
+                <p>{t("finishConfirm")}</p>
               )}
 
               {confirmAction === "cancel-tournament" && (
@@ -399,7 +391,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
                     </Label>
                     <Textarea
                       id="cancel-reason"
-                      placeholder="Expliquez pourquoi le tournoi est annulé..."
+                      placeholder={t("cancelReasonPlaceholder")}
                       value={actionData.reason || ""}
                       onChange={(e) =>
                         setActionData({ ...actionData, reason: e.target.value })

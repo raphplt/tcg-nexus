@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1 } from "@components/Shared/Titles";
 import { Button } from "@components/ui/button";
@@ -24,27 +26,30 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { CreateSupportTicketDto } from "@/types/support-ticket";
 import { supportTicketService } from "@/services/support-ticket.service";
 
-const formSchema = z.object({
-  subject: z
-    .string()
-    .min(3, "Le sujet doit contenir au moins 3 caractères")
-    .max(100, "Le sujet ne peut pas dépasser 100 caractères"),
-  message: z
-    .string()
-    .min(5, "Le message doit contenir au moins 5 caractères")
-    .max(2000, "Le message ne peut pas dépasser 2000 caractères"),
-});
+const createFormSchema = (t: (key: string) => string) =>
+  z.object({
+    subject: z
+      .string()
+      .min(3, t("subjectMinLength"))
+      .max(100, t("subjectMaxLength")),
+    message: z
+      .string()
+      .min(5, t("messageMinLength"))
+      .max(2000, t("messageMaxLength")),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 export default function CreateSupportTicketPage() {
+  const t = useTranslations("SupportCreate");
+  const schema = useMemo(() => createFormSchema(t), [t]);
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       subject: "",
       message: "",
@@ -64,13 +69,12 @@ export default function CreateSupportTicketPage() {
 
       const ticket = await supportTicketService.create(payload);
 
-      setSuccess("Ticket créé avec succès !");
+      setSuccess(t("success"));
       setTimeout(() => {
         router.push(`/support/${ticket.id}`);
       }, 1000);
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message || "Erreur lors de la création du ticket.";
+      const message = err?.response?.data?.message || t("error");
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -88,10 +92,8 @@ export default function CreateSupportTicketPage() {
         </Button>
 
         <div className="text-center space-y-2">
-          <H1 variant="primary">Créer un ticket</H1>
-          <p className="text-muted-foreground">
-            Décrivez votre problème et notre équipe vous répondra rapidement.
-          </p>
+          <H1 variant="primary">{t("title")}</H1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
 
         <Card>
@@ -120,10 +122,10 @@ export default function CreateSupportTicketPage() {
                   name="subject"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sujet</FormLabel>
+                      <FormLabel>{t("subject")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Ex: Problème de paiement"
+                          placeholder={t("subjectPlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -137,10 +139,10 @@ export default function CreateSupportTicketPage() {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Message</FormLabel>
+                      <FormLabel>{t("message")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Décrivez votre problème en détail..."
+                          placeholder={t("messagePlaceholder")}
                           className="min-h-[150px]"
                           {...field}
                         />
@@ -156,7 +158,7 @@ export default function CreateSupportTicketPage() {
                   disabled={isSubmitting}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {isSubmitting ? "Envoi en cours..." : "Envoyer le ticket"}
+                  {isSubmitting ? "Envoi en cours..." : t("submit")}
                 </Button>
               </form>
             </Form>

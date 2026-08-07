@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -39,6 +40,7 @@ export default function DeckImportPage() {
 }
 
 function DeckImportContent() {
+  const t = useTranslations("DeckImport");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -76,7 +78,7 @@ function DeckImportContent() {
       router.push(`/decks/${importedDeck.id}`);
     },
     onError: (error: any) => {
-      toast.error(error.message || "Impossible d'importer le deck");
+      toast.error(error.message || t("importError"));
     },
   });
 
@@ -92,9 +94,7 @@ function DeckImportContent() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message ||
-          error.message ||
-          "Impossible d'importer le deck",
+        error?.response?.data?.message || error.message || t("importError"),
       );
     },
   });
@@ -105,7 +105,7 @@ function DeckImportContent() {
 
   const handleImport = () => {
     if (!user) {
-      toast.error("Vous devez être connecté pour importer un deck");
+      toast.error(t("loginRequired"));
       router.push("/auth/login");
       return;
     }
@@ -125,16 +125,12 @@ function DeckImportContent() {
       try {
         const parsed = JSON.parse(event.target?.result as string);
         if (!parsed.name || !parsed.format || !Array.isArray(parsed.cards)) {
-          setJsonError(
-            'Format JSON invalide. Le fichier doit contenir "name", "format" et "cards".',
-          );
+          setJsonError(t("invalidJson"));
           return;
         }
         setJsonData(parsed);
       } catch {
-        setJsonError(
-          "Impossible de lire le fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide.",
-        );
+        setJsonError(t("unreadableFile"));
       }
     };
     reader.readAsText(file);
@@ -142,7 +138,7 @@ function DeckImportContent() {
 
   const handleImportJson = () => {
     if (!user) {
-      toast.error("Vous devez être connecté pour importer un deck");
+      toast.error(t("loginRequired"));
       router.push("/auth/login");
       return;
     }
@@ -180,10 +176,8 @@ function DeckImportContent() {
       </Button>
 
       <div>
-        <H1>Importer un deck</H1>
-        <p className="text-muted-foreground mt-2">
-          Importez un deck via un code de partage ou un fichier JSON
-        </p>
+        <H1>{t("title")}</H1>
+        <p className="text-muted-foreground mt-2">{t("subtitle")}</p>
       </div>
 
       {/* Tabs */}
@@ -193,7 +187,7 @@ function DeckImportContent() {
           onClick={() => setActiveTab("code")}
         >
           <Search className="mr-2 h-4 w-4" />
-          Code de partage
+          {t("shareCode")}
         </Button>
         <Button
           variant={activeTab === "json" ? "default" : "outline"}
@@ -209,7 +203,7 @@ function DeckImportContent() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Code de partage</CardTitle>
+              <CardTitle>{t("shareCode")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
@@ -240,10 +234,10 @@ function DeckImportContent() {
             <Card className="border-destructive">
               <CardContent className="py-8 text-center">
                 <p className="text-destructive font-medium">
-                  Code invalide ou expiré
+                  {t("invalidCode")}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Vérifiez le code et réessayez
+                  {t("checkCode")}
                 </p>
               </CardContent>
             </Card>
@@ -264,7 +258,7 @@ function DeckImportContent() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-3">Créé par</h3>
+                  <h3 className="font-semibold mb-3">{t("createdBy")}</h3>
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <span className="text-sm font-medium">
@@ -280,7 +274,7 @@ function DeckImportContent() {
                 <Separator />
 
                 <div className="space-y-4">
-                  <h3 className="font-semibold">Liste des cartes</h3>
+                  <h3 className="font-semibold">{t("cardList")}</h3>
 
                   {cardGroups?.pokemon && cardGroups.pokemon.length > 0 && (
                     <div>
@@ -368,7 +362,7 @@ function DeckImportContent() {
                     ) : (
                       <>
                         <Download className="mr-2 h-4 w-4" />
-                        Importer ce deck
+                        {t("importThisDeck")}
                       </>
                     )}
                   </Button>
@@ -387,10 +381,7 @@ function DeckImportContent() {
               <CardTitle>Importer depuis un fichier JSON</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Sélectionnez un fichier JSON exporté depuis TCG Nexus ou
-                respectant le format d'export.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("fileHelp")}</p>
 
               <input
                 ref={fileInputRef}
@@ -405,9 +396,7 @@ function DeckImportContent() {
                 className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
               >
                 <Upload className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
-                <p className="text-sm font-medium">
-                  Cliquez pour sélectionner un fichier JSON
-                </p>
+                <p className="text-sm font-medium">{t("selectFile")}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   .json uniquement
                 </p>
@@ -443,7 +432,7 @@ function DeckImportContent() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="font-semibold">Liste des cartes</h3>
+                  <h3 className="font-semibold">{t("cardList")}</h3>
                   <div className="space-y-1">
                     {jsonData.cards.map((card, idx) => (
                       <div
@@ -483,7 +472,7 @@ function DeckImportContent() {
                     ) : (
                       <>
                         <Download className="mr-2 h-4 w-4" />
-                        Importer ce deck
+                        {t("importThisDeck")}
                       </>
                     )}
                   </Button>

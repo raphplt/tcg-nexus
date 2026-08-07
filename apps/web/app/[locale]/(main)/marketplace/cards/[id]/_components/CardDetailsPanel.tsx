@@ -13,24 +13,25 @@ import { Button } from "@/components/ui/button";
 import { PokemonCardType } from "@/types/cardPokemon";
 import { typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface CardDetailsPanelProps {
   card: PokemonCardType;
 }
 
 function EnergyIcon({ type, size = 18 }: { type: string; size?: number }) {
+  const t = useTranslations("CardDetails");
   const src = typeToImage[slugify(type.toLowerCase())];
   if (!src) return <span className="text-xs">{type}</span>;
   return <Image src={src} alt={type} width={size} height={size} />;
 }
 
-const variantLabels: Record<string, string> = {
-  normal: "Normale",
-  reverse: "Reverse",
-  holo: "Holographique",
-  firstEdition: "Première édition",
-  wPromo: "Promo",
+const variantKeys: Record<string, string> = {
+  normal: "variantNormal",
+  reverse: "variantReverse",
+  holo: "variantHolo",
+  firstEdition: "variantFirstEdition",
+  wPromo: "variantPromo",
 };
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -43,6 +44,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
+  const t = useTranslations("CardDetails");
   const locale = useLocale();
   const hasCombat =
     (card.attacks?.length ?? 0) > 0 || (card.abilities?.length ?? 0) > 0;
@@ -56,16 +58,14 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
     <section className="rounded-xl border bg-card shadow-sm">
       <div className="px-6 pt-6 pb-2">
         <h2 className="text-lg font-semibold">Fiche de la carte</h2>
-        <p className="text-sm text-muted-foreground">
-          Caractéristiques de jeu, informations d&apos;édition et légalité.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       <Accordion type="multiple" className="px-6 pb-2">
         {hasCombat && (
           <AccordionItem value="combat">
             <AccordionTrigger className="hover:no-underline">
-              Attaques et talents
+              {t("attacksAndAbilities")}
             </AccordionTrigger>
             <AccordionContent className="space-y-4">
               {card.abilities?.map((ability, i) => (
@@ -108,7 +108,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
         {hasResistances && (
           <AccordionItem value="resistances">
             <AccordionTrigger className="hover:no-underline">
-              Faiblesses et résistances
+              {t("weaknessesAndResistances")}
             </AccordionTrigger>
             <AccordionContent className="space-y-3">
               {(card.weaknesses?.length ?? 0) > 0 && (
@@ -125,7 +125,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
               {(card.resistances?.length ?? 0) > 0 && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground w-28">
-                    Résistances
+                    {t("resistances")}
                   </span>
                   {card.resistances?.map((r, i) => (
                     <Badge key={i} variant="outline" className="gap-1">
@@ -149,16 +149,16 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
 
         <AccordionItem value="edition">
           <AccordionTrigger className="hover:no-underline">
-            Édition et légalité
+            {t("editionAndLegality")}
           </AccordionTrigger>
           <AccordionContent>
             <InfoRow label="Set" value={card.set?.name ?? "—"} />
             {card.set?.serie?.name && (
-              <InfoRow label="Série" value={card.set.serie.name} />
+              <InfoRow label={t("series")} value={card.set.serie.name} />
             )}
             {card.set?.releaseDate && (
               <InfoRow
-                label="Date de sortie"
+                label={t("releaseDate")}
                 value={new Date(card.set.releaseDate).toLocaleDateString(
                   locale,
                 )}
@@ -166,16 +166,19 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
             )}
             {card.set?.cardCount?.official && (
               <InfoRow
-                label="Cartes du set"
+                label={t("setCards")}
                 value={`${card.set.cardCount.official} officielles`}
               />
             )}
             {card.regulationMark && (
-              <InfoRow label="Bloc de régulation" value={card.regulationMark} />
+              <InfoRow
+                label={t("regulationMark")}
+                value={card.regulationMark}
+              />
             )}
             {card.legal && (
               <InfoRow
-                label="Formats autorisés"
+                label={t("allowedFormats")}
                 value={
                   <span className="flex gap-1.5">
                     <Badge
@@ -192,7 +195,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
                         card.legal.expanded ? "" : "text-muted-foreground"
                       }
                     >
-                      Étendu
+                      {t("expanded")}
                     </Badge>
                   </span>
                 }
@@ -214,7 +217,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
                     variant={available ? "secondary" : "outline"}
                     className={available ? "" : "text-muted-foreground/60"}
                   >
-                    {variantLabels[variant] ?? variant}
+                    {variantKeys[variant] ? t(variantKeys[variant]) : variant}
                     {available ? "" : " — non éditée"}
                   </Badge>
                 ))}
@@ -232,7 +235,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Consulter la fiche TCGdex
+              {t("viewOnTcgdex")}
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </Button>

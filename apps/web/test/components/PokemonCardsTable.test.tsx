@@ -152,6 +152,6 @@ describe("PokemonCardsTable", () => {
 
     render(<PokemonCardsTable />);
 
-    await screen.findByText("Erreur lors du chargement des cartes Pokemon");
+    await screen.findByText("Erreur lors du chargement des cartes Pokémon");
   });
 });

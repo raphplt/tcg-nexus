@@ -47,8 +47,7 @@ import type {
   PokemonSerieType,
   PokemonSetType,
 } from "@/types/cardPokemon";
-import type { PaginatedResult } from "@/types/pagination";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   getCardImage,
   getSeriesLogo,
@@ -62,31 +61,34 @@ interface PokemonCardsTableProps {
 }
 
 const POKEMON_TYPES = [
-  { value: "Grass", label: "Plante" },
-  { value: "Fire", label: "Feu" },
-  { value: "Water", label: "Eau" },
-  { value: "Lightning", label: "Électrique" },
-  { value: "Psychic", label: "Psy" },
-  { value: "Fighting", label: "Combat" },
-  { value: "Darkness", label: "Obscurité" },
-  { value: "Metal", label: "Métal" },
-  { value: "Dragon", label: "Dragon" },
-  { value: "Fairy", label: "Fée" },
-  { value: "Colorless", label: "Incolore" },
+  { value: "Grass", labelKey: "typeGrass" },
+  { value: "Fire", labelKey: "typeFire" },
+  { value: "Water", labelKey: "typeWater" },
+  { value: "Lightning", labelKey: "typeLightning" },
+  { value: "Psychic", labelKey: "typePsychic" },
+  { value: "Fighting", labelKey: "typeFighting" },
+  { value: "Darkness", labelKey: "typeDarkness" },
+  { value: "Metal", labelKey: "typeMetal" },
+  { value: "Dragon", labelKey: "typeDragon" },
+  { value: "Fairy", labelKey: "typeFairy" },
+  { value: "Colorless", labelKey: "typeColorless" },
 ];
 
 const POKEMON_RARITIES = [
-  { value: "Commune", label: "Commune" },
-  { value: "Peu Commune", label: "Peu Commune" },
-  { value: "Rare", label: "Rare" },
-  { value: "Rare Holo", label: "Rare Holo" },
-  { value: "Double rare", label: "Double Rare" },
-  { value: "Ultra Rare", label: "Ultra Rare" },
-  { value: "Illustration rare", label: "Illustration Rare" },
-  { value: "Illustration spéciale rare", label: "Illustration Spéciale Rare" },
-  { value: "Hyper rare", label: "Hyper Rare" },
-  { value: "Secret Rare", label: "Secret Rare" },
-  { value: "Promo", label: "Promo" },
+  { value: "Commune", labelKey: "rarityCommon" },
+  { value: "Peu Commune", labelKey: "rarityUncommon" },
+  { value: "Rare", labelKey: "rarityRare" },
+  { value: "Rare Holo", labelKey: "rarityRareHolo" },
+  { value: "Double rare", labelKey: "rarityDoubleRare" },
+  { value: "Ultra Rare", labelKey: "rarityUltraRare" },
+  { value: "Illustration rare", labelKey: "rarityIllustrationRare" },
+  {
+    value: "Illustration spéciale rare",
+    labelKey: "raritySpecialIllustrationRare",
+  },
+  { value: "Hyper rare", labelKey: "rarityHyperRare" },
+  { value: "Secret Rare", labelKey: "raritySecretRare" },
+  { value: "Promo", labelKey: "rarityPromo" },
 ];
 
 //TODO : à refactoriser, trop long
@@ -94,6 +96,7 @@ export function PokemonCardsTable({
   initialPage = 1,
   itemsPerPage = 12,
 }: PokemonCardsTableProps) {
+  const t = useTranslations("Pokedex");
   const locale = useLocale();
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
@@ -138,10 +141,7 @@ export function PokemonCardsTable({
         });
         setSets(sortedSets);
       } catch (err) {
-        console.error(
-          "Erreur lors du chargement des métadonnées (séries/sets):",
-          err,
-        );
+        console.error(t("metadataError"), err);
       }
     };
     loadMetadata();
@@ -192,7 +192,7 @@ export function PokemonCardsTable({
         setHasMore(data.meta.hasNextPage);
         setTotalItems(data.meta.totalItems);
       } catch (err) {
-        setError("Erreur lors du chargement des cartes Pokemon");
+        setError(t("cardsError"));
         console.error("Error fetching Pokemon cards:", err);
       } finally {
         setLoading(false);
@@ -356,11 +356,9 @@ export function PokemonCardsTable({
             <div>
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                Explorateur Pokédex
+                {t("explorerTitle")}
               </CardTitle>
-              <CardDescription>
-                Naviguez par séries et extensions de cartes officielles
-              </CardDescription>
+              <CardDescription>{t("explorerSubtitle")}</CardDescription>
             </div>
 
             {/* View Mode Toggle & Reset */}
@@ -371,7 +369,7 @@ export function PokemonCardsTable({
                 onClick={resetFilters}
                 className="text-xs hover:bg-destructive/10 hover:text-destructive transition-colors"
               >
-                Réinitialiser
+                {t("reset")}
               </Button>
               <div className="flex bg-muted rounded-lg p-0.5 border border-border/40">
                 <Button
@@ -406,7 +404,7 @@ export function PokemonCardsTable({
               }}
               className="cursor-pointer hover:text-primary transition-colors font-medium"
             >
-              Pokédex
+              {t("title")}
             </span>
             {selectedSerie && (
               <>
@@ -486,7 +484,7 @@ export function PokemonCardsTable({
                   className="h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
                 >
                   <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                  Retour aux séries
+                  {t("backToSeries")}
                 </Button>
               </div>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -666,13 +664,13 @@ export function PokemonCardsTable({
                   }}
                 >
                   <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Filtrer par type" />
+                    <SelectValue placeholder={t("filterByType")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
                     {POKEMON_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                        {t(type.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -689,13 +687,13 @@ export function PokemonCardsTable({
                   }}
                 >
                   <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Filtrer par rareté" />
+                    <SelectValue placeholder={t("filterByRarity")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toutes les raretés</SelectItem>
                     {POKEMON_RARITIES.map((rarity) => (
                       <SelectItem key={rarity.value} value={rarity.value}>
-                        {rarity.label}
+                        {t(rarity.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -711,7 +709,7 @@ export function PokemonCardsTable({
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Rechercher une carte..."
+                    placeholder={t("searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 h-9 text-xs"
@@ -766,8 +764,7 @@ export function PokemonCardsTable({
               </div>
               <h3 className="font-bold text-lg mb-1">Prêt à explorer ?</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-4">
-                Sélectionnez une extension dans l'explorateur ou utilisez la
-                barre de recherche pour afficher les cartes Pokémon.
+                {t("selectSet")}
               </p>
             </div>
           ) : !currentData || currentData.data.length === 0 ? (
@@ -776,14 +773,13 @@ export function PokemonCardsTable({
                 <Search className="w-8 h-8 text-muted-foreground/60" />
               </div>
               <h3 className="font-semibold text-lg mb-1">
-                Aucune carte trouvée
+                {t("noResultsTitle")}
               </h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-4">
-                Nous n&apos;avons trouvé aucune carte correspondant à vos
-                critères de recherche. Essayez de réinitialiser vos filtres.
+                {t("noResultsDescription")}
               </p>
               <Button onClick={resetFilters} size="sm">
-                Réinitialiser les filtres
+                {t("resetFilters")}
               </Button>
             </div>
           ) : displayFormat === "grid" ? (
