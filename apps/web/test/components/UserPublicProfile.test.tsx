@@ -2,7 +2,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import UserPublicProfile from "@/app/(main)/users/[id]/_components/UserPublicProfile";
+import UserPublicProfile from "@/app/[locale]/(main)/users/[id]/_components/UserPublicProfile";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "1" }),

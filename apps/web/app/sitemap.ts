@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/i18n/config";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tcg-nexus.org";
 
@@ -24,10 +25,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/auth/register", changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  return staticRoutes.map(({ path, changeFrequency, priority }) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified: now,
-    changeFrequency,
-    priority,
-  }));
+  return staticRoutes.flatMap(({ path, changeFrequency, priority }) =>
+    SUPPORTED_LOCALES.map((locale) => ({
+      url: `${SITE_URL}/${locale}${path}`,
+      lastModified: now,
+      changeFrequency,
+      priority,
+      alternates: {
+        languages: {
+          ...Object.fromEntries(
+            SUPPORTED_LOCALES.map((l) => [l, `${SITE_URL}/${l}${path}`]),
+          ),
+          "x-default": `${SITE_URL}/${DEFAULT_LOCALE}${path}`,
+        },
+      },
+    })),
+  );
 }

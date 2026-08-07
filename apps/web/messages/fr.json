@@ -1,51 +1,46 @@
 {
-  "breadcrumb": {
-    "home": "Accueil",
-    "marketplace": "Marketplace",
-    "cards": "Cartes",
-    "cardDetail": "Détail de la carte",
-    "sellers": "Vendeurs",
-    "sellerDetail": "Profil vendeur",
-    "create": "Créer une vente"
+  "Metadata": {
+    "title": "TCG Nexus - La plateforme ultime du jeu de cartes",
+    "titleTemplate": "%s · TCG Nexus",
+    "description": "TCG Nexus : catalogue Pokémon, marketplace, decks, tournois et collections. La nouvelle référence pour les joueurs et collectionneurs de cartes.",
+    "keywords": "TCG, Pokémon, cartes à collectionner, marketplace, deck builder, tournois, collection, Trading Card Game",
+    "ogTitle": "TCG Nexus - La plateforme ultime du jeu de cartes",
+    "ogDescription": "Catalogue Pokémon, marketplace, decks, tournois et collections — tout ce qu'il faut pour jouer et collectionner.",
+    "twitterDescription": "Catalogue, marketplace, decks et tournois pour les joueurs de TCG."
   },
-  "collection": {
-    "detail": {
-      "loading": "Chargement...",
-      "notFound": "Collection introuvable.",
-      "noDescription": "Aucune description",
-      "public": "Public",
-      "private": "Privé",
-      "cards": "carte",
-      "cardsPlural": "cartes",
-      "createdAt": "Créée le",
-      "owner": "Propriétaire",
-      "searchPlaceholder": "Rechercher une carte (nom, rareté, set)...",
-      "sortBy": "Trier par",
-      "sortByAddedAt": "Date d'ajout",
-      "sortByName": "Nom",
-      "sortByRarity": "Rareté",
-      "sortByQuantity": "Quantité",
-      "order": "Ordre",
-      "orderAscending": "Croissant",
-      "orderDescending": "Décroissant",
-      "loadingCards": "Chargement des cartes...",
-      "noCards": "Aucune carte dans cette collection",
-      "noCardsFound": "Aucune carte trouvée",
-      "tryOtherKeywords": "Essayez avec d'autres mots-clés",
-      "startAddingCards": "Commencez par ajouter des cartes à votre collection",
-      "image": "Image",
-      "name": "Nom",
-      "set": "Set",
-      "quantity": "Quantité",
-      "state": "État",
-      "rarity": "Rareté",
-      "hp": "PV",
-      "types": "Types",
-      "actions": "Actions",
-      "viewDetails": "Voir les détails",
-      "page": "Page",
-      "of": "sur",
-      "unknown": "?"
-    }
+  "Common": {
+    "changeLanguage": "Changer de langue",
+    "currency": "Devise",
+    "loading": "Chargement...",
+    "search": "Rechercher",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour"
+  },
+  "Navigation": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "cart": "Mon panier",
+    "orders": "Mes commandes",
+    "sales": "Mes ventes",
+    "admin": "Admin"
+  },
+  "NotFound": {
+    "title": "Page introuvable",
+    "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "backHome": "Retour à l'accueil",
+    "exploreCards": "Explorer les cartes"
+  },
+  "Error": {
+    "title": "Erreur inattendue",
+    "description": "Quelque chose s'est mal passé. Veuillez réessayer.",
+    "retry": "Réessayer"
   }
 }

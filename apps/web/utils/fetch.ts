@@ -1,4 +1,10 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  isSupportedLocale,
+  LOCALE_COOKIE_NAME,
+} from "@/i18n/config";
 import { NEXT_PUBLIC_API_URL } from "./variables";
 
 export const API_BASE_URL =
@@ -21,6 +27,34 @@ export const secureApi = axios.create({
   },
   withCredentials: true,
 });
+
+function readCurrentLocale(): string {
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCALE;
+  }
+
+  const fromPath = getLocaleFromPathname(window.location.pathname);
+  if (fromPath) {
+    return fromPath;
+  }
+
+  const fromCookie = document.cookie
+    .split("; ")
+    .find((part) => part.startsWith(`${LOCALE_COOKIE_NAME}=`))
+    ?.split("=")[1];
+
+  return isSupportedLocale(fromCookie) ? fromCookie : DEFAULT_LOCALE;
+}
+
+function withLocaleHeader(instance: AxiosInstance): void {
+  instance.interceptors.request.use((config) => {
+    config.headers.set("Accept-Language", readCurrentLocale());
+    return config;
+  });
+}
+
+withLocaleHeader(api);
+withLocaleHeader(secureApi);
 
 // ---------------------------------------------------------------------------
 // Intercepteur de refresh — filet de sécurité

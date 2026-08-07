@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AdminUsersTable } from "@/app/(main)/(protected)/admin/_components/AdminUsersTable";
+import { AdminUsersTable } from "@/app/[locale]/(main)/(protected)/admin/_components/AdminUsersTable";
 import { adminService } from "@/services/admin.service";
 import { type User, UserRole } from "@/types/auth";
 

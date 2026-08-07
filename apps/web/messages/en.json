@@ -1,0 +1,46 @@
+{
+  "Metadata": {
+    "title": "TCG Nexus - The ultimate trading card platform",
+    "titleTemplate": "%s · TCG Nexus",
+    "description": "TCG Nexus: Pokémon catalogue, marketplace, decks, tournaments and collections. The new reference for card players and collectors.",
+    "keywords": "TCG, Pokémon, trading cards, marketplace, deck builder, tournaments, collection, Trading Card Game",
+    "ogTitle": "TCG Nexus - The ultimate trading card platform",
+    "ogDescription": "Pokémon catalogue, marketplace, decks, tournaments and collections — everything you need to play and collect.",
+    "twitterDescription": "Catalogue, marketplace, decks and tournaments for TCG players."
+  },
+  "Common": {
+    "changeLanguage": "Change language",
+    "currency": "Currency",
+    "loading": "Loading...",
+    "search": "Search",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back"
+  },
+  "Navigation": {
+    "login": "Sign in",
+    "register": "Sign up",
+    "logout": "Sign out",
+    "profile": "Profile",
+    "settings": "Settings",
+    "cart": "My cart",
+    "orders": "My orders",
+    "sales": "My sales",
+    "admin": "Admin"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has been moved.",
+    "backHome": "Back to home",
+    "exploreCards": "Explore cards"
+  },
+  "Error": {
+    "title": "Unexpected error",
+    "description": "Something went wrong. Please try again.",
+    "retry": "Try again"
+  }
+}

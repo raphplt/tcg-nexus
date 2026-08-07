@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 import {
   getCardStateColor,
   getConditionLabel,
-} from "@/app/(main)/marketplace/utils";
+} from "@/app/[locale]/(main)/marketplace/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
