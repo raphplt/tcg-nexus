@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { SanitizedHandCardView } from "@/types/match-online";
@@ -18,10 +19,11 @@ export function HandBar({
   onCardClick,
   disabled = false,
 }: HandBarProps) {
+  const t = useTranslations("MatchBoard");
   if (!hand.length) {
     return (
       <div className="flex h-16 items-center justify-center text-sm font-medium tracking-wide text-white/30">
-        Votre main est vide.
+        {t("emptyHand")}
       </div>
     );
   }
@@ -103,16 +105,16 @@ export function HandBar({
                   className={cn(
                     "absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.5",
                     "text-[7px] font-bold uppercase tracking-wider shadow-md",
-                    card.category === "Pokémon" && "bg-blue-600 text-white",
+                    card.category === t("pokemon") && "bg-blue-600 text-white",
                     card.category === "Dresseur" && "bg-rose-600 text-white",
-                    card.category === "Énergie" && "bg-amber-600 text-white",
+                    card.category === t("energy") && "bg-amber-600 text-white",
                   )}
                 >
-                  {card.category === "Pokémon"
-                    ? card.stage === "De base"
+                  {card.category === t("pokemon")
+                    ? card.stage === t("basic")
                       ? "BASE"
                       : "EVO"
-                    : card.category === "Énergie"
+                    : card.category === t("energy")
                       ? "NRJ"
                       : "DRS"}
                 </div>

@@ -436,7 +436,7 @@ describe("PlayPage", () => {
     renderPage();
 
     expect(
-      await screen.findByText(/Votre compte n’est pas encore prêt/i),
+      await screen.findByText(/Votre compte n['’]est pas encore prêt/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Ouvrir mon profil/i }),

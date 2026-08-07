@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ export function TurnBanner({
   enginePlayerId,
   turnNumber,
 }: TurnBannerProps) {
+  const t = useTranslations("MatchBoard");
   const [visible, setVisible] = useState(false);
   const [isMyTurn, setIsMyTurn] = useState(false);
   const prevActiveRef = useRef(activePlayerId);
@@ -95,7 +97,7 @@ export function TurnBanner({
                   : "text-red-300 drop-shadow-[0_0_40px_rgba(248,113,113,0.6)]",
               )}
             >
-              {isMyTurn ? "Votre tour" : "Tour adverse"}
+              {isMyTurn ? t("yourTurn") : "Tour adverse"}
             </h2>
 
             <motion.p

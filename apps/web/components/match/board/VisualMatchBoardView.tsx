@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Shield, Swords, Zap } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -58,6 +59,7 @@ export function VisualMatchBoardView({
   onRespondPrompt,
   onForfeit,
 }: VisualMatchBoardViewProps) {
+  const t = useTranslations("MatchBoard");
   const viewerPlayer =
     enginePlayerId && gameState
       ? (gameState.players[enginePlayerId] ?? null)
@@ -91,8 +93,8 @@ export function VisualMatchBoardView({
   const winnerLabel =
     sessionStatus === "FINISHED" && gameState?.winnerId
       ? gameState.winnerId === enginePlayerId
-        ? "Victoire"
-        : "Défaite"
+        ? t("victory")
+        : t("defeat")
       : null;
 
   // Detect attack events for flash animation
@@ -119,7 +121,7 @@ export function VisualMatchBoardView({
 
   // Confetti for victory
   const confettiParticles = useMemo(() => {
-    if (winnerLabel !== "Victoire") return [];
+    if (winnerLabel !== t("victory")) return [];
     return Array.from({ length: 40 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -147,7 +149,7 @@ export function VisualMatchBoardView({
             <div className="absolute inset-2 border-2 border-emerald-400 border-b-transparent rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
           </div>
           <p className="text-white/40 text-sm font-medium tracking-wider uppercase">
-            Initialisation du terrain...
+            {t("initializing")}
           </p>
         </div>
       </div>
@@ -215,7 +217,7 @@ export function VisualMatchBoardView({
               </span>
             </HudBadge>
             {winnerLabel ? (
-              <HudBadge tone={winnerLabel === "Victoire" ? "amber" : "rose"}>
+              <HudBadge tone={winnerLabel === t("victory") ? "amber" : "rose"}>
                 {winnerLabel}
               </HudBadge>
             ) : null}
@@ -502,7 +504,7 @@ export function VisualMatchBoardView({
             className="absolute inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-md"
           >
             {/* Confetti for victory */}
-            {winnerLabel === "Victoire" &&
+            {winnerLabel === t("victory") &&
               confettiParticles.map((p) => (
                 <motion.div
                   key={p.id}
@@ -536,7 +538,7 @@ export function VisualMatchBoardView({
             <motion.div
               initial={{ scale: 0.8, y: 30 }}
               animate={
-                winnerLabel === "Défaite"
+                winnerLabel === t("defeat")
                   ? {
                       scale: 1,
                       y: 0,
@@ -557,12 +559,12 @@ export function VisualMatchBoardView({
                 }}
                 className={cn(
                   "text-6xl font-black tracking-tight",
-                  winnerLabel === "Victoire"
+                  winnerLabel === t("victory")
                     ? "text-yellow-400 drop-shadow-[0_0_40px_rgba(250,204,21,0.5)]"
                     : "text-red-400 drop-shadow-[0_0_40px_rgba(248,113,113,0.5)]",
                 )}
               >
-                {winnerLabel === "Victoire" ? "VICTOIRE !" : "DÉFAITE"}
+                {winnerLabel === t("victory") ? "VICTOIRE !" : "DÉFAITE"}
               </motion.h2>
 
               {gameState.winnerReason && (

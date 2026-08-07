@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -66,8 +67,8 @@ const MAX_ROUNDS = 10;
 type Difficulty = "easy" | "medium" | "hard";
 
 interface DifficultyConfig {
-  label: string;
-  desc: string;
+  labelKey: string;
+  descKey: string;
   time: number;
   baseBlur: number; // flou au début de la manche (max)
   minBlur: number; // flou plancher en fin de chrono (toujours caché)
@@ -81,8 +82,8 @@ interface DifficultyConfig {
 
 const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
   easy: {
-    label: "Facile",
-    desc: "Flou léger, 20s, indices type + génération. Mauvaises réponses très différentes.",
+    labelKey: "easy",
+    descKey: "easyHelp",
     time: 20,
     baseBlur: 9,
     minBlur: 3,
@@ -94,8 +95,8 @@ const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     icon: Sparkles,
   },
   medium: {
-    label: "Moyen",
-    desc: "Flou moyen, 15s, indice de type. Propositions variées.",
+    labelKey: "medium",
+    descKey: "mediumHelp",
     time: 15,
     baseBlur: 13,
     minBlur: 6,
@@ -107,8 +108,8 @@ const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
     icon: Zap,
   },
   hard: {
-    label: "Difficile",
-    desc: "Flou fort, 10s, aucun indice. Mauvaises réponses proches (même type / génération).",
+    labelKey: "hard",
+    descKey: "hardHelp",
     time: 10,
     baseBlur: 18,
     minBlur: 10,
@@ -221,6 +222,7 @@ function buildOptions(
 }
 
 export default function WhosThatPokemonPage() {
+  const t = useTranslations("WhosThatPokemon");
   const [mode, setMode] = useState<"select" | "play">("select");
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
 
@@ -404,9 +406,9 @@ export default function WhosThatPokemonPage() {
               <HelpCircle className="h-4 w-4" />
             </div>
             <div>
-              <H1 className="text-lg! sm:text-xl!">Qui est ce Pokémon ?</H1>
+              <H1 className="text-lg! sm:text-xl!">{t("title")}</H1>
               <p className="text-[10px] text-muted-foreground">
-                Devine le Pokémon derrière l&apos;image brouillée
+                {t("subtitle")}
               </p>
             </div>
           </div>
@@ -414,7 +416,7 @@ export default function WhosThatPokemonPage() {
             <div className="flex items-center gap-2 text-sm font-semibold">
               {cfg && (
                 <Badge className={`border ${ACCENT_CLASSES[cfg.accent].chip}`}>
-                  {cfg.label}
+                  {t(cfg.labelKey)}
                 </Badge>
               )}
               {streak > 1 && (
@@ -436,7 +438,7 @@ export default function WhosThatPokemonPage() {
         {mode === "select" && (
           <div className="space-y-4">
             <H3 className="text-center font-heading text-lg font-bold">
-              Choisis ta difficulté
+              {t("chooseDifficulty")}
             </H3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => {
@@ -454,10 +456,10 @@ export default function WhosThatPokemonPage() {
                       </div>
                       <div>
                         <h3 className="mb-1 font-heading text-lg font-bold">
-                          {conf.label}
+                          {t(conf.labelKey)}
                         </h3>
                         <p className="text-xs text-muted-foreground">
-                          {conf.desc}
+                          {t(conf.descKey)}
                         </p>
                       </div>
                       <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-semibold text-muted-foreground">
@@ -493,14 +495,14 @@ export default function WhosThatPokemonPage() {
             <Award className="mx-auto h-12 w-12 text-primary" />
             <div className="space-y-2">
               <h2 className="text-2xl font-black uppercase tracking-tight">
-                Partie terminée !
+                {t("gameOver")}
               </h2>
               <p className="text-sm text-muted-foreground">
                 Score final :{" "}
                 <span className="text-lg font-black text-foreground">
                   {score}
                 </span>{" "}
-                pts · en {cfg?.label}
+                {t("pointsIn", { difficulty: cfg ? t(cfg.labelKey) : "" })}
               </p>
               {bestStreak > 1 && (
                 <p className="flex items-center justify-center gap-1 text-sm font-semibold text-orange-500">
@@ -517,7 +519,7 @@ export default function WhosThatPokemonPage() {
                   setGameOver(false);
                 }}
               >
-                Changer de difficulté
+                {t("changeDifficulty")}
               </Button>
               <Button
                 onClick={() => difficulty && startGame(difficulty)}
@@ -537,7 +539,7 @@ export default function WhosThatPokemonPage() {
                 <div className="flex flex-col items-center justify-center gap-3 py-16">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   <p className="text-xs font-semibold text-muted-foreground">
-                    Préparation de la carte mystère...
+                    {t("preparingCard")}
                   </p>
                 </div>
               ) : (
@@ -585,7 +587,7 @@ export default function WhosThatPokemonPage() {
                     {gameState === "playing" ? (
                       <div className="space-y-4">
                         <H3 className="text-center font-heading text-lg font-black text-foreground md:text-left">
-                          Qui est ce Pokémon ?
+                          {t("title")}
                         </H3>
                         {clueText && (
                           <p className="text-center text-xs font-semibold text-muted-foreground md:text-left">
@@ -646,7 +648,7 @@ export default function WhosThatPokemonPage() {
                         >
                           {round < MAX_ROUNDS
                             ? "Manche suivante"
-                            : "Voir les résultats"}
+                            : t("viewResults")}
                         </Button>
                       </motion.div>
                     )}

@@ -18,7 +18,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import {
@@ -95,21 +95,26 @@ interface ResumeItem {
   updatedAt: string | null;
 }
 
+type Translate = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
+
 const RESUME_LIMIT = 3;
 
-const phaseLabels: Record<string, string> = {
-  qualification: "Qualification",
-  quarter_final: "Quart de finale",
-  semi_final: "Demi-finale",
-  final: "Finale",
+const phaseKeys: Record<string, string> = {
+  qualification: "phaseQualification",
+  quarter_final: "phaseQuarterFinal",
+  semi_final: "phaseSemiFinal",
+  final: "phaseFinal",
 };
 
-const statusLabels: Record<PlayHubMatchSummary["status"], string> = {
-  scheduled: "Prêt à lancer",
-  in_progress: "En cours",
-  finished: "Terminé",
-  forfeit: "Forfait",
-  cancelled: "Annulé",
+const statusKeys: Record<PlayHubMatchSummary["status"], string> = {
+  scheduled: "statusScheduled",
+  in_progress: "statusInProgress",
+  finished: "statusFinished",
+  forfeit: "statusForfeit",
+  cancelled: "statusCancelled",
 };
 
 const statusVariants: Record<
@@ -123,22 +128,22 @@ const statusVariants: Record<
   cancelled: "outline",
 };
 
-const queueFilters: Array<{ id: MatchBucket; label: string }> = [
-  { id: "all", label: "Tous" },
-  { id: "live", label: "À reprendre" },
-  { id: "ready", label: "Prêts" },
-  { id: "done", label: "Historique" },
+const queueFilters: Array<{ id: MatchBucket; labelKey: string }> = [
+  { id: "all", labelKey: "filterAll" },
+  { id: "live", labelKey: "filterLive" },
+  { id: "ready", labelKey: "filterReady" },
+  { id: "done", labelKey: "filterDone" },
 ];
 
-const playTabs: Array<{ id: PlayTab; label: string }> = [
-  { id: "tournois", label: "Tournois" },
-  { id: "ia", label: "IA" },
-  { id: "duel", label: "Duel" },
+const playTabs: Array<{ id: PlayTab; labelKey: string }> = [
+  { id: "tournois", labelKey: "tabTournaments" },
+  { id: "ia", labelKey: "tabAi" },
+  { id: "duel", labelKey: "tabDuel" },
 ];
 
-const difficultyLabels: Record<TrainingDifficulty, string> = {
-  easy: "Facile",
-  standard: "Standard",
+const difficultyKeys: Record<TrainingDifficulty, string> = {
+  easy: "difficultyEasy",
+  standard: "difficultyStandard",
 };
 
 const isPlayTab = (value: string | null): value is PlayTab =>
@@ -147,7 +152,7 @@ const isPlayTab = (value: string | null): value is PlayTab =>
 const formatPlayDate = (
   locale: string,
   date?: string | null,
-  fallback = "Date à confirmer",
+  fallback = "",
 ) => {
   if (!date) return fallback;
 
@@ -159,8 +164,8 @@ const formatPlayDate = (
   });
 };
 
-const formatPhase = (phase: string) =>
-  phaseLabels[phase] ||
+const formatPhase = (phase: string, t: Translate) =>
+  (phaseKeys[phase] ? t(phaseKeys[phase]) : "") ||
   phase
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -185,41 +190,44 @@ const getNeutralErrorMessage = (error: unknown, fallback: string) => {
 const getMatchBucket = (
   status: PlayHubMatchSummary["status"],
 ): PlayerMatchRecord["bucket"] => {
+  const t = useTranslations("Play");
   if (status === "in_progress") return "live";
   if (status === "scheduled") return "ready";
   return "done";
 };
 
-const getMatchActionLabel = (status: PlayHubMatchSummary["status"]) =>
-  status === "in_progress" ? "Reprendre" : "Ouvrir la table";
+const getMatchActionLabel = (
+  status: PlayHubMatchSummary["status"],
+  t: Translate,
+) => (status === "in_progress" ? t("resume") : t("openTable"));
 
-const getMatchActivity = (match: PlayHubMatchSummary, locale: string) => {
+const getMatchActivity = (
+  match: PlayHubMatchSummary,
+  locale: string,
+  t: Translate,
+) => {
   if (match.status === "in_progress") {
     return {
-      label: "En cours depuis",
-      value: formatPlayDate(locale, match.startedAt, "Partie en direct"),
+      label: t("liveSince"),
+      value: formatPlayDate(locale, match.startedAt, t("liveGame")),
       updatedAt: match.startedAt || match.scheduledDate || null,
     };
   }
 
   if (match.status === "scheduled") {
     return {
-      label: "Prévu pour",
-      value: formatPlayDate(
-        locale,
-        match.scheduledDate,
-        "Table prête à lancer",
-      ),
+      label: t("scheduledFor"),
+      value: formatPlayDate(locale, match.scheduledDate, t("tableReady")),
       updatedAt: match.scheduledDate || null,
     };
   }
 
   return {
-    label: "Dernière activité",
+    label: t("lastActivity"),
     value: formatPlayDate(
       locale,
       match.finishedAt || match.startedAt || match.scheduledDate,
-      "Historique disponible",
+      t("historyAvailable"),
     ),
     updatedAt:
       match.finishedAt || match.startedAt || match.scheduledDate || null,
@@ -234,6 +242,7 @@ const sortByRecentDate = <T extends { updatedAt?: string | null }>(
   new Date(left.updatedAt || 0).getTime();
 
 const buildResumeItems = (
+  t: Translate,
   playHub?: PlayHubResponse,
   trainingLobby?: TrainingLobbyView,
   casualLobby?: CasualLobbyView,
@@ -250,10 +259,10 @@ const buildResumeItems = (
         match.status === "in_progress" ? "tournament_live" : "tournament_ready",
       priority: match.status === "in_progress" ? 0 : 1,
       title: `vs ${match.opponentName}`,
-      subtitle: `${match.tournamentName} • ${formatPhase(match.phase)} • Round ${match.round}`,
-      statusLabel: statusLabels[match.status],
+      subtitle: `${match.tournamentName} • ${formatPhase(match.phase, t)} • ${t("round", { round: match.round })}`,
+      statusLabel: t(statusKeys[match.status]),
       href: `/tournaments/${match.tournamentId}/matches/${match.id}`,
-      actionLabel: getMatchActionLabel(match.status),
+      actionLabel: getMatchActionLabel(match.status, t),
       updatedAt:
         match.startedAt || match.scheduledDate || match.finishedAt || null,
     });
@@ -266,12 +275,12 @@ const buildResumeItems = (
         : "training_active",
       priority: session.awaitingPlayerAction ? 2 : 3,
       title: session.aiDeckPresetName,
-      subtitle: `IA ${difficultyLabels[session.aiDifficulty]} • Tour ${session.turnNumber}`,
+      subtitle: `${t("ai")} ${t(difficultyKeys[session.aiDifficulty])} • ${t("turn", { turn: session.turnNumber })}`,
       statusLabel: session.awaitingPlayerAction
-        ? "À vous de jouer"
-        : "Session active",
+        ? t("yourTurn")
+        : t("activeSession"),
       href: `/play/training/${session.sessionId}`,
-      actionLabel: "Continuer",
+      actionLabel: t("continue"),
       updatedAt: session.updatedAt,
     });
   }
@@ -281,10 +290,12 @@ const buildResumeItems = (
       kind: session.awaitingPlayerAction ? "duel_awaiting" : "duel_active",
       priority: session.awaitingPlayerAction ? 4 : 5,
       title: `vs ${session.opponentName}`,
-      subtitle: `Duel 1v1 • Tour ${session.turnNumber}`,
-      statusLabel: session.awaitingPlayerAction ? "À vous" : "Tour adverse",
+      subtitle: `${t("duel1v1")} • ${t("turn", { turn: session.turnNumber })}`,
+      statusLabel: session.awaitingPlayerAction
+        ? t("yourTurnShort")
+        : t("opponentTurn"),
       href: `/play/casual/${session.sessionId}`,
-      actionLabel: "Continuer",
+      actionLabel: t("continue"),
       updatedAt: session.updatedAt,
     });
   }
@@ -331,6 +342,7 @@ export default function PlayPage() {
 }
 
 function PlayPageContent() {
+  const t = useTranslations("Play");
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -469,7 +481,7 @@ function PlayPageContent() {
       : groupedMatches.done.slice(0, 4);
   }, [activeFilter, deferredSearch, groupedMatches.done]);
   const resumeItems = useMemo(
-    () => buildResumeItems(playHub, trainingLobby, casualLobby),
+    () => buildResumeItems(t, playHub, trainingLobby, casualLobby),
     [casualLobby, playHub, trainingLobby],
   );
   const defaultTab = useMemo(
@@ -532,16 +544,15 @@ function PlayPageContent() {
             </Badge>
             <div className="space-y-3">
               <h1 className="text-3xl font-black leading-tight">
-                Votre compte n’est pas encore prêt pour le jeu en ligne.
+                {t("accountNotReady")}
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                Il manque encore un profil joueur exploitable pour ouvrir vos
-                tables et lancer des parties.
+                {t("accountNotReadyHelp")}
               </p>
             </div>
             <Button asChild className="">
               <Link href="/profile">
-                Ouvrir mon profil
+                {t("openProfile")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -588,7 +599,7 @@ function PlayPageContent() {
                 value={tab.id}
                 className="tcg-play-tab px-4 py-3 text-sm font-semibold"
               >
-                <span>{tab.label}</span>
+                <span>{t(tab.labelKey)}</span>
                 {tabCounts[tab.id] > 0 ? (
                   <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                     {tabCounts[tab.id]}
@@ -642,6 +653,7 @@ function PlayHeader({
   deckCount: number;
   secondaryMetricsLoading: boolean;
 }) {
+  const t = useTranslations("Play");
   return (
     <Card className="tcg-surface tcg-surface--hero tcg-surface--hero-play border-border">
       <CardContent className="space-y-5 p-5 md:p-6">
@@ -654,13 +666,13 @@ function PlayHeader({
               Jouer
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-              Tournois, entraînement et duel en ligne.
+              {t("subtitle")}
             </p>
           </div>
 
           <Button asChild variant="outline" className="">
             <Link href="/decks/me">
-              Gérer mes decks
+              {t("manageDecks")}
               <Layers3 className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -669,7 +681,7 @@ function PlayHeader({
         <div className="flex flex-wrap gap-3">
           <HeaderMetric
             icon={Trophy}
-            label="Tournois"
+            label={t("tabTournaments")}
             value={String(tournamentActionCount)}
             detail="à ouvrir"
           />
@@ -731,14 +743,17 @@ function PlayResumeStrip({
   items: ResumeItem[];
   isLoading: boolean;
 }) {
+  const t = useTranslations("Play");
   return (
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
-            En cours
+            {t("statusInProgress")}
           </p>
-          <h2 className="text-2xl font-black text-foreground">À reprendre</h2>
+          <h2 className="text-2xl font-black text-foreground">
+            {t("filterLive")}
+          </h2>
         </div>
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -761,13 +776,14 @@ function PlayResumeStrip({
           ))}
         </div>
       ) : (
-        <PlaySoftState message="Aucune partie en cours." />
+        <PlaySoftState message={t("noActiveGame")} />
       )}
     </section>
   );
 }
 
 function ResumeCard({ item }: { item: ResumeItem }) {
+  const t = useTranslations("Play");
   const locale = useLocale();
   return (
     <Card
@@ -802,7 +818,7 @@ function ResumeCard({ item }: { item: ResumeItem }) {
           <span>
             {item.updatedAt
               ? `Dernière activité ${formatPlayDate(locale, item.updatedAt)}`
-              : "Mise à jour dès que disponible"}
+              : t("updateWhenAvailable")}
           </span>
         </div>
 
@@ -847,6 +863,7 @@ function PlayTournamentTab({
   hasSearch: boolean;
   historyIsTrimmed: boolean;
 }) {
+  const t = useTranslations("Play");
   const hasMatches =
     liveMatches.length > 0 ||
     readyMatches.length > 0 ||
@@ -860,9 +877,11 @@ function PlayTournamentTab({
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
               Matches
             </p>
-            <h2 className="text-2xl font-black text-foreground">Tournois</h2>
+            <h2 className="text-2xl font-black text-foreground">
+              {t("tabTournaments")}
+            </h2>
             <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-              Consultez vos matches par statut.
+              {t("matchesByStatus")}
             </p>
           </div>
           <div className="relative w-full max-w-sm">
@@ -870,7 +889,7 @@ function PlayTournamentTab({
             <Input
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Rechercher un tournoi, un adversaire ou un match"
+              placeholder={t("searchPlaceholder")}
               className="h-11 rounded-full border-border bg-muted pl-9 shadow-none"
             />
           </div>
@@ -887,7 +906,7 @@ function PlayTournamentTab({
                 activeFilter === filter.id && "tcg-filter-chip--active",
               )}
             >
-              {filter.label}
+              {t(filter.labelKey)}
               <span className="ml-2 text-xs opacity-70">
                 {filterCounts[filter.id]}
               </span>
@@ -899,7 +918,7 @@ function PlayTournamentTab({
           <PlayErrorState
             message={getNeutralErrorMessage(
               query.error,
-              "Impossible de charger les matches de tournoi.",
+              t("tournamentMatchesError"),
             )}
             onRetry={() => void query.refetch()}
           />
@@ -907,16 +926,16 @@ function PlayTournamentTab({
           <PlaySoftState
             message={
               hasSearch || activeFilter !== "all"
-                ? "Aucun match ne correspond à la recherche."
-                : "Aucun match de tournoi pour le moment."
+                ? t("noMatchForSearch")
+                : t("noTournamentMatch")
             }
           />
         ) : (
           <div className="space-y-6">
             {liveMatches.length ? (
               <MatchSection
-                title="À reprendre"
-                description="Matches déjà ouverts."
+                title={t("filterLive")}
+                description={t("matchesAlreadyOpen")}
               >
                 {liveMatches.map((record) => (
                   <PlayerMatchCard key={record.match.id} record={record} />
@@ -925,7 +944,10 @@ function PlayTournamentTab({
             ) : null}
 
             {readyMatches.length ? (
-              <MatchSection title="Prêts" description="Tables disponibles.">
+              <MatchSection
+                title={t("filterReady")}
+                description="Tables disponibles."
+              >
                 {readyMatches.map((record) => (
                   <PlayerMatchCard key={record.match.id} record={record} />
                 ))}
@@ -934,11 +956,9 @@ function PlayTournamentTab({
 
             {historyMatches.length ? (
               <MatchSection
-                title="Historique"
+                title={t("filterDone")}
                 description={
-                  historyIsTrimmed
-                    ? "Derniers résultats."
-                    : "Matches terminés, annulés ou forfaits."
+                  historyIsTrimmed ? t("latestResults") : t("finishedMatches")
                 }
               >
                 {historyMatches.map((record) => (
@@ -984,8 +1004,9 @@ function PlayerMatchCard({
   record: PlayerMatchRecord;
   compact?: boolean;
 }) {
+  const t = useTranslations("Play");
   const locale = useLocale();
-  const activity = getMatchActivity(record.match, locale);
+  const activity = getMatchActivity(record.match, locale, t);
 
   return (
     <Card
@@ -1010,13 +1031,14 @@ function PlayerMatchCard({
                 vs {record.opponentName}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {formatPhase(record.match.phase)} • Round {record.match.round}
+                {formatPhase(record.match.phase, t)} •{" "}
+                {t("round", { round: record.match.round })}
               </p>
             </div>
           </div>
 
           <Badge variant={statusVariants[record.match.status]}>
-            {statusLabels[record.match.status]}
+            {t(statusKeys[record.match.status])}
           </Badge>
         </div>
 
@@ -1045,7 +1067,7 @@ function PlayerMatchCard({
               <Link
                 href={`/tournaments/${record.match.tournamentId}/matches/${record.match.id}`}
               >
-                {getMatchActionLabel(record.match.status)}
+                {getMatchActionLabel(record.match.status, t)}
                 <Swords className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -1056,7 +1078,7 @@ function PlayerMatchCard({
               className=""
             >
               <Link href={`/tournaments/${record.match.tournamentId}`}>
-                Voir le tournoi
+                {t("viewTournament")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -1072,6 +1094,7 @@ function PlayTrainingTab({
 }: {
   query: UseQueryResult<TrainingLobbyView>;
 }) {
+  const t = useTranslations("Play");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
@@ -1131,7 +1154,7 @@ function PlayTrainingTab({
   const createSessionMutation = useMutation({
     mutationFn: () => {
       if (!selectedDeckId || !selectedPresetId) {
-        throw new Error("Sélection incomplète");
+        throw new Error(t("incompleteSelection"));
       }
 
       return trainingMatchService.createSession({
@@ -1152,26 +1175,18 @@ function PlayTrainingTab({
       router.push(`/play/training/${session.sessionId}`);
     },
     onError: (error: unknown) => {
-      setLastError(
-        getNeutralErrorMessage(
-          error,
-          "Impossible de lancer ce match d’entraînement.",
-        ),
-      );
+      setLastError(getNeutralErrorMessage(error, t("trainingStartError")));
     },
   });
 
   if (query.isLoading) {
-    return <PlayModeLoadingShell label="Chargement du mode entraînement..." />;
+    return <PlayModeLoadingShell label={t("loadingTraining")} />;
   }
 
   if (query.error || !query.data) {
     return (
       <PlayErrorState
-        message={getNeutralErrorMessage(
-          query.error,
-          "Impossible de charger le mode entraînement.",
-        )}
+        message={getNeutralErrorMessage(query.error, t("trainingLoadError"))}
         onRetry={() => void query.refetch()}
       />
     );
@@ -1188,16 +1203,16 @@ function PlayTrainingTab({
               </p>
               <div className="space-y-1">
                 <h2 className="text-2xl font-black text-foreground">
-                  Entraînement
+                  {t("training")}
                 </h2>
                 <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                  Sélectionnez un deck, un adversaire IA et une difficulté.
+                  {t("trainingHelp")}
                 </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">BO1</Badge>
-              <Badge variant="outline">Non classé</Badge>
+              <Badge variant="outline">{t("unranked")}</Badge>
             </div>
           </div>
 
@@ -1215,7 +1230,7 @@ function PlayTrainingTab({
                     onValueChange={(value) => setSelectedDeckId(Number(value))}
                   >
                     <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Choisir un deck" />
+                      <SelectValue placeholder={t("chooseDeck")} />
                     </SelectTrigger>
                     <SelectContent>
                       {eligibleDecks.map((deck) => (
@@ -1239,7 +1254,7 @@ function PlayTrainingTab({
                     onValueChange={setSelectedPresetId}
                   >
                     <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Choisir un preset" />
+                      <SelectValue placeholder={t("choosePreset")} />
                     </SelectTrigger>
                     <SelectContent>
                       {query.data.aiDeckPresets.map((preset) => (
@@ -1253,7 +1268,7 @@ function PlayTrainingTab({
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Difficulté
+                    {t("difficulty")}
                   </p>
                   <Select
                     value={selectedDifficulty}
@@ -1262,12 +1277,12 @@ function PlayTrainingTab({
                     }
                   >
                     <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Choisir un niveau" />
+                      <SelectValue placeholder={t("chooseLevel")} />
                     </SelectTrigger>
                     <SelectContent>
                       {query.data.difficulties.map((difficulty) => (
                         <SelectItem key={difficulty} value={difficulty}>
-                          {difficultyLabels[difficulty]}
+                          {t(difficultyKeys[difficulty])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1280,7 +1295,7 @@ function PlayTrainingTab({
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Sparkles className="h-4 w-4 text-primary" />
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      Preset sélectionné
+                      {t("selectedPreset")}
                     </p>
                   </div>
                   {selectedPreset ? (
@@ -1294,7 +1309,7 @@ function PlayTrainingTab({
                     </div>
                   ) : (
                     <p className="text-sm leading-6 text-muted-foreground">
-                      Choisissez un preset pour lancer la partie.
+                      {t("choosePresetHelp")}
                     </p>
                   )}
                 </div>
@@ -1311,11 +1326,11 @@ function PlayTrainingTab({
                   {createSessionMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Création...
+                      {t("creating")}
                     </>
                   ) : (
                     <>
-                      Lancer la partie
+                      {t("startGame")}
                       <Swords className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -1324,11 +1339,11 @@ function PlayTrainingTab({
             </div>
           ) : (
             <PlaySoftState
-              message="Aucun deck compatible pour l’entraînement."
+              message={t("noCompatibleDeckTraining")}
               action={
                 <Button asChild className="">
                   <Link href="/decks/me">
-                    Ouvrir mes decks
+                    {t("openMyDecks")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -1347,7 +1362,7 @@ function PlayTrainingTab({
                   Sessions
                 </p>
                 <h3 className="mt-1 text-xl font-bold text-foreground">
-                  Entraînement
+                  {t("training")}
                 </h3>
               </div>
               <Badge variant="outline">
@@ -1366,7 +1381,7 @@ function PlayTrainingTab({
                 ))}
               </div>
             ) : (
-              <PlaySoftState message="Aucune partie d’entraînement en cours." />
+              <PlaySoftState message={t("noTrainingSession")} />
             )}
           </CardContent>
         </Card>
@@ -1377,7 +1392,7 @@ function PlayTrainingTab({
               <div className="flex items-center gap-2">
                 <Bot className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Incompatibilités
+                  {t("incompatibilities")}
                 </p>
               </div>
               <div className="space-y-3">
@@ -1390,14 +1405,14 @@ function PlayTrainingTab({
                       {deck.deckName}
                     </p>
                     <p className="text-sm leading-6 text-muted-foreground">
-                      {deck.reasons[0]?.message || "Deck non supporté."}
+                      {deck.reasons[0]?.message || t("unsupportedDeck")}
                     </p>
                   </div>
                 ))}
               </div>
               <Button asChild variant="outline" className="w-full">
                 <Link href="/decks/me">
-                  Corriger mes decks
+                  {t("fixMyDecks")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -1410,6 +1425,7 @@ function PlayTrainingTab({
 }
 
 function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
+  const t = useTranslations("Play");
   const locale = useLocale();
   return (
     <div className="tcg-note-card space-y-4 p-4">
@@ -1419,12 +1435,12 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
             {session.aiDeckPresetName}
           </p>
           <p className="text-sm text-muted-foreground">
-            IA {difficultyLabels[session.aiDifficulty]} • Tour{" "}
-            {session.turnNumber}
+            {t("ai")} {t(difficultyKeys[session.aiDifficulty])} •{" "}
+            {t("turnLabel")} {session.turnNumber}
           </p>
         </div>
         <Badge variant={session.awaitingPlayerAction ? "default" : "secondary"}>
-          {session.awaitingPlayerAction ? "À vous de jouer" : "Tour de l’IA"}
+          {session.awaitingPlayerAction ? t("yourTurn") : t("aiTurn")}
         </Badge>
       </div>
 
@@ -1432,7 +1448,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
         <span>Mise à jour {formatPlayDate(locale, session.updatedAt)}</span>
         <Button asChild variant="outline" className="">
           <Link href={`/play/training/${session.sessionId}`}>
-            Continuer
+            {t("continue")}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -1442,6 +1458,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
 }
 
 function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
+  const t = useTranslations("Play");
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
   const socketPromiseRef = useRef<Promise<Socket | null> | null>(null);
@@ -1596,16 +1613,13 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   };
 
   if (query.isLoading) {
-    return <PlayModeLoadingShell label="Chargement du duel en ligne..." />;
+    return <PlayModeLoadingShell label={t("loadingDuel")} />;
   }
 
   if (query.error || !query.data) {
     return (
       <PlayErrorState
-        message={getNeutralErrorMessage(
-          query.error,
-          "Impossible de charger le duel en ligne.",
-        )}
+        message={getNeutralErrorMessage(query.error, t("duelLoadError"))}
         onRetry={() => void query.refetch()}
       />
     );
@@ -1622,7 +1636,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                   Sessions
                 </p>
                 <h2 className="mt-1 text-2xl font-black text-foreground">
-                  Duel
+                  {t("tabDuel")}
                 </h2>
               </div>
               <Badge variant="outline">
@@ -1646,21 +1660,21 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
             <div className="space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">
-                  Duel
+                  {t("tabDuel")}
                 </p>
-                <Badge variant="outline">En ligne</Badge>
+                <Badge variant="outline">{t("online")}</Badge>
               </div>
               <h2 className="text-2xl font-black leading-tight text-foreground">
-                Recherche de partie
+                {t("matchmaking")}
               </h2>
               <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Sélectionnez un deck pour lancer un match en ligne.
+                {t("matchmakingHelp")}
               </p>
             </div>
 
             {mmStatus === "queued" ? (
               <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-                {isConnected ? "Connecté" : "Connexion..."}
+                {isConnected ? t("connected") : "Connexion..."}
               </div>
             ) : null}
           </div>
@@ -1671,10 +1685,10 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
             <div className="space-y-3 rounded-lg border border-emerald-500/20 bg-emerald-500/8 p-5 text-center">
               <div className="flex items-center justify-center gap-3 text-emerald-700">
                 <Users className="h-5 w-5" />
-                <span className="text-lg font-bold">Adversaire trouvé</span>
+                <span className="text-lg font-bold">{t("opponentFound")}</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Ouverture de la partie...
+                {t("openingGame")}
               </p>
               <Loader2 className="mx-auto h-5 w-5 animate-spin text-emerald-700" />
             </div>
@@ -1690,7 +1704,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                     <p className="text-xs text-amber-700/80">
                       {queueSize > 1
                         ? `${queueSize} joueurs actuellement dans la file`
-                        : "En attente d’un autre joueur"}
+                        : t("waitingForPlayer")}
                     </p>
                   </div>
                 </div>
@@ -1709,14 +1723,14 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Votre deck
+                    {t("yourDeck")}
                   </p>
                   <Select
                     value={selectedDeckId?.toString() ?? ""}
                     onValueChange={(value) => setSelectedDeckId(Number(value))}
                   >
                     <SelectTrigger className="h-11 w-full">
-                      <SelectValue placeholder="Choisir un deck" />
+                      <SelectValue placeholder={t("chooseDeck")} />
                     </SelectTrigger>
                     <SelectContent>
                       {eligibleDecks.map((deck) => (
@@ -1737,10 +1751,10 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                       htmlFor="play-ranked-toggle"
                       className="text-sm font-semibold"
                     >
-                      Match classé
+                      {t("rankedMatch")}
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Affecte votre ELO. Adversaires de niveau similaire.
+                      {t("rankedMatchHelp")}
                     </p>
                   </div>
                   <Switch
@@ -1752,7 +1766,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
 
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary">BO1</Badge>
-                  <Badge variant="secondary">Standard</Badge>
+                  <Badge variant="secondary">{t("difficultyStandard")}</Badge>
                   <Badge variant="secondary">60 cartes</Badge>
                 </div>
               </div>
@@ -1762,17 +1776,17 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 disabled={!selectedDeckId}
                 onClick={() => void handleJoinQueue()}
               >
-                {isRanked ? "Lancer un match classé" : "Lancer la recherche"}
+                {isRanked ? t("startRankedMatch") : t("startSearch")}
                 <Swords className="ml-2 h-4 w-4" />
               </Button>
             </div>
           ) : (
             <PlaySoftState
-              message="Aucun deck compatible pour le duel en ligne."
+              message={t("noCompatibleDeckDuel")}
               action={
                 <Button asChild variant="outline" className="">
                   <Link href="/decks/me">
-                    Gérer mes decks
+                    {t("manageDecks")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -1786,6 +1800,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
 }
 
 function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
+  const t = useTranslations("Play");
   const locale = useLocale();
   return (
     <div className="tcg-note-card space-y-4 p-4">
@@ -1799,7 +1814,9 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
           </p>
         </div>
         <Badge variant={session.awaitingPlayerAction ? "default" : "secondary"}>
-          {session.awaitingPlayerAction ? "À vous" : "Tour adverse"}
+          {session.awaitingPlayerAction
+            ? t("yourTurnShort")
+            : t("opponentTurn")}
         </Badge>
       </div>
 
@@ -1807,7 +1824,7 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
         <span>Mise à jour {formatPlayDate(locale, session.updatedAt)}</span>
         <Button asChild variant="outline" className="">
           <Link href={`/play/casual/${session.sessionId}`}>
-            Continuer
+            {t("continue")}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -1841,12 +1858,13 @@ function PlayErrorState({
   message: string;
   onRetry: () => void;
 }) {
+  const t = useTranslations("Play");
   return (
     <Card className="tcg-surface border-destructive/30">
       <CardContent className="space-y-4 p-6">
         <p className="text-sm leading-6 text-destructive">{message}</p>
         <Button variant="outline" className="" onClick={onRetry}>
-          Réessayer
+          {t("retry")}
         </Button>
       </CardContent>
     </Card>
@@ -1884,6 +1902,7 @@ function PlaySoftState({
 }
 
 function PlayGuestPage() {
+  const t = useTranslations("Play");
   return (
     <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--soft">
       <div className="grid gap-6">
@@ -1894,19 +1913,18 @@ function PlayGuestPage() {
             </p>
             <div className="space-y-4">
               <h1 className="max-w-3xl text-4xl font-black leading-tight">
-                Connectez-vous pour jouer
+                {t("signInToPlay")}
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground">
-                Retrouvez vos matches de tournoi, lancez une partie
-                d’entraînement ou cherchez un duel en ligne.
+                {t("signInHelp")}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg" className="px-6">
-                <Link href="/auth/login">Se connecter</Link>
+                <Link href="/auth/login">{t("signIn")}</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="px-6">
-                <Link href="/auth/register">Créer un compte</Link>
+                <Link href="/auth/register">{t("createAccount")}</Link>
               </Button>
             </div>
           </CardContent>
@@ -1916,17 +1934,13 @@ function PlayGuestPage() {
           <GuestModeTile
             icon={Trophy}
             title="Tournoi"
-            text="Reprenez vos rondes en cours et ouvrez vos tables prêtes à lancer."
+            text={t("tournamentsTabHelp")}
           />
-          <GuestModeTile
-            icon={Sparkles}
-            title="IA"
-            text="Lancez une session rapide contre un preset contrôlé par l’ordinateur."
-          />
+          <GuestModeTile icon={Sparkles} title="IA" text={t("aiTabHelp")} />
           <GuestModeTile
             icon={Swords}
-            title="Duel"
-            text="Cherchez un adversaire humain et revenez sur vos parties actives."
+            title={t("tabDuel")}
+            text={t("duelTabHelp")}
           />
         </div>
       </div>
@@ -2014,16 +2028,17 @@ function getResumeCardClass(kind: ResumeKind) {
 }
 
 function getResumeContextLabel(kind: ResumeKind) {
+  const t = useTranslations("Play");
   switch (kind) {
     case "tournament_live":
     case "tournament_ready":
       return "Tournoi";
     case "training_awaiting":
     case "training_active":
-      return "Entraînement";
+      return t("training");
     case "duel_awaiting":
     case "duel_active":
-      return "Duel";
+      return t("tabDuel");
     default:
       return "Partie";
   }

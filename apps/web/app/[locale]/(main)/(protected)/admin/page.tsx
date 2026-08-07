@@ -11,14 +11,14 @@ import { AdminPokemonSetsTable } from "./_components/AdminPokemonSetsTable";
 import { AdminPokemonCardsTable } from "./_components/AdminPokemonCardsTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, ShoppingBag, Trophy } from "lucide-react";
+import { Users, ShoppingBag, Trophy, LanguagesIcon } from "lucide-react";
 
 export default function AdminPage() {
   const { user } = useAuth();
 
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
-      <div className="container mx-auto space-y-6 py-8">
+      <div className="container mx-auto space-y-6 py-8 px-6">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <Badge variant="secondary">Admin</Badge>
@@ -71,6 +71,14 @@ export default function AdminPage() {
                 Création, statuts, inscriptions
               </p>
             </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Traductions</CardTitle>
+              <LanguagesIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+
+            <CardContent></CardContent>
           </Card>
         </div>
 

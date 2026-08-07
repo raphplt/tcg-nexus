@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -21,76 +22,47 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface GameInfo {
   id: string;
-  title: string;
-  description: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   modes: ("Solo" | "Local" | "En ligne")[];
-  features: string[];
+  featureCount: number;
 }
 
 const MINI_GAMES: GameInfo[] = [
   {
     id: "smash_or_pass",
-    title: "Smash or Pass",
-    description:
-      "Parcours des cartes aléatoires et swipe à droite pour les ajouter directement à tes favoris et ta wishlist.",
     href: "/pokemon/mini-games/smash-or-pass",
     icon: Heart,
     modes: ["Solo"],
-    features: [
-      "Wishlist directe",
-      "Filtres par série & bloc",
-      "Stats de session",
-    ],
+    featureCount: 3,
   },
   {
     id: "case_opening",
-    title: "Duel Case Opening",
-    description:
-      "Affronte tes amis ou un ordinateur dans un duel de tirage de boosters Pokémon en ligne ou en local. Que le plus chanceux gagne !",
     href: "/pokemon/mini-games/case-opening",
     icon: Package,
     modes: ["Solo", "Local", "En ligne"],
-    features: [
-      "Roulette style CS:GO",
-      "Matchmaking temps réel",
-      "Prix en direct",
-    ],
+    featureCount: 3,
   },
   {
     id: "juste_prix",
-    title: "Le Juste Prix",
-    description:
-      "Devine le prix exact de cartes rares ou de produits scellés Pokémon. Le joueur le plus précis ou le plus rapide remporte la mise.",
     href: "/pokemon/mini-games/juste-prix",
     icon: Sparkles,
     modes: ["Solo", "Local", "En ligne"],
-    features: ["Estimation de cartes", "Produits scellés", "PVP synchrone"],
+    featureCount: 3,
   },
   {
     id: "pokedle",
-    title: "Pokédle",
-    description:
-      "Devine le Pokémon mystère de la session en utilisant des indices Wordle (types, génération, HP, évolution) et une carte qui se défloute.",
     href: "/pokemon/mini-games/pokedle",
     icon: Layers,
     modes: ["Solo"],
-    features: [
-      "Système d'indices",
-      "Recherche autocomplétée",
-      "Défloutage d'image",
-    ],
+    featureCount: 3,
   },
   {
     id: "whos_that_pokemon",
-    title: "Qui est ce Pokémon ?",
-    description:
-      "Retrouve la nostalgie du dessin animé ! Identifie le Pokémon caché derrière la silhouette noire de l'illustration avant la fin du chronomètre.",
     href: "/pokemon/mini-games/whos-that-pokemon",
     icon: HelpCircle,
     modes: ["Solo"],
-    features: ["Chrono 15 secondes", "Choix multiple", "Révélation de carte"],
+    featureCount: 3,
   },
 ];
 
@@ -112,6 +84,7 @@ const cardVariants = {
 };
 
 export default function MiniGamesHubPage() {
+  const t = useTranslations("MiniGames");
   return (
     <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
       {/* Hero Header */}
@@ -120,15 +93,13 @@ export default function MiniGamesHubPage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Découverte
+                {t("eyebrow")}
               </p>
               <h1 className="text-3xl font-black leading-tight text-foreground md:text-[2.5rem]">
-                Pokémon Mini-Jeux
+                {t("title")}
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground md:text-base">
-                Défie la chance, teste tes connaissances et affronte la
-                communauté en ligne ou tes amis sur le même écran grâce à nos 5
-                modes de jeux inédits.
+                {t("subtitle")}
               </p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-foreground">
@@ -160,7 +131,13 @@ export default function MiniGamesHubPage() {
                       <div className="flex flex-wrap gap-1 justify-end">
                         {game.modes.map((mode) => (
                           <Badge
-                            key={mode}
+                            key={
+                              mode === "En ligne"
+                                ? t("modeOnline")
+                                : mode === "Local"
+                                  ? t("modeLocal")
+                                  : t("modeSolo")
+                            }
                             variant="secondary"
                             className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                               mode === "En ligne"
@@ -176,7 +153,11 @@ export default function MiniGamesHubPage() {
                             {mode === "Local" && (
                               <Gamepad className="h-2 w-2 mr-1 inline" />
                             )}
-                            {mode}
+                            {mode === "En ligne"
+                              ? t("modeOnline")
+                              : mode === "Local"
+                                ? t("modeLocal")
+                                : t("modeSolo")}
                           </Badge>
                         ))}
                       </div>
@@ -185,24 +166,26 @@ export default function MiniGamesHubPage() {
                     {/* Info */}
                     <div className="space-y-1">
                       <h3 className="font-heading text-lg font-bold text-foreground">
-                        {game.title}
+                        {t(`games.${game.id}.title`)}
                       </h3>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        {game.description}
+                        {t(`games.${game.id}.description`)}
                       </p>
                     </div>
 
                     {/* Bullet points */}
                     <ul className="space-y-1 pt-1">
-                      {game.features.map((feature, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium"
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary/45" />
-                          {feature}
-                        </li>
-                      ))}
+                      {Array.from({ length: game.featureCount }).map(
+                        (_, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium"
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary/45" />
+                            {t(`games.${game.id}.feature${idx + 1}`)}
+                          </li>
+                        ),
+                      )}
                     </ul>
                   </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -41,6 +42,7 @@ interface GuessRow {
 }
 
 export default function PokedlePage() {
+  const t = useTranslations("Pokedle");
   const [targetCard, setTargetCard] = useState<PokemonCardType | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -225,9 +227,7 @@ export default function PokedlePage() {
           </div>
           <div>
             <H1 className="text-lg! sm:text-xl!">Pokédle</H1>
-            <p className="text-[10px] text-muted-foreground">
-              Devine le Pokémon mystère à partir des attributs
-            </p>
+            <p className="text-[10px] text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
         <Badge
@@ -242,7 +242,7 @@ export default function PokedlePage() {
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin h-8 w-8 text-primary" />
           <p className="text-xs font-semibold text-muted-foreground">
-            Choix du Pokémon mystère...
+            {t("choosingPokemon")}
           </p>
         </div>
       ) : (
@@ -284,7 +284,7 @@ export default function PokedlePage() {
             {gameState === "won" && (
               <div className="rounded-lg border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 p-6 text-center space-y-3">
                 <h3 className="text-lg font-black uppercase">
-                  Félicitations !
+                  {t("congratulations")}
                 </h3>
                 <p className="text-sm font-bold">
                   Tu as trouvé{" "}
@@ -312,7 +312,8 @@ export default function PokedlePage() {
                   onClick={initGame}
                   className="bg-gradient-to-r from-primary to-secondary text-white font-semibold"
                 >
-                  <RotateCcw className="h-4 w-4 mr-2" /> Réessayer
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  {t("retry")}
                 </Button>
               </div>
             )}
@@ -323,7 +324,7 @@ export default function PokedlePage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                   <Input
-                    placeholder="Entrez le nom d'un Pokémon..."
+                    placeholder={t("searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -366,7 +367,7 @@ export default function PokedlePage() {
             {guesses.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-heading text-sm font-bold uppercase text-muted-foreground tracking-wider">
-                  Essais précédents
+                  {t("previousGuesses")}
                 </h3>
                 <div className="overflow-x-auto border border-border rounded-xl shadow-sm bg-card">
                   <table className="w-full text-center border-collapse">

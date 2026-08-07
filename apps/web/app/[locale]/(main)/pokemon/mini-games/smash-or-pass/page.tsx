@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -138,6 +139,7 @@ function PokemonCardView({
   onSwipe: (direction: "left" | "right") => void;
   isFetching: boolean;
 }) {
+  const t = useTranslations("SmashOrPass");
   const cardImage = useMemo(() => getCardImage(card), [card]);
 
   return (
@@ -179,7 +181,7 @@ function PokemonCardView({
                   variant="secondary"
                   className="border border-border px-2.5 py-0.5 text-[11px] font-semibold"
                 >
-                  {card?.set?.name ?? "Bloc inconnu"}
+                  {card?.set?.name ?? t("unknownBlock")}
                 </Badge>
                 {card?.id ? <FavoriteButton cardId={card.id} /> : null}
               </div>
@@ -203,7 +205,7 @@ function PokemonCardView({
                     #{card?.localId ?? "??"}
                   </p>
                   <H3 className="text-lg! sm:text-xl! truncate">
-                    {card?.name ?? "Sans nom"}
+                    {card?.name ?? t("unnamed")}
                   </H3>
                 </div>
                 {card?.rarity ? (
@@ -216,7 +218,7 @@ function PokemonCardView({
                     variant="outline"
                     className="shrink-0 border text-[11px]"
                   >
-                    Rareté inconnue
+                    {t("unknownRarity")}
                   </Badge>
                 )}
               </div>
@@ -238,6 +240,7 @@ function PokemonCardView({
 }
 
 export default function PokemonMatchPage() {
+  const t = useTranslations("SmashOrPass");
   const { user } = useAuth();
   const { data: series = [] } = usePokemonSeries();
   const { data: sets = [] } = usePokemonSets();
@@ -256,7 +259,7 @@ export default function PokemonMatchPage() {
   const activeFilters = [
     selectedSerie !== "None"
       ? {
-          label: "Bloc",
+          label: t("block"),
           value:
             series.find(
               (serie: PokemonSerieType) =>
@@ -265,11 +268,11 @@ export default function PokemonMatchPage() {
         }
       : null,
     selectedRarity !== "None"
-      ? { label: "Rareté", value: selectedRarity }
+      ? { label: t("rarity"), value: selectedRarity }
       : null,
     selectedSet !== "None"
       ? {
-          label: "Série",
+          label: t("series"),
           value:
             sets.find(
               (set: PokemonSetType) => set.id.toString() === selectedSet,
@@ -320,7 +323,7 @@ export default function PokemonMatchPage() {
         try {
           await pokemonCardService.addToWishlist(user.id, card.id);
         } catch (error) {
-          console.error("Erreur lors de l'ajout à la wishlist :", error);
+          console.error(t("wishlistError"), error);
         }
       }
 
@@ -383,7 +386,7 @@ export default function PokemonMatchPage() {
               <div>
                 <H1 className="text-lg! sm:text-xl!">Smash or Pass</H1>
                 <p className="text-[11px] text-muted-foreground sm:text-xs">
-                  Swipe pour ajouter à ta wishlist
+                  {t("swipeHelp")}
                 </p>
               </div>
             </div>
@@ -411,18 +414,15 @@ export default function PokemonMatchPage() {
                 <DialogContent className="border border-border shadow-lg sm:max-w-xl">
                   <DialogHeader className="text-left">
                     <DialogTitle className="font-heading text-xl font-bold">
-                      Affiner la découverte
+                      {t("refineDiscovery")}
                     </DialogTitle>
-                    <DialogDescription>
-                      Choisis un bloc, une rareté ou une série pour filtrer les
-                      cartes.
-                    </DialogDescription>
+                    <DialogDescription>{t("filterHelp")}</DialogDescription>
                   </DialogHeader>
                   <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-3">
                     <FilterSelect
-                      label="Bloc"
+                      label={t("block")}
                       value={selectedSerie}
-                      placeholder="Choisir un bloc"
+                      placeholder={t("chooseBlock")}
                       onValueChange={setSelectedSerie}
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
@@ -434,9 +434,9 @@ export default function PokemonMatchPage() {
                     </FilterSelect>
 
                     <FilterSelect
-                      label="Rareté"
+                      label={t("rarity")}
                       value={selectedRarity}
-                      placeholder="Choisir une rareté"
+                      placeholder={t("chooseRarity")}
                       onValueChange={setSelectedRarity}
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
@@ -448,9 +448,9 @@ export default function PokemonMatchPage() {
                     </FilterSelect>
 
                     <FilterSelect
-                      label="Série"
+                      label={t("series")}
                       value={selectedSet}
-                      placeholder="Choisir une série"
+                      placeholder={t("chooseSeries")}
                       onValueChange={setSelectedSet}
                     >
                       <SelectItem value="None">Aucun filtre</SelectItem>
@@ -472,7 +472,7 @@ export default function PokemonMatchPage() {
                       }}
                     >
                       <RotateCcw className="h-3.5 w-3.5" />
-                      Réinitialiser
+                      {t("reset")}
                     </Button>
                     <Button
                       size="sm"
@@ -574,7 +574,7 @@ export default function PokemonMatchPage() {
             <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono rounded">
               &rarr;
             </kbd>
-            ou glisse la carte
+            {t("orDragCard")}
           </p>
         </div>
       </div>

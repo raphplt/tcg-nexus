@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -53,6 +54,7 @@ interface OnlinePlayer {
 }
 
 export default function JustePrixPage() {
+  const t = useTranslations("JustePrix");
   const [mode, setMode] = useState<"select" | "solo" | "local" | "online">(
     "select",
   );
@@ -492,10 +494,8 @@ export default function JustePrixPage() {
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <H1 className="text-lg! sm:text-xl!">Le Juste Prix</H1>
-            <p className="text-[10px] text-muted-foreground">
-              Estime la valeur exacte des objets
-            </p>
+            <H1 className="text-lg! sm:text-xl!">{t("title")}</H1>
+            <p className="text-[10px] text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -551,7 +551,7 @@ export default function JustePrixPage() {
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin h-10 w-10 text-primary" />
           <p className="text-sm font-bold text-muted-foreground">
-            Création de la session et tirage des cartes...
+            {t("creatingSession")}
           </p>
         </div>
       )}
@@ -565,10 +565,11 @@ export default function JustePrixPage() {
                 <User className="h-10 w-10" />
               </div>
               <div>
-                <h3 className="font-heading text-xl font-bold mb-2">Solo</h3>
+                <h3 className="font-heading text-xl font-bold mb-2">
+                  {t("solo")}
+                </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Tente de deviner les prix en 5 essais max par manche.
-                  Rapproche-toi le plus possible des 10%.
+                  {t("soloHelp")}
                 </p>
               </div>
               <Button
@@ -590,8 +591,7 @@ export default function JustePrixPage() {
                   PVP Local
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Défie un ami sur la même machine. Chacun propose son
-                  estimation en secret, la plus proche gagne le point.
+                  {t("localHelp")}
                 </p>
               </div>
               <Button
@@ -613,8 +613,7 @@ export default function JustePrixPage() {
                   PVP En Ligne
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Matchmaking en temps réel par socket. Estimations simultanées
-                  sous tension avec chrono.
+                  {t("onlineHelp")}
                 </p>
               </div>
               <Button
@@ -659,16 +658,16 @@ export default function JustePrixPage() {
                 className="border border-border font-bold"
               >
                 {currentItem.type === "card"
-                  ? "Carte de collection"
-                  : "Produit Scellé"}
+                  ? t("collectionCard")
+                  : t("sealedProduct")}
               </Badge>
               <h3 className="font-heading text-lg font-bold text-foreground truncate max-w-xs">
                 {currentItem.data.name ||
                   currentItem.data.nameEn ||
-                  "Nom inconnu"}
+                  t("unknownName")}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {currentItem.data.set?.name || "Extension inconnue"}
+                {currentItem.data.set?.name || t("unknownSet")}
               </p>
             </div>
           </div>
@@ -683,7 +682,7 @@ export default function JustePrixPage() {
                     <div className="flex gap-2">
                       <Input
                         type="text"
-                        placeholder="Estimation en euros (€)..."
+                        placeholder={t("guessPlaceholder")}
                         value={inputVal}
                         onChange={(e) => setInputVal(e.target.value)}
                         onKeyDown={(e) =>
@@ -714,13 +713,13 @@ export default function JustePrixPage() {
                               <span>{g.guess.toFixed(2)} €</span>
                               {g.direction === "more" ? (
                                 <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex gap-1 items-center">
-                                  <TrendingUp className="h-3 w-3" /> C'est plus
-                                  !
+                                  <TrendingUp className="h-3 w-3" />
+                                  {t("higher")}
                                 </Badge>
                               ) : (
                                 <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex gap-1 items-center">
-                                  <TrendingDown className="h-3 w-3" /> C'est
-                                  moins !
+                                  <TrendingDown className="h-3 w-3" />
+                                  {t("lower")}
                                 </Badge>
                               )}
                             </div>
@@ -736,7 +735,9 @@ export default function JustePrixPage() {
                     className={`border border-border rounded-xl p-6 shadow-md space-y-4 ${roundResult === "success" ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-red-500/10 text-red-700 dark:text-red-400"}`}
                   >
                     <h3 className="text-xl font-bold">
-                      {roundResult === "success" ? "Bravo !" : "Manche ratée !"}
+                      {roundResult === "success"
+                        ? t("wellDone")
+                        : t("roundFailed")}
                     </h3>
                     <p className="text-sm font-semibold text-foreground">
                       Le prix correct était de{" "}
@@ -752,7 +753,7 @@ export default function JustePrixPage() {
                       </p>
                     ) : (
                       <p className="text-xs font-semibold">
-                        Tu as épuisé tes 5 tentatives.
+                        {t("outOfAttempts")}
                       </p>
                     )}
 
@@ -762,8 +763,8 @@ export default function JustePrixPage() {
                       className="w-full font-semibold h-11"
                     >
                       {currentRound < items.length
-                        ? "Manche suivante ➡️"
-                        : "Voir le récapitulatif 🏁"}
+                        ? t("nextRound")
+                        : t("viewRecap")}
                     </Button>
                   </motion.div>
                 )}
@@ -785,15 +786,13 @@ export default function JustePrixPage() {
                               : "text-red-500 dark:text-red-400"
                           }
                         >
-                          {localPvpTurn === "p1"
-                            ? "Joueur 1 (Bleu)"
-                            : "Joueur 2 (Rouge)"}
+                          {localPvpTurn === "p1" ? t("player1") : t("player2")}
                         </span>
                       </p>
                       <p className="text-xs font-medium text-muted-foreground">
                         {localPvpTurn === "p1"
-                          ? "Joueur 2, ne regardez pas ! Saisissez votre estimation ci-dessous."
-                          : "Joueur 1, ne regardez pas ! Saisissez votre estimation ci-dessous."}
+                          ? t("player2LookAway")
+                          : t("player1LookAway")}
                       </p>
                     </div>
 
@@ -801,7 +800,7 @@ export default function JustePrixPage() {
                       <Input
                         type="password"
                         pattern="[0-9]*"
-                        placeholder="Ton prix secret (€)..."
+                        placeholder={t("secretGuessPlaceholder")}
                         value={inputVal}
                         onChange={(e) => setInputVal(e.target.value)}
                         onKeyDown={(e) =>
@@ -824,7 +823,7 @@ export default function JustePrixPage() {
                     className="border border-border rounded-xl p-6 shadow-md bg-card text-foreground space-y-4"
                   >
                     <h3 className="text-xl font-bold text-center border-b border-border pb-2">
-                      Révélation !
+                      {t("reveal")}
                     </h3>
                     <div className="grid grid-cols-2 gap-4 text-center">
                       <div className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/10">
@@ -869,18 +868,14 @@ export default function JustePrixPage() {
                     <div className="text-center font-bold text-sm">
                       {Math.abs(currentItem.correctPrice - p1Guess!) ===
                       Math.abs(currentItem.correctPrice - p2Guess!) ? (
-                        <span className="text-amber-600">
-                          Égalité sur cette manche !
-                        </span>
+                        <span className="text-amber-600">{t("roundTie")}</span>
                       ) : Math.abs(currentItem.correctPrice - p1Guess!) <
                         Math.abs(currentItem.correctPrice - p2Guess!) ? (
                         <span className="text-blue-600">
-                          Le Joueur 1 gagne le point ! 🔵
+                          {t("player1Wins")}
                         </span>
                       ) : (
-                        <span className="text-red-500">
-                          Le Joueur 2 gagne le point ! 🔴
-                        </span>
+                        <span className="text-red-500">{t("player2Wins")}</span>
                       )}
                     </div>
 
@@ -889,8 +884,8 @@ export default function JustePrixPage() {
                       className="w-full font-semibold h-11"
                     >
                       {currentRound < items.length
-                        ? "Manche suivante ➡️"
-                        : "Voir les résultats 🏁"}
+                        ? t("nextRound")
+                        : t("viewResults")}
                     </Button>
                   </motion.div>
                 )}
@@ -909,7 +904,7 @@ export default function JustePrixPage() {
         >
           <Award className="h-16 w-16 mx-auto text-primary mb-4" />
           <h2 className="text-2xl font-bold tracking-tight mb-2">
-            Partie Terminée !
+            {t("gameOver")}
           </h2>
 
           {mode === "solo" ? (
@@ -922,7 +917,7 @@ export default function JustePrixPage() {
             </p>
           ) : (
             <div className="space-y-4 mb-6">
-              <p className="text-sm font-semibold">Résultats des duels :</p>
+              <p className="text-sm font-semibold">{t("duelResults")}</p>
               <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
                 <div className="border border-blue-500/20 rounded-lg bg-blue-500/10 p-3">
                   <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
@@ -943,15 +938,11 @@ export default function JustePrixPage() {
               </div>
               <h3 className="text-lg font-bold mt-4">
                 {p1Score === p2Score ? (
-                  <span className="text-amber-500">Égalité parfaite ! 🤝</span>
+                  <span className="text-amber-500">{t("perfectTie")}</span>
                 ) : p1Score > p2Score ? (
-                  <span className="text-blue-600">
-                    🏆 Victoire du Joueur 1 ! 🔵
-                  </span>
+                  <span className="text-blue-600">{t("player1Victory")}</span>
                 ) : (
-                  <span className="text-red-500">
-                    🏆 Victoire du Joueur 2 ! 🔴
-                  </span>
+                  <span className="text-red-500">{t("player2Victory")}</span>
                 )}
               </h3>
             </div>
@@ -987,17 +978,17 @@ export default function JustePrixPage() {
             </H3>
             {!onlineIsConnected ? (
               <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Connexion au
-                serveur…
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("connecting")}
               </p>
             ) : onlineQueueStatus === "queued" ? (
               <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Recherche d&apos;un
-                adversaire…
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("searchingOpponent")}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Lance la recherche pour affronter un joueur en direct.
+                {t("startSearchHelp")}
               </p>
             )}
             <div className="flex justify-center gap-3 pt-2">
@@ -1022,7 +1013,7 @@ export default function JustePrixPage() {
                   disabled={!onlineIsConnected}
                   className="bg-purple-500 font-semibold text-white hover:bg-purple-600"
                 >
-                  Chercher un match
+                  {t("searchMatch")}
                 </Button>
               )}
             </div>
@@ -1041,7 +1032,7 @@ export default function JustePrixPage() {
                 Synchronisation en cours...
               </h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Cliquez sur Prêt pour démarrer le match !
+                {t("clickReady")}
               </p>
               <div className="flex justify-center gap-4">
                 {onlineSession.players.map((p: any) => {
@@ -1056,14 +1047,14 @@ export default function JustePrixPage() {
                       </span>
                       {p.ready ? (
                         <Badge className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 mt-2">
-                          Prêt
+                          {t("ready")}
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
                           className="border border-border mt-2"
                         >
-                          Pas prêt
+                          {t("notReady")}
                         </Badge>
                       )}
                     </div>
@@ -1074,11 +1065,11 @@ export default function JustePrixPage() {
                 {onlineSession.players.find((p: any) => p.userId === selfId)
                   ?.ready ? (
                   <Button disabled className="font-semibold">
-                    En attente de l'autre joueur...
+                    {t("waitingOtherPlayer")}
                   </Button>
                 ) : (
                   <Button onClick={handleOnlineReady} className="font-semibold">
-                    Je suis Prêt !
+                    {t("imReady")}
                   </Button>
                 )}
               </div>
@@ -1119,13 +1110,13 @@ export default function JustePrixPage() {
                     className="border border-border font-bold"
                   >
                     {currentItem.type === "card"
-                      ? "Carte de collection"
-                      : "Produit Scellé"}
+                      ? t("collectionCard")
+                      : t("sealedProduct")}
                   </Badge>
                   <h3 className="font-heading text-lg font-bold text-foreground truncate max-w-xs">
                     {currentItem.data.name ||
                       currentItem.data.nameEn ||
-                      "Nom inconnu"}
+                      t("unknownName")}
                   </h3>
                 </div>
               </div>
@@ -1136,11 +1127,10 @@ export default function JustePrixPage() {
                   <div className="space-y-4">
                     <div className="border border-border rounded-xl p-4 bg-muted text-foreground">
                       <h4 className="text-sm font-semibold">
-                        Entre ton estimation
+                        {t("enterGuess")}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        Saisis le prix rapidement. Si tu es proche du prix
-                        exact, un bonus de rapidité sera accordé !
+                        {t("enterGuessHelp")}
                       </p>
                     </div>
 
@@ -1148,13 +1138,13 @@ export default function JustePrixPage() {
                       ?.hasGuessed ? (
                       <div className="text-center py-6 border-2 border-dashed border-zinc-300">
                         <p className="text-sm font-bold text-muted-foreground">
-                          Estimation envoyée ! En attente de l'adversaire...
+                          {t("guessSent")}
                         </p>
                       </div>
                     ) : (
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Estimation en euros (€)..."
+                          placeholder={t("guessPlaceholder")}
                           value={inputVal}
                           onChange={(e) => setInputVal(e.target.value)}
                           onKeyDown={(e) =>
@@ -1178,7 +1168,7 @@ export default function JustePrixPage() {
                     className="border border-border rounded-xl p-6 shadow-md bg-card text-foreground space-y-4"
                   >
                     <h3 className="text-xl font-bold text-center border-b border-border pb-2">
-                      Révélation !
+                      {t("reveal")}
                     </h3>
                     <div className="grid grid-cols-2 gap-4 text-center">
                       {onlineReveal.guesses.map((g: any) => {
@@ -1215,7 +1205,7 @@ export default function JustePrixPage() {
                         (p: any) => p.userId === selfId,
                       )?.ready ? (
                         <Button disabled className="w-full font-semibold">
-                          En attente de l'adversaire...
+                          {t("waitingOpponent")}
                         </Button>
                       ) : (
                         <Button
@@ -1223,8 +1213,8 @@ export default function JustePrixPage() {
                           className="w-full font-semibold h-11"
                         >
                           {onlineSession.round < onlineSession.maxRounds
-                            ? "Prêt pour la manche suivante ➡️"
-                            : "Voir les scores finaux 🏁"}
+                            ? t("readyNextRound")
+                            : t("viewFinalScores")}
                         </Button>
                       )}
                     </div>
@@ -1243,11 +1233,11 @@ export default function JustePrixPage() {
             >
               <Award className="h-16 w-16 mx-auto text-primary mb-4" />
               <h2 className="text-2xl font-bold tracking-tight mb-2">
-                Match Terminé !
+                {t("matchOver")}
               </h2>
 
               <div className="space-y-4 mb-6">
-                <p className="text-sm font-semibold">Tableau des scores :</p>
+                <p className="text-sm font-semibold">{t("scoreboard")}</p>
                 <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
                   {onlineSession.players.map((p: any) => {
                     const isMe = p.userId === selfId;
@@ -1278,7 +1268,7 @@ export default function JustePrixPage() {
                     if (me.score === opp.score)
                       return (
                         <span className="text-amber-500">
-                          Égalité parfaite ! 🤝
+                          {t("perfectTie")}
                         </span>
                       );
                     if (me.score > opp.score)
@@ -1301,7 +1291,7 @@ export default function JustePrixPage() {
                   onClick={() => setMode("select")}
                   className="w-full font-semibold"
                 >
-                  Retour au Salon
+                  {t("backToLobby")}
                 </Button>
               </div>
             </motion.div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -91,21 +92,22 @@ function cardValue(card: any): number {
 }
 
 function mapCard(card: any): CardItem {
+  const t = useTranslations("CaseOpening");
   return {
     uid: nextUid(),
     id: String(card?.id ?? "unknown"),
-    name: card?.name ?? "Carte Pokémon",
+    name: card?.name ?? t("pokemonCard"),
     rarity: card?.rarity,
     image: getCardImage(card),
     price: Number(cardValue(card).toFixed(2)),
   };
 }
 
-const fallbackPool = (): CardItem[] =>
+const fallbackPool = (fallbackName: string): CardItem[] =>
   Array.from({ length: 12 }, () => ({
     uid: nextUid(),
     id: "fallback",
-    name: "Carte Pokémon",
+    name: fallbackName,
     image: PLACEHOLDER,
     price: 0.5,
   }));
@@ -244,6 +246,7 @@ function PlayerBoard({
   packs: CardItem[][];
   accent: "blue" | "red";
 }) {
+  const t = useTranslations("CaseOpening");
   const header =
     accent === "blue"
       ? "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
@@ -261,7 +264,7 @@ function PlayerBoard({
       </div>
       {cards.length === 0 ? (
         <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border text-xs text-muted-foreground">
-          Aucune carte pour l'instant
+          {t("noCardYet")}
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
@@ -293,6 +296,7 @@ function PlayerBoard({
 // Page
 // ---------------------------------------------------------------------------
 export default function CaseOpeningPage() {
+  const t = useTranslations("CaseOpening");
   const [mode, setMode] = useState<Mode>("select");
   const [sets, setSets] = useState<PokemonSetType[]>([]);
   const [selectedSet, setSelectedSet] = useState("all");
@@ -401,15 +405,19 @@ export default function CaseOpeningPage() {
         limit: 80,
       });
       const items = (res.data ?? []).map(mapCard);
-      poolRef.current = items.length > 0 ? items : fallbackPool();
+      poolRef.current =
+        items.length > 0 ? items : fallbackPool(t("pokemonCard"));
     } catch {
-      poolRef.current = fallbackPool();
+      poolRef.current = fallbackPool(t("pokemonCard"));
     }
     setPoolReady(true);
   }, []);
 
   const drawPack = useCallback((): CardItem[] => {
-    const pool = poolRef.current.length > 0 ? poolRef.current : fallbackPool();
+    const pool =
+      poolRef.current.length > 0
+        ? poolRef.current
+        : fallbackPool(t("pokemonCard"));
     return Array.from({ length: PACK_SIZE }, () => ({
       ...pickRandom(pool),
       uid: nextUid(),
@@ -623,11 +631,7 @@ export default function CaseOpeningPage() {
 
     socket.on("connect", () => setOnlineConnected(true));
     socket.on("disconnect", () => setOnlineConnected(false));
-    socket.on("connect_error", () =>
-      setOnlineError(
-        "Connexion au serveur impossible. Es-tu bien connecté à ton compte ?",
-      ),
-    );
+    socket.on("connect_error", () => setOnlineError(t("connectionError")));
 
     socket.on("minigame_matched", (data: any) => {
       selfIdRef.current = data.selfId ?? null;
@@ -698,13 +702,13 @@ export default function CaseOpeningPage() {
   // -------------------------------------------------------------------------
   // Rendu
   // -------------------------------------------------------------------------
-  const p1Name = mode === "local" ? "Joueur 1" : "Moi";
+  const p1Name = mode === "local" ? t("player1") : "Moi";
   const p2Name =
     mode === "solo"
       ? "PikaBot"
       : mode === "local"
-        ? "Joueur 2"
-        : opponent?.name || "Adversaire";
+        ? t("player2")
+        : opponent?.name || t("opponent");
 
   const showScores =
     mode === "solo" || mode === "local" || (mode === "online" && onlineSession);
@@ -729,10 +733,8 @@ export default function CaseOpeningPage() {
             <Package className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <H1 className="text-lg! sm:text-xl!">Duel Case Opening</H1>
-            <p className="text-[10px] text-muted-foreground">
-              Ouvre des boosters Pokémon et remporte la cagnotte
-            </p>
+            <H1 className="text-lg! sm:text-xl!">{t("title")}</H1>
+            <p className="text-[10px] text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
 
@@ -766,19 +768,19 @@ export default function CaseOpeningPage() {
           <Card className="tcg-surface bg-card shadow-sm">
             <CardContent className="space-y-4 p-6">
               <H3 className="font-heading text-lg font-bold text-foreground">
-                Options du duel
+                {t("duelOptions")}
               </H3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Booster / Set Pokémon
+                    {t("boosterSet")}
                   </label>
                   <Select value={selectedSet} onValueChange={setSelectedSet}>
                     <SelectTrigger className="bg-background font-semibold">
-                      <SelectValue placeholder="Aléatoire (Toutes les cartes)" />
+                      <SelectValue placeholder={t("randomAllCards")} />
                     </SelectTrigger>
                     <SelectContent className="bg-popover font-semibold">
-                      <SelectItem value="all">Aléatoire (Tout)</SelectItem>
+                      <SelectItem value="all">{t("randomAll")}</SelectItem>
                       {sets.map((set) => (
                         <SelectItem key={set.id} value={set.id}>
                           {set.name}
@@ -789,7 +791,7 @@ export default function CaseOpeningPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Nombre de boosters
+                    {t("boosterCount")}
                   </label>
                   <Select
                     value={boosterCount.toString()}
@@ -816,10 +818,11 @@ export default function CaseOpeningPage() {
                   <Dice5 className="h-10 w-10" />
                 </div>
                 <div>
-                  <h3 className="mb-1 font-heading text-lg font-bold">Solo</h3>
+                  <h3 className="mb-1 font-heading text-lg font-bold">
+                    {t("solo")}
+                  </h3>
                   <p className="text-xs text-muted-foreground">
-                    Ouvre des boosters en duel contre l&apos;ordinateur PikaBot.
-                    La plus grande valeur cumulée gagne.
+                    {t("soloHelp")}
                   </p>
                 </div>
                 <Button
@@ -841,8 +844,7 @@ export default function CaseOpeningPage() {
                     PVP Local
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Défie ton ami à tour de rôle sur le même écran. Chacun son
-                    booster, le suspense est garanti.
+                    {t("localHelp")}
                   </p>
                 </div>
                 <Button
@@ -864,8 +866,7 @@ export default function CaseOpeningPage() {
                     PVP En Ligne
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Rejoins le matchmaking et affronte la communauté en direct
-                    avec animations d&apos;ouverture synchrones.
+                    {t("onlineHelp")}
                   </p>
                 </div>
                 <Button
@@ -896,7 +897,7 @@ export default function CaseOpeningPage() {
               <FinishedPanel
                 p1Score={p1Score}
                 p2Score={p2Score}
-                loserName={mode === "solo" ? "PikaBot" : "Joueur 2"}
+                loserName={mode === "solo" ? "PikaBot" : t("player2")}
                 onReplay={() => startGame(mode)}
                 onBack={quitToSelect}
               />
@@ -907,9 +908,7 @@ export default function CaseOpeningPage() {
                   Manche {round} — au tour de{" "}
                   <span className="text-primary">{activeName}</span>
                 </p>
-                <p className="text-xs text-zinc-400">
-                  Passe l&apos;appareil, puis clique quand tu es prêt.
-                </p>
+                <p className="text-xs text-zinc-400">{t("passDevice")}</p>
                 <Button
                   onClick={confirmHandoff}
                   className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
@@ -926,8 +925,8 @@ export default function CaseOpeningPage() {
                 </p>
                 {!poolReady && (
                   <span className="flex items-center gap-1 text-xs text-zinc-400">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Chargement des
-                    cartes…
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {t("loadingCards")}
                   </span>
                 )}
               </div>
@@ -955,13 +954,13 @@ export default function CaseOpeningPage() {
           {/* Plateaux */}
           <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
             <PlayerBoard
-              name={mode === "local" ? "Joueur 1" : "Moi"}
+              name={mode === "local" ? t("player1") : "Moi"}
               score={p1Score}
               packs={p1Packs}
               accent="blue"
             />
             <PlayerBoard
-              name={mode === "solo" ? "PikaBot" : "Joueur 2"}
+              name={mode === "solo" ? "PikaBot" : t("player2")}
               score={p2Score}
               packs={p2Packs}
               accent="red"
@@ -990,17 +989,17 @@ export default function CaseOpeningPage() {
                   </p>
                 ) : !onlineConnected ? (
                   <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Connexion au
-                    serveur…
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("connecting")}
                   </p>
                 ) : queueStatus === "queued" ? (
                   <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Recherche
-                    d&apos;un adversaire…
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("searchingOpponent")}
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">
-                    Lance la recherche pour affronter un autre joueur en direct.
+                    {t("startSearchHelp")}
                   </p>
                 )}
 
@@ -1011,7 +1010,7 @@ export default function CaseOpeningPage() {
                       onClick={onlineCancel}
                       className="font-semibold text-red-500"
                     >
-                      Annuler la recherche
+                      {t("cancelSearch")}
                     </Button>
                   ) : (
                     <Button
@@ -1019,7 +1018,7 @@ export default function CaseOpeningPage() {
                       disabled={!onlineConnected}
                       className="bg-purple-500 font-semibold text-white hover:bg-purple-600"
                     >
-                      Chercher un match
+                      {t("searchMatch")}
                     </Button>
                   )}
                 </div>
@@ -1035,7 +1034,7 @@ export default function CaseOpeningPage() {
                 Adversaire trouvé : {opponent?.name}
               </h3>
               <p className="mb-4 text-xs text-muted-foreground">
-                Cliquez sur « Prêt » pour démarrer le duel.
+                {t("clickReady")}
               </p>
               <div className="flex justify-center gap-4">
                 {onlineSession.players.map((p: any) => {
@@ -1050,14 +1049,14 @@ export default function CaseOpeningPage() {
                       </span>
                       {p.ready ? (
                         <Badge className="mt-2 border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400">
-                          Prêt
+                          {t("ready")}
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
                           className="mt-2 border border-border"
                         >
-                          Pas prêt
+                          {t("notReady")}
                         </Badge>
                       )}
                     </div>
@@ -1070,14 +1069,14 @@ export default function CaseOpeningPage() {
                     disabled
                     className="bg-muted font-semibold text-muted-foreground"
                   >
-                    En attente de l&apos;adversaire…
+                    {t("waitingOpponent")}
                   </Button>
                 ) : (
                   <Button
                     onClick={onlineReady}
                     className="bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
                   >
-                    Je suis prêt !
+                    {t("imReady")}
                   </Button>
                 )}
               </div>
@@ -1100,8 +1099,8 @@ export default function CaseOpeningPage() {
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     <p className="text-sm font-semibold text-white">
                       {opp && opp.openedPacks.length >= onlineSession.round
-                        ? "Les deux boosters sont ouverts !"
-                        : "En attente que l'adversaire ouvre son booster…"}
+                        ? t("bothOpened")
+                        : t("waitingOpponentBooster")}
                     </p>
                   </div>
                 ) : (
@@ -1139,7 +1138,7 @@ export default function CaseOpeningPage() {
                   accent="blue"
                 />
                 <PlayerBoard
-                  name={opponent?.name || "Adversaire"}
+                  name={opponent?.name || t("opponent")}
                   score={p2Score}
                   packs={p2Packs}
                   accent="red"
@@ -1157,7 +1156,7 @@ export default function CaseOpeningPage() {
                         disabled
                         className="bg-muted font-semibold text-muted-foreground"
                       >
-                        En attente de l&apos;adversaire…
+                        {t("waitingOpponent")}
                       </Button>
                     ) : (
                       <Button
@@ -1165,8 +1164,8 @@ export default function CaseOpeningPage() {
                         className="h-12 bg-primary px-8 font-semibold text-primary-foreground hover:bg-primary/90"
                       >
                         {onlineSession.round < onlineSession.maxRounds
-                          ? "Prêt pour la manche suivante"
-                          : "Voir les résultats"}
+                          ? t("readyNextRound")
+                          : t("viewResults")}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     )}
@@ -1184,7 +1183,7 @@ export default function CaseOpeningPage() {
             >
               <Award className="mx-auto mb-4 h-16 w-16 text-primary" />
               <h2 className="mb-2 text-2xl font-bold tracking-tight">
-                Match terminé !
+                {t("matchOver")}
               </h2>
               <div className="mx-auto mb-6 grid max-w-sm grid-cols-2 gap-4">
                 {onlineSession.players.map((p: any) => {
@@ -1206,7 +1205,7 @@ export default function CaseOpeningPage() {
               </div>
               <h3 className="mb-6 text-lg font-bold">
                 {me.score === opp.score ? (
-                  <span className="text-amber-500">Égalité parfaite ! 🤝</span>
+                  <span className="text-amber-500">{t("perfectTie")}</span>
                 ) : me.score > opp.score ? (
                   <span className="text-green-500">
                     Victoire ! Tu es plus chanceux que {opp.userName} ! 🎉
@@ -1221,7 +1220,7 @@ export default function CaseOpeningPage() {
                 onClick={quitToSelect}
                 className="w-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
               >
-                Retour au salon
+                {t("backToLobby")}
               </Button>
             </motion.div>
           )}
@@ -1241,6 +1240,7 @@ function RevealTray({
   reveal: CardItem[];
   active: boolean;
 }) {
+  const t = useTranslations("CaseOpening");
   if (reveal.length === 0) return null;
   const total = reveal.reduce((s, c) => s + c.price, 0);
   return (
@@ -1264,7 +1264,7 @@ function RevealTray({
         </AnimatePresence>
       </div>
       <p className="text-xs font-semibold text-muted-foreground">
-        {active ? "Ouverture en cours…" : "Booster ouvert"} · {reveal.length}/
+        {active ? t("opening") : t("boosterOpened")} · {reveal.length}/
         {PACK_SIZE} · {total.toFixed(2)} €
       </p>
     </div>
@@ -1284,13 +1284,14 @@ function FinishedPanel({
   onReplay: () => void;
   onBack: () => void;
 }) {
+  const t = useTranslations("CaseOpening");
   return (
     <div className="w-full space-y-3 py-6 text-center">
       <Trophy className="mx-auto h-12 w-12 text-primary" />
-      <h3 className="text-xl font-bold text-white">Duel terminé !</h3>
+      <h3 className="text-xl font-bold text-white">{t("duelOver")}</h3>
       <p className="text-sm font-bold text-zinc-300">
         {p1Score === p2Score ? (
-          <span className="text-amber-500">Égalité parfaite ! 🤝</span>
+          <span className="text-amber-500">{t("perfectTie")}</span>
         ) : p1Score > p2Score ? (
           <span className="text-green-500">Victoire de Joueur 1 ! 🔵</span>
         ) : (
