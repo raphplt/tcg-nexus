@@ -593,5 +593,92 @@
         "other": "Other"
       }
     }
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to your dashboard, {name}!",
+    "loadError": "Could not load your statistics. Please try again.",
+    "memberSince": "Member since {date}",
+    "activity": {
+      "title": "Recent activity",
+      "events": "{count, plural, =0 {No events} one {# event} other {# events}}",
+      "empty": "No activity in the last 7 days"
+    },
+    "badges": {
+      "title": "Badges",
+      "empty": "Start using the platform to unlock badges"
+    },
+    "collection": {
+      "title": "My collection",
+      "empty": "No cards in your collections",
+      "start": "Start a collection",
+      "summary": "{cards, plural, one {# card} other {# cards}} across {collections, plural, one {# collection} other {# collections}}",
+      "estimatedValue": "Estimated value",
+      "recent": "{count, plural, one {+# card in the last 30 days} other {+# cards in the last 30 days}}"
+    },
+    "decks": {
+      "title": "My decks",
+      "empty": "No decks created",
+      "create": "Create a deck",
+      "created": "{count, plural, one {# deck created} other {# decks created}}",
+      "mostPopular": "Most popular",
+      "views": "{count, plural, one {# view} other {# views}}"
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "empty": "No marketplace activity",
+      "explore": "Explore the marketplace",
+      "activeListings": "{count, plural, one {# active listing} other {# active listings}}",
+      "purchases": "{count, plural, one {# purchase} other {# purchases}}",
+      "revenue": "Revenue",
+      "spent": "Spent"
+    },
+    "tournaments": {
+      "title": "My tournaments",
+      "empty": "You haven't entered a tournament yet",
+      "browse": "View tournaments",
+      "played": "{count, plural, one {# tournament played} other {# tournaments played}}",
+      "winRate": "Win rate",
+      "bestRank": "Best rank",
+      "wins": "{count}W",
+      "losses": "{count}L"
+    },
+    "myTournaments": {
+      "playerRequiredTitle": "Player profile required",
+      "playerRequiredDescription": "You need a player profile to view your tournaments.",
+      "discover": "Discover tournaments",
+      "title": "My tournaments",
+      "subtitle": "Track all your tournament entries",
+      "tabs": {
+        "active": "Active ({count})",
+        "finished": "Finished ({count})",
+        "cancelled": "Cancelled ({count})"
+      },
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "finished": "Finished",
+        "wins": "Wins",
+        "averageRank": "Average rank"
+      },
+      "list": {
+        "empty": "No tournaments in this category",
+        "players": "{count, plural, =0 {No players} one {# player} other {# players}}",
+        "rank": "Rank #{rank}",
+        "points": "{count, plural, one {# point} other {# points}}",
+        "winsPercent": "{value}% wins",
+        "view": "View",
+        "dashboard": "Dashboard",
+        "bracket": "Bracket",
+        "status": {
+          "draft": "Draft",
+          "registrationOpen": "Registration open",
+          "registrationClosed": "Registration closed",
+          "inProgress": "In progress",
+          "finished": "Finished",
+          "cancelled": "Cancelled"
+        }
+      }
+    }
   }
 }

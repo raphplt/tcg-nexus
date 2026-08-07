@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tournament } from "@/types/tournament";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface TournamentListProps {
   tournaments: Tournament[];
@@ -29,6 +29,7 @@ export function TournamentList({
   userId,
 }: TournamentListProps) {
   const locale = useLocale();
+  const t = useTranslations("Dashboard.myTournaments.list");
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -44,9 +45,7 @@ export function TournamentList({
       <Card>
         <CardContent className="p-8 text-center">
           <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Aucun tournoi dans cette catégorie
-          </p>
+          <p className="text-muted-foreground">{t("empty")}</p>
         </CardContent>
       </Card>
     );
@@ -77,18 +76,24 @@ export function TournamentList({
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { variant: "outline" as const, label: "Brouillon" },
+      draft: { variant: "outline" as const, label: t("status.draft") },
       registration_open: {
         variant: "secondary" as const,
-        label: "Inscriptions ouvertes",
+        label: t("status.registrationOpen"),
       },
       registration_closed: {
         variant: "outline" as const,
-        label: "Inscriptions fermées",
+        label: t("status.registrationClosed"),
       },
-      in_progress: { variant: "default" as const, label: "En cours" },
-      finished: { variant: "secondary" as const, label: "Terminé" },
-      cancelled: { variant: "destructive" as const, label: "Annulé" },
+      in_progress: {
+        variant: "default" as const,
+        label: t("status.inProgress"),
+      },
+      finished: { variant: "secondary" as const, label: t("status.finished") },
+      cancelled: {
+        variant: "destructive" as const,
+        label: t("status.cancelled"),
+      },
     };
 
     const config =
@@ -131,7 +136,9 @@ export function TournamentList({
                     )}
                     <span className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
-                      {tournament.players?.length || 0} joueurs
+                      {t("players", {
+                        count: tournament.players?.length || 0,
+                      })}
                     </span>
                   </div>
 
@@ -141,17 +148,21 @@ export function TournamentList({
                       <div className="flex items-center gap-2">
                         <Trophy className="w-4 h-4 text-yellow-500" />
                         <span className="font-medium">
-                          Rang #{playerRanking.rank}
+                          {t("rank", { rank: playerRanking.rank })}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-blue-500" />
-                        <span>{playerRanking.points} points</span>
+                        <span>
+                          {t("points", { count: playerRanking.points })}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Target className="w-4 h-4 text-green-500" />
                         <span>
-                          {playerRanking.winRate.toFixed(1)}% victoires
+                          {t("winsPercent", {
+                            value: playerRanking.winRate.toFixed(1),
+                          })}
                         </span>
                       </div>
                     </div>
@@ -168,7 +179,7 @@ export function TournamentList({
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/tournaments/${tournament.id}`}>
                       <Eye className="w-4 h-4 mr-2" />
-                      Voir
+                      {t("view")}
                     </Link>
                   </Button>
 
@@ -176,7 +187,7 @@ export function TournamentList({
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/tournaments/${tournament.id}/player`}>
                         <BarChart3 className="w-4 h-4 mr-2" />
-                        Dashboard
+                        {t("dashboard")}
                       </Link>
                     </Button>
                   )}
@@ -186,7 +197,7 @@ export function TournamentList({
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/tournaments/${tournament.id}/bracket`}>
                         <Trophy className="w-4 h-4 mr-2" />
-                        Bracket
+                        {t("bracket")}
                       </Link>
                     </Button>
                   )}

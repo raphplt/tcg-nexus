@@ -13,8 +13,10 @@ import { PaginatedResult } from "@/types/pagination";
 import { Link } from "@/i18n/navigation";
 import { TournamentStats } from "./components/TournamentStats";
 import { TournamentList } from "./components/TournamentList";
+import { useTranslations } from "next-intl";
 
 export default function MyTournamentsPage() {
+  const t = useTranslations("Dashboard.myTournaments");
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("active");
 
@@ -89,12 +91,14 @@ export default function MyTournamentsPage() {
       <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <Trophy className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Profil joueur requis</h1>
+          <h1 className="text-2xl font-bold mb-2">
+            {t("playerRequiredTitle")}
+          </h1>
           <p className="text-muted-foreground mb-4">
-            Vous devez avoir un profil joueur pour voir vos tournois.
+            {t("playerRequiredDescription")}
           </p>
           <Button asChild>
-            <Link href="/tournaments">Découvrir les tournois</Link>
+            <Link href="/tournaments">{t("discover")}</Link>
           </Button>
         </div>
       </div>
@@ -107,16 +111,14 @@ export default function MyTournamentsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <H1 className="mb-2">Mes Tournois</H1>
-            <p className="text-muted-foreground">
-              Suivi de toutes vos participations
-            </p>
+            <H1 className="mb-2">{t("title")}</H1>
+            <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
 
           <Button asChild>
             <Link href="/tournaments">
               <Trophy className="w-4 h-4 mr-2" />
-              Découvrir des tournois
+              {t("discover")}
             </Link>
           </Button>
         </div>
@@ -129,15 +131,15 @@ export default function MyTournamentsPage() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="active" className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              Actifs ({stats.active})
+              {t("tabs.active", { count: stats.active })}
             </TabsTrigger>
             <TabsTrigger value="finished" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              Terminés ({stats.finished})
+              {t("tabs.finished", { count: stats.finished })}
             </TabsTrigger>
             <TabsTrigger value="cancelled" className="flex items-center gap-2">
               <X className="w-4 h-4" />
-              Annulés ({cancelledTournaments.length})
+              {t("tabs.cancelled", { count: cancelledTournaments.length })}
             </TabsTrigger>
           </TabsList>
 

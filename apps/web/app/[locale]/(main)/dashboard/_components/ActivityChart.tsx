@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { DashboardActivityDay } from "@/types/dashboard";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface ActivityChartProps {
   data: DashboardActivityDay[];
@@ -29,6 +29,7 @@ function CustomTooltip(props: {
   label?: string;
 }) {
   const locale = useLocale();
+  const t = useTranslations("Dashboard.activity");
   const { active, payload, label } = props;
   if (!active || !payload || payload.length === 0 || !label) return null;
 
@@ -44,15 +45,14 @@ function CustomTooltip(props: {
   return (
     <div className="rounded-lg border bg-background p-2 shadow-sm">
       <p className="text-xs text-muted-foreground capitalize">{formatted}</p>
-      <p className="text-sm font-semibold">
-        {value} événement{value > 1 ? "s" : ""}
-      </p>
+      <p className="text-sm font-semibold">{t("events", { count: value })}</p>
     </div>
   );
 }
 
 export function ActivityChart({ data }: ActivityChartProps) {
   const locale = useLocale();
+  const t = useTranslations("Dashboard.activity");
   const hasActivity = data.some((d) => d.events > 0);
 
   const chartData = data.map((d) => ({
@@ -63,16 +63,14 @@ export function ActivityChart({ data }: ActivityChartProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Activité récente</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("title")}</CardTitle>
         <Activity className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         {!hasActivity ? (
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <Activity className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
-              Aucune activité ces 7 derniers jours
-            </p>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={200}>

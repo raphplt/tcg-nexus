@@ -593,5 +593,92 @@
         "other": "Autre"
       }
     }
+  },
+  "Dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue sur votre tableau de bord, {name} !",
+    "loadError": "Impossible de charger les statistiques. Veuillez réessayer.",
+    "memberSince": "Membre depuis le {date}",
+    "activity": {
+      "title": "Activité récente",
+      "events": "{count, plural, =0 {Aucun événement} one {# événement} other {# événements}}",
+      "empty": "Aucune activité ces 7 derniers jours"
+    },
+    "badges": {
+      "title": "Badges",
+      "empty": "Commencez à utiliser la plateforme pour débloquer des badges"
+    },
+    "collection": {
+      "title": "Ma collection",
+      "empty": "Aucune carte dans vos collections",
+      "start": "Commencer une collection",
+      "summary": "{cards, plural, one {# carte} other {# cartes}} dans {collections, plural, one {# collection} other {# collections}}",
+      "estimatedValue": "Valeur estimée",
+      "recent": "{count, plural, one {+# carte ces 30 derniers jours} other {+# cartes ces 30 derniers jours}}"
+    },
+    "decks": {
+      "title": "Mes decks",
+      "empty": "Aucun deck créé",
+      "create": "Créer un deck",
+      "created": "{count, plural, one {# deck créé} other {# decks créés}}",
+      "mostPopular": "Le plus populaire",
+      "views": "{count, plural, one {# vue} other {# vues}}"
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "empty": "Aucune activité marketplace",
+      "explore": "Explorer la marketplace",
+      "activeListings": "{count, plural, one {# annonce active} other {# annonces actives}}",
+      "purchases": "{count, plural, one {# achat} other {# achats}}",
+      "revenue": "Revenus",
+      "spent": "Dépensé"
+    },
+    "tournaments": {
+      "title": "Mes tournois",
+      "empty": "Vous n'avez pas encore participé à un tournoi",
+      "browse": "Voir les tournois",
+      "played": "{count, plural, one {# tournoi joué} other {# tournois joués}}",
+      "winRate": "Taux de victoire",
+      "bestRank": "Meilleur rang",
+      "wins": "{count} V",
+      "losses": "{count} D"
+    },
+    "myTournaments": {
+      "playerRequiredTitle": "Profil joueur requis",
+      "playerRequiredDescription": "Vous devez avoir un profil joueur pour voir vos tournois.",
+      "discover": "Découvrir des tournois",
+      "title": "Mes tournois",
+      "subtitle": "Suivez toutes vos participations",
+      "tabs": {
+        "active": "Actifs ({count})",
+        "finished": "Terminés ({count})",
+        "cancelled": "Annulés ({count})"
+      },
+      "stats": {
+        "total": "Total",
+        "active": "Actifs",
+        "finished": "Terminés",
+        "wins": "Victoires",
+        "averageRank": "Rang moyen"
+      },
+      "list": {
+        "empty": "Aucun tournoi dans cette catégorie",
+        "players": "{count, plural, =0 {Aucun joueur} one {# joueur} other {# joueurs}}",
+        "rank": "Rang #{rank}",
+        "points": "{count, plural, one {# point} other {# points}}",
+        "winsPercent": "{value} % de victoires",
+        "view": "Voir",
+        "dashboard": "Tableau de bord",
+        "bracket": "Tableau",
+        "status": {
+          "draft": "Brouillon",
+          "registrationOpen": "Inscriptions ouvertes",
+          "registrationClosed": "Inscriptions fermées",
+          "inProgress": "En cours",
+          "finished": "Terminé",
+          "cancelled": "Annulé"
+        }
+      }
+    }
   }
 }

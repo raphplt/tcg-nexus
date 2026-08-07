@@ -12,10 +12,11 @@ import { BadgesWidget } from "./_components/BadgesWidget";
 import { ActivityChart } from "./_components/ActivityChart";
 import { DashboardSkeleton } from "./_components/DashboardSkeleton";
 import { Calendar } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const DashboardPage = () => {
   const locale = useLocale();
+  const t = useTranslations("Dashboard");
   const { user } = useAuth();
   const { data, isLoading, isError } = useDashboard();
 
@@ -37,30 +38,28 @@ const DashboardPage = () => {
         ) : isError || !data ? (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <h1 className="text-3xl font-bold">{t("title")}</h1>
               <p className="text-muted-foreground">
-                Bienvenue sur votre tableau de bord, {user.firstName} !
+                {t("welcome", { name: user.firstName })}
               </p>
             </div>
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                Impossible de charger les statistiques. Veuillez réessayer.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("loadError")}</p>
             </div>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <h1 className="text-3xl font-bold">Dashboard</h1>
+                <h1 className="text-3xl font-bold">{t("title")}</h1>
                 <p className="text-muted-foreground">
-                  Bienvenue sur votre tableau de bord, {user.firstName} !
+                  {t("welcome", { name: user.firstName })}
                 </p>
               </div>
               {memberSince && (
                 <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  Membre depuis le {memberSince}
+                  {t("memberSince", { date: memberSince })}
                 </div>
               )}
             </div>

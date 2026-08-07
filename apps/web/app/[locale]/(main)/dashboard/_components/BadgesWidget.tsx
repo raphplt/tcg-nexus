@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { DashboardBadgesData } from "@/types/dashboard";
+import { useTranslations } from "next-intl";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   sparkles: Sparkles,
@@ -37,12 +38,13 @@ interface BadgesWidgetProps {
 }
 
 export function BadgesWidget({ data }: BadgesWidgetProps) {
+  const t = useTranslations("Dashboard.badges");
   const isEmpty = data.unlocked.length === 0 && !data.nextBadge;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Badges</CardTitle>
+        <CardTitle className="text-sm font-medium">{t("title")}</CardTitle>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
             {data.unlocked.length}/{data.total}
@@ -54,9 +56,7 @@ export function BadgesWidget({ data }: BadgesWidgetProps) {
         {isEmpty ? (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <Award className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
-              Commencez à utiliser la plateforme pour débloquer des badges
-            </p>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
           </div>
         ) : (
           <div className="space-y-3">
