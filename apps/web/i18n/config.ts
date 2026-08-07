@@ -24,7 +24,9 @@ export function isSupportedLocale(value: unknown): value is SupportedLocale {
 }
 
 // Récupérer la langue depuis le pathname
-export function getLocaleFromPathname(pathname: string): SupportedLocale | null {
+export function getLocaleFromPathname(
+  pathname: string,
+): SupportedLocale | null {
   const segment = pathname.split("/")[1];
   return isSupportedLocale(segment) ? segment : null;
 }

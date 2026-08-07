@@ -9,8 +9,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { EloBadge } from "@/components/match/EloBadge";
@@ -33,6 +32,7 @@ import type {
 } from "@/types/casual-match";
 import { extractApiErrorMessage } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
+import { useLocale } from "next-intl";
 
 type MatchmakingStatus = "idle" | "queued" | "matched";
 
@@ -361,6 +361,7 @@ export function MatchmakingPanel() {
 }
 
 function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
+  const locale = useLocale();
   return (
     <div className="rounded-2xl border border-slate-600/50 bg-slate-800/50 p-4 space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -368,7 +369,7 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
           <p className="font-semibold text-white">vs {session.opponentName}</p>
           <p className="text-xs text-slate-400">
             Tour {session.turnNumber} •{" "}
-            {new Date(session.updatedAt).toLocaleString("fr-FR", {
+            {new Date(session.updatedAt).toLocaleString(locale, {
               day: "2-digit",
               month: "short",
               hour: "2-digit",

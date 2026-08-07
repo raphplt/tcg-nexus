@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/utils/price";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useLocale } from "next-intl";
 
 interface PriceChartProps {
   data: Array<{ price: number; currency: string; recordedAt: Date | string }>;
@@ -26,6 +27,7 @@ export function PriceChart({
   className,
   showTrend = true,
 }: PriceChartProps) {
+  const locale = useLocale();
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
@@ -44,7 +46,7 @@ export function PriceChart({
   // Sur l'axe on arrondit à l'unité pour éviter les libellés tronqués
   const formatAxisPrice = (value: number) => {
     try {
-      return Number(value).toLocaleString("fr-FR", {
+      return Number(value).toLocaleString(locale, {
         style: "currency",
         currency,
         maximumFractionDigits: 0,
@@ -58,7 +60,7 @@ export function PriceChart({
     .map((item) => {
       const d = new Date(item.recordedAt);
       return {
-        date: d.toLocaleDateString("fr-FR", {
+        date: d.toLocaleDateString(locale, {
           day: "2-digit",
           month: "2-digit",
         }),
@@ -79,7 +81,7 @@ export function PriceChart({
       return (
         <div className="bg-popover border border-border rounded-lg shadow-lg p-3">
           <p className="text-sm font-semibold mb-1">
-            {p.payload.fullDate.toLocaleDateString("fr-FR", {
+            {p.payload.fullDate.toLocaleDateString(locale, {
               day: "2-digit",
               month: "long",
               year: "numeric",

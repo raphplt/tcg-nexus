@@ -14,7 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1, H3 } from "@/components/Shared/Titles";

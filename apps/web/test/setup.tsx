@@ -107,6 +107,80 @@ vi.mock("next/link", () => ({
   })(),
 }));
 
+// Les composants naviguent via les wrappers localisés : même mock que next/link
+// et next/navigation, mais sur @/i18n/navigation.
+vi.mock("@/i18n/navigation", () => ({
+  __esModule: true,
+  Link: (() => {
+    const LocalizedLinkMock = React.forwardRef<HTMLAnchorElement, any>(
+      ({ href, locale: _locale, children, ...rest }, ref) => {
+        const path =
+          typeof href === "string" ? href : (href?.pathname ?? "");
+        return (
+          <a href={path} ref={ref} {...rest}>
+            {children}
+          </a>
+        );
+      },
+    );
+    LocalizedLinkMock.displayName = "LocalizedLinkMock";
+    return LocalizedLinkMock;
+  })(),
+  useRouter: () => ({ push, replace, prefetch }),
+  usePathname: () => navigationState.pathname,
+  getPathname: ({ href }: { href: string }) => href,
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
+}));
+
+// Les tests rendent des composants isolés, sans NextIntlClientProvider : on
+// résout les clés directement dans le dictionnaire français.
+vi.mock("next-intl", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next-intl")>();
+  const messages = (await import("../messages/fr.json")).default as Record<
+    string,
+    unknown
+  >;
+
+  const resolve = (path: string): unknown =>
+    path
+      .split(".")
+      .reduce<unknown>(
+        (acc, key) =>
+          acc && typeof acc === "object"
+            ? (acc as Record<string, unknown>)[key]
+            : undefined,
+        messages,
+      );
+
+  const interpolate = (text: string, values?: Record<string, unknown>) =>
+    values
+      ? text.replace(/\{(\w+)\}/g, (match, key) =>
+          key in values ? String(values[key]) : match,
+        )
+      : text;
+
+  const useTranslations = (namespace?: string) => {
+    const t = (key: string, values?: Record<string, unknown>) => {
+      const full = namespace ? `${namespace}.${key}` : key;
+      const value = resolve(full);
+      return typeof value === "string" ? interpolate(value, values) : full;
+    };
+    t.rich = (key: string, values?: Record<string, unknown>) => t(key, values);
+    t.raw = (key: string) => resolve(namespace ? `${namespace}.${key}` : key);
+    t.has = (key: string) =>
+      resolve(namespace ? `${namespace}.${key}` : key) !== undefined;
+    return t;
+  };
+
+  return {
+    ...actual,
+    useLocale: () => "fr",
+    useMessages: () => messages,
+    useTranslations,
+  };
+});
+
 vi.mock("next/image", () => ({
   __esModule: true,
   default: (props: any) => {

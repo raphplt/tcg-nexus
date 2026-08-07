@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { H1 } from "@/components/Shared/Titles";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Search, Plus, Heart, Eye, Users, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import CreateCollection from "./_components/CreateCollection";

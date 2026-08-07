@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { FavoriteButton } from "./FavoritesButton";
 import { getCardImage } from "@/utils/images";
 

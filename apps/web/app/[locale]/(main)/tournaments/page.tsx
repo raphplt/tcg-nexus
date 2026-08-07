@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -13,8 +14,7 @@ import {
   Trophy,
   Users2,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import React, { useMemo, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
@@ -53,9 +53,9 @@ const resolveBadgeVariant = (
     | "outline"
     | undefined) || fallback;
 
-const formatDate = (date?: string) => {
+const formatDate = (date: string | undefined, locale: string) => {
   if (!date) return "Date à confirmer";
-  return new Date(date).toLocaleDateString("fr-FR", {
+  return new Date(date).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -72,6 +72,7 @@ const getTournamentTypeLabel = (type: string) =>
   type;
 
 export default function TournamentsPage() {
+  const locale = useLocale();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -300,7 +301,7 @@ export default function TournamentsPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">
-                        {formatDate(spotlightTournament.startDate)}
+                        {formatDate(spotlightTournament.startDate, locale)}
                       </p>
                       <h2 className="text-2xl font-bold leading-tight">
                         {spotlightTournament.name}
@@ -358,7 +359,7 @@ export default function TournamentsPage() {
                   label="Prochaine date"
                   value={
                     spotlightTournament
-                      ? formatDate(spotlightTournament.startDate)
+                      ? formatDate(spotlightTournament.startDate, locale)
                       : "À confirmer"
                   }
                   icon={CalendarClock}
@@ -627,6 +628,7 @@ function SectionHeading({
 }
 
 function UpcomingRow({ tournament }: { tournament: Tournament }) {
+  const locale = useLocale();
   return (
     <Link
       href={`/tournaments/${tournament.id}`}
@@ -636,7 +638,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
         <div className="min-w-24 rounded-md bg-foreground px-3 py-2 text-center text-background">
           <p className="text-xs uppercase tracking-[0.18em] opacity-70">Date</p>
           <p className="mt-1 text-sm font-semibold">
-            {formatDate(tournament.startDate)}
+            {formatDate(tournament.startDate, locale)}
           </p>
         </div>
 
@@ -674,6 +676,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
 }
 
 function ResultRow({ tournament }: { tournament: Tournament }) {
+  const locale = useLocale();
   return (
     <Link
       href={`/tournaments/${tournament.id}`}
@@ -681,7 +684,7 @@ function ResultRow({ tournament }: { tournament: Tournament }) {
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {formatDate(tournament.endDate || tournament.startDate)}
+          {formatDate(tournament.endDate || tournament.startDate, locale)}
         </p>
         <p className="mt-1 font-semibold text-foreground">{tournament.name}</p>
       </div>
@@ -713,13 +716,14 @@ function TournamentBrowseCard({
   isRegistering: boolean;
   canRegister: boolean;
 }) {
+  const locale = useLocale();
   return (
     <Card className="tcg-surface tcg-surface--hover">
       <CardContent className="space-y-5 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {formatDate(tournament.startDate)}
+              {formatDate(tournament.startDate, locale)}
             </p>
             <h3 className="mt-2 text-xl font-bold leading-tight text-foreground">
               {tournament.name}

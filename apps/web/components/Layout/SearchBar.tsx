@@ -9,7 +9,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { useSearchKeyboard } from "@/hooks/useSearchKeyboard";

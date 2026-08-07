@@ -1,17 +1,19 @@
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shield, Mail, Calendar, Settings } from "lucide-react";
 import { User, UserRole } from "@/types/auth";
+import { useLocale } from "next-intl";
 
 interface ProfileHeaderProps {
   user: User;
 }
 
 export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
+  const locale = useLocale();
   const getUserInitials = (firstName: string, lastName: string) => {
     return (
       `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() ||
@@ -42,7 +44,7 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
   };
 
   const formatMemberSince = (date: Date) => {
-    return new Date(date).toLocaleDateString("fr-FR", {
+    return new Date(date).toLocaleDateString(locale, {
       month: "long",
       year: "numeric",
     });

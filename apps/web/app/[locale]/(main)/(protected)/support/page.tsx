@@ -14,13 +14,15 @@ import {
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { supportTicketService } from "@/services/support-ticket.service";
 import { SupportTicket } from "@/types/support-ticket";
 import { PaginatedResult } from "@/types/pagination";
+import { useLocale } from "next-intl";
 
 export default function SupportPage() {
+  const locale = useLocale();
   const [data, setData] = useState<PaginatedResult<SupportTicket> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -84,7 +86,7 @@ export default function SupportPage() {
                         <p className="text-sm text-muted-foreground">
                           #{ticket.id} &middot; Créé le{" "}
                           {new Date(ticket.createdAt).toLocaleDateString(
-                            "fr-FR",
+                            locale,
                           )}
                         </p>
                       </div>

@@ -1,13 +1,15 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Layers, Plus, TrendingUp } from "lucide-react";
 import type { DashboardCollectionData } from "@/types/dashboard";
+import { useLocale } from "next-intl";
 
 interface CollectionWidgetProps {
   data: DashboardCollectionData;
 }
 
 export function CollectionWidget({ data }: CollectionWidgetProps) {
+  const locale = useLocale();
   const isEmpty = data.totalCards === 0;
 
   return (
@@ -43,7 +45,7 @@ export function CollectionWidget({ data }: CollectionWidgetProps) {
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Valeur estimée</span>
               <span className="font-semibold">
-                {data.estimatedValue.toLocaleString("fr-FR", {
+                {data.estimatedValue.toLocaleString(locale, {
                   style: "currency",
                   currency: "EUR",
                 })}

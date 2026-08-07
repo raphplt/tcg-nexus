@@ -12,15 +12,17 @@ import { BadgesWidget } from "./_components/BadgesWidget";
 import { ActivityChart } from "./_components/ActivityChart";
 import { DashboardSkeleton } from "./_components/DashboardSkeleton";
 import { Calendar } from "lucide-react";
+import { useLocale } from "next-intl";
 
 const DashboardPage = () => {
+  const locale = useLocale();
   const { user } = useAuth();
   const { data, isLoading, isError } = useDashboard();
 
   if (!user) return null;
 
   const memberSince = data?.user.memberSince
-    ? new Date(data.user.memberSince).toLocaleDateString("fr-FR", {
+    ? new Date(data.user.memberSince).toLocaleDateString(locale, {
         day: "numeric",
         month: "long",
         year: "numeric",

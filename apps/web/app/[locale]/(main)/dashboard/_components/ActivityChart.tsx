@@ -12,14 +12,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { DashboardActivityDay } from "@/types/dashboard";
+import { useLocale } from "next-intl";
 
 interface ActivityChartProps {
   data: DashboardActivityDay[];
 }
 
-function formatDayLabel(dateStr: string): string {
+function formatDayLabel(dateStr: string, locale: string): string {
   const date = new Date(dateStr + "T00:00:00");
-  return date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
 }
 
 function CustomTooltip(props: {
@@ -27,13 +28,14 @@ function CustomTooltip(props: {
   payload?: Array<{ value: number }>;
   label?: string;
 }) {
+  const locale = useLocale();
   const { active, payload, label } = props;
   if (!active || !payload || payload.length === 0 || !label) return null;
 
   const first = payload[0] as { value: number };
   const value = first.value;
   const date = new Date(label + "T00:00:00");
-  const formatted = date.toLocaleDateString("fr-FR", {
+  const formatted = date.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -50,11 +52,12 @@ function CustomTooltip(props: {
 }
 
 export function ActivityChart({ data }: ActivityChartProps) {
+  const locale = useLocale();
   const hasActivity = data.some((d) => d.events > 0);
 
   const chartData = data.map((d) => ({
     ...d,
-    label: formatDayLabel(d.date),
+    label: formatDayLabel(d.date, locale),
   }));
 
   return (

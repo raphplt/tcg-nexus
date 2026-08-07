@@ -1,8 +1,11 @@
 "use client";
 
 import { ArrowRight, Clock, LayoutGrid, Swords } from "lucide-react";
-import Link from "next/link";
-import { getPlayerName, TabMatchesProps } from "@/app/[locale]/(main)/tournaments/utils";
+import { Link } from "@/i18n/navigation";
+import {
+  getPlayerName,
+  TabMatchesProps,
+} from "@/app/[locale]/(main)/tournaments/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

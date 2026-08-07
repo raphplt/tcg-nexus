@@ -6,7 +6,7 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { tournamentService } from "@/services/tournament.service";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 
 const TournamentPreview = () => {
@@ -41,9 +41,14 @@ const TournamentPreview = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <div className="font-semibold truncate">{tournament.name}</div>
+                  <div className="font-semibold truncate">
+                    {tournament.name}
+                  </div>
                   {tournament.isExternal && (
-                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] py-0 px-1.5 h-4 select-none"
+                    >
                       Externe
                     </Badge>
                   )}

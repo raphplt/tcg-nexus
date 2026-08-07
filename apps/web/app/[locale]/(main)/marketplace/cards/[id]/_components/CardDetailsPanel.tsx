@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { PokemonCardType } from "@/types/cardPokemon";
 import { typeToImage } from "@/utils/images";
 import { slugify } from "@/utils/text";
+import { useLocale } from "next-intl";
 
 interface CardDetailsPanelProps {
   card: PokemonCardType;
@@ -42,6 +43,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
+  const locale = useLocale();
   const hasCombat =
     (card.attacks?.length ?? 0) > 0 || (card.abilities?.length ?? 0) > 0;
   const hasResistances =
@@ -158,7 +160,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
               <InfoRow
                 label="Date de sortie"
                 value={new Date(card.set.releaseDate).toLocaleDateString(
-                  "fr-FR",
+                  locale,
                 )}
               />
             )}

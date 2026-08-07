@@ -1,20 +1,22 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Plus } from "lucide-react";
 import type { DashboardMarketplaceData } from "@/types/dashboard";
+import { useLocale } from "next-intl";
 
 interface MarketplaceWidgetProps {
   data: DashboardMarketplaceData;
 }
 
 export function MarketplaceWidget({ data }: MarketplaceWidgetProps) {
+  const locale = useLocale();
   const isEmpty =
     data.activeListings === 0 &&
     data.totalPurchases === 0 &&
     data.totalRevenue === 0;
 
   const formatCurrency = (value: number) =>
-    value.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+    value.toLocaleString(locale, { style: "currency", currency: "EUR" });
 
   return (
     <Card>

@@ -1,5 +1,5 @@
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import {
   Trophy,
   Calendar,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tournament } from "@/types/tournament";
+import { useLocale } from "next-intl";
 
 interface TournamentListProps {
   tournaments: Tournament[];
@@ -27,6 +28,7 @@ export function TournamentList({
   showRanking = false,
   userId,
 }: TournamentListProps) {
+  const locale = useLocale();
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -51,7 +53,7 @@ export function TournamentList({
   }
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("fr-FR", {
+    return new Date(date).toLocaleDateString(locale, {
       day: "2-digit",
       month: "short",
       year: "numeric",

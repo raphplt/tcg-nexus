@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Layers } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { decksService } from "@/services/decks.service";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Skeleton } from "../ui/skeleton";
 
 const TrendingDecks = () => {

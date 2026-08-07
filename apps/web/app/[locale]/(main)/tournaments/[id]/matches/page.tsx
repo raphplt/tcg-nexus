@@ -13,8 +13,8 @@ import {
   Trophy,
   X,
 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import { H1 } from "@/components/Shared/Titles";
 import {
@@ -53,8 +53,10 @@ import { useMatches } from "@/hooks/useMatches";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useTournament } from "@/hooks/useTournament";
 import { ResetMatchDialog } from "./_components/ResetMatchDialog";
+import { useLocale } from "next-intl";
 
 export default function MatchesPage() {
+  const locale = useLocale();
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -154,7 +156,7 @@ export default function MatchesPage() {
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
-    return new Date(date).toLocaleTimeString("fr-FR", {
+    return new Date(date).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     });

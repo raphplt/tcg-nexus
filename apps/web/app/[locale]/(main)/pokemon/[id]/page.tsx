@@ -1,7 +1,7 @@
-import { permanentRedirect } from "next/navigation";
+import { permanentRedirect } from "@/i18n/navigation";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }
 
 /**
@@ -9,6 +9,6 @@ interface PageProps {
  * On conserve l'ancienne URL pour ne pas casser les liens existants.
  */
 export default async function PokemonCardRedirectPage({ params }: PageProps) {
-  const { id } = await params;
-  permanentRedirect(`/marketplace/cards/${id}`);
+  const { id, locale } = await params;
+  permanentRedirect({ href: `/marketplace/cards/${id}`, locale });
 }

@@ -10,8 +10,8 @@ import {
   RotateCcw,
   Trophy,
 } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import GameBoard from "@/components/match/GameBoard";
 import { H1 } from "@/components/Shared/Titles";
@@ -26,8 +26,10 @@ import { tournamentService } from "@/services/tournament.service";
 import { Match } from "@/types/tournament";
 import { MatchScoreForm } from "../_components/MatchScoreForm";
 import { ResetMatchDialog } from "../_components/ResetMatchDialog";
+import { useLocale } from "next-intl";
 
 export default function MatchPage() {
+  const locale = useLocale();
   const { id, matchId } = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -66,7 +68,7 @@ export default function MatchPage() {
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
-    return new Date(date).toLocaleString("fr-FR", {
+    return new Date(date).toLocaleString(locale, {
       day: "2-digit",
       month: "short",
       year: "numeric",

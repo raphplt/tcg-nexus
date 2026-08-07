@@ -1,9 +1,9 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Bot, Loader2, Sparkles, Swords } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -360,6 +360,8 @@ export function TrainingLobbyPanel() {
 }
 
 function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
+  const locale = useLocale();
+
   return (
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -378,7 +380,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-        <span>Mise à jour {formatTrainingDate(session.updatedAt)}</span>
+        <span>Mise à jour {formatTrainingDate(session.updatedAt, locale)}</span>
         <Button asChild variant="outline" className="rounded-full">
           <Link href={`/play/training/${session.sessionId}`}>
             Reprendre
@@ -390,8 +392,8 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
   );
 }
 
-function formatTrainingDate(date: string) {
-  return new Date(date).toLocaleString("fr-FR", {
+function formatTrainingDate(date: string, locale: string) {
+  return new Date(date).toLocaleString(locale, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",

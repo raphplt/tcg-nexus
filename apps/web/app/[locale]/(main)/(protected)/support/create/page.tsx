@@ -20,10 +20,9 @@ import React, { useState } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { CreateSupportTicketDto } from "@/types/support-ticket";
 import { supportTicketService } from "@/services/support-ticket.service";
-import Link from "next/link";
 
 const formSchema = z.object({
   subject: z

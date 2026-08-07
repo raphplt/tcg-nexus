@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,20 +15,8 @@ import {
 import { marketplaceService } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 
-// Translations
-const translations = {
-  home: "Accueil",
-  marketplace: "Marketplace",
-  cards: "Cartes",
-  cardDetail: "Détail de la carte",
-  sealed: "Produits scellés",
-  sealedDetail: "Détail produit",
-  sellers: "Vendeurs",
-  sellerDetail: "Profil vendeur",
-  create: "Créer une vente",
-};
-
 export function MarketplaceBreadcrumb() {
+  const t = useTranslations("Breadcrumb");
   const pathname = usePathname();
   const params = useParams();
 
@@ -57,7 +46,7 @@ export function MarketplaceBreadcrumb() {
   breadcrumbs.push(
     <BreadcrumbItem key="home">
       <BreadcrumbLink asChild>
-        <Link href="/">{translations.home}</Link>
+        <Link href="/">{t("home")}</Link>
       </BreadcrumbLink>
     </BreadcrumbItem>,
   );
@@ -68,10 +57,10 @@ export function MarketplaceBreadcrumb() {
       <BreadcrumbSeparator key="sep-1" />,
       <BreadcrumbItem key="marketplace">
         {pathname === "/marketplace" ? (
-          <BreadcrumbPage>{translations.marketplace}</BreadcrumbPage>
+          <BreadcrumbPage>{t("marketplace")}</BreadcrumbPage>
         ) : (
           <BreadcrumbLink asChild>
-            <Link href="/marketplace">{translations.marketplace}</Link>
+            <Link href="/marketplace">{t("marketplace")}</Link>
           </BreadcrumbLink>
         )}
       </BreadcrumbItem>,
@@ -83,10 +72,10 @@ export function MarketplaceBreadcrumb() {
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="cards">
           {pathname === "/marketplace/cards" ? (
-            <BreadcrumbPage>{translations.cards}</BreadcrumbPage>
+            <BreadcrumbPage>{t("cards")}</BreadcrumbPage>
           ) : (
             <BreadcrumbLink asChild>
-              <Link href="/marketplace/cards">{translations.cards}</Link>
+              <Link href="/marketplace/cards">{t("cards")}</Link>
             </BreadcrumbLink>
           )}
         </BreadcrumbItem>,
@@ -97,9 +86,7 @@ export function MarketplaceBreadcrumb() {
         breadcrumbs.push(
           <BreadcrumbSeparator key="sep-3" />,
           <BreadcrumbItem key="card-detail">
-            <BreadcrumbPage>
-              {card?.name || translations.cardDetail}
-            </BreadcrumbPage>
+            <BreadcrumbPage>{card?.name || t("cardDetail")}</BreadcrumbPage>
           </BreadcrumbItem>,
         );
       }
@@ -111,10 +98,10 @@ export function MarketplaceBreadcrumb() {
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="sealed">
           {pathname === "/marketplace/sealed" ? (
-            <BreadcrumbPage>{translations.sealed}</BreadcrumbPage>
+            <BreadcrumbPage>{t("sealed")}</BreadcrumbPage>
           ) : (
             <BreadcrumbLink asChild>
-              <Link href="/marketplace/sealed">{translations.sealed}</Link>
+              <Link href="/marketplace/sealed">{t("sealed")}</Link>
             </BreadcrumbLink>
           )}
         </BreadcrumbItem>,
@@ -124,7 +111,7 @@ export function MarketplaceBreadcrumb() {
         breadcrumbs.push(
           <BreadcrumbSeparator key="sep-3" />,
           <BreadcrumbItem key="sealed-detail">
-            <BreadcrumbPage>{translations.sealedDetail}</BreadcrumbPage>
+            <BreadcrumbPage>{t("sealedDetail")}</BreadcrumbPage>
           </BreadcrumbItem>,
         );
       }
@@ -136,10 +123,10 @@ export function MarketplaceBreadcrumb() {
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="sellers">
           {pathname === "/marketplace/sellers" ? (
-            <BreadcrumbPage>{translations.sellers}</BreadcrumbPage>
+            <BreadcrumbPage>{t("sellers")}</BreadcrumbPage>
           ) : (
             <BreadcrumbLink asChild>
-              <Link href="/marketplace/sellers">{translations.sellers}</Link>
+              <Link href="/marketplace/sellers">{t("sellers")}</Link>
             </BreadcrumbLink>
           )}
         </BreadcrumbItem>,
@@ -153,7 +140,7 @@ export function MarketplaceBreadcrumb() {
             <BreadcrumbPage>
               {seller
                 ? `${seller.firstName} ${seller.lastName}`
-                : translations.sellerDetail}
+                : t("sellerDetail")}
             </BreadcrumbPage>
           </BreadcrumbItem>,
         );
@@ -165,7 +152,7 @@ export function MarketplaceBreadcrumb() {
       breadcrumbs.push(
         <BreadcrumbSeparator key="sep-2" />,
         <BreadcrumbItem key="create">
-          <BreadcrumbPage>{translations.create}</BreadcrumbPage>
+          <BreadcrumbPage>{t("create")}</BreadcrumbPage>
         </BreadcrumbItem>,
       );
     }

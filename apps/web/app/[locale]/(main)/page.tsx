@@ -1,7 +1,7 @@
 "use client";
 
 import { LayoutDashboard, LibraryBig } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React from "react";
 import LatestArticles from "@/components/Home/LatestArticles";
 import MarketplacePreview from "@/components/Home/MarketplacePreview";

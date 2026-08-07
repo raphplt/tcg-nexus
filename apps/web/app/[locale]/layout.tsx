@@ -53,7 +53,10 @@ export async function generateMetadata({
     applicationName: "TCG Nexus",
     alternates: {
       canonical: `/${locale}`,
-      languages: { ...alternateLanguages, "x-default": `/${routing.defaultLocale}` },
+      languages: {
+        ...alternateLanguages,
+        "x-default": `/${routing.defaultLocale}`,
+      },
     },
     openGraph: {
       type: "website",

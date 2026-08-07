@@ -36,6 +36,7 @@ import { AdminOrderFilters, adminService } from "@/services/admin.service";
 import { Order, OrderStatus } from "@/types/order";
 import { PaginatedResult } from "@/types/pagination";
 import { getFulfillmentLabel } from "@/utils/order";
+import { useLocale } from "next-intl";
 
 const statusOptions = Object.values(OrderStatus);
 
@@ -58,6 +59,7 @@ interface StatusModalState {
 }
 
 export function AdminOrdersTable() {
+  const locale = useLocale();
   const [filters, setFilters] = useState<AdminOrderFilters>({
     page: 1,
     limit: 10,
@@ -262,7 +264,7 @@ export function AdminOrdersTable() {
                     </TableCell>
                     <TableCell>{statusBadge(order.status)}</TableCell>
                     <TableCell>
-                      {new Date(order.createdAt).toLocaleString("fr-FR")}
+                      {new Date(order.createdAt).toLocaleString(locale)}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Dialog

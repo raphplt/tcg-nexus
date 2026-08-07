@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";

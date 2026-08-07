@@ -2,7 +2,7 @@
 
 import { Flame, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SmartImage } from "@/components/ui/SmartImage";

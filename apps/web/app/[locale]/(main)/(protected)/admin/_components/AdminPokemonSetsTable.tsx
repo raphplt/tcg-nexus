@@ -45,6 +45,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "react-hot-toast";
 import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { useLocale } from "next-intl";
 
 type SetFormState = {
   id: string;
@@ -81,6 +82,7 @@ const defaultSetForm: SetFormState = {
 };
 
 export function AdminPokemonSetsTable() {
+  const locale = useLocale();
   const [sets, setSets] = useState<PokemonSetType[]>([]);
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -197,7 +199,10 @@ export function AdminPokemonSetsTable() {
       throw new Error("Veuillez d'abord créer l'extension");
     }
     try {
-      const response = await adminService.uploadPokemonSetLogo(editing.id, file);
+      const response = await adminService.uploadPokemonSetLogo(
+        editing.id,
+        file,
+      );
       toast.success("Logo téléversé avec succès");
       setForm((prev) => ({ ...prev, logo: response.logo || "" }));
       await loadSets();
@@ -215,7 +220,10 @@ export function AdminPokemonSetsTable() {
       throw new Error("Veuillez d'abord créer l'extension");
     }
     try {
-      const response = await adminService.uploadPokemonSetSymbol(editing.id, file);
+      const response = await adminService.uploadPokemonSetSymbol(
+        editing.id,
+        file,
+      );
       toast.success("Symbole téléversé avec succès");
       setForm((prev) => ({ ...prev, symbol: response.symbol || "" }));
       await loadSets();
@@ -304,9 +312,7 @@ export function AdminPokemonSetsTable() {
                       <div className="flex items-center gap-2">
                         <CalendarDays className="h-4 w-4" />
                         {set.releaseDate
-                          ? new Date(set.releaseDate).toLocaleDateString(
-                              "fr-FR",
-                            )
+                          ? new Date(set.releaseDate).toLocaleDateString(locale)
                           : "-"}
                       </div>
                     </TableCell>
@@ -439,13 +445,16 @@ export function AdminPokemonSetsTable() {
               {editing ? (
                 <ImageUpload
                   value={form.logo}
-                  onChange={(url) => setForm((prev) => ({ ...prev, logo: url || "" }))}
+                  onChange={(url) =>
+                    setForm((prev) => ({ ...prev, logo: url || "" }))
+                  }
                   onUpload={handleUploadLogo}
                   label="Logo"
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer l'extension pour pouvoir y associer un logo.
+                  Veuillez d'abord créer l'extension pour pouvoir y associer un
+                  logo.
                 </div>
               )}
             </div>
@@ -454,13 +463,16 @@ export function AdminPokemonSetsTable() {
               {editing ? (
                 <ImageUpload
                   value={form.symbol}
-                  onChange={(url) => setForm((prev) => ({ ...prev, symbol: url || "" }))}
+                  onChange={(url) =>
+                    setForm((prev) => ({ ...prev, symbol: url || "" }))
+                  }
                   onUpload={handleUploadSymbol}
                   label="Symbole"
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer l'extension pour pouvoir y associer un symbole.
+                  Veuillez d'abord créer l'extension pour pouvoir y associer un
+                  symbole.
                 </div>
               )}
             </div>

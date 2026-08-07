@@ -24,9 +24,9 @@ import {
   Trophy,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,6 +51,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NavItem, navItems } from "@/utils/sidebar";
 
 export function AppSidebar() {
+  const t = useTranslations("Sidebar");
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
 
@@ -80,11 +81,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton
-                tooltip={item.label}
+                tooltip={t(item.labelKey)}
                 className={isGroupActive(item) ? activeClass : inactiveClass}
               >
                 <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
                 <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
@@ -95,7 +96,7 @@ export function AppSidebar() {
                     <SidebarMenuSubButton asChild isActive={isActive(sub.href)}>
                       <Link href={sub.href}>
                         <sub.icon className="h-4 w-4" />
-                        <span>{sub.label}</span>
+                        <span>{t(sub.labelKey)}</span>
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
@@ -112,12 +113,12 @@ export function AppSidebar() {
         <SidebarMenuButton
           asChild
           isActive={isActive(item.href)}
-          tooltip={item.label}
+          tooltip={t(item.labelKey)}
           className={isActive(item.href) ? activeClass : inactiveClass}
         >
           <Link href={item.href}>
             <item.icon className="h-5 w-5" />
-            <span>{item.label}</span>
+            <span>{t(item.labelKey)}</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -155,14 +156,14 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groupNavigation")}</SidebarGroupLabel>
           <SidebarMenu>
             {filterItems(navItems.main).map(renderNavItem)}
           </SidebarMenu>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Découvrir</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groupDiscover")}</SidebarGroupLabel>
           <SidebarMenu>
             {filterItems(navItems.discover).map(renderNavItem)}
           </SidebarMenu>
@@ -170,7 +171,7 @@ export function AppSidebar() {
 
         {isAuthenticated && (
           <SidebarGroup>
-            <SidebarGroupLabel>Mon espace</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("groupMySpace")}</SidebarGroupLabel>
             <SidebarMenu>
               {filterItems(navItems.user).map(renderNavItem)}
             </SidebarMenu>
@@ -178,7 +179,7 @@ export function AppSidebar() {
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Aide</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groupHelp")}</SidebarGroupLabel>
           <SidebarMenu>
             {filterItems(navItems.secondary).map(renderNavItem)}
           </SidebarMenu>
@@ -186,7 +187,7 @@ export function AppSidebar() {
 
         {user?.role === "admin" && (
           <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupLabel>{t("groupAdmin")}</SidebarGroupLabel>
             <SidebarMenu>
               {filterItems(navItems.admin).map(renderNavItem)}
             </SidebarMenu>
@@ -216,10 +217,10 @@ export function AppSidebar() {
         ) : (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Se connecter">
+              <SidebarMenuButton asChild tooltip={t("login")}>
                 <Link href="/auth/login">
                   <LogIn className="h-5 w-5" />
-                  <span>Se connecter</span>
+                  <span>{t("login")}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -6,7 +6,7 @@ import { collectionService } from "@/services/collection.service";
 import { Collection, CollectionItemType } from "@/types/collection";
 import Image from "next/image";
 import { Search, Info, Eye, Calendar, Package, Lock, User } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import {
   Table,
   TableBody,
@@ -45,8 +45,10 @@ import { PokemonCardType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/types/pagination";
 import { getCardImage } from "@/utils/images";
+import { useLocale } from "next-intl";
 
 const CollectionDetailPage = () => {
+  const locale = useLocale();
   const { id } = useParams();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
@@ -129,7 +131,7 @@ const CollectionDetailPage = () => {
 
   // Formater la date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
+    return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
       month: "long",
       year: "numeric",

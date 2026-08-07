@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, Pencil } from "lucide-react";
+import { useLocale } from "next-intl";
 
 interface UserFormState {
   email: string;
@@ -67,6 +68,7 @@ const emptyForm: UserFormState = {
 };
 
 export function AdminUsersTable() {
+  const locale = useLocale();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -223,7 +225,7 @@ export function AdminUsersTable() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+                      {new Date(user.createdAt).toLocaleDateString(locale)}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button

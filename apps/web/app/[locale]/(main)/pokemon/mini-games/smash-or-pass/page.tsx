@@ -13,7 +13,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { FavoriteButton } from "@/components/Home/FavoritesButton";
@@ -373,11 +373,7 @@ export default function PokemonMatchPage() {
           <div className="tcg-surface flex items-center justify-between gap-3 px-4 py-2.5 bg-card/50 backdrop-blur-sm">
             <div className="flex items-center gap-2.5">
               <Link href="/pokemon/mini-games">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 w-8 p-0"
-                >
+                <Button size="sm" variant="outline" className="h-8 w-8 p-0">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>

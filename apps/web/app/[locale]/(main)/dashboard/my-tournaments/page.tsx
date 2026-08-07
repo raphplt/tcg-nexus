@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { tournamentService } from "@/services/tournament.service";
 import { Tournament } from "@/types/tournament";
 import { PaginatedResult } from "@/types/pagination";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { TournamentStats } from "./components/TournamentStats";
 import { TournamentList } from "./components/TournamentList";
 

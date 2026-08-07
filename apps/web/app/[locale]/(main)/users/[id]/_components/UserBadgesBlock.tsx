@@ -5,12 +5,14 @@ import { Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { badgeService } from "@/services/badge.service";
+import { useLocale } from "next-intl";
 
 interface UserBadgesBlockProps {
   userId: number;
 }
 
 export function UserBadgesBlock({ userId }: UserBadgesBlockProps) {
+  const locale = useLocale();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-badges", userId],
     queryFn: () => badgeService.getUserBadges(userId),
@@ -50,7 +52,7 @@ export function UserBadgesBlock({ userId }: UserBadgesBlockProps) {
               <div>
                 <p className="font-medium">{ub.badge.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {new Date(ub.unlockedAt).toLocaleDateString("fr-FR")}
+                  {new Date(ub.unlockedAt).toLocaleDateString(locale)}
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { ArrowRight, Package } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React from "react";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
 import { sealedProductTypeLabels } from "@/types/sealed-product";

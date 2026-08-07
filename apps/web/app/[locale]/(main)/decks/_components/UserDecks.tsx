@@ -3,7 +3,7 @@ import { Button } from "@components/ui/button";
 import { Skeleton } from "@components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Download, Plus, User as UserIcon } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { decksService } from "@/services/decks.service";
 import DeckCard from "./DeckCard";

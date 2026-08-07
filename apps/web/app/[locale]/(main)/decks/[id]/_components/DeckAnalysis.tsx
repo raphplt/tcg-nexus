@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { DeckAnalysis } from "@/types/deck-analysis";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

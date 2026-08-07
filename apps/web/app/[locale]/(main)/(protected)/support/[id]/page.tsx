@@ -16,7 +16,7 @@ import {
   User as UserIcon,
   ShieldCheck,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { supportTicketService } from "@/services/support-ticket.service";
@@ -26,8 +26,10 @@ import {
 } from "@/types/support-ticket";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { useLocale } from "next-intl";
 
 export default function SupportTicketDetailPage() {
+  const locale = useLocale();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [ticket, setTicket] = useState<SupportTicketWithMessages | null>(null);
@@ -154,7 +156,7 @@ export default function SupportTicketDetailPage() {
               </H1>
               <p className="text-sm text-muted-foreground mt-1">
                 Ticket #{ticket.id} &middot; Créé le{" "}
-                {new Date(ticket.createdAt).toLocaleDateString("fr-FR", {
+                {new Date(ticket.createdAt).toLocaleDateString(locale, {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -225,6 +227,7 @@ function MessageBubble({
   message: SupportTicketMessage;
   isOwn: boolean;
 }) {
+  const locale = useLocale();
   const displayName = message.user
     ? `${message.user.firstName} ${message.user.lastName}`
     : "Utilisateur";
@@ -252,7 +255,7 @@ function MessageBubble({
             {message.isStaff ? `${displayName} (Staff)` : displayName}
           </span>
           <span className="text-xs text-muted-foreground">
-            {new Date(message.createdAt).toLocaleString("fr-FR", {
+            {new Date(message.createdAt).toLocaleString(locale, {
               day: "2-digit",
               month: "2-digit",
               hour: "2-digit",

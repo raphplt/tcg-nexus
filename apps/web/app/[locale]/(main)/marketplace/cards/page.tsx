@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { CardListItem } from "@/components/Marketplace/CardListItem";

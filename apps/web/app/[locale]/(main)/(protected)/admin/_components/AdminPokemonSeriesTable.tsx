@@ -133,7 +133,10 @@ export function AdminPokemonSeriesTable() {
       throw new Error("Veuillez d'abord créer la série");
     }
     try {
-      const response = await adminService.uploadPokemonSerieLogo(editing.id, file);
+      const response = await adminService.uploadPokemonSerieLogo(
+        editing.id,
+        file,
+      );
       toast.success("Logo téléversé avec succès");
       setForm((prev) => ({ ...prev, logo: response.logo || "" }));
       await loadSeries();
@@ -286,13 +289,16 @@ export function AdminPokemonSeriesTable() {
               {editing ? (
                 <ImageUpload
                   value={form.logo}
-                  onChange={(url) => setForm((prev) => ({ ...prev, logo: url || "" }))}
+                  onChange={(url) =>
+                    setForm((prev) => ({ ...prev, logo: url || "" }))
+                  }
                   onUpload={handleUploadLogo}
                   label="Logo"
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer la série pour pouvoir y associer un logo.
+                  Veuillez d'abord créer la série pour pouvoir y associer un
+                  logo.
                 </div>
               )}
             </div>

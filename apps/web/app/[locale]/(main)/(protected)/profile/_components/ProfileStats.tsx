@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Trophy, TrendingUp, Award } from "lucide-react";
+import { useLocale } from "next-intl";
 import type {
   DashboardTournamentsData,
   DashboardBadgesData,
@@ -13,6 +14,7 @@ interface ProfileStatsProps {
 }
 
 export const ProfileStats = ({ tournaments, badges }: ProfileStatsProps) => {
+  const locale = useLocale();
   const hasTournamentData = tournaments && tournaments.played > 0;
   const hasBadges = badges && badges.unlocked.length > 0;
 
@@ -104,7 +106,7 @@ export const ProfileStats = ({ tournaments, badges }: ProfileStatsProps) => {
                 <div>
                   <p className="font-medium">{badge.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(badge.unlockedAt).toLocaleDateString("fr-FR")}
+                    {new Date(badge.unlockedAt).toLocaleDateString(locale)}
                   </p>
                 </div>
               </div>

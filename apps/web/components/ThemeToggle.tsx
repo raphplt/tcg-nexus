@@ -15,7 +15,6 @@ export function ThemeToggle() {
     }
   };
 
-  // Éviter le scintillement lors du montage
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" disabled className="h-9 w-9 relative">

@@ -8,7 +8,7 @@ import {
   Settings2,
   Trophy,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React from "react";
 import { H1 } from "@/components/Shared/Titles";
 import { Badge } from "@/components/ui/badge";

@@ -14,7 +14,7 @@ import type { PaginatedResult } from "@/types/pagination";
 import { tournamentService } from "@/services/tournament.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 export interface Filters {
   search: string;
@@ -145,7 +145,10 @@ export function TournamentsTable({
                     {tournament.name}
                   </div>
                   {tournament.isExternal && (
-                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 select-none">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] py-0 px-1.5 h-4 select-none"
+                    >
                       Externe
                     </Badge>
                   )}

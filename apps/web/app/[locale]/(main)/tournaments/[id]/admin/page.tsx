@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft, BarChart3, Eye, Swords, Trophy, Users } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { H1 } from "@/components/Shared/Titles";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +20,10 @@ import { TournamentControls } from "../_components/TournamentControls";
 import { MatchManager } from "./_components/MatchManager";
 import { RankingsManager } from "./_components/RankingsManager";
 import { RegistrationManager } from "./_components/RegistrationManager";
+import { useLocale } from "next-intl";
 
 export default function TournamentAdminPage() {
+  const locale = useLocale();
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -72,7 +74,7 @@ export default function TournamentAdminPage() {
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
-    return new Date(date).toLocaleString("fr-FR", {
+    return new Date(date).toLocaleString(locale, {
       day: "2-digit",
       month: "short",
       year: "numeric",

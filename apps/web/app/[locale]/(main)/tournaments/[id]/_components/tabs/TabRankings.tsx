@@ -1,7 +1,7 @@
 "use client";
 
 import { Award, Medal, TrendingUp, Trophy } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

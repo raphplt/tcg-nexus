@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, Package, Sparkles, Star } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
 import { H2 } from "@/components/Shared/Titles";
 import { Button } from "@/components/ui/button";

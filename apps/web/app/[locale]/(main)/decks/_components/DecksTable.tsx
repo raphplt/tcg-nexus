@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowUp, ArrowDown, Trash2, Pencil } from "lucide-react";
 import type { PaginatedResult } from "@/types/pagination";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Deck } from "@/types/Decks";
 import { Button } from "@components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";

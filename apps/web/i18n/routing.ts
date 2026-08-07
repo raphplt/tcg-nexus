@@ -1,5 +1,9 @@
 import { defineRouting } from "next-intl/routing";
-import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME, SUPPORTED_LOCALES } from "./config";
+import {
+  DEFAULT_LOCALE,
+  LOCALE_COOKIE_NAME,
+  SUPPORTED_LOCALES,
+} from "./config";
 
 export const routing = defineRouting({
   locales: SUPPORTED_LOCALES,

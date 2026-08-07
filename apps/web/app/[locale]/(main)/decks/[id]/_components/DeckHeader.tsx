@@ -12,9 +12,8 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link, useRouter } from "@/i18n/navigation";
 import { getCardImage } from "@/utils/images";
-import { useRouter } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
 interface DeckHeaderProps {

@@ -18,8 +18,9 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   type ComponentType,
   type ReactNode,
@@ -144,12 +145,13 @@ const isPlayTab = (value: string | null): value is PlayTab =>
   value === "tournois" || value === "ia" || value === "duel";
 
 const formatPlayDate = (
+  locale: string,
   date?: string | null,
   fallback = "Date à confirmer",
 ) => {
   if (!date) return fallback;
 
-  return new Date(date).toLocaleString("fr-FR", {
+  return new Date(date).toLocaleString(locale, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -191,11 +193,11 @@ const getMatchBucket = (
 const getMatchActionLabel = (status: PlayHubMatchSummary["status"]) =>
   status === "in_progress" ? "Reprendre" : "Ouvrir la table";
 
-const getMatchActivity = (match: PlayHubMatchSummary) => {
+const getMatchActivity = (match: PlayHubMatchSummary, locale: string) => {
   if (match.status === "in_progress") {
     return {
       label: "En cours depuis",
-      value: formatPlayDate(match.startedAt, "Partie en direct"),
+      value: formatPlayDate(locale, match.startedAt, "Partie en direct"),
       updatedAt: match.startedAt || match.scheduledDate || null,
     };
   }
@@ -203,7 +205,11 @@ const getMatchActivity = (match: PlayHubMatchSummary) => {
   if (match.status === "scheduled") {
     return {
       label: "Prévu pour",
-      value: formatPlayDate(match.scheduledDate, "Table prête à lancer"),
+      value: formatPlayDate(
+        locale,
+        match.scheduledDate,
+        "Table prête à lancer",
+      ),
       updatedAt: match.scheduledDate || null,
     };
   }
@@ -211,6 +217,7 @@ const getMatchActivity = (match: PlayHubMatchSummary) => {
   return {
     label: "Dernière activité",
     value: formatPlayDate(
+      locale,
       match.finishedAt || match.startedAt || match.scheduledDate,
       "Historique disponible",
     ),
@@ -761,6 +768,7 @@ function PlayResumeStrip({
 }
 
 function ResumeCard({ item }: { item: ResumeItem }) {
+  const locale = useLocale();
   return (
     <Card
       className={cn(
@@ -793,7 +801,7 @@ function ResumeCard({ item }: { item: ResumeItem }) {
           <Clock3 className="h-4 w-4 text-muted-foreground" />
           <span>
             {item.updatedAt
-              ? `Dernière activité ${formatPlayDate(item.updatedAt)}`
+              ? `Dernière activité ${formatPlayDate(locale, item.updatedAt)}`
               : "Mise à jour dès que disponible"}
           </span>
         </div>
@@ -976,7 +984,8 @@ function PlayerMatchCard({
   record: PlayerMatchRecord;
   compact?: boolean;
 }) {
-  const activity = getMatchActivity(record.match);
+  const locale = useLocale();
+  const activity = getMatchActivity(record.match, locale);
 
   return (
     <Card
@@ -1401,6 +1410,7 @@ function PlayTrainingTab({
 }
 
 function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
+  const locale = useLocale();
   return (
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1419,7 +1429,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>Mise à jour {formatPlayDate(session.updatedAt)}</span>
+        <span>Mise à jour {formatPlayDate(locale, session.updatedAt)}</span>
         <Button asChild variant="outline" className="">
           <Link href={`/play/training/${session.sessionId}`}>
             Continuer
@@ -1776,6 +1786,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
 }
 
 function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
+  const locale = useLocale();
   return (
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1793,7 +1804,7 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>Mise à jour {formatPlayDate(session.updatedAt)}</span>
+        <span>Mise à jour {formatPlayDate(locale, session.updatedAt)}</span>
         <Button asChild variant="outline" className="">
           <Link href={`/play/casual/${session.sessionId}`}>
             Continuer

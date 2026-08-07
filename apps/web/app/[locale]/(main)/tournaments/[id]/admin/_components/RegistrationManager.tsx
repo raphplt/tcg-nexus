@@ -48,6 +48,7 @@ import {
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
 import { extractApiErrorMessage } from "@/utils/api-error";
+import { useLocale } from "next-intl";
 
 type BulkAction = "confirm" | "cancel" | "check_in";
 
@@ -77,6 +78,7 @@ export function RegistrationManager({
   tournamentId,
   tournamentStatus,
 }: RegistrationManagerProps) {
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>(
     [],
@@ -261,7 +263,7 @@ export function RegistrationManager({
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleString("fr-FR", {
+    return new Date(date).toLocaleString(locale, {
       day: "2-digit",
       month: "short",
       hour: "2-digit",

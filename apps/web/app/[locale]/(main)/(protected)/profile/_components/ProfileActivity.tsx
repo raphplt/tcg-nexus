@@ -2,12 +2,14 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Activity, BarChart3 } from "lucide-react";
 import type { DashboardActivityDay } from "@/types/dashboard";
+import { useLocale } from "next-intl";
 
 interface ProfileActivityProps {
   activity?: DashboardActivityDay[];
 }
 
 export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
+  const locale = useLocale();
   const hasActivity = activity && activity.some((day) => day.events > 0);
   const maxEvents = hasActivity
     ? Math.max(...activity!.map((d) => d.events))
@@ -15,7 +17,7 @@ export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR", {
+    return date.toLocaleDateString(locale, {
       weekday: "short",
       day: "numeric",
       month: "short",

@@ -4,7 +4,7 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import toast from "react-hot-toast";
 
 export const FavoriteButton = ({ cardId }: { cardId: string }) => {

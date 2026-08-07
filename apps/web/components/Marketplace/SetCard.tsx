@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { PokemonSetType } from "@/types/cardPokemon";
 import { getSetImage } from "@/utils/images";
 import { Card, CardHeader, CardTitle } from "../ui/card";

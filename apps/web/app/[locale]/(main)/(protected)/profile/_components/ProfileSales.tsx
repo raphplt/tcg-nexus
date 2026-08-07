@@ -10,7 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {

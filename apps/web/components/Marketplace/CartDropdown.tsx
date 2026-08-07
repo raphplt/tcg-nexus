@@ -2,7 +2,7 @@
 
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,11 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import {
+  SEALED_PLACEHOLDER,
+  getSealedImageUrl,
+  getSealedName,
+} from "@/utils/sealedImage";
 
 const CartDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);

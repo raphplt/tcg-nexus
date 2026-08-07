@@ -8,7 +8,7 @@ import {
   Star,
   TrendingUp,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";

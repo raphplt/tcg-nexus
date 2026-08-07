@@ -11,7 +11,7 @@ import {
   Star,
   TrendingUp,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CardCard } from "@/components/Marketplace/CardCard";
@@ -46,6 +46,7 @@ import { marketplaceService } from "@/services/marketplace.service";
 import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
+import { useLocale } from "next-intl";
 
 const getSealedConditionColor = (condition: string | null | undefined) => {
   switch (condition) {
@@ -61,6 +62,7 @@ const getSealedConditionColor = (condition: string | null | undefined) => {
 };
 
 export default function SellerPage() {
+  const locale = useLocale();
   const { id } = useParams();
   const sellerId = parseInt(id as string);
   const [viewMode, setViewMode] = useViewMode("grid");
@@ -179,7 +181,7 @@ export default function SellerPage() {
                 <p className="text-muted-foreground">
                   Membre depuis{" "}
                   {seller.createdAt
-                    ? new Date(seller.createdAt).toLocaleDateString("fr-FR", {
+                    ? new Date(seller.createdAt).toLocaleDateString(locale, {
                         year: "numeric",
                         month: "long",
                       })
@@ -445,7 +447,7 @@ export default function SellerPage() {
                             <TableCell>{listing.quantityAvailable}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {new Date(listing.createdAt).toLocaleDateString(
-                                "fr-FR",
+                                locale,
                               )}
                             </TableCell>
                             <TableCell>

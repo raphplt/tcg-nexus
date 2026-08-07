@@ -13,7 +13,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import React from "react";
 import { H1 } from "@/components/Shared/Titles";
@@ -34,8 +34,10 @@ import { useRankings } from "@/hooks/useRankings";
 import { useTournament } from "@/hooks/useTournament";
 import { matchService } from "@/services/match.service";
 import { Match } from "@/types/tournament";
+import { useLocale } from "next-intl";
 
 export default function PlayerDashboardPage() {
+  const locale = useLocale();
   const { id } = useParams();
   const { user } = useAuth();
   const { tournament } = useTournament(id as string);
@@ -106,7 +108,7 @@ export default function PlayerDashboardPage() {
 
   const formatDate = (date?: string) => {
     if (!date) return "-";
-    return new Date(date).toLocaleString("fr-FR", {
+    return new Date(date).toLocaleString(locale, {
       day: "2-digit",
       month: "short",
       hour: "2-digit",

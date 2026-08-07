@@ -2,7 +2,7 @@ import React from "react";
 import { H2 } from "../Shared/Titles";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 

@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   Users,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import usePlacesAutocomplete from "use-places-autocomplete";
