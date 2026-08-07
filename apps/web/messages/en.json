@@ -381,5 +381,217 @@
     "empty": "No ranked player at the moment.",
     "previous": "Previous",
     "next": "Next"
+  },
+  "Settings": {
+    "title": "Settings",
+    "authenticationRequired": "You must be signed in to access settings",
+    "profile": {
+      "title": "Personal information",
+      "avatar": "Profile avatar",
+      "avatarPreview": "Avatar preview",
+      "removeAvatar": "Remove avatar",
+      "avatarHelp": "Choose an iconic Pokémon as your account avatar:",
+      "selectAvatar": "Choose {name} as your avatar",
+      "firstName": "First name",
+      "firstNamePlaceholder": "Your first name",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Your last name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "save": "Save",
+      "updated": "Profile updated successfully",
+      "updateError": "Could not update your profile",
+      "avatars": {
+        "pikachu": "Pikachu",
+        "eevee": "Eevee",
+        "charizard": "Charizard",
+        "blastoise": "Blastoise",
+        "venusaur": "Venusaur",
+        "gengar": "Gengar",
+        "mewtwo": "Mewtwo",
+        "snorlax": "Snorlax",
+        "umbreon": "Umbreon",
+        "lucario": "Lucario",
+        "mew": "Mew"
+      }
+    },
+    "password": {
+      "title": "Password",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "submit": "Change password",
+      "updated": "Password updated successfully",
+      "updateError": "Could not update your password"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "theme": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "displayCurrency": "Display currency",
+      "currencyPlaceholder": "Choose a currency",
+      "currencyUpdated": "Currency updated",
+      "saveError": "Could not save your preference",
+      "currencies": {
+        "EUR": "Euro (EUR)",
+        "USD": "US dollar (USD)",
+        "GBP": "Pound sterling (GBP)",
+        "JPY": "Japanese yen (JPY)",
+        "CHF": "Swiss franc (CHF)",
+        "CAD": "Canadian dollar (CAD)"
+      }
+    },
+    "validation": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "invalidEmail": "Invalid email address",
+      "passwordMinimumLength": "Password must be at least 8 characters",
+      "passwordsDoNotMatch": "Passwords do not match"
+    }
+  },
+  "Theme": {
+    "loading": "Loading theme...",
+    "switchToLight": "Switch to light theme",
+    "switchToDark": "Switch to dark theme",
+    "toggle": "Change theme"
+  },
+  "Notifications": {
+    "open": "Open notifications",
+    "title": "Notifications",
+    "newCount": "{count, plural, one {# new} other {# new}}",
+    "markAllAsRead": "Mark all as read",
+    "loading": "Loading notifications...",
+    "emptyTitle": "No notifications",
+    "emptyDescription": "You're all caught up! All alerts will appear here.",
+    "joinGame": "Join game",
+    "openMatch": "Open match",
+    "markAsRead": "Mark as read",
+    "delete": "Delete"
+  },
+  "AuthHeader": {
+    "openUserMenu": "Open user menu",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Sign out",
+    "login": "Sign in",
+    "register": "Sign up",
+    "roles": {
+      "admin": "Administrator",
+      "moderator": "Moderator",
+      "user": "User"
+    }
+  },
+  "GlobalSearch": {
+    "open": "Open global search (Ctrl+K)",
+    "trigger": "Press / to search",
+    "title": "Search",
+    "placeholder": "Search cards, tournaments, players...",
+    "fieldLabel": "Search field",
+    "loading": "Searching...",
+    "noResults": "No result found for “{query}”",
+    "resultsLabel": "Search results",
+    "popularSuggestions": "Popular suggestions",
+    "shortcuts": {
+      "cards": "Popular cards",
+      "cardsQuery": "Pikachu",
+      "tournaments": "Active tournaments",
+      "tournamentsQuery": "tournament",
+      "players": "Top players",
+      "playersQuery": "player",
+      "marketplace": "Marketplace",
+      "marketplaceQuery": "marketplace"
+    },
+    "hints": {
+      "navigate": "to navigate",
+      "select": "to select",
+      "close": "to close"
+    }
+  },
+  "Home": {
+    "hero": {
+      "trainer": "Trainer",
+      "welcomeBack": "Welcome back, <highlight>{name}</highlight>!",
+      "memberDescription": "Your space is ready: follow your tournaments, update your collection and manage your decks in just a few clicks.",
+      "dashboard": "Go to dashboard",
+      "collection": "View my collection",
+      "guestTitle": "The <highlight>ultimate</highlight> platform for Pokémon TCG players",
+      "guestDescription": "Manage your collections, enter tournaments, and buy or sell on the marketplace. Everything in one place.",
+      "marketplace": "Browse the marketplace",
+      "tournaments": "View tournaments"
+    },
+    "common": {
+      "loading": "Loading...",
+      "noImage": "No image",
+      "pokemonCard": "Pokémon card"
+    },
+    "favorite": {
+      "add": "Add to favorites",
+      "added": "Card added to favorites!",
+      "error": "Could not add the card to favorites"
+    },
+    "articles": {
+      "title": "Latest articles",
+      "error": "Could not load the articles."
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "unknownSet": "Unknown set",
+      "unknownRarity": "Unknown rarity",
+      "buy": "Buy",
+      "viewAll": "View all listings"
+    },
+    "randomCard": {
+      "title": "Random card",
+      "error": "Could not load the card",
+      "rarity": "Rarity: {rarity}",
+      "previous": "Previous card",
+      "next": "New card",
+      "details": "View details"
+    },
+    "tournaments": {
+      "title": "Upcoming tournaments",
+      "error": "Could not load the tournaments",
+      "external": "External",
+      "empty": "No upcoming tournament",
+      "viewAll": "View all tournaments"
+    },
+    "decks": {
+      "latest": "Latest decks",
+      "best": "Best decks",
+      "viewAll": "View all",
+      "unknownFormat": "Unknown format",
+      "anonymous": "Anonymous",
+      "by": "{format} • By {author}",
+      "empty": "No deck found."
+    },
+    "collection": {
+      "title": "My collection",
+      "cardDescription": "Card from my collection"
+    },
+    "strategy": {
+      "title": "Strategy tools",
+      "imageAlt": "Strategy tools",
+      "open": "Open tools"
+    },
+    "sealed": {
+      "title": "Sealed products",
+      "view": "View",
+      "viewAll": "View all sealed products",
+      "types": {
+        "booster": "Booster",
+        "display": "Booster box",
+        "etb": "Elite Trainer Box",
+        "box": "Box",
+        "tin": "Tin",
+        "deck": "Deck",
+        "tripack": "Three-pack blister",
+        "collection_box": "Collection box",
+        "portfolio": "Portfolio",
+        "other": "Other"
+      }
+    }
   }
 }

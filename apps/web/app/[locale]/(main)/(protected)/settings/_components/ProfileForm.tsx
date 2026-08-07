@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { UserRound, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { User } from "@/types/auth";
 import { userService } from "@/services/user.service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,35 +25,46 @@ import { toast } from "react-hot-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getUserInitials } from "@/utils/text";
 
-const profileSchema = z.object({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
-  email: z.string().email("Email invalide"),
-  avatarUrl: z.string().optional(),
-});
+const createProfileSchema = (messages: {
+  firstNameRequired: string;
+  lastNameRequired: string;
+  invalidEmail: string;
+}) =>
+  z.object({
+    firstName: z.string().min(1, messages.firstNameRequired),
+    lastName: z.string().min(1, messages.lastNameRequired),
+    email: z.string().email(messages.invalidEmail),
+    avatarUrl: z.string().optional(),
+  });
 
-type ProfileFormData = z.infer<typeof profileSchema>;
+type ProfileFormData = z.infer<ReturnType<typeof createProfileSchema>>;
 
 interface ProfileFormProps {
   user: User;
 }
 
 const AVAILABLE_AVATARS = [
-  { id: "pikachu", name: "Pikachu", url: "/images/avatars/pikachu.png" },
-  { id: "eevee", name: "Évoli", url: "/images/avatars/eevee.png" },
-  { id: "charizard", name: "Dracaufeu", url: "/images/avatars/charizard.png" },
-  { id: "blastoise", name: "Tortank", url: "/images/avatars/blastoise.png" },
-  { id: "venusaur", name: "Florizarre", url: "/images/avatars/venusaur.png" },
-  { id: "gengar", name: "Ectoplasma", url: "/images/avatars/gengar.png" },
-  { id: "mewtwo", name: "Mewtwo", url: "/images/avatars/mewtwo.png" },
-  { id: "snorlax", name: "Ronflex", url: "/images/avatars/snorlax.png" },
-  { id: "umbreon", name: "Noctali", url: "/images/avatars/umbreon.png" },
-  { id: "lucario", name: "Lucario", url: "/images/avatars/lucario.png" },
-  { id: "mew", name: "Mew", url: "/images/avatars/mew.png" },
-];
+  { id: "pikachu", url: "/images/avatars/pikachu.png" },
+  { id: "eevee", url: "/images/avatars/eevee.png" },
+  { id: "charizard", url: "/images/avatars/charizard.png" },
+  { id: "blastoise", url: "/images/avatars/blastoise.png" },
+  { id: "venusaur", url: "/images/avatars/venusaur.png" },
+  { id: "gengar", url: "/images/avatars/gengar.png" },
+  { id: "mewtwo", url: "/images/avatars/mewtwo.png" },
+  { id: "snorlax", url: "/images/avatars/snorlax.png" },
+  { id: "umbreon", url: "/images/avatars/umbreon.png" },
+  { id: "lucario", url: "/images/avatars/lucario.png" },
+  { id: "mew", url: "/images/avatars/mew.png" },
+] as const;
 
 export const ProfileForm = ({ user }: ProfileFormProps) => {
+  const t = useTranslations("Settings");
   const { refreshUser } = useAuth();
+  const profileSchema = createProfileSchema({
+    firstNameRequired: t("validation.firstNameRequired"),
+    lastNameRequired: t("validation.lastNameRequired"),
+    invalidEmail: t("validation.invalidEmail"),
+  });
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -67,12 +79,10 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
     try {
       await userService.updateProfile(data);
       await refreshUser();
-      toast.success("Profil mis à jour avec succès");
+      toast.success(t("profile.updated"));
     } catch (error: unknown) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erreur lors de la mise à jour";
+        error instanceof Error ? error.message : t("profile.updateError");
       toast.error(message);
     }
   };
@@ -81,7 +91,7 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
     <Card className="p-6">
       <div className="flex items-center space-x-2 mb-6">
         <UserRound className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Informations personnelles</h2>
+        <h2 className="text-xl font-semibold">{t("profile.title")}</h2>
       </div>
 
       <Form {...form}>
@@ -91,12 +101,15 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
             name="avatarUrl"
             render={({ field }) => (
               <FormItem className="space-y-3 mb-6">
-                <FormLabel>Avatar de profil</FormLabel>
+                <FormLabel>{t("profile.avatar")}</FormLabel>
                 <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-lg border bg-card/50">
                   {/* Preview */}
                   <div className="relative flex-shrink-0">
                     <Avatar className="w-20 h-20 border-2 border-border shadow-md">
-                      <AvatarImage src={field.value} alt="Preview" />
+                      <AvatarImage
+                        src={field.value}
+                        alt={t("profile.avatarPreview")}
+                      />
                       <AvatarFallback className="text-xl bg-primary/10 text-primary">
                         {getUserInitials(
                           form.watch("firstName"),
@@ -109,7 +122,8 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
                         type="button"
                         onClick={() => field.onChange("")}
                         className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full p-1 shadow-sm transition-colors"
-                        title="Supprimer l'avatar"
+                        title={t("profile.removeAvatar")}
+                        aria-label={t("profile.removeAvatar")}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -132,12 +146,12 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
                   {/* Selector Grid */}
                   <div className="flex-1 space-y-2">
                     <p className="text-xs text-muted-foreground text-center sm:text-left">
-                      Choisissez un Pokémon emblématique comme avatar pour votre
-                      compte :
+                      {t("profile.avatarHelp")}
                     </p>
                     <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                       {AVAILABLE_AVATARS.map((avatar) => {
                         const isSelected = field.value === avatar.url;
+                        const avatarName = t(`profile.avatars.${avatar.id}`);
                         return (
                           <button
                             key={avatar.id}
@@ -148,11 +162,14 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
                                 ? "border-primary ring-2 ring-primary/45 scale-105 shadow-md"
                                 : "border-transparent opacity-80 hover:opacity-100"
                             }`}
-                            title={avatar.name}
+                            title={avatarName}
+                            aria-label={t("profile.selectAvatar", {
+                              name: avatarName,
+                            })}
                           >
                             <Image
                               src={avatar.url}
-                              alt={avatar.name}
+                              alt={avatarName}
                               fill
                               sizes="48px"
                               className="object-cover"
@@ -174,9 +191,12 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Prénom</FormLabel>
+                  <FormLabel>{t("profile.firstName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Votre prénom" {...field} />
+                    <Input
+                      placeholder={t("profile.firstNamePlaceholder")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -188,9 +208,12 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               name="lastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom</FormLabel>
+                  <FormLabel>{t("profile.lastName")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Votre nom" {...field} />
+                    <Input
+                      placeholder={t("profile.lastNamePlaceholder")}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,11 +226,11 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t("profile.email")}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
-                    placeholder="votre@email.com"
+                    placeholder={t("profile.emailPlaceholder")}
                     {...field}
                   />
                 </FormControl>
@@ -224,7 +247,7 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               {form.formState.isSubmitting && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
-              Enregistrer
+              {t("profile.save")}
             </Button>
           </div>
         </form>

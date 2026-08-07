@@ -6,8 +6,10 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "@/i18n/navigation";
 import toast from "react-hot-toast";
+import { useTranslations } from "next-intl";
 
 export const FavoriteButton = ({ cardId }: { cardId: string }) => {
+  const t = useTranslations("Home");
   const [loading, setLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -45,11 +47,11 @@ export const FavoriteButton = ({ cardId }: { cardId: string }) => {
 
       await pokemonCardService.addToFavorites(user.id, cardId);
       await cardEventTracker.trackFavorite(cardId);
-      toast.success("Carte ajoutée aux favoris !");
+      toast.success(t("favorite.added"));
       setIsFavorite(true);
     } catch (error) {
       console.error("Erreur ajout favoris :", error);
-      toast.error("Impossible d'ajouter aux favoris");
+      toast.error(t("favorite.error"));
     } finally {
       setLoading(false);
       timeoutRef.current = setTimeout(() => setIsAnimating(false), 500);
@@ -60,7 +62,7 @@ export const FavoriteButton = ({ cardId }: { cardId: string }) => {
     <Button
       size="icon"
       variant="outline"
-      aria-label="Ajouter aux favoris"
+      aria-label={t("favorite.add")}
       onClick={handleAddToFavorites}
       disabled={loading}
       className={`relative transition-all duration-300 ease-out ${

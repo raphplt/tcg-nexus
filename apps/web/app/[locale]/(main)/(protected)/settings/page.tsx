@@ -8,8 +8,10 @@ import { ProfileForm } from "./_components/ProfileForm";
 import { PasswordForm } from "./_components/PasswordForm";
 import { PreferencesForm } from "./_components/PreferencesForm";
 import { Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function SettingsPage() {
+  const t = useTranslations("Settings");
   const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -21,7 +23,7 @@ export default function SettingsPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="p-8 text-center">
           <h2 className="text-2xl font-bold text-muted-foreground">
-            Vous devez être connecté pour accéder aux paramètres
+            {t("authenticationRequired")}
           </h2>
         </Card>
       </div>
@@ -32,7 +34,7 @@ export default function SettingsPage() {
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex items-center space-x-3">
         <Settings className="w-7 h-7 text-primary" />
-        <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

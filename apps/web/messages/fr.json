@@ -381,5 +381,217 @@
     "empty": "Aucun joueur classé pour le moment.",
     "previous": "Précédent",
     "next": "Suivant"
+  },
+  "Settings": {
+    "title": "Paramètres",
+    "authenticationRequired": "Vous devez être connecté pour accéder aux paramètres",
+    "profile": {
+      "title": "Informations personnelles",
+      "avatar": "Avatar de profil",
+      "avatarPreview": "Aperçu de l'avatar",
+      "removeAvatar": "Supprimer l'avatar",
+      "avatarHelp": "Choisissez un Pokémon emblématique comme avatar pour votre compte :",
+      "selectAvatar": "Choisir {name} comme avatar",
+      "firstName": "Prénom",
+      "firstNamePlaceholder": "Votre prénom",
+      "lastName": "Nom",
+      "lastNamePlaceholder": "Votre nom",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "save": "Enregistrer",
+      "updated": "Profil mis à jour avec succès",
+      "updateError": "Erreur lors de la mise à jour",
+      "avatars": {
+        "pikachu": "Pikachu",
+        "eevee": "Évoli",
+        "charizard": "Dracaufeu",
+        "blastoise": "Tortank",
+        "venusaur": "Florizarre",
+        "gengar": "Ectoplasma",
+        "mewtwo": "Mewtwo",
+        "snorlax": "Ronflex",
+        "umbreon": "Noctali",
+        "lucario": "Lucario",
+        "mew": "Mew"
+      }
+    },
+    "password": {
+      "title": "Mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Minimum 8 caractères",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "submit": "Changer le mot de passe",
+      "updated": "Mot de passe mis à jour avec succès",
+      "updateError": "Erreur lors de la mise à jour"
+    },
+    "preferences": {
+      "title": "Préférences",
+      "theme": "Thème",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
+      "themeSystem": "Système",
+      "displayCurrency": "Devise d'affichage",
+      "currencyPlaceholder": "Choisir une devise",
+      "currencyUpdated": "Devise mise à jour",
+      "saveError": "Erreur lors de la sauvegarde",
+      "currencies": {
+        "EUR": "Euro (EUR)",
+        "USD": "Dollar US (USD)",
+        "GBP": "Livre sterling (GBP)",
+        "JPY": "Yen japonais (JPY)",
+        "CHF": "Franc suisse (CHF)",
+        "CAD": "Dollar canadien (CAD)"
+      }
+    },
+    "validation": {
+      "firstNameRequired": "Le prénom est requis",
+      "lastNameRequired": "Le nom est requis",
+      "invalidEmail": "Email invalide",
+      "passwordMinimumLength": "Le mot de passe doit contenir au moins 8 caractères",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas"
+    }
+  },
+  "Theme": {
+    "loading": "Chargement du thème...",
+    "switchToLight": "Passer au thème clair",
+    "switchToDark": "Passer au thème sombre",
+    "toggle": "Changer de thème"
+  },
+  "Notifications": {
+    "open": "Ouvrir les notifications",
+    "title": "Notifications",
+    "newCount": "{count, plural, one {# nouvelle} other {# nouvelles}}",
+    "markAllAsRead": "Tout lire",
+    "loading": "Chargement des notifications...",
+    "emptyTitle": "Aucune notification",
+    "emptyDescription": "Vous êtes à jour ! Toutes les alertes s'afficheront ici.",
+    "joinGame": "Rejoindre la partie",
+    "openMatch": "Accéder au match",
+    "markAsRead": "Marquer comme lu",
+    "delete": "Supprimer"
+  },
+  "AuthHeader": {
+    "openUserMenu": "Ouvrir le menu utilisateur",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "register": "Inscription",
+    "roles": {
+      "admin": "Administrateur",
+      "moderator": "Modérateur",
+      "user": "Utilisateur"
+    }
+  },
+  "GlobalSearch": {
+    "open": "Ouvrir la recherche globale (Ctrl+K)",
+    "trigger": "Tapez / pour rechercher",
+    "title": "Rechercher",
+    "placeholder": "Rechercher des cartes, tournois, joueurs...",
+    "fieldLabel": "Champ de recherche",
+    "loading": "Recherche en cours...",
+    "noResults": "Aucun résultat trouvé pour « {query} »",
+    "resultsLabel": "Résultats de recherche",
+    "popularSuggestions": "Suggestions populaires",
+    "shortcuts": {
+      "cards": "Cartes populaires",
+      "cardsQuery": "Pikachu",
+      "tournaments": "Tournois actifs",
+      "tournamentsQuery": "tournoi",
+      "players": "Meilleurs joueurs",
+      "playersQuery": "joueur",
+      "marketplace": "Marketplace",
+      "marketplaceQuery": "marketplace"
+    },
+    "hints": {
+      "navigate": "pour naviguer",
+      "select": "pour sélectionner",
+      "close": "pour fermer"
+    }
+  },
+  "Home": {
+    "hero": {
+      "trainer": "Dresseur",
+      "welcomeBack": "Bon retour, <highlight>{name}</highlight> !",
+      "memberDescription": "Votre espace est prêt : suivez vos tournois, mettez à jour votre collection et gérez vos decks en quelques clics.",
+      "dashboard": "Aller au tableau de bord",
+      "collection": "Voir ma collection",
+      "guestTitle": "La plateforme <highlight>ultime</highlight> pour les joueurs Pokémon TCG",
+      "guestDescription": "Gérez vos collections, participez à des tournois, achetez et vendez sur la marketplace. Tout en un seul endroit.",
+      "marketplace": "Explorer la marketplace",
+      "tournaments": "Voir les tournois"
+    },
+    "common": {
+      "loading": "Chargement...",
+      "noImage": "Pas d'image",
+      "pokemonCard": "Carte Pokémon"
+    },
+    "favorite": {
+      "add": "Ajouter aux favoris",
+      "added": "Carte ajoutée aux favoris !",
+      "error": "Impossible d'ajouter la carte aux favoris"
+    },
+    "articles": {
+      "title": "Derniers articles",
+      "error": "Erreur lors du chargement des articles."
+    },
+    "marketplace": {
+      "title": "Marketplace",
+      "unknownSet": "Extension inconnue",
+      "unknownRarity": "Rareté inconnue",
+      "buy": "Acheter",
+      "viewAll": "Voir tous les articles"
+    },
+    "randomCard": {
+      "title": "Carte au hasard",
+      "error": "Erreur lors du chargement de la carte",
+      "rarity": "Rareté : {rarity}",
+      "previous": "Carte précédente",
+      "next": "Nouvelle carte",
+      "details": "Voir les détails"
+    },
+    "tournaments": {
+      "title": "Prochains tournois",
+      "error": "Erreur lors du chargement des tournois",
+      "external": "Externe",
+      "empty": "Aucun tournoi à venir",
+      "viewAll": "Voir tous les tournois"
+    },
+    "decks": {
+      "latest": "Derniers decks",
+      "best": "Meilleurs decks",
+      "viewAll": "Voir tout",
+      "unknownFormat": "Format inconnu",
+      "anonymous": "Anonyme",
+      "by": "{format} • Par {author}",
+      "empty": "Aucun deck trouvé."
+    },
+    "collection": {
+      "title": "Ma collection",
+      "cardDescription": "Carte de ma collection"
+    },
+    "strategy": {
+      "title": "Outils stratégiques",
+      "imageAlt": "Outils stratégiques",
+      "open": "Accéder aux outils"
+    },
+    "sealed": {
+      "title": "Produits scellés",
+      "view": "Voir",
+      "viewAll": "Voir tous les produits scellés",
+      "types": {
+        "booster": "Booster",
+        "display": "Display",
+        "etb": "Coffret Dresseur d'élite",
+        "box": "Coffret",
+        "tin": "Boîte métallique",
+        "deck": "Deck",
+        "tripack": "Tripack",
+        "collection_box": "Coffret collection",
+        "portfolio": "Portfolio",
+        "other": "Autre"
+      }
+    }
   }
 }

@@ -16,24 +16,32 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Lock, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { userService } from "@/services/user.service";
 import { toast } from "react-hot-toast";
 
-const passwordSchema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas",
-    path: ["confirmPassword"],
-  });
+const createPasswordSchema = (messages: {
+  minimumLength: string;
+  passwordsDoNotMatch: string;
+}) =>
+  z
+    .object({
+      password: z.string().min(8, messages.minimumLength),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: messages.passwordsDoNotMatch,
+      path: ["confirmPassword"],
+    });
 
-type PasswordFormData = z.infer<typeof passwordSchema>;
+type PasswordFormData = z.infer<ReturnType<typeof createPasswordSchema>>;
 
 export const PasswordForm = () => {
+  const t = useTranslations("Settings");
+  const passwordSchema = createPasswordSchema({
+    minimumLength: t("validation.passwordMinimumLength"),
+    passwordsDoNotMatch: t("validation.passwordsDoNotMatch"),
+  });
   const form = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
@@ -45,13 +53,11 @@ export const PasswordForm = () => {
   const onSubmit = async (data: PasswordFormData) => {
     try {
       await userService.updatePassword({ password: data.password });
-      toast.success("Mot de passe mis à jour avec succès");
+      toast.success(t("password.updated"));
       form.reset();
     } catch (error: unknown) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Erreur lors de la mise à jour";
+        error instanceof Error ? error.message : t("password.updateError");
       toast.error(message);
     }
   };
@@ -60,7 +66,7 @@ export const PasswordForm = () => {
     <Card className="p-6">
       <div className="flex items-center space-x-2 mb-6">
         <Lock className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Mot de passe</h2>
+        <h2 className="text-xl font-semibold">{t("password.title")}</h2>
       </div>
 
       <Form {...form}>
@@ -70,11 +76,11 @@ export const PasswordForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nouveau mot de passe</FormLabel>
+                <FormLabel>{t("password.newPassword")}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Minimum 8 caractères"
+                    placeholder={t("password.newPasswordPlaceholder")}
                     {...field}
                   />
                 </FormControl>
@@ -88,11 +94,11 @@ export const PasswordForm = () => {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirmer le mot de passe</FormLabel>
+                <FormLabel>{t("password.confirmPassword")}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Confirmez votre mot de passe"
+                    placeholder={t("password.confirmPasswordPlaceholder")}
                     {...field}
                   />
                 </FormControl>
@@ -109,7 +115,7 @@ export const PasswordForm = () => {
               {form.formState.isSubmitting && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
-              Changer le mot de passe
+              {t("password.submit")}
             </Button>
           </div>
         </form>

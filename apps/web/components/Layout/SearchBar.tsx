@@ -9,6 +9,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
@@ -18,14 +19,8 @@ import { Dialog, DialogContent, DialogTitle } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { getSearchItemIcon, SearchItemButton } from "./SearchItemButton";
 
-const FALLBACK_SHORTCUTS = [
-  { query: "Pikachu", label: "Cartes populaires", icon: Hash },
-  { query: "tournoi", label: "Tournois actifs", icon: Trophy },
-  { query: "joueur", label: "Top joueurs", icon: Users },
-  { query: "marketplace", label: "Marketplace", icon: ShoppingCart },
-];
-
 const SearchBar = () => {
+  const t = useTranslations("GlobalSearch");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -92,16 +87,14 @@ const SearchBar = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          aria-label="Ouvrir la recherche globale (Ctrl+K)"
+          aria-label={t("open")}
           className="flex items-center gap-2 bg-card rounded-md p-2 border border-border hover:border-primary transition-all duration-300 w-full max-w-md cursor-pointer"
         >
           <SearchIcon
             className="text-muted-foreground size-4"
             aria-hidden="true"
           />
-          <p className="text-muted-foreground text-sm">
-            Tapez / pour rechercher
-          </p>
+          <p className="text-muted-foreground text-sm">{t("trigger")}</p>
           <div className="ml-auto flex items-center gap-1">
             <Command
               className="w-3 h-3 text-muted-foreground"
@@ -115,7 +108,7 @@ const SearchBar = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-2xl mx-auto p-0">
           <div className="p-4">
-            <DialogTitle className="sr-only">Rechercher</DialogTitle>
+            <DialogTitle className="sr-only">{t("title")}</DialogTitle>
 
             <div className="flex items-center gap-2 mb-4">
               <Search
@@ -124,10 +117,10 @@ const SearchBar = () => {
               />
               <Input
                 ref={inputRef}
-                placeholder="Rechercher des cartes, tournois, joueurs..."
+                placeholder={t("placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                aria-label="Champ de recherche"
+                aria-label={t("fieldLabel")}
                 className="border-0 shadow-none focus-visible:ring-0 text-base"
               />
             </div>
@@ -170,6 +163,8 @@ function SearchResultsSection({
   selectedIndex: number;
   onSelect: (result: SearchResultItem) => void;
 }) {
+  const t = useTranslations("GlobalSearch");
+
   if (isLoading) {
     return (
       <div
@@ -181,7 +176,7 @@ function SearchResultsSection({
           className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse"
           aria-hidden="true"
         />
-        <p>Recherche en cours...</p>
+        <p>{t("loading")}</p>
       </div>
     );
   }
@@ -193,17 +188,13 @@ function SearchResultsSection({
           className="w-8 h-8 mx-auto mb-2 opacity-50"
           aria-hidden="true"
         />
-        <p>Aucun résultat trouvé pour « {query} »</p>
+        <p>{t("noResults", { query })}</p>
       </div>
     );
   }
 
   return (
-    <ul
-      className="space-y-1"
-      role="listbox"
-      aria-label="Résultats de recherche"
-    >
+    <ul className="space-y-1" role="listbox" aria-label={t("resultsLabel")}>
       {results.map((result, index) => (
         <li key={result.id}>
           <SearchItemButton
@@ -237,16 +228,40 @@ function SearchSuggestionsSection({
   onPickSuggestion: (title: string) => void;
   onPickShortcut: (q: string) => void;
 }) {
+  const t = useTranslations("GlobalSearch");
+  const fallbackShortcuts = [
+    {
+      query: t("shortcuts.cardsQuery"),
+      label: t("shortcuts.cards"),
+      icon: Hash,
+    },
+    {
+      query: t("shortcuts.tournamentsQuery"),
+      label: t("shortcuts.tournaments"),
+      icon: Trophy,
+    },
+    {
+      query: t("shortcuts.playersQuery"),
+      label: t("shortcuts.players"),
+      icon: Users,
+    },
+    {
+      query: t("shortcuts.marketplaceQuery"),
+      label: t("shortcuts.marketplace"),
+      icon: ShoppingCart,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground mb-3">
-        Suggestions populaires
+        {t("popularSuggestions")}
       </div>
       {suggestions.length > 0 ? (
         <ul
           className="space-y-1"
           role="listbox"
-          aria-label="Suggestions populaires"
+          aria-label={t("popularSuggestions")}
         >
           {suggestions.map((suggestion, index) => (
             <li key={`${suggestion.type}-${suggestion.id}`}>
@@ -263,7 +278,7 @@ function SearchSuggestionsSection({
         </ul>
       ) : (
         <div className="grid grid-cols-2 gap-2">
-          {FALLBACK_SHORTCUTS.map(({ query, label, icon: Icon }) => (
+          {fallbackShortcuts.map(({ query, label, icon: Icon }) => (
             <button
               key={query}
               type="button"
@@ -284,22 +299,24 @@ function SearchSuggestionsSection({
 }
 
 function SearchFooterHints() {
+  const t = useTranslations("GlobalSearch");
+
   return (
     <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex items-center justify-between">
       <div className="flex items-center gap-4">
         <span className="flex items-center gap-1">
           <kbd className="px-1 py-0.5 bg-muted rounded text-xs">↑</kbd>
           <kbd className="px-1 py-0.5 bg-muted rounded text-xs">↓</kbd>
-          <span>pour naviguer</span>
+          <span>{t("hints.navigate")}</span>
         </span>
         <span className="flex items-center gap-1">
           <kbd className="px-1 py-0.5 bg-muted rounded text-xs">↵</kbd>
-          <span>pour sélectionner</span>
+          <span>{t("hints.select")}</span>
         </span>
       </div>
       <span className="flex items-center gap-1">
         <kbd className="px-1 py-0.5 bg-muted rounded text-xs">esc</kbd>
-        <span>pour fermer</span>
+        <span>{t("hints.close")}</span>
       </span>
     </div>
   );

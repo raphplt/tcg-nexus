@@ -1,6 +1,7 @@
 "use client";
 
 import { LayoutDashboard, LibraryBig } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import React from "react";
 import LatestArticles from "@/components/Home/LatestArticles";
@@ -13,9 +14,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 const HomePage = () => {
+  const t = useTranslations("Home");
   const { user, isAuthenticated, isLoading } = useAuth();
   const isLoggedIn = !isLoading && isAuthenticated && user;
-  const userFirstName = user?.firstName ?? "Dresseur";
+  const userFirstName = user?.firstName ?? t("hero.trainer");
 
   return (
     <div className="min-h-screen bg-linear-to-br from-muted via-background to-accent/20">
@@ -27,17 +29,20 @@ const HomePage = () => {
               {isLoggedIn ? (
                 <>
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight text-foreground">
-                    Bon retour,{" "}
-                    <span className="text-primary">{userFirstName}</span> !
+                    {t.rich("hero.welcomeBack", {
+                      name: userFirstName,
+                      highlight: (chunks) => (
+                        <span className="text-primary">{chunks}</span>
+                      ),
+                    })}
                   </h1>
                   <p className="text-xl text-muted-foreground max-w-xl">
-                    Votre espace est prêt: suivez vos tournois, mettez à jour
-                    votre collection et gérez vos decks en quelques clics.
+                    {t("hero.memberDescription")}
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Button asChild size="lg" className="text-lg px-8 py-6">
                       <Link href="/dashboard">
-                        Aller au dashboard
+                        {t("hero.dashboard")}
                         <LayoutDashboard className="ml-2 h-5 w-5" />
                       </Link>
                     </Button>
@@ -48,7 +53,7 @@ const HomePage = () => {
                       className="text-lg px-8 py-6"
                     >
                       <Link href="/collection">
-                        Voir ma collection
+                        {t("hero.collection")}
                         <LibraryBig className="ml-2 h-5 w-5" />
                       </Link>
                     </Button>
@@ -57,16 +62,18 @@ const HomePage = () => {
               ) : (
                 <>
                   <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight text-foreground">
-                    La plateforme <span className="text-primary">ultime</span>{" "}
-                    pour les joueurs Pokemon TCG
+                    {t.rich("hero.guestTitle", {
+                      highlight: (chunks) => (
+                        <span className="text-primary">{chunks}</span>
+                      ),
+                    })}
                   </h1>
                   <p className="text-xl text-muted-foreground max-w-xl">
-                    Gerez vos collections, participez a des tournois, achetez et
-                    vendez sur le marketplace. Tout en un seul endroit.
+                    {t("hero.guestDescription")}
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Button asChild size="lg" className="text-lg px-8 py-6">
-                      <Link href="/marketplace">Explorer le Marketplace</Link>
+                      <Link href="/marketplace">{t("hero.marketplace")}</Link>
                     </Button>
                     <Button
                       asChild
@@ -74,7 +81,7 @@ const HomePage = () => {
                       variant="outline"
                       className="text-lg px-8 py-6"
                     >
-                      <Link href="/tournaments">Voir les tournois</Link>
+                      <Link href="/tournaments">{t("hero.tournaments")}</Link>
                     </Button>
                   </div>
                 </>

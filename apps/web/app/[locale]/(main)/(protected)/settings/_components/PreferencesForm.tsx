@@ -11,22 +11,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Settings2, Sun, Moon, Monitor, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/use-theme";
 import { Currency, useCurrencyStore } from "@/store/currency.store";
 import { userService } from "@/services/user.service";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
-const CURRENCY_LABELS: Record<Currency, string> = {
-  [Currency.EUR]: "Euro (EUR)",
-  [Currency.USD]: "Dollar US (USD)",
-  [Currency.GBP]: "Livre sterling (GBP)",
-  [Currency.JPY]: "Yen japonais (JPY)",
-  [Currency.CHF]: "Franc suisse (CHF)",
-  [Currency.CAD]: "Dollar canadien (CAD)",
-};
-
 export const PreferencesForm = () => {
+  const t = useTranslations("Settings");
   const { theme, setTheme, mounted } = useTheme();
   const { currency, setCurrency } = useCurrencyStore();
   const { refreshUser } = useAuth();
@@ -40,9 +33,9 @@ export const PreferencesForm = () => {
       setSaving(true);
       await userService.updateProfile({ preferredCurrency: newCurrency });
       await refreshUser();
-      toast.success("Devise mise à jour");
+      toast.success(t("preferences.currencyUpdated"));
     } catch {
-      toast.error("Erreur lors de la sauvegarde");
+      toast.error(t("preferences.saveError"));
     } finally {
       setSaving(false);
     }
@@ -54,12 +47,14 @@ export const PreferencesForm = () => {
     <Card className="p-6">
       <div className="flex items-center space-x-2 mb-6">
         <Settings2 className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Préférences</h2>
+        <h2 className="text-xl font-semibold">{t("preferences.title")}</h2>
       </div>
 
       <div className="space-y-6">
         <div className="space-y-3">
-          <label className="text-sm font-medium">Thème</label>
+          <label className="text-sm font-medium">
+            {t("preferences.theme")}
+          </label>
           <div className="grid grid-cols-3 gap-3">
             <Button
               variant={theme === "light" ? "default" : "outline"}
@@ -67,7 +62,7 @@ export const PreferencesForm = () => {
               onClick={() => setTheme("light")}
             >
               <Sun className="w-5 h-5" />
-              <span className="text-xs">Clair</span>
+              <span className="text-xs">{t("preferences.themeLight")}</span>
             </Button>
             <Button
               variant={theme === "dark" ? "default" : "outline"}
@@ -75,7 +70,7 @@ export const PreferencesForm = () => {
               onClick={() => setTheme("dark")}
             >
               <Moon className="w-5 h-5" />
-              <span className="text-xs">Sombre</span>
+              <span className="text-xs">{t("preferences.themeDark")}</span>
             </Button>
             <Button
               variant={theme === "system" ? "default" : "outline"}
@@ -83,22 +78,26 @@ export const PreferencesForm = () => {
               onClick={() => setTheme("system")}
             >
               <Monitor className="w-5 h-5" />
-              <span className="text-xs">Système</span>
+              <span className="text-xs">{t("preferences.themeSystem")}</span>
             </Button>
           </div>
         </div>
 
         <div className="space-y-3">
-          <label className="text-sm font-medium">Devise d&apos;affichage</label>
+          <label className="text-sm font-medium">
+            {t("preferences.displayCurrency")}
+          </label>
           <div className="flex items-center gap-3">
             <Select value={currency} onValueChange={handleCurrencyChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choisir une devise" />
+                <SelectValue
+                  placeholder={t("preferences.currencyPlaceholder")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {Object.values(Currency).map((c) => (
                   <SelectItem key={c} value={c}>
-                    {CURRENCY_LABELS[c]}
+                    {t(`preferences.currencies.${c}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
