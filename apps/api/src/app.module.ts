@@ -22,6 +22,7 @@ import { DeckModule } from "./deck/deck.module";
 import { DeckCardModule } from "./deck-card/deck-card.module";
 import { DeckFormatModule } from "./deck-format/deck-format.module";
 import { FaqModule } from "./faq/faq.module";
+import { TranslationModule } from "./translation/translation.module";
 import { FeedModule } from "./feed/feed.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
@@ -102,6 +103,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     AiModule,
     UserCartModule,
     FaqModule,
+    TranslationModule,
     SupportTicketModule,
     BadgeModule,
     DashboardModule,

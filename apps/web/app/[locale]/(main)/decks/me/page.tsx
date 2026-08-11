@@ -83,7 +83,9 @@ export default function MyDecksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
-        <H1 className="text-center mb-2" variant="primary">{t("title")}</H1>
+        <H1 className="text-center mb-2" variant="primary">
+          {t("title")}
+        </H1>
         <DecksFilters
           filters={filters}
           resetFilters={resetFilters}

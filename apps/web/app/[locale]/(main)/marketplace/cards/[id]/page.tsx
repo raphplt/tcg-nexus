@@ -70,8 +70,7 @@ export default function CardDetailPage() {
       await addItem({ listingId, quantity: 1 });
       toast.success(t("addedToCart"));
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message || t("addError");
+      const errorMessage = error?.response?.data?.message || t("addError");
       toast.error(errorMessage);
     } finally {
       setAddingToListingId(null);

@@ -25,9 +25,7 @@ const CardGrid = ({
   const t = useTranslations("DeckCards");
   const label = emptyLabel ?? t("empty");
   if (!cards.length) {
-    return (
-      <div className="text-sm text-muted-foreground py-4">{label}</div>
-    );
+    return <div className="text-sm text-muted-foreground py-4">{label}</div>;
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-4">

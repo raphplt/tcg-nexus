@@ -75,9 +75,7 @@ export default function SellSealedForm({
       setPrice("");
       setDescription("");
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        t("createError");
+      const message = err?.response?.data?.message || t("createError");
       toast.error(Array.isArray(message) ? message.join(", ") : message);
     } finally {
       setLoading(false);

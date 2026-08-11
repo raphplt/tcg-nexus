@@ -2349,7 +2349,6 @@
   "AdminTranslations": {
     "title": "Translation management",
     "subtitle": "Edit interface texts and the translations of system content.",
-    "productionWarning": "In production, translation files are reset on every deployment: report your changes back to the repository.",
     "pendingChanges": "{count, plural, =0 {No pending change} one {# pending change} other {# pending changes}}",
     "save": "Save",
     "saving": "Saving...",
@@ -2357,7 +2356,6 @@
     "saveError": "Could not save: {error}",
     "tabInterface": "Interface ({count})",
     "tabContent": "System content ({count})",
-    "interfaceTitle": "Interface texts",
     "searchPlaceholder": "Search a key or a text...",
     "onlyMissing": "Missing only",
     "resultCount": "{count, plural, one {# key} other {# keys}}",
@@ -2368,7 +2366,11 @@
     "contentTitle": "System content",
     "contentHelp": "French is the reference and comes from the database. Other languages are stored in the dictionaries as an overlay.",
     "contentEmpty": "No system content to translate at the moment.",
-    "translationPlaceholder": "Translation..."
+    "translationPlaceholder": "Translation...",
+    "storageNotice": "Changes are stored in the database and take effect immediately. Emptying a field restores the value shipped with the application.",
+    "customised": "Customised",
+    "allNamespaces": "All namespaces",
+    "columnKey": "Key"
   },
   "CardPage": {
     "notFoundTitle": "Card not found",

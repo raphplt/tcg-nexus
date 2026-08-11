@@ -2349,7 +2349,6 @@
   "AdminTranslations": {
     "title": "Gestion des traductions",
     "subtitle": "Éditez les textes de l'interface et les traductions des contenus système.",
-    "productionWarning": "En production, les fichiers de traduction sont réinitialisés à chaque déploiement : reportez vos modifications dans le dépôt.",
     "pendingChanges": "{count, plural, =0 {Aucune modification en attente} one {# modification en attente} other {# modifications en attente}}",
     "save": "Enregistrer",
     "saving": "Enregistrement...",
@@ -2357,7 +2356,6 @@
     "saveError": "Enregistrement impossible : {error}",
     "tabInterface": "Interface ({count})",
     "tabContent": "Contenus système ({count})",
-    "interfaceTitle": "Textes de l'interface",
     "searchPlaceholder": "Rechercher une clé ou un texte...",
     "onlyMissing": "Manquantes uniquement",
     "resultCount": "{count, plural, one {# clé} other {# clés}}",
@@ -2368,7 +2366,11 @@
     "contentTitle": "Contenus système",
     "contentHelp": "Le français fait référence : il vient de la base. Les autres langues sont stockées dans les dictionnaires et servent de surcouche.",
     "contentEmpty": "Aucun contenu système à traduire pour le moment.",
-    "translationPlaceholder": "Traduction..."
+    "translationPlaceholder": "Traduction...",
+    "storageNotice": "Les modifications sont enregistrées en base et prennent effet immédiatement. Vider un champ restaure la valeur du dictionnaire livré avec l'application.",
+    "customised": "Personnalisée",
+    "allNamespaces": "Tous les domaines",
+    "columnKey": "Clé"
   },
   "CardPage": {
     "notFoundTitle": "Carte introuvable",

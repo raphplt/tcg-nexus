@@ -1,39 +1,47 @@
 "use server";
 
-import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { SUPPORTED_LOCALES, type SupportedLocale } from "@/i18n/config";
-
-const MESSAGES_DIR = path.join(process.cwd(), "messages");
+import { invalidateMessagesCache } from "@/i18n/messages";
 
 export type TranslationEntry = {
   path: string;
   values: Record<SupportedLocale, string>;
+  /** true si la valeur vient de la base et non du dictionnaire du dépôt */
+  overridden: Partial<Record<SupportedLocale, boolean>>;
 };
 
 type JsonTree = Record<string, unknown>;
+type Overrides = Record<string, Record<string, string>>;
+
+function apiBaseUrl(): string {
+  return (
+    process.env.API_INTERNAL_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    "http://localhost:3001"
+  );
+}
+
+async function cookieHeader(): Promise<string> {
+  const store = await cookies();
+  return store
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+}
 
 /**
  * Les Server Actions sont des endpoints publics : le rôle admin est revérifié
  * ici, la protection de la route ne suffit pas.
  */
 async function assertAdmin(): Promise<void> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  const baseUrl =
-    process.env.API_INTERNAL_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:3001";
-
-  const response = await fetch(`${baseUrl}/auth/profile`, {
+  const response = await fetch(`${apiBaseUrl()}/auth/profile`, {
     method: "POST",
-    headers: { Cookie: cookieHeader, "Content-Type": "application/json" },
+    headers: {
+      Cookie: await cookieHeader(),
+      "Content-Type": "application/json",
+    },
     cache: "no-store",
   });
 
@@ -46,15 +54,6 @@ async function assertAdmin(): Promise<void> {
   if (role !== "admin") {
     throw new Error("FORBIDDEN");
   }
-}
-
-function messagesFile(locale: SupportedLocale): string {
-  // le nom de fichier ne vient jamais de l'utilisateur : locale est validée en amont
-  return path.join(MESSAGES_DIR, `${locale}.json`);
-}
-
-async function readTree(locale: SupportedLocale): Promise<JsonTree> {
-  return JSON.parse(await readFile(messagesFile(locale), "utf8"));
 }
 
 function flatten(tree: JsonTree, prefix = ""): Map<string, string> {
@@ -72,38 +71,50 @@ function flatten(tree: JsonTree, prefix = ""): Map<string, string> {
   return out;
 }
 
-function setDeep(tree: JsonTree, keyPath: string, value: string): void {
-  const parts = keyPath.split(".");
-  let node = tree;
-  for (const part of parts.slice(0, -1)) {
-    if (!node[part] || typeof node[part] !== "object") {
-      node[part] = {};
-    }
-    node = node[part] as JsonTree;
-  }
-  node[parts[parts.length - 1]!] = value;
+async function readBaseDictionary(
+  locale: SupportedLocale,
+): Promise<Map<string, string>> {
+  const tree = (await import(`@/messages/${locale}.json`)).default as JsonTree;
+  return flatten(tree);
+}
+
+async function fetchOverrides(): Promise<Overrides> {
+  const response = await fetch(`${apiBaseUrl()}/translations`, {
+    cache: "no-store",
+  });
+  return response.ok ? await response.json() : {};
 }
 
 export async function loadTranslations(): Promise<TranslationEntry[]> {
   await assertAdmin();
 
-  const trees = await Promise.all(
+  const overrides = await fetchOverrides();
+  const dictionaries = await Promise.all(
     SUPPORTED_LOCALES.map(
-      async (locale) => [locale, flatten(await readTree(locale))] as const,
+      async (locale) => [locale, await readBaseDictionary(locale)] as const,
     ),
   );
 
   const paths = new Set<string>();
-  for (const [, flat] of trees) {
+  for (const [, flat] of dictionaries) {
     for (const key of flat.keys()) paths.add(key);
   }
+  for (const localeOverrides of Object.values(overrides)) {
+    for (const key of Object.keys(localeOverrides)) paths.add(key);
+  }
 
-  return [...paths].sort().map((keyPath) => ({
-    path: keyPath,
-    values: Object.fromEntries(
-      trees.map(([locale, flat]) => [locale, flat.get(keyPath) ?? ""]),
-    ) as Record<SupportedLocale, string>,
-  }));
+  return [...paths].sort().map((keyPath) => {
+    const values = {} as Record<SupportedLocale, string>;
+    const overridden: Partial<Record<SupportedLocale, boolean>> = {};
+
+    for (const [locale, flat] of dictionaries) {
+      const override = overrides[locale]?.[keyPath];
+      values[locale] = override ?? flat.get(keyPath) ?? "";
+      overridden[locale] = override !== undefined;
+    }
+
+    return { path: keyPath, values, overridden };
+  });
 }
 
 export type SystemContentItem = {
@@ -119,18 +130,13 @@ export type SystemContentItem = {
 
 /**
  * Les contenus système (FAQ...) n'ont pas encore de table de traduction côté
- * API : la version française fait référence et les autres langues vivent dans
- * les dictionnaires, sous SystemContent.
+ * API : la version française fait référence et les autres langues sont
+ * stockées comme des clés ordinaires, sous SystemContent.
  */
 export async function loadSystemContent(): Promise<SystemContentItem[]> {
   await assertAdmin();
 
-  const baseUrl =
-    process.env.API_INTERNAL_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    "http://localhost:3001";
-
-  const response = await fetch(`${baseUrl}/faq`, { cache: "no-store" });
+  const response = await fetch(`${apiBaseUrl()}/faq`, { cache: "no-store" });
   if (!response.ok) {
     return [];
   }
@@ -143,15 +149,14 @@ export async function loadSystemContent(): Promise<SystemContentItem[]> {
     category: string;
   }> = Array.isArray(payload) ? payload : (payload?.data ?? []);
 
-  const trees = await Promise.all(
-    SUPPORTED_LOCALES.map(
-      async (locale) => [locale, flatten(await readTree(locale))] as const,
-    ),
-  );
+  const overrides = await fetchOverrides();
 
   const translationsFor = (keyPath: string) =>
     Object.fromEntries(
-      trees.map(([locale, flat]) => [locale, flat.get(keyPath) ?? ""]),
+      SUPPORTED_LOCALES.map((locale) => [
+        locale,
+        overrides[locale]?.[keyPath] ?? "",
+      ]),
     ) as Record<SupportedLocale, string>;
 
   return items.map((item) => {
@@ -191,34 +196,32 @@ export async function saveTranslations(
     };
   }
 
-  const byLocale = new Map<SupportedLocale, typeof changes>();
   for (const change of changes) {
     if (!SUPPORTED_LOCALES.includes(change.locale as SupportedLocale)) {
       return { ok: false, error: `INVALID_LOCALE:${change.locale}` };
     }
-    const locale = change.locale as SupportedLocale;
-    byLocale.set(locale, [...(byLocale.get(locale) ?? []), change]);
   }
 
-  try {
-    for (const [locale, localeChanges] of byLocale) {
-      const tree = await readTree(locale);
-      for (const change of localeChanges) {
-        setDeep(tree, change.path, change.value);
-      }
-      await writeFile(
-        messagesFile(locale),
-        `${JSON.stringify(tree, null, 2)}\n`,
-        "utf8",
-      );
-    }
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "WRITE_FAILED",
-    };
+  const response = await fetch(`${apiBaseUrl()}/translations`, {
+    method: "PUT",
+    headers: {
+      Cookie: await cookieHeader(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      entries: changes.map(({ path, locale, value }) => ({
+        locale,
+        key: path,
+        value,
+      })),
+    }),
+  });
+
+  if (!response.ok) {
+    return { ok: false, error: `API_${response.status}` };
   }
 
-  revalidatePath("/admin/translations");
+  invalidateMessagesCache();
+  revalidatePath("/", "layout");
   return { ok: true, saved: changes.length };
 }

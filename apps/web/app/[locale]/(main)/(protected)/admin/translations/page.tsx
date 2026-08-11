@@ -19,11 +19,7 @@ export default async function AdminTranslationsPage() {
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
 
-        <TranslationsManager
-          entries={entries}
-          systemContent={systemContent}
-          isProduction={process.env.NODE_ENV === "production"}
-        />
+        <TranslationsManager entries={entries} systemContent={systemContent} />
       </div>
     </ProtectedRoute>
   );

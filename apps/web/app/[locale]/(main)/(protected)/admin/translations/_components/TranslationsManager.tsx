@@ -1,12 +1,20 @@
 "use client";
 
-import { AlertTriangle, Save, Search } from "lucide-react";
+import { Info, Save, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +29,7 @@ import {
   type TranslationEntry,
 } from "../actions";
 
-const PAGE_SIZE = 40;
+const PAGE_SIZE = 60;
 
 type Draft = Record<string, string>;
 
@@ -30,13 +38,11 @@ const draftKey = (path: string, locale: SupportedLocale) => `${path}|${locale}`;
 interface TranslationsManagerProps {
   entries: TranslationEntry[];
   systemContent: SystemContentItem[];
-  isProduction: boolean;
 }
 
 export function TranslationsManager({
   entries,
   systemContent,
-  isProduction,
 }: TranslationsManagerProps) {
   const t = useTranslations("AdminTranslations");
   const [draft, setDraft] = useState<Draft>({});
@@ -63,12 +69,10 @@ export function TranslationsManager({
 
   return (
     <div className="space-y-4">
-      {isProduction && (
-        <div className="flex items-start gap-2 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-          <span>{t("productionWarning")}</span>
-        </div>
-      )}
+      <div className="flex items-start gap-2 rounded border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 shrink-0" />
+        <span>{t("storageNotice")}</span>
+      </div>
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
@@ -110,6 +114,45 @@ export function TranslationsManager({
   );
 }
 
+/** Textarea qui s'ajuste à son contenu : une ligne pour la plupart des clés. */
+function AutoTextarea({
+  value,
+  onChange,
+  invalid,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  invalid?: boolean;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const resize = useCallback(() => {
+    const node = ref.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${node.scrollHeight}px`;
+  }, []);
+
+  useEffect(resize, [resize, value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      rows={1}
+      onChange={(event) => {
+        onChange(event.target.value);
+        resize();
+      }}
+      className={cn(
+        "w-full resize-none overflow-hidden rounded border bg-background px-2 py-1 text-sm leading-snug",
+        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        invalid && "border-destructive/60",
+      )}
+    />
+  );
+}
+
 function InterfaceEditor({
   entries,
   draft,
@@ -121,12 +164,30 @@ function InterfaceEditor({
 }) {
   const t = useTranslations("AdminTranslations");
   const [search, setSearch] = useState("");
+  const [namespace, setNamespace] = useState("all");
   const [onlyMissing, setOnlyMissing] = useState(false);
   const [visible, setVisible] = useState(PAGE_SIZE);
+
+  const namespaces = useMemo(
+    () =>
+      [...new Set(entries.map((entry) => entry.path.split(".")[0]!))].sort(),
+    [entries],
+  );
+
+  const missingCount = useMemo(
+    () =>
+      entries.filter((entry) =>
+        SUPPORTED_LOCALES.some((locale) => !entry.values[locale]?.trim()),
+      ).length,
+    [entries],
+  );
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
     return entries.filter((entry) => {
+      if (namespace !== "all" && !entry.path.startsWith(`${namespace}.`)) {
+        return false;
+      }
       if (
         onlyMissing &&
         SUPPORTED_LOCALES.every((locale) => entry.values[locale]?.trim())
@@ -141,102 +202,125 @@ function InterfaceEditor({
         )
       );
     });
-  }, [entries, search, onlyMissing]);
+  }, [entries, search, namespace, onlyMissing]);
 
   const shown = filtered.slice(0, visible);
+  const resetPaging = () => setVisible(PAGE_SIZE);
 
   return (
-    <Card>
-      <CardHeader className="space-y-3">
-        <CardTitle className="text-base">{t("interfaceTitle")}</CardTitle>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setVisible(PAGE_SIZE);
-              }}
-              placeholder={t("searchPlaceholder")}
-              className="pl-9"
-            />
-          </div>
-          <Button
-            variant={onlyMissing ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setOnlyMissing((value) => !value);
-              setVisible(PAGE_SIZE);
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-64 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              resetPaging();
             }}
-          >
-            {t("onlyMissing")}
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {t("resultCount", { count: filtered.length })}
-          </span>
+            placeholder={t("searchPlaceholder")}
+            className="h-9 pl-9"
+          />
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+
+        <select
+          value={namespace}
+          onChange={(event) => {
+            setNamespace(event.target.value);
+            resetPaging();
+          }}
+          className="h-9 rounded border bg-background px-2 text-sm"
+        >
+          <option value="all">{t("allNamespaces")}</option>
+          {namespaces.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        <Button
+          variant={onlyMissing ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            setOnlyMissing((value) => !value);
+            resetPaging();
+          }}
+        >
+          {t("onlyMissing")} ({missingCount})
+        </Button>
+
+        <span className="text-sm text-muted-foreground">
+          {t("resultCount", { count: filtered.length })}
+        </span>
+      </div>
+
+      <div className="overflow-hidden rounded border">
+        <div className="grid grid-cols-[minmax(160px,1fr)_1.6fr_1.6fr] gap-3 border-b bg-muted/50 px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <span>{t("columnKey")}</span>
+          {SUPPORTED_LOCALES.map((locale) => (
+            <span key={locale}>{locale.toUpperCase()}</span>
+          ))}
+        </div>
+
         {shown.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="py-8 text-center text-sm text-muted-foreground">
             {t("noResults")}
           </p>
         )}
 
         {shown.map((entry) => (
-          <div key={entry.path} className="space-y-2 rounded border p-3">
-            <code className="text-xs text-muted-foreground">{entry.path}</code>
-            <div className="grid gap-3 md:grid-cols-2">
-              {SUPPORTED_LOCALES.map((locale) => {
-                const key = draftKey(entry.path, locale);
-                const value = draft[key] ?? entry.values[locale] ?? "";
-                const isMissing = !value.trim();
-                return (
-                  <div key={locale} className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs uppercase">
-                        {locale}
-                      </Badge>
-                      {isMissing && (
-                        <Badge variant="destructive" className="text-xs">
-                          {t("missing")}
-                        </Badge>
+          <div
+            key={entry.path}
+            className="grid grid-cols-[minmax(160px,1fr)_1.6fr_1.6fr] items-start gap-3 border-b px-3 py-1.5 last:border-b-0 hover:bg-muted/30"
+          >
+            <code
+              title={entry.path}
+              className="truncate pt-1.5 text-xs text-muted-foreground"
+            >
+              {namespace === "all"
+                ? entry.path
+                : entry.path.slice(namespace.length + 1)}
+            </code>
+
+            {SUPPORTED_LOCALES.map((locale) => {
+              const key = draftKey(entry.path, locale);
+              const value = draft[key] ?? entry.values[locale] ?? "";
+              return (
+                <div key={locale} className="flex items-start gap-1.5">
+                  <AutoTextarea
+                    value={value}
+                    invalid={!value.trim()}
+                    onChange={(next) =>
+                      setDraft((prev) => ({ ...prev, [key]: next }))
+                    }
+                  />
+                  {(key in draft || entry.overridden[locale]) && (
+                    <span
+                      title={key in draft ? t("modified") : t("customised")}
+                      className={cn(
+                        "mt-2 h-1.5 w-1.5 shrink-0 rounded-full",
+                        key in draft ? "bg-primary" : "bg-muted-foreground/50",
                       )}
-                      {key in draft && (
-                        <Badge variant="secondary" className="text-xs">
-                          {t("modified")}
-                        </Badge>
-                      )}
-                    </div>
-                    <Textarea
-                      value={value}
-                      rows={2}
-                      onChange={(event) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          [key]: event.target.value,
-                        }))
-                      }
                     />
-                  </div>
-                );
-              })}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         ))}
+      </div>
 
-        {visible < filtered.length && (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setVisible((value) => value + PAGE_SIZE)}
-          >
-            {t("loadMore")}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+      {visible < filtered.length && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setVisible((value) => value + PAGE_SIZE)}
+        >
+          {t("loadMore")}
+        </Button>
+      )}
+    </div>
   );
 }
 
