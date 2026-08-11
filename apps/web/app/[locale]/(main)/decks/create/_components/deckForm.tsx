@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
@@ -23,6 +24,7 @@ import { CardListSection } from "./form-parts/CardListSection";
 import { SelectedCardsSection } from "./form-parts/SelectedCardsSection";
 
 export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
+  const t = useTranslations("DeckForm");
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -226,7 +228,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
 
         const response = await decksService.update(deck.id, updatePayload);
         if (response) {
-          toast.success("Deck modifié avec succès !");
+          toast.success(t("updated"));
           router.push(`/decks/${deck.id}`);
         }
       } else {
@@ -256,7 +258,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
         };
         const response = await decksService.create(creationData);
         if (response) {
-          toast.success("Deck créé avec succès !");
+          toast.success(t("created"));
           form.reset({
             name: "",
             formatId: 0,
@@ -269,9 +271,7 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
     } catch (err: any) {
       console.error("Deck operation error:", err);
       const backendMessage = err?.response?.data?.message;
-      let toastMsg = deck
-        ? "Erreur lors de la modification du deck"
-        : "Erreur lors de la création du deck";
+      let toastMsg = deck ? t("updateError") : t("createError");
       if (backendMessage) {
         if (Array.isArray(backendMessage)) {
           toastMsg = backendMessage.join(". ");
@@ -349,9 +349,9 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
               {loading ? (
                 <Loader2 className="animate-spin" />
               ) : deck ? (
-                "Modifier le deck"
+                t("submitEdit")
               ) : (
-                "Créer le deck"
+                t("submitCreate")
               )}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

@@ -1,11 +1,30 @@
-import { H2 } from "@/components/Shared/Titles";
+import { getTranslations } from "next-intl/server";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { loadSystemContent, loadTranslations } from "./actions";
+import { TranslationsManager } from "./_components/TranslationsManager";
 
-const AdminTranslationsPage = () => {
+export default async function AdminTranslationsPage() {
+  const t = await getTranslations("AdminTranslations");
+
+  const [entries, systemContent] = await Promise.all([
+    loadTranslations().catch(() => []),
+    loadSystemContent().catch(() => []),
+  ]);
+
   return (
-    <div>
-      <H2> Gestions des traductions admin</H2>
-    </div>
-  );
-};
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <div className="container mx-auto space-y-6 py-8 px-6">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
+        </div>
 
-export default AdminTranslationsPage;
+        <TranslationsManager
+          entries={entries}
+          systemContent={systemContent}
+          isProduction={process.env.NODE_ENV === "production"}
+        />
+      </div>
+    </ProtectedRoute>
+  );
+}

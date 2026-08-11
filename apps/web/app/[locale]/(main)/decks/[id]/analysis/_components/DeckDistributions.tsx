@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DeckAnalysis } from "@/types/deck-analysis";
@@ -18,6 +19,7 @@ interface DeckDistributionsProps {
 }
 
 export function DeckDistributions({ analysis }: DeckDistributionsProps) {
+  const t = useTranslations("DeckDistributions");
   const curveData = analysis.attackCostDistribution.map((entry) => ({
     cost: `${entry.cost}`,
     count: entry.count,
@@ -27,11 +29,11 @@ export function DeckDistributions({ analysis }: DeckDistributionsProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Card className="border-primary/20 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Répartition des types</CardTitle>
+          <CardTitle className="text-base">{t("typeDistribution")}</CardTitle>
         </CardHeader>
         <CardContent>
           {analysis.typeDistribution.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun type détecté.</p>
+            <p className="text-sm text-muted-foreground">{t("noTypes")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {analysis.typeDistribution.map((entry) => (
@@ -75,15 +77,11 @@ export function DeckDistributions({ analysis }: DeckDistributionsProps) {
 
       <Card className="border-primary/20 shadow-sm md:col-span-2">
         <CardHeader>
-          <CardTitle className="text-base">
-            Courbe des coûts d'attaque
-          </CardTitle>
+          <CardTitle className="text-base">{t("attackCostCurve")}</CardTitle>
         </CardHeader>
         <CardContent>
           {curveData.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Pas d'attaques recensées.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("noAttacks")}</p>
           ) : (
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
@@ -96,7 +94,7 @@ export function DeckDistributions({ analysis }: DeckDistributionsProps) {
                     dataKey="cost"
                     tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
                     label={{
-                      value: "Coût en énergies",
+                      value: t("energyCost"),
                       position: "insideBottom",
                       offset: -4,
                       fontSize: 12,

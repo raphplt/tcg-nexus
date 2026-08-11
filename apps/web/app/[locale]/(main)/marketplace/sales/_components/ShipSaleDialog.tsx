@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export default function ShipSaleDialog({ sale, onClose, onConfirm }: Props) {
+  const t = useTranslations("ShipSale");
   const [carrier, setCarrier] = useState<string>(CARRIERS[0] ?? "La Poste");
   const [trackingNumber, setTrackingNumber] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +47,7 @@ export default function ShipSaleDialog({ sale, onClose, onConfirm }: Props) {
 
   const handleConfirm = async () => {
     if (trackingNumber.trim().length < 3) {
-      setError("Le numéro de suivi est obligatoire pour marquer l'expédition.");
+      setError(t("trackingRequired"));
       return;
     }
 
@@ -63,7 +65,7 @@ export default function ShipSaleDialog({ sale, onClose, onConfirm }: Props) {
     <Dialog open={!!sale} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Marquer comme expédiée</DialogTitle>
+          <DialogTitle>{t("markShipped")}</DialogTitle>
           <DialogDescription>
             {sale?.productName} — commande #{sale?.order?.id}. L&apos;acheteur
             sera notifié et verra le numéro de suivi.
@@ -72,7 +74,7 @@ export default function ShipSaleDialog({ sale, onClose, onConfirm }: Props) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="carrier">Transporteur</Label>
+            <Label htmlFor="carrier">{t("carrier")}</Label>
             <Select value={carrier} onValueChange={setCarrier}>
               <SelectTrigger id="carrier">
                 <SelectValue />
@@ -88,7 +90,7 @@ export default function ShipSaleDialog({ sale, onClose, onConfirm }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tracking">Numéro de suivi</Label>
+            <Label htmlFor="tracking">{t("trackingNumber")}</Label>
             <Input
               id="tracking"
               value={trackingNumber}

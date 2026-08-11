@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowRight, Package, Sparkles, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useState } from "react";
@@ -33,6 +34,7 @@ export function SealedProductsPreview({
   className,
   gridCols,
 }: SealedProductsPreviewProps) {
+  const t = useTranslations("SealedPreview");
   const [mode, setMode] = useState<Mode>(defaultMode);
 
   const { data: popular, isLoading: loadingPopular } =
@@ -51,7 +53,7 @@ export function SealedProductsPreview({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Package className="w-6 h-6 text-primary" />
-          <H2>Produits scellés</H2>
+          <H2>{t("title")}</H2>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -68,7 +70,7 @@ export function SealedProductsPreview({
             onClick={() => setMode("recent")}
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Récents
+            {t("recent")}
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/marketplace/sealed">
@@ -93,7 +95,7 @@ export function SealedProductsPreview({
       ) : (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            Aucun produit scellé pour le moment
+            {t("empty")}
           </CardContent>
         </Card>
       )}

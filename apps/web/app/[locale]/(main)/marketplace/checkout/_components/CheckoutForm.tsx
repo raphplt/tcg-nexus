@@ -5,6 +5,7 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
+import { useTranslations } from "next-intl";
 import { AlertCircle } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useState } from "react";
@@ -37,6 +38,7 @@ export default function CheckoutForm({
   currency,
   shippingAddress,
 }: Props) {
+  const t = useTranslations("CheckoutForm");
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -69,7 +71,7 @@ export default function CheckoutForm({
     });
 
     if (error) {
-      setMessage(error.message ?? "Une erreur inattendue est survenue.");
+      setMessage(error.message ?? t("unexpectedError"));
       setIsLoading(false);
       return;
     }
@@ -85,10 +87,10 @@ export default function CheckoutForm({
     try {
       await paymentService.confirmOrder(orderId);
       await fetchCart();
-      toast.success("Commande confirmée !");
+      toast.success(t("orderConfirmed"));
       router.push(`/orders/${orderId}`);
     } catch {
-      toast.success("Paiement reçu, confirmation en cours.");
+      toast.success(t("paymentReceived"));
       router.push(`/orders/${orderId}`);
     }
   };
@@ -119,7 +121,7 @@ export default function CheckoutForm({
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer le paiement</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmPayment")}</AlertDialogTitle>
             <AlertDialogDescription>
               Vous êtes sur le point de payer{" "}
               <span className="font-semibold text-foreground">
@@ -131,7 +133,7 @@ export default function CheckoutForm({
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmPayment}>
-              Confirmer le paiement
+              {t("confirmPayment")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

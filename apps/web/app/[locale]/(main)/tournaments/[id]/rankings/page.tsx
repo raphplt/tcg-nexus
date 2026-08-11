@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Trophy,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
@@ -20,6 +21,7 @@ import { useTournament } from "@/hooks/useTournament";
 import { RankingsDisplay } from "./_components/RankingsDisplay";
 
 export default function RankingsPage() {
+  const t = useTranslations("TournamentRankingsPage");
   const { id } = useParams();
   const { tournament } = useTournament(id as string);
   const { rankings, stats, isLoading, refetch } = useRankings(id as string);
@@ -46,8 +48,8 @@ export default function RankingsPage() {
         "Joueur",
         "Points",
         "Victoires",
-        "Défaites",
-        "Égalités",
+        t("losses"),
+        t("draws"),
         "% Victoires",
       ].join(","),
       ...rankings.map((r) =>
@@ -94,7 +96,7 @@ export default function RankingsPage() {
             <Button variant="ghost" size="sm" asChild>
               <Link href={`/tournaments/${id}`}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour au tournoi
+                {t("backToTournament")}
               </Link>
             </Button>
 
@@ -110,7 +112,7 @@ export default function RankingsPage() {
                 )}
                 {tournament?.status === "in_progress" && (
                   <Badge variant="secondary" className="animate-pulse">
-                    Mise à jour automatique
+                    {t("autoUpdate")}
                   </Badge>
                 )}
               </div>
@@ -208,7 +210,9 @@ export default function RankingsPage() {
                 <div className="text-2xl font-bold text-blue-600">
                   {stats.totalPlayers}
                 </div>
-                <div className="text-sm text-muted-foreground">Joueurs</div>
+                <div className="text-sm text-muted-foreground">
+                  {t("players")}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -216,7 +220,9 @@ export default function RankingsPage() {
                 <div className="text-2xl font-bold text-green-600">
                   {stats.totalMatches}
                 </div>
-                <div className="text-sm text-muted-foreground">Matches</div>
+                <div className="text-sm text-muted-foreground">
+                  {t("matches")}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -224,7 +230,9 @@ export default function RankingsPage() {
                 <div className="text-2xl font-bold text-purple-600">
                   {stats.avgPoints}
                 </div>
-                <div className="text-sm text-muted-foreground">Points moy.</div>
+                <div className="text-sm text-muted-foreground">
+                  {t("avgPoints")}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -233,7 +241,7 @@ export default function RankingsPage() {
                   {stats.perfectRecord}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Sans défaite
+                  {t("undefeated")}
                 </div>
               </CardContent>
             </Card>

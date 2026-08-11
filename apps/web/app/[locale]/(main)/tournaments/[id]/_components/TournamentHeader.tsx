@@ -8,6 +8,7 @@ import {
   Settings2,
   Trophy,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import React from "react";
 import { H1 } from "@/components/Shared/Titles";
@@ -37,6 +38,7 @@ export function TournamentHeader({
   onRegister,
   formatDate,
 }: TournamentHeaderProps) {
+  const t = useTranslations("TournamentHeader");
   const statusBadgeVariant =
     statusColor[tournament.status || ""] ?? "secondary";
   const typeBadgeVariant = typeColor[tournament.type || ""] ?? "outline";
@@ -57,10 +59,11 @@ export function TournamentHeader({
         </Badge>
         {tournament.isPublic === false ? (
           <Badge variant="secondary" className="gap-1">
-            <Lock className="size-3" /> Privé
+            <Lock className="size-3" />
+            {t("private")}
           </Badge>
         ) : (
-          <Badge variant="outline">Public</Badge>
+          <Badge variant="outline">{t("public")}</Badge>
         )}
         {tournament.requiresApproval && (
           <Badge variant="secondary" className="gap-1">
@@ -89,7 +92,7 @@ export function TournamentHeader({
           className="shadow-md"
           onClick={onRegister}
         >
-          {registrationOpen ? "S'inscrire" : "Inscriptions fermées"}
+          {registrationOpen ? "S'inscrire" : t("registrationsClosed")}
         </Button>
 
         {permissions.canViewAdmin && (
@@ -103,7 +106,8 @@ export function TournamentHeader({
         {tournament.status === "in_progress" && (
           <Button variant="secondary" className="shadow-md" asChild>
             <Link href={`/tournaments/${tournament.id}/bracket`}>
-              <Trophy className="size-4 mr-2" /> Voir le tableau
+              <Trophy className="size-4 mr-2" />
+              {t("viewBracket")}
             </Link>
           </Button>
         )}
@@ -113,7 +117,8 @@ export function TournamentHeader({
             tournament.status === "finished") && (
             <Button variant="outline" className="shadow-md" asChild>
               <Link href={`/tournaments/${tournament.id}/player`}>
-                <BarChart3 className="size-4 mr-2" /> Mon dashboard
+                <BarChart3 className="size-4 mr-2" />
+                {t("myDashboard")}
               </Link>
             </Button>
           )}
@@ -121,9 +126,10 @@ export function TournamentHeader({
         <Button
           variant="secondary"
           className="shadow-md"
-          aria-label="Règlement"
+          aria-label={t("rules")}
         >
-          <ListChecks className="size-4 mr-2" /> Règlement
+          <ListChecks className="size-4 mr-2" />
+          {t("rules")}
         </Button>
       </div>
     </header>

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +23,7 @@ export function ShareDialog({
   onOpenChange,
   shareCode,
 }: ShareDialogProps) {
+  const t = useTranslations("ShareDeck");
   const [copied, setCopied] = useState(false);
   const [origin, setOrigin] = useState("");
 
@@ -34,7 +36,7 @@ export function ShareDialog({
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
-    toast.success("Code copié dans le presse-papier");
+    toast.success(t("copied"));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -42,11 +44,8 @@ export function ShareDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Partager le deck</DialogTitle>
-          <DialogDescription>
-            Partagez ce code avec d'autres joueurs pour qu'ils puissent importer
-            votre deck
-          </DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -64,9 +63,7 @@ export function ShareDialog({
             </Button>
           </div>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Ou partagez ce lien direct :
-            </p>
+            <p className="text-sm text-muted-foreground">{t("orShareLink")}</p>
             <div className="flex items-center gap-2">
               <Input
                 value={`${origin}/decks/import?code=${shareCode}`}

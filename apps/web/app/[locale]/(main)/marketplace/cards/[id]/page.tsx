@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useState } from "react";
@@ -19,6 +20,7 @@ import { CardHeading } from "./_components/CardHeading";
 import { ListingsTable } from "./_components/ListingsTable";
 
 export default function CardDetailPage() {
+  const t = useTranslations("CardPage");
   const { id } = useParams();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -54,7 +56,7 @@ export default function CardDetailPage() {
 
   const handleAddToCart = async (listingId: number) => {
     if (!isAuthenticated) {
-      toast.error("Vous devez être connecté pour ajouter au panier");
+      toast.error(t("loginRequired"));
       router.push("/auth/login");
       return;
     }
@@ -66,10 +68,10 @@ export default function CardDetailPage() {
       }
 
       await addItem({ listingId, quantity: 1 });
-      toast.success("Article ajouté au panier !");
+      toast.success(t("addedToCart"));
     } catch (error: any) {
       const errorMessage =
-        error?.response?.data?.message || "Erreur lors de l'ajout au panier";
+        error?.response?.data?.message || t("addError");
       toast.error(errorMessage);
     } finally {
       setAddingToListingId(null);
@@ -91,10 +93,8 @@ export default function CardDetailPage() {
   if (!card) {
     return (
       <Alert variant="destructive" className="mx-auto mt-12 max-w-2xl">
-        <AlertTitle>Carte introuvable</AlertTitle>
-        <AlertDescription>
-          Cette carte n&apos;existe pas ou n&apos;est plus référencée.
-        </AlertDescription>
+        <AlertTitle>{t("notFoundTitle")}</AlertTitle>
+        <AlertDescription>{t("notFoundDescription")}</AlertDescription>
       </Alert>
     );
   }

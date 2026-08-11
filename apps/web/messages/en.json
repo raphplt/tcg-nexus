@@ -236,7 +236,13 @@
     "emptyCart": "Go back to the marketplace to add items.",
     "browseMarketplace": "Browse the marketplace",
     "startError": "Could not start the payment. Please try again in a moment.",
-    "sealedProduct": "Sealed product"
+    "sealedProduct": "Sealed product",
+    "stripeMissing": "Payment is temporarily unavailable: the Stripe configuration is missing. No amount has been charged.",
+    "orderSummary": "Order summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "emptyCartTitle": "Your cart is empty"
   },
   "Orders": {
     "title": "My orders",
@@ -1437,9 +1443,9 @@
         "description": "Creation, statuses, registrations"
       },
       "translations": {
-        "title": "Catalogue",
-        "headline": "Series, sets and cards",
-        "description": "Pokémon content synced from TCGdex"
+        "title": "Translations",
+        "headline": "Interface & content",
+        "description": "Interface keys and system content"
       }
     },
     "tabs": {
@@ -1712,7 +1718,11 @@
     "player": "Player",
     "search": "Search",
     "actions": "Actions",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "bulkConfirmed": "{count, plural, one {# registration confirmed} other {# registrations confirmed}}",
+    "bulkCancelled": "{count, plural, one {# registration cancelled} other {# registrations cancelled}}",
+    "bulkCheckedIn": "{count, plural, one {# registration checked in} other {# registrations checked in}}",
+    "bulkPromoted": "{count, plural, one {# player promoted from the waitlist.} other {# players promoted from the waitlist.}}"
   },
   "TournamentAdmin": {
     "loadError": "Could not load the tournament.",
@@ -2178,7 +2188,13 @@
     "chooseFormat": "Choose a format",
     "publicHelp": "Automatically share your deck with the community.",
     "isPublic": "Public deck",
-    "format": "Format"
+    "format": "Format",
+    "updated": "Deck updated!",
+    "created": "Deck created!",
+    "updateError": "Could not update the deck",
+    "createError": "Could not create the deck",
+    "submitEdit": "Update deck",
+    "submitCreate": "Create deck"
   },
   "DeckDetail": {
     "loadError": "Something went wrong while loading the deck.",
@@ -2212,5 +2228,178 @@
     "messagePlaceholder": "Your message...",
     "backToSupport": "Back to support",
     "notFound": "Ticket not found."
+  },
+  "DeckStats": {
+    "title": "Quick overview",
+    "subtitle": "Track your card distribution live.",
+    "empty": "Add your first cards to see the overview.",
+    "varieties": "Varieties"
+  },
+  "DecksFilters": {
+    "reset": "Reset",
+    "namePlaceholder": "Deck name",
+    "hideFilters": "Hide filters",
+    "advancedFilters": "Advanced filters",
+    "all": "All",
+    "search": "Search",
+    "order": "Order",
+    "sortBy": "Sort by",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "create": "Create a deck"
+  },
+  "DeckOverviewStats": {
+    "formatValid": "Format valid",
+    "pokemon": "Pokémon",
+    "energies": "Energies",
+    "averageCost": "Average cost",
+    "energiesPerAttack": "Energies per attack",
+    "categories": "Categories"
+  },
+  "DeckDistributions": {
+    "attackCostCurve": "Attack cost curve",
+    "noAttacks": "No attack recorded.",
+    "energyCost": "Energy cost",
+    "typeDistribution": "Type distribution",
+    "noTypes": "No type detected.",
+    "type": "Type"
+  },
+  "ShareDeck": {
+    "title": "Share deck",
+    "description": "Share this code with other players so they can import your deck",
+    "orShareLink": "Or share this direct link:",
+    "copied": "Code copied to clipboard"
+  },
+  "TournamentRankingsPage": {
+    "backToTournament": "Back to tournament",
+    "autoUpdate": "Automatic update",
+    "undefeated": "Undefeated",
+    "losses": "Losses",
+    "draws": "Draws",
+    "players": "Players",
+    "matches": "Matches",
+    "avgPoints": "Avg. points"
+  },
+  "TournamentHeader": {
+    "private": "Private",
+    "public": "Public",
+    "viewBracket": "View bracket",
+    "myDashboard": "My dashboard",
+    "rules": "Rules",
+    "registrationsClosed": "Registrations closed"
+  },
+  "ShipSale": {
+    "trackingRequired": "The tracking number is required to mark the shipment.",
+    "markShipped": "Mark as shipped",
+    "trackingNumber": "Tracking number",
+    "carrier": "Carrier"
+  },
+  "PriceSuggestion": {
+    "computing": "Computing the suggested price...",
+    "noReference": "No price reference available for this card.",
+    "usePrice": "Use this price",
+    "marketReference": "market reference price"
+  },
+  "ProfileStats": {
+    "title": "Stats",
+    "noTournaments": "No tournament played yet",
+    "noBadges": "No badge unlocked yet",
+    "badges": "Badges",
+    "wins": "Wins",
+    "losses": "Losses",
+    "winRate": "Win rate",
+    "tournamentsPlayed": "Tournaments played"
+  },
+  "CheckoutForm": {
+    "confirmPayment": "Confirm payment",
+    "unexpectedError": "An unexpected error occurred.",
+    "orderConfirmed": "Order confirmed!",
+    "paymentReceived": "Payment received, confirmation in progress."
+  },
+  "DeckCreate": {
+    "title": "New deck",
+    "subtitle": "Search your cards with advanced filters, adjust quantities and preview your deck before publishing it.",
+    "formatsError": "Could not load the formats",
+    "loginRequired": "Sign in required.",
+    "loginRequiredHelp": "You must be signed in to create a deck."
+  },
+  "UserDecks": {
+    "title": "My decks",
+    "empty": "You have not created any deck yet.",
+    "createFirst": "Create my first deck",
+    "create": "Create a deck",
+    "import": "Import a deck",
+    "new": "New"
+  },
+  "DeckAnalysisPage": {
+    "title": "Deck analysis",
+    "failed": "The analysis could not complete. Check that the deck contains cards, then try again.",
+    "error": "Could not analyse the deck"
+  },
+  "ImageUpload": {
+    "dropzone": "Drag and drop an image or click to browse",
+    "formats": "PNG, JPG or WEBP (max. 2 MB)",
+    "uploading": "Uploading..."
+  },
+  "SealedPreview": {
+    "title": "Sealed products",
+    "recent": "Recent",
+    "empty": "No sealed product at the moment"
+  },
+  "AdminTranslations": {
+    "title": "Translation management",
+    "subtitle": "Edit interface texts and the translations of system content.",
+    "productionWarning": "In production, translation files are reset on every deployment: report your changes back to the repository.",
+    "pendingChanges": "{count, plural, =0 {No pending change} one {# pending change} other {# pending changes}}",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "{count, plural, one {# translation saved} other {# translations saved}}",
+    "saveError": "Could not save: {error}",
+    "tabInterface": "Interface ({count})",
+    "tabContent": "System content ({count})",
+    "interfaceTitle": "Interface texts",
+    "searchPlaceholder": "Search a key or a text...",
+    "onlyMissing": "Missing only",
+    "resultCount": "{count, plural, one {# key} other {# keys}}",
+    "noResults": "No key matches this search.",
+    "missing": "Missing",
+    "modified": "Modified",
+    "loadMore": "Show more",
+    "contentTitle": "System content",
+    "contentHelp": "French is the reference and comes from the database. Other languages are stored in the dictionaries as an overlay.",
+    "contentEmpty": "No system content to translate at the moment.",
+    "translationPlaceholder": "Translation..."
+  },
+  "CardPage": {
+    "notFoundTitle": "Card not found",
+    "notFoundDescription": "This card does not exist or is no longer listed.",
+    "loginRequired": "You must be signed in to add to the cart",
+    "addedToCart": "Item added to cart!",
+    "addError": "Could not add to the cart"
+  },
+  "DeckCards": {
+    "title": "Cards",
+    "subtitle": "Browse the deck's cards and their quantities.",
+    "empty": "No card",
+    "emptySide": "No side card"
+  },
+  "MyDecks": {
+    "title": "My decks",
+    "loginRequired": "Sign in required.",
+    "loginRequiredHelp": "You must be signed in to see your decks.",
+    "allFormats": "All",
+    "sortCreatedAt": "Creation date",
+    "sortName": "Name",
+    "sortType": "Type"
+  },
+  "SellSealed": {
+    "loginRequired": "You must be signed in to sell.",
+    "created": "Listing created!",
+    "createError": "Could not create the listing.",
+    "price": "Price",
+    "currency": "Currency",
+    "quantity": "Quantity",
+    "condition": "Condition",
+    "descriptionOptional": "Description (optional)"
   }
 }

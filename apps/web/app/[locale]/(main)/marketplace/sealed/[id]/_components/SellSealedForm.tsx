@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
@@ -29,6 +30,7 @@ interface SellSealedFormProps {
 export default function SellSealedForm({
   sealedProductId,
 }: SellSealedFormProps) {
+  const t = useTranslations("SellSealed");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -45,7 +47,7 @@ export default function SellSealedForm({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      toast.error("Vous devez être connecté pour vendre.");
+      toast.error(t("loginRequired"));
       router.push("/auth/login");
       return;
     }
@@ -66,7 +68,7 @@ export default function SellSealedForm({
         sealedCondition: condition,
         description: description || undefined,
       });
-      toast.success("Annonce créée !");
+      toast.success(t("created"));
       queryClient.invalidateQueries({
         queryKey: ["sealed-products", sealedProductId, "listings"],
       });
@@ -75,7 +77,7 @@ export default function SellSealedForm({
     } catch (err: any) {
       const message =
         err?.response?.data?.message ||
-        "Erreur lors de la création de l'annonce.";
+        t("createError");
       toast.error(Array.isArray(message) ? message.join(", ") : message);
     } finally {
       setLoading(false);
@@ -86,7 +88,7 @@ export default function SellSealedForm({
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor="sealed-price">Prix</Label>
+          <Label htmlFor="sealed-price">{t("price")}</Label>
           <Input
             id="sealed-price"
             type="number"
@@ -98,7 +100,7 @@ export default function SellSealedForm({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="sealed-currency">Devise</Label>
+          <Label htmlFor="sealed-currency">{t("currency")}</Label>
           <Select value={currency} onValueChange={setCurrency}>
             <SelectTrigger id="sealed-currency">
               <SelectValue />
@@ -116,7 +118,7 @@ export default function SellSealedForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label htmlFor="sealed-quantity">Quantité</Label>
+          <Label htmlFor="sealed-quantity">{t("quantity")}</Label>
           <Input
             id="sealed-quantity"
             type="number"
@@ -126,7 +128,7 @@ export default function SellSealedForm({
           />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="sealed-condition">État</Label>
+          <Label htmlFor="sealed-condition">{t("condition")}</Label>
           <Select
             value={condition}
             onValueChange={(v) => setCondition(v as SealedCondition)}
@@ -148,7 +150,7 @@ export default function SellSealedForm({
       <ShippingPolicyNotice productKind="sealed" />
 
       <div className="space-y-1">
-        <Label htmlFor="sealed-description">Description (optionnelle)</Label>
+        <Label htmlFor="sealed-description">{t("descriptionOptional")}</Label>
         <Textarea
           id="sealed-description"
           value={description}

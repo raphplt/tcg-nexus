@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { DeckAnalysis } from "@/types/deck-analysis";
 
@@ -28,20 +29,21 @@ const Stat = ({
 );
 
 export function DeckOverviewStats({ analysis }: DeckOverviewStatsProps) {
+  const t = useTranslations("DeckOverviewStats");
   return (
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       <Stat
         label="Total"
         value={`${analysis.totalCards}/60`}
-        hint={analysis.totalCards === 60 ? "Format respecté" : "Hors format"}
+        hint={analysis.totalCards === 60 ? t("formatValid") : "Hors format"}
       />
-      <Stat label="Pokémon" value={analysis.pokemonCount} />
-      <Stat label="Énergies" value={analysis.energyCount} />
+      <Stat label={t("pokemon")} value={analysis.pokemonCount} />
+      <Stat label={t("energies")} value={analysis.energyCount} />
       <Stat label="Dresseurs" value={analysis.trainerCount} />
       <Stat
-        label="Coût moyen"
+        label={t("averageCost")}
         value={analysis.averageEnergyCost.toFixed(2)}
-        hint="Énergies par attaque"
+        hint={t("energiesPerAttack")}
       />
     </div>
   );

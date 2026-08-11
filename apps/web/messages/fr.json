@@ -236,7 +236,13 @@
     "emptyCart": "Retournez sur la marketplace pour ajouter des articles.",
     "browseMarketplace": "Découvrir la marketplace",
     "startError": "Impossible de démarrer le paiement. Réessayez dans un instant.",
-    "sealedProduct": "Produit scellé"
+    "sealedProduct": "Produit scellé",
+    "stripeMissing": "Le paiement est momentanément indisponible : la configuration Stripe est manquante. Aucun montant n'a été débité.",
+    "orderSummary": "Résumé de la commande",
+    "subtotal": "Sous-total",
+    "shipping": "Frais de port",
+    "total": "Total",
+    "emptyCartTitle": "Votre panier est vide"
   },
   "Orders": {
     "title": "Mes commandes",
@@ -1437,9 +1443,9 @@
         "description": "Création, statuts, inscriptions"
       },
       "translations": {
-        "title": "Catalogue",
-        "headline": "Séries, sets et cartes",
-        "description": "Contenu Pokémon synchronisé depuis TCGdex"
+        "title": "Traductions",
+        "headline": "Interface & contenus",
+        "description": "Clés d'interface et contenus système"
       }
     },
     "tabs": {
@@ -1712,7 +1718,11 @@
     "player": "Joueur",
     "search": "Rechercher",
     "actions": "Actions",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "bulkConfirmed": "{count, plural, one {# inscription confirmée} other {# inscriptions confirmées}}",
+    "bulkCancelled": "{count, plural, one {# inscription annulée} other {# inscriptions annulées}}",
+    "bulkCheckedIn": "{count, plural, one {# inscription enregistrée au check-in} other {# inscriptions enregistrées au check-in}}",
+    "bulkPromoted": "{count, plural, one {# joueur promu depuis la liste d'attente.} other {# joueurs promus depuis la liste d'attente.}}"
   },
   "TournamentAdmin": {
     "loadError": "Impossible de charger le tournoi.",
@@ -2178,7 +2188,13 @@
     "chooseFormat": "Choisissez un format",
     "publicHelp": "Partagez automatiquement votre deck avec la communauté.",
     "isPublic": "Deck public",
-    "format": "Format"
+    "format": "Format",
+    "updated": "Deck modifié avec succès !",
+    "created": "Deck créé avec succès !",
+    "updateError": "Erreur lors de la modification du deck",
+    "createError": "Erreur lors de la création du deck",
+    "submitEdit": "Modifier le deck",
+    "submitCreate": "Créer le deck"
   },
   "DeckDetail": {
     "loadError": "Erreur lors du chargement du deck.",
@@ -2212,5 +2228,178 @@
     "messagePlaceholder": "Votre message...",
     "backToSupport": "Retour au support",
     "notFound": "Ticket introuvable."
+  },
+  "DeckStats": {
+    "title": "Aperçu rapide",
+    "subtitle": "Suivez en direct la répartition de vos cartes.",
+    "empty": "Ajoutez vos premières cartes pour voir l'aperçu.",
+    "varieties": "Variétés"
+  },
+  "DecksFilters": {
+    "reset": "Réinitialiser",
+    "namePlaceholder": "Nom du deck",
+    "hideFilters": "Masquer les filtres",
+    "advancedFilters": "Filtres avancés",
+    "all": "Tous",
+    "search": "Recherche",
+    "order": "Ordre",
+    "sortBy": "Trier par",
+    "ascending": "Ascendant",
+    "descending": "Descendant",
+    "create": "Créer un deck"
+  },
+  "DeckOverviewStats": {
+    "formatValid": "Format respecté",
+    "pokemon": "Pokémon",
+    "energies": "Énergies",
+    "averageCost": "Coût moyen",
+    "energiesPerAttack": "Énergies par attaque",
+    "categories": "Catégories"
+  },
+  "DeckDistributions": {
+    "attackCostCurve": "Courbe des coûts d'attaque",
+    "noAttacks": "Pas d'attaques recensées.",
+    "energyCost": "Coût en énergies",
+    "typeDistribution": "Répartition des types",
+    "noTypes": "Aucun type détecté.",
+    "type": "Type"
+  },
+  "ShareDeck": {
+    "title": "Partager le deck",
+    "description": "Partagez ce code avec d'autres joueurs pour qu'ils puissent importer votre deck",
+    "orShareLink": "Ou partagez ce lien direct :",
+    "copied": "Code copié dans le presse-papier"
+  },
+  "TournamentRankingsPage": {
+    "backToTournament": "Retour au tournoi",
+    "autoUpdate": "Mise à jour automatique",
+    "undefeated": "Sans défaite",
+    "losses": "Défaites",
+    "draws": "Égalités",
+    "players": "Joueurs",
+    "matches": "Matches",
+    "avgPoints": "Points moy."
+  },
+  "TournamentHeader": {
+    "private": "Privé",
+    "public": "Public",
+    "viewBracket": "Voir le tableau",
+    "myDashboard": "Mon dashboard",
+    "rules": "Règlement",
+    "registrationsClosed": "Inscriptions fermées"
+  },
+  "ShipSale": {
+    "trackingRequired": "Le numéro de suivi est obligatoire pour marquer l'expédition.",
+    "markShipped": "Marquer comme expédiée",
+    "trackingNumber": "Numéro de suivi",
+    "carrier": "Transporteur"
+  },
+  "PriceSuggestion": {
+    "computing": "Calcul du prix conseillé...",
+    "noReference": "Aucune référence de prix disponible pour cette carte.",
+    "usePrice": "Utiliser ce prix",
+    "marketReference": "prix de référence du marché"
+  },
+  "ProfileStats": {
+    "title": "Statistiques",
+    "noTournaments": "Aucun tournoi joué pour le moment",
+    "noBadges": "Aucun badge débloqué pour le moment",
+    "badges": "Badges",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "winRate": "Taux de victoire",
+    "tournamentsPlayed": "Tournois participés"
+  },
+  "CheckoutForm": {
+    "confirmPayment": "Confirmer le paiement",
+    "unexpectedError": "Une erreur inattendue est survenue.",
+    "orderConfirmed": "Commande confirmée !",
+    "paymentReceived": "Paiement reçu, confirmation en cours."
+  },
+  "DeckCreate": {
+    "title": "Nouveau deck",
+    "subtitle": "Recherchez vos cartes avec des filtres avancés, ajustez les quantités et prévisualisez votre deck avant de le publier.",
+    "formatsError": "Erreur lors du chargement des formats",
+    "loginRequired": "Connexion requise.",
+    "loginRequiredHelp": "Vous devez être connecté pour créer un deck."
+  },
+  "UserDecks": {
+    "title": "Mes decks",
+    "empty": "Vous n'avez pas encore créé de deck.",
+    "createFirst": "Créer mon premier deck",
+    "create": "Créer un deck",
+    "import": "Importer un deck",
+    "new": "Nouveau"
+  },
+  "DeckAnalysisPage": {
+    "title": "Analyse du deck",
+    "failed": "L'analyse n'a pas pu aboutir. Vérifiez que le deck contient des cartes puis réessayez.",
+    "error": "Impossible d'analyser le deck"
+  },
+  "ImageUpload": {
+    "dropzone": "Glissez-déposez une image ou cliquez pour parcourir",
+    "formats": "PNG, JPG ou WEBP (max. 2 Mo)",
+    "uploading": "Téléversement en cours..."
+  },
+  "SealedPreview": {
+    "title": "Produits scellés",
+    "recent": "Récents",
+    "empty": "Aucun produit scellé pour le moment"
+  },
+  "AdminTranslations": {
+    "title": "Gestion des traductions",
+    "subtitle": "Éditez les textes de l'interface et les traductions des contenus système.",
+    "productionWarning": "En production, les fichiers de traduction sont réinitialisés à chaque déploiement : reportez vos modifications dans le dépôt.",
+    "pendingChanges": "{count, plural, =0 {Aucune modification en attente} one {# modification en attente} other {# modifications en attente}}",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saved": "{count, plural, one {# traduction enregistrée} other {# traductions enregistrées}}",
+    "saveError": "Enregistrement impossible : {error}",
+    "tabInterface": "Interface ({count})",
+    "tabContent": "Contenus système ({count})",
+    "interfaceTitle": "Textes de l'interface",
+    "searchPlaceholder": "Rechercher une clé ou un texte...",
+    "onlyMissing": "Manquantes uniquement",
+    "resultCount": "{count, plural, one {# clé} other {# clés}}",
+    "noResults": "Aucune clé ne correspond à cette recherche.",
+    "missing": "Manquante",
+    "modified": "Modifiée",
+    "loadMore": "Afficher plus",
+    "contentTitle": "Contenus système",
+    "contentHelp": "Le français fait référence : il vient de la base. Les autres langues sont stockées dans les dictionnaires et servent de surcouche.",
+    "contentEmpty": "Aucun contenu système à traduire pour le moment.",
+    "translationPlaceholder": "Traduction..."
+  },
+  "CardPage": {
+    "notFoundTitle": "Carte introuvable",
+    "notFoundDescription": "Cette carte n'existe pas ou n'est plus référencée.",
+    "loginRequired": "Vous devez être connecté pour ajouter au panier",
+    "addedToCart": "Article ajouté au panier !",
+    "addError": "Erreur lors de l'ajout au panier"
+  },
+  "DeckCards": {
+    "title": "Cartes",
+    "subtitle": "Parcourez les cartes du deck et leurs quantités.",
+    "empty": "Aucune carte",
+    "emptySide": "Aucune carte side"
+  },
+  "MyDecks": {
+    "title": "Mes decks",
+    "loginRequired": "Connexion requise.",
+    "loginRequiredHelp": "Vous devez être connecté pour voir vos decks.",
+    "allFormats": "Tous",
+    "sortCreatedAt": "Date de création",
+    "sortName": "Nom",
+    "sortType": "Type"
+  },
+  "SellSealed": {
+    "loginRequired": "Vous devez être connecté pour vendre.",
+    "created": "Annonce créée !",
+    "createError": "Erreur lors de la création de l'annonce.",
+    "price": "Prix",
+    "currency": "Devise",
+    "quantity": "Quantité",
+    "condition": "État",
+    "descriptionOptional": "Description (optionnelle)"
   }
 }

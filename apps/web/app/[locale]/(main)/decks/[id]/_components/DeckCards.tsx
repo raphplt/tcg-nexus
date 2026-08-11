@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Deck } from "@/types/Decks";
 import { DeckCard } from "@/types/deck-cards";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +17,16 @@ const normalizeCategory = (cat?: string) =>
 
 const CardGrid = ({
   cards,
-  emptyLabel = "Aucune carte",
+  emptyLabel,
 }: {
   cards: DeckCard[];
   emptyLabel?: string;
 }) => {
+  const t = useTranslations("DeckCards");
+  const label = emptyLabel ?? t("empty");
   if (!cards.length) {
     return (
-      <div className="text-sm text-muted-foreground py-4">{emptyLabel}</div>
+      <div className="text-sm text-muted-foreground py-4">{label}</div>
     );
   }
   return (
@@ -110,6 +113,7 @@ function CardSection({ title, cards }: { title: string; cards: DeckCard[] }) {
 }
 
 export function DeckCards({ deck }: DeckCardsProps) {
+  const t = useTranslations("DeckCards");
   const mainCards = deck.cards?.filter((c) => c.role === "main") || [];
   const sideCards = deck.cards?.filter((c) => c.role === "side") || [];
 
@@ -136,10 +140,8 @@ export function DeckCards({ deck }: DeckCardsProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-col gap-2">
-          <CardTitle>Cartes</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Parcourez les cartes du deck et leurs quantités.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="main">
@@ -153,7 +155,7 @@ export function DeckCards({ deck }: DeckCardsProps) {
               <CardGrid cards={mainCards} />
             </TabsContent>
             <TabsContent value="side">
-              <CardGrid cards={sideCards} emptyLabel="Aucune carte side" />
+              <CardGrid cards={sideCards} emptyLabel={t("emptySide")} />
             </TabsContent>
           </Tabs>
         </CardContent>

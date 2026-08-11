@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import Image from "next/image";
 import {
@@ -39,23 +40,22 @@ export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
   mainCount,
   sideCount,
 }) => {
+  const t = useTranslations("DeckStats");
   return (
     <Card className="bg-linear-to-br from-primary/5 via-background to-secondary/10 border-primary/20 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Layers className="w-5 h-5 text-primary" />
-          Aperçu rapide
+          {t("title")}
         </CardTitle>
-        <CardDescription>
-          Suivez en direct la répartition de vos cartes.
-        </CardDescription>
+        <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <StatBlock label="Total cartes" value={mainCount + sideCount} />
           <StatBlock label="Principal" value={mainCount} />
           <StatBlock label="Side" value={sideCount} />
-          <StatBlock label="Variétés" value={cards.length} />
+          <StatBlock label={t("varieties")} value={cards.length} />
         </div>
         <Separator />
         <div className="flex -space-x-3">
@@ -76,9 +76,7 @@ export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
             </div>
           ))}
           {cards.length === 0 && (
-            <div className="text-sm text-muted-foreground">
-              Ajoutez vos premières cartes pour voir l’aperçu.
-            </div>
+            <div className="text-sm text-muted-foreground">{t("empty")}</div>
           )}
         </div>
       </CardContent>

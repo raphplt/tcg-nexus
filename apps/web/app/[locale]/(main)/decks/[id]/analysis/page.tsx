@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
@@ -21,6 +22,7 @@ import { DeckSuggestionsPanel } from "./_components/DeckSuggestionsPanel";
 import { computeDeckScores } from "./_utils/scores";
 
 export default function DeckAnalysisPage() {
+  const t = useTranslations("DeckAnalysisPage");
   const { id } = useParams();
   const router = useRouter();
   const deckId = id as string;
@@ -33,7 +35,7 @@ export default function DeckAnalysisPage() {
   const analyzeMutation = useMutation({
     mutationFn: () => decksService.analyzeDeck(Number(deckId)),
     onError: () => {
-      toast.error("Impossible d'analyser le deck");
+      toast.error(t("error"));
     },
   });
 
@@ -68,7 +70,7 @@ export default function DeckAnalysisPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Analyse du deck
+                {t("title")}
               </h1>
               {isDeckLoading ? (
                 <Skeleton className="h-4 w-40 mt-1" />
@@ -98,8 +100,7 @@ export default function DeckAnalysisPage() {
         {analyzeMutation.isError && !analysis && (
           <Card className="border-destructive">
             <CardContent className="pt-6 text-center text-sm text-destructive">
-              L'analyse n'a pas pu aboutir. Vérifiez que le deck contient des
-              cartes puis réessayez.
+              {t("failed")}
             </CardContent>
           </Card>
         )}

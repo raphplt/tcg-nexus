@@ -78,7 +78,7 @@ export default function CheckoutPage() {
   if (!session && cartItems.length === 0) {
     return (
       <div className="container mx-auto py-10 text-center space-y-4">
-        <h1 className="text-2xl font-bold">Votre panier est vide</h1>
+        <h1 className="text-2xl font-bold">{t("emptyCartTitle")}</h1>
         <p className="text-muted-foreground">{t("emptyCart")}</p>
         <Button onClick={() => router.push("/marketplace")}>
           {t("browseMarketplace")}
@@ -93,10 +93,7 @@ export default function CheckoutPage() {
         <Card className="border-destructive">
           <CardContent className="flex items-start gap-3 p-6 text-sm">
             <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
-            <p>
-              Le paiement est momentanément indisponible : la configuration
-              Stripe est manquante. Aucun montant n&apos;a été débité.
-            </p>
+            <p>{t("stripeMissing")}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,7 +113,7 @@ export default function CheckoutPage() {
         <div className="order-2 lg:order-1">
           <Card>
             <CardHeader>
-              <CardTitle>Résumé de la commande</CardTitle>
+              <CardTitle>{t("orderSummary")}</CardTitle>
             </CardHeader>
             <CardContent>
               {session ? (
@@ -180,7 +177,7 @@ export default function CheckoutPage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Sous-total</span>
+                  <span className="text-muted-foreground">{t("subtotal")}</span>
                   <span>
                     {formatExact(
                       displayAmount - displayShipping,
@@ -189,7 +186,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Frais de port</span>
+                  <span className="text-muted-foreground">{t("shipping")}</span>
                   <span>
                     {displayShipping === 0
                       ? "Offerts"
@@ -198,7 +195,7 @@ export default function CheckoutPage() {
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
+                  <span>{t("total")}</span>
                   <span>{formatExact(displayAmount, displayCurrency)}</span>
                 </div>
               </div>

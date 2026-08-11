@@ -175,17 +175,18 @@ export function RegistrationManager({
         action,
       }),
     onSuccess: async (result) => {
-      const labels: Record<BulkAction, string> = {
-        confirm: "confirmée(s)",
-        cancel: "annulée(s)",
-        check_in: "enregistrée(s) au check-in",
+      const actionKeys: Record<BulkAction, string> = {
+        confirm: "bulkConfirmed",
+        cancel: "bulkCancelled",
+        check_in: "bulkCheckedIn",
       };
+      const summary = t(actionKeys[result.action], {
+        count: result.updatedCount,
+      });
       toast.success(
-        `${result.updatedCount} inscription(s) ${labels[result.action]}${
-          result.promotedCount > 0
-            ? ` ${result.promotedCount} joueur(s) promu(s) depuis la liste d'attente.`
-            : ""
-        }`,
+        result.promotedCount > 0
+          ? `${summary} ${t("bulkPromoted", { count: result.promotedCount })}`
+          : summary,
       );
       setSelectedRegistrations([]);
       await refreshTournamentQueries();

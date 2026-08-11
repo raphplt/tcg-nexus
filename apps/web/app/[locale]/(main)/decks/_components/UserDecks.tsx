@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { H2 } from "@components/Shared/Titles";
 import { Button } from "@components/ui/button";
 import { Skeleton } from "@components/ui/skeleton";
@@ -9,6 +10,7 @@ import { decksService } from "@/services/decks.service";
 import DeckCard from "./DeckCard";
 
 export default function UserDecks() {
+  const t = useTranslations("UserDecks");
   const { user } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["user-decks"],
@@ -21,7 +23,7 @@ export default function UserDecks() {
   if (isLoading) {
     return (
       <div className="space-y-4 mb-12">
-        <H2>Mes Decks</H2>
+        <H2>{t("title")}</H2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
@@ -35,13 +37,14 @@ export default function UserDecks() {
     <div className="space-y-6 mb-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <H2 className="flex items-center gap-2">
-          <UserIcon className="w-6 h-6 text-primary" /> Mes Decks
+          <UserIcon className="w-6 h-6 text-primary" />
+          {t("title")}
         </H2>
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/decks/import">
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Importer un deck</span>
+              <span className="hidden sm:inline">{t("import")}</span>
               <span className="sm:hidden">Importer</span>
             </Button>
           </Link>
@@ -49,7 +52,7 @@ export default function UserDecks() {
             <Button size="sm">
               <Plus className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Nouveau Deck</span>
-              <span className="sm:hidden">Nouveau</span>
+              <span className="sm:hidden">{t("new")}</span>
             </Button>
           </Link>
         </div>
@@ -67,11 +70,9 @@ export default function UserDecks() {
         </div>
       ) : (
         <div className="text-center py-12 border border-dashed border-border rounded-xl bg-card/50">
-          <p className="text-muted-foreground mb-4">
-            Vous n'avez pas encore créé de deck.
-          </p>
+          <p className="text-muted-foreground mb-4">{t("empty")}</p>
           <Link href="/decks/create">
-            <Button variant="outline">Créer mon premier deck</Button>
+            <Button variant="outline">{t("createFirst")}</Button>
           </Link>
         </div>
       )}

@@ -4,6 +4,7 @@ import { LanguagesIcon, ShoppingBag, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,13 +26,14 @@ type AdminTab =
 
 const SUMMARY_CARDS: Array<{
   key: string;
-  tab: AdminTab;
+  tab?: AdminTab;
+  href?: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { key: "users", tab: "users", icon: Users },
   { key: "sales", tab: "orders", icon: ShoppingBag },
   { key: "tournaments", tab: "tournaments", icon: Trophy },
-  { key: "translations", tab: "series", icon: LanguagesIcon },
+  { key: "translations", href: "/admin/translations", icon: LanguagesIcon },
 ];
 
 export default function AdminPage() {
@@ -54,13 +56,8 @@ export default function AdminPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {SUMMARY_CARDS.map(({ key, tab: target, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(target)}
-              className="text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
+          {SUMMARY_CARDS.map(({ key, tab: target, href, icon: Icon }) => {
+            const card = (
               <Card className="h-full transition-colors hover:border-primary/50 hover:bg-accent/40">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
@@ -77,8 +74,26 @@ export default function AdminPage() {
                   </p>
                 </CardContent>
               </Card>
-            </button>
-          ))}
+            );
+
+            const className =
+              "text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+
+            return href ? (
+              <Link key={key} href={href} className={className}>
+                {card}
+              </Link>
+            ) : (
+              <button
+                key={key}
+                type="button"
+                onClick={() => target && setTab(target)}
+                className={className}
+              >
+                {card}
+              </button>
+            );
+          })}
         </div>
 
         <Tabs

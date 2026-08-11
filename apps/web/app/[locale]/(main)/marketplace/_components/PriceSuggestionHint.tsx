@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePriceSuggestion } from "@/hooks/useMarketplace";
@@ -26,24 +27,17 @@ export function PriceSuggestionHint({
   currency,
   onApply,
 }: PriceSuggestionHintProps) {
+  const t = useTranslations("PriceSuggestion");
   const { data, isLoading } = usePriceSuggestion(cardId, cardState, currency);
 
   if (!cardId) return null;
 
   if (isLoading) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Calcul du prix conseillé...
-      </p>
-    );
+    return <p className="text-xs text-muted-foreground">{t("computing")}</p>;
   }
 
   if (!data?.suggestedPrice) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Aucune référence de prix disponible pour cette carte.
-      </p>
-    );
+    return <p className="text-xs text-muted-foreground">{t("noReference")}</p>;
   }
 
   const { count } = data.listings;
@@ -52,7 +46,7 @@ export function PriceSuggestionHint({
       ? `moyenne de ${count} annonce${count > 1 ? "s" : ""} en ${stateLabel(cardState)}`
       : data.basis === "all-states"
         ? `moyenne de ${count} annonce${count > 1 ? "s" : ""}, tous états confondus`
-        : "prix de référence du marché";
+        : t("marketReference");
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -71,7 +65,7 @@ export function PriceSuggestionHint({
         className="h-auto p-0 text-xs"
         onClick={() => onApply(data.suggestedPrice as number)}
       >
-        Utiliser ce prix
+        {t("usePrice")}
       </Button>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
@@ -17,6 +18,7 @@ import { Skeleton } from "@components/ui/skeleton";
 import { DeckFormat } from "@/types/deckFormat";
 
 export default function CreateDeckPage() {
+  const t = useTranslations("DeckCreate");
   const { isAuthenticated } = useAuth();
   const [formatList, setFormatList] = useState<DeckFormat[]>([]);
   const [formatLoading, setFormatLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function CreateDeckPage() {
           setFormatList((res as any).data as DeckFormat[]);
         }
       } catch (err) {
-        console.error("Erreur lors du chargement des formats", err);
+        console.error(t("formatsError"), err);
       } finally {
         setFormatLoading(false);
       }
@@ -44,9 +46,9 @@ export default function CreateDeckPage() {
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
         <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
-          <AlertTitle>Connexion requise.</AlertTitle>
+          <AlertTitle>{t("loginRequired")}</AlertTitle>
           <AlertDescription>
-            <p>Vous devez être connecté pour créer un deck.</p>
+            <p>{t("loginRequiredHelp")}</p>
           </AlertDescription>
         </Alert>
       </div>
@@ -68,8 +70,7 @@ export default function CreateDeckPage() {
           <CardHeader className="space-y-2">
             <CardTitle className="text-3xl">Créer un deck</CardTitle>
             <CardDescription className="text-base">
-              Recherchez vos cartes avec des filtres avancés, ajustez les
-              quantités et prévisualisez votre deck avant de le publier.
+              {t("subtitle")}
             </CardDescription>
           </CardHeader>
         </Card>

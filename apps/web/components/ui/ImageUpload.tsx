@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useRef } from "react";
 import { UploadCloud, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ export function ImageUpload({
   label,
   disabled = false,
 }: ImageUploadProps) {
+  const t = useTranslations("ImageUpload");
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -126,7 +128,7 @@ export function ImageUpload({
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2 text-muted-foreground">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-medium">Téléversement en cours...</p>
+              <p className="text-sm font-medium">{t("uploading")}</p>
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-2 text-center">
@@ -134,12 +136,8 @@ export function ImageUpload({
                 <UploadCloud className="h-6 w-6 text-muted-foreground" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium">
-                  Glissez-déposez une image ou cliquez pour parcourir
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  PNG, JPG ou WEBP (Max. 2 Mo)
-                </p>
+                <p className="text-sm font-medium">{t("dropzone")}</p>
+                <p className="text-xs text-muted-foreground">{t("formats")}</p>
               </div>
             </div>
           )}

@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import { H1 } from "@components/Shared/Titles";
 import DecksFilters from "../_components/DecksFilters";
 import { DecksFiltersTypes as DecksFiltersType } from "../_components/DecksFilters";
@@ -13,6 +14,7 @@ import { DeckFormat } from "@/types/deckFormat";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 export default function MyDecksPage() {
+  const t = useTranslations("MyDecks");
   const { isAuthenticated } = useAuth();
   const [page, setPage] = useState(1);
   const [formatList, setFormatList] = useState<DeckFormat[]>([]);
@@ -43,7 +45,7 @@ export default function MyDecksPage() {
   ];
 
   const formatOptions = [
-    { label: "Tous", value: "ALL" },
+    { label: t("allFormats"), value: "ALL" },
     ...formatList.map((data) => ({
       label: data.type,
       value: data.id.toString(),
@@ -51,9 +53,9 @@ export default function MyDecksPage() {
   ];
 
   const sortOptions = [
-    { label: "Date de création", value: "createdAt" },
-    { label: "Nom", value: "name" },
-    { label: "Type", value: "format.type" },
+    { label: t("sortCreatedAt"), value: "createdAt" },
+    { label: t("sortName"), value: "name" },
+    { label: t("sortType"), value: "format.type" },
   ];
   useEffect(() => {
     const listFormat = async () => {
@@ -70,9 +72,9 @@ export default function MyDecksPage() {
       <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
         <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
-          <AlertTitle>Connexion requise.</AlertTitle>
+          <AlertTitle>{t("loginRequired")}</AlertTitle>
           <AlertDescription>
-            <p>Vous devez être connecté pour voir vos decks.</p>
+            <p>{t("loginRequiredHelp")}</p>
           </AlertDescription>
         </Alert>
       </div>
@@ -81,9 +83,7 @@ export default function MyDecksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary/10 to-primary/10 py-16 px-2">
       <div className="max-w-5xl mx-auto">
-        <H1 className="text-center mb-2" variant="primary">
-          Mes decks
-        </H1>
+        <H1 className="text-center mb-2" variant="primary">{t("title")}</H1>
         <DecksFilters
           filters={filters}
           resetFilters={resetFilters}
