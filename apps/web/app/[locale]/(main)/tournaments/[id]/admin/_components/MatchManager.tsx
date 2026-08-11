@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
@@ -51,36 +52,37 @@ interface MatchManagerProps {
 
 const statusConfig: Record<
   string,
-  { label: string; icon: React.ReactNode; color: string }
+  { labelKey: string; icon: React.ReactNode; color: string }
 > = {
   scheduled: {
-    label: "Planifié",
+    labelKey: "statusScheduled",
     icon: <Clock className="size-3" />,
     color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   },
   in_progress: {
-    label: "En cours",
+    labelKey: "statusInProgress",
     icon: <PlayCircle className="size-3" />,
     color: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
   },
   finished: {
-    label: "Terminé",
+    labelKey: "statusFinished",
     icon: <CheckCircle2 className="size-3" />,
     color: "bg-green-500/10 text-green-500 border-green-500/20",
   },
   forfeit: {
-    label: "Forfait",
+    labelKey: "statusForfeit",
     icon: <XCircle className="size-3" />,
     color: "bg-orange-500/10 text-orange-500 border-orange-500/20",
   },
   cancelled: {
-    label: "Annulé",
+    labelKey: "statusCancelled",
     icon: <XCircle className="size-3" />,
     color: "bg-red-500/10 text-red-500 border-red-500/20",
   },
 };
 
 export function MatchManager({ tournamentId }: MatchManagerProps) {
+  const t = useTranslations("MatchManager");
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [roundFilter, setRoundFilter] = useState<string>("all");
@@ -115,7 +117,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
-      toast.success("Match mis à jour");
+      toast.success(t("updated"));
       setEditDialogOpen(false);
       setSelectedMatch(null);
     },
@@ -148,7 +150,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
   }, [matches]);
 
   const getPlayerName = (player: any) => {
-    if (!player) return "À déterminer";
+    if (!player) return t("toBeDetermined");
     if (player.user) {
       return `${player.user.firstName} ${player.user.lastName}`;
     }
@@ -165,7 +167,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
   const handleSaveScore = () => {
     if (!selectedMatch) return;
     if (scoreA === scoreB) {
-      toast.error("Un match à élimination doit désigner un vainqueur");
+      toast.error(t("winnerRequired"));
       return;
     }
 
@@ -205,10 +207,9 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center h-64 text-center">
           <Swords className="size-12 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium">Aucun match</h3>
+          <h3 className="text-lg font-medium">{t("empty")}</h3>
           <p className="text-muted-foreground mt-2 max-w-md">
-            Les matches seront générés automatiquement lorsque le tournoi sera
-            démarré.
+            {t("generatedOnStart")}
           </p>
         </CardContent>
       </Card>
@@ -227,7 +228,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           bgColor="bg-primary/10"
         />
         <StatCard
-          label="Terminés"
+          label={t("finishedPlural")}
           value={stats.finished}
           icon={<CheckCircle2 className="size-5" />}
           color="text-green-500"
@@ -241,7 +242,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           bgColor="bg-yellow-500/10"
         />
         <StatCard
-          label="Planifiés"
+          label={t("scheduledPlural")}
           value={stats.scheduled}
           icon={<Clock className="size-5" />}
           color="text-blue-500"
@@ -255,7 +256,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Swords className="size-5 text-primary" />
-              Gestion des matchs
+              {t("title")}
             </CardTitle>
             <div className="flex items-center gap-2">
               <Filter className="size-4 text-muted-foreground" />
@@ -293,13 +294,13 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="w-16">Match</TableHead>
-                  <TableHead>Joueur A</TableHead>
+                  <TableHead className="w-16">{t("match")}</TableHead>
+                  <TableHead>{t("playerA")}</TableHead>
                   <TableHead className="text-center">Score</TableHead>
-                  <TableHead>Joueur B</TableHead>
+                  <TableHead>{t("playerB")}</TableHead>
                   <TableHead>Ronde</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -376,7 +377,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                             className={`gap-1 ${matchStatus.color}`}
                           >
                             {matchStatus.icon}
-                            {matchStatus.label}
+                            {t(matchStatus.labelKey)}
                           </Badge>
                         )}
                       </TableCell>
@@ -391,7 +392,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                                 onClick={() => handleStartMatch(match)}
                               >
                                 <PlayCircle className="size-4 mr-1" />
-                                Démarrer
+                                {t("start")}
                               </Button>
                             )}
                           {(match.status === "scheduled" ||
@@ -416,7 +417,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                       colSpan={7}
                       className="h-32 text-center text-muted-foreground"
                     >
-                      Aucun match ne correspond aux filtres.
+                      {t("emptyFiltered")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -430,7 +431,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifier le score</DialogTitle>
+            <DialogTitle>{t("editScore")}</DialogTitle>
             <DialogDescription>
               Match #{selectedMatch?.id} — ronde {selectedMatch?.round}
             </DialogDescription>
@@ -438,7 +439,9 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
 
           <div className="grid grid-cols-3 gap-4 items-center py-4">
             <div className="text-center space-y-2">
-              <Label className="text-sm text-muted-foreground">Joueur A</Label>
+              <Label className="text-sm text-muted-foreground">
+                {t("playerA")}
+              </Label>
               <p className="font-medium">
                 {getPlayerName(selectedMatch?.playerA)}
               </p>
@@ -456,7 +459,9 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
             </div>
 
             <div className="text-center space-y-2">
-              <Label className="text-sm text-muted-foreground">Joueur B</Label>
+              <Label className="text-sm text-muted-foreground">
+                {t("playerB")}
+              </Label>
               <p className="font-medium">
                 {getPlayerName(selectedMatch?.playerB)}
               </p>
@@ -472,7 +477,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
 
           {scoreA === scoreB && (
             <p className="text-sm text-amber-600 text-center">
-              Une égalité n’est pas autorisée en élimination directe.
+              {t("noTieAllowed")}
             </p>
           )}
 

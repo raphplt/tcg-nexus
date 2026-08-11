@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import {
   Table,
@@ -54,6 +55,7 @@ export function TournamentsTable({
   sortOrder,
   setFilters,
 }: TournamentsTableProps) {
+  const t = useTranslations("TournamentsTable");
   const router = useRouter();
 
   const handleSort = (key: string) => {
@@ -79,10 +81,10 @@ export function TournamentsTable({
       if (user) {
         await tournamentService.register(tournament.id, "");
       } else {
-        console.error("User non authentifié.");
+        console.error(t("notAuthenticated"));
       }
     } catch (error) {
-      console.error("Erreur lors de l'inscription au tournoi :", error);
+      console.error(t("registerError"), error);
     }
   };
 
@@ -121,7 +123,7 @@ export function TournamentsTable({
               colSpan={6}
               className="text-center py-8 text-lg animate-pulse"
             >
-              Chargement des tournois...
+              {t("loading")}
             </TableCell>
           </TableRow>
         ) : error ? (
@@ -130,7 +132,7 @@ export function TournamentsTable({
               colSpan={6}
               className="text-center text-destructive py-8"
             >
-              Erreur lors du chargement des tournois
+              {t("loadError")}
             </TableCell>
           </TableRow>
         ) : data?.data?.length ? (
@@ -165,7 +167,9 @@ export function TournamentsTable({
               </TableCell>
               <TableCell>
                 {tournament.location || (
-                  <span className="italic text-muted-foreground">À venir</span>
+                  <span className="italic text-muted-foreground">
+                    {t("upcoming")}
+                  </span>
                 )}
               </TableCell>
               <TableCell>
@@ -220,7 +224,7 @@ export function TournamentsTable({
                   }}
                 >
                   <Eye className="w-4 h-4" />
-                  Détails
+                  {t("details")}
                 </Button>
               </TableCell>
             </TableRow>
@@ -231,7 +235,7 @@ export function TournamentsTable({
               colSpan={6}
               className="text-center py-8 text-muted-foreground"
             >
-              Aucun tournoi trouvé.
+              {t("empty")}
             </TableCell>
           </TableRow>
         )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { adminService, PokemonCardPayload } from "@/services/admin.service";
 import { PokemonCardType, PokemonSetType } from "@/types/cardPokemon";
@@ -85,6 +86,7 @@ const defaultCardForm: CardFormState = {
 };
 
 export function AdminPokemonCardsTable() {
+  const t = useTranslations("AdminCards");
   const [cardsData, setCardsData] =
     useState<PaginatedResult<PokemonCardType> | null>(null);
   const [searchResults, setSearchResults] = useState<PokemonCardType[] | null>(
@@ -123,7 +125,7 @@ export function AdminPokemonCardsTable() {
       setPage(pageParam);
     } catch (err) {
       console.error("Failed to load cards", err);
-      setError("Impossible de charger les cartes");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +209,7 @@ export function AdminPokemonCardsTable() {
 
   const saveCard = async () => {
     if (!form.setId) {
-      toast.error("Sélectionnez un set pour la carte");
+      toast.error(t("setRequired"));
       return;
     }
 
@@ -238,10 +240,10 @@ export function AdminPokemonCardsTable() {
     try {
       if (editing) {
         await adminService.updatePokemonCard(editing.id, payload);
-        toast.success("Carte mise à jour");
+        toast.success(t("updated"));
       } else {
         await adminService.createPokemonCard(payload);
-        toast.success("Carte créée");
+        toast.success(t("created"));
       }
       setOpenModal(false);
       setForm(defaultCardForm);
@@ -260,7 +262,7 @@ export function AdminPokemonCardsTable() {
     if (!cardToDelete) return;
     try {
       await adminService.deletePokemonCard(cardToDelete.id);
-      toast.success("Carte supprimée");
+      toast.success(t("deleted"));
       setCardToDelete(null);
       if (searchResults) {
         await runSearch(searchTerm);
@@ -282,16 +284,14 @@ export function AdminPokemonCardsTable() {
     <Card>
       <CardHeader className="flex items-center justify-between">
         <div>
-          <CardTitle>Cartes Pokémon</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Ajouter, modifier ou retirer des cartes du catalogue.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher une carte..."
+              placeholder={t("searchPlaceholder")}
               className="pl-8 w-64"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
@@ -314,13 +314,13 @@ export function AdminPokemonCardsTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Local Id</TableHead>
-                <TableHead>Set</TableHead>
-                <TableHead>Rareté</TableHead>
-                <TableHead>Catégorie</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("localId")}</TableHead>
+                <TableHead>{t("set")}</TableHead>
+                <TableHead>{t("rarity")}</TableHead>
+                <TableHead>{t("category")}</TableHead>
                 <TableHead>HP</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -376,7 +376,7 @@ export function AdminPokemonCardsTable() {
                     colSpan={7}
                     className="text-center text-muted-foreground"
                   >
-                    Aucune carte trouvée.
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -396,7 +396,7 @@ export function AdminPokemonCardsTable() {
                 disabled={cardsData.meta.currentPage === 1 || isLoading}
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               >
-                Précédent
+                {t("previous")}
               </Button>
               <Button
                 variant="outline"
@@ -424,16 +424,14 @@ export function AdminPokemonCardsTable() {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Modifier la carte" : "Nouvelle carte"}
+              {editing ? t("editCard") : "Nouvelle carte"}
             </DialogTitle>
-            <DialogDescription>
-              Renseignez les données principales de la carte.
-            </DialogDescription>
+            <DialogDescription>{t("formSubtitle")}</DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="card-name">Nom</Label>
+              <Label htmlFor="card-name">{t("name")}</Label>
               <Input
                 id="card-name"
                 value={form.name}
@@ -443,7 +441,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-local-id">Local Id</Label>
+              <Label htmlFor="card-local-id">{t("localId")}</Label>
               <Input
                 id="card-local-id"
                 value={form.localId}
@@ -453,7 +451,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Set</Label>
+              <Label>{t("set")}</Label>
               <Select
                 value={form.setId}
                 onValueChange={(value) =>
@@ -461,7 +459,7 @@ export function AdminPokemonCardsTable() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir un set" />
+                  <SelectValue placeholder={t("chooseSet")} />
                 </SelectTrigger>
                 <SelectContent>
                   {sets.map((set) => (
@@ -473,7 +471,7 @@ export function AdminPokemonCardsTable() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-rarity">Rareté</Label>
+              <Label htmlFor="card-rarity">{t("rarity")}</Label>
               <Input
                 id="card-rarity"
                 value={form.rarity}
@@ -483,7 +481,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Catégorie</Label>
+              <Label>{t("category")}</Label>
               <Select
                 value={form.category || "none"}
                 onValueChange={(value) =>
@@ -495,10 +493,10 @@ export function AdminPokemonCardsTable() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Catégorie" />
+                  <SelectValue placeholder={t("category")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Non renseigné</SelectItem>
+                  <SelectItem value="none">{t("notProvided")}</SelectItem>
                   {Object.values(PokemonCardsType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -519,9 +517,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-types">
-                Types (séparés par des virgules)
-              </Label>
+              <Label htmlFor="card-types">{t("typesLabel")}</Label>
               <Input
                 id="card-types"
                 value={form.types}
@@ -531,7 +527,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-image">Image (URL)</Label>
+              <Label htmlFor="card-image">{t("imageUrl")}</Label>
               <Input
                 id="card-image"
                 value={form.image}
@@ -541,7 +537,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-illustrator">Illustrateur</Label>
+              <Label htmlFor="card-illustrator">{t("illustrator")}</Label>
               <Input
                 id="card-illustrator"
                 value={form.illustrator}
@@ -564,7 +560,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="card-regulation">Marque de régulation</Label>
+              <Label htmlFor="card-regulation">{t("regulationMark")}</Label>
               <Input
                 id="card-regulation"
                 value={form.regulationMark}
@@ -577,7 +573,7 @@ export function AdminPokemonCardsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Type d'entraîneur</Label>
+              <Label>{t("trainerType")}</Label>
               <Select
                 value={form.trainerType || "none"}
                 onValueChange={(value) =>
@@ -588,10 +584,10 @@ export function AdminPokemonCardsTable() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Non renseigné" />
+                  <SelectValue placeholder={t("notProvided")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Non renseigné</SelectItem>
+                  <SelectItem value="none">{t("notProvided")}</SelectItem>
                   {Object.values(TrainerType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -601,7 +597,7 @@ export function AdminPokemonCardsTable() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Type d'énergie</Label>
+              <Label>{t("energyType")}</Label>
               <Select
                 value={form.energyType || "none"}
                 onValueChange={(value) =>
@@ -612,10 +608,10 @@ export function AdminPokemonCardsTable() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Non renseigné" />
+                  <SelectValue placeholder={t("notProvided")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Non renseigné</SelectItem>
+                  <SelectItem value="none">{t("notProvided")}</SelectItem>
                   {Object.values(EnergyType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {type}
@@ -627,7 +623,7 @@ export function AdminPokemonCardsTable() {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="card-description">Description</Label>
+            <Label htmlFor="card-description">{t("description")}</Label>
             <Textarea
               id="card-description"
               value={form.description}
@@ -645,7 +641,7 @@ export function AdminPokemonCardsTable() {
               Annuler
             </Button>
             <Button onClick={saveCard}>
-              {editing ? "Mettre à jour" : "Créer"}
+              {editing ? t("update") : t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -659,10 +655,8 @@ export function AdminPokemonCardsTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette carte ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("irreversible")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCardToDelete(null)}>

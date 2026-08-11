@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Info, Trophy } from "lucide-react";
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +15,14 @@ export function TournamentOverview({
   headerSubtitle,
   formatDate,
 }: TournamentOverviewProps) {
+  const t = useTranslations("TournamentOverview");
   return (
     <section id="aperçu" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Info className="size-5" /> Aperçu
+            <Info className="size-5" />
+            {t("title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -29,12 +32,12 @@ export function TournamentOverview({
             </p>
           ) : (
             <p className="text-muted-foreground text-sm">
-              Aucune description fournie.
+              {t("noDescription")}
             </p>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-            <InfoRow label="Période" value={headerSubtitle} />
+            <InfoRow label={t("period")} value={headerSubtitle} />
             <InfoRow label="Lieu" value={tournament.location || "-"} />
             <InfoRow
               label="Tour actuel"
@@ -51,7 +54,8 @@ export function TournamentOverview({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Trophy className="size-5" /> Récompenses
+            <Trophy className="size-5" />
+            {t("rewards")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -68,9 +72,7 @@ export function TournamentOverview({
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Pas de récompenses définies.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("noRewards")}</p>
           )}
         </CardContent>
       </Card>

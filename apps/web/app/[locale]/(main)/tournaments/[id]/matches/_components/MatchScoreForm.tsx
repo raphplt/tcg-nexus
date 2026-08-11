@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, CheckCircle, Clock, Trophy, X } from "lucide-react";
 import React, { useState } from "react";
@@ -29,14 +31,15 @@ import { useMatches } from "@/hooks/useMatches";
 import { useMatchPermissions } from "@/hooks/usePermissions";
 import { Match } from "@/types/tournament";
 
-const scoreSchema = z.object({
-  playerAScore: z.number().min(0, "Le score doit être positif"),
-  playerBScore: z.number().min(0, "Le score doit être positif"),
-  isForfeit: z.boolean().optional(),
-  notes: z.string().optional(),
-});
+const createScoreSchema = (t: (key: string) => string) =>
+  z.object({
+    playerAScore: z.number().min(0, t("scorePositive")),
+    playerBScore: z.number().min(0, t("scorePositive")),
+    isForfeit: z.boolean().optional(),
+    notes: z.string().optional(),
+  });
 
-type ScoreFormData = z.infer<typeof scoreSchema>;
+type ScoreFormData = z.infer<ReturnType<typeof createScoreSchema>>;
 
 interface MatchScoreFormProps {
   match: Match;
@@ -44,6 +47,8 @@ interface MatchScoreFormProps {
 }
 
 export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
+  const t = useTranslations("MatchScoreForm");
+  const schema = useMemo(() => createScoreSchema(t), [t]);
   const { user } = useAuth();
   const permissions = useMatchPermissions(user, match);
   const { reportScore, isReporting } = useMatches(
@@ -59,7 +64,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
     formState: { errors, isValid },
     reset,
   } = useForm<ScoreFormData>({
-    resolver: zodResolver(scoreSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       playerAScore: match.playerAScore || 0,
       playerBScore: match.playerBScore || 0,
@@ -95,7 +100,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         return (
           <Badge variant="outline">
             <Clock className="w-3 h-3 mr-1" />
-            Programmé
+            {t("statusScheduled")}
           </Badge>
         );
       case "in_progress":
@@ -109,7 +114,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         return (
           <Badge variant="default">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Terminé
+            {t("statusFinished")}
           </Badge>
         );
       case "forfeit":
@@ -129,9 +134,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
       <Card>
         <CardContent className="p-6 text-center">
           <AlertTriangle className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Vous n'avez pas les permissions pour modifier ce match.
-          </p>
+          <p className="text-muted-foreground">{t("noPermission")}</p>
         </CardContent>
       </Card>
     );
@@ -228,7 +231,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 </Avatar>
                 <p className="font-medium mb-3">{match.playerA?.name}</p>
                 <div className="space-y-2">
-                  <Label htmlFor="playerAScore">Score</Label>
+                  <Label htmlFor="playerAScore">{t("score")}</Label>
                   <Input
                     id="playerAScore"
                     type="number"
@@ -271,7 +274,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 </Avatar>
                 <p className="font-medium mb-3">{match.playerB?.name}</p>
                 <div className="space-y-2">
-                  <Label htmlFor="playerBScore">Score</Label>
+                  <Label htmlFor="playerBScore">{t("score")}</Label>
                   <Input
                     id="playerBScore"
                     type="number"
@@ -294,15 +297,15 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 <Switch id="forfeit" {...register("isForfeit")} />
                 <Label htmlFor="forfeit" className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-orange-500" />
-                  Match par forfait
+                  {t("forfeitMatch")}
                 </Label>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes (optionnelles)</Label>
+                <Label htmlFor="notes">{t("notesOptional")}</Label>
                 <Textarea
                   id="notes"
-                  placeholder="Commentaires sur le match..."
+                  placeholder={t("notesPlaceholder")}
                   {...register("notes")}
                 />
               </div>
@@ -316,7 +319,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                   disabled={!isValid || isReporting}
                   className="flex-1"
                 >
-                  {isReporting ? "Enregistrement..." : "Valider le résultat"}
+                  {isReporting ? "Enregistrement..." : t("submitResult")}
                 </Button>
               </AlertDialogTrigger>
 
@@ -332,7 +335,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer le résultat</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmResult")}</AlertDialogTitle>
             <AlertDialogDescription>
               {formData && (
                 <div className="space-y-3">
@@ -358,7 +361,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
 
                   {formData.isForfeit && (
                     <p className="text-orange-600 font-medium">
-                      ⚠️ Match par forfait
+                      {t("forfeitWarning")}
                     </p>
                   )}
 
@@ -375,7 +378,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmSubmit} disabled={isReporting}>
               {isReporting ? "Enregistrement..." : "Confirmer"}
             </AlertDialogAction>

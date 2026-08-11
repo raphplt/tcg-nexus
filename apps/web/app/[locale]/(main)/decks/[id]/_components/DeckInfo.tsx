@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Deck } from "@/types/Decks";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,15 +26,16 @@ const InfoRow = ({
 );
 
 export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
+  const t = useTranslations("DeckInfo");
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Informations</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <InfoRow label="Format" value={deck.format?.type} />
         <InfoRow
-          label="Créateur"
+          label={t("creator")}
           value={
             deck.user?.id ? (
               <Link
@@ -60,15 +62,15 @@ export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
           }
         />
         <InfoRow
-          label="Visibilité"
+          label={t("visibility")}
           value={
             <Badge variant={deck.isPublic ? "default" : "outline"}>
-              {deck.isPublic ? "Public" : "Privé"}
+              {deck.isPublic ? "Public" : t("private")}
             </Badge>
           }
         />
         <InfoRow
-          label="Dernière maj"
+          label={t("lastUpdate")}
           value={
             deck.updatedAt ? new Date(deck.updatedAt).toLocaleDateString() : "—"
           }
@@ -78,7 +80,7 @@ export function DeckInfo({ deck, isOwner }: DeckInfoProps) {
             <Button asChild className="w-full" variant="secondary">
               <Link href={`/decks/${deck.id}/update`}>
                 <Edit3 className="w-4 h-4 mr-2" />
-                Modifier mon deck
+                {t("edit")}
               </Link>
             </Button>
           </div>

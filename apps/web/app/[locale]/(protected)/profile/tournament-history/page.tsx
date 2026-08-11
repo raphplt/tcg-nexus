@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { useMemo, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -30,15 +31,16 @@ import type { TournamentHistoryItem } from "@/types/player-history";
 import { tournamentStatusTranslation } from "@/utils/tournaments";
 
 const periodOptions = [
-  { label: "Dernier mois", value: "1m" },
-  { label: "3 mois", value: "3m" },
-  { label: "Année", value: "1y" },
-  { label: "Tout", value: "all" },
+  { labelKey: "periodLastMonth", value: "1m" },
+  { labelKey: "period3Months", value: "3m" },
+  { labelKey: "periodYear", value: "1y" },
+  { labelKey: "periodAll", value: "all" },
 ] as const;
 
 type PeriodValue = (typeof periodOptions)[number]["value"];
 
 const TournamentHistoryPage = () => {
+  const t = useTranslations("TournamentHistory");
   const { user } = useAuth();
   const [period, setPeriod] = useState<PeriodValue>("all");
 
@@ -82,12 +84,10 @@ const TournamentHistoryPage = () => {
       <div className="container mx-auto px-4 py-8">
         <Card className="p-8 text-center">
           <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Aucun profil joueur</h3>
-          <p className="text-muted-foreground">
-            Vous devez créer un profil joueur pour consulter l&apos;historique.
-          </p>
+          <h3 className="text-lg font-semibold mb-2">{t("noPlayerProfile")}</h3>
+          <p className="text-muted-foreground">{t("playerProfileRequired")}</p>
           <Button asChild variant="outline" className="mt-4">
-            <Link href="/profile">Retour au profil</Link>
+            <Link href="/profile">{t("backToProfile")}</Link>
           </Button>
         </Card>
       </div>
@@ -98,13 +98,11 @@ const TournamentHistoryPage = () => {
     <div className="container mx-auto px-4 py-8 space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Historique des tournois</h1>
-          <p className="text-sm text-muted-foreground">
-            Suivez vos performances et l&apos;évolution de votre ELO.
-          </p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/profile">Retour au profil</Link>
+          <Link href="/profile">{t("backToProfile")}</Link>
         </Button>
       </div>
 
@@ -117,7 +115,7 @@ const TournamentHistoryPage = () => {
               variant={period === option.value ? "default" : "outline"}
               onClick={() => setPeriod(option.value)}
             >
-              {option.label}
+              {t(option.labelKey)}
             </Button>
           ))}
         </div>
@@ -129,7 +127,7 @@ const TournamentHistoryPage = () => {
             <Trophy className="w-5 h-5 text-primary" />
             <div>
               <div className="text-sm text-muted-foreground">
-                Tournois joués
+                {t("tournamentsPlayed")}
               </div>
               <div className="text-2xl font-bold">
                 {data?.stats.totalTournaments ?? 0}
@@ -141,7 +139,9 @@ const TournamentHistoryPage = () => {
           <div className="flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-primary" />
             <div>
-              <div className="text-sm text-muted-foreground">Taux victoire</div>
+              <div className="text-sm text-muted-foreground">
+                {t("winRate")}
+              </div>
               <div className="text-2xl font-bold">
                 {data?.stats.winRate?.toFixed(1) ?? "0.0"}%
               </div>
@@ -152,7 +152,9 @@ const TournamentHistoryPage = () => {
           <div className="flex items-center gap-3">
             <Target className="w-5 h-5 text-primary" />
             <div>
-              <div className="text-sm text-muted-foreground">Meilleur rang</div>
+              <div className="text-sm text-muted-foreground">
+                {t("bestRank")}
+              </div>
               <div className="text-2xl font-bold">
                 {data?.stats.bestRank ?? "-"}
               </div>
@@ -170,7 +172,7 @@ const TournamentHistoryPage = () => {
           <div className="h-48 bg-muted animate-pulse rounded-md" />
         ) : history.length === 0 ? (
           <div className="text-sm text-muted-foreground">
-            Aucun tournoi passé sur cette période.
+            {t("noPastTournaments")}
           </div>
         ) : (
           <div className="h-56">
@@ -196,7 +198,7 @@ const TournamentHistoryPage = () => {
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Résultats détaillés</h2>
+          <h2 className="text-lg font-semibold">{t("detailedResults")}</h2>
         </div>
 
         {isLoading ? (
@@ -207,7 +209,7 @@ const TournamentHistoryPage = () => {
           </div>
         ) : sortedHistory.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Aucun tournoi terminé sur cette période.
+            {t("noFinishedTournaments")}
           </p>
         ) : (
           <div className="space-y-3">

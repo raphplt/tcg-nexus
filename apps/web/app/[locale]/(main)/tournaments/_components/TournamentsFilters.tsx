@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ export function TournamentsFilters({
   sortOptions,
   resetFilters,
 }: TournamentsFiltersProps) {
+  const t = useTranslations("TournamentsFilters");
   const [searchInput, setSearchInput] = useState(filters.search);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -66,14 +68,14 @@ export function TournamentsFilters({
     <div className="mb-8 flex flex-col gap-2 bg-card/80 p-4 rounded-lg border border-border">
       <div className="flex flex-wrap gap-4 items-end justify-between">
         <div className="flex flex-col gap-1 min-w-[180px] flex-1">
-          <Label htmlFor="search">Recherche</Label>
+          <Label htmlFor="search">{t("search")}</Label>
           <div className="relative">
             <Input
               id="search"
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom du tournoi..."
+              placeholder={t("namePlaceholder")}
               className="pl-9"
             />
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -86,7 +88,7 @@ export function TournamentsFilters({
           onClick={() => setShowAdvanced((v) => !v)}
         >
           <SlidersHorizontal className="w-4 h-4 mr-2" />
-          {showAdvanced ? "Masquer les filtres" : "Filtres avancés"}
+          {showAdvanced ? t("hideFilters") : t("advancedFilters")}
         </Button>
         {user?.isPro && (
           <div className="flex justify-end">
@@ -108,10 +110,10 @@ export function TournamentsFilters({
             >
               <SelectTrigger className="w-full">
                 {typeOptions.find((opt) => opt.value === filters.type)?.label ||
-                  "Tous"}
+                  t("all")}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous</SelectItem>
+                <SelectItem value="ALL">{t("all")}</SelectItem>
                 {typeOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
@@ -126,7 +128,7 @@ export function TournamentsFilters({
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="status">Statut</Label>
+            <Label htmlFor="status">{t("status")}</Label>
             <Select
               value={filters.status || "ALL"}
               onValueChange={(value) =>
@@ -135,10 +137,10 @@ export function TournamentsFilters({
             >
               <SelectTrigger className="w-full">
                 {statusOptions.find((opt) => opt.value === filters.status)
-                  ?.label || "Tous les statuts"}
+                  ?.label || t("allStatuses")}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous les statuts</SelectItem>
+                <SelectItem value="ALL">{t("allStatuses")}</SelectItem>
                 {statusOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
@@ -153,7 +155,7 @@ export function TournamentsFilters({
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="location">Lieu</Label>
+            <Label htmlFor="location">{t("location")}</Label>
             <Input
               id="location"
               type="text"
@@ -163,7 +165,7 @@ export function TournamentsFilters({
             />
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label>Date de début (du)</Label>
+            <Label>{t("startDateFrom")}</Label>
             <Input
               type="date"
               value={filters.startDateFrom}
@@ -171,7 +173,7 @@ export function TournamentsFilters({
             />
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label>Date de début (au)</Label>
+            <Label>{t("startDateTo")}</Label>
             <Input
               type="date"
               value={filters.startDateTo}
@@ -198,7 +200,7 @@ export function TournamentsFilters({
             </Select>
           </div>
           <div className="flex flex-col gap-1 min-w-[120px]">
-            <Label htmlFor="sortOrder">Ordre</Label>
+            <Label htmlFor="sortOrder">{t("order")}</Label>
             <Select
               value={filters.sortOrder}
               onValueChange={(value) =>
@@ -206,11 +208,11 @@ export function TournamentsFilters({
               }
             >
               <SelectTrigger className="w-full">
-                {filters.sortOrder === "ASC" ? "Ascendant" : "Descendant"}
+                {filters.sortOrder === "ASC" ? t("ascending") : t("descending")}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ASC">Ascendant</SelectItem>
-                <SelectItem value="DESC">Descendant</SelectItem>
+                <SelectItem value="ASC">{t("ascending")}</SelectItem>
+                <SelectItem value="DESC">{t("descending")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -219,7 +221,7 @@ export function TournamentsFilters({
             variant="outline"
             className="h-10 mt-4"
           >
-            Réinitialiser
+            {t("reset")}
           </Button>
         </div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CheckCircle, Clock3, Search, Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import React, { useState } from "react";
@@ -24,18 +25,19 @@ interface TabParticipantsProps {
 const statusLabels: Record<
   string,
   {
-    label: string;
+    labelKey: string;
     variant: "default" | "secondary" | "destructive" | "outline";
   }
 > = {
-  confirmed: { label: "Confirmé", variant: "default" },
-  pending: { label: "En attente", variant: "secondary" },
-  cancelled: { label: "Annulé", variant: "destructive" },
-  waitlisted: { label: "Liste d'attente", variant: "outline" },
-  eliminated: { label: "Éliminé", variant: "destructive" },
+  confirmed: { labelKey: "confirmed", variant: "default" },
+  pending: { labelKey: "pending", variant: "secondary" },
+  cancelled: { labelKey: "cancelled", variant: "destructive" },
+  waitlisted: { labelKey: "waitlisted", variant: "outline" },
+  eliminated: { labelKey: "eliminated", variant: "destructive" },
 };
 
 export function TabParticipants({ registrations }: TabParticipantsProps) {
+  const t = useTranslations("TabParticipants");
   const [searchQuery, setSearchQuery] = useState("");
 
   const participantRegistrations = registrations.filter(
@@ -87,7 +89,9 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{participantCount}</p>
-                <p className="text-xs text-muted-foreground">Participants</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("participants")}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -100,7 +104,9 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{confirmedCount}</p>
-                <p className="text-xs text-muted-foreground">Confirmés</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("confirmedPlural")}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -113,7 +119,7 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{waitlistedCount}</p>
-                <p className="text-xs text-muted-foreground">Liste d’attente</p>
+                <p className="text-xs text-muted-foreground">{t("waitlist")}</p>
               </div>
             </div>
           </CardContent>
@@ -125,14 +131,14 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Users className="size-5 text-primary" />
-            Liste des participants
+            {t("title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="Rechercher un participant..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -145,8 +151,8 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-12">#</TableHead>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead className="text-right">Statut</TableHead>
+                  <TableHead>{t("player")}</TableHead>
+                  <TableHead className="text-right">{t("status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -190,8 +196,11 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                           }
                           className="text-xs"
                         >
-                          {statusLabels[registration.status]?.label ||
-                            registration.status}
+                          {(() => {
+                            const key =
+                              statusLabels[registration.status]?.labelKey;
+                            return key ? t(key) : registration.status;
+                          })()}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -203,8 +212,8 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
                       className="h-32 text-center text-muted-foreground"
                     >
                       {participantRegistrations.length === 0
-                        ? "Aucun participant inscrit pour le moment."
-                        : "Aucun résultat trouvé pour cette recherche."}
+                        ? t("empty")
+                        : t("noResults")}
                     </TableCell>
                   </TableRow>
                 )}

@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { Plus, Trash2, Pencil } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface UserFormState {
   email: string;
@@ -68,6 +68,7 @@ const emptyForm: UserFormState = {
 };
 
 export function AdminUsersTable() {
+  const t = useTranslations("AdminUsers");
   const locale = useLocale();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +86,7 @@ export function AdminUsersTable() {
       setUsers(response);
     } catch (err) {
       console.error("Failed to fetch users", err);
-      setError("Impossible de charger les utilisateurs");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -121,17 +122,17 @@ export function AdminUsersTable() {
           ...form,
           password: form.password || undefined,
         });
-        toast.success("Utilisateur mis à jour");
+        toast.success(t("updated"));
       } else {
         await adminService.createUser(form);
-        toast.success("Utilisateur créé");
+        toast.success(t("created"));
       }
       setOpenModal(false);
       setForm(emptyForm);
       await loadUsers();
     } catch (err) {
       console.error("Unable to save user", err);
-      toast.error("Erreur lors de l'enregistrement");
+      toast.error(t("saveError"));
     }
   };
 
@@ -139,12 +140,12 @@ export function AdminUsersTable() {
     if (!userToDelete) return;
     try {
       await adminService.deleteUser(userToDelete.id);
-      toast.success("Utilisateur supprimé");
+      toast.success(t("deleted"));
       setUserToDelete(null);
       await loadUsers();
     } catch (err) {
       console.error("Unable to delete user", err);
-      toast.error("Suppression impossible");
+      toast.error(t("deleteFailed"));
     }
   };
 
@@ -161,10 +162,8 @@ export function AdminUsersTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Utilisateurs</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Gestion des rôles et de l'activation des comptes.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={startCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -182,13 +181,13 @@ export function AdminUsersTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>#</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead>Pro</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Créé le</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("lastName")}</TableHead>
+                <TableHead>{t("email")}</TableHead>
+                <TableHead>{t("role")}</TableHead>
+                <TableHead>{t("pro")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("createdAt")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -214,14 +213,14 @@ export function AdminUsersTable() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isPro ? "default" : "outline"}>
-                        {user.isPro ? "Pro" : "Standard"}
+                        {user.isPro ? t("pro") : t("standard")}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={user.isActive ? "secondary" : "destructive"}
                       >
-                        {user.isActive ? "Actif" : "Suspendu"}
+                        {user.isActive ? t("active") : t("suspended")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -253,7 +252,7 @@ export function AdminUsersTable() {
                     colSpan={8}
                     className="text-center text-muted-foreground"
                   >
-                    Aucun utilisateur
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -266,17 +265,13 @@ export function AdminUsersTable() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingUser
-                ? "Mettre à jour l'utilisateur"
-                : "Créer un utilisateur"}
+              {editingUser ? t("updateUser") : t("createUser")}
             </DialogTitle>
-            <DialogDescription>
-              Définissez le rôle, les informations et l'état du compte.
-            </DialogDescription>
+            <DialogDescription>{t("formSubtitle")}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="firstName">Prénom</Label>
+              <Label htmlFor="firstName">{t("firstName")}</Label>
               <Input
                 id="firstName"
                 value={form.firstName}
@@ -289,7 +284,7 @@ export function AdminUsersTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="lastName">Nom</Label>
+              <Label htmlFor="lastName">{t("lastName")}</Label>
               <Input
                 id="lastName"
                 value={form.lastName}
@@ -299,7 +294,7 @@ export function AdminUsersTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -310,11 +305,11 @@ export function AdminUsersTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder={editingUser ? "Laisser vide pour conserver" : ""}
+                placeholder={editingUser ? t("leaveEmptyToKeep") : ""}
                 value={form.password}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, password: event.target.value }))
@@ -322,34 +317,36 @@ export function AdminUsersTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Rôle</Label>
+              <Label>{t("role")}</Label>
               <Select
                 value={form.role}
                 onValueChange={(value) =>
                   setForm((prev) => ({ ...prev, role: value as UserRole }))
                 }
               >
-                <SelectTrigger aria-label="Rôle">
+                <SelectTrigger aria-label={t("role")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
-                  <SelectItem value={UserRole.MODERATOR}>Modérateur</SelectItem>
-                  <SelectItem value={UserRole.USER}>Utilisateur</SelectItem>
+                  <SelectItem value={UserRole.ADMIN}>{t("admin")}</SelectItem>
+                  <SelectItem value={UserRole.MODERATOR}>
+                    {t("moderator")}
+                  </SelectItem>
+                  <SelectItem value={UserRole.USER}>{t("user")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center justify-between rounded border px-3 py-2">
                 <div>
-                  <p className="text-sm font-medium">Compte pro</p>
+                  <p className="text-sm font-medium">{t("proAccount")}</p>
                   <p className="text-xs text-muted-foreground">
-                    Autoriser les ventes en mode pro
+                    {t("allowProSales")}
                   </p>
                 </div>
                 <Switch
                   checked={form.isPro}
-                  aria-label="Compte pro"
+                  aria-label={t("proAccount")}
                   onCheckedChange={(checked) =>
                     setForm((prev) => ({ ...prev, isPro: checked }))
                   }
@@ -357,14 +354,14 @@ export function AdminUsersTable() {
               </div>
               <div className="flex items-center justify-between rounded border px-3 py-2">
                 <div>
-                  <p className="text-sm font-medium">Compte actif</p>
+                  <p className="text-sm font-medium">{t("activeAccount")}</p>
                   <p className="text-xs text-muted-foreground">
-                    Bloquer ou réactiver l'utilisateur
+                    {t("blockOrReactivate")}
                   </p>
                 </div>
                 <Switch
                   checked={form.isActive}
-                  aria-label="Compte actif"
+                  aria-label={t("activeAccount")}
                   onCheckedChange={(checked) =>
                     setForm((prev) => ({ ...prev, isActive: checked }))
                   }
@@ -377,7 +374,7 @@ export function AdminUsersTable() {
               Annuler
             </Button>
             <Button onClick={saveUser}>
-              {editingUser ? "Mettre à jour" : "Créer"}
+              {editingUser ? t("update") : t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -391,10 +388,8 @@ export function AdminUsersTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cet utilisateur ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("irreversible")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setUserToDelete(null)}>

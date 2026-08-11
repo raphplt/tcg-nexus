@@ -26,9 +26,10 @@ import { tournamentService } from "@/services/tournament.service";
 import { Match } from "@/types/tournament";
 import { MatchScoreForm } from "../_components/MatchScoreForm";
 import { ResetMatchDialog } from "../_components/ResetMatchDialog";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function MatchPage() {
+  const t = useTranslations("MatchDetail");
   const locale = useLocale();
   const { id, matchId } = useParams();
   const router = useRouter();
@@ -84,7 +85,7 @@ export default function MatchPage() {
       case "semi_final":
         return "Demi-finale";
       case "quarter_final":
-        return "Quart de finale";
+        return t("phaseQuarterFinal");
       default:
         return "Qualification";
     }
@@ -121,12 +122,12 @@ export default function MatchPage() {
       <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-4xl mx-auto text-center">
           <AlertTriangle className="w-16 h-16 mx-auto text-destructive mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Match non trouvé</h1>
+          <h1 className="text-2xl font-bold mb-2">{t("notFoundTitle")}</h1>
           <p className="text-muted-foreground mb-4">
-            Le match demandé n'existe pas ou n'est pas accessible.
+            {t("notFoundDescription")}
           </p>
           <Button asChild>
-            <Link href={`/tournaments/${id}`}>Retour au tournoi</Link>
+            <Link href={`/tournaments/${id}`}>{t("backToTournament")}</Link>
           </Button>
         </div>
       </div>
@@ -141,7 +142,7 @@ export default function MatchPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour au tournoi
+              {t("backToTournament")}
             </Link>
           </Button>
 
@@ -173,7 +174,7 @@ export default function MatchPage() {
                 disabled={isStarting}
               >
                 <Play className="w-4 h-4 mr-2" />
-                {isStarting ? "Démarrage..." : "Démarrer"}
+                {isStarting ? t("starting") : t("start")}
               </Button>
             )}
 
@@ -185,7 +186,7 @@ export default function MatchPage() {
                 disabled={isResetting}
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
-                {isResetting ? "Réinitialisation..." : "Réinitialiser"}
+                {isResetting ? t("resetting") : t("reset")}
               </Button>
             )}
           </div>
@@ -206,34 +207,38 @@ export default function MatchPage() {
                   </span>
                   <div className="mt-1">
                     {match.status === "scheduled" && (
-                      <Badge variant="outline">Programmé</Badge>
+                      <Badge variant="outline">{t("statusScheduled")}</Badge>
                     )}
                     {match.status === "in_progress" && (
-                      <Badge variant="secondary">En cours</Badge>
+                      <Badge variant="secondary">{t("statusInProgress")}</Badge>
                     )}
                     {match.status === "finished" && (
-                      <Badge variant="default">Terminé</Badge>
+                      <Badge variant="default">{t("statusFinished")}</Badge>
                     )}
                     {match.status === "forfeit" && (
-                      <Badge variant="destructive">Forfait</Badge>
+                      <Badge variant="destructive">{t("statusForfeit")}</Badge>
                     )}
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-sm text-muted-foreground">Phase :</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("phase")}
+                  </span>
                   <p className="font-medium">{getPhaseLabel(match.phase)}</p>
                 </div>
 
                 <div>
-                  <span className="text-sm text-muted-foreground">Ronde :</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("round")}
+                  </span>
                   <p className="font-medium">{match.round}</p>
                 </div>
 
                 {match.startedAt && (
                   <div>
                     <span className="text-sm text-muted-foreground">
-                      Démarré à :
+                      {t("startedAt")}
                     </span>
                     <p className="font-medium">{formatDate(match.startedAt)}</p>
                   </div>
@@ -242,7 +247,7 @@ export default function MatchPage() {
                 {match.finishedAt && (
                   <div>
                     <span className="text-sm text-muted-foreground">
-                      Terminé à :
+                      {t("finishedAt")}
                     </span>
                     <p className="font-medium">
                       {formatDate(match.finishedAt)}
@@ -261,14 +266,14 @@ export default function MatchPage() {
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/tournaments/${id}/bracket`}>
                     <Trophy className="w-4 h-4 mr-2" />
-                    Voir le tableau
+                    {t("viewBracket")}
                   </Link>
                 </Button>
 
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/tournaments/${id}/matches`}>
                     <Clock className="w-4 h-4 mr-2" />
-                    Tous les matches
+                    {t("allMatches")}
                   </Link>
                 </Button>
               </CardContent>
@@ -286,9 +291,7 @@ export default function MatchPage() {
                     <CardTitle>Mode administration</CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm text-muted-foreground">
-                    Le plateau en ligne est réservé aux deux joueurs du match.
-                    Les outils ci-dessous permettent à l’organisation de saisir
-                    ou corriger un résultat si nécessaire.
+                    {t("adminNotice")}
                   </CardContent>
                 </Card>
                 <MatchScoreForm
@@ -302,8 +305,7 @@ export default function MatchPage() {
             ) : (
               <Card>
                 <CardContent className="py-8 text-sm text-muted-foreground">
-                  Cette page permet de suivre le résultat. Le plateau de jeu est
-                  accessible uniquement aux deux joueurs concernés.
+                  {t("spectatorNotice")}
                 </CardContent>
               </Card>
             )}

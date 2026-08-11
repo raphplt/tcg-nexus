@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -25,6 +26,7 @@ import { tournamentService } from "@/services/tournament.service";
 import { EliminationBracket } from "./_components/EliminationBracket";
 
 export default function BracketPage() {
+  const t = useTranslations("Bracket");
   const { id } = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -76,12 +78,10 @@ export default function BracketPage() {
       <div className="min-h-screen bg-background px-4 py-10">
         <div className="max-w-7xl mx-auto text-center">
           <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive" />
-          <h1 className="text-2xl font-bold mb-4">Tableau indisponible</h1>
-          <p className="text-muted-foreground mb-4">
-            Les données du tableau n’ont pas pu être chargées.
-          </p>
+          <h1 className="text-2xl font-bold mb-4">{t("unavailable")}</h1>
+          <p className="text-muted-foreground mb-4">{t("loadError")}</p>
           <Button asChild>
-            <Link href={`/tournaments/${id}`}>Retour au tournoi</Link>
+            <Link href={`/tournaments/${id}`}>{t("backToTournament")}</Link>
           </Button>
         </div>
       </div>
@@ -108,13 +108,13 @@ export default function BracketPage() {
   const getBracketTypeName = () => {
     switch (bracket.type) {
       case "single_elimination":
-        return "Élimination simple";
+        return t("singleElimination");
       case "double_elimination":
-        return "Élimination double";
+        return t("doubleElimination");
       case "swiss_system":
-        return "Système suisse";
+        return t("swiss");
       case "round_robin":
-        return "Toutes rondes";
+        return t("allRounds");
       default:
         return "Inconnu";
     }
@@ -183,9 +183,7 @@ export default function BracketPage() {
               size="sm"
               onClick={() => setIsFullscreen(!isFullscreen)}
               aria-label={
-                isFullscreen
-                  ? "Quitter le plein écran"
-                  : "Afficher en plein écran"
+                isFullscreen ? t("exitFullscreen") : t("enterFullscreen")
               }
             >
               {isFullscreen ? (
@@ -209,7 +207,7 @@ export default function BracketPage() {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {myMatch.status === "in_progress"
-                      ? "Reprends la partie en cours"
+                      ? t("resumeGame")
                       : "Lance ta partie en ligne"}
                   </p>
                 </div>
@@ -219,7 +217,7 @@ export default function BracketPage() {
                   router.push(`/tournaments/${id}/matches/${myMatch.matchId}`)
                 }
               >
-                Rejoindre mon match
+                {t("joinMyMatch")}
               </Button>
             </CardContent>
           </Card>
@@ -231,13 +229,13 @@ export default function BracketPage() {
               <Trophy className="mb-4 h-10 w-10 text-muted-foreground" />
               <h2 className="text-xl font-semibold">
                 {tournament.isExternal
-                  ? "Résultats gérés sur une plateforme externe"
-                  : "Le tableau sera généré au démarrage"}
+                  ? t("externalResults")
+                  : t("generatedOnStart")}
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 {tournament.isExternal
-                  ? "Nexus présente cet événement sans inventer de résultats qui ne sont pas synchronisés. Consultez la plateforme de l’organisateur pour le suivi en direct."
-                  : "Une fois les inscriptions fermées et le tournoi lancé, les affiches, scores et vainqueurs apparaîtront ici automatiquement."}
+                  ? t("externalNotice")
+                  : t("generatedNotice")}
               </p>
               {tournament.isExternal && tournament.externalRegistrationUrl && (
                 <Button className="mt-5" asChild>
@@ -246,7 +244,7 @@ export default function BracketPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Ouvrir le site de l’organisateur
+                    {t("openOrganizerSite")}
                   </a>
                 </Button>
               )}
@@ -267,9 +265,9 @@ export default function BracketPage() {
 
               {(isSwiss || isRoundRobin) && (
                 <div className="py-12 text-center">
-                  <p className="font-medium">Suivi des rondes externalisé</p>
+                  <p className="font-medium">{t("externalRoundTracking")}</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Ce format n’est pas orchestré par le moteur Nexus.
+                    {t("notOrchestrated")}
                   </p>
                 </div>
               )}

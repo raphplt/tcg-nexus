@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -27,6 +28,7 @@ export function ResetMatchDialog({
   onConfirm,
   isPending = false,
 }: ResetMatchDialogProps) {
+  const t = useTranslations("ResetMatch");
   const [reason, setReason] = useState("");
 
   const trimmedReason = reason.trim();
@@ -41,22 +43,17 @@ export function ResetMatchDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Réinitialiser ce match ?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Le score et le résultat seront effacés. Cette action peut modifier
-            la progression du tournoi et doit rester exceptionnelle.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{t("confirmTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>{t("warning")}</AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="space-y-2">
-          <Label htmlFor="reset-match-reason">
-            Motif de la réinitialisation
-          </Label>
+          <Label htmlFor="reset-match-reason">{t("reasonLabel")}</Label>
           <Textarea
             id="reset-match-reason"
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            placeholder="Ex. erreur de saisie du score"
+            placeholder={t("reasonPlaceholder")}
             maxLength={300}
           />
           <p className="text-right text-xs text-muted-foreground">
@@ -65,7 +62,9 @@ export function ResetMatchDialog({
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Conserver</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
+            {t("keep")}
+          </AlertDialogCancel>
           <AlertDialogAction
             disabled={!trimmedReason || isPending}
             onClick={(event) => {
@@ -76,7 +75,7 @@ export function ResetMatchDialog({
               onConfirm(trimmedReason);
             }}
           >
-            {isPending ? "Réinitialisation..." : "Réinitialiser"}
+            {isPending ? t("resetting") : t("reset")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

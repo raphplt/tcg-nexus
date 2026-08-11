@@ -20,9 +20,10 @@ import { TournamentControls } from "../_components/TournamentControls";
 import { MatchManager } from "./_components/MatchManager";
 import { RankingsManager } from "./_components/RankingsManager";
 import { RegistrationManager } from "./_components/RegistrationManager";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function TournamentAdminPage() {
+  const t = useTranslations("TournamentAdmin");
   const locale = useLocale();
   const { id } = useParams();
   const router = useRouter();
@@ -60,12 +61,12 @@ export default function TournamentAdminPage() {
     return (
       <div className="min-h-screen bg-background py-8 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-4">Erreur</h1>
-          <p className="text-muted-foreground">
-            Impossible de charger le tournoi.
-          </p>
+          <h1 className="text-2xl font-bold text-destructive mb-4">
+            {t("error")}
+          </h1>
+          <p className="text-muted-foreground">{t("loadError")}</p>
           <Button asChild className="mt-4">
-            <Link href="/tournaments">Retour aux tournois</Link>
+            <Link href="/tournaments">{t("backToTournaments")}</Link>
           </Button>
         </div>
       </div>
@@ -91,13 +92,13 @@ export default function TournamentAdminPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour au tournoi
+              {t("backToTournament")}
             </Link>
           </Button>
 
           <div className="flex-1">
             <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Badge variant="outline">Administration</Badge>
+              <Badge variant="outline">{t("administration")}</Badge>
               <Badge variant="secondary">
                 {tournamentStatusTranslation[
                   tournament.status as keyof typeof tournamentStatusTranslation
@@ -107,7 +108,7 @@ export default function TournamentAdminPage() {
             <H1 className="mb-2">{tournament.name}</H1>
             <p className="text-muted-foreground">
               {formatDate(tournament.startDate)} •{" "}
-              {tournament.location || "Lieu non spécifié"}
+              {tournament.location || t("noLocation")}
             </p>
           </div>
 
@@ -127,14 +128,14 @@ export default function TournamentAdminPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
-                  Vue d'ensemble
+                  {t("overview")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {progress && (
                   <>
                     <div className="flex justify-between text-sm">
-                      <span>Progression :</span>
+                      <span>{t("progress")}</span>
                       <span className="font-medium">
                         {Math.round(progress.progressPercentage)}%
                       </span>
@@ -161,7 +162,7 @@ export default function TournamentAdminPage() {
                           {progress.completedMatches}
                         </div>
                         <div className="text-muted-foreground">
-                          Matchs terminés
+                          {t("finishedMatches")}
                         </div>
                       </div>
                     </div>
@@ -213,7 +214,7 @@ export default function TournamentAdminPage() {
                                 progress.currentRound <
                                   progress.totalRounds && (
                                   <div className="text-green-600 dark:text-green-400 text-xs mt-1">
-                                    Prêt pour la ronde suivante
+                                    {t("readyNextRound")}
                                   </div>
                                 )}
                             </div>
@@ -235,35 +236,35 @@ export default function TournamentAdminPage() {
                   className="flex items-center gap-2"
                 >
                   <BarChart3 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Vue d'ensemble</span>
+                  <span className="hidden sm:inline">{t("overview")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="registrations"
                   className="flex items-center gap-2"
                 >
                   <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Inscriptions</span>
+                  <span className="hidden sm:inline">{t("registrations")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="matches"
                   className="flex items-center gap-2"
                 >
                   <Swords className="w-4 h-4" />
-                  <span className="hidden sm:inline">Matchs</span>
+                  <span className="hidden sm:inline">{t("matches")}</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="rankings"
                   className="flex items-center gap-2"
                 >
                   <Trophy className="w-4 h-4" />
-                  <span className="hidden sm:inline">Classements</span>
+                  <span className="hidden sm:inline">{t("rankings")}</span>
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Informations générales</CardTitle>
+                    <CardTitle>{t("generalInfo")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -290,7 +291,7 @@ export default function TournamentAdminPage() {
                         </div>
                         <div>
                           <span className="text-sm text-muted-foreground">
-                            Inscriptions jusqu’au :
+                            {t("registrationsUntil")}
                           </span>
                           <p className="font-medium">
                             {formatDate(
@@ -303,7 +304,7 @@ export default function TournamentAdminPage() {
                       <div className="space-y-3">
                         <div>
                           <span className="text-sm text-muted-foreground">
-                            Début :
+                            {t("start")}
                           </span>
                           <p className="font-medium">
                             {formatDate(tournament.startDate)}
@@ -311,7 +312,7 @@ export default function TournamentAdminPage() {
                         </div>
                         <div>
                           <span className="text-sm text-muted-foreground">
-                            Fin prévue :
+                            {t("expectedEnd")}
                           </span>
                           <p className="font-medium">
                             {formatDate(tournament.endDate)}

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -51,6 +52,7 @@ const DecksTable = ({
   sortOrder,
   setFilters,
 }: DecksTableProps) => {
+  const t = useTranslations("DecksTable");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [selectedDeckId, setSelectedDeckId] = useState<null | number>(null);
@@ -71,11 +73,11 @@ const DecksTable = ({
     try {
       const response = await decksService.removeDeck(id);
       if (response) {
-        toast.success("Deck supprimé avec succès.");
+        toast.success(t("deleted"));
       }
     } catch (err) {
       console.error(err);
-      toast.error("Erreur lors de la création du deck");
+      toast.error(t("createError"));
     } finally {
       setDeckList((prev) => prev.filter((deck) => deck.id !== id));
       setOpen(false);
@@ -115,7 +117,7 @@ const DecksTable = ({
                 colSpan={6}
                 className="text-center py-8 text-lg animate-pulse"
               >
-                Chargement des decks...
+                {t("loading")}
               </TableCell>
             </TableRow>
           ) : error ? (
@@ -124,7 +126,7 @@ const DecksTable = ({
                 colSpan={6}
                 className="text-center text-destructive py-8"
               >
-                Erreur lors du chargement des decks.
+                {t("loadError")}
               </TableCell>
             </TableRow>
           ) : deckList.length ? (
@@ -178,7 +180,7 @@ const DecksTable = ({
                 colSpan={6}
                 className="text-center py-8 text-muted-foreground"
               >
-                Aucun deck trouvée.
+                {t("empty")}
               </TableCell>
             </TableRow>
           )}
@@ -187,14 +189,13 @@ const DecksTable = ({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Cela supprimera définitivement le
-              deck.
+              {t("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => deleteDeck(selectedDeckId)}>
               Continue
             </AlertDialogAction>

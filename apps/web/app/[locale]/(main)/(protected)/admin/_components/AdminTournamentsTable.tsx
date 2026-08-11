@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { adminService } from "@/services/admin.service";
 import {
@@ -77,13 +78,13 @@ const defaultForm: TournamentFormState = {
   externalRegistrationUrl: "",
 };
 
-const statusLabels: Record<TournamentStatus, string> = {
-  [TournamentStatus.DRAFT]: "Brouillon",
-  [TournamentStatus.REGISTRATION_OPEN]: "Inscriptions ouvertes",
-  [TournamentStatus.REGISTRATION_CLOSED]: "Inscriptions closes",
-  [TournamentStatus.IN_PROGRESS]: "En cours",
-  [TournamentStatus.FINISHED]: "Terminé",
-  [TournamentStatus.CANCELLED]: "Annulé",
+const statusKeys: Record<TournamentStatus, string> = {
+  [TournamentStatus.DRAFT]: "statusDraft",
+  [TournamentStatus.REGISTRATION_OPEN]: "statusRegistrationOpen",
+  [TournamentStatus.REGISTRATION_CLOSED]: "statusRegistrationClosed",
+  [TournamentStatus.IN_PROGRESS]: "statusInProgress",
+  [TournamentStatus.FINISHED]: "statusFinished",
+  [TournamentStatus.CANCELLED]: "statusCancelled",
 };
 
 const statusTransitions: Record<TournamentStatus, TournamentStatus[]> = {
@@ -108,6 +109,7 @@ const getStatusTransitions = (status: string): TournamentStatus[] =>
   statusTransitions[status as TournamentStatus] ?? [];
 
 export function AdminTournamentsTable() {
+  const t = useTranslations("AdminTournaments");
   const [data, setData] = useState<PaginatedResult<Tournament> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +127,7 @@ export function AdminTournamentsTable() {
       setData(response);
     } catch (err) {
       console.error("Failed to load tournaments", err);
-      setError("Impossible de charger les tournois");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -188,10 +190,10 @@ export function AdminTournamentsTable() {
     try {
       if (editing) {
         await adminService.updateTournament(editing.id, payload);
-        toast.success("Tournoi mis à jour");
+        toast.success(t("updated"));
       } else {
         await adminService.createTournament(payload);
-        toast.success("Tournoi créé");
+        toast.success(t("created"));
       }
       setOpenModal(false);
       await loadTournaments(data?.meta.currentPage ?? 1);
@@ -207,11 +209,11 @@ export function AdminTournamentsTable() {
   ) => {
     try {
       await adminService.updateTournamentStatus(tournament.id, status);
-      toast.success("Statut mis à jour");
+      toast.success(t("statusUpdated"));
       await loadTournaments(data?.meta.currentPage ?? 1);
     } catch (err) {
       console.error("Status update failed", err);
-      toast.error("Mise à jour impossible");
+      toast.error(t("updateFailed"));
     }
   };
 
@@ -219,7 +221,7 @@ export function AdminTournamentsTable() {
     if (!tournamentToDelete) return;
     try {
       await adminService.deleteTournament(tournamentToDelete.id);
-      toast.success("Tournoi supprimé");
+      toast.success(t("deleted"));
       setTournamentToDelete(null);
       await loadTournaments();
     } catch (err) {
@@ -234,10 +236,8 @@ export function AdminTournamentsTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Tournois</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Créer, mettre à jour ou archiver les tournois.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -256,12 +256,12 @@ export function AdminTournamentsTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>#</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Dates</TableHead>
-                <TableHead>Joueurs</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("type")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("dates")}</TableHead>
+                <TableHead>{t("players")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -303,7 +303,7 @@ export function AdminTournamentsTable() {
                             ...getStatusTransitions(tournament.status),
                           ].map((status) => (
                             <SelectItem key={status} value={status}>
-                              {statusLabels[status]}
+                              {t(statusKeys[status])}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -332,7 +332,7 @@ export function AdminTournamentsTable() {
                         size="sm"
                         onClick={() => openEdit(tournament)}
                       >
-                        Éditer
+                        {t("edit")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -350,7 +350,7 @@ export function AdminTournamentsTable() {
                     colSpan={7}
                     className="text-center text-muted-foreground"
                   >
-                    Aucun tournoi
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -363,15 +363,13 @@ export function AdminTournamentsTable() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Mettre à jour le tournoi" : "Nouveau tournoi"}
+              {editing ? t("updateTournament") : "Nouveau tournoi"}
             </DialogTitle>
-            <DialogDescription>
-              Définissez les paramètres essentiels du tournoi.
-            </DialogDescription>
+            <DialogDescription>{t("formSubtitle")}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nom</Label>
+              <Label htmlFor="name">{t("name")}</Label>
               <Input
                 id="name"
                 value={form.name}
@@ -381,7 +379,7 @@ export function AdminTournamentsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="location">Lieu</Label>
+              <Label htmlFor="location">{t("location")}</Label>
               <Input
                 id="location"
                 value={form.location}
@@ -391,7 +389,7 @@ export function AdminTournamentsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="startDate">Début</Label>
+              <Label htmlFor="startDate">{t("start")}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -405,7 +403,7 @@ export function AdminTournamentsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="endDate">Fin</Label>
+              <Label htmlFor="endDate">{t("end")}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -416,7 +414,7 @@ export function AdminTournamentsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Type</Label>
+              <Label>{t("type")}</Label>
               <Select
                 value={String(form.type)}
                 onValueChange={(value) =>
@@ -450,16 +448,14 @@ export function AdminTournamentsTable() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Statut</Label>
+              <Label>{t("status")}</Label>
               <div className="flex h-10 items-center rounded-md border bg-muted/40 px-3">
-                <Badge variant="secondary">{statusLabels[form.status]}</Badge>
+                <Badge variant="secondary">{t(statusKeys[form.status])}</Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Le statut se pilote depuis les actions du tournoi.
-              </p>
+              <p className="text-xs text-muted-foreground">{t("statusHelp")}</p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="maxPlayers">Joueurs max</Label>
+              <Label htmlFor="maxPlayers">{t("maxPlayers")}</Label>
               <Input
                 id="maxPlayers"
                 type="number"
@@ -480,7 +476,7 @@ export function AdminTournamentsTable() {
                   Tournoi externe
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Inscriptions hors de la plateforme
+                  {t("externalRegistrations")}
                 </p>
               </div>
               <Switch
@@ -522,7 +518,7 @@ export function AdminTournamentsTable() {
               Annuler
             </Button>
             <Button onClick={saveTournament}>
-              {editing ? "Mettre à jour" : "Créer"}
+              {editing ? t("update") : t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -536,9 +532,9 @@ export function AdminTournamentsTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce tournoi ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action supprimera définitivement le tournoi.
+              {t("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

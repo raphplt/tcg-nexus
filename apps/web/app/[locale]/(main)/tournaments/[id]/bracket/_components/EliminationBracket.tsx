@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Crown, Medal, Target, Trophy } from "lucide-react";
 import React from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -24,6 +25,7 @@ function BracketMatchComponent({
   onClick,
   interactive = true,
 }: BracketMatchProps) {
+  const t = useTranslations("EliminationBracket");
   const getPhaseIcon = (phase: string) => {
     switch (phase) {
       case "final":
@@ -95,7 +97,7 @@ function BracketMatchComponent({
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {match.playerA?.name || "À déterminer"}
+                {match.playerA?.name || t("toBeDetermined")}
               </p>
               {match.playerA?.seed && (
                 <p className="text-xs text-muted-foreground">
@@ -128,7 +130,7 @@ function BracketMatchComponent({
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {match.playerB?.name || "À déterminer"}
+                {match.playerB?.name || t("toBeDetermined")}
               </p>
               {match.playerB?.seed && (
                 <p className="text-xs text-muted-foreground">
@@ -146,11 +148,11 @@ function BracketMatchComponent({
           <span className="text-muted-foreground">
             {match.status === "finished" || match.status === "forfeit"
               ? `${match.playerAScore ?? 0} – ${match.playerBScore ?? 0}`
-              : "Score à venir"}
+              : t("scorePending")}
           </span>
           {match.status === "finished" ? (
             <Badge variant="default" className="text-xs">
-              Terminé
+              {t("finished")}
             </Badge>
           ) : match.status === "forfeit" ? (
             <Badge variant="destructive" className="text-xs">
@@ -158,15 +160,15 @@ function BracketMatchComponent({
             </Badge>
           ) : match.status === "in_progress" ? (
             <Badge variant="secondary" className="text-xs">
-              En cours
+              {t("inProgress")}
             </Badge>
           ) : match.playerA && match.playerB ? (
             <Badge variant="outline" className="text-xs">
-              Programmé
+              {t("scheduled")}
             </Badge>
           ) : (
             <Badge variant="outline" className="text-xs">
-              À venir
+              {t("upcoming")}
             </Badge>
           )}
         </div>
@@ -180,10 +182,11 @@ export function EliminationBracket({
   onMatchClick,
   interactive = true,
 }: EliminationBracketProps) {
+  const t = useTranslations("EliminationBracket");
   if (!bracket || bracket.rounds.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Aucun bracket disponible</p>
+        <p className="text-muted-foreground">{t("empty")}</p>
       </div>
     );
   }
@@ -200,7 +203,7 @@ export function EliminationBracket({
                   : round.index === bracket.totalRounds - 1
                     ? "Demi-finales"
                     : round.index === bracket.totalRounds - 2
-                      ? "Quarts de finale"
+                      ? t("quarterFinals")
                       : `Round ${round.index}`}
               </h3>
               <Badge variant="outline" className="mt-1">
@@ -240,15 +243,15 @@ export function EliminationBracket({
             <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded border border-emerald-500/40 bg-emerald-500/10" />
-                <span>Vainqueur</span>
+                <span>{t("winner")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded border border-primary/60 bg-primary/5" />
-                <span>En cours</span>
+                <span>{t("inProgress")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded border border-border bg-card" />
-                <span>Programmé ou à venir</span>
+                <span>{t("scheduledOrUpcoming")}</span>
               </div>
             </div>
           </CardContent>

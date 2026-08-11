@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Info } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -29,6 +30,7 @@ import {
 } from "./_components/VerticalTabs";
 
 function formatDate(date?: string | null) {
+  const t = useTranslations("TournamentDetail");
   if (!date) return "-";
   try {
     return new Date(date).toLocaleString(undefined, {
@@ -74,26 +76,30 @@ const LoadingView = () => (
   </div>
 );
 
-const ErrorView = ({ message }: { message?: string }) => (
-  <div className="min-h-screen bg-background">
-    <div className="max-w-7xl mx-auto py-16 px-4">
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <Info className="size-5" /> Erreur de chargement
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            {message || "Impossible de récupérer les détails du tournoi."}
-          </p>
-        </CardContent>
-      </Card>
+const ErrorView = ({ message }: { message?: string }) => {
+  const t = useTranslations("TournamentDetail");
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto py-16 px-4">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Info className="size-5" />
+              {t("loadErrorTitle")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">{message || t("loadError")}</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function TournamentDetailsPage() {
+  const t = useTranslations("TournamentDetail");
   const { id } = useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -116,24 +122,17 @@ export default function TournamentDetailsPage() {
     try {
       const registration = await tournamentService.register(tournament.id, "");
       const messages = {
-        confirmed: "Votre inscription est confirmée.",
-        pending:
-          "Votre demande d'inscription attend la validation de l'organisation.",
-        waitlisted:
-          "Le tournoi est complet : vous avez rejoint la liste d'attente.",
+        confirmed: t("registrationConfirmed"),
+        pending: t("registrationPending"),
+        waitlisted: t("registrationWaitlisted"),
       } as const;
       toast.success(
         messages[registration.status as keyof typeof messages] ??
-          "Votre inscription a bien été enregistrée.",
+          t("registrationSaved"),
       );
       await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     } catch (error) {
-      toast.error(
-        extractApiErrorMessage(
-          error,
-          "Impossible de vous inscrire au tournoi.",
-        ),
-      );
+      toast.error(extractApiErrorMessage(error, t("registerError")));
     }
   };
 
@@ -141,15 +140,10 @@ export default function TournamentDetailsPage() {
     if (!tournament?.id || !user?.player?.id) return;
     try {
       await tournamentService.unregister(tournament.id, user.player.id);
-      toast.success("Vous avez quitté le tournoi.");
+      toast.success(t("leftTournament"));
       await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     } catch (error) {
-      toast.error(
-        extractApiErrorMessage(
-          error,
-          "Impossible de vous désinscrire du tournoi.",
-        ),
-      );
+      toast.error(extractApiErrorMessage(error, t("unregisterError")));
       throw error;
     }
   };

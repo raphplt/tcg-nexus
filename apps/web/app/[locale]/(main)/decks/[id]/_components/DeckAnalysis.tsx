@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { DeckAnalysis } from "@/types/deck-analysis";
@@ -55,6 +56,7 @@ const DistributionBadges = ({
   title: string;
   data: { label: string; count: number; percentage: number }[];
 }) => {
+  const t = useTranslations("DeckAnalysis");
   if (!data.length) return null;
   return (
     <div className="space-y-2">
@@ -105,87 +107,91 @@ const AnalysisSkeleton = () => (
   </div>
 );
 
-const AnalysisResult = ({ analysis }: { analysis: DeckAnalysis }) => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-2 gap-3">
-      <PillStat label="Pokémon" value={analysis.pokemonCount} />
-      <PillStat label="Énergies" value={analysis.energyCount} />
-      <PillStat label="Dresseurs" value={analysis.trainerCount} />
-      <PillStat
-        label="Coût moyen"
-        value={analysis.averageEnergyCost.toFixed(2)}
+const AnalysisResult = ({ analysis }: { analysis: DeckAnalysis }) => {
+  const t = useTranslations("DeckAnalysis");
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <PillStat label={t("pokemon")} value={analysis.pokemonCount} />
+        <PillStat label={t("energies")} value={analysis.energyCount} />
+        <PillStat label={t("trainers")} value={analysis.trainerCount} />
+        <PillStat
+          label={t("averageCost")}
+          value={analysis.averageEnergyCost.toFixed(2)}
+        />
+      </div>
+
+      {analysis.warnings.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/60">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t("toWatch")}</AlertTitle>
+          <AlertDescription>
+            <BulletList items={analysis.warnings} />
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {analysis.duplicates.length > 0 && (
+        <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t("duplicates")}</AlertTitle>
+          <AlertDescription>
+            <ul className="space-y-1 text-sm">
+              {analysis.duplicates.map((dup) => (
+                <li key={dup.cardId} className="flex justify-between">
+                  <span>{dup.cardName}</span>
+                  <span className="text-xs text-muted-foreground">
+                    x{dup.qty}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {analysis.suggestions.length > 0 && (
+        <SuggestionList title="Recommandations" items={analysis.suggestions} />
+      )}
+
+      {analysis.missingCards.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-sm font-semibold">{t("suggestedMissing")}</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {analysis.missingCards.map((missing, index) => (
+              <div
+                key={`${missing.label}-${index}`}
+                className="rounded-lg border bg-accent/40 p-3"
+              >
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span>{missing.label}</span>
+                  <Badge variant="secondary">+{missing.recommendedQty}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {missing.reason}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <DistributionBadges
+        title={t("typeDistribution")}
+        data={analysis.typeDistribution}
+      />
+      <DistributionBadges
+        title={t("costCurve")}
+        data={analysis.attackCostDistribution.map((item) => ({
+          label: t("cost", { cost: item.cost }),
+          count: item.count,
+          percentage: item.percentage,
+        }))}
       />
     </div>
-
-    {analysis.warnings.length > 0 && (
-      <Alert variant="destructive" className="border-destructive/60">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>À surveiller</AlertTitle>
-        <AlertDescription>
-          <BulletList items={analysis.warnings} />
-        </AlertDescription>
-      </Alert>
-    )}
-
-    {analysis.duplicates.length > 0 && (
-      <Alert className="border-amber-200 bg-amber-50 text-amber-900">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Doublons détectés</AlertTitle>
-        <AlertDescription>
-          <ul className="space-y-1 text-sm">
-            {analysis.duplicates.map((dup) => (
-              <li key={dup.cardId} className="flex justify-between">
-                <span>{dup.cardName}</span>
-                <span className="text-xs text-muted-foreground">
-                  x{dup.qty}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </AlertDescription>
-      </Alert>
-    )}
-
-    {analysis.suggestions.length > 0 && (
-      <SuggestionList title="Recommandations" items={analysis.suggestions} />
-    )}
-
-    {analysis.missingCards.length > 0 && (
-      <div className="space-y-2">
-        <div className="text-sm font-semibold">Cartes manquantes suggérées</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {analysis.missingCards.map((missing, index) => (
-            <div
-              key={`${missing.label}-${index}`}
-              className="rounded-lg border bg-accent/40 p-3"
-            >
-              <div className="flex items-center justify-between text-sm font-medium">
-                <span>{missing.label}</span>
-                <Badge variant="secondary">+{missing.recommendedQty}</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {missing.reason}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    <DistributionBadges
-      title="Répartition des types"
-      data={analysis.typeDistribution}
-    />
-    <DistributionBadges
-      title="Courbe de coûts"
-      data={analysis.attackCostDistribution.map((item) => ({
-        label: `Coût ${item.cost}`,
-        count: item.count,
-        percentage: item.percentage,
-      }))}
-    />
-  </div>
-);
+  );
+};
 
 export function DeckAnalysisCard({
   analysis,
@@ -193,6 +199,7 @@ export function DeckAnalysisCard({
   error,
   onAnalyze,
 }: DeckAnalysisProps) {
+  const t = useTranslations("DeckAnalysis");
   const { id } = useParams();
   const deckId = id as string;
 
@@ -202,7 +209,7 @@ export function DeckAnalysisCard({
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
-            Analyse du deck
+            {t("title")}
           </CardTitle>
           <Button onClick={onAnalyze} disabled={isLoading}>
             {isLoading ? (
@@ -213,9 +220,7 @@ export function DeckAnalysisCard({
             Analyser mon deck
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Obtenez des recommandations rapides sur l'équilibre de ce deck.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         <Button
           asChild
           variant="outline"
@@ -224,7 +229,7 @@ export function DeckAnalysisCard({
         >
           <Link href={`/decks/${deckId}/analysis`}>
             <ExternalLink className="w-4 h-4 mr-2" />
-            Voir l'analyse complète
+            {t("viewFull")}
           </Link>
         </Button>
       </CardHeader>
@@ -232,7 +237,7 @@ export function DeckAnalysisCard({
         {error && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Analyse impossible</AlertTitle>
+            <AlertTitle>{t("failed")}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -242,9 +247,7 @@ export function DeckAnalysisCard({
         {!isLoading && analysis && <AnalysisResult analysis={analysis} />}
 
         {!isLoading && !analysis && !error && (
-          <p className="text-sm text-muted-foreground">
-            Lancez une analyse pour afficher les recommandations automatiques.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("runAnalysis")}</p>
         )}
       </CardContent>
     </Card>

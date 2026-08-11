@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import {
   Card,
@@ -83,6 +84,8 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
   setPage,
   children,
 }) => {
+  const t = useTranslations("DeckCardFilters");
+  const tp = useTranslations("Pokedex");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
@@ -97,12 +100,9 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
           <div>
             <CardTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-primary" />
-              Sélection des cartes
+              {t("title")}
             </CardTitle>
-            <CardDescription>
-              Retrouvez les filtres avancés du marketplace pour composer votre
-              liste.
-            </CardDescription>
+            <CardDescription>{t("subtitle")}</CardDescription>
           </div>
           {activeFiltersCount > 0 && (
             <Badge variant="secondary">
@@ -116,11 +116,11 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
         <div className="space-y-4">
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="flex-1">
-              <Label className="sr-only">Rechercher</Label>
+              <Label className="sr-only">{t("search")}</Label>
               <div className="relative">
                 <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
                 <Input
-                  placeholder="Nom, numéro, extension..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-9"
@@ -133,13 +133,13 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                 onValueChange={(value) => updateFilters({ sortBy: value })}
               >
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="name">Nom</SelectItem>
-                  <SelectItem value="localId">Numéro</SelectItem>
+                  <SelectItem value="name">{t("name")}</SelectItem>
+                  <SelectItem value="localId">{t("number")}</SelectItem>
                   <SelectItem value="price">Prix</SelectItem>
-                  <SelectItem value="popularity">Popularité</SelectItem>
+                  <SelectItem value="popularity">{t("popularity")}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -152,8 +152,8 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                   <SelectValue placeholder="Ordre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ASC">Croissant</SelectItem>
-                  <SelectItem value="DESC">Décroissant</SelectItem>
+                  <SelectItem value="ASC">{t("ascending")}</SelectItem>
+                  <SelectItem value="DESC">{t("descending")}</SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -176,8 +176,8 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
           {isFiltersOpen && (
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 pt-2 animate-in slide-in-from-top-2 fade-in duration-200">
               <FilterSelect
-                label="Série"
-                placeholder="Toutes"
+                label={t("series")}
+                placeholder={t("allFeminine")}
                 value={filters.serieId || "all"}
                 onChange={(value) =>
                   updateFilters({
@@ -192,7 +192,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
 
               <FilterSelect
                 label="Extension"
-                placeholder="Toutes"
+                placeholder={t("allFeminine")}
                 value={filters.setId || "all"}
                 onChange={(value) =>
                   updateFilters({
@@ -206,8 +206,8 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
               />
 
               <FilterSelect
-                label="Énergie"
-                placeholder="Tous"
+                label={t("energy")}
+                placeholder={t("all")}
                 value={filters.energyType || "all"}
                 onChange={(value) =>
                   updateFilters({
@@ -215,22 +215,22 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                   })
                 }
                 options={[
-                  { value: "Grass", label: "Plante" },
-                  { value: "Fire", label: "Feu" },
-                  { value: "Water", label: "Eau" },
-                  { value: "Lightning", label: "Électrique" },
-                  { value: "Psychic", label: "Psy" },
-                  { value: "Fighting", label: "Combat" },
-                  { value: "Darkness", label: "Ténèbres" },
-                  { value: "Metal", label: "Métal" },
-                  { value: "Fairy", label: "Fée" },
-                  { value: "Dragon", label: "Dragon" },
-                  { value: "Colorless", label: "Incolore" },
+                  { value: "Grass", label: tp("typeGrass") },
+                  { value: "Fire", label: tp("typeFire") },
+                  { value: "Water", label: tp("typeWater") },
+                  { value: "Lightning", label: tp("typeLightning") },
+                  { value: "Psychic", label: tp("typePsychic") },
+                  { value: "Fighting", label: tp("typeFighting") },
+                  { value: "Darkness", label: tp("typeDarkness") },
+                  { value: "Metal", label: tp("typeMetal") },
+                  { value: "Fairy", label: tp("typeFairy") },
+                  { value: "Dragon", label: tp("typeDragon") },
+                  { value: "Colorless", label: tp("typeColorless") },
                 ]}
               />
 
               <div className="space-y-1.5">
-                <Label>Rareté</Label>
+                <Label>{t("rarity")}</Label>
                 <Input
                   placeholder="Ex: Rare"
                   value={filters.rarity || ""}
@@ -295,7 +295,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                   }}
                 >
                   <RefreshCcw className="w-3 h-3 mr-2" />
-                  Réinitialiser tous les filtres
+                  {t("resetAll")}
                 </Button>
               </div>
             </div>

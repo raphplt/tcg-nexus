@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -21,6 +22,7 @@ interface TrainingBoardProps {
 }
 
 export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
+  const t = useTranslations("TrainingBoard");
   const queryClient = useQueryClient();
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -44,9 +46,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(
-        extractApiErrorMessage(error, "Impossible de résoudre cette action."),
-      );
+      setLastError(extractApiErrorMessage(error, t("actionError")));
     },
   });
 
@@ -57,9 +57,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(
-        extractApiErrorMessage(error, "Impossible de valider cette réponse."),
-      );
+      setLastError(extractApiErrorMessage(error, t("responseError")));
     },
   });
 
@@ -71,7 +69,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       <Card className="tcg-surface">
         <CardContent className="flex items-center justify-center gap-3 py-10 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement du match d’entraînement...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -81,10 +79,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
     return (
       <Card className="border-destructive/40">
         <CardContent className="py-8 text-sm text-destructive">
-          {extractApiErrorMessage(
-            sessionQuery.error,
-            "Impossible de charger ce match d’entraînement.",
-          )}
+          {extractApiErrorMessage(sessionQuery.error, t("loadError"))}
         </CardContent>
       </Card>
     );
@@ -119,10 +114,10 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
                 <h2 className="text-2xl font-bold">Partie terminée</h2>
                 <p className="text-sm leading-6 text-slate-600">
                   {session.winnerSide === "PLAYER"
-                    ? "Vous avez remporté ce match d’entraînement."
+                    ? t("youWon")
                     : session.winnerSide === "AI"
-                      ? "L’IA a remporté ce match d’entraînement."
-                      : "Le match s’est terminé sans vainqueur déclaré."}
+                      ? t("aiWon")
+                      : t("noWinner")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">

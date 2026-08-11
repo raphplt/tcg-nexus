@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
@@ -37,13 +38,14 @@ const MarketplaceSearch = ({
   sets,
   updateFilters,
 }: MarketplaceSearchProps) => {
+  const t = useTranslations("MarketplaceSearch");
   return (
     <Card className="mb-6">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
-            Recherche et filtres
+            {t("title")}
           </CardTitle>
           <div className="flex items-center gap-2">
             {activeFiltersCount > 0 && (
@@ -64,7 +66,7 @@ const MarketplaceSearch = ({
         <div className="flex gap-4">
           <div className="flex-1">
             <Input
-              placeholder="Rechercher une carte..."
+              placeholder={t("searchPlaceholder")}
               value={filters.search}
               onChange={(e) => updateFilters({ search: e.target.value })}
               className="w-full"
@@ -78,9 +80,9 @@ const MarketplaceSearch = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="name">Nom</SelectItem>
+              <SelectItem value="name">{t("name")}</SelectItem>
               <SelectItem value="price">Prix</SelectItem>
-              <SelectItem value="popularity">Popularité</SelectItem>
+              <SelectItem value="popularity">{t("popularity")}</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -93,8 +95,8 @@ const MarketplaceSearch = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ASC">Croissant</SelectItem>
-              <SelectItem value="DESC">Décroissant</SelectItem>
+              <SelectItem value="ASC">{t("ascending")}</SelectItem>
+              <SelectItem value="DESC">{t("descending")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -102,7 +104,7 @@ const MarketplaceSearch = ({
         {showFilters && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
             <div>
-              <Label>Série</Label>
+              <Label>{t("series")}</Label>
               <Select
                 value={filters.serieId || "all"}
                 onValueChange={(value) =>
@@ -112,10 +114,10 @@ const MarketplaceSearch = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Toutes les séries" />
+                  <SelectValue placeholder={t("allSeries")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les séries</SelectItem>
+                  <SelectItem value="all">{t("allSeries")}</SelectItem>
                   {series?.map((s) => (
                     <SelectItem key={s.id} value={s.id.toString()}>
                       {s.name}
@@ -126,7 +128,7 @@ const MarketplaceSearch = ({
             </div>
 
             <div>
-              <Label>Extension</Label>
+              <Label>{t("set")}</Label>
               <Select
                 value={filters.setId || "all"}
                 onValueChange={(value) =>
@@ -136,10 +138,10 @@ const MarketplaceSearch = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Toutes les extensions" />
+                  <SelectValue placeholder={t("allSets")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les extensions</SelectItem>
+                  <SelectItem value="all">{t("allSets")}</SelectItem>
                   {sets?.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -150,7 +152,7 @@ const MarketplaceSearch = ({
             </div>
 
             <div>
-              <Label>Rareté</Label>
+              <Label>{t("rarity")}</Label>
               <Input
                 placeholder="Ex: Rare Holo"
                 value={filters.rarity || ""}
@@ -171,10 +173,10 @@ const MarketplaceSearch = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Tous les états" />
+                  <SelectValue placeholder={t("allConditions")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les états</SelectItem>
+                  <SelectItem value="all">{t("allConditions")}</SelectItem>
                   {cardStates.map((cs) => (
                     <SelectItem key={cs.value} value={cs.value}>
                       {cs.label}
@@ -185,7 +187,7 @@ const MarketplaceSearch = ({
             </div>
 
             <div>
-              <Label>Devise</Label>
+              <Label>{t("currency")}</Label>
               <Select
                 value={filters.currency || "all"}
                 onValueChange={(value) =>
@@ -195,10 +197,10 @@ const MarketplaceSearch = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Toutes les devises" />
+                  <SelectValue placeholder={t("allCurrencies")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les devises</SelectItem>
+                  <SelectItem value="all">{t("allCurrencies")}</SelectItem>
                   {currencyOptions.map((c) => (
                     <SelectItem key={c.value} value={c.value}>
                       {c.label}
@@ -209,7 +211,7 @@ const MarketplaceSearch = ({
             </div>
 
             <div>
-              <Label>Langue</Label>
+              <Label>{t("language")}</Label>
               <Select
                 value={filters.language || "all"}
                 onValueChange={(value) =>
@@ -219,10 +221,10 @@ const MarketplaceSearch = ({
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Toutes les langues" />
+                  <SelectValue placeholder={t("allLanguages")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les langues</SelectItem>
+                  <SelectItem value="all">{t("allLanguages")}</SelectItem>
                   {languages.map((l) => (
                     <SelectItem key={l.value} value={l.value}>
                       {l.label}
@@ -272,7 +274,7 @@ const MarketplaceSearch = ({
               <div className="col-span-full">
                 <Button variant="outline" onClick={resetFilters}>
                   <X className="w-4 h-4 mr-2" />
-                  Réinitialiser les filtres
+                  {t("resetFilters")}
                 </Button>
               </div>
             )}

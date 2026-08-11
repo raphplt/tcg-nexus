@@ -59,6 +59,7 @@ interface StatusModalState {
 }
 
 export function AdminOrdersTable() {
+  const t = useTranslations("AdminOrders");
   const tStatus = useTranslations("OrderStatus");
   const locale = useLocale();
   const [filters, setFilters] = useState<AdminOrderFilters>({
@@ -85,7 +86,7 @@ export function AdminOrdersTable() {
       setFilters((prev) => ({ ...prev, ...overrides }));
     } catch (err) {
       console.error("Failed to load orders", err);
-      setError("Impossible de charger les ventes");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -127,11 +128,11 @@ export function AdminOrdersTable() {
             }
           : prev,
       );
-      toast.success("Statut de commande mis à jour");
+      toast.success(t("statusUpdated"));
       setStatusModal({ open: false, order: null, status: OrderStatus.PAID });
     } catch (err) {
       console.error("Unable to update order status", err);
-      toast.error("Mise à jour impossible");
+      toast.error(t("updateFailed"));
     }
   };
 
@@ -145,19 +146,17 @@ export function AdminOrdersTable() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Ventes</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Suivez les commandes et mettez à jour leur statut.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button variant="outline" onClick={() => refreshOrders()}>
-          Recharger
+          {t("reload")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-3 items-center">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Statut</span>
+            <span className="text-xs text-muted-foreground">{t("status")}</span>
             <Select
               value={filters.status ?? "ALL"}
               onValueChange={(value) =>
@@ -168,10 +167,10 @@ export function AdminOrdersTable() {
               }
             >
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Tous les statuts" />
+                <SelectValue placeholder={t("allStatuses")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tous</SelectItem>
+                <SelectItem value="ALL">{t("all")}</SelectItem>
                 {statusOptions.map((status) => (
                   <SelectItem key={status} value={status}>
                     {status}
@@ -181,10 +180,10 @@ export function AdminOrdersTable() {
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Acheteur</span>
+            <span className="text-xs text-muted-foreground">{t("buyer")}</span>
             <Input
               type="number"
-              placeholder="ID acheteur"
+              placeholder={t("buyerIdPlaceholder")}
               className="w-40"
               value={filters.buyerId ?? ""}
               onChange={(event) =>
@@ -199,10 +198,10 @@ export function AdminOrdersTable() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Vendeur</span>
+            <span className="text-xs text-muted-foreground">{t("seller")}</span>
             <Input
               type="number"
-              placeholder="ID vendeur"
+              placeholder={t("sellerIdPlaceholder")}
               className="w-40"
               value={filters.sellerId ?? ""}
               onChange={(event) =>
@@ -229,11 +228,11 @@ export function AdminOrdersTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>#</TableHead>
-                <TableHead>Acheteur</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("buyer")}</TableHead>
+                <TableHead>{t("total")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("date")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -290,7 +289,7 @@ export function AdminOrdersTable() {
                               Détails commande #{order.id}
                             </DialogTitle>
                             <DialogDescription>
-                              Articles, acheteur et transactions associées
+                              {t("detailsSubtitle")}
                             </DialogDescription>
                           </DialogHeader>
                           {selectedOrder && (
@@ -302,11 +301,11 @@ export function AdminOrdersTable() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead>Article</TableHead>
-                                      <TableHead>État / Cond.</TableHead>
-                                      <TableHead>Vendeur</TableHead>
-                                      <TableHead>Expédition</TableHead>
-                                      <TableHead>Qté</TableHead>
+                                      <TableHead>{t("item")}</TableHead>
+                                      <TableHead>{t("condition")}</TableHead>
+                                      <TableHead>{t("seller")}</TableHead>
+                                      <TableHead>{t("shipping")}</TableHead>
+                                      <TableHead>{t("qty")}</TableHead>
                                       <TableHead>PU</TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -366,7 +365,7 @@ export function AdminOrdersTable() {
                     colSpan={6}
                     className="text-center text-muted-foreground"
                   >
-                    Aucune vente trouvée avec ces filtres.
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -387,7 +386,7 @@ export function AdminOrdersTable() {
               }
             >
               <ArrowLeft className="mr-1 h-4 w-4" />
-              Page précédente
+              {t("previousPage")}
             </Button>
             <div className="text-sm text-muted-foreground">
               Page {paginationInfo.currentPage} / {paginationInfo.totalPages}
@@ -421,7 +420,7 @@ export function AdminOrdersTable() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mettre à jour le statut</DialogTitle>
+            <DialogTitle>{t("updateStatus")}</DialogTitle>
             <DialogDescription>
               Choisissez le nouveau statut de la commande
               {statusModal.order ? ` #${statusModal.order.id}` : ""}.
@@ -460,7 +459,7 @@ export function AdminOrdersTable() {
             >
               Annuler
             </Button>
-            <Button onClick={handleUpdateStatus}>Mettre à jour</Button>
+            <Button onClick={handleUpdateStatus}>{t("update")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

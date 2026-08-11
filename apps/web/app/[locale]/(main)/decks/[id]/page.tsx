@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ import { DeckInfo } from "./_components/DeckInfo";
 import { ShareDialog } from "./_components/ShareDialog";
 
 export default function DeckDetailsPage() {
+  const t = useTranslations("DeckDetail");
   const { id } = useParams();
   const { user } = useAuth();
   const deckId = id as string;
@@ -44,10 +46,10 @@ export default function DeckDetailsPage() {
     onSuccess: (data) => {
       setShareCode(data.code);
       setShareDialogOpen(true);
-      toast.success("Code de partage généré");
+      toast.success(t("shareCodeGenerated"));
     },
     onError: () => {
-      toast.error("Impossible de générer le code de partage");
+      toast.error(t("shareCodeError"));
     },
   });
 
@@ -56,11 +58,11 @@ export default function DeckDetailsPage() {
     onSuccess: (result) => {
       setAnalysis(result);
       setAnalysisError(null);
-      toast.success("Analyse terminée");
+      toast.success(t("analysisDone"));
     },
     onError: () => {
-      setAnalysisError("Impossible d'analyser le deck pour le moment.");
-      toast.error("Impossible d'analyser le deck");
+      setAnalysisError(t("analysisUnavailable"));
+      toast.error(t("analysisError"));
     },
   });
 
@@ -76,10 +78,10 @@ export default function DeckDetailsPage() {
       a.download = `${data.name.replace(/[^a-zA-Z0-9-_ ]/g, "")}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success("Deck exporté avec succès");
+      toast.success(t("exported"));
     },
     onError: () => {
-      toast.error("Impossible d'exporter le deck");
+      toast.error(t("exportError"));
     },
   });
 
@@ -116,9 +118,7 @@ export default function DeckDetailsPage() {
       <div className="max-w-6xl mx-auto py-10 px-4">
         <Card className="border-destructive">
           <CardContent className="pt-6">
-            <div className="text-center text-destructive">
-              Erreur lors du chargement du deck.
-            </div>
+            <div className="text-center text-destructive">{t("loadError")}</div>
           </CardContent>
         </Card>
       </div>

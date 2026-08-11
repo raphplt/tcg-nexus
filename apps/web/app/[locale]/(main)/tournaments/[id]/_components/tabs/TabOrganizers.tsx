@@ -10,6 +10,7 @@ import {
   UserCircle,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ export function TabOrganizers({
   organizers,
   notifications,
 }: TabOrganizersProps) {
+  const t = useTranslations("TabOrganizers");
   return (
     <div className="space-y-6">
       {/* Organisateurs */}
@@ -51,7 +53,7 @@ export function TabOrganizers({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Users className="size-5 text-primary" />
-            Équipe d'organisation
+            {t("team")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -101,9 +103,7 @@ export function TabOrganizers({
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <UserCircle className="size-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
-                Aucun organisateur renseigné pour ce tournoi.
-              </p>
+              <p className="text-muted-foreground">{t("noOrganizers")}</p>
             </div>
           )}
         </CardContent>
@@ -166,11 +166,9 @@ export function TabOrganizers({
           ) : (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Bell className="size-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
-                Aucune notification pour le moment.
-              </p>
+              <p className="text-muted-foreground">{t("noNotifications")}</p>
               <p className="text-sm text-muted-foreground/70 mt-2">
-                Les annonces des organisateurs apparaîtront ici.
+                {t("notificationsHelp")}
               </p>
             </div>
           )}
@@ -186,15 +184,12 @@ export function TabOrganizers({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground mb-4">
-            Si vous avez des questions concernant ce tournoi, n'hésitez pas à
-            contacter l'équipe d'organisation.
-          </p>
+          <p className="text-muted-foreground mb-4">{t("contactHelp")}</p>
           {organizers && organizers.length > 0 && organizers[0]?.email ? (
             <Button asChild>
               <a href={`mailto:${organizers[0].email}`}>
                 <Mail className="size-4 mr-2" />
-                Contacter les organisateurs
+                {t("contactOrganizers")}
               </a>
             </Button>
           ) : (

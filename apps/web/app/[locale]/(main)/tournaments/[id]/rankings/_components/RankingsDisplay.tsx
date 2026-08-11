@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { BarChart3, Crown, Eye, Medal, Trophy } from "lucide-react";
 import React from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,6 +36,7 @@ interface PlayerStatsProps {
 }
 
 function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
+  const t = useTranslations("TournamentRankings");
   const winRate = ranking.winRate;
   const totalGames = ranking.wins + ranking.losses + ranking.draws;
 
@@ -57,7 +59,7 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
           <div className="text-2xl font-bold text-blue-600">
             {ranking.points}
           </div>
-          <div className="text-sm text-muted-foreground">Points</div>
+          <div className="text-sm text-muted-foreground">{t("points")}</div>
         </div>
         <div className="text-center p-3 bg-muted rounded">
           <div className="text-2xl font-bold text-green-600">
@@ -70,26 +72,26 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
       <div className="grid grid-cols-3 gap-2 text-sm">
         <div className="text-center p-2 bg-green-50 rounded">
           <div className="font-bold text-green-700">{ranking.wins}</div>
-          <div className="text-green-600">Victoires</div>
+          <div className="text-green-600">{t("wins")}</div>
         </div>
         <div className="text-center p-2 bg-red-50 rounded">
           <div className="font-bold text-red-700">{ranking.losses}</div>
-          <div className="text-red-600">Défaites</div>
+          <div className="text-red-600">{t("losses")}</div>
         </div>
         <div className="text-center p-2 bg-yellow-50 rounded">
           <div className="font-bold text-yellow-700">{ranking.draws}</div>
-          <div className="text-yellow-600">Égalités</div>
+          <div className="text-yellow-600">{t("draws")}</div>
         </div>
       </div>
 
       <div className="pt-3 border-t">
         <div className="text-sm space-y-2">
           <div className="flex justify-between">
-            <span>Total matches :</span>
+            <span>{t("totalMatches")}</span>
             <span className="font-medium">{totalGames}</span>
           </div>
           <div className="flex justify-between">
-            <span>Points par match :</span>
+            <span>{t("pointsPerMatch")}</span>
             <span className="font-medium">
               {totalGames > 0
                 ? (ranking.points / totalGames).toFixed(2)
@@ -98,7 +100,7 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
           </div>
           {tournament?.type === "swiss_system" && (
             <div className="text-xs text-muted-foreground mt-2">
-              Système suisse : Victoire = 3pts, Égalité = 1pt, Défaite = 0pt
+              {t("swissScoring")}
             </div>
           )}
         </div>
@@ -112,6 +114,7 @@ export function RankingsDisplay({
   tournament,
   isLoading,
 }: RankingsDisplayProps) {
+  const t = useTranslations("TournamentRankings");
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -163,9 +166,7 @@ export function RankingsDisplay({
       <Card>
         <CardContent className="p-6 text-center">
           <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Aucun classement disponible pour le moment.
-          </p>
+          <p className="text-muted-foreground">{t("empty")}</p>
         </CardContent>
       </Card>
     );
@@ -189,10 +190,10 @@ export function RankingsDisplay({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-16">Rang</TableHead>
-                <TableHead>Joueur</TableHead>
-                <TableHead className="text-center">Points</TableHead>
-                <TableHead className="text-center">V-D-E</TableHead>
+                <TableHead className="w-16">{t("rank")}</TableHead>
+                <TableHead>{t("player")}</TableHead>
+                <TableHead className="text-center">{t("points")}</TableHead>
+                <TableHead className="text-center">{t("wdl")}</TableHead>
                 <TableHead className="text-center">% Victoires</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
@@ -228,7 +229,7 @@ export function RankingsDisplay({
                                 ? "🏆 Champion"
                                 : ranking.rank === 2
                                   ? "🥈 Vice-champion"
-                                  : "🥉 3ème place"}
+                                  : t("thirdPlace")}
                             </p>
                           )}
                         </div>
@@ -270,12 +271,12 @@ export function RankingsDisplay({
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm">
                             <Eye className="w-3 h-3 mr-1" />
-                            Détails
+                            {t("details")}
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Statistiques détaillées</DialogTitle>
+                            <DialogTitle>{t("detailedStats")}</DialogTitle>
                           </DialogHeader>
                           <PlayerStats
                             ranking={ranking}
@@ -297,7 +298,7 @@ export function RankingsDisplay({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
-            Système de points
+            {t("pointSystem")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -305,29 +306,29 @@ export function RankingsDisplay({
             {tournament?.type === "swiss_system" && (
               <>
                 <p>
-                  • <strong>Victoire :</strong> 3 points
+                  • <strong>{t("win")}</strong> 3 points
                 </p>
                 <p>
-                  • <strong>Égalité :</strong> 1 point
+                  • <strong>{t("draw")}</strong> 1 point
                 </p>
                 <p>
-                  • <strong>Défaite :</strong> 0 point
+                  • <strong>{t("loss")}</strong> 0 point
                 </p>
                 <p>
-                  • <strong>Bye :</strong> 3 points (victoire automatique)
+                  • <strong>{t("bye")}</strong> 3 points (victoire automatique)
                 </p>
               </>
             )}
             {tournament?.type === "round_robin" && (
               <>
                 <p>
-                  • <strong>Victoire :</strong> 3 points
+                  • <strong>{t("win")}</strong> 3 points
                 </p>
                 <p>
-                  • <strong>Égalité :</strong> 1 point
+                  • <strong>{t("draw")}</strong> 1 point
                 </p>
                 <p>
-                  • <strong>Défaite :</strong> 0 point
+                  • <strong>{t("loss")}</strong> 0 point
                 </p>
               </>
             )}
@@ -335,17 +336,17 @@ export function RankingsDisplay({
               tournament?.type === "double_elimination") && (
               <>
                 <p>
-                  • <strong>Victoire :</strong> 1 point (progression)
+                  • <strong>{t("win")}</strong> 1 point (progression)
                 </p>
                 <p>
-                  • <strong>Défaite :</strong> 0 point (élimination)
+                  • <strong>{t("loss")}</strong>
+                  {t("zeroPointElimination")}
                 </p>
               </>
             )}
             <p className="pt-2 border-t">
-              <strong>Départage :</strong> En cas d'égalité de points, le
-              classement se fait par % de victoires, puis par nombre de
-              victoires.
+              <strong>{t("tiebreak")}</strong>
+              {t("tiebreakRule")}
             </p>
           </div>
         </CardContent>

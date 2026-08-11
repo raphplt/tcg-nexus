@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React, { useEffect, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import { toast } from "react-hot-toast";
 import { Tournament } from "@/types/tournament";
 
 export const ProfileTournaments = () => {
+  const t = useTranslations("ProfileTournaments");
   const { user } = useAuth();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export const ProfileTournaments = () => {
       setTotalPages(result.meta.totalPages);
     } catch (error) {
       console.error("Erreur chargement tournois:", error);
-      toast.error("Impossible de charger vos tournois");
+      toast.error(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -84,9 +86,7 @@ export const ProfileTournaments = () => {
       <Card className="p-8 text-center">
         <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">Aucun profil joueur</h3>
-        <p className="text-muted-foreground">
-          Vous devez créer un profil joueur pour participer aux tournois.
-        </p>
+        <p className="text-muted-foreground">{t("playerProfileRequired")}</p>
       </Card>
     );
   }
@@ -96,10 +96,10 @@ export const ProfileTournaments = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">
           <Trophy className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Mes tournois</h2>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/profile/tournament-history">Historique ELO</Link>
+          <Link href="/profile/tournament-history">{t("eloHistory")}</Link>
         </Button>
       </div>
 
@@ -112,11 +112,9 @@ export const ProfileTournaments = () => {
       ) : tournaments.length === 0 ? (
         <div className="text-center py-8">
           <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">
-            Vous n&apos;avez participé à aucun tournoi
-          </p>
+          <p className="text-muted-foreground">{t("empty")}</p>
           <Button className="mt-4" variant="outline">
-            Voir les tournois à venir
+            {t("viewUpcoming")}
           </Button>
         </div>
       ) : (
@@ -150,7 +148,7 @@ export const ProfileTournaments = () => {
               </div>
 
               <Button variant="ghost" size="sm">
-                Voir détails
+                {t("viewDetails")}
               </Button>
             </div>
           ))}

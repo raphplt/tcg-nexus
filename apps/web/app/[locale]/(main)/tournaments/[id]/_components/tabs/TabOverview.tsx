@@ -9,6 +9,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface TabOverviewProps {
 }
 
 export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
+  const t = useTranslations("TabOverview");
   const participantCount =
     tournament.registrations?.length || tournament.players?.length || 0;
   const maxPlayers = tournament.maxPlayers || "∞";
@@ -34,7 +36,8 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Info className="size-5 text-primary" />À propos du tournoi
+            <Info className="size-5 text-primary" />
+            {t("about")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -43,9 +46,7 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
               {tournament.description}
             </p>
           ) : (
-            <p className="text-muted-foreground italic">
-              Aucune description fournie pour ce tournoi.
-            </p>
+            <p className="text-muted-foreground italic">{t("noDescription")}</p>
           )}
         </CardContent>
       </Card>
@@ -59,7 +60,10 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <InfoItem label="Début" value={formatDate(tournament.startDate)} />
+            <InfoItem
+              label={t("start")}
+              value={formatDate(tournament.startDate)}
+            />
             <InfoItem label="Fin" value={formatDate(tournament.endDate)} />
             <InfoItem
               label="Date limite d'inscription"
@@ -127,8 +131,8 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
               label="Inscriptions tardives"
               value={
                 tournament.allowLateRegistration
-                  ? "Autorisées"
-                  : "Non autorisées"
+                  ? t("allowed")
+                  : t("notAllowed")
               }
             />
           </CardContent>
@@ -138,19 +142,19 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <MapPin className="size-5 text-primary" />
-              Lieu & Accès
+              {t("locationAndAccess")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <InfoItem
               label="Lieu"
-              value={tournament.location || "Non spécifié"}
+              value={tournament.location || t("notSpecified")}
             />
             <InfoItem
-              label="Visibilité"
+              label={t("visibility")}
               value={
                 <Badge variant={tournament.isPublic ? "default" : "secondary"}>
-                  {tournament.isPublic ? "Public" : "Privé"}
+                  {tournament.isPublic ? "Public" : t("private")}
                 </Badge>
               }
             />
@@ -171,7 +175,9 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-            <span className="text-muted-foreground">Prix d'inscription</span>
+            <span className="text-muted-foreground">
+              {t("registrationPrice")}
+            </span>
             <span className="text-2xl font-bold text-primary">
               {formatPricing(tournament.pricing)}
             </span>
@@ -188,7 +194,7 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Trophy className="size-5 text-primary" />
-            Récompenses
+            {t("rewards")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -214,9 +220,7 @@ export function TabOverview({ tournament, formatDate }: TabOverviewProps) {
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground italic">
-              Aucune récompense définie pour ce tournoi.
-            </p>
+            <p className="text-muted-foreground italic">{t("noRewards")}</p>
           )}
         </CardContent>
       </Card>

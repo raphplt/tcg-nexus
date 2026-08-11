@@ -45,7 +45,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "react-hot-toast";
 import { CalendarDays, Pencil, Plus, Trash2 } from "lucide-react";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type SetFormState = {
   id: string;
@@ -82,6 +82,7 @@ const defaultSetForm: SetFormState = {
 };
 
 export function AdminPokemonSetsTable() {
+  const t = useTranslations("AdminSets");
   const locale = useLocale();
   const [sets, setSets] = useState<PokemonSetType[]>([]);
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
@@ -104,7 +105,7 @@ export function AdminPokemonSetsTable() {
       setSeries(loadedSeries);
     } catch (err) {
       console.error("Failed to load sets", err);
-      setError("Impossible de charger les extensions");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -146,11 +147,11 @@ export function AdminPokemonSetsTable() {
 
   const saveSet = async () => {
     if (!form.id.trim() || !form.name.trim() || !form.releaseDate.trim()) {
-      toast.error("Id, nom et date de sortie sont obligatoires");
+      toast.error(t("requiredFields"));
       return;
     }
     if (!form.serieId.trim()) {
-      toast.error("Associez une série à ce set");
+      toast.error(t("seriesRequired"));
       return;
     }
 
@@ -179,10 +180,10 @@ export function AdminPokemonSetsTable() {
       if (editing) {
         const { id, ...updatePayload } = payload;
         await adminService.updatePokemonSet(editing.id, updatePayload);
-        toast.success("Set mis à jour");
+        toast.success(t("updated"));
       } else {
         await adminService.createPokemonSet(payload);
-        toast.success("Set créé");
+        toast.success(t("created"));
       }
       setOpenModal(false);
       setForm(defaultSetForm);
@@ -195,42 +196,42 @@ export function AdminPokemonSetsTable() {
 
   const handleUploadLogo = async (file: File) => {
     if (!editing) {
-      toast.error("Veuillez d'abord créer l'extension");
-      throw new Error("Veuillez d'abord créer l'extension");
+      toast.error(t("createFirst"));
+      throw new Error(t("createFirst"));
     }
     try {
       const response = await adminService.uploadPokemonSetLogo(
         editing.id,
         file,
       );
-      toast.success("Logo téléversé avec succès");
+      toast.success(t("logoUploaded"));
       setForm((prev) => ({ ...prev, logo: response.logo || "" }));
       await loadSets();
       return response.logo || "";
     } catch (err) {
       console.error("Upload failed", err);
-      toast.error("Erreur lors du téléversement");
+      toast.error(t("uploadError"));
       throw err;
     }
   };
 
   const handleUploadSymbol = async (file: File) => {
     if (!editing) {
-      toast.error("Veuillez d'abord créer l'extension");
-      throw new Error("Veuillez d'abord créer l'extension");
+      toast.error(t("createFirst"));
+      throw new Error(t("createFirst"));
     }
     try {
       const response = await adminService.uploadPokemonSetSymbol(
         editing.id,
         file,
       );
-      toast.success("Symbole téléversé avec succès");
+      toast.success(t("symbolUploaded"));
       setForm((prev) => ({ ...prev, symbol: response.symbol || "" }));
       await loadSets();
       return response.symbol || "";
     } catch (err) {
       console.error("Upload failed", err);
-      toast.error("Erreur lors du téléversement");
+      toast.error(t("uploadError"));
       throw err;
     }
   };
@@ -239,7 +240,7 @@ export function AdminPokemonSetsTable() {
     if (!setToDelete) return;
     try {
       await adminService.deletePokemonSet(setToDelete.id);
-      toast.success("Set supprimé");
+      toast.success(t("deleted"));
       setSetToDelete(null);
       await loadSets();
     } catch (err) {
@@ -262,10 +263,8 @@ export function AdminPokemonSetsTable() {
     <Card>
       <CardHeader className="flex items-center justify-between">
         <div>
-          <CardTitle>Extensions</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Créer, éditer et supprimer les sets Pokémon.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={startCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -284,12 +283,12 @@ export function AdminPokemonSetsTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Id</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Série</TableHead>
-                <TableHead>Date de sortie</TableHead>
-                <TableHead>Cartes</TableHead>
-                <TableHead>Légal</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("series")}</TableHead>
+                <TableHead>{t("releaseDate")}</TableHead>
+                <TableHead>{t("cards")}</TableHead>
+                <TableHead>{t("legal")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -329,12 +328,12 @@ export function AdminPokemonSetsTable() {
                       <Badge
                         variant={set.legal?.standard ? "default" : "outline"}
                       >
-                        Standard
+                        {t("standard")}
                       </Badge>
                       <Badge
                         variant={set.legal?.expanded ? "default" : "outline"}
                       >
-                        Étendu
+                        {t("expanded")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -363,7 +362,7 @@ export function AdminPokemonSetsTable() {
                     colSpan={7}
                     className="text-center text-muted-foreground"
                   >
-                    Aucun set pour le moment.
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -375,13 +374,8 @@ export function AdminPokemonSetsTable() {
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? "Modifier le set" : "Nouveau set"}
-            </DialogTitle>
-            <DialogDescription>
-              Renseignez les informations principales et l'association à une
-              série.
-            </DialogDescription>
+            <DialogTitle>{editing ? t("editSet") : "Nouveau set"}</DialogTitle>
+            <DialogDescription>{t("formSubtitle")}</DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -397,7 +391,7 @@ export function AdminPokemonSetsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-name">Nom</Label>
+              <Label htmlFor="set-name">{t("name")}</Label>
               <Input
                 id="set-name"
                 value={form.name}
@@ -407,7 +401,7 @@ export function AdminPokemonSetsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Série</Label>
+              <Label>{t("series")}</Label>
               <Select
                 value={form.serieId}
                 onValueChange={(value) =>
@@ -415,7 +409,7 @@ export function AdminPokemonSetsTable() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir une série" />
+                  <SelectValue placeholder={t("chooseSeries")} />
                 </SelectTrigger>
                 <SelectContent>
                   {series.map((serie) => (
@@ -427,7 +421,7 @@ export function AdminPokemonSetsTable() {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="set-release">Date de sortie</Label>
+              <Label htmlFor="set-release">{t("releaseDate")}</Label>
               <Input
                 id="set-release"
                 type="date"
@@ -441,7 +435,7 @@ export function AdminPokemonSetsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Logo de l'Extension</Label>
+              <Label>{t("setLogo")}</Label>
               {editing ? (
                 <ImageUpload
                   value={form.logo}
@@ -453,13 +447,12 @@ export function AdminPokemonSetsTable() {
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer l'extension pour pouvoir y associer un
-                  logo.
+                  {t("createFirstForLogo")}
                 </div>
               )}
             </div>
             <div className="grid gap-2">
-              <Label>Symbole de l'Extension</Label>
+              <Label>{t("setSymbol")}</Label>
               {editing ? (
                 <ImageUpload
                   value={form.symbol}
@@ -471,8 +464,7 @@ export function AdminPokemonSetsTable() {
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer l'extension pour pouvoir y associer un
-                  symbole.
+                  {t("createFirstForSymbol")}
                 </div>
               )}
             </div>
@@ -493,7 +485,7 @@ export function AdminPokemonSetsTable() {
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div className="grid gap-2">
-              <Label htmlFor="count-total">Cartes totales</Label>
+              <Label htmlFor="count-total">{t("totalCards")}</Label>
               <Input
                 id="count-total"
                 type="number"
@@ -507,7 +499,7 @@ export function AdminPokemonSetsTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="count-official">Officielles</Label>
+              <Label htmlFor="count-official">{t("official")}</Label>
               <Input
                 id="count-official"
                 type="number"
@@ -567,9 +559,9 @@ export function AdminPokemonSetsTable() {
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-center justify-between rounded border px-3 py-2">
               <div>
-                <p className="text-sm font-medium">Standard</p>
+                <p className="text-sm font-medium">{t("standard")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Légal au format standard
+                  {t("legalStandard")}
                 </p>
               </div>
               <Button
@@ -587,9 +579,9 @@ export function AdminPokemonSetsTable() {
             </div>
             <div className="flex items-center justify-between rounded border px-3 py-2">
               <div>
-                <p className="text-sm font-medium">Étendu</p>
+                <p className="text-sm font-medium">{t("expanded")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Légal au format étendu
+                  {t("legalExpanded")}
                 </p>
               </div>
               <Button
@@ -612,7 +604,7 @@ export function AdminPokemonSetsTable() {
               Annuler
             </Button>
             <Button onClick={saveSet}>
-              {editing ? "Mettre à jour" : "Créer"}
+              {editing ? t("update") : t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -626,9 +618,9 @@ export function AdminPokemonSetsTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce set ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible et supprimera les cartes associées.
+              {t("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

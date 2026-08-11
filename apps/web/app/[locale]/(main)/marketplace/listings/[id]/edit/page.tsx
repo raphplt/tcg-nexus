@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -42,6 +43,7 @@ interface FormState {
 }
 
 export default function EditListingPage() {
+  const t = useTranslations("EditListing");
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
@@ -67,7 +69,7 @@ export default function EditListingPage() {
           description: data.description ?? "",
         });
       } catch {
-        setError("Cette annonce est introuvable ou a été supprimée.");
+        setError(t("notFoundOrDeleted"));
       } finally {
         setIsLoading(false);
       }
@@ -84,11 +86,11 @@ export default function EditListingPage() {
     const quantity = Number(form.quantityAvailable);
 
     if (!Number.isFinite(price) || price <= 0) {
-      toast.error("Le prix doit être supérieur à 0.");
+      toast.error(t("priceInvalid"));
       return;
     }
     if (!Number.isInteger(quantity) || quantity < 1) {
-      toast.error("La quantité doit être d'au moins 1.");
+      toast.error(t("quantityInvalid"));
       return;
     }
     setIsSaving(true);
@@ -104,12 +106,12 @@ export default function EditListingPage() {
           ? { cardState: form.cardState as Listing["cardState"] }
           : {}),
       });
-      toast.success("Annonce mise à jour");
+      toast.success(t("updated"));
       router.push("/profile");
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message || "La mise à jour de l'annonce a échoué.";
+          ?.message || t("updateFailed");
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -129,11 +131,9 @@ export default function EditListingPage() {
       <div className="container mx-auto max-w-2xl py-10">
         <Card className="border-destructive">
           <CardContent className="p-6 text-center space-y-4">
-            <p className="text-destructive">
-              {error ?? "Cette annonce est introuvable."}
-            </p>
+            <p className="text-destructive">{error ?? t("notFound")}</p>
             <Button variant="outline" onClick={() => router.push("/profile")}>
-              Retour à mes ventes
+              {t("backToSales")}
             </Button>
           </CardContent>
         </Card>
@@ -146,11 +146,9 @@ export default function EditListingPage() {
       <div className="container mx-auto max-w-2xl py-10">
         <Card className="border-destructive">
           <CardContent className="p-6 text-center space-y-4">
-            <p className="text-destructive">
-              Vous ne pouvez modifier que vos propres annonces.
-            </p>
+            <p className="text-destructive">{t("ownListingsOnly")}</p>
             <Button variant="outline" onClick={() => router.push("/profile")}>
-              Retour à mes ventes
+              {t("backToSales")}
             </Button>
           </CardContent>
         </Card>
@@ -160,7 +158,7 @@ export default function EditListingPage() {
 
   const isSealed = !!listing.sealedProduct;
   const productName = isSealed
-    ? getSealedName(listing.sealedProduct) || "Produit scellé"
+    ? getSealedName(listing.sealedProduct) || t("sealedProduct")
     : (listing.pokemonCard?.name ?? "Carte");
   const productImage = isSealed
     ? getSealedImageUrl(listing.sealedProduct) || SEALED_PLACEHOLDER
@@ -173,12 +171,12 @@ export default function EditListingPage() {
         className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour à mes ventes
+        {t("backToSales")}
       </Link>
 
       <Card>
         <CardHeader>
-          <CardTitle>Modifier l&apos;annonce</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center gap-4">
@@ -224,7 +222,7 @@ export default function EditListingPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="currency">Devise</Label>
+                <Label htmlFor="currency">{t("currency")}</Label>
                 <Select
                   value={form.currency}
                   onValueChange={(value) =>
@@ -245,7 +243,7 @@ export default function EditListingPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quantity">Quantité disponible</Label>
+                <Label htmlFor="quantity">{t("quantityAvailable")}</Label>
                 <Input
                   id="quantity"
                   type="number"
@@ -261,7 +259,7 @@ export default function EditListingPage() {
 
               {!isSealed && (
                 <div className="space-y-2">
-                  <Label htmlFor="cardState">État de la carte</Label>
+                  <Label htmlFor="cardState">{t("cardCondition")}</Label>
                   <Select
                     value={form.cardState}
                     onValueChange={(value) =>
@@ -269,7 +267,7 @@ export default function EditListingPage() {
                     }
                   >
                     <SelectTrigger id="cardState">
-                      <SelectValue placeholder="Sélectionner" />
+                      <SelectValue placeholder={t("select")} />
                     </SelectTrigger>
                     <SelectContent>
                       {cardStates.map((state) => (
@@ -283,7 +281,7 @@ export default function EditListingPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="language">Langue</Label>
+                <Label htmlFor="language">{t("language")}</Label>
                 <Select
                   value={form.language}
                   onValueChange={(value) =>
@@ -304,7 +302,7 @@ export default function EditListingPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="status">Visibilité</Label>
+                <Label htmlFor="status">{t("visibility")}</Label>
                 <Select
                   value={form.status}
                   onValueChange={(value) =>
@@ -315,10 +313,8 @@ export default function EditListingPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">En vente</SelectItem>
-                    <SelectItem value="inactive">
-                      Retirée de la vente
-                    </SelectItem>
+                    <SelectItem value="active">{t("onSale")}</SelectItem>
+                    <SelectItem value="inactive">{t("unlisted")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -327,7 +323,7 @@ export default function EditListingPage() {
             <ShippingPolicyNotice productKind={isSealed ? "sealed" : "card"} />
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t("description")}</Label>
               <Textarea
                 id="description"
                 rows={4}
@@ -335,7 +331,7 @@ export default function EditListingPage() {
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
-                placeholder="Précisez l'état, les défauts éventuels, la provenance…"
+                placeholder={t("descriptionPlaceholder")}
               />
             </div>
 
@@ -345,7 +341,7 @@ export default function EditListingPage() {
                 variant="outline"
                 onClick={() => router.push("/profile")}
               >
-                Annuler
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

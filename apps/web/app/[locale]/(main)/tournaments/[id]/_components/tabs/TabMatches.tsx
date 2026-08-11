@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowRight, Clock, LayoutGrid, Swords } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
@@ -10,15 +11,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const statusLabels: Record<string, string> = {
-  scheduled: "Programmé",
-  in_progress: "En cours",
-  finished: "Terminé",
-  forfeit: "Forfait",
-  cancelled: "Annulé",
+const statusKeys: Record<string, string> = {
+  scheduled: "statusScheduled",
+  in_progress: "statusInProgress",
+  finished: "statusFinished",
+  forfeit: "statusForfeit",
+  cancelled: "statusCancelled",
 };
 
 export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
+  const t = useTranslations("TabMatches");
   const visibleMatches = [...matches]
     .sort((a, b) => {
       const activeA = a.status === "in_progress" ? 0 : 1;
@@ -32,10 +34,9 @@ export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
       <Card>
         <CardContent className="flex min-h-64 flex-col items-center justify-center px-6 text-center">
           <Swords className="mb-4 size-10 text-muted-foreground" />
-          <h3 className="text-lg font-semibold">Aucun match pour le moment</h3>
+          <h3 className="text-lg font-semibold">{t("empty")}</h3>
           <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">
-            Les affiches seront générées automatiquement lorsque l’organisation
-            démarrera le tournoi.
+            {t("generatedOnStart")}
           </p>
         </CardContent>
       </Card>
@@ -46,22 +47,20 @@ export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Suivi des matchs</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Les matchs actifs et les derniers résultats du tournoi.
-          </p>
+          <h2 className="text-xl font-semibold">{t("matchTracking")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         {tournamentId && (
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
               <Link href={`/tournaments/${tournamentId}/bracket`}>
                 <LayoutGrid className="mr-2 size-4" />
-                Voir le tableau
+                {t("viewBracket")}
               </Link>
             </Button>
             <Button asChild>
               <Link href={`/tournaments/${tournamentId}/matches`}>
-                Tous les matchs
+                {t("allMatches")}
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </Button>
@@ -90,7 +89,10 @@ export function TabMatches({ matches, tournamentId }: TabMatchesProps) {
                     match.status === "in_progress" ? "default" : "outline"
                   }
                 >
-                  {statusLabels[match.status] ?? match.status}
+                  {(() => {
+                    const key = statusKeys[match.status];
+                    return key ? t(key) : match.status;
+                  })()}
                 </Badge>
               </div>
               <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">

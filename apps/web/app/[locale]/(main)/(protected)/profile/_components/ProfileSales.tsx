@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   Trash2,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "@/i18n/navigation";
 import React, { useEffect, useState } from "react";
@@ -34,6 +35,7 @@ import { getCardImage } from "@/utils/images";
 import { formatPrice } from "@/utils/price";
 
 export const ProfileSales = () => {
+  const t = useTranslations("ProfileSales");
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,9 +65,7 @@ export const ProfileSales = () => {
       setListings(result.data);
       setTotalPages(result.meta.totalPages);
     } catch {
-      setError(
-        "Impossible de charger vos annonces. Réessayez dans un instant.",
-      );
+      setError(t("loadError"));
     } finally {
       setLoading(false);
     }
@@ -91,10 +91,10 @@ export const ProfileSales = () => {
       );
 
       toast.success(
-        newStatus === "active" ? "Vente réactivée" : "Vente désactivée",
+        newStatus === "active" ? t("reactivated") : t("deactivated"),
       );
     } catch {
-      toast.error("Erreur lors de la modification");
+      toast.error(t("updateError"));
     }
   };
 
@@ -102,9 +102,9 @@ export const ProfileSales = () => {
     try {
       await marketplaceService.deleteListing(listing.id.toString());
       setListings((prev) => prev.filter((l) => l.id !== listing.id));
-      toast.success("Annonce supprimée");
+      toast.success(t("deleted"));
     } catch {
-      toast.error("Erreur lors de la suppression");
+      toast.error(t("deleteError"));
     } finally {
       setListingToDelete(null);
     }
@@ -115,11 +115,11 @@ export const ProfileSales = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center space-x-2">
           <ShoppingBag className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Mes ventes</h2>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
         </div>
 
         <Button onClick={() => router.push("/marketplace/create")}>
-          Créer une vente
+          {t("createListing")}
         </Button>
       </div>
 
@@ -127,7 +127,7 @@ export const ProfileSales = () => {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Rechercher une carte..."
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -140,7 +140,7 @@ export const ProfileSales = () => {
             size="sm"
             onClick={() => setStatusFilter("all")}
           >
-            Tous
+            {t("all")}
           </Button>
           <Button
             variant={statusFilter === "active" ? "default" : "outline"}
@@ -170,16 +170,14 @@ export const ProfileSales = () => {
           <AlertCircle className="w-12 h-12 mx-auto text-destructive" />
           <p className="text-muted-foreground">{error}</p>
           <Button variant="outline" onClick={loadListings}>
-            Réessayer
+            {t("retry")}
           </Button>
         </div>
       ) : listings.length === 0 ? (
         <div className="text-center py-12 space-y-4">
           <ShoppingBag className="w-12 h-12 mx-auto text-muted-foreground" />
           <p className="text-muted-foreground">
-            {search || statusFilter !== "all"
-              ? "Aucune annonce ne correspond à ces critères."
-              : "Vous n'avez encore publié aucune annonce."}
+            {search || statusFilter !== "all" ? t("emptyFiltered") : t("empty")}
           </p>
         </div>
       ) : (
@@ -222,12 +220,12 @@ export const ProfileSales = () => {
                   title={
                     listing.status === "inactive"
                       ? "Remettre en vente"
-                      : "Retirer de la vente"
+                      : t("unlist")
                   }
                   aria-label={
                     listing.status === "inactive"
                       ? "Remettre l'annonce en vente"
-                      : "Retirer l'annonce de la vente"
+                      : t("unlistTooltip")
                   }
                 >
                   {listing.status === "inactive" ? (
@@ -293,7 +291,7 @@ export const ProfileSales = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette annonce ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
               {listingToDelete?.pokemonCard?.name} ne sera plus visible sur la
               marketplace. Les commandes déjà passées sur cette annonce restent

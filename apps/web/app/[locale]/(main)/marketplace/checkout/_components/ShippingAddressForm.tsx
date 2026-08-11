@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 import usePlacesAutocomplete from "use-places-autocomplete";
@@ -32,6 +33,7 @@ export default function ShippingAddressForm({
   isSubmitting,
   error,
 }: Props) {
+  const t = useTranslations("ShippingAddress");
   const [open, setOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -57,9 +59,7 @@ export default function ShippingAddressForm({
     const trimmed = address.trim();
 
     if (trimmed.length < 10) {
-      setValidationError(
-        "Renseignez une adresse de livraison complète (numéro, rue, ville, code postal).",
-      );
+      setValidationError(t("incompleteAddress"));
       return;
     }
 
@@ -70,7 +70,7 @@ export default function ShippingAddressForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="shipping-address">Adresse de livraison</Label>
+        <Label htmlFor="shipping-address">{t("title")}</Label>
 
         {ready ? (
           <Popover open={open} onOpenChange={setOpen}>
@@ -83,7 +83,7 @@ export default function ShippingAddressForm({
                 className="w-full justify-between text-left font-normal"
               >
                 <span className="truncate">
-                  {address || "Rechercher une adresse..."}
+                  {address || t("searchPlaceholder")}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -94,12 +94,12 @@ export default function ShippingAddressForm({
             >
               <Command shouldFilter={false}>
                 <CommandInput
-                  placeholder="Rechercher une adresse..."
+                  placeholder={t("searchPlaceholder")}
                   value={value}
                   onValueChange={setValue}
                 />
                 <CommandList>
-                  <CommandEmpty>Aucune adresse trouvée.</CommandEmpty>
+                  <CommandEmpty>{t("noAddressFound")}</CommandEmpty>
                   <CommandGroup>
                     {status === "OK" &&
                       data.map(({ place_id, description }) => (
@@ -129,15 +129,12 @@ export default function ShippingAddressForm({
             id="shipping-address"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="12 rue des Cartes, 75001 Paris, France"
+            placeholder={t("addressExample")}
             autoComplete="street-address"
           />
         )}
 
-        <p className="text-xs text-muted-foreground">
-          Cette adresse sera transmise aux vendeurs pour l&apos;expédition et
-          conservée sur la commande.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("notice")}</p>
       </div>
 
       {(validationError || error) && (

@@ -48,7 +48,7 @@ import {
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
 import { extractApiErrorMessage } from "@/utils/api-error";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 type BulkAction = "confirm" | "cancel" | "check_in";
 
@@ -78,6 +78,7 @@ export function RegistrationManager({
   tournamentId,
   tournamentStatus,
 }: RegistrationManagerProps) {
+  const t = useTranslations("RegistrationManager");
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>(
@@ -123,13 +124,11 @@ export function RegistrationManager({
     mutationFn: (registrationId: number) =>
       tournamentService.confirmRegistration(tournamentId, registrationId),
     onSuccess: async () => {
-      toast.success("Inscription confirmée !");
+      toast.success(t("confirmed"));
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(
-        extractApiErrorMessage(error, "Impossible de confirmer l'inscription."),
-      );
+      toast.error(extractApiErrorMessage(error, t("confirmError")));
     },
   });
 
@@ -147,7 +146,7 @@ export function RegistrationManager({
         reason,
       ),
     onSuccess: async () => {
-      toast.success("Inscription annulée");
+      toast.success(t("cancelled"));
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
@@ -161,13 +160,11 @@ export function RegistrationManager({
     mutationFn: (registrationId: number) =>
       tournamentService.checkIn(tournamentId, registrationId),
     onSuccess: async () => {
-      toast.success("Check-in effectué !");
+      toast.success(t("checkedIn"));
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(
-        extractApiErrorMessage(error, "Impossible d'effectuer le check-in."),
-      );
+      toast.error(extractApiErrorMessage(error, t("checkInError")));
     },
   });
 
@@ -194,12 +191,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(
-        extractApiErrorMessage(
-          error,
-          "L'action groupée n'a pas pu être appliquée.",
-        ),
-      );
+      toast.error(extractApiErrorMessage(error, t("bulkActionError")));
     },
   });
 
@@ -213,12 +205,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(
-        extractApiErrorMessage(
-          error,
-          "Le check-in global n'a pas pu être effectué.",
-        ),
-      );
+      toast.error(extractApiErrorMessage(error, t("globalCheckInError")));
     },
   });
 
@@ -250,13 +237,13 @@ export function RegistrationManager({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
-        return <Badge variant="default">Confirmée</Badge>;
+        return <Badge variant="default">{t("statusConfirmed")}</Badge>;
       case "pending":
-        return <Badge variant="secondary">En attente</Badge>;
+        return <Badge variant="secondary">{t("statusPending")}</Badge>;
       case "cancelled":
-        return <Badge variant="destructive">Annulée</Badge>;
+        return <Badge variant="destructive">{t("statusCancelled")}</Badge>;
       case "waitlisted":
-        return <Badge variant="outline">Liste d'attente</Badge>;
+        return <Badge variant="outline">{t("waitlist")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -320,7 +307,7 @@ export function RegistrationManager({
     const escapeCsvCell = (value: string | number) =>
       `"${String(value).replaceAll('"', '""')}"`;
     const csv = [
-      ["Joueur", "Statut", "Check-in", "Inscription", "Notes"]
+      [t("player"), "Statut", t("checkIn"), t("registration"), "Notes"]
         .map(escapeCsvCell)
         .join(","),
       ...filteredRegistrations.map((reg) =>
@@ -361,8 +348,7 @@ export function RegistrationManager({
       <div className="space-y-6">
         {!canManageRegistrations && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-100">
-            Les inscriptions sont maintenant en lecture seule. Elles ne peuvent
-            plus être modifiées après le démarrage ou l’annulation du tournoi.
+            {t("readOnlyNotice")}
           </div>
         )}
 
@@ -381,7 +367,9 @@ export function RegistrationManager({
               <div className="text-2xl font-bold text-green-600">
                 {stats.confirmed}
               </div>
-              <div className="text-sm text-muted-foreground">Confirmées</div>
+              <div className="text-sm text-muted-foreground">
+                {t("statusConfirmedPlural")}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -389,7 +377,9 @@ export function RegistrationManager({
               <div className="text-2xl font-bold text-orange-600">
                 {stats.pending}
               </div>
-              <div className="text-sm text-muted-foreground">En attente</div>
+              <div className="text-sm text-muted-foreground">
+                {t("statusPending")}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -398,7 +388,7 @@ export function RegistrationManager({
                 {stats.waitlisted}
               </div>
               <div className="text-sm text-muted-foreground">
-                Liste d’attente
+                {t("waitlistAlt")}
               </div>
             </CardContent>
           </Card>
@@ -407,7 +397,9 @@ export function RegistrationManager({
               <div className="text-2xl font-bold text-purple-600">
                 {stats.checkedIn}
               </div>
-              <div className="text-sm text-muted-foreground">Check-in</div>
+              <div className="text-sm text-muted-foreground">
+                {t("checkIn")}
+              </div>
             </CardContent>
           </Card>
           <Card>
@@ -415,7 +407,9 @@ export function RegistrationManager({
               <div className="text-2xl font-bold text-red-600">
                 {stats.cancelled}
               </div>
-              <div className="text-sm text-muted-foreground">Annulées</div>
+              <div className="text-sm text-muted-foreground">
+                {t("statusCancelledPlural")}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -425,18 +419,18 @@ export function RegistrationManager({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filtres et actions
+              {t("filtersAndActions")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div className="space-y-2">
-                <Label htmlFor="search">Rechercher</Label>
+                <Label htmlFor="search">{t("search")}</Label>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="search"
-                    placeholder="Nom du joueur..."
+                    placeholder={t("playerPlaceholder")}
                     className="pl-8"
                     value={filters.search}
                     onChange={(e) =>
@@ -458,21 +452,29 @@ export function RegistrationManager({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Tous les statuts" />
+                    <SelectValue placeholder={t("allStatuses")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="confirmed">Confirmées</SelectItem>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="waitlisted">Liste d’attente</SelectItem>
-                    <SelectItem value="cancelled">Annulées</SelectItem>
+                    <SelectItem value="all">{t("all")}</SelectItem>
+                    <SelectItem value="confirmed">
+                      {t("statusConfirmedPlural")}
+                    </SelectItem>
+                    <SelectItem value="pending">
+                      {t("statusPending")}
+                    </SelectItem>
+                    <SelectItem value="waitlisted">
+                      {t("waitlistAlt")}
+                    </SelectItem>
+                    <SelectItem value="cancelled">
+                      {t("statusCancelledPlural")}
+                    </SelectItem>
                     <SelectItem value="eliminated">Éliminées</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Check-in</Label>
+                <Label>{t("checkIn")}</Label>
                 <Select
                   value={filters.checkedIn || "all"}
                   onValueChange={(value) =>
@@ -483,12 +485,12 @@ export function RegistrationManager({
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Tous" />
+                    <SelectValue placeholder={t("all")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="true">Check-in fait</SelectItem>
-                    <SelectItem value="false">Check-in manquant</SelectItem>
+                    <SelectItem value="all">{t("all")}</SelectItem>
+                    <SelectItem value="true">{t("checkInDone")}</SelectItem>
+                    <SelectItem value="false">{t("checkInMissing")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -501,7 +503,7 @@ export function RegistrationManager({
                   }
                   className="w-full"
                 >
-                  Réinitialiser
+                  {t("reset")}
                 </Button>
               </div>
             </div>
@@ -539,7 +541,7 @@ export function RegistrationManager({
                     }
                   >
                     <X className="w-4 h-4 mr-2" />
-                    Annuler
+                    {t("cancel")}
                   </Button>
 
                   <Button
@@ -553,7 +555,7 @@ export function RegistrationManager({
                     }
                   >
                     <UserCheck className="w-4 h-4 mr-2" />
-                    Check-in
+                    {t("checkIn")}
                   </Button>
                 </>
               )}
@@ -611,12 +613,12 @@ export function RegistrationManager({
                       }}
                     />
                   </TableHead>
-                  <TableHead>Joueur</TableHead>
+                  <TableHead>{t("player")}</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Check-in</TableHead>
-                  <TableHead>Inscription</TableHead>
+                  <TableHead>{t("checkIn")}</TableHead>
+                  <TableHead>{t("registration")}</TableHead>
                   <TableHead>Notes</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -776,7 +778,7 @@ export function RegistrationManager({
                     <TableCell colSpan={7} className="text-center py-8">
                       <div className="text-muted-foreground">
                         <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>Aucune inscription trouvée</p>
+                        <p>{t("empty")}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -791,7 +793,7 @@ export function RegistrationManager({
       <AlertDialog open={!!bulkAction} onOpenChange={() => setBulkAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer l'action groupée</AlertDialogTitle>
+            <AlertDialogTitle>{t("confirmBulkAction")}</AlertDialogTitle>
             <AlertDialogDescription>
               {bulkAction === "confirm" && (
                 <p>Confirmer {selectedRegistrations.length} inscription(s) ?</p>
@@ -808,7 +810,7 @@ export function RegistrationManager({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={executeBulkAction}
               disabled={bulkMutation.isPending}
@@ -825,7 +827,7 @@ export function RegistrationManager({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Effectuer le check-in global ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("globalCheckInConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
               Les {uncheckedConfirmedCount} participant(s) confirmé(s) sans
               check-in seront enregistrés en une seule opération.
@@ -833,7 +835,7 @@ export function RegistrationManager({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={checkInAllMutation.isPending}>
-              Annuler
+              {t("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {
@@ -844,7 +846,7 @@ export function RegistrationManager({
             >
               {checkInAllMutation.isPending
                 ? "Enregistrement…"
-                : "Confirmer le check-in"}
+                : t("confirmCheckIn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -858,14 +860,13 @@ export function RegistrationManager({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Annuler cette inscription ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("cancelConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Le joueur sera retiré des participants confirmés et devra se
-              réinscrire pour participer.
+              {t("cancelWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Conserver l’inscription</AlertDialogCancel>
+            <AlertDialogCancel>{t("keepRegistration")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (registrationToCancel === null) return;

@@ -46,7 +46,7 @@ import { marketplaceService } from "@/services/marketplace.service";
 import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { formatPrice, formatPrice as formatPriceUtil } from "@/utils/price";
 import { getCardStateColor } from "../../utils";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 const getSealedConditionColor = (condition: string | null | undefined) => {
   switch (condition) {
@@ -62,6 +62,7 @@ const getSealedConditionColor = (condition: string | null | undefined) => {
 };
 
 export default function SellerPage() {
+  const t = useTranslations("SellerProfile");
   const locale = useLocale();
   const { id } = useParams();
   const sellerId = parseInt(id as string);
@@ -127,7 +128,7 @@ export default function SellerPage() {
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              Vendeur non trouvé
+              {t("notFound")}
             </CardContent>
           </Card>
         </div>
@@ -145,7 +146,7 @@ export default function SellerPage() {
         <div className="max-w-7xl mx-auto">
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              Vendeur non trouvé
+              {t("notFound")}
             </CardContent>
           </Card>
         </div>
@@ -174,18 +175,19 @@ export default function SellerPage() {
                   </H1>
                   {seller.isPro && (
                     <Badge variant="secondary" className="text-sm">
-                      Vendeur Pro
+                      {t("proSeller")}
                     </Badge>
                   )}
                 </div>
                 <p className="text-muted-foreground">
-                  Membre depuis{" "}
-                  {seller.createdAt
-                    ? new Date(seller.createdAt).toLocaleDateString(locale, {
-                        year: "numeric",
-                        month: "long",
-                      })
-                    : "récemment"}
+                  {t("memberSince", {
+                    date: seller.createdAt
+                      ? new Date(seller.createdAt).toLocaleDateString(locale, {
+                          year: "numeric",
+                          month: "long",
+                        })
+                      : t("recently"),
+                  })}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -195,7 +197,7 @@ export default function SellerPage() {
                     className="cursor-pointer hover:bg-accent"
                   >
                     <MessageCircle className="w-3 h-3 mr-1" />
-                    Voir le profil
+                    {t("viewProfile")}
                   </Badge>
                 </Link>
               </div>
@@ -229,7 +231,7 @@ export default function SellerPage() {
             <CardContent>
               <div className="text-3xl font-bold">{stats.totalSales}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Commandes complétées
+                {t("completedOrders")}
               </div>
             </CardContent>
           </Card>
@@ -246,7 +248,7 @@ export default function SellerPage() {
                 {formatPrice(stats.totalRevenue, "EUR")}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Total généré
+                {t("totalGenerated")}
               </div>
             </CardContent>
           </Card>
@@ -263,7 +265,7 @@ export default function SellerPage() {
                 {formatPrice(stats.avgOrderValue, "EUR")}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Par commande
+                {t("perOrder")}
               </div>
             </CardContent>
           </Card>
@@ -271,7 +273,7 @@ export default function SellerPage() {
 
         <div>
           <div className="flex items-center justify-between mb-6">
-            <H2>Offres du vendeur</H2>
+            <H2>{t("sellerListings")}</H2>
             <div className="flex items-center gap-3">
               <Badge variant="secondary">
                 {listings?.meta?.totalItems ?? 0} offre
@@ -286,7 +288,7 @@ export default function SellerPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Rechercher une offre..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -300,12 +302,12 @@ export default function SellerPage() {
                 }
               >
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Type de produit" />
+                  <SelectValue placeholder={t("productType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les produits</SelectItem>
-                  <SelectItem value="card">Cartes</SelectItem>
-                  <SelectItem value="sealed">Produits Scellés</SelectItem>
+                  <SelectItem value="all">{t("allProducts")}</SelectItem>
+                  <SelectItem value="card">{t("cards")}</SelectItem>
+                  <SelectItem value="sealed">{t("sealedProducts")}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -320,15 +322,21 @@ export default function SellerPage() {
                 }}
               >
                 <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Trier par" />
+                  <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="createdAt-DESC">Plus récent</SelectItem>
-                  <SelectItem value="createdAt-ASC">Plus ancien</SelectItem>
+                  <SelectItem value="createdAt-DESC">
+                    {t("sortNewest")}
+                  </SelectItem>
+                  <SelectItem value="createdAt-ASC">
+                    {t("sortOldest")}
+                  </SelectItem>
                   <SelectItem value="name-ASC">Nom (A-Z)</SelectItem>
                   <SelectItem value="name-DESC">Nom (Z-A)</SelectItem>
-                  <SelectItem value="price-ASC">Prix : croissant</SelectItem>
-                  <SelectItem value="price-DESC">Prix : décroissant</SelectItem>
+                  <SelectItem value="price-ASC">{t("sortPriceAsc")}</SelectItem>
+                  <SelectItem value="price-DESC">
+                    {t("sortPriceDesc")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -379,12 +387,12 @@ export default function SellerPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Produit</TableHead>
+                        <TableHead>{t("product")}</TableHead>
                         <TableHead>État / Condition</TableHead>
-                        <TableHead>Prix</TableHead>
-                        <TableHead>Quantité</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{t("price")}</TableHead>
+                        <TableHead>{t("quantity")}</TableHead>
+                        <TableHead>{t("date")}</TableHead>
+                        <TableHead>{t("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -471,7 +479,7 @@ export default function SellerPage() {
           ) : (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
-                Aucune offre disponible pour le moment
+                {t("noListings")}
               </CardContent>
             </Card>
           )}
@@ -485,7 +493,7 @@ export default function SellerPage() {
                 disabled={!listings.meta.hasPreviousPage}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                Précédent
+                {t("previous")}
               </Button>
               <span className="text-sm text-muted-foreground">
                 Page {listings.meta.currentPage} sur {listings.meta.totalPages}

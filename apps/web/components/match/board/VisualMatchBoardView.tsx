@@ -10,10 +10,10 @@ import type {
 } from "@/components/match/MatchBoardView";
 import { cn } from "@/lib/utils";
 
-const sessionStatusLabels: Record<string, string> = {
-  WAITING_FOR_DECKS: "En attente des decks",
-  ACTIVE: "En cours",
-  FINISHED: "Terminé",
+const sessionStatusKeys: Record<string, string> = {
+  WAITING_FOR_DECKS: "waitingForDecks",
+  ACTIVE: "inProgress",
+  FINISHED: "finished",
 };
 
 import type {
@@ -187,7 +187,7 @@ export function VisualMatchBoardView({
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-2.5">
             <HudPlayerChip
-              name="Vous"
+              name={t("you")}
               prizesRemaining={viewerPlayer.prizesRemaining}
               active={isMyTurn}
               tone="emerald"
@@ -202,7 +202,10 @@ export function VisualMatchBoardView({
 
           <div className="flex flex-wrap items-center gap-2">
             <HudBadge>
-              {sessionStatusLabels[sessionStatus] ?? sessionStatus}
+              {(() => {
+                const key = sessionStatusKeys[sessionStatus];
+                return key ? t(key) : sessionStatus;
+              })()}
             </HudBadge>
             <HudBadge>{`Tour ${gameState.turnNumber}`}</HudBadge>
             <HudBadge>{formatPhaseLabel(gameState.gamePhase)}</HudBadge>
@@ -213,7 +216,7 @@ export function VisualMatchBoardView({
                 ) : (
                   <Zap className="h-3 w-3" />
                 )}
-                {isMyTurn ? "Votre tour" : "Tour adverse"}
+                {isMyTurn ? t("yourTurn") : "Tour adverse"}
               </span>
             </HudBadge>
             {winnerLabel ? (
@@ -564,7 +567,7 @@ export function VisualMatchBoardView({
                     : "text-red-400 drop-shadow-[0_0_40px_rgba(248,113,113,0.5)]",
                 )}
               >
-                {winnerLabel === t("victory") ? "VICTOIRE !" : "DÉFAITE"}
+                {winnerLabel === t("victory") ? "VICTOIRE !" : t("defeatUpper")}
               </motion.h2>
 
               {gameState.winnerReason && (
@@ -725,6 +728,7 @@ function formatLogEntry(entry: OnlineMatchLogEntry) {
 }
 
 function formatPhaseLabel(phase?: string | null) {
+  const t = useTranslations("MatchBoard");
   if (!phase) return "Phase";
 
   const labels: Record<string, string> = {
@@ -732,7 +736,7 @@ function formatPhaseLabel(phase?: string | null) {
     Mulligan: "Mulligan",
     Play: "Action",
     Attack: "Attaque",
-    BetweenTurns: "Entre tours",
+    BetweenTurns: t("betweenTurns"),
     Finished: "Fin",
   };
 
@@ -740,11 +744,12 @@ function formatPhaseLabel(phase?: string | null) {
 }
 
 function formatWinReason(reason: string): string {
+  const t = useTranslations("MatchBoard");
   const reasons: Record<string, string> = {
-    PrizeOut: "Toutes les cartes récompenses récupérées !",
-    DeckOut: "Plus de cartes dans le deck adverse.",
-    NoPokemon: "L'adversaire n'a plus de Pokémon en jeu.",
-    Forfeit: "L'adversaire a abandonné.",
+    PrizeOut: t("allPrizesTaken"),
+    DeckOut: t("opponentDeckEmpty"),
+    NoPokemon: t("opponentNoPokemon"),
+    Forfeit: t("opponentForfeited"),
   };
   return reasons[reason] ?? reason;
 }

@@ -26,9 +26,10 @@ import {
 } from "@/types/support-ticket";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export default function SupportTicketDetailPage() {
+  const t = useTranslations("SupportTicket");
   const locale = useLocale();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -113,9 +114,9 @@ export default function SupportTicketDetailPage() {
     return (
       <PageWrapper gradient="secondary" maxWidth="lg">
         <div className="text-center space-y-4 py-16">
-          <p className="text-muted-foreground">Ticket introuvable.</p>
+          <p className="text-muted-foreground">{t("notFound")}</p>
           <Button variant="outline" asChild>
-            <Link href="/support">Retour au support</Link>
+            <Link href="/support">{t("backToSupport")}</Link>
           </Button>
         </div>
       </PageWrapper>
@@ -143,7 +144,7 @@ export default function SupportTicketDetailPage() {
               disabled={isClosing}
             >
               <Lock className="w-4 h-4 mr-2" />
-              {isClosing ? "Fermeture..." : "Fermer le ticket"}
+              {isClosing ? "Fermeture..." : t("closeTicket")}
             </Button>
           )}
         </div>
@@ -174,7 +175,7 @@ export default function SupportTicketDetailPage() {
             <div className="max-h-[500px] overflow-y-auto p-6 space-y-4">
               {ticket.messages.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  Aucun message pour le moment.
+                  {t("noMessages")}
                 </p>
               ) : (
                 ticket.messages.map((msg) => (
@@ -191,7 +192,7 @@ export default function SupportTicketDetailPage() {
             {!isClosed ? (
               <div className="border-t p-4 flex gap-3">
                 <Textarea
-                  placeholder="Votre message..."
+                  placeholder={t("messagePlaceholder")}
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -210,7 +211,7 @@ export default function SupportTicketDetailPage() {
             ) : (
               <div className="border-t p-4 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
                 <Lock className="w-4 h-4" />
-                Ce ticket est fermé. Vous ne pouvez plus envoyer de messages.
+                {t("ticketClosed")}
               </div>
             )}
           </CardContent>
@@ -277,11 +278,12 @@ function MessageBubble({
 }
 
 function TicketStatusBadge({ status }: { status: string }) {
+  const t = useTranslations("SupportTicket");
   if (status === "closed") {
     return (
       <Badge variant="secondary" className="gap-1">
         <CheckCircle2 className="w-3 h-3" />
-        Fermé
+        {t("closed")}
       </Badge>
     );
   }

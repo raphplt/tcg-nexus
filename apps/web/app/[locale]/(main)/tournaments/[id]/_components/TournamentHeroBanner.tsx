@@ -13,6 +13,7 @@ import {
   UserMinus,
   Users,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import React, { useState } from "react";
 import {
@@ -62,6 +63,7 @@ export function TournamentHeroBanner({
   onUnregister,
   formatDate,
 }: TournamentHeroBannerProps) {
+  const t = useTranslations("TournamentHero");
   const [isRegistering, setIsRegistering] = useState(false);
   const [isUnregistering, setIsUnregistering] = useState(false);
   const [showUnregisterDialog, setShowUnregisterDialog] = useState(false);
@@ -138,10 +140,11 @@ export function TournamentHeroBanner({
             )}
             {tournament.isPublic === false ? (
               <Badge variant="outline" className="gap-1">
-                <Lock className="size-3" /> Privé
+                <Lock className="size-3" />
+                {t("private")}
               </Badge>
             ) : (
-              <Badge variant="outline">Public</Badge>
+              <Badge variant="outline">{t("public")}</Badge>
             )}
             {tournament.requiresApproval && (
               <Badge variant="outline" className="gap-1">
@@ -184,16 +187,16 @@ export function TournamentHeroBanner({
                 {tournament.isExternal
                   ? "S'inscrire (Externe)"
                   : currentRegistration?.status === "confirmed"
-                    ? "Inscription confirmée"
+                    ? t("registrationConfirmed")
                     : currentRegistration?.status === "pending"
                       ? "Validation en attente"
                       : currentRegistration?.status === "waitlisted"
-                        ? "Sur liste d'attente"
+                        ? t("onWaitlist")
                         : registrationOpen
                           ? tournamentIsFull
-                            ? "Rejoindre la liste d'attente"
-                            : "S'inscrire au tournoi"
-                          : "Inscriptions fermées"}
+                            ? t("joinWaitlist")
+                            : t("register")
+                          : t("registrationsClosed")}
               </Button>
 
               {!tournament.isExternal &&
@@ -206,7 +209,7 @@ export function TournamentHeroBanner({
                     disabled={isUnregistering}
                   >
                     <UserMinus className="size-4 mr-2" />
-                    Se désinscrire
+                    {t("unregister")}
                   </Button>
                 )}
 
@@ -249,7 +252,7 @@ export function TournamentHeroBanner({
               <CardContent className="p-3 text-center">
                 <Clock3 className="size-5 mx-auto mb-1 text-primary" />
                 <p className="text-lg font-bold">{waitlistedCount}</p>
-                <p className="text-xs text-muted-foreground">Liste d’attente</p>
+                <p className="text-xs text-muted-foreground">{t("waitlist")}</p>
               </CardContent>
             </Card>
             <Card className="surface-muted">
@@ -269,16 +272,14 @@ export function TournamentHeroBanner({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Quitter ce tournoi ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("leaveConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Votre inscription sera annulée. Si vous occupiez une place
-              confirmée, la première personne sur liste d’attente pourra être
-              promue automatiquement.
+              {t("unregisterWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isUnregistering}>
-              Conserver mon inscription
+              {t("keepRegistration")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={(event) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ interface DeckSuggestionsPanelProps {
 }
 
 export function DeckSuggestionsPanel({ analysis }: DeckSuggestionsPanelProps) {
+  const t = useTranslations("DeckSuggestions");
   const hasContent =
     analysis.warnings.length > 0 ||
     analysis.suggestions.length > 0 ||
@@ -23,12 +25,11 @@ export function DeckSuggestionsPanel({ analysis }: DeckSuggestionsPanelProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
-            Aucun ajustement recommandé
+            {t("noSuggestions")}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          Le deck semble équilibré, aucune recommandation automatique pour le
-          moment.
+          {t("balanced")}
         </CardContent>
       </Card>
     );
@@ -79,7 +80,7 @@ export function DeckSuggestionsPanel({ analysis }: DeckSuggestionsPanelProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Plus className="h-4 w-4" />
-              Cartes à ajouter
+              {t("cardsToAdd")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -108,7 +109,7 @@ export function DeckSuggestionsPanel({ analysis }: DeckSuggestionsPanelProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base text-amber-900 dark:text-amber-200">
               <AlertTriangle className="h-4 w-4" />
-              Doublons détectés
+              {t("duplicates")}
             </CardTitle>
           </CardHeader>
           <CardContent>

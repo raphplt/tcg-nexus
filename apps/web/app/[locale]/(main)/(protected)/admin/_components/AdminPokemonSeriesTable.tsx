@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { adminService, PokemonSeriePayload } from "@/services/admin.service";
 import { PokemonSerieType } from "@/types/cardPokemon";
@@ -51,6 +52,7 @@ const defaultForm: SerieFormState = {
 };
 
 export function AdminPokemonSeriesTable() {
+  const t = useTranslations("AdminSeries");
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export function AdminPokemonSeriesTable() {
       setSeries(data);
     } catch (err) {
       console.error("Failed to load series", err);
-      setError("Impossible de charger les séries");
+      setError(t("loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +99,7 @@ export function AdminPokemonSeriesTable() {
 
   const saveSerie = async () => {
     if (!form.id.trim() || !form.name.trim()) {
-      toast.error("Id et nom sont obligatoires");
+      toast.error(t("idAndNameRequired"));
       return;
     }
 
@@ -113,10 +115,10 @@ export function AdminPokemonSeriesTable() {
           name: payload.name,
           logo: payload.logo,
         });
-        toast.success("Série mise à jour");
+        toast.success(t("updated"));
       } else {
         await adminService.createPokemonSerie(payload);
-        toast.success("Série créée");
+        toast.success(t("created"));
       }
       setOpenModal(false);
       setForm(defaultForm);
@@ -129,21 +131,21 @@ export function AdminPokemonSeriesTable() {
 
   const handleUploadLogo = async (file: File) => {
     if (!editing) {
-      toast.error("Veuillez d'abord créer la série");
-      throw new Error("Veuillez d'abord créer la série");
+      toast.error(t("createFirst"));
+      throw new Error(t("createFirst"));
     }
     try {
       const response = await adminService.uploadPokemonSerieLogo(
         editing.id,
         file,
       );
-      toast.success("Logo téléversé avec succès");
+      toast.success(t("logoUploaded"));
       setForm((prev) => ({ ...prev, logo: response.logo || "" }));
       await loadSeries();
       return response.logo || "";
     } catch (err) {
       console.error("Upload failed", err);
-      toast.error("Erreur lors du téléversement");
+      toast.error(t("uploadError"));
       throw err;
     }
   };
@@ -152,7 +154,7 @@ export function AdminPokemonSeriesTable() {
     if (!serieToDelete) return;
     try {
       await adminService.deletePokemonSerie(serieToDelete.id);
-      toast.success("Série supprimée");
+      toast.success(t("deleted"));
       setSerieToDelete(null);
       await loadSeries();
     } catch (err) {
@@ -165,14 +167,12 @@ export function AdminPokemonSeriesTable() {
     <Card>
       <CardHeader className="flex items-center justify-between">
         <div>
-          <CardTitle>Séries</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Créer, modifier ou supprimer des séries Pokémon.
-          </p>
+          <CardTitle>{t("title")}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={startCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Nouvelle série
+          {t("newSeries")}
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -186,9 +186,9 @@ export function AdminPokemonSeriesTable() {
             <TableHeader>
               <TableRow>
                 <TableHead>Id</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Logo</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("name")}</TableHead>
+                <TableHead>{t("logo")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,7 +243,7 @@ export function AdminPokemonSeriesTable() {
                     colSpan={4}
                     className="text-center text-muted-foreground"
                   >
-                    Aucune série pour le moment.
+                    {t("empty")}
                   </TableCell>
                 </TableRow>
               )}
@@ -256,11 +256,9 @@ export function AdminPokemonSeriesTable() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Modifier une série" : "Ajouter une série"}
+              {editing ? t("editSeries") : t("addSeries")}
             </DialogTitle>
-            <DialogDescription>
-              Définissez l'identifiant unique et les métadonnées principales.
-            </DialogDescription>
+            <DialogDescription>{t("formSubtitle")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="grid gap-2">
@@ -275,7 +273,7 @@ export function AdminPokemonSeriesTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="serie-name">Nom</Label>
+              <Label htmlFor="serie-name">{t("name")}</Label>
               <Input
                 id="serie-name"
                 value={form.name}
@@ -285,7 +283,7 @@ export function AdminPokemonSeriesTable() {
               />
             </div>
             <div className="grid gap-2">
-              <Label>Logo de la Série</Label>
+              <Label>{t("seriesLogo")}</Label>
               {editing ? (
                 <ImageUpload
                   value={form.logo}
@@ -293,12 +291,11 @@ export function AdminPokemonSeriesTable() {
                     setForm((prev) => ({ ...prev, logo: url || "" }))
                   }
                   onUpload={handleUploadLogo}
-                  label="Logo"
+                  label={t("logo")}
                 />
               ) : (
                 <div className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  Veuillez d'abord créer la série pour pouvoir y associer un
-                  logo.
+                  {t("createFirstForLogo")}
                 </div>
               )}
             </div>
@@ -308,7 +305,7 @@ export function AdminPokemonSeriesTable() {
               Annuler
             </Button>
             <Button onClick={saveSerie}>
-              {editing ? "Mettre à jour" : "Créer"}
+              {editing ? t("update") : t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -322,10 +319,8 @@ export function AdminPokemonSeriesTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette série ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("irreversible")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setSerieToDelete(null)}>

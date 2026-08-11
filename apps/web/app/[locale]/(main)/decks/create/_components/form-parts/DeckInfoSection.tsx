@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import {
@@ -37,17 +38,16 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
   formats,
   isEditMode,
 }) => {
+  const t = useTranslations("DeckForm");
   return (
     <Card className="xl:col-span-2 border border-primary/20 shadow-lg">
       <CardHeader className="space-y-1">
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          {isEditMode ? "Modifier le deck" : "Informations du deck"}
+          {isEditMode ? t("editTitle") : t("infoTitle")}
         </CardTitle>
         <CardDescription>
-          {isEditMode
-            ? "Modifiez les informations et la composition de votre deck."
-            : "Donnez une identité claire à votre liste avant de composer votre sélection de cartes."}
+          {isEditMode ? t("editSubtitle") : t("createSubtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid md:grid-cols-2 gap-4">
@@ -56,9 +56,9 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom du deck</FormLabel>
+              <FormLabel>{t("name")}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Nom du deck" className="h-11" />
+                <Input {...field} placeholder={t("name")} className="h-11" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -70,14 +70,14 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           name="formatId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Format</FormLabel>
+              <FormLabel>{t("format")}</FormLabel>
               <Select
                 value={field.value.toString()}
                 onValueChange={(v) => field.onChange(Number(v))}
               >
                 <FormControl>
                   <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Choisissez un format" />
+                    <SelectValue placeholder={t("chooseFormat")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -99,9 +99,9 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           render={({ field }) => (
             <FormItem className="col-span-full flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-3">
               <div className="space-y-0.5">
-                <FormLabel>Deck public</FormLabel>
+                <FormLabel>{t("isPublic")}</FormLabel>
                 <p className="text-sm text-muted-foreground">
-                  Partagez automatiquement votre deck avec la communauté.
+                  {t("publicHelp")}
                 </p>
               </div>
               <FormControl>

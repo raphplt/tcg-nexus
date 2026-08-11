@@ -50,6 +50,7 @@ export default function OrderDetailsPage() {
 }
 
 function OrderDetailsContent() {
+  const t = useTranslations("OrderDetail");
   const tStatus = useTranslations("OrderStatus");
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
@@ -83,7 +84,7 @@ function OrderDetailsContent() {
       try {
         setOrder(await paymentService.getOrderById(orderId));
       } catch {
-        setError("Cette commande est introuvable ou ne vous appartient pas.");
+        setError(t("notFound"));
       } finally {
         setIsLoading(false);
       }
@@ -109,7 +110,7 @@ function OrderDetailsContent() {
               {error ?? "Commande introuvable."}
             </p>
             <Button variant="outline" asChild>
-              <Link href="/orders">Retour à mes commandes</Link>
+              <Link href="/orders">{t("backToOrders")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -126,7 +127,7 @@ function OrderDetailsContent() {
         className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour à mes commandes
+        {t("backToOrders")}
       </Link>
 
       <Card>
@@ -155,8 +156,7 @@ function OrderDetailsContent() {
         <CardContent className="pt-6 space-y-6">
           {order.status === OrderStatus.PENDING && (
             <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
-              Le paiement de cette commande n&apos;est pas encore confirmé. Les
-              articles restent réservés le temps de finaliser le règlement.
+              {t("paymentPending")}
             </div>
           )}
 
@@ -164,14 +164,14 @@ function OrderDetailsContent() {
             <div className="space-y-1">
               <h3 className="flex items-center gap-2 font-semibold">
                 <MapPin className="h-4 w-4" />
-                Adresse de livraison
+                {t("shippingAddress")}
               </h3>
               <p className="text-sm text-muted-foreground whitespace-pre-line">
-                {order.shippingAddress || "Non renseignée"}
+                {order.shippingAddress || t("notProvided")}
               </p>
             </div>
             <div className="space-y-1 sm:text-right">
-              <h3 className="font-semibold">Destinataire</h3>
+              <h3 className="font-semibold">{t("recipient")}</h3>
               <p className="text-sm text-muted-foreground">
                 {order.buyer?.firstName} {order.buyer?.lastName}
               </p>
@@ -293,7 +293,7 @@ function OrderDetailsContent() {
 
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Sous-total</span>
+              <span className="text-muted-foreground">{t("subtotal")}</span>
               <span>
                 {formatExact(
                   order.totalAmount - order.shippingAmount,
@@ -302,7 +302,7 @@ function OrderDetailsContent() {
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Frais de port</span>
+              <span className="text-muted-foreground">{t("shipping")}</span>
               <span>
                 {order.shippingAmount === 0
                   ? "Offerts"
@@ -310,7 +310,7 @@ function OrderDetailsContent() {
               </span>
             </div>
             <div className="flex justify-between font-bold text-lg pt-2 border-t">
-              <span>Total</span>
+              <span>{t("total")}</span>
               <span>{formatExact(order.totalAmount, order.currency)}</span>
             </div>
           </div>
