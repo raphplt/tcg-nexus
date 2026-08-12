@@ -107,6 +107,7 @@ describe("MarketplaceService", () => {
     mockPaymentTransactionRepo = {
       create: jest.fn(),
       save: jest.fn(),
+      findOne: jest.fn().mockResolvedValue(null),
     };
 
     mockOrderItemRepo = {
