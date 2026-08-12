@@ -377,7 +377,7 @@ export class OrderService {
     }
 
     if (order.status !== OrderStatus.PENDING) {
-      return; // déjà traité (webhook et retour client peuvent se croiser)
+      return; // Already processed (webhook and client return events can arrive out of order)
     }
 
     order.status = OrderStatus.PAID;

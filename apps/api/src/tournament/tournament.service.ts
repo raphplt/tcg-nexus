@@ -302,17 +302,23 @@ export class TournamentService {
     return this.stateService.transitionState(id, status, reason);
   }
 
-  // Récupérer les transitions possibles pour un tournoi
+  /**
+   * Retrieves available state transitions for a tournament.
+   */
   async getAvailableTransitions(id: number) {
     return this.stateService.getStateHistory(id);
   }
 
-  // Valider une transition d'état
+  /**
+   * Validates a target state transition.
+   */
   async validateStateTransition(id: number, targetStatus: TournamentStatus) {
     return this.stateService.validateStateTransition(id, targetStatus);
   }
 
-  // Inscrire un joueur à un tournoi
+  /**
+   * Registers a player for a tournament.
+   */
   async registerPlayer(
     registrationDto: TournamentRegistrationDto,
   ): Promise<TournamentRegistration> {
@@ -446,7 +452,9 @@ export class TournamentService {
     return registration;
   }
 
-  // Désinscrire un joueur d'un tournoi
+  /**
+   * Unregisters a player from a tournament.
+   */
   async unregisterPlayer(
     tournamentId: number,
     playerId: number,
@@ -469,7 +477,9 @@ export class TournamentService {
     });
   }
 
-  // Récupérer les tournois d'un joueur
+  /**
+   * Retrieves all tournaments associated with a specific player.
+   */
   async getPlayerTournaments(playerId: number, query: TournamentQueryDto) {
     const {
       page = 1,
@@ -493,7 +503,9 @@ export class TournamentService {
     );
   }
 
-  // Récupérer les tournois à venir
+  /**
+   * Retrieves upcoming public tournaments.
+   */
   async getUpcomingTournaments(limit: number = 10): Promise<Tournament[]> {
     return this.tournamentRepository.find({
       where: {
@@ -510,7 +522,9 @@ export class TournamentService {
     });
   }
 
-  // Récupérer les tournois passés
+  /**
+   * Retrieves past public tournaments.
+   */
   async getPastTournaments(limit: number = 10): Promise<Tournament[]> {
     return this.tournamentRepository.find({
       where: {
@@ -523,7 +537,9 @@ export class TournamentService {
     });
   }
 
-  // Récupérer les statistiques d'un tournoi
+  /**
+   * Retrieves tournament statistics summary.
+   */
   async getTournamentStats(id: number) {
     const tournament = await this.findOne(id);
 

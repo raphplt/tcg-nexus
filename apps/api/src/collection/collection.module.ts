@@ -1,3 +1,4 @@
+import { CardModule } from "src/card/card.module";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
@@ -17,6 +18,7 @@ import { Collection } from "./entities/collection.entity";
       CardState,
       PokemonSet,
     ]),
+    CardModule,
   ],
   controllers: [CollectionController],
   providers: [CollectionService],

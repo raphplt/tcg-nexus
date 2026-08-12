@@ -102,7 +102,7 @@ export class AiService {
     const categoryMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
       const category =
-        card.pokemonDetails?.category || card.category || "Unknown";
+        card.pokemonDetails?.category || "Unknown";
       categoryMap.set(category, (categoryMap.get(category) || 0) + qty);
     });
 

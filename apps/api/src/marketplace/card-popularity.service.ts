@@ -12,7 +12,7 @@ import { Listing } from "./entities/listing.entity";
 export class CardPopularityService {
   private readonly logger = new Logger(CardPopularityService.name);
 
-  // Poids pour le calcul du popularity_score
+  // Event weights used to calculate popularity scores
   private readonly EVENT_WEIGHTS = {
     [CardEventType.VIEW]: 1,
     [CardEventType.SEARCH]: 2,
@@ -21,7 +21,7 @@ export class CardPopularityService {
     [CardEventType.SALE]: 50,
   };
 
-  // Fenêtres de temps (en jours)
+  // Time windows (in days)
   private readonly POPULARITY_WINDOW_DAYS = parseInt(
     process.env.POPULARITY_WINDOW_DAYS || "90",
     10,
@@ -363,19 +363,16 @@ export class CardPopularityService {
       .slice(0, limit);
 
     return sortedCards.map((metric) => ({
+      // Name, image, rarity, and set labels are attached by `CatalogLocalizationInterceptor` from IDs.
       card: {
         id: metric.card.id,
-        name: metric.card.name,
-        image: metric.card.image,
+        tcgDexId: metric.card.tcgDexId,
         localId: metric.card.localId,
-        rarity: metric.card.rarity,
         set: metric.card.set
           ? {
-              name: metric.card.set.name,
-              logo: metric.card.set.logo,
-              symbol: metric.card.set.symbol,
+              id: metric.card.set.id,
               serie: metric.card.set.serie
-                ? { name: metric.card.set.serie.name }
+                ? { id: metric.card.set.serie.id }
                 : null,
             }
           : null,
@@ -430,19 +427,16 @@ export class CardPopularityService {
     }
 
     return sortedCards.slice(0, limit).map((metric) => ({
+      // Name, image, rarity, and set labels are attached by `CatalogLocalizationInterceptor` from IDs.
       card: {
         id: metric.card.id,
-        name: metric.card.name,
-        image: metric.card.image,
+        tcgDexId: metric.card.tcgDexId,
         localId: metric.card.localId,
-        rarity: metric.card.rarity,
         set: metric.card.set
           ? {
-              name: metric.card.set.name,
-              logo: metric.card.set.logo,
-              symbol: metric.card.set.symbol,
+              id: metric.card.set.id,
               serie: metric.card.set.serie
-                ? { name: metric.card.set.serie.name }
+                ? { id: metric.card.set.serie.id }
                 : null,
             }
           : null,

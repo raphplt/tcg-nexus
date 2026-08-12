@@ -29,9 +29,8 @@ export class CatalogLocalizationInterceptor implements NestInterceptor {
       Array.isArray(header) ? header[0] : (header as string | undefined),
     );
 
-    // `?withTranslations=true` : vue d'administration. Le catalogue étant
-    // public, ce paramètre n'expose rien de confidentiel — il coûte seulement
-    // une requête de plus par type d'entité.
+    // `?withTranslations=true`: Admin view. Since catalog data is public, this parameter exposes no confidential info;
+    // it incurs only one additional DB query per entity type.
     const withTranslations = request?.query?.withTranslations === "true";
 
     return next

@@ -1,3 +1,5 @@
+import { RequestLocale } from "src/translation/request-locale";
+import type { SupportedLocale } from "src/translation/supported-locales";
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Public } from "../auth/decorators/public.decorator";
@@ -48,8 +50,11 @@ export class CardController {
 
   @Public()
   @Get("set/:setId/rarities")
-  getSetRarities(@Param("setId") setId: string) {
-    return this.cardService.getSetRarities(setId);
+  getSetRarities(
+    @Param("setId") setId: string,
+    @RequestLocale() locale: SupportedLocale,
+  ) {
+    return this.cardService.getSetRarities(setId, locale);
   }
 
   @Public()

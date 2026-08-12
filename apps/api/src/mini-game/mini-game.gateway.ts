@@ -215,9 +215,7 @@ export class MiniGameGateway
 
       this.activeSessions.set(sessionId, session);
 
-      // Emit to both. `selfId` = l'id du destinataire lui-même : le client
-      // n'a plus à deviner "qui suis-je" par élimination (fragile si
-      // opponent est momentanément null / à la reconnexion).
+      // Emit to both sockets. `selfId` = recipient's own ID so client does not need to deduce identity by elimination
       this.server.to(opponent.socketId).emit("minigame_matched", {
         sessionId,
         gameType: data.gameType,

@@ -1,26 +1,21 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 /**
- * Tables de traduction du catalogue Pokémon.
+ * Pokémon catalog translation tables migration.
  *
- * Migration purement additive : aucune colonne existante n'est touchée, les
- * lectures actuelles continuent de fonctionner. Les valeurs déjà en base sont
- * recopiées en `fr`, langue dans laquelle elles ont été scrapées ; la suppression
- * des colonnes linguistiques de `card`, `pokemon_set` et `pokemon_serie` fera
- * l'objet d'une migration séparée, une fois toutes les lectures basculées.
+ * Additive migration: existing columns are preserved so legacy queries continue operating.
+ * Existing catalog values are backfilled under locale 'fr' (original scraped language).
  */
 export class CatalogTranslations1786071600000 implements MigrationInterface {
   name = "CatalogTranslations1786071600000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // La recherche de cartes compare des libellés accentués : « pokemon » doit
-    // trouver « Pokémon », dans toutes les langues du catalogue.
+    // Card search compares accent-insensitive labels (e.g. "pokemon" matches "Pokémon" across catalog languages).
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS unaccent`);
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
 
-    // `unaccent` est déclarée STABLE (elle dépend d'un dictionnaire), donc
-    // inutilisable dans un index. Ce wrapper fige le dictionnaire et devient
-    // IMMUTABLE, ce qui rend l'expression indexable.
+    // `unaccent` is declared STABLE (depends on dictionary), unindexable directly.
+    // This wrapper freezes dictionary context to IMMUTABLE, enabling expression index support.
     await queryRunner.query(`
       CREATE OR REPLACE FUNCTION immutable_unaccent(text)
       RETURNS text
@@ -28,9 +23,8 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
       $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$
     `);
 
-    // Une carte reste une seule ligne quel que soit le nombre de langues :
-    // c'est ce qui empêche un backfill de dupliquer les cartes et de casser
-    // les decks, collections et annonces qui les référencent.
+    // One card remains a single row regardless of language count:
+    // prevents duplicate cards across backfills and preserves deck/collection/listing foreign keys.
     await queryRunner.query(`
       CREATE UNIQUE INDEX "UQ_card_game_tcgDexId"
       ON "card" ("game", "tcgDexId")
@@ -98,8 +92,7 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
       )
     `);
 
-    // Reprise de l'existant en `fr`. Les champs linguistiques des cartes sont
-    // répartis entre `card` et `pokemon_card_details`.
+    // Backfill existing data under locale 'fr'. Card linguistic fields are split across `card` and `pokemon_card_details`.
     await queryRunner.query(`
       INSERT INTO "card_translation" (
         "card_id", "locale", "name", "image", "category", "rarity",

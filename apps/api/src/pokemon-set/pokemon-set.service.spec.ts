@@ -1,3 +1,4 @@
+import { PokemonSetTranslation } from "./entities/pokemon-set-translation.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { PokemonSet } from "./entities/pokemon-set.entity";
@@ -30,6 +31,10 @@ describe("PokemonSetService", () => {
         {
           provide: getRepositoryToken(PokemonSet),
           useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(PokemonSetTranslation),
+          useValue: { findOne: jest.fn(), findOneOrFail: jest.fn(), upsert: jest.fn() },
         },
       ],
     }).compile();

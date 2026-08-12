@@ -51,8 +51,7 @@ async function main() {
   const sets = arg("sets")?.split(",").filter(Boolean);
   const limit = arg("limit") ? Number(arg("limit")) : undefined;
   const batch = arg("batch") ? Number(arg("batch")) : 16;
-  // --refresh : recalcule aussi les cartes déjà vectorisées (utile quand la
-  // logique d'embedding change, ex. recadrage sur l'illustration).
+  // --refresh: recalculates existing vector embeddings (useful on embedding algorithm changes)
   const refresh = process.argv.includes("--refresh");
 
   const db = new Client({
@@ -64,7 +63,7 @@ async function main() {
   });
   await db.connect();
 
-  // table d'embeddings auto-créée si la machine ne l'a pas encore (idempotent)
+  // Auto-creates embeddings table if missing (idempotent)
   await db.query("CREATE EXTENSION IF NOT EXISTS vector");
   await db.query(
     `CREATE TABLE IF NOT EXISTS card_embedding (

@@ -50,7 +50,7 @@ export class OrderItem {
   @Column({ type: "int" })
   quantity: number;
 
-  // part des frais de port portée par cette ligne : un seul colis par vendeur
+  // Allocated shipping cost portion carried by this order item
   @Column("decimal", { precision: 10, scale: 2, default: 0 })
   shippingCost: number;
 

@@ -35,8 +35,7 @@ export class Notification {
   @Column({ type: "jsonb", nullable: true })
   data: Record<string, any> | null;
 
-  // title/body restent rendus pour l'historique ; les nouvelles notifications
-  // sont traduites à l'affichage depuis la clé et ses paramètres
+  // title/body remain stored for historical records; new notifications are translated on-the-fly using key and params
   @Column({ type: "varchar", nullable: true })
   translationKey: string | null;
 

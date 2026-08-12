@@ -54,15 +54,6 @@ export class PokemonSet {
   @Column({ type: "enum", enum: CardGame, default: CardGame.Pokemon })
   game: CardGame;
 
-  @Column()
-  name: string;
-
-  @Column({ nullable: true })
-  logo?: string;
-
-  @Column({ nullable: true })
-  symbol?: string;
-
   @Column(() => CardCount)
   cardCount: CardCount;
 
@@ -97,11 +88,20 @@ export class PokemonSet {
   )
   sealedProducts: SealedProduct[];
 
-  /** Nom et visuels par langue ; `name`, `logo` et `symbol` en sont l'héritage. */
+  /** Nom, logo et symbole du set, une ligne par langue activée. */
   @OneToMany(
     () => PokemonSetTranslation,
     (translation) => translation.set,
     { cascade: true },
   )
   translations?: PokemonSetTranslation[];
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  name?: string;
+  logo?: string;
+  symbol?: string;
 }

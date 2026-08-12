@@ -1,3 +1,4 @@
+import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as fs from "fs";
@@ -63,6 +64,8 @@ export class SealedProductService {
     private readonly sealedProductRepository: Repository<SealedProduct>,
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
+    @InjectRepository(PokemonSetTranslation)
+    private readonly setTranslationRepository: Repository<PokemonSetTranslation>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(PriceHistory)
@@ -492,11 +495,16 @@ export class SealedProductService {
       fs.readFileSync(dataPath, "utf-8"),
     );
 
-    // Index PokemonSets by normalized name for matching
+    // Index PokemonSets by normalized name for matching across all localized translations (supporting EN/FR sealed product names).
     const allSets = await this.pokemonSetRepository.find();
+    const setById = new Map(allSets.map((set) => [set.id, set]));
+    const setTranslations = await this.setTranslationRepository.find();
+
     const setByNormalizedName = new Map<string, PokemonSet>();
-    for (const set of allSets) {
-      setByNormalizedName.set(this.normalizeName(set.name), set);
+    for (const translation of setTranslations) {
+      const set = setById.get(translation.setId);
+      if (!set || !translation.name) continue;
+      setByNormalizedName.set(this.normalizeName(translation.name), set);
     }
 
     const report: SealedSeedReport = {

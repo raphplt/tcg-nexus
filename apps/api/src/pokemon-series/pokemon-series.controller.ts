@@ -80,7 +80,7 @@ export class PokemonSeriesController {
       throw new NotFoundException(`Série ${id} introuvable`);
     }
 
-    // Supprimer l'ancien logo de R2 s'il existe
+    // Remove existing logo file from R2 storage if present
     if (serie.logo) {
       await this.r2StorageService.deleteFile(serie.logo);
     }

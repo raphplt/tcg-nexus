@@ -108,7 +108,12 @@ export class MatchService {
     private readonly rankingService: RankingService,
   ) {}
 
-  // Créer un nouveau match
+  /**
+   * Creates a new scheduled match.
+   *
+   * @param createMatchDto Match creation DTO.
+   * @returns Created Match entity.
+   */
   async create(createMatchDto: CreateMatchDto): Promise<Match> {
     const {
       tournamentId,
@@ -118,26 +123,17 @@ export class MatchService {
       phase,
       scheduledDate,
       notes,
-      skipStatusCheck,
     } = createMatchDto;
 
-    const tournament: Tournament | null =
-      await this.tournamentRepository.findOne({
-        where: { id: tournamentId },
-      });
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+    });
+
     if (!tournament) {
       throw new NotFoundException({
         code: "TOURNAMENT_NOT_FOUND",
         message: "Tournoi non trouvé",
       });
-    }
-    if (
-      !skipStatusCheck &&
-      tournament.status !== TournamentStatus.IN_PROGRESS
-    ) {
-      throw new BadRequestException(
-        "Le tournoi doit être en cours pour créer des matches",
-      );
     }
 
     let playerA: Player | null = null;
@@ -221,7 +217,12 @@ export class MatchService {
     return this.ensureOnlineSession(savedMatch);
   }
 
-  // Récupérer tous les matches avec filtres
+  /**
+   * Retrieves paginated matches matching filter query parameters.
+   *
+   * @param query Match filter parameters.
+   * @returns Paginated matches list.
+   */
   async findAll(query: MatchQueryDto) {
     const {
       tournamentId,
@@ -276,7 +277,12 @@ export class MatchService {
     };
   }
 
-  // Récupérer un match par ID
+  /**
+   * Retrieves a single match by ID with full relations.
+   *
+   * @param id Match ID.
+   * @returns Match entity.
+   */
   async findOne(id: number): Promise<Match> {
     const match = await this.matchRepository.findOne({
       where: { id },
@@ -297,7 +303,13 @@ export class MatchService {
     return match;
   }
 
-  // Mettre à jour un match (score, statut, etc.)
+  /**
+   * Updates match attributes (status, notes, scheduledDate).
+   *
+   * @param id Match ID.
+   * @param updateMatchDto Update fields DTO.
+   * @returns Updated Match.
+   */
   async update(id: number, updateMatchDto: UpdateMatchDto): Promise<Match> {
     const match = await this.findOne(id);
 
@@ -343,7 +355,11 @@ export class MatchService {
     return updatedMatch;
   }
 
-  // Supprimer un match
+  /**
+   * Removes a match record by ID.
+   *
+   * @param id Match ID.
+   */
   async remove(id: number): Promise<void> {
     const match = await this.findOne(id);
     if (
@@ -358,6 +374,9 @@ export class MatchService {
   }
 
   // Démarrer un match
+  /**
+   * Starts a single match by updating status and creating online game session.
+   */
   async startMatch(id: number, startMatchDto: StartMatchDto): Promise<Match> {
     const match = await this.findOne(id);
     const result = await this.startMatches(
@@ -464,7 +483,13 @@ export class MatchService {
     return { startedCount: matches.length, matches };
   }
 
-  // Reporter un score
+  /**
+   * Reports final match scores and computes winner or draw status.
+   *
+   * @param id Match ID.
+   * @param reportScoreDto Score payload.
+   * @returns Updated Match.
+   */
   async reportScore(
     id: number,
     reportScoreDto: ReportScoreDto,
@@ -529,7 +554,7 @@ export class MatchService {
 
       if (isForfeit) {
         match.status = MatchStatus.FORFEIT;
-        // Si forfait, on infère le vainqueur par le score fourni
+        // On forfeit: infer winner based on provided score
         match.winner =
           playerAScore > playerBScore
             ? (match.playerA ?? null)
@@ -556,7 +581,7 @@ export class MatchService {
       }
       await this.createMatchStatistics(match, manager);
 
-      // Vérifier si le tournoi peut avancer automatiquement
+      // Check if tournament can progress automatically
       const tournamentFinished = await this.checkTournamentProgression(
         match,
         manager,
@@ -605,7 +630,13 @@ export class MatchService {
     return result.match;
   }
 
-  // Annuler un résultat de match (pour les juges)
+  /**
+   * Resets a recorded match outcome (judge action).
+   *
+   * @param id Match ID.
+   * @param resetMatchDto Reset parameters and reason.
+   * @returns Reset Match entity.
+   */
   async resetMatch(id: number, resetMatchDto: ResetMatchDto): Promise<Match> {
     const result = await this.dataSource.transaction<{
       match: Match;
@@ -679,7 +710,13 @@ export class MatchService {
     return result.match;
   }
 
-  // Récupérer les matches d'un tournoi par round
+  /**
+   * Retrieves matches for a specific tournament round.
+   *
+   * @param tournamentId Tournament ID.
+   * @param round Round number.
+   * @returns List of Match entities.
+   */
   async getMatchesByRound(
     tournamentId: number,
     round: number,
@@ -710,7 +747,13 @@ export class MatchService {
     await this.ensureOnlineSessions(matches);
   }
 
-  // Récupérer les matches d'un joueur dans un tournoi
+  /**
+   * Retrieves matches for a specific player in a tournament.
+   *
+   * @param tournamentId Tournament ID.
+   * @param playerId Player ID.
+   * @returns List of Match entities.
+   */
   async getPlayerMatches(
     tournamentId: number,
     playerId: number,
@@ -1043,7 +1086,7 @@ export class MatchService {
   }
 
   /**
-   * Vérifie si le tournoi peut progresser automatiquement
+   * Checks if tournament can progress to the next round automatically.
    */
   private async checkTournamentProgression(
     match: Match,
@@ -1069,9 +1112,9 @@ export class MatchService {
         m.status !== MatchStatus.FINISHED && m.status !== MatchStatus.FORFEIT,
     );
 
-    // Si tous les matches du round sont terminés, on peut potentiellement avancer
+    // If all matches in current round are complete, attempt round progression
     if (unfinishedMatches.length === 0) {
-      // Pour l'élimination, propager automatiquement les vainqueurs
+      // Automatically propagate winners in elimination brackets
       if (
         tournament.type === TournamentType.SINGLE_ELIMINATION ||
         tournament.type === TournamentType.DOUBLE_ELIMINATION

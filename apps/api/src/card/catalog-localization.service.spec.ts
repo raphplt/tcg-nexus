@@ -94,18 +94,18 @@ describe("CatalogLocalizationService", () => {
 
     expect(payload.items[0].card.name).toBe("Charizard");
     expect(payload.items[1].card.name).toBe("Blastoise");
-    // Une seule requête, quel que soit le nombre de cartes du payload.
+    // Single query regardless of card count in payload
     expect(find).toHaveBeenCalledTimes(1);
   });
 
-  it("ne requête rien quand le payload ne contient aucune entité", async () => {
+  it("does not execute query when payload contains no entities", async () => {
     await service.localize({ message: "ok" }, "en");
     expect(find).not.toHaveBeenCalled();
     expect(findSets).not.toHaveBeenCalled();
     expect(findSeries).not.toHaveBeenCalled();
   });
 
-  it("traduit le set et la série portés par une carte", async () => {
+  it("translates set and series carried by a card", async () => {
     find.mockResolvedValue([]);
     findSets.mockResolvedValue([
       { setId: "base1", locale: "en", name: "Base Set" },
@@ -131,9 +131,9 @@ describe("CatalogLocalizationService", () => {
     expect(payload.set.serie.name).toBe("Base");
   });
 
-  it("laisse intact un objet pris à tort pour un set", async () => {
+  it("leaves non-set object untouched", async () => {
     find.mockResolvedValue([]);
-    // Aucune traduction en base pour cet id : la base filtre les faux positifs.
+    // No database translation for this ID: DB filter eliminates false positives.
     findSets.mockResolvedValue([]);
 
     const payload = await service.localize(

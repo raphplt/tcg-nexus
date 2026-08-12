@@ -20,6 +20,15 @@ export class SealedEventService {
     private readonly sealedProductRepository: Repository<SealedProduct>,
   ) {}
 
+  /**
+   * Records a user interaction event for a sealed product.
+   *
+   * @param dto Sealed product event DTO.
+   * @param userId Optional user ID.
+   * @param ipAddress Client IP address.
+   * @param userAgent User agent header string.
+   * @param sessionId Session identifier.
+   */
   async recordEvent(
     dto: CreateSealedEventDto,
     userId?: number,
@@ -38,7 +47,7 @@ export class SealedEventService {
       });
     }
 
-    // Hash IP pour conformité RGPD (même pattern que CardPopularityService)
+    // Hash IP address for GDPR compliance
     const hashedIp = ipAddress
       ? createHash("sha256").update(ipAddress).digest("hex").substring(0, 16)
       : undefined;

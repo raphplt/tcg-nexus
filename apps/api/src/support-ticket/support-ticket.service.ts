@@ -53,7 +53,7 @@ export class SupportTicketService {
     });
     await this.messageRepo.save(initialMessage);
 
-    // Notification email à l'utilisateur
+    // Send confirmation email to ticket owner
     this.mailService.sendTicketCreated(
       user.email,
       savedTicket.id,
@@ -89,7 +89,7 @@ export class SupportTicketService {
 
     const savedMessage = await this.messageRepo.save(message);
 
-    // Notification email : notifier l'autre partie
+    // Email notification: notify counter-party
     const senderName = `${user.firstName} ${user.lastName}`;
     const preview =
       dto.message.length > 200
@@ -97,7 +97,7 @@ export class SupportTicketService {
         : dto.message;
 
     if (this.isStaff(user)) {
-      // Staff répond -> notifier l'utilisateur propriétaire du ticket
+      // Staff reply -> notify ticket owner user
       this.mailService.sendTicketReply(
         ticket.user.email,
         ticketId,
@@ -107,7 +107,7 @@ export class SupportTicketService {
         ticket.user.preferredLocale,
       );
     }
-    // Utilisateur répond -> pas de notification auto (le staff consulte le dashboard)
+    // User reply -> staff monitors dashboard directly, no auto email
 
     return savedMessage;
   }

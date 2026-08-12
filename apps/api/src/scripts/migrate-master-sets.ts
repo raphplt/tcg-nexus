@@ -1,3 +1,4 @@
+import { PokemonSetTranslation } from "../pokemon-set/entities/pokemon-set-translation.entity";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "src/app.module";
 import { Collection } from "src/collection/entities/collection.entity";
@@ -19,19 +20,26 @@ async function bootstrap() {
   );
 
   try {
-    // Trouver le PokemonSet "Étincelles Déferlantes"
-    const ev08 = await setRepo.findOne({
-      where: { name: "Étincelles Déferlantes" },
-    });
+    // Find PokemonSet "Surging Sparks" ("Étincelles Déferlantes")
+    // Set names originate from translations table: query via translation repository.
+    const translation = await app
+      .get<Repository<PokemonSetTranslation>>(
+        getRepositoryToken(PokemonSetTranslation),
+      )
+      .findOne({ where: { name: "Étincelles Déferlantes" } });
+
+    const ev08 = translation
+      ? await setRepo.findOne({ where: { id: translation.setId } })
+      : null;
     if (!ev08) {
       console.log(
-        "⚠️ PokemonSet 'Étincelles Déferlantes' non trouvé en base. Rien à migrer.",
+        "⚠️ PokemonSet 'Étincelles Déferlantes' not found in database. Nothing to migrate.",
       );
       await app.close();
       return;
     }
 
-    // Trouver toutes les collections avec ce nom qui n'ont pas encore de masterSet
+    // Find all collections with matching name lacking masterSet relationship
     const collections = await collectionRepo.find({
       where: { name: "Étincelles Déferlantes" },
       relations: ["masterSet"],

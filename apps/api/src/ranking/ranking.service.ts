@@ -267,7 +267,7 @@ export class RankingService {
 
     const rank = currentRank.get(player.id);
     if (rank == null) {
-      // Le joueur n'a pas participé au format demandé sur la période
+      // Player did not participate in the target format within timeframe
       return this.toGlobalRankingPlayer(player, 0, "equal");
     }
 
@@ -425,7 +425,7 @@ export class RankingService {
         });
       }
 
-      // Mettre à jour les statistiques
+      // Update ranking stats
       ranking.points = stats.points;
       ranking.wins = stats.wins;
       ranking.losses = stats.losses;
@@ -435,7 +435,7 @@ export class RankingService {
       rankings.push(ranking);
     }
 
-    // Trier et assigner les rangs
+    // Sort rankings and assign sequential ranks
     rankings.sort((a, b) => {
       if (a.points !== b.points) return b.points - a.points;
       if (a.winRate !== b.winRate) return b.winRate - a.winRate;
@@ -446,10 +446,10 @@ export class RankingService {
       ranking.rank = index + 1;
     });
 
-    // Sauvegarder
+    // Save rankings
     await this.rankingRepository.save(rankings);
 
-    // Mettre à jour l'ELO si le tournoi est terminé
+    // Process ELO rating updates if tournament is finished
     if (
       tournament.status === TournamentStatus.FINISHED ||
       tournament.isFinished
@@ -529,7 +529,7 @@ export class RankingService {
   }
 
   /**
-   * Calcule les statistiques des joueurs d'un tournoi
+   * Calculates base standings (points, wins, losses, draws, win rate) from finished matches.
    */
   private calculatePlayerStatistics(
     tournament: Tournament,
@@ -537,7 +537,7 @@ export class RankingService {
     const playerStats = new Map<number, RankingCalculationResult>();
     const pointsSystem = this.getPointsSystem(tournament.type);
 
-    // Initialiser les stats pour tous les joueurs ayant des matches
+    // Initialize stats for all participating players who played matches
     const allPlayerIds = new Set<number>();
     tournament.matches.forEach((match) => {
       if (match.playerA) allPlayerIds.add(match.playerA.id);
@@ -559,9 +559,9 @@ export class RankingService {
       });
     });
 
-    // Calculer les résultats des matches
+    // Calculate match outcomes
     tournament.matches
-      .filter((match) => match.finishedAt) // Seulement les matches terminés
+      .filter((match) => match.finishedAt) // Process finished matches only
       .forEach((match) => {
         if (!match.playerA || !match.playerB) return;
 
@@ -569,7 +569,7 @@ export class RankingService {
         const playerBStats = playerStats.get(match.playerB.id)!;
 
         if (match.winner) {
-          // Match avec vainqueur
+          // Decided match outcome with a winner
           if (match.winner.id === match.playerA.id) {
             playerAStats.wins++;
             playerAStats.points += pointsSystem.win;
@@ -703,7 +703,7 @@ export class RankingService {
         opponentWinRateSum += opponentWinRate;
         opponentCount++;
 
-        // Games win rate (basé sur les scores)
+        // Game win rate (computed from match scores)
         const isPlayerA = match.playerA?.id === playerId;
         const playerScore = isPlayerA ? match.playerAScore : match.playerBScore;
         const opponentScore = isPlayerA

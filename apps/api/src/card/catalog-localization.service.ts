@@ -116,6 +116,18 @@ export class CatalogLocalizationService {
   }
 
   /**
+   * Résout les libellés pour un usage interne au serveur — DTO allégé,
+   * comparaison de noms, message de journal — là où aucune langue de requête
+   * n'est à honorer.
+   *
+   * À appeler avant toute lecture de `name`, `image` ou `rarity` sur une carte
+   * fraîchement chargée : ces champs ne vivent plus que dans les traductions.
+   */
+  async resolveLabels<T>(payload: T): Promise<T> {
+    return this.localize(payload, DEFAULT_LOCALE);
+  }
+
+  /**
    * Loads translations to apply per entity: requested locale or fallback locale.
    */
   private async load<T extends { locale: string }>(

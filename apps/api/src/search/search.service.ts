@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import { applyCardSearch } from "../card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -27,6 +28,7 @@ export class SearchService {
     private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(Tournament)
     private readonly tournamentRepository: Repository<Tournament>,
+    private readonly localization: CatalogLocalizationService,
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     @InjectRepository(Listing)
@@ -62,25 +64,25 @@ export class SearchService {
     const offset = (page - 1) * limit;
     const results: SearchResultItem[] = [];
 
-    // Recherche dans les cartes Pokémon
+    // Search Pokémon cards
     if (type === "all" || type === "cards") {
       const cardResults = await this.searchPokemonCards(searchTerm, limit);
       results.push(...cardResults);
     }
 
-    // Recherche dans les tournois
+    // Search tournaments
     if (type === "all" || type === "tournaments") {
       const tournamentResults = await this.searchTournaments(searchTerm, limit);
       results.push(...tournamentResults);
     }
 
-    // Recherche dans les joueurs
+    // Search players
     if (type === "all" || type === "players") {
       const playerResults = await this.searchPlayers(searchTerm, limit);
       results.push(...playerResults);
     }
 
-    // Recherche dans le marketplace
+    // Search marketplace listings
     if (type === "all" || type === "marketplace") {
       const marketplaceResults = await this.searchMarketplace(
         searchTerm,
@@ -89,11 +91,11 @@ export class SearchService {
       results.push(...marketplaceResults);
     }
 
-    // Calcul du score de pertinence et tri
+    // Sort by relevance score
     const scoredResults = this.calculateRelevanceScores(results, searchTerm);
     const sortedResults = this.sortResults(scoredResults, sortBy, sortOrder);
 
-    // Pagination des résultats
+    // Paginate results
     const paginatedResults = sortedResults.slice(offset, offset + limit);
     const totalPages = Math.ceil(sortedResults.length / limit);
 
@@ -119,6 +121,9 @@ export class SearchService {
       .where("card.game = :game", { game: CardGame.Pokemon });
 
     const cards = await applyCardSearch(qb, query).limit(limit).getMany();
+
+    // Flattening result name into `title` prevents interceptor recognition; resolve labels directly here
+    await this.localization.resolveLabels(cards);
 
     return cards.map((card) => ({
       id: card.id,
@@ -257,7 +262,7 @@ export class SearchService {
       const titleLower = result.title.toLowerCase();
       const descriptionLower = result.description.toLowerCase();
 
-      // Score basé sur la correspondance exacte dans le titre
+      // Score based on exact title match
       if (titleLower === queryLower) {
         score += 100;
       } else if (titleLower.startsWith(queryLower)) {
@@ -266,12 +271,12 @@ export class SearchService {
         score += 60;
       }
 
-      // Score basé sur la correspondance dans la description
+      // Score based on description match
       if (descriptionLower.includes(queryLower)) {
         score += 20;
       }
 
-      // Bonus pour les correspondances partielles
+      // Bonus for partial word matches
       const queryWords = queryLower.split(" ");
       const titleWords = titleLower.split(" ");
       const descriptionWords = descriptionLower.split(" ");
@@ -294,31 +299,27 @@ export class SearchService {
 
   private sortResults(
     results: SearchResultItem[],
-    sortBy: string,
-    sortOrder: "ASC" | "DESC",
+    sortBy: string = "relevance",
+    sortOrder: "ASC" | "DESC" = "DESC",
   ): SearchResultItem[] {
     return results.sort((a, b) => {
       let comparison = 0;
 
-      switch (sortBy) {
-        case "relevance":
-          comparison = (b.relevanceScore || 0) - (a.relevanceScore || 0);
-          break;
-        case "title":
-          comparison = a.title.localeCompare(b.title);
-          break;
-        case "type":
-          comparison = a.type.localeCompare(b.type);
-          break;
-        default:
-          comparison = (b.relevanceScore || 0) - (a.relevanceScore || 0);
+      if (sortBy === "title") {
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortBy === "type") {
+        comparison = a.type.localeCompare(b.type);
+      } else {
+        comparison = (a.relevanceScore || 0) - (b.relevanceScore || 0);
       }
 
       return sortOrder === "ASC" ? comparison : -comparison;
     });
   }
 
-  // Méthode pour obtenir des suggestions de recherche (legacy)
+  /**
+   * Retrieves search suggestions (legacy method).
+   */
   async getSearchSuggestions(
     query: string,
     limit: number = 5,
@@ -330,7 +331,7 @@ export class SearchService {
     const suggestions: string[] = [];
     const searchTerm = query.trim();
 
-    // Suggestions basées sur les noms de cartes populaires
+    // Suggestions derived from popular card names
     const popularCards = await this.pokemonCardRepository
       .createQueryBuilder("card")
       .where("card.game = :game", { game: CardGame.Pokemon })
@@ -345,7 +346,7 @@ export class SearchService {
         .filter((name): name is string => Boolean(name)),
     );
 
-    // Suggestions basées sur les tournois récents
+    // Suggestions derived from recent public tournaments
     const recentTournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
@@ -356,11 +357,13 @@ export class SearchService {
 
     suggestions.push(...recentTournaments.map((tournament) => tournament.name));
 
-    // Supprimer les doublons et limiter
+    // Remove duplicates and enforce limit
     return [...new Set(suggestions)].slice(0, limit);
   }
 
-  // Méthode pour obtenir des suggestions preview (infos essentielles)
+  /**
+   * Retrieves preview search suggestions with basic fields.
+   */
   async getSuggestionsPreview(
     query: string,
     limit: number = 8,
@@ -376,7 +379,7 @@ export class SearchService {
     const suggestions: SuggestionPreviewItem[] = [];
     const searchTerm = query.trim();
 
-    // Suggestions basées sur les cartes Pokémon
+    // Suggestions derived from Pokémon cards
     const cards = await this.pokemonCardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
@@ -397,7 +400,7 @@ export class SearchService {
       })),
     );
 
-    // Suggestions basées sur les tournois
+    // Suggestions derived from tournaments
     const tournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .where("tournament.name ILIKE :query", { query: `%${searchTerm}%` })
@@ -415,7 +418,7 @@ export class SearchService {
       })),
     );
 
-    // Suggestions basées sur les joueurs
+    // Suggestions derived from registered players
     const players = await this.playerRepository
       .createQueryBuilder("player")
       .leftJoinAndSelect("player.user", "user")
@@ -435,7 +438,7 @@ export class SearchService {
       })),
     );
 
-    // Supprimer les doublons et limiter
+    // Omit duplicates and enforce slice limit
     const uniqueSuggestions = suggestions
       .filter(
         (item, index, self) =>
@@ -451,7 +454,9 @@ export class SearchService {
     };
   }
 
-  // Méthode pour obtenir des suggestions détaillées
+  /**
+   * Retrieves detailed search suggestions with full metadata.
+   */
   async getSuggestionsDetail(
     query: string,
     limit: number = 5,
@@ -467,7 +472,7 @@ export class SearchService {
     const suggestions: SuggestionDetailItem[] = [];
     const searchTerm = query.trim();
 
-    // Suggestions basées sur les cartes Pokémon avec détails
+    // Detailed suggestions derived from Pokémon cards
     const cards = await this.pokemonCardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
@@ -497,7 +502,7 @@ export class SearchService {
       })),
     );
 
-    // Suggestions basées sur les tournois avec détails
+    // Detailed suggestions derived from tournaments
     const tournaments = await this.tournamentRepository
       .createQueryBuilder("tournament")
       .leftJoinAndSelect("tournament.players", "players")
@@ -526,7 +531,6 @@ export class SearchService {
       })),
     );
 
-    // Supprimer les doublons et limiter
     const uniqueSuggestions = suggestions
       .filter(
         (item, index, self) =>

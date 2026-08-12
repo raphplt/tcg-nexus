@@ -107,7 +107,7 @@ export class TournamentStateService {
       description: "Annuler le tournoi",
     },
 
-    // FINISHED et CANCELLED sont des états terminaux
+    // FINISHED and CANCELLED are terminal states
   ];
 
   constructor(
@@ -156,7 +156,7 @@ export class TournamentStateService {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    // Vérifier toutes les conditions
+    // Evaluate transition conditions
     for (const condition of rule.conditions) {
       try {
         const result = await condition(tournament);
@@ -304,7 +304,7 @@ export class TournamentStateService {
       return false;
     }
 
-    // Pour les tournois à élimination, vérifier s'il reste un seul joueur
+    // For elimination tournaments, check if a single active player remains
     if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
       const activeRegistrations = await this.registrationRepository.count({
         where: {
@@ -316,12 +316,12 @@ export class TournamentStateService {
       return activeRegistrations <= 1;
     }
 
-    // Pour les autres formats, vérifier si c'est le dernier round
+    // For other formats, check if final round reached
     return tournament.currentRound >= tournament.totalRounds;
   }
 
   /**
-   * Récupère le nombre de joueurs confirmés
+   * Retrieves count of confirmed player registrations.
    */
   private async getConfirmedPlayersCount(
     tournamentId: number,
@@ -335,7 +335,7 @@ export class TournamentStateService {
   }
 
   /**
-   * Exécute les actions spécifiques à une transition
+   * Executes side-effect actions for state transition.
    */
   private executeTransitionActions(
     tournament: Tournament,
@@ -345,16 +345,16 @@ export class TournamentStateService {
   ): void {
     switch (toStatus) {
       case TournamentStatus.REGISTRATION_OPEN:
-        // Réinitialiser les inscriptions annulées si nécessaire
+        // Reset cancelled registrations if required
         break;
 
       case TournamentStatus.IN_PROGRESS:
-        // Marquer comme démarré, initialiser currentRound
+        // Mark tournament as started, initialize round 1
         tournament.currentRound = 1;
         break;
 
       case TournamentStatus.FINISHED:
-        // Marquer comme terminé, calculer les récompenses
+        // Mark tournament as finished, compute rewards
         tournament.isFinished = true;
         break;
 

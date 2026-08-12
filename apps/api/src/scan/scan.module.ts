@@ -1,3 +1,4 @@
+import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { CardModule } from "../card/card.module";
@@ -8,7 +9,7 @@ import { ScanService } from "./scan.service";
 import { VisionService } from "./vision/vision.service";
 
 @Module({
-  imports: [ConfigModule, CardModule],
+  imports: [ConfigModule, CardModule, CatalogLocalizationModule],
   controllers: [ScanController],
   providers: [ScanService, OcrService, VisionService, ScanLogger],
 })

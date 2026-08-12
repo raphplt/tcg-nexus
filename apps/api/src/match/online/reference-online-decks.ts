@@ -69,8 +69,8 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { tcgDexId: "sv06-153", qty: 2 }, // Jamming Tower
       // Energy (7)
       { tcgDexId: "sv02-191", qty: 3 }, // Luminous Energy
-      { name: "Psy", qty: 2 },
-      { name: "Feu", qty: 1 },
+      { name: "Psychic", qty: 2 },
+      { name: "Fire", qty: 1 },
       { tcgDexId: "sv05-162", qty: 1 }, // Neo Upper Energy
     ],
   },
@@ -108,8 +108,8 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { tcgDexId: "sv02-171", qty: 1 }, // Artazon
       { tcgDexId: "me01-122", qty: 1 }, // Mystery Garden
       // Energy (10)
-      { name: "Psy", qty: 7 },
-      { name: "Obscurité", qty: 3 },
+      { name: "Psychic", qty: 7 },
+      { name: "Darkness", qty: 3 },
     ],
   },
   {
@@ -140,8 +140,8 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { name: "Ballon", qty: 1 }, // ASC 181
       { tcgDexId: "sv02-171", qty: 2 }, // Artazon
       // Energy (11)
-      { name: "Combat", qty: 8 },
-      { name: "Métal", qty: 2 },
+      { name: "Fighting", qty: 8 },
+      { name: "Metal", qty: 2 },
       { tcgDexId: "sv06-167", qty: 1 }, // Legacy Energy
     ],
   },
@@ -182,7 +182,7 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { tcgDexId: "sv10-180", qty: 1 }, // Team Rocket's Watchtower
       { tcgDexId: "sv02-171", qty: 1 }, // Artazon
       // Energy (9)
-      { name: "Obscurité", qty: 7 },
+      { name: "Darkness", qty: 7 },
       { tcgDexId: "sv02-192", qty: 2 }, // Reversal Energy
     ],
   },
@@ -215,7 +215,7 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { tcgDexId: "sv10-169", qty: 3 }, // Spikemuth Arena
       { tcgDexId: "sv02-171", qty: 1 }, // Artazon
       // Energy (9)
-      { name: "Obscurité", qty: 9 },
+      { name: "Darkness", qty: 9 },
     ],
   },
   {
@@ -253,10 +253,10 @@ export const REFERENCE_ONLINE_DECKS: ReferenceOnlineDeck[] = [
       { tcgDexId: "sv07-131", qty: 2 }, // Area Zero Underdepths
       { tcgDexId: "sv02-171", qty: 1 }, // Artazon
       // Energy (12)
-      { name: "Plante", qty: 5 },
-      { name: "Combat", qty: 3 },
-      { name: "Électrique", qty: 3 },
-      { name: "Eau", qty: 1 },
+      { name: "Grass", qty: 5 },
+      { name: "Fighting", qty: 3 },
+      { name: "Lightning", qty: 3 },
+      { name: "Water", qty: 1 },
     ],
   },
 ];

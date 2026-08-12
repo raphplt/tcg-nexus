@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import { BadRequestException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
@@ -44,6 +45,7 @@ export class DeckService {
     private readonly deckShareRepo: Repository<DeckShare>,
     @InjectRepository(SavedDeck)
     private readonly savedDeckRepo: Repository<SavedDeck>,
+    private readonly localization: CatalogLocalizationService,
   ) {}
   /**
    * Creates a new deck for a user along with its card compositions.
@@ -239,6 +241,9 @@ export class DeckService {
     if (!deck) throw new NotFoundException("Deck not found");
 
     const cards = deck.cards || [];
+    // Analysis compares card names (energy matching): labels originate from localized translations and must be resolved first
+    await this.localization.resolveLabels(cards);
+
     const totalCards = cards.reduce((sum, card) => sum + (card.qty || 0), 0);
 
     const typeMap = new Map<string, number>();
@@ -257,7 +262,7 @@ export class DeckService {
       );
 
       const categoryLabel =
-        card.pokemonDetails?.category || card.category || "Unknown";
+        card.pokemonDetails?.category || "Unknown";
       const normalizedCategory = categoryLabel.toLowerCase().replace("é", "e");
 
       let mappedCategory = categoryLabel;

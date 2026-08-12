@@ -25,15 +25,13 @@ export class PokemonSeriesService {
   async findAll(): Promise<PokemonSerie[]> {
     return this.pokemonSeriesRepository
       .createQueryBuilder("serie")
-      .select(["serie.id", "serie.name", "serie.logo"])
+      // Name and logo are attached by `CatalogLocalizationInterceptor`: sorting by release date is locale-independent.
+      .select(["serie.id"])
       .leftJoin("serie.sets", "set")
       .where("serie.game = :game", { game: CardGame.Pokemon })
       .groupBy("serie.id")
-      .addGroupBy("serie.name")
-      .addGroupBy("serie.logo")
       .addSelect("MIN(set.releaseDate)", "minReleaseDate")
       .orderBy("MIN(set.releaseDate)", "ASC")
-      .addOrderBy("serie.name", "ASC")
       .getRawAndEntities()
       .then((result) => result.entities);
   }

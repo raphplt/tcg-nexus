@@ -1,17 +1,15 @@
 /**
- * Banc d'essai du scan : rejoue ScanService.recognize() sur un jeu de cartes
- * étiqueté (test-cards/labels.json) et mesure accuracy / rappel / calibration.
- * Prérequis : vision up (port 8000) + DB (.env).
+ * Scan benchmark test suite: replays ScanService.recognize() over labeled test card dataset (test-cards/labels.json)
+ * and measures accuracy, recall, and confidence calibration.
+ * Prerequisites: vision service up (port 8000) + database (.env).
  *
  *   npm run bench:scan
  *   npm run bench:scan -- --only=PXL_20260616_200242260.jpg
  */
 
-// on ne pollue pas scan-logs/ pendant le banc
+// Disable scan logging during benchmark run
 process.env.SCAN_LOG = "false";
-// le banc étend le timeout vision : sur cette machine l'OCR ciblé + CLIP d'une
-// frame prend ~20 s, au-delà du défaut prod (15 s). Sans ça, chaque scan timeout
-// et bascule sur le repli tesseract.js brut → on ne mesure plus le vrai pipeline.
+// Benchmark extends vision service timeout for heavy OCR/CLIP processing
 process.env.VISION_TIMEOUT_MS = process.env.VISION_TIMEOUT_MS ?? "60000";
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -25,8 +23,7 @@ import sharp from "sharp";
 import { ScanModule } from "../scan/scan.module";
 import { ScanService } from "../scan/scan.service";
 
-// le mobile redimensionne à 1600px avant l'envoi (ocr.service.ts) : on fait
-// pareil pour mesurer le vrai pipeline (sinon le 12 Mpx brut fait timeout vision)
+// Mobile client resizes images to 1600px max width before upload: match behavior in benchmark
 const MAX_WIDTH = 1600;
 
 const toFrame = async (path: string): Promise<Buffer> => {
@@ -334,7 +331,7 @@ async function main() {
     ? JSON.parse(readFileSync(labelsPath, "utf8"))
     : {};
   if (!existsSync(labelsPath))
-    console.log(`⚠️  Pas de labels (${labelsPath}) : tout sera "unlabeled".`);
+    console.log(`⚠️  No labels found (${labelsPath}) : everything will be marked "unlabeled".`);
 
   let cases = buildCases(dir, labels);
   if (args.only) cases = cases.filter((c) => c.key === args.only);
@@ -346,7 +343,7 @@ async function main() {
   });
   const scan = app.get(ScanService);
 
-  console.log(`Scan de ${cases.length} cas…\n`);
+  console.log(`Scanning ${cases.length} cases…\n`);
   const results: CaseResult[] = [];
   for (let i = 0; i < cases.length; i++) {
     const c = cases[i];

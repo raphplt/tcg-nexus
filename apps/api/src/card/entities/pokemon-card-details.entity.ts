@@ -22,6 +22,13 @@ export type PokemonWeaknessResistance = {
   value: string;
 };
 
+/**
+ * Données de jeu d'une carte, identiques dans toutes les langues : points de
+ * vie, types, faiblesses, coût de retraite…
+ *
+ * Les champs traduits — description, effet, capacités, attaques, niveau
+ * d'évolution — vivent dans `card_translation`.
+ */
 @Entity()
 export class PokemonCardDetails {
   @PrimaryColumn("uuid", { name: "card_id" })
@@ -50,34 +57,7 @@ export class PokemonCardDetails {
   types?: string[];
 
   @Column({ nullable: true })
-  evolveFrom?: string;
-
-  @Column({ nullable: true })
-  description?: string;
-
-  @Column({ type: "text", nullable: true })
-  effect?: string;
-
-  @Column({ nullable: true })
   level?: string;
-
-  @Column({ nullable: true })
-  stage?: string;
-
-  @Column({ nullable: true })
-  suffix?: string;
-
-  @Column({ type: "jsonb", nullable: true })
-  item?: {
-    name: string;
-    effect: string;
-  };
-
-  @Column({ type: "jsonb", nullable: true })
-  abilities?: PokemonAbility[];
-
-  @Column({ type: "jsonb", nullable: true })
-  attacks?: PokemonAttack[];
 
   @Column({ type: "jsonb", nullable: true })
   weaknesses?: PokemonWeaknessResistance[];
@@ -110,4 +90,18 @@ export class PokemonCardDetails {
    */
   @Column({ type: "jsonb", nullable: true })
   parsedEffects?: Record<string, unknown> | null;
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  description?: string;
+  effect?: string;
+  evolveFrom?: string;
+  stage?: string;
+  suffix?: string;
+  item?: { name: string; effect: string };
+  abilities?: PokemonAbility[];
+  attacks?: PokemonAttack[];
 }

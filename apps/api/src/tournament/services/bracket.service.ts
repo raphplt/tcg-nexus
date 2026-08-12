@@ -147,7 +147,7 @@ export class BracketService {
     const rounds: { index: number; matches: BracketNode[] }[] = [];
     let matchId = 1;
 
-    // Créer tous les rounds
+    // Create all bracket rounds
     for (let round = 1; round <= totalRounds; round++) {
       const matchesInRound = Math.pow(2, totalRounds - round);
       const matches: BracketNode[] = [];
@@ -165,7 +165,7 @@ export class BracketService {
           nextSlot: position % 2 === 0 ? "A" : "B",
         };
 
-        // Premier round : assigner les joueurs
+        // First round: assign players to slots
         if (round === 1) {
           const playerAIndex = position * 2;
           const playerBIndex = playerAIndex + 1;
@@ -195,7 +195,7 @@ export class BracketService {
       rounds.push({ index: round, matches });
     }
 
-    // Créer les matches en base
+    // Persist created bracket matches in database
     await this.createMatchesFromBracket(tournament, rounds, manager);
 
     return {

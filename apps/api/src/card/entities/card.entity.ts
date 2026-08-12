@@ -74,9 +74,6 @@ export type CardPricingData = {
 };
 
 @Entity("card")
-// Une carte = une ligne, toutes langues confondues. Sans cette contrainte, un
-// import dans une nouvelle langue pourrait dupliquer les cartes et détacher
-// les decks, collections et annonces qui les référencent.
 @Index(["game", "tcgDexId"], {
   unique: true,
   where: '"tcgDexId" IS NOT NULL',
@@ -94,20 +91,12 @@ export class Card {
   @Column({ nullable: true })
   localId?: string;
 
-  @Column({ nullable: true })
-  name?: string;
-
-  @Column({ nullable: true })
-  image?: string;
-
-  @Column({ nullable: true })
-  category?: string;
-
+  /**
+   * Illustrator name: proper noun, does not get translated and is therefore
+   * carried by the card entity itself.
+   */
   @Column({ nullable: true })
   illustrator?: string;
-
-  @Column({ nullable: true })
-  rarity?: string;
 
   @Column({ type: "jsonb", nullable: true })
   variants?: CardVariants;
@@ -155,10 +144,9 @@ export class Card {
   collectionItems: CollectionItem[];
 
   /**
-   * Champs linguistiques de la carte, une ligne par langue activée.
-   * Les colonnes `name`, `image`, `category` et `rarity` ci-dessus en sont les
-   * doublons hérités : elles seront supprimées une fois toutes les lectures
-   * passées par les traductions.
+   * Linguistic fields for the card — name, image, category, rarity — one row
+   * per enabled language. No language is prioritized: the card entity itself
+   * no longer carries any labels.
    */
   @OneToMany(
     () => CardTranslation,
@@ -166,4 +154,14 @@ export class Card {
     { cascade: true },
   )
   translations?: CardTranslation[];
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  name?: string;
+  image?: string;
+  category?: string;
+  rarity?: string;
 }

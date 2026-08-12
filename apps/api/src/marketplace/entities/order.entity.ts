@@ -64,7 +64,7 @@ export class Order {
   @Column({ type: "timestamp", nullable: true })
   reservationExpiresAt: Date | null;
 
-  /** garde-fou contre un rejeu de webhook */
+  /** Guardrail against duplicate webhook events or replay attacks */
   @Column({ type: "boolean", default: false })
   stockReleased: boolean;
 

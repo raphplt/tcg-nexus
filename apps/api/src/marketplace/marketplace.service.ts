@@ -1,4 +1,9 @@
 import {
+  cardNameMatchesSql,
+  localizedNameSql,
+} from "src/card/card-search";
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
+import {
   BadRequestException,
   ForbiddenException,
   Injectable,
@@ -94,7 +99,7 @@ export class MarketplaceService {
     const listing = this.listingRepository.create({
       ...rest,
       productKind,
-      // Frais de port et délai imposés par la plateforme, jamais par le vendeur
+      // Platform-enforced shipping cost and handling delay (never set directly by seller)
       shippingCost: getShippingCost(productKind),
       handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
       seller: user,
@@ -177,7 +182,7 @@ export class MarketplaceService {
     if (search) {
       qb.andWhere(
         `(
-          LOWER(pokemonCard.name) LIKE :search
+          ${cardNameMatchesSql("pokemonCard")}
           OR LOWER(seller.firstName) LIKE :search
           OR LOWER(seller.lastName) LIKE :search
           OR LOWER(set.name) LIKE :search
@@ -291,7 +296,7 @@ export class MarketplaceService {
 
     if (search) {
       qb.andWhere(
-        "(LOWER(pokemonCard.name) LIKE :search OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedSet.name) LIKE :search)",
+        `(${cardNameMatchesSql("pokemonCard")} OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedSet.name) LIKE :search)`,
         { search: `%${search.toLowerCase()}%` },
       );
     }
@@ -317,10 +322,12 @@ export class MarketplaceService {
     }
 
     if (sortBy === "name") {
+      // Name originates from localized translations: sorting defaults to default locale
       qb.addSelect(
-        "COALESCE(pokemonCard.name, sealedProduct.nameEn)",
+        `COALESCE(${localizedNameSql("pokemonCard")}, sealedProduct.nameEn)`,
         "product_name",
       );
+      qb.setParameter("sortLocale", DEFAULT_LOCALE);
       qb.orderBy("product_name", sortOrder);
     } else {
       qb.orderBy(`listing.${sortBy || "createdAt"}`, sortOrder);
@@ -547,27 +554,22 @@ export class MarketplaceService {
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
+      // Labels attached by `CatalogLocalizationInterceptor` from IDs: selecting them here is unneeded.
       .select([
         "pokemonCard.id",
-        "pokemonCard.name",
-        "pokemonCard.image",
+        "pokemonCard.tcgDexId",
         "pokemonCard.localId",
-        "pokemonCard.rarity",
-        "set.name",
-        "set.logo",
-        "serie.name",
+        "set.id",
+        "serie.id",
       ])
       .addSelect("COUNT(listing.id)", "listing_count")
       .addSelect("MIN(listing.price)", "min_price")
       .addSelect("AVG(listing.price)", "avg_price")
       .groupBy("pokemonCard.id")
-      .addGroupBy("pokemonCard.name")
-      .addGroupBy("pokemonCard.image")
-      .addGroupBy("pokemonCard.rarity")
+      .addGroupBy("pokemonCard.tcgDexId")
       .addGroupBy("pokemonCard.localId")
-      .addGroupBy("set.name")
-      .addGroupBy("set.logo")
-      .addGroupBy("serie.name")
+      .addGroupBy("set.id")
+      .addGroupBy("serie.id")
       .orderBy("listing_count", "DESC")
       .limit(limit)
       .getRawMany();
@@ -575,14 +577,11 @@ export class MarketplaceService {
     return cards.map((card) => ({
       card: {
         id: card.pokemonCard_id,
-        name: card.pokemonCard_name,
-        image: card.pokemonCard_image,
+        tcgDexId: card.pokemonCard_tcgDexId || card.pokemonCard_tcgdexid,
         localId: card.pokemonCard_localId || card.pokemonCard_localid,
-        rarity: card.pokemonCard_rarity,
         set: {
-          name: card.set_name,
-          logo: card.set_logo,
-          serie: { name: card.serie_name },
+          id: card.set_id,
+          serie: { id: card.serie_id },
         },
       },
       listingCount: parseInt(String(card.listing_count), 10) || 0,
@@ -604,26 +603,21 @@ export class MarketplaceService {
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
       .where("listing.createdAt >= :daysAgo", { daysAgo })
+      // Labels attached by `CatalogLocalizationInterceptor` from IDs: selecting them here is unneeded.
       .select([
         "pokemonCard.id",
-        "pokemonCard.name",
-        "pokemonCard.image",
+        "pokemonCard.tcgDexId",
         "pokemonCard.localId",
-        "pokemonCard.rarity",
-        "set.name",
-        "set.logo",
-        "serie.name",
+        "set.id",
+        "serie.id",
       ])
       .addSelect("COUNT(listing.id)", "recent_listing_count")
       .addSelect("MIN(listing.price)", "min_price")
       .groupBy("pokemonCard.id")
-      .addGroupBy("pokemonCard.name")
-      .addGroupBy("pokemonCard.image")
-      .addGroupBy("pokemonCard.rarity")
+      .addGroupBy("pokemonCard.tcgDexId")
       .addGroupBy("pokemonCard.localId")
-      .addGroupBy("set.name")
-      .addGroupBy("set.logo")
-      .addGroupBy("serie.name")
+      .addGroupBy("set.id")
+      .addGroupBy("serie.id")
       .orderBy("recent_listing_count", "DESC")
       .limit(limit)
       .getRawMany();
@@ -631,14 +625,11 @@ export class MarketplaceService {
     return cards.map((card) => ({
       card: {
         id: card.pokemonCard_id,
-        name: card.pokemonCard_name,
-        image: card.pokemonCard_image,
+        tcgDexId: card.pokemonCard_tcgDexId || card.pokemonCard_tcgdexid,
         localId: card.pokemonCard_localId || card.pokemonCard_localid,
-        rarity: card.pokemonCard_rarity,
         set: {
-          name: card.set_name,
-          logo: card.set_logo,
-          serie: { name: card.serie_name },
+          id: card.set_id,
+          serie: { id: card.serie_id },
         },
       },
       recentListingCount: parseInt(String(card.recent_listing_count), 10) || 0,

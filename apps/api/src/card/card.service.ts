@@ -3,8 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
-import { applyCardSearch } from "./card-search";
+import {
+  DEFAULT_LOCALE,
+  type SupportedLocale,
+} from "../translation/supported-locales";
+import { applyCardSearch, localizedNameSql } from "./card-search";
 import { Card } from "./entities/card.entity";
+import { CardTranslation } from "./entities/card-translation.entity";
 
 const stripAccents = (value: string): string =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -19,6 +24,8 @@ export class CardService implements OnModuleInit {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
+    @InjectRepository(CardTranslation)
+    private readonly cardTranslationRepository: Repository<CardTranslation>,
   ) {}
 
   /**
@@ -57,19 +64,35 @@ export class CardService implements OnModuleInit {
     const t = stripAccents(term).trim();
     if (t.length < 3) return [];
 
-    const qb = this.cardRepository
-      .createQueryBuilder("card")
-      .leftJoinAndSelect("card.set", "set")
-      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .where("card.name % :t", { t })
-      .orderBy("similarity(card.name, :t)", "DESC")
+    // Names live in localized translations: find best similarity across all languages
+    // (e.g. scanned cards may be in English), then load matching cards preserving rank score order.
+    const scored = await this.cardTranslationRepository
+      .createQueryBuilder("ct")
+      .select("ct.card_id", "cardId")
+      .addSelect("MAX(similarity(immutable_unaccent(ct.name), :t))", "score")
+      .innerJoin("card", "card", "card.id = ct.card_id")
+      .where("immutable_unaccent(ct.name) % :t", { t })
+      .groupBy("ct.card_id")
+      .orderBy("score", "DESC")
       .limit(20);
 
     if (game) {
-      qb.andWhere("card.game = :game", { game });
+      scored.andWhere("card.game = :game", { game });
     }
 
-    return qb.getMany();
+    const rows = await scored.getRawMany<{ cardId: string }>();
+    const ids = rows.map((row) => row.cardId);
+    if (ids.length === 0) return [];
+
+    const cards = await this.cardRepository.find({
+      where: { id: In(ids) },
+      relations: ["set", "pokemonDetails"],
+    });
+
+    const byId = new Map(cards.map((card) => [card.id, card]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((card): card is Card => card !== undefined);
   }
 
   /**
@@ -273,13 +296,21 @@ export class CardService implements OnModuleInit {
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
-    const [data, totalItems] = await this.cardRepository.findAndCount({
-      where: game ? { game } : {},
-      relations: ["set", "pokemonDetails"],
-      skip: offset,
-      take: validLimit,
-      order: { name: "ASC" },
-    });
+    // Card names live in localized translations: sorting uses a subquery on default locale as `order: { name }` does not map to an entity column.
+    const qb = this.cardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .orderBy(localizedNameSql("card"), "ASC")
+      .setParameter("sortLocale", DEFAULT_LOCALE)
+      .skip(offset)
+      .take(validLimit);
+
+    if (game) {
+      qb.where("card.game = :game", { game });
+    }
+
+    const [data, totalItems] = await qb.getManyAndCount();
 
     return PaginationHelper.createPaginatedResult(
       data,
@@ -310,19 +341,30 @@ export class CardService implements OnModuleInit {
   }
 
   /**
-   * Retrieves distinct rarity values for cards in a set.
+   * Retrieves unique card rarities contained within a specific expansion set.
    *
-   * @param setId Set identifier.
+   * @param setId Expansion set ID.
+   * @param locale Desired locale for translated rarity labels.
    * @returns Array of unique rarity strings.
    */
-  async getSetRarities(setId: string): Promise<string[]> {
-    const rows = await this.cardRepository
-      .createQueryBuilder("card")
-      .select("DISTINCT(card.rarity)", "rarity")
+  async getSetRarities(
+    setId: string,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<string[]> {
+    // Rarities are localized labels: return in requested locale with fallback to default locale if missing.
+    const rows = await this.cardTranslationRepository
+      .createQueryBuilder("ct")
+      .select("DISTINCT(ct.rarity)", "rarity")
+      .innerJoin("card", "card", "card.id = ct.card_id")
       .where("card.setId = :setId", { setId })
-      .andWhere("card.rarity IS NOT NULL")
-      .getRawMany();
+      .andWhere("ct.locale = :locale", { locale })
+      .andWhere("ct.rarity IS NOT NULL")
+      .getRawMany<{ rarity: string }>();
 
-    return rows.map((r) => r.rarity).filter(Boolean);
+    if (rows.length === 0 && locale !== DEFAULT_LOCALE) {
+      return this.getSetRarities(setId, DEFAULT_LOCALE);
+    }
+
+    return rows.map((row) => row.rarity).filter(Boolean);
   }
 }

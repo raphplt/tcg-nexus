@@ -1,3 +1,4 @@
+import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
 import { forwardRef, Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Listing } from "src/marketplace/entities/listing.entity";
@@ -12,6 +13,7 @@ import { SealedProductService } from "./sealed-product.service";
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      PokemonSetTranslation,
       SealedProduct,
       SealedProductLocale,
       PokemonSet,

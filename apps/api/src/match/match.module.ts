@@ -1,3 +1,5 @@
+import { CardTranslation } from "src/card/entities/card-translation.entity";
+import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -37,6 +39,7 @@ import { TrainingMatchController } from "./training-match.controller";
     AuthModule,
     RankingModule,
     TypeOrmModule.forFeature([
+      CardTranslation,
       Match,
       OnlineMatchSession,
       TrainingMatchSession,
@@ -52,6 +55,7 @@ import { TrainingMatchController } from "./training-match.controller";
       Card,
       User,
     ]),
+    CatalogLocalizationModule,
   ],
   controllers: [
     MatchController,

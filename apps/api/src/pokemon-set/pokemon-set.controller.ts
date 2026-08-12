@@ -1,3 +1,5 @@
+import { RequestLocale } from "src/translation/request-locale";
+import type { SupportedLocale } from "src/translation/supported-locales";
 import {
   Body,
   Controller,
@@ -81,6 +83,7 @@ export class PokemonSetController {
   async uploadLogo(
     @Param("id") id: string,
     @UploadedFile() file: Express.Multer.File,
+    @RequestLocale() locale: SupportedLocale,
   ) {
     if (!file) {
       throw new BadRequestException("Aucun fichier fourni");
@@ -91,14 +94,15 @@ export class PokemonSetController {
       throw new NotFoundException(`Extension ${id} introuvable`);
     }
 
-    // Supprimer l'ancien logo de R2 s'il existe
-    if (set.logo) {
-      await this.r2StorageService.deleteFile(set.logo);
+    // Logo image is localized: replace existing logo image for current locale.
+    const visual = await this.pokemonSetService.findVisual(id, locale);
+    if (visual?.logo) {
+      await this.r2StorageService.deleteFile(visual.logo);
     }
 
-    const slug = slugify(set.name);
     const extension = path.extname(file.originalname) || ".webp";
-    const key = `sets/${slug}/logo${extension}`;
+    // Storage key derived from set ID, stable across locales and namespaced by locale
+    const key = `sets/${id}/${locale}/logo${extension}`;
     const logoUrl = await this.r2StorageService.uploadFile(
       file.buffer,
       key,
@@ -109,7 +113,7 @@ export class PokemonSetController {
       throw new InternalServerErrorException("Échec de l'upload sur R2");
     }
 
-    return this.pokemonSetService.update(id, { logo: logoUrl });
+    return this.pokemonSetService.updateVisual(id, locale, { logo: logoUrl });
   }
 
   @Post(":id/symbol")
@@ -119,6 +123,7 @@ export class PokemonSetController {
   async uploadSymbol(
     @Param("id") id: string,
     @UploadedFile() file: Express.Multer.File,
+    @RequestLocale() locale: SupportedLocale,
   ) {
     if (!file) {
       throw new BadRequestException("Aucun fichier fourni");
@@ -129,14 +134,13 @@ export class PokemonSetController {
       throw new NotFoundException(`Extension ${id} introuvable`);
     }
 
-    // Supprimer l'ancien symbole de R2 s'il existe
-    if (set.symbol) {
-      await this.r2StorageService.deleteFile(set.symbol);
+    const visual = await this.pokemonSetService.findVisual(id, locale);
+    if (visual?.symbol) {
+      await this.r2StorageService.deleteFile(visual.symbol);
     }
 
-    const slug = slugify(set.name);
     const extension = path.extname(file.originalname) || ".png";
-    const key = `sets/${slug}/symbol${extension}`;
+    const key = `sets/${id}/${locale}/symbol${extension}`;
     const symbolUrl = await this.r2StorageService.uploadFile(
       file.buffer,
       key,
@@ -147,6 +151,8 @@ export class PokemonSetController {
       throw new InternalServerErrorException("Échec de l'upload sur R2");
     }
 
-    return this.pokemonSetService.update(id, { symbol: symbolUrl });
+    return this.pokemonSetService.updateVisual(id, locale, {
+      symbol: symbolUrl,
+    });
   }
 }

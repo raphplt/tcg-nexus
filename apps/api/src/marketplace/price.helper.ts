@@ -4,7 +4,11 @@ import { Currency } from "../common/enums/currency";
 export const round2 = (value: number) => Math.round(value * 100) / 100;
 
 /**
- * Prix de référence externe d'une carte, dans la devise demandée.
+ * Retrieves external reference market price of a card in the specified currency.
+ *
+ * @param pricing Card pricing metadata structure.
+ * @param currency Target currency code.
+ * @returns Market reference price or null.
  */
 export function getMarketReferencePrice(
   pricing: CardPricingData | null | undefined,

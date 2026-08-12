@@ -154,7 +154,7 @@ export class TournamentOrchestrationService {
         );
       }
 
-      // Vérifier que tous les matches du round actuel sont terminés
+      // Verify that all matches for the current round are completed
       const currentRoundMatches = tournament.matches.filter(
         (match) => match.round === tournament.currentRound,
       );
@@ -462,7 +462,7 @@ export class TournamentOrchestrationService {
       );
     }
 
-    // Compter les joueurs confirmés et check-in si requis
+    // Count confirmed players and enforce check-in requirement if active
     let eligiblePlayers = tournament.registrations.filter(
       (reg) => reg.status === RegistrationStatus.CONFIRMED,
     );
@@ -488,7 +488,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Avance un round en élimination
+   * Advances single-elimination tournament to next round.
    */
   private async advanceEliminationRound(
     tournament: Tournament,
@@ -507,11 +507,11 @@ export class TournamentOrchestrationService {
     let playersAdvanced = 0;
     let playersEliminated = 0;
 
-    // Créer les matches du round suivant avec les vainqueurs
+    // Create next round matches pairing up winning players
     const winners: any[] = [];
 
     for (const match of previousRoundMatches) {
-      // Déterminer le gagnant basé sur les scores si winner n'est pas défini
+      // Determine winner based on match scores if winner property is unassigned
       let winner = match.winner;
       if (!winner && match.status === MatchStatus.FINISHED) {
         if ((match.playerAScore ?? 0) > (match.playerBScore ?? 0)) {
@@ -526,7 +526,7 @@ export class TournamentOrchestrationService {
         playersAdvanced++;
       }
 
-      // Marquer les perdants comme éliminés
+      // Mark losing players as eliminated from tournament
       const loser =
         match.playerA?.id === winner?.id ? match.playerB : match.playerA;
       if (loser) {
@@ -546,7 +546,7 @@ export class TournamentOrchestrationService {
       }
     }
 
-    // Créer les matches du prochain round avec await
+    // Create next round matches asynchronously
     for (let i = 0; i < winners.length; i += 2) {
       if (i + 1 < winners.length) {
         await this.matchService.create({

@@ -126,7 +126,7 @@ export class CatalogImportService {
     return { locales, series, sets, ...cards };
   }
 
-  // --- Séries ---------------------------------------------------------------
+  // --- Series ---------------------------------------------------------------
 
   private async importSeries(locales: DatasetLocale[]): Promise<number> {
     const byId = new Map<string, Record<DatasetLocale, unknown>>();
@@ -148,13 +148,7 @@ export class CatalogImportService {
       };
 
       await this.serieRepository.upsert(
-        {
-          id,
-          game: CardGame.Pokemon,
-          // Colonnes héritées : conservées le temps que les lectures basculent.
-          name: fallback.name ? cleanString(fallback.name) : undefined,
-          logo: fallback.logo,
-        },
+        { id, game: CardGame.Pokemon },
         ["id"],
       );
 
@@ -224,9 +218,6 @@ export class CatalogImportService {
           releaseDate: fallback.releaseDate,
           legal: fallback.legal,
           tcgOnline: fallback.tcgOnline,
-          name: fallback.name ? cleanString(String(fallback.name)) : undefined,
-          logo: fallback.logo,
-          symbol: fallback.symbol,
         },
         ["id"],
       );
@@ -262,7 +253,7 @@ export class CatalogImportService {
       (await this.setRepository.find({ select: ["id"] })).map((set) => set.id),
     );
 
-    // Un set est traité dès qu'au moins une langue le fournit.
+    // A set is processed as soon as at least one locale provides it
     const setIds = [
       ...new Set(locales.flatMap((locale) => listSetIds(locale))),
     ].sort();
@@ -344,19 +335,14 @@ export class CatalogImportService {
         legal: fallback.legal,
         pricing: fallback.pricing,
         updated: fallback.updated,
-        // Colonnes héritées, alimentées par la langue de repli.
-        name: fallback.name ? cleanString(String(fallback.name)) : "",
-        image: fallback.image,
-        category: fallback.category,
+        // L'illustrateur est un nom propre : il ne se traduit pas.
         illustrator: fallback.illustrator
           ? cleanString(String(fallback.illustrator))
           : null,
-        rarity: fallback.rarity,
       } as DeepPartial<Card>);
     }
 
-    // `save` renvoie les entités avec leur id, y compris pour les insertions :
-    // c'est ce qui permet de rattacher détails et traductions juste après.
+    // `save` returns entities with IDs (including inserts), allowing details/translations linkage right after
     const saved = await this.cardRepository.save(toSave, {
       chunk: BATCH_SIZE,
     });
@@ -402,21 +388,6 @@ export class CatalogImportService {
         trainerType: mapTrainerType(fallback.trainerType as string),
         energyType: mapEnergyType(fallback.energyType as string),
         boosters: fallback.boosters,
-        // Champs traduits, conservés le temps que les lectures basculent.
-        description: fallback.description
-          ? cleanString(String(fallback.description))
-          : undefined,
-        effect: fallback.effect
-          ? cleanString(String(fallback.effect))
-          : undefined,
-        evolveFrom: fallback.evolveFrom
-          ? cleanString(String(fallback.evolveFrom))
-          : undefined,
-        stage: fallback.stage,
-        suffix: fallback.suffix,
-        item: fallback.item,
-        abilities: fallback.abilities,
-        attacks: fallback.attacks,
       } as DeepPartial<PokemonCardDetails>);
     }
 
@@ -487,13 +458,13 @@ export class CatalogImportService {
       const value = perLocale[locale];
       if (value) return value as T & Record<string, any>;
     }
-    // `perLocale` n'est jamais vide : il est construit à partir des langues lues.
+    // `perLocale` map is non-empty: constructed from parsed dataset languages
     return Object.values(perLocale)[0] as T & Record<string, any>;
   }
 
   /**
-   * Upsert par lots. Une traduction existante est mise à jour, jamais
-   * supprimée : une langue absente d'un run conserve ses valeurs.
+   * Batch upsert. Existing translations are updated without deletion:
+   * locales absent from a run retain previous values.
    */
   private async saveInBatches<T extends object>(
     repository: Repository<T>,

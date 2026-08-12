@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import {
   BadRequestException,
   ForbiddenException,
@@ -209,6 +210,13 @@ describe("MarketplaceService", () => {
         { provide: DataSource, useValue: mockDataSource },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: OrderService, useValue: mockOrderService },
+        {
+          provide: CatalogLocalizationService,
+          useValue: {
+            localize: jest.fn(async (payload) => payload),
+            resolveLabels: jest.fn(async (payload) => payload),
+          },
+        },
       ],
     }).compile();
 
@@ -376,8 +384,9 @@ describe("MarketplaceService", () => {
       expect(qb.andWhere).toHaveBeenCalledWith("listing.price <= :priceMax", {
         priceMax: 100,
       });
+      // Name lives in card_translation: search uses an EXISTS subquery.
       expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining("LOWER(pokemonCard.name) LIKE"),
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
     });
@@ -454,7 +463,7 @@ describe("MarketplaceService", () => {
         price: 10,
         currency: Currency.EUR,
         cardState: CardState.NM,
-        // Valeurs qu'un client tenterait de forcer
+        // Values a client might attempt to override
         shippingCost: 42,
         handlingTimeDays: 25,
       } as CreateListingDto;

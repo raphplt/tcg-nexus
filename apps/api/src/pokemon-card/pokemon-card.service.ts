@@ -1,4 +1,4 @@
-import { applyCardSearch } from "src/card/card-search";
+import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -25,11 +25,9 @@ export class PokemonCardService {
       id: card.id,
       tcgDexId: card.tcgDexId,
       localId: card.localId,
-      name: card.name,
-      image: card.image,
-      category: details?.category ?? card.category,
+      // Name, image, rarity, and category are attached by CatalogLocalizationInterceptor in request locale
+      category: details?.category,
       illustrator: card.illustrator,
-      rarity: card.rarity,
       variants: card.variants,
       variantsDetailed: card.variantsDetailed,
       set: card.set,
@@ -279,7 +277,7 @@ export class PokemonCardService {
     }
 
     if (rarity && rarity.trim() !== "") {
-      qb.andWhere("card.rarity = :rarity", { rarity });
+      applyRarityFilter(qb, rarity);
     }
 
     if (type && type.trim() !== "") {
@@ -322,7 +320,7 @@ export class PokemonCardService {
     }
 
     if (rarity && rarity.trim() !== "") {
-      qb.andWhere("pokemonCard.rarity = :rarity", { rarity });
+      applyRarityFilter(qb, rarity, { alias: "pokemonCard" });
     }
 
     if (setId && setId.trim() !== "") {
@@ -369,8 +367,7 @@ export class PokemonCardService {
         .toLowerCase()
         .trim();
 
-    // Variantes du localId : "063" → ["063", "63"]
-    // pour gérer les BDD qui stockent avec ou sans padding
+    // LocalId variations: "063" → ["063", "63"] to support database records stored with or without leading zero padding
     const rawLocalId = (localId || setNumber || "").trim();
     const localIdVariants: string[] = [];
     if (rawLocalId) {
@@ -385,8 +382,7 @@ export class PokemonCardService {
       }
     }
 
-    // ── ÉTAPE 1 : requête AND (nom + numéro ensemble) ────────────────────
-    // Plus précise — si les deux critères sont disponibles
+    // ── STEP 1: Strict AND query (name + set number combined) ─────────────
     let cards: Card[] = [];
 
     if (cardName?.trim() && localIdVariants.length > 0) {
@@ -411,7 +407,7 @@ export class PokemonCardService {
       cards = await andQb.getMany();
     }
 
-    // ── ÉTAPE 2 : fallback OR si rien trouvé ────────────────────────────
+    // ── STEP 2: Fallback OR query if no match ──────────────────────────────
     if (cards.length === 0) {
       const orConditions: string[] = [];
       const orParams: Record<string, string> = {};
@@ -467,7 +463,7 @@ export class PokemonCardService {
       const nLocalId = norm(card.localId);
       const nSet = norm(card.set?.name);
 
-      // LocalId
+      // LocalId matching
       const localIdExact = nLocalIdVariants.some((v) => v && nLocalId === v);
       const localIdPartial =
         !localIdExact &&
@@ -476,7 +472,7 @@ export class PokemonCardService {
       if (localIdExact) score += 60;
       else if (localIdPartial) score += 30;
 
-      // Nom
+      // Card Name matching
       const nameExact = nTargetName && nName === nTargetName;
       const nameContains =
         !nameExact && nTargetName && nName.includes(nTargetName);
@@ -491,11 +487,7 @@ export class PokemonCardService {
       else if (nameContains) score += 30;
       else if (namePartial) score += 20;
 
-      // ★ BONUS COMBINÉ — le cœur du fix ★
-      // Seule une carte qui a à la fois le bon nom ET le bon numéro reçoit ce bonus.
-      // "Abra 063" → score 60+50+120 = 230
-      // "Machop 063" → score 60 seulement
-      // "Abra 025" → score 50 seulement (si OCR donne 063 comme numéro)
+      // Combined Bonus (Bonus applied when both card name and localId match)
       const hasName = nameExact || nameContains || namePartial;
       const hasLocalId = localIdExact || localIdPartial;
       if (hasName && hasLocalId) score += 120;

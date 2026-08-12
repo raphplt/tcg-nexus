@@ -1,3 +1,14 @@
+import { CardService } from "src/card/card.service";
+import {
+  DEFAULT_LOCALE,
+  type SupportedLocale,
+} from "src/translation/supported-locales";
+import {
+  applyCardSearch,
+  applyRarityFilter,
+  localizedNameSql,
+  localizedRaritySql,
+} from "src/card/card-search";
 import {
   ForbiddenException,
   Injectable,
@@ -31,6 +42,7 @@ export class CollectionService {
     private cardStateRepository: Repository<CardState>,
     @InjectRepository(PokemonSet)
     private pokemonSetRepository: Repository<PokemonSet>,
+    private readonly cardService: CardService,
   ) {}
 
   private async getOwnedCollection(
@@ -434,10 +446,7 @@ export class CollectionService {
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
-        queryBuilder.andWhere(
-          "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search)",
-          { search: `%${search}%` },
-        );
+        applyCardSearch(queryBuilder, search);
       }
 
       if (setId) {
@@ -447,7 +456,7 @@ export class CollectionService {
         queryBuilder.andWhere("serie.id = :serieId", { serieId });
       }
       if (rarity) {
-        queryBuilder.andWhere("card.rarity = :rarity", { rarity });
+        applyRarityFilter(queryBuilder, rarity);
       }
       if (cardState) {
         queryBuilder.andWhere("item.cardState.code = :cardState", {
@@ -466,13 +475,11 @@ export class CollectionService {
           id: item?.id ?? null,
           quantity: item?.quantity ?? 0,
           added_at: item?.added_at ?? null,
+          // `tcgDexId` allows `CatalogLocalizationInterceptor` to attach localized name, image, rarity, and category
           pokemonCard: {
             id: card.id,
-            name: card.name,
-            image: card.image,
+            tcgDexId: card.tcgDexId,
             localId: card.localId,
-            rarity: card.rarity,
-            category: card.category,
             updated: card.updated,
             set: card.set,
           },
@@ -505,10 +512,7 @@ export class CollectionService {
       .where("item.collection.id = :collectionId", { collectionId });
 
     if (search) {
-      queryBuilder.andWhere(
-        "(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)",
-        { search: `%${search}%` },
-      );
+      applyCardSearch(queryBuilder, search, { alias: "pokemonCard" });
     }
 
     if (setId) {
@@ -520,7 +524,7 @@ export class CollectionService {
     }
 
     if (rarity) {
-      queryBuilder.andWhere("pokemonCard.rarity = :rarity", { rarity });
+      applyRarityFilter(queryBuilder, rarity, { alias: "pokemonCard" });
     }
 
     if (cardState) {
@@ -535,11 +539,13 @@ export class CollectionService {
     ];
     const sortField = validSortBy.includes(sortBy) ? sortBy : "added_at";
 
-    if (
-      sortField === "pokemonCard.name" ||
-      sortField === "pokemonCard.rarity"
-    ) {
-      queryBuilder.orderBy(sortField, sortOrder);
+    if (sortField === "pokemonCard.name") {
+      // Card name and rarity originate from localized translations: sorting defaults to default locale
+      queryBuilder.setParameter("sortLocale", DEFAULT_LOCALE);
+      queryBuilder.orderBy(localizedNameSql("pokemonCard"), sortOrder);
+    } else if (sortField === "pokemonCard.rarity") {
+      queryBuilder.setParameter("sortLocale", DEFAULT_LOCALE);
+      queryBuilder.orderBy(localizedRaritySql("pokemonCard"), sortOrder);
     } else {
       queryBuilder.orderBy(`item.${sortField}`, sortOrder);
     }
@@ -562,7 +568,10 @@ export class CollectionService {
     };
   }
 
-  async getSetRarities(collectionId: string): Promise<string[]> {
+  async getSetRarities(
+    collectionId: string,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<string[]> {
     const collection = await this.collectionRepository.findOne({
       where: { id: collectionId },
       relations: ["masterSet"],
@@ -576,15 +585,7 @@ export class CollectionService {
       return [];
     }
 
-    const result = await this.cardRepository
-      .createQueryBuilder("card")
-      .select("DISTINCT card.rarity", "rarity")
-      .innerJoin("card.set", "set")
-      .where("set.id = :setId", { setId: collection.masterSet.id })
-      .andWhere("card.rarity IS NOT NULL")
-      .orderBy("card.rarity", "ASC")
-      .getRawMany();
-
-    return result.map((r: { rarity: string }) => r.rarity);
+    // Rarities are localized labels: delegate to CardService which handles locale resolution and fallbacks
+    return this.cardService.getSetRarities(collection.masterSet.id, locale);
   }
 }
