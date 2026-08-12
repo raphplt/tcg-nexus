@@ -3,7 +3,9 @@ import { NEXT_PUBLIC_API_URL } from "./variables";
 
 export const API_BASE_URL =
   NEXT_PUBLIC_API_URL ||
-  (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001");
+  (process.env.NODE_ENV === "production"
+    ? "/api"
+    : "http://localhost:3001/api");
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

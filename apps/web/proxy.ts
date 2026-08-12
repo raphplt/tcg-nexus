@@ -28,7 +28,7 @@ function resolveApiBaseUrl(request: NextRequest): string {
     return `${request.nextUrl.origin}/api`;
   }
 
-  return "http://localhost:3001";
+  return "http://localhost:3001/api";
 }
 
 function buildCookieHeader(request: NextRequest): string {
