@@ -4,24 +4,16 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SmartImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  /** URL affichée si l'image principale échoue (ex. dos de carte). */
+  /** URL shown if the primary image fails, for example a card back. */
   fallbackSrc?: string;
-  /** Classe appliquée au conteneur (positionné). */
+  /** Class applied to the positioned container. */
   wrapperClassName?: string;
-  /** Désactive le skeleton de chargement (ex. petites icônes). */
+  /** Disables the loading skeleton, for example for small icons. */
   noSkeleton?: boolean;
 }
 
 /**
- * Image légère et fluide, sans passer par l'optimiseur Next (pour ne pas
- * surcharger le serveur self-hosted sur des milliers de cartes) :
- *  - `loading="lazy"` + `decoding="async"` (hors du chemin critique) ;
- *  - skeleton animé tant que l'image n'est pas chargée ;
- *  - fondu d'apparition une fois chargée (réduit le « pop » qui donne le
- *    sentiment de lag) ;
- *  - repli automatique sur `fallbackSrc` en cas d'erreur.
- *
- * Le conteneur doit définir les dimensions (ex. `aspect-[3/4] relative`).
+ * Lightweight image component that bypasses Next optimization to avoid overloading a self-hosted server with thousands of cards. It lazy-loads, shows a loading skeleton, fades in, and falls back to `fallbackSrc`. The container must define its dimensions, for example `aspect-[3/4] relative`.
  */
 export function SmartImage({
   src,
@@ -42,7 +34,7 @@ export function SmartImage({
       {!loaded && !noSkeleton && (
         <span className="absolute inset-0 animate-pulse rounded-[inherit] bg-muted" />
       )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
+
       <img
         src={effectiveSrc}
         alt={alt}

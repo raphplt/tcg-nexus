@@ -20,7 +20,6 @@ export default function MyTournamentsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("active");
 
-  // Fetch tournaments associated with current player
   const { data: paginatedTournaments, isLoading } = useQuery<
     PaginatedResult<Tournament>
   >({
@@ -47,7 +46,6 @@ export default function MyTournamentsPage() {
 
   const playerTournaments = paginatedTournaments?.data || [];
 
-  // Group tournaments by lifecycle status
   const activeTournaments = playerTournaments.filter(
     (t) =>
       t.status === "registration_open" ||
@@ -63,13 +61,11 @@ export default function MyTournamentsPage() {
     (t) => t.status === "cancelled",
   );
 
-  // Overall player performance statistics
   const stats = {
     total: playerTournaments.length,
     active: activeTournaments.length,
     finished: finishedTournaments.length,
     wins: finishedTournaments.filter((t) => {
-      // Check if current player ranked #1 (tournament winner)
       const playerRanking = t.rankings?.find(
         (r) => r.player.id === user?.player?.id,
       );
@@ -108,7 +104,6 @@ export default function MyTournamentsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <H1 className="mb-2">{t("title")}</H1>
@@ -123,10 +118,8 @@ export default function MyTournamentsPage() {
           </Button>
         </div>
 
-        {/* Statistiques globales */}
         <TournamentStats stats={stats} />
 
-        {/* Onglets par statut */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="active" className="flex items-center gap-2">

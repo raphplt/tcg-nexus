@@ -103,7 +103,6 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
               <FormItem className="space-y-3 mb-6">
                 <FormLabel>{t("profile.avatar")}</FormLabel>
                 <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-lg border bg-card/50">
-                  {/* Preview */}
                   <div className="relative flex-shrink-0">
                     <Avatar className="w-20 h-20 border-2 border-border shadow-md">
                       <AvatarImage
@@ -143,7 +142,7 @@ export const ProfileForm = ({ user }: ProfileFormProps) => {
                       </button>
                     )}
                   </div>
-                  {/* Selector Grid */}
+
                   <div className="flex-1 space-y-2">
                     <p className="text-xs text-muted-foreground text-center sm:text-left">
                       {t("profile.avatarHelp")}

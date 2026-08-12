@@ -12,12 +12,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export type TabId =
-  | "overview"
-  | "participants"
-  | "matches"
-  | "rankings"
-  | "rules"
-  | "organizers";
+  "overview" | "participants" | "matches" | "rankings" | "rules" | "organizers";
 
 interface Tab {
   id: TabId;
@@ -121,7 +116,6 @@ export function VerticalTabs({
   );
 }
 
-// Version mobile avec tabs horizontaux scrollables
 export function MobileTabBar({
   activeTab,
   onTabChange,

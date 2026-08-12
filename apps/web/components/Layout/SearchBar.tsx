@@ -322,7 +322,6 @@ function SearchFooterHints() {
   );
 }
 
-// Re-export pour usage externe éventuel (ex : menu customisé)
 export { getSearchItemIcon };
 
 export default SearchBar;

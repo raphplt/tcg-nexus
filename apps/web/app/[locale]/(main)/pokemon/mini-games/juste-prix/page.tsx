@@ -59,7 +59,6 @@ export default function JustePrixPage() {
     "select",
   );
 
-  // --- SOLO & LOCAL PVP STATE ---
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<GuessItem[]>([]);
   const [currentRound, setCurrentRound] = useState(1);
@@ -70,7 +69,6 @@ export default function JustePrixPage() {
   >("playing");
   const [soloScore, setSoloScore] = useState(0);
 
-  // Local PvP specifics
   const [p1Guess, setP1Guess] = useState<number | null>(null);
   const [p2Guess, setP2Guess] = useState<number | null>(null);
   const [localPvpTurn, setLocalPvpTurn] = useState<"p1" | "p2" | "reveal">(
@@ -80,7 +78,6 @@ export default function JustePrixPage() {
   const [p2Score, setP2Score] = useState(0);
   const [localGuessesCount, setLocalGuessesCount] = useState(0);
 
-  // --- ONLINE PVP STATE ---
   const socketRef = useRef<Socket | null>(null);
   const [onlineSessionId, setOnlineSessionId] = useState<string | null>(null);
   const [onlineQueueStatus, setOnlineQueueStatus] = useState<
@@ -102,7 +99,6 @@ export default function JustePrixPage() {
     return new URL(API_BASE_URL, window.location.origin).toString();
   }, []);
 
-  // --- SOCKET CONNECTION & EVENTS ---
   useEffect(() => {
     if (mode !== "online" || !socketBaseUrl) {
       socketRef.current?.disconnect();
@@ -482,7 +478,6 @@ export default function JustePrixPage() {
 
   return (
     <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
-      {/* Main Header */}
       <div className="tcg-surface p-4 flex items-center justify-between bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link href="/pokemon/mini-games">
@@ -546,7 +541,6 @@ export default function JustePrixPage() {
         </div>
       </div>
 
-      {/* LOADING STATE */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin h-10 w-10 text-primary" />
@@ -556,7 +550,6 @@ export default function JustePrixPage() {
         </div>
       )}
 
-      {/* MODE SELECTION SCREEN */}
       {!loading && mode === "select" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-6">
           <Card className="tcg-surface tcg-surface--hover transition-all">
@@ -627,10 +620,8 @@ export default function JustePrixPage() {
         </div>
       )}
 
-      {/* ACTIVE GAME: SOLO OR LOCAL */}
       {!loading && (mode === "solo" || mode === "local") && currentItem && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-4">
-          {/* Visual Item Display */}
           <div className="lg:col-span-5 flex flex-col items-center gap-4">
             <div className="text-sm font-semibold">
               Manche {currentRound} / {items.length}
@@ -672,9 +663,7 @@ export default function JustePrixPage() {
             </div>
           </div>
 
-          {/* Game Input & Details Area */}
           <div className="lg:col-span-7 space-y-6">
-            {/* SOLO MODE DETAILS */}
             {mode === "solo" && (
               <div className="space-y-4">
                 {roundResult === "playing" ? (
@@ -698,7 +687,6 @@ export default function JustePrixPage() {
                       </Button>
                     </div>
 
-                    {/* Solo Guess history */}
                     {soloGuesses.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-bold text-muted-foreground uppercase">
@@ -771,7 +759,6 @@ export default function JustePrixPage() {
               </div>
             )}
 
-            {/* LOCAL PVP MODE DETAILS */}
             {mode === "local" && (
               <div className="space-y-4">
                 {localPvpTurn !== "reveal" ? (
@@ -895,7 +882,6 @@ export default function JustePrixPage() {
         </div>
       )}
 
-      {/* RESULTS SCREEN (SOLO OR LOCAL) */}
       {!loading && (mode === "solo" || mode === "local") && !currentItem && (
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -966,7 +952,6 @@ export default function JustePrixPage() {
         </motion.div>
       )}
 
-      {/* ONLINE LOBBY / MATCHMAKING */}
       {mode === "online" && !onlineSession && (
         <Card className="tcg-surface mx-auto max-w-xl bg-card text-center shadow-sm">
           <CardContent className="space-y-4 p-8">
@@ -1021,10 +1006,8 @@ export default function JustePrixPage() {
         </Card>
       )}
 
-      {/* ONLINE PVP MODE GAMEPLAY */}
       {mode === "online" && onlineSession && (
         <div className="space-y-6 pt-4">
-          {/* MATCH STATS / STATUS */}
           {onlineSession.state === "waiting" && (
             <div className="text-center py-10 border border-border rounded-xl shadow-sm bg-card">
               <Loader2 className="animate-spin h-8 w-8 mx-auto text-primary mb-3" />
@@ -1076,17 +1059,14 @@ export default function JustePrixPage() {
             </div>
           )}
 
-          {/* ACTIVE PLAYING SCREEN */}
           {onlineSession.state === "playing" && currentItem && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Visual Item Display */}
               <div className="lg:col-span-5 flex flex-col items-center gap-4">
                 <div className="text-sm font-semibold">
                   Manche {onlineSession.round} / {onlineSession.maxRounds}
                 </div>
                 <Card className="border border-border bg-zinc-800 dark:bg-zinc-900 rounded-xl shadow-md overflow-hidden w-full max-w-64">
                   <CardContent className="p-4 flex justify-center items-center relative aspect-[5/7]">
-                    {/* Timer bar */}
                     {!onlineReveal && (
                       <div className="absolute -top-3 -right-3 z-30 flex items-center gap-1 border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg px-3 py-1 text-xs font-semibold">
                         <Clock className="h-3.5 w-3.5" />
@@ -1121,7 +1101,6 @@ export default function JustePrixPage() {
                 </div>
               </div>
 
-              {/* Input guess or reveal */}
               <div className="lg:col-span-7 space-y-6">
                 {!onlineReveal ? (
                   <div className="space-y-4">
@@ -1199,7 +1178,6 @@ export default function JustePrixPage() {
                       </span>
                     </div>
 
-                    {/* Ready button for next round */}
                     <div>
                       {onlineSession.players.find(
                         (p: any) => p.userId === selfId,
@@ -1224,7 +1202,6 @@ export default function JustePrixPage() {
             </div>
           )}
 
-          {/* GAME FINISHED SCREEN */}
           {onlineSession.state === "finished" && (
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}

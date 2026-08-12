@@ -41,13 +41,12 @@ class SealedEventTracker {
         context,
       });
     } catch (error) {
-      // Échec silencieux pour ne pas perturber l'UX
       console.debug("Failed to record sealed event:", error);
     }
   }
 
   /**
-   * Track une vue de produit scellé (avec déduplication par session)
+   * Tracks a sealed-product view with session-level deduplication.
    */
   async trackView(
     sealedProductId: string,

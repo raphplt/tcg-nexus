@@ -1,11 +1,12 @@
 /**
- * Importe le catalogue Pokémon (séries, sets, cartes et traductions) depuis le
- * dataset local, sans rejouer le seed de démonstration.
+ * Imports the Pokémon catalog (series, sets, cards and translations) from the
+ * local dataset, without replaying the demo seed.
  *
- *   npm run import:catalog                # toutes les langues du dataset
- *   LOCALES=en npm run import:catalog     # une seule langue
+ *   npm run import:catalog                # every locale in the dataset
+ *   LOCALES=en npm run import:catalog     # a single locale
  *
- * Le dataset se récupère avec `npm run data:pull` dans apps/fetch.
+ * The dataset ships with the repository; `npm run data:pull` in apps/fetch
+ * refreshes it from R2.
  */
 import { NestFactory } from "@nestjs/core";
 import { isDatasetLocale, type DatasetLocale } from "@repo/pokemon-dataset";

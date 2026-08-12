@@ -126,7 +126,7 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  // Sans cet appel, toute page utilisant une traduction bascule en dynamique.
+  // NOTE: This marks localized pages as statically renderable.
   setRequestLocale(locale);
 
   return (

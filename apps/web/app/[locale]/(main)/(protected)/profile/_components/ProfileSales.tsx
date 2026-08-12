@@ -83,7 +83,6 @@ export const ProfileSales = () => {
         status: newStatus,
       });
 
-      // Optimistic update
       setListings((prev) =>
         prev.map((l) =>
           l.id === listing.id ? { ...l, status: newStatus } : l,

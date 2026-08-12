@@ -23,7 +23,6 @@ export function isSupportedLocale(value: unknown): value is SupportedLocale {
   );
 }
 
-// Récupérer la langue depuis le pathname
 export function getLocaleFromPathname(
   pathname: string,
 ): SupportedLocale | null {
@@ -31,7 +30,6 @@ export function getLocaleFromPathname(
   return isSupportedLocale(segment) ? segment : null;
 }
 
-// Retirer le préfixe de locale d'un pathname
 export function stripLocaleFromPathname(pathname: string): string {
   const locale = getLocaleFromPathname(pathname);
   if (!locale) {

@@ -87,7 +87,6 @@ export default function TournamentAdminPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
@@ -178,7 +177,6 @@ export default function TournamentAdminPage() {
                           </div>
                         </div>
 
-                        {/* Statut du round actuel */}
                         {(() => {
                           const currentRoundMatches =
                             tournament.matches?.filter(

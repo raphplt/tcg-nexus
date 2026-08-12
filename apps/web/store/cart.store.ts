@@ -8,7 +8,6 @@ interface CartState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   fetchCart: () => Promise<void>;
   addItem: (data: CreateCartItemDto) => Promise<void>;
   updateItem: (itemId: number, data: UpdateCartItemDto) => Promise<void>;
@@ -42,7 +41,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await cartService.addItemToCart(data);
-      // Recharger le panier après ajout
+
       await get().fetchCart();
     } catch (error: any) {
       set({
@@ -58,7 +57,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await cartService.updateCartItem(itemId, data);
-      // Recharger le panier après mise à jour
+
       await get().fetchCart();
     } catch (error: any) {
       set({
@@ -75,7 +74,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await cartService.removeItemFromCart(itemId);
-      // Mettre à jour le panier localement sans recharger
+
       const currentCart = get().cart;
       if (currentCart) {
         set({
@@ -132,7 +131,6 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 }));
 
-// Sélecteurs utiles
 export const useCartItems = () =>
   useCartStore((state) => state.cart?.cartItems || []);
 export const useCartTotal = () =>

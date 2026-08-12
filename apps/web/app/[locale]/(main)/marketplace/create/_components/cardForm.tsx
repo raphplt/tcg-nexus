@@ -185,7 +185,7 @@ const CardForm = () => {
         form.reset();
         setSelectedCard(null);
         toast.success(t("success"));
-        // Use the pokemonCardId (UUID) for the redirect, not the listing id
+
         router.push(`/marketplace/cards/${data.cardId}`);
       } else {
         toast.error(t("error"));
@@ -209,7 +209,6 @@ const CardForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Selected Card Preview */}
         {selectedCard && (
           <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/5 via-background to-secondary/10 shadow-lg overflow-hidden">
             <CardHeader className="pb-3">
@@ -265,7 +264,6 @@ const CardForm = () => {
           </Card>
         )}
 
-        {/* Card Selection */}
         {!selectedCard && (
           <Card className="border border-border/60 shadow-lg">
             <CardHeader className="space-y-1">
@@ -286,7 +284,6 @@ const CardForm = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search & Sort */}
               <div className="flex flex-col lg:flex-row gap-3">
                 <div className="flex-1">
                   <Label className="sr-only">{t("search")}</Label>
@@ -332,7 +329,6 @@ const CardForm = () => {
                 </Select>
               </div>
 
-              {/* Filters */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
                 <FilterSelect
                   label={t("series")}
@@ -404,7 +400,6 @@ const CardForm = () => {
 
               <Separator />
 
-              {/* Card Grid */}
               {cardsLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                   {Array.from({ length: 8 }).map((_, i) => (
@@ -485,7 +480,6 @@ const CardForm = () => {
           </Card>
         )}
 
-        {/* Sale Details */}
         <Card className="border border-primary/20 shadow-lg bg-gradient-to-br from-secondary/5 via-background to-primary/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -647,7 +641,6 @@ const CardForm = () => {
           </CardContent>
         </Card>
 
-        {/* Actions */}
         <div className="flex justify-end gap-3">
           <Button variant="secondary" type="button" asChild>
             <Link href="/marketplace">{t("cancel")}</Link>

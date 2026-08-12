@@ -73,7 +73,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
   const hasSupportedEngine =
     !tournament.isExternal && tournament.type === "single_elimination";
 
-  // Configuration des actions disponibles selon l'état
   const getAvailableActions = (): ActionConfig[] => {
     const actions: ActionConfig[] = [];
 
@@ -129,7 +128,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
 
       case "in_progress":
         if (permissions.canManageTournament) {
-          // Vérifier si on peut passer au round suivant
           const currentRound = tournament.currentRound || 1;
           const totalRounds = tournament.totalRounds || 1;
           const currentRoundMatches =
@@ -140,9 +138,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
               (m) => m.status === "finished" || m.status === "forfeit",
             );
 
-          // Afficher le bouton "Passer au round suivant" si :
-          // - Tous les matches du round actuel sont terminés
-          // - Ce n'est pas le dernier round
           if (allCurrentRoundFinished && currentRound < totalRounds) {
             actions.push({
               action: "advance-round",
@@ -157,7 +152,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         break;
     }
 
-    // Action d'annulation toujours disponible (sauf si terminé)
     if (
       tournament.status !== "finished" &&
       tournament.status !== "cancelled" &&
@@ -254,7 +248,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Statut actuel */}
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">{t("status")}</span>
             <Badge className={statusInfo.color}>
@@ -274,7 +267,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
               </div>
             )}
 
-          {/* Actions disponibles */}
           <div className="space-y-2">
             {actions.length > 0 ? (
               actions.map((actionConfig) => (
@@ -302,7 +294,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             )}
           </div>
 
-          {/* Informations de progression */}
           {tournament.status === "in_progress" && (
             <div className="pt-4 border-t">
               <div className="text-sm space-y-1">
@@ -330,7 +321,6 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         </CardContent>
       </Card>
 
-      {/* Modales de confirmation */}
       <AlertDialog
         open={!!confirmAction}
         onOpenChange={() => setConfirmAction(null)}

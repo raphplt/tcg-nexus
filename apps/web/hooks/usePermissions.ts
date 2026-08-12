@@ -17,7 +17,6 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
       };
     }
 
-    // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = tournament.organizers?.some(
       (org) => org.user?.id === user.id,
     );
@@ -26,11 +25,9 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
       (org) => org.user?.id === user.id,
     )?.role;
 
-    // Permissions système
     const isAdmin = user.role === UserRole.ADMIN;
     const isModerator = user.role === UserRole.MODERATOR;
 
-    // Permissions organisateur
     const isOwner = organizerRole === "owner";
     const isTournamentAdmin = organizerRole === "admin";
     const isTournamentModerator = organizerRole === "moderator";
@@ -40,34 +37,27 @@ export function usePermissions(user: User | null, tournament?: Tournament) {
     const canModerate = canManage || isTournamentModerator || isJudge;
 
     return {
-      // Gestion générale du tournoi
       canManageTournament: canManage,
       canStartTournament: canManage,
       canFinishTournament: canManage,
       canCancelTournament: canManage,
 
-      // Gestion des inscriptions
       canManageRegistrations: canModerate,
       canConfirmRegistrations: canModerate,
       canViewRegistrations: canModerate,
 
-      // Gestion des matches
       canReportAnyScore: canModerate,
       canResetMatches: canModerate,
       canStartMatches: canModerate,
 
-      // Vues
       canViewAdmin: isOrganizer || isAdmin || isModerator,
       canViewPrivateData: canModerate,
 
-      // Rôles
       userRole: organizerRole || user.role?.toLowerCase(),
       isOrganizer,
       isSystemAdmin: isAdmin,
 
-      // Helpers
       canReportMatchScore: (match: Match) => {
-        // Un joueur peut reporter le score de son propre match
         const isPlayerInMatch =
           (match.playerA?.user?.id && match.playerA.user.id === user.id) ||
           (match.playerB?.user?.id && match.playerB.user.id === user.id);
@@ -88,7 +78,6 @@ export function useMatchPermissions(user: User | null, match?: Match) {
       };
     }
 
-    // Vérifier si l'utilisateur est un des joueurs du match
     const isPlayerA = match.playerA?.user?.id
       ? match.playerA.user.id === user.id
       : false;
@@ -97,7 +86,6 @@ export function useMatchPermissions(user: User | null, match?: Match) {
       : false;
     const isPlayerInMatch = isPlayerA || isPlayerB;
 
-    // Vérifier si l'utilisateur est organisateur du tournoi
     const isOrganizer = match.tournament?.organizers?.some(
       (org) => org.user?.id === user.id,
     );

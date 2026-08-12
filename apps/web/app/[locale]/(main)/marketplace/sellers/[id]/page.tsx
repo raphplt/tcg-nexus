@@ -76,19 +76,16 @@ export default function SellerPage() {
     "all",
   );
 
-  // Reset to page 1 on filter/search change
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, sortBy, sortOrder, productKind]);
 
-  // Fetch seller statistics
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["seller-stats", sellerId],
     queryFn: () => marketplaceService.getSellerStatistics(sellerId),
     enabled: !!sellerId && !isNaN(sellerId),
   });
 
-  // Fetch seller listings
   const { data: listings, isLoading: loadingListings } = useQuery({
     queryKey: [
       "seller-listings",
@@ -283,7 +280,6 @@ export default function SellerPage() {
             </div>
           </div>
 
-          {/* Filtres et recherche */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

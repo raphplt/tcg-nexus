@@ -109,7 +109,6 @@ export function TournamentHeroBanner({
       await onUnregister();
       setShowUnregisterDialog(false);
     } catch {
-      // Le parent affiche le message d'erreur et la confirmation reste ouverte.
     } finally {
       setIsUnregistering(false);
     }

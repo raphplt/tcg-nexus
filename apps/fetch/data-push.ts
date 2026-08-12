@@ -1,11 +1,12 @@
 /**
- * Publie le dataset local sur R2, d'où `npm run data:pull` le récupérera.
+ * Publishes the local dataset to R2, where `npm run data:pull` picks it up.
  *
- *   npm run data:push                 # toutes les langues présentes dans data/
- *   LOCALES=en npm run data:push      # une seule langue
- *   npm run data:push -- --force      # renvoie tout, sans comparer au distant
+ *   npm run data:push                 # every locale present in data/
+ *   LOCALES=en npm run data:push      # a single locale
+ *   npm run data:push -- --force      # re-uploads everything, no remote diff
  *
- * Réservé au mainteneur : nécessite les credentials R2.
+ * Maintainer only: requires the R2 credentials. The repository remains the
+ * source of truth; this refreshes deployed environments between releases.
  */
 import {
   buildManifest,
@@ -28,7 +29,7 @@ import {
 import { assertR2Config, uploadBufferToR2 } from "./r2.js";
 
 const UPLOAD_CONCURRENCY = 8;
-/** Le dataset évolue à chaque run du scraper : pas de cache CDN figé. */
+/** The dataset changes on every scraper run: no frozen CDN cache. */
 const DATASET_CACHE_CONTROL = "no-cache";
 
 const dataDir = resolveDataDir();
@@ -42,7 +43,7 @@ function contentTypeOf(relativePath: string): string {
     : "application/octet-stream";
 }
 
-/** Langues demandées qui ont effectivement des cartes sur disque. */
+/** Requested locales that actually have cards on disk. */
 function localesToPublish(): DatasetLocale[] {
   return localesFromEnv().filter((locale) => {
     const hasCards = listSetIds(locale, dataDir).length > 0;
@@ -55,7 +56,7 @@ function localesToPublish(): DatasetLocale[] {
   });
 }
 
-/** Manifeste déjà publié, pour n'envoyer que le delta. */
+/** Already published manifest, used to upload only the delta. */
 async function fetchRemoteManifest(): Promise<DatasetManifest | null> {
   try {
     const response = await fetch(publicUrl(MANIFEST_KEY), {
@@ -130,8 +131,8 @@ async function push() {
     return;
   }
 
-  // Publié en dernier : tant que le manifeste n'a pas changé, un `data:pull`
-  // concurrent continue de voir la version précédente, cohérente.
+  // Published last: until the manifest changes, a concurrent `data:pull`
+  // keeps seeing the previous, consistent version.
   const published = await uploadBufferToR2(
     Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`),
     MANIFEST_KEY,

@@ -17,8 +17,7 @@ function apiBaseUrl(): string {
 }
 
 /**
- * Les overrides sont éditables depuis l'administration : on les relit
- * périodiquement plutôt qu'à chaque rendu.
+ * Administrative translation overrides are periodically reloaded instead of fetched on every render.
  */
 async function fetchOverrides(): Promise<Overrides> {
   if (cache && cache.expiresAt > Date.now()) {
@@ -36,8 +35,7 @@ async function fetchOverrides(): Promise<Overrides> {
     cache = { overrides, expiresAt: Date.now() + CACHE_TTL_MS };
     return overrides;
   } catch {
-    // l'API indisponible ne doit pas casser le rendu : on garde les
-    // dictionnaires du dépôt, quitte à servir des traductions un peu datées
+
     return cache?.overrides ?? {};
   }
 }
@@ -59,7 +57,7 @@ function applyOverride(tree: Messages, keyPath: string, value: string): void {
   node[parts[parts.length - 1]!] = value;
 }
 
-/** Dictionnaire du dépôt, surchargé par les traductions éditées en base. */
+/** Repository dictionary overridden by translations edited in the database. */
 export async function loadMessages(locale: SupportedLocale): Promise<Messages> {
   const base = (await import(`../messages/${locale}.json`)).default as Messages;
   const overrides = (await fetchOverrides())[locale];

@@ -63,7 +63,6 @@ export function ListingsTable({
   const t = useTranslations("ListingsTable");
   const { formatPrice } = useCurrencyStore();
 
-  // Sort listings by lowest total cost (price + shipping) first
   const sortedListings = useMemo(
     () =>
       [...listings].sort(

@@ -26,7 +26,6 @@ import { pokemonCardService } from "@/services/pokemonCard.service";
 import { PokemonCardsType } from "@/types/enums/pokemonCardsType";
 import { getCardImage } from "@/utils/images";
 
-// Filet de secours si la base est indisponible / le pool trop petit.
 const POPULAR_POKEMON = [
   "Pikachu",
   "Dracaufeu",
@@ -70,8 +69,8 @@ interface DifficultyConfig {
   labelKey: string;
   descKey: string;
   time: number;
-  baseBlur: number; // Initial round blur intensity (maximum)
-  minBlur: number; // Floor blur intensity at timer end (always obscured)
+  baseBlur: number;
+  minBlur: number;
   brightness: number;
   mult: number;
   distractors: "far" | "mix" | "similar";
@@ -165,10 +164,7 @@ const genOf = (dexId?: number): number => {
 const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => 0.5 - Math.random());
 
 /**
- * Construit 4 propositions (1 correcte + 3 distracteurs) à partir du pool réel
- * de cartes. La nature des distracteurs dépend de la difficulté :
- *  - "similar" : partagent un type OU la génération de la cible (piège) ;
- *  - "far"     : ni type ni génération en commun (facile) ;
+ * Builds four choices from the actual card pool: one correct answer and three distractors. Similar distractors share the target's type or generation, whereas distant ones share neither.
  *  - "mix"     : n'importe lesquels.
  */
 function buildOptions(
@@ -207,7 +203,6 @@ function buildOptions(
     .slice(0, 3)
     .map((c) => c.name);
 
-  // Complément de secours si le pool n'a pas fourni assez de noms.
   for (const cand of shuffle(POPULAR_POKEMON)) {
     if (picks.length >= 3) break;
     if (
@@ -246,7 +241,6 @@ export default function WhosThatPokemonPage() {
 
   const cfg = difficulty ? DIFFICULTIES[difficulty] : null;
 
-  // Pool de distracteurs (une fois par partie).
   const loadPool = useCallback(async () => {
     try {
       const res = await pokemonCardService.getPaginated({ limit: 120 });
@@ -258,7 +252,6 @@ export default function WhosThatPokemonPage() {
     }
   }, []);
 
-  // Tire une carte Pokémon (pas Dresseur / Énergie) pour la manche.
   const fetchPokemonCard = useCallback(async () => {
     let c = await pokemonCardService.getRandom();
     let tries = 0;
@@ -328,7 +321,7 @@ export default function WhosThatPokemonPage() {
 
       if (correct && cfg) {
         const speedRatio = Math.max(0, timeLeft) / cfg.time;
-        const base = 60 + Math.round(speedRatio * 40); // 60..100
+        const base = 60 + Math.round(speedRatio * 40);
         const withMult = base * cfg.mult;
         const newStreak = streak + 1;
         const streakBonus = Math.round(
@@ -357,7 +350,6 @@ export default function WhosThatPokemonPage() {
     }
   };
 
-  // Chrono + défloutage progressif.
   useEffect(() => {
     if (mode !== "play" || gameState !== "playing" || loading || gameOver)
       return;
@@ -394,7 +386,6 @@ export default function WhosThatPokemonPage() {
       className="flex flex-col items-center space-y-6"
     >
       <div className="w-full max-w-2xl space-y-6">
-        {/* Header */}
         <div className="tcg-surface flex items-center justify-between bg-card/50 p-4 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <Link href="/pokemon/mini-games">
@@ -434,7 +425,6 @@ export default function WhosThatPokemonPage() {
           )}
         </div>
 
-        {/* SELECT DIFFICULTY */}
         {mode === "select" && (
           <div className="space-y-4">
             <H3 className="text-center font-heading text-lg font-bold">
@@ -485,7 +475,6 @@ export default function WhosThatPokemonPage() {
           </div>
         )}
 
-        {/* GAME OVER */}
         {mode === "play" && gameOver && (
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -531,7 +520,6 @@ export default function WhosThatPokemonPage() {
           </motion.div>
         )}
 
-        {/* PLAYING */}
         {mode === "play" && !gameOver && (
           <Card className="tcg-surface overflow-hidden bg-card/85 backdrop-blur-sm">
             <CardContent className="p-6">
@@ -544,7 +532,6 @@ export default function WhosThatPokemonPage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-8 md:flex-row">
-                  {/* Visuel brouillé */}
                   <div className="relative flex w-full max-w-60 shrink-0 flex-col items-center justify-center">
                     <div
                       className={`absolute -right-3 -top-3 z-30 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black ${
@@ -570,9 +557,7 @@ export default function WhosThatPokemonPage() {
                               : "scale-95 select-none pointer-events-none"
                           }`}
                           style={{
-                            // Une carte est un rectangle opaque : pas de vraie
-                            // silhouette détourée possible. On masque par un flou
-                            // obscurci qui s'atténue avec le temps, levé à la révélation.
+
                             filter: revealed
                               ? "none"
                               : `blur(${blurNow.toFixed(1)}px) brightness(${cfg?.brightness ?? 0.5}) saturate(1.15)`,
@@ -582,7 +567,6 @@ export default function WhosThatPokemonPage() {
                     </div>
                   </div>
 
-                  {/* Réponses / résultat */}
                   <div className="flex w-full flex-1 flex-col justify-between gap-6">
                     {gameState === "playing" ? (
                       <div className="space-y-4">

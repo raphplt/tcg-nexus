@@ -14,10 +14,9 @@ export function useRankings(tournamentId: string) {
     queryKey: ["tournament", tournamentId, "rankings"],
     queryFn: () => tournamentService.getRankings(id),
     enabled: !!id,
-    refetchInterval: 60000, // Refresh toutes les minutes
+    refetchInterval: 60000,
   });
 
-  // Helper functions
   const getPlayerRanking = (playerId: number) => {
     return rankings?.find((ranking) => ranking.player.id === playerId);
   };
@@ -64,28 +63,24 @@ export function useRankings(tournamentId: string) {
         playerId: current.player.id,
         currentRank: current.rank,
         previousRank: previous?.rank,
-        change, // Positif = montée, négatif = descente
+        change,
         isNew: !previous,
       };
     });
   };
 
   return {
-    // Données
     rankings: rankings || [],
     isLoading,
     error,
 
-    // Helpers
     getPlayerRanking,
     getTopPlayers,
     getPlayerPosition,
     getRankingChanges,
 
-    // Stats
     stats: getRankingStats(),
 
-    // Utils
     refetch,
     isEmpty: !rankings || rankings.length === 0,
   };

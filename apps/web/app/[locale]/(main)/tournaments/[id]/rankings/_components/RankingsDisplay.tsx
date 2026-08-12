@@ -293,7 +293,6 @@ export function RankingsDisplay({
         </CardContent>
       </Card>
 
-      {/* Informations sur le système de points */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

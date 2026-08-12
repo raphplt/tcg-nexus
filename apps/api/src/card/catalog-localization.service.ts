@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { PokemonSerieTranslation } from "src/pokemon-series/entities/pokemon-serie-translation.entity";
 import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
+import { SealedProductLocale } from "src/sealed-product/entities/sealed-product-locale.entity";
 import {
   DEFAULT_LOCALE,
   type SupportedLocale,
@@ -9,14 +10,21 @@ import {
 import { In, Repository } from "typeorm";
 import { CardTranslation } from "./entities/card-translation.entity";
 
-/** Response payload object bearing an identifier: card, set, or series. */
+/** Response payload object bearing an identifier: card, set, series or sealed product. */
 interface Localizable {
   id: string;
   [key: string]: unknown;
 }
 
-/** Maximum payload traversal depth guard against circular references. */
+/** Maximum payload traversal depth, guarding against circular references. */
 const MAX_DEPTH = 8;
+
+interface CollectedEntities {
+  cards: Map<string, Localizable>;
+  sets: Map<string, Localizable>;
+  series: Map<string, Localizable>;
+  sealedProducts: Map<string, Localizable>;
+}
 
 function isObject(value: unknown): value is Localizable {
   return (
@@ -26,12 +34,19 @@ function isObject(value: unknown): value is Localizable {
   );
 }
 
-/** Card entities uniquely feature a tcgDexId property. */
+/** Card entities uniquely feature a `tcgDexId` property. */
 function isCardLike(value: Localizable): boolean {
   return typeof value.tcgDexId === "string";
 }
 
-/** Set entities feature releaseDate, symbol, or cardCount. */
+/** Sealed products uniquely feature `productType` or `nameEn`. */
+function isSealedProductLike(value: Localizable): boolean {
+  return (
+    typeof value.productType === "string" || typeof value.nameEn === "string"
+  );
+}
+
+/** Set entities feature a release date, a symbol, or a card count. */
 function isSetLike(value: Localizable, parentKey?: string): boolean {
   return (
     parentKey === "set" ||
@@ -41,16 +56,25 @@ function isSetLike(value: Localizable, parentKey?: string): boolean {
   );
 }
 
-/** Series entities feature a position or nested sets array. */
+/** Series entities are identified by their position, or by a nested sets array. */
 function isSerieLike(value: Localizable, parentKey?: string): boolean {
   return parentKey === "serie" || Array.isArray(value.sets);
 }
 
 /**
- * Localizes catalog entities (cards, sets, series) present in API response payloads.
+ * Localizes catalog entities present in API response payloads: cards, sets,
+ * series and sealed products.
  *
- * Resolves localized fields (`name`, `image`, `logo`, etc.) using order:
- * Requested Locale -> Default Fallback Locale -> Base Entity Values.
+ * Clients never deal with translation tables: they receive an entity whose
+ * `name`, `image`, `logo`… are already resolved, following the order
+ * requested locale -> default locale -> value already on the payload.
+ *
+ * A single traversal rather than per-service resolution: cards appear in many
+ * payloads — listings, collections, decks, search results — and each one would
+ * otherwise have to remember to localize.
+ *
+ * Collected identifiers are checked against the database, so an object wrongly
+ * detected as a set simply finds no translation and stays untouched.
  */
 @Injectable()
 export class CatalogLocalizationService {
@@ -61,35 +85,45 @@ export class CatalogLocalizationService {
     private readonly setTranslations: Repository<PokemonSetTranslation>,
     @InjectRepository(PokemonSerieTranslation)
     private readonly serieTranslations: Repository<PokemonSerieTranslation>,
+    @InjectRepository(SealedProductLocale)
+    private readonly sealedProductLocales: Repository<SealedProductLocale>,
   ) {}
 
   /**
-   * Traverses a payload and localizes cards, sets, and series in place.
-   * Uses at most three database queries regardless of payload nesting.
+   * Traverses a payload and localizes catalog entities in place.
+   * Runs at most four queries, whatever the payload nesting.
    *
    * @param payload Target object or array payload.
    * @param locale Requested target locale.
-   * @param options Localization options including `withTranslations`.
-   * @returns Localized payload.
+   * @param options `withTranslations` also attaches every language, for admin views.
+   * @returns The same payload, localized in place.
    */
   async localize<T>(
     payload: T,
     locale: SupportedLocale,
     options: { withTranslations?: boolean } = {},
   ): Promise<T> {
-    const { cards, sets, series } = this.collect(payload);
-    if (cards.size === 0 && sets.size === 0 && series.size === 0) {
+    const collected = this.collect(payload);
+    const { cards, sets, series, sealedProducts } = collected;
+
+    if (
+      cards.size === 0 &&
+      sets.size === 0 &&
+      series.size === 0 &&
+      sealedProducts.size === 0
+    ) {
       return payload;
     }
 
-    const [cardRows, setRows, serieRows] = await Promise.all([
+    const [cardRows, setRows, serieRows, sealedRows] = await Promise.all([
       this.load(this.cardTranslations, "cardId", [...cards.keys()], locale),
       this.load(this.setTranslations, "setId", [...sets.keys()], locale),
       this.load(this.serieTranslations, "serieId", [...series.keys()], locale),
+      this.loadSealedProductNames([...sealedProducts.keys()], locale),
     ]);
 
     if (options.withTranslations) {
-      await this.attachAllTranslations({ cards, sets, series });
+      await this.attachAllTranslations(collected);
     }
 
     for (const [id, card] of cards) {
@@ -111,24 +145,31 @@ export class CatalogLocalizationService {
         assign(serie, "logo", translation.logo);
       }
     }
+    for (const [id, product] of sealedProducts) {
+      // Falls back to `nameEn` when the product has no localized name.
+      assign(product, "name", sealedRows.get(id) ?? product.nameEn);
+    }
 
     return payload;
   }
 
   /**
-   * Résout les libellés pour un usage interne au serveur — DTO allégé,
-   * comparaison de noms, message de journal — là où aucune langue de requête
-   * n'est à honorer.
+   * Resolves labels for server-side use — trimmed DTOs, name comparisons, log
+   * messages — where there is no request language to honour.
    *
-   * À appeler avant toute lecture de `name`, `image` ou `rarity` sur une carte
-   * fraîchement chargée : ces champs ne vivent plus que dans les traductions.
+   * Call it before reading `name`, `image` or `rarity` on a freshly loaded
+   * card: those fields only live in translations.
+   *
+   * @param payload Target object or array payload.
+   * @returns The same payload, resolved in the default locale.
    */
   async resolveLabels<T>(payload: T): Promise<T> {
     return this.localize(payload, DEFAULT_LOCALE);
   }
 
   /**
-   * Loads translations to apply per entity: requested locale or fallback locale.
+   * Loads the translation to apply per entity: the requested locale, or the
+   * fallback locale when the entity has no row in that language.
    */
   private async load<T extends { locale: string }>(
     repository: Repository<T>,
@@ -149,7 +190,7 @@ export class CatalogLocalizationService {
     for (const row of rows) {
       const id = (row as unknown as Record<string, string>)[idColumn] as string;
       const current = byId.get(id);
-      // Requested locale always takes priority over fallback locale
+      // The requested locale always wins over the fallback locale.
       if (!current || row.locale === locale) byId.set(id, row);
     }
 
@@ -157,13 +198,46 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Attaches all available translations under `translations`, indexed by locale.
+   * Sealed product names live in their own table, keyed by a generated id
+   * rather than by the product: the product id is read from the join column.
    */
-  private async attachAllTranslations(collected: {
-    cards: Map<string, Localizable>;
-    sets: Map<string, Localizable>;
-    series: Map<string, Localizable>;
-  }) {
+  private async loadSealedProductNames(
+    ids: string[],
+    locale: SupportedLocale,
+  ): Promise<Map<string, string>> {
+    if (ids.length === 0) return new Map();
+
+    const locales =
+      locale === DEFAULT_LOCALE ? [locale] : [locale, DEFAULT_LOCALE];
+
+    const rows = await this.sealedProductLocales
+      .createQueryBuilder("productLocale")
+      .select("productLocale.sealed_product_id", "productId")
+      .addSelect("productLocale.locale", "locale")
+      .addSelect("productLocale.name", "name")
+      .where("productLocale.sealed_product_id IN (:...ids)", { ids })
+      .andWhere("productLocale.locale IN (:...locales)", { locales })
+      .getRawMany<{ productId: string; locale: string; name: string }>();
+
+    const byId = new Map<string, { locale: string; name: string }>();
+    for (const row of rows) {
+      const current = byId.get(row.productId);
+      if (!current || row.locale === locale) {
+        byId.set(row.productId, { locale: row.locale, name: row.name });
+      }
+    }
+
+    return new Map(
+      [...byId.entries()].map(([id, value]) => [id, value.name] as const),
+    );
+  }
+
+  /**
+   * Attaches every language under `translations`, keyed by locale. Resolved
+   * fields stay in place, so an admin view shows both what users see and what
+   * exists in each language.
+   */
+  private async attachAllTranslations(collected: CollectedEntities) {
     await Promise.all([
       this.attachFor(this.cardTranslations, "cardId", collected.cards),
       this.attachFor(this.setTranslations, "setId", collected.sets),
@@ -196,7 +270,8 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Overwrites localized card fields. Missing translation fields are left unchanged.
+   * Overwrites the localized fields of a card. A field missing from the
+   * translation is left as-is rather than blanked out.
    */
   private applyCard(card: Localizable, translation: CardTranslation) {
     assign(card, "name", translation.name);
@@ -217,11 +292,12 @@ export class CatalogLocalizationService {
     assign(details, "attacks", translation.attacks);
   }
 
-  /** Collects catalog entities from payload deduplicated by ID. */
-  private collect(payload: unknown) {
+  /** Catalog entities found in the payload, deduplicated by id. */
+  private collect(payload: unknown): CollectedEntities {
     const cards = new Map<string, Localizable>();
     const sets = new Map<string, Localizable>();
     const series = new Map<string, Localizable>();
+    const sealedProducts = new Map<string, Localizable>();
     const seen = new Set<unknown>();
 
     const walk = (value: unknown, depth: number, parentKey?: string) => {
@@ -232,12 +308,16 @@ export class CatalogLocalizationService {
       seen.add(value);
 
       if (Array.isArray(value)) {
+        // An array does not change the parent key: `set.cards[0]` stays
+        // attached to the `cards` key.
         for (const item of value) walk(item, depth + 1, parentKey);
         return;
       }
 
       if (isObject(value)) {
         if (isCardLike(value)) cards.set(value.id, value);
+        else if (isSealedProductLike(value))
+          sealedProducts.set(value.id, value);
         else if (isSerieLike(value, parentKey)) series.set(value.id, value);
         else if (isSetLike(value, parentKey)) sets.set(value.id, value);
       }
@@ -248,7 +328,7 @@ export class CatalogLocalizationService {
     };
 
     walk(payload, 0);
-    return { cards, sets, series };
+    return { cards, sets, series, sealedProducts };
   }
 }
 

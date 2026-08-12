@@ -47,7 +47,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     setPage(1);
   }, [resetSignal]);
 
-  // Fetch paginated cards
   useEffect(() => {
     if (!open) return;
     const fetchCards = async () => {
@@ -69,7 +68,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     fetchCards();
   }, [page, open]);
 
-  // Scroll pour charger plus
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const bottom =
       e.currentTarget.scrollTop + e.currentTarget.clientHeight >=
@@ -94,7 +92,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     setOpen(false);
   };
 
-  // Search cards
   const handleSearchChange = (val: string) => {
     setInput(val);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

@@ -59,10 +59,8 @@ describe("AdminUsersTable", () => {
     await userEvent.type(screen.getByLabelText(/Email/), "grace@example.com");
     await userEvent.type(screen.getByLabelText(/Mot de passe/), "secret123");
 
-    // Toggle switches
     await userEvent.click(screen.getByRole("switch", { name: /Compte pro/i }));
 
-    // Click create button (uses default role from form state)
     await userEvent.click(screen.getByRole("button", { name: /Créer/i }));
 
     await waitFor(() =>

@@ -1,5 +1,5 @@
 import { CatalogLocalizationService } from "src/card/catalog-localization.service";
-import { applyCardSearch } from "../card/card-search";
+import { applyCardSearch, cardNameMatchesSql } from "../card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -214,12 +214,17 @@ export class SearchService {
       .leftJoinAndSelect("listing.pokemonCard", "pokemonCard")
       .leftJoinAndSelect("listing.seller", "seller")
       .leftJoinAndSelect("pokemonCard.set", "set")
-      .where("pokemonCard.name ILIKE :query", { query: `%${query}%` })
-      .orWhere("listing.description ILIKE :query", { query: `%${query}%` })
-      .orWhere("seller.firstName ILIKE :query", { query: `%${query}%` })
-      .orWhere("seller.lastName ILIKE :query", { query: `%${query}%` })
+      .where(cardNameMatchesSql("pokemonCard", "query"), {
+        query: `%${query.toLowerCase()}%`,
+      })
+      .orWhere("listing.description ILIKE :query")
+      .orWhere("seller.firstName ILIKE :query")
+      .orWhere("seller.lastName ILIKE :query")
       .limit(limit)
       .getMany();
+
+    // Card labels are flattened into `title`, out of reach of the interceptor.
+    await this.localization.resolveLabels(listings);
 
     return listings
       .filter((listing) => listing.pokemonCard != null)

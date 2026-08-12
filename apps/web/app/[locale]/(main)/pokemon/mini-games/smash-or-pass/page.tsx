@@ -357,7 +357,6 @@ export default function PokemonMatchPage() {
 
   return (
     <div className="relative h-[calc(100vh-3.5rem)] overflow-hidden">
-      {/* Background image */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <Image
           src={BG_IMAGES[bgIndex] ?? BG_IMAGES[0] ?? ""}
@@ -371,7 +370,6 @@ export default function PokemonMatchPage() {
       </div>
 
       <div className="relative z-10 mx-auto flex h-full max-w-5xl flex-col px-4 py-3 sm:px-6 sm:py-4 lg:px-10">
-        {/* Header */}
         <div className="mb-3 flex flex-col gap-2 sm:mb-4">
           <div className="tcg-surface flex items-center justify-between gap-3 px-4 py-2.5 bg-card/50 backdrop-blur-sm">
             <div className="flex items-center gap-2.5">
@@ -487,7 +485,6 @@ export default function PokemonMatchPage() {
             </div>
           </div>
 
-          {/* Active filters + session stats */}
           <div className="flex flex-wrap items-center gap-2">
             {activeFilters.map((filter) => (
               <Badge
@@ -513,7 +510,6 @@ export default function PokemonMatchPage() {
           </div>
         </div>
 
-        {/* Card area — fills remaining space */}
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
           <div className="relative w-full max-w-95">
             {isLoading || !card ? (
@@ -530,7 +526,6 @@ export default function PokemonMatchPage() {
             )}
           </div>
 
-          {/* Action buttons */}
           <div className="flex items-center gap-4 bg-card/95 px-5 py-2.5 border border-border rounded-xl shadow-lg backdrop-blur-sm">
             <Button
               variant="outline"
@@ -566,7 +561,6 @@ export default function PokemonMatchPage() {
             </Button>
           </div>
 
-          {/* Keyboard hint */}
           <p className="hidden text-[11px] text-muted-foreground/50 md:block">
             <kbd className="mx-0.5 inline-block border border-border bg-muted px-1 py-0.5 text-[9px] font-mono rounded">
               &larr;

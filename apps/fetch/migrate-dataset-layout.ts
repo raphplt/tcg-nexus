@@ -1,13 +1,13 @@
 /**
- * Convertit l'ancienne arborescence `data/<serieId>/<setId>/<cardId>.json`
- * (monolingue, ~20 000 fichiers, 80 Mo) vers le format du dataset :
- * `data/<locale>/cards/<setId>.ndjson.br` (~1,4 Mo par langue).
+ * Converts the legacy `data/<serieId>/<setId>/<cardId>.json` layout
+ * (single-locale, ~20,000 files, 80 MB) to the dataset format:
+ * `data/<locale>/cards/<setId>.ndjson.br` (~1.4 MB per locale).
  *
- *   npm run data:migrate-layout              # écrit data/fr/, garde l'ancien
- *   npm run data:migrate-layout -- --prune   # supprime l'ancienne arborescence
+ *   npm run data:migrate-layout              # writes data/fr/, keeps the old tree
+ *   npm run data:migrate-layout -- --prune   # deletes the old tree
  *
- * Les données existantes ayant été scrapées en français, elles deviennent la
- * langue `fr`. À n'exécuter qu'une fois.
+ * Existing data was scraped in French, so it becomes the `fr` locale.
+ * Meant to be run once.
  */
 import {
   type DatasetCard,
@@ -33,7 +33,7 @@ const LEGACY_ROOT_FILES = [
 const dataDir = resolveDataDir();
 const prune = process.argv.includes("--prune");
 
-/** Dossiers de séries de l'ancienne arborescence, à la racine de `data/`. */
+/** Series folders of the legacy layout, at the root of `data/`. */
 function legacySerieDirs(): string[] {
   if (!fs.existsSync(dataDir)) return [];
   return fs
@@ -60,8 +60,8 @@ function migrate() {
     path.join(dataDir, "pokemon_series.json"),
     [],
   );
-  // Les sets Pokémon Pocket avaient échappé au filtre de l'ancien scraper.
-  // Ils appartiennent à un autre jeu : on ne les reprend pas.
+  // Pokémon Pocket sets slipped through the old scraper's filter. They belong
+  // to a different game and are not carried over.
   const sets = readJson<DatasetSet[]>(
     path.join(dataDir, "pokemon_sets.json"),
     [],
@@ -120,7 +120,7 @@ function migrate() {
       fs.rmSync(serieDir, { recursive: true, force: true });
     }
     for (const file of LEGACY_ROOT_FILES) {
-      // sealed_products.json n'appartient pas au catalogue de cartes : conservé.
+      // sealed_products.json is not part of the card catalog: kept as-is.
       if (file === "sealed_products.json") continue;
       fs.rmSync(path.join(dataDir, file), { force: true });
     }

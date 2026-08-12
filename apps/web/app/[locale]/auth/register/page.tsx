@@ -83,7 +83,6 @@ const RegisterPage = () => {
         </Button>
       </div>
 
-      {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 rounded-full blur-3xl animate-pulse" />
         <div

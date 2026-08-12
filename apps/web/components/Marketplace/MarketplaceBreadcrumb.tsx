@@ -20,14 +20,12 @@ export function MarketplaceBreadcrumb() {
   const pathname = usePathname();
   const params = useParams();
 
-  // Get card name if on card detail page
   const { data: card } = useQuery({
     queryKey: ["pokemon-card", params.id],
     queryFn: () => pokemonCardService.getById(params.id as string),
     enabled: !!params.id && pathname.includes("/cards/"),
   });
 
-  // Get seller name if on seller detail page
   const { data: sellerStats } = useQuery({
     queryKey: ["seller-stats", params.id ? parseInt(params.id as string) : 0],
     queryFn: () =>
@@ -42,7 +40,6 @@ export function MarketplaceBreadcrumb() {
 
   const breadcrumbs = [];
 
-  // Always start with Home
   breadcrumbs.push(
     <BreadcrumbItem key="home">
       <BreadcrumbLink asChild>
@@ -51,7 +48,6 @@ export function MarketplaceBreadcrumb() {
     </BreadcrumbItem>,
   );
 
-  // Add Marketplace
   if (pathname.startsWith("/marketplace")) {
     breadcrumbs.push(
       <BreadcrumbSeparator key="sep-1" />,
@@ -66,7 +62,6 @@ export function MarketplaceBreadcrumb() {
       </BreadcrumbItem>,
     );
 
-    // Add Cards if on cards pages
     if (pathname.startsWith("/marketplace/cards")) {
       breadcrumbs.push(
         <BreadcrumbSeparator key="sep-2" />,
@@ -81,7 +76,6 @@ export function MarketplaceBreadcrumb() {
         </BreadcrumbItem>,
       );
 
-      // Add card detail if on specific card page
       if (pathname.match(/^\/marketplace\/cards\/[^/]+$/)) {
         breadcrumbs.push(
           <BreadcrumbSeparator key="sep-3" />,
@@ -92,7 +86,6 @@ export function MarketplaceBreadcrumb() {
       }
     }
 
-    // Add Sealed products if on sealed pages
     if (pathname.startsWith("/marketplace/sealed")) {
       breadcrumbs.push(
         <BreadcrumbSeparator key="sep-2" />,
@@ -117,7 +110,6 @@ export function MarketplaceBreadcrumb() {
       }
     }
 
-    // Add Sellers if on sellers pages
     if (pathname.startsWith("/marketplace/sellers")) {
       breadcrumbs.push(
         <BreadcrumbSeparator key="sep-2" />,
@@ -132,7 +124,6 @@ export function MarketplaceBreadcrumb() {
         </BreadcrumbItem>,
       );
 
-      // Add seller detail if on specific seller page
       if (pathname.match(/^\/marketplace\/sellers\/\d+$/)) {
         breadcrumbs.push(
           <BreadcrumbSeparator key="sep-3" />,

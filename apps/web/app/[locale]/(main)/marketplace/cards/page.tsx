@@ -88,7 +88,6 @@ function MarketplaceCardsContent() {
     }
   }, [debouncedSearch, data]);
 
-  // Effect to handle URL change
   useEffect(() => {
     const newFilters: FilterState = {
       search: searchParams.get("search") || "",
@@ -113,7 +112,6 @@ function MarketplaceCardsContent() {
     setItems([]);
   }, [searchParams]);
 
-  // Accumulate items when new data is received
   useEffect(() => {
     if (data?.data) {
       if (page === 1) {
@@ -132,7 +130,6 @@ function MarketplaceCardsContent() {
 
   const hasMore = data ? page < data.meta.totalPages : false;
 
-  // IntersectionObserver for infinite scrolling
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -281,7 +278,6 @@ function MarketplaceCardsContent() {
               </div>
             )}
 
-            {/* Elément sentinelle pour le scroll infini */}
             <div
               ref={observerRef}
               className="py-8 flex justify-center items-center"

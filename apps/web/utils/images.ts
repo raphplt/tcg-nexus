@@ -52,21 +52,17 @@ import {
 export const R2_BASE_URL = "https://cdn.tcg-nexus.org";
 
 /**
- * Anciens hôtes R2 "publics" (URL brute `*.r2.dev`) qui ont été remplacés par
- * le domaine custom `cdn.tcg-nexus.org`. Les objets existent toujours dans le
- * même bucket : seul le préfixe public a changé. L'accès `*.r2.dev` est
- * désactivé en prod, donc toute URL stockée avec cet hôte est cassée et doit
- * être réécrite vers le CDN.
+ * Legacy public R2 hosts (`*.r2.dev`) are rewritten to the custom
+ * `cdn.tcg-nexus.org` domain. Objects remain in the same bucket, but direct
+ * R2 public access is disabled in production.
  */
 const LEGACY_R2_HOSTS = ["pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev"];
 
 const PLACEHOLDER_CARD = "/images/carte-pokemon-dos.jpg";
 
 /**
- * Réécrit uniquement l'hôte : ancien R2 "public" (`*.r2.dev`, désactivé en
- * prod) -> `cdn.tcg-nexus.org`. N'ajoute aucune extension. À utiliser pour les
- * URLs "de base" auxquelles on concatène ensuite une qualité/extension (ex.
- * images de cartes : `<base>/high.png`).
+ * Rewrites only legacy public R2 hosts to `cdn.tcg-nexus.org`; it never adds
+ * an extension. Use it for base card-image URLs before adding a quality suffix.
  */
 export function rewriteLegacyHost(
   url: string | null | undefined,
@@ -83,18 +79,14 @@ export function rewriteLegacyHost(
 }
 
 /**
- * Normalise une URL d'asset "complète" (logo / symbole) :
- *  - réécrit les anciens hôtes `*.r2.dev` vers `cdn.tcg-nexus.org` ;
- *  - ajoute l'extension manquante aux URLs TCGdex "nues" (ex.
- *    `https://assets.tcgdex.net/fr/base/base2/logo` -> `.../logo.webp`),
- *    car TCGdex ne sert pas l'URL sans extension/qualité.
+ * Normalizes a complete asset URL such as a logo or symbol. It rewrites legacy
+ * R2 hosts and adds the missing extension to bare TCGdex URLs.
  *
- * Ne pas utiliser pour les images de cartes (URL de base sans extension à
- * laquelle on ajoute `/high.png`) : voir `getCardImage`.
+ * Do not use this for card images, whose base URLs receive a `/high.png` or
+ * `/low.png` suffix in `getCardImage`.
  *
- * @param url URL d'origine (peut être undefined/null)
- * @param ext extension à appliquer aux assets TCGdex nus ("webp" pour les
- *            logos, "png" pour les symboles)
+ * @param url - Source URL, which may be null or undefined.
+ * @param ext - Extension to add to bare TCGdex assets.
  */
 export function normalizeAssetUrl(
   url: string | null | undefined,
@@ -103,7 +95,6 @@ export function normalizeAssetUrl(
   let next = rewriteLegacyHost(url);
   if (!next) return undefined;
 
-  // URLs TCGdex sans extension : ajout de l'extension/qualité.
   if (
     next.includes("assets.tcgdex.net") &&
     !/\.(png|webp|jpg|jpeg)$/i.test(next)
@@ -126,7 +117,6 @@ export function getCardImage(
     return PLACEHOLDER_CARD;
   }
 
-  // URL de base sans extension (host-rewrite uniquement), puis qualité + .png.
   const base = rewriteLegacyHost(card.image);
   if (!base) return PLACEHOLDER_CARD;
 
@@ -134,14 +124,14 @@ export function getCardImage(
   return `${base}${suffix}.png`;
 }
 
-/** URL normalisée du logo d'un set, ou undefined si absent. */
+/** Returns a normalized set logo URL, if available. */
 export function getSetLogo(
   set: PokemonSetType | null | undefined,
 ): string | undefined {
   return normalizeAssetUrl(set?.logo, "webp");
 }
 
-/** URL normalisée du symbole d'un set, ou undefined si absent. */
+/** Returns a normalized set symbol URL, if available. */
 export function getSetSymbol(
   set: PokemonSetType | null | undefined,
 ): string | undefined {
@@ -149,8 +139,7 @@ export function getSetSymbol(
 }
 
 /**
- * Meilleure image disponible pour représenter un set : logo en priorité,
- * puis symbole en repli. undefined si aucune image.
+ * Returns the best available image for a set, preferring its logo to its symbol.
  */
 export function getSetImage(
   set: PokemonSetType | null | undefined,
@@ -158,7 +147,7 @@ export function getSetImage(
   return getSetLogo(set) ?? getSetSymbol(set);
 }
 
-/** URL normalisée du logo d'une série, ou undefined si absent. */
+/** Returns a normalized series logo URL, if available. */
 export function getSeriesLogo(
   serie: PokemonSerieType | null | undefined,
 ): string | undefined {

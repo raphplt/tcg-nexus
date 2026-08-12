@@ -142,7 +142,6 @@ export function TournamentList({
                     </span>
                   </div>
 
-                  {/* Résultat du joueur */}
                   {showRanking && playerRanking && (
                     <div className="flex items-center gap-4 mb-4">
                       <div className="flex items-center gap-2">

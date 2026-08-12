@@ -1,28 +1,27 @@
 /**
- * Emplacement du dataset publié sur R2, partagé par `data:pull` et `data:push`.
+ * Location of the dataset published on R2, shared by `data:pull` and `data:push`.
  *
- * Le dataset n'est pas versionné dans git : il est publié une fois sur R2 et
- * récupéré par `npm run data:pull`, sans credentials, depuis n'importe quel
- * poste ou environnement.
+ * The repository is the source of truth for the dataset; R2 only exists to
+ * refresh an already deployed environment without rebuilding its image.
  */
 import { DATASET_FORMAT_VERSION } from "@repo/pokemon-dataset";
 
-/** Domaine public du bucket, servi par le CDN Cloudflare. */
+/** Public bucket domain, served by the Cloudflare CDN. */
 const DEFAULT_PUBLIC_URL = "https://cdn.tcg-nexus.org";
 
 export const DATASET_PREFIX = `datasets/pokemon/v${DATASET_FORMAT_VERSION}`;
 
 export const MANIFEST_KEY = `${DATASET_PREFIX}/manifest.json`;
 
-/** Clé R2 d'un fichier du dataset, à partir de son chemin relatif à `data/`. */
+/** R2 key of a dataset file, from its path relative to `data/`. */
 export function remoteKey(relativePath: string): string {
   return `${DATASET_PREFIX}/${relativePath}`;
 }
 
 /**
- * Base publique de lecture. `R2_PUBLIC_URL` permet de pointer un autre bucket
- * (préproduction, fork) ; à défaut on utilise le CDN du projet, ce qui rend
- * `data:pull` utilisable sans aucune configuration.
+ * Public read base. `R2_PUBLIC_URL` can point at another bucket (staging,
+ * fork); otherwise the project CDN is used, which makes `data:pull` usable
+ * without any configuration.
  */
 export function publicBaseUrl(): string {
   return (process.env.R2_PUBLIC_URL || DEFAULT_PUBLIC_URL).replace(/\/+$/, "");
@@ -33,7 +32,12 @@ export function publicUrl(key: string): string {
 }
 
 /**
- * Exécute `task` sur chaque élément avec au plus `concurrency` tâches en vol.
+ * Runs `task` over every item with at most `concurrency` tasks in flight.
+ *
+ * @param items Items to process.
+ * @param concurrency Maximum number of concurrent tasks.
+ * @param task Callback invoked per item.
+ * @returns Results in the same order as `items`.
  */
 export async function mapWithConcurrency<T, R>(
   items: T[],

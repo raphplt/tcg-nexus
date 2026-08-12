@@ -33,7 +33,7 @@ export function ChallengeCard({
   const [claimed, setClaimed] = useState(activeChallenge.isClaimed);
 
   const { challenge, progress, isCompleted } = activeChallenge;
-  // Ensure progress doesn't exceed target visually
+
   const currentProgress = Math.min(progress, challenge.targetValue);
   const percentage = (currentProgress / challenge.targetValue) * 100;
 
@@ -75,7 +75,6 @@ export function ChallengeCard({
 
       <CardContent>
         <div className="flex flex-col gap-3 mt-2">
-          {/* Progress bar area */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider">
               <span>{t("progress")}</span>
@@ -87,7 +86,6 @@ export function ChallengeCard({
           </div>
 
           <AnimatePresence mode="popLayout">
-            {/* Buttons & Status */}
             {claimed ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}

@@ -44,7 +44,6 @@ export function PriceChart({
     );
   }
 
-  // Sur l'axe on arrondit à l'unité pour éviter les libellés tronqués
   const formatAxisPrice = (value: number) => {
     try {
       return Number(value).toLocaleString(locale, {

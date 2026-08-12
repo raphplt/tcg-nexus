@@ -43,6 +43,7 @@ describe("CollectionService", () => {
 
   const createQueryBuilder = () => {
     const qb: any = {
+      leftJoin: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       setParameter: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -226,11 +227,8 @@ describe("CollectionService", () => {
       "pokemonCard.name",
       "DESC",
     );
-    // Name originates from card_translation table: sorting uses a subquery.
-    expect(qb.orderBy).toHaveBeenCalledWith(
-      expect.stringContaining("FROM card_translation ct"),
-      "DESC",
-    );
+    // Names live in card_translation: sorting joins it on the default locale.
+    expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "DESC");
   });
 
   it("should throw when collection missing on pagination", async () => {

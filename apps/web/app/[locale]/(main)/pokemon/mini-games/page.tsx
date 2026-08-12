@@ -87,7 +87,6 @@ export default function MiniGamesHubPage() {
   const t = useTranslations("MiniGames");
   return (
     <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
-      {/* Hero Header */}
       <Card className="tcg-surface tcg-surface--hero border-border">
         <CardContent className="space-y-4 p-5 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -109,7 +108,6 @@ export default function MiniGamesHubPage() {
         </CardContent>
       </Card>
 
-      {/* Games Grid */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -123,7 +121,6 @@ export default function MiniGamesHubPage() {
               <Card className="tcg-surface tcg-surface--hover h-full flex flex-col justify-between overflow-hidden">
                 <CardContent className="p-5 flex-1 flex flex-col justify-between">
                   <div className="space-y-4">
-                    {/* Top Bar with Icon & Modes */}
                     <div className="flex items-start justify-between gap-4">
                       <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
                         <Icon className="h-5 w-5" />
@@ -163,7 +160,6 @@ export default function MiniGamesHubPage() {
                       </div>
                     </div>
 
-                    {/* Info */}
                     <div className="space-y-1">
                       <h3 className="font-heading text-lg font-bold text-foreground">
                         {t(`games.${game.id}.title`)}
@@ -173,7 +169,6 @@ export default function MiniGamesHubPage() {
                       </p>
                     </div>
 
-                    {/* Bullet points */}
                     <ul className="space-y-1 pt-1">
                       {Array.from({ length: game.featureCount }).map(
                         (_, idx) => (
@@ -189,7 +184,6 @@ export default function MiniGamesHubPage() {
                     </ul>
                   </div>
 
-                  {/* Action button */}
                   <div className="pt-5">
                     <Button
                       asChild

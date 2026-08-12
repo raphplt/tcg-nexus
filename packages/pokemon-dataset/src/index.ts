@@ -1,20 +1,20 @@
 /**
- * Stockage du catalogue Pokémon multilingue.
+ * Multilingual Pokémon catalog storage.
  *
- * Module volontairement d'un seul tenant : il est chargé par apps/fetch (ESM
- * via tsx), apps/api (CommonJS via ts-node) et Node directement, dont les
- * résolutions de sous-modules TypeScript sont incompatibles entre elles.
+ * Deliberately kept as a single module: it is loaded by apps/fetch (ESM via
+ * tsx), apps/api (CommonJS via ts-node) and Node itself, whose TypeScript
+ * submodule resolutions are mutually incompatible.
  */
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 
-// === Langues et types ============================================
+// === Locales and types ===========================================
 
 /**
- * Langues du catalogue. Doit rester aligné avec
- * `apps/api/src/translation/supported-locales.ts` et `apps/web/i18n/config.ts`.
+ * Catalog locales. Must stay aligned with
+ * `apps/api/src/translation/supported-locales.ts` and `apps/web/i18n/config.ts`.
  */
 export const DATASET_LOCALES = ["fr", "en"] as const;
 
@@ -30,9 +30,9 @@ export function isDatasetLocale(value: unknown): value is DatasetLocale {
 }
 
 /**
- * Carte telle que renvoyée par TCGdex et stockée dans le dataset.
- * On conserve la forme brute du SDK : le mapping vers les entités est la
- * responsabilité du seed, pas du stockage.
+ * A card as returned by TCGdex and stored in the dataset.
+ * The raw SDK shape is preserved: mapping to entities is the seed's
+ * responsibility, not the storage layer's.
  */
 export interface DatasetCard {
   id: string;
@@ -59,13 +59,13 @@ export interface DatasetSerie {
   [key: string]: unknown;
 }
 
-/** Entrée du manifeste : un fichier du dataset et son empreinte. */
+/** Manifest entry: one dataset file and its checksum. */
 export interface DatasetManifestEntry {
-  /** Chemin relatif à `data/`, ex. `fr/cards/base1.ndjson.br`. */
+  /** Path relative to `data/`, e.g. `fr/cards/base1.ndjson.br`. */
   path: string;
-  /** SHA-256 du fichier compressé, en hexadécimal. */
+  /** SHA-256 of the compressed file, hexadecimal. */
   sha256: string;
-  /** Taille du fichier compressé, en octets. */
+  /** Size of the compressed file, in bytes. */
   bytes: number;
 }
 
@@ -75,11 +75,11 @@ export interface DatasetLocaleStats {
 }
 
 /**
- * Index du dataset publié. Sert au `data:pull` : on ne retélécharge que les
- * fichiers dont l'empreinte diffère de la copie locale.
+ * Index of the published dataset. Drives `data:pull`: only files whose
+ * checksum differs from the local copy are downloaded again.
  */
 export interface DatasetManifest {
-  /** Version du format de stockage, incrémentée en cas de changement cassant. */
+  /** Storage format version, bumped on any breaking change. */
   formatVersion: number;
   generatedAt: string;
   locales: DatasetLocale[];
@@ -89,16 +89,16 @@ export interface DatasetManifest {
 
 export const DATASET_FORMAT_VERSION = 1;
 
-// === Emplacement des fichiers ====================================
+// === File locations ==============================================
 
 /**
- * Racine du dataset. Volontairement indépendante de `__dirname` /
- * `import.meta.url` : ce module est chargé aussi bien en CommonJS (apps/api)
- * qu'en ESM (apps/fetch).
+ * Dataset root. Deliberately independent from `__dirname` /
+ * `import.meta.url`: this module is loaded both as CommonJS (apps/api) and as
+ * ESM (apps/fetch).
  *
- * Ordre de résolution :
- *   1. `TCG_DATA_DIR` si définie (utile en conteneur, où le dataset est monté) ;
- *   2. le dossier `data/` à la racine du monorepo, repéré via `turbo.json`.
+ * Resolution order:
+ *   1. `TCG_DATA_DIR` when set (useful in containers, where it is mounted);
+ *   2. the `data/` folder at the monorepo root, located through `turbo.json`.
  */
 export function resolveDataDir(): string {
   const fromEnv = process.env.TCG_DATA_DIR;
@@ -115,8 +115,8 @@ export function resolveDataDir(): string {
   }
 
   throw new Error(
-    "Racine du monorepo introuvable (turbo.json). Définir TCG_DATA_DIR pour " +
-      "pointer explicitement le dossier du dataset.",
+    "Monorepo root not found (turbo.json). Set TCG_DATA_DIR to point at the " +
+      "dataset folder explicitly.",
   );
 }
 
@@ -128,7 +128,7 @@ export function cardsDir(locale: DatasetLocale, dataDir = resolveDataDir()) {
   return path.join(localeDir(locale, dataDir), "cards");
 }
 
-/** Extension des fichiers de cartes : NDJSON compressé en Brotli. */
+/** Card file extension: Brotli-compressed NDJSON. */
 export const CARDS_FILE_EXT = ".ndjson.br";
 
 export function setCardsFile(
@@ -136,10 +136,10 @@ export function setCardsFile(
   setId: string,
   dataDir = resolveDataDir(),
 ) {
-  // Les ids TCGdex sont alphanumériques (`sv08.5`, `P-A`) ; on refuse tout de
-  // même les séparateurs de chemin pour ne jamais écrire hors du dossier.
+  // TCGdex ids are alphanumeric (`sv08.5`, `P-A`); path separators are still
+  // rejected so nothing can ever be written outside the folder.
   if (setId.includes("/") || setId.includes("\\") || setId.includes("..")) {
-    throw new Error(`Identifiant de set invalide : ${setId}`);
+    throw new Error(`Invalid set identifier: ${setId}`);
   }
   return path.join(cardsDir(locale, dataDir), `${setId}${CARDS_FILE_EXT}`);
 }
@@ -156,14 +156,14 @@ export function manifestFile(dataDir = resolveDataDir()) {
   return path.join(dataDir, "manifest.json");
 }
 
-// === Lecture et écriture =========================================
+// === Reading and writing =========================================
 
 /**
- * Les cartes sont stockées en NDJSON compressé Brotli, un fichier par set.
+ * Cards are stored as Brotli-compressed NDJSON, one file per set.
  *
- * Un fichier JSON indenté par carte coûtait 80 Mo sur disque pour 20 000
- * fichiers ; le même contenu tient en ~1,4 Mo par langue sous cette forme, et
- * un set entier se lit d'un seul coup (quelques centaines de Ko décompressés).
+ * One indented JSON file per card cost 80 MB on disk across 20,000 files; the
+ * same content fits in ~1.4 MB per locale in this form, and a whole set is
+ * read in one go (a few hundred KB once decompressed).
  */
 const BROTLI_OPTIONS = {
   params: {
@@ -186,7 +186,7 @@ function writeJsonFile(file: string, value: unknown) {
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-// --- Séries et sets ---------------------------------------------------------
+// --- Series and sets --------------------------------------------------------
 
 export function readSeries(
   locale: DatasetLocale,
@@ -218,9 +218,9 @@ export function writeSets(
   writeJsonFile(setsFile(locale, dataDir), sets);
 }
 
-// --- Cartes -----------------------------------------------------------------
+// --- Cards ------------------------------------------------------------------
 
-/** Ids des sets pour lesquels les cartes sont présentes localement. */
+/** Ids of the sets whose cards are present locally. */
 export function listSetIds(
   locale: DatasetLocale,
   dataDir = resolveDataDir(),
@@ -266,8 +266,8 @@ export function writeSetCards(
   const file = setCardsFile(locale, setId, dataDir);
   ensureDir(path.dirname(file));
 
-  // Tri par id pour que deux runs successifs produisent le même fichier
-  // — condition nécessaire au diff par empreinte du manifeste.
+  // Sorted by id so two successive runs produce the same file — a
+  // prerequisite for the manifest's checksum-based diffing.
   const ndjson = [...cards]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((card) => JSON.stringify(card))
@@ -280,8 +280,8 @@ export function writeSetCards(
 }
 
 /**
- * Parcourt les cartes d'une langue set par set. Le fichier d'un set est
- * décompressé puis libéré : la mémoire ne dépend pas de la taille du catalogue.
+ * Iterates over a locale's cards, set by set. Each set file is decompressed
+ * then released: memory use does not depend on catalog size.
  */
 export function* iterateSets(
   locale: DatasetLocale,
@@ -303,7 +303,7 @@ export function countCards(
   return total;
 }
 
-// === Manifeste ===================================================
+// === Manifest ====================================================
 
 export function sha256File(file: string): string {
   return crypto
@@ -321,8 +321,8 @@ function entryFor(dataDir: string, absolutePath: string): DatasetManifestEntry {
 }
 
 /**
- * Construit le manifeste à partir du contenu réel de `data/`.
- * `generatedAt` est passé en paramètre pour que l'appelant maîtrise l'horodatage.
+ * Builds the manifest from the actual contents of `data/`.
+ * `generatedAt` is a parameter so the caller controls the timestamp.
  */
 export function buildManifest(
   locales: DatasetLocale[],
@@ -381,8 +381,8 @@ export function writeManifest(
 }
 
 /**
- * Langues à traiter, lues depuis `LOCALES` (ex. `LOCALES=fr,en`).
- * Toutes les langues supportées par défaut.
+ * Locales to process, read from `LOCALES` (e.g. `LOCALES=fr,en`).
+ * Defaults to every supported locale.
  */
 export function localesFromEnv(value = process.env.LOCALES): DatasetLocale[] {
   if (!value) return [...DATASET_LOCALES];
@@ -397,8 +397,8 @@ export function localesFromEnv(value = process.env.LOCALES): DatasetLocale[] {
   );
   if (unknown.length > 0) {
     throw new Error(
-      `Langue(s) non supportée(s) : ${unknown.join(", ")}. ` +
-        `Valeurs possibles : ${DATASET_LOCALES.join(", ")}.`,
+      `Unsupported locale(s): ${unknown.join(", ")}. ` +
+        `Allowed values: ${DATASET_LOCALES.join(", ")}.`,
     );
   }
 

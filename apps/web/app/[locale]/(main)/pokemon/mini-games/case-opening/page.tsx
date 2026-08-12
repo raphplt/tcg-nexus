@@ -42,16 +42,13 @@ import type { PokemonSetType } from "@/types/cardPokemon";
 import { API_BASE_URL } from "@/utils/fetch";
 import { getCardImage } from "@/utils/images";
 
-// ---------------------------------------------------------------------------
-// Roulette UI constants
-// ---------------------------------------------------------------------------
-const CARD_W = 112; // Card width (w-28)
-const CARD_GAP = 16; // Gap (gap-4)
-const STRIDE = CARD_W + CARD_GAP; // Step distance between cards = 128px
-const WINNER_INDEX = 34; // Position index of winning card in the strip
-const TRAIL = 8; // Trailing card count following winner to prevent empty right edge
-const SPIN_DURATION = 2.3; // Duration in seconds per card
-const PACK_SIZE = 6; // Cards per booster pack
+const CARD_W = 112;
+const CARD_GAP = 16;
+const STRIDE = CARD_W + CARD_GAP;
+const WINNER_INDEX = 34;
+const TRAIL = 8;
+const SPIN_DURATION = 2.3;
+const PACK_SIZE = 6;
 const PLACEHOLDER = "/images/carte-pokemon-dos.jpg";
 
 type Side = "p1" | "p2";
@@ -67,13 +64,10 @@ interface CardItem {
   price: number;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 let uidCounter = 0;
 const nextUid = () => `c${(uidCounter += 1)}`;
 
-/** Valeur marchande d'une carte (même logique que le backend). */
+/** Card market value, using the same logic as the backend. */
 function cardValue(card: any): number {
   const cm = card?.pricing?.cardmarket;
   if (cm) {
@@ -196,7 +190,6 @@ function CardRoulette({
 
   return (
     <div ref={viewportRef} className="relative h-full w-full overflow-hidden">
-      {/* Indicateur central */}
       <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 w-1 -translate-x-1/2 bg-linear-to-b from-primary/0 via-primary to-primary/0" />
       <div className="pointer-events-none absolute left-1/2 top-0 z-30 h-0 w-0 -translate-x-1/2 border-x-[7px] border-t-[9px] border-x-transparent border-t-primary" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 z-30 h-0 w-0 -translate-x-1/2 border-x-[7px] border-b-[9px] border-x-transparent border-b-primary" />
@@ -229,7 +222,6 @@ function CardRoulette({
 }
 
 // ---------------------------------------------------------------------------
-// <PlayerBoard> : les boosters ouverts d'un joueur.
 // ---------------------------------------------------------------------------
 function PlayerBoard({
   name,
@@ -298,11 +290,9 @@ export default function CaseOpeningPage() {
   const [selectedSet, setSelectedSet] = useState("all");
   const [boosterCount, setBoosterCount] = useState(3);
 
-  // Pool de cartes (fond de roulette + tirage solo/local)
   const poolRef = useRef<CardItem[]>([]);
   const [poolReady, setPoolReady] = useState(false);
 
-  // Moteur de reveal (partagé solo / local / online)
   const [spin, setSpin] = useState<{
     id: number;
     card: CardItem;
@@ -346,7 +336,6 @@ export default function CaseOpeningPage() {
   const myRevealedRef = useRef(0);
   const oppRevealedRef = useRef(0);
 
-  // Refs miroir (lues dans les callbacks stables)
   const modeRef = useRef(mode);
   const roundRef = useRef(round);
   const boosterCountRef = useRef(boosterCount);
@@ -381,7 +370,6 @@ export default function CaseOpeningPage() {
     return new URL(API_BASE_URL, window.location.origin).toString();
   }, []);
 
-  // Récupération des sets
   useEffect(() => {
     pokemonCardService
       .getAllSets(50)
@@ -433,7 +421,6 @@ export default function CaseOpeningPage() {
   }, []);
 
   // -------------------------------------------------------------------------
-  // Moteur de reveal carte-par-carte
   // -------------------------------------------------------------------------
   const commitPack = useCallback((side: Side, cards: CardItem[]) => {
     const value = Number(cards.reduce((s, c) => s + c.price, 0).toFixed(2));
@@ -450,7 +437,6 @@ export default function CaseOpeningPage() {
     }
   }, []);
 
-  // Enchaînement après un booster complet (dépend du mode).
   const onBoosterComplete = useCallback(
     (side: Side, cards: CardItem[]) => {
       commitPack(side, cards);
@@ -460,7 +446,6 @@ export default function CaseOpeningPage() {
       const m = modeRef.current;
 
       if (m === "online") {
-        // Score officiel = celui du backend.
         const s = onlineSessionRef.current;
         const me = s?.players?.find((p: any) => p.userId === selfIdRef.current);
         if (me) setP1Score(me.score);
@@ -544,7 +529,7 @@ export default function CaseOpeningPage() {
   }, []);
 
   // -------------------------------------------------------------------------
-  // Démarrage solo / local
+
   // -------------------------------------------------------------------------
   const startGame = useCallback(
     async (m: "solo" | "local") => {
@@ -579,7 +564,7 @@ export default function CaseOpeningPage() {
   }, [resetBoards]);
 
   // -------------------------------------------------------------------------
-  // Online : réception d'un état de session
+
   // -------------------------------------------------------------------------
   const handleOnlineState = useCallback(
     (session: any) => {
@@ -591,7 +576,6 @@ export default function CaseOpeningPage() {
       const opp = session.players.find((p: any) => p.userId !== sid);
       if (!me || !opp) return;
 
-      // Booster adverse : commit direct (pas de roulette pour l'adversaire).
       if ((opp.openedPacks?.length ?? 0) > oppRevealedRef.current) {
         const fresh = opp.openedPacks
           .slice(oppRevealedRef.current)
@@ -601,7 +585,6 @@ export default function CaseOpeningPage() {
       }
       setP2Score(opp.score);
 
-      // Mon booster : roulette carte-par-carte.
       if (
         !isSpinningRef.current &&
         (me.openedPacks?.length ?? 0) > myRevealedRef.current
@@ -695,9 +678,6 @@ export default function CaseOpeningPage() {
     }
   }, []);
 
-  // -------------------------------------------------------------------------
-  // Rendu
-  // -------------------------------------------------------------------------
   const p1Name = mode === "local" ? t("player1") : "Moi";
   const p2Name =
     mode === "solo"
@@ -717,7 +697,6 @@ export default function CaseOpeningPage() {
 
   return (
     <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
-      {/* Header */}
       <div className="tcg-surface flex items-center justify-between bg-card/50 p-4 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link href="/pokemon/mini-games">
@@ -758,7 +737,6 @@ export default function CaseOpeningPage() {
         </div>
       </div>
 
-      {/* ===================== SELECT ===================== */}
       {mode === "select" && (
         <div className="mx-auto max-w-3xl space-y-6 pt-4">
           <Card className="tcg-surface bg-card shadow-sm">
@@ -877,10 +855,8 @@ export default function CaseOpeningPage() {
         </div>
       )}
 
-      {/* ===================== SOLO / LOCAL ===================== */}
       {(mode === "solo" || mode === "local") && (
         <div className="space-y-8 pt-4">
-          {/* Roulette */}
           <Card className="relative flex h-52 items-center overflow-hidden rounded-xl border border-border bg-zinc-950/80 p-4 shadow-lg backdrop-blur-md dark:bg-zinc-950/60">
             {isSpinning && spin ? (
               <CardRoulette
@@ -929,10 +905,8 @@ export default function CaseOpeningPage() {
             )}
           </Card>
 
-          {/* Cartes révélées du booster en cours */}
           <RevealTray reveal={currentReveal} active={isSpinning} />
 
-          {/* Bouton d'ouverture */}
           {stage === "idle" && !isSpinning && (
             <div className="flex justify-center">
               <Button
@@ -947,7 +921,6 @@ export default function CaseOpeningPage() {
             </div>
           )}
 
-          {/* Plateaux */}
           <div className="grid grid-cols-1 gap-8 pt-2 md:grid-cols-2">
             <PlayerBoard
               name={mode === "local" ? t("player1") : "Moi"}
@@ -965,10 +938,8 @@ export default function CaseOpeningPage() {
         </div>
       )}
 
-      {/* ===================== ONLINE ===================== */}
       {mode === "online" && (
         <div className="space-y-6 pt-4">
-          {/* Lobby / matchmaking */}
           {(!onlineSession || queueStatus !== "matched") && (
             <Card className="tcg-surface mx-auto max-w-xl bg-card text-center shadow-sm">
               <CardContent className="space-y-4 p-8">
@@ -1022,7 +993,6 @@ export default function CaseOpeningPage() {
             </Card>
           )}
 
-          {/* Salle d'attente (prêt) */}
           {onlineSession?.state === "waiting" && (
             <div className="tcg-surface bg-card py-10 text-center shadow-sm">
               <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary" />
@@ -1079,7 +1049,6 @@ export default function CaseOpeningPage() {
             </div>
           )}
 
-          {/* Partie en cours */}
           {onlineSession?.state === "playing" && (
             <>
               <Card className="relative flex h-52 items-center overflow-hidden rounded-xl border border-border bg-zinc-950/80 p-4 shadow-lg backdrop-blur-md dark:bg-zinc-950/60">
@@ -1170,7 +1139,6 @@ export default function CaseOpeningPage() {
             </>
           )}
 
-          {/* Fin de partie online */}
           {onlineSession?.state === "finished" && me && opp && (
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}

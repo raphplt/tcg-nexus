@@ -18,8 +18,7 @@ const stateLabel = (value?: string) =>
   cardStates.find((s) => s.value === value)?.label ?? value;
 
 /**
- * Prix conseillé sous le champ de saisie : moyenne des annonces actives de la
- * carte, ou prix de référence du marché quand elle n'est pas encore en vente.
+ * Displays the suggested price beneath the input, based on active listings or the market reference price.
  */
 export function PriceSuggestionHint({
   cardId,

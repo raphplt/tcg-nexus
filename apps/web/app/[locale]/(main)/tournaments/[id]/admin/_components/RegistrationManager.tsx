@@ -52,7 +52,6 @@ import { useLocale, useTranslations } from "next-intl";
 
 type BulkAction = "confirm" | "cancel" | "check_in";
 
-// Helper function to get player display name
 const getPlayerName = (registration: TournamentRegistration): string => {
   const player = registration.player;
   if (player?.user) {
@@ -111,7 +110,6 @@ export function RegistrationManager({
       }),
     ]);
 
-  // Données des inscriptions
   const { data: registrations = [], isLoading } = useQuery<
     TournamentRegistration[]
   >({
@@ -120,7 +118,6 @@ export function RegistrationManager({
     enabled: !!tournamentId,
   });
 
-  // Mutations pour les actions
   const confirmMutation = useMutation({
     mutationFn: (registrationId: number) =>
       tournamentService.confirmRegistration(tournamentId, registrationId),
@@ -211,7 +208,6 @@ export function RegistrationManager({
     },
   });
 
-  // Filtrage des inscriptions
   const filteredRegistrations = registrations.filter((reg) => {
     if (filters.status && reg.status !== filters.status) return false;
     if (filters.search) {
@@ -354,7 +350,6 @@ export function RegistrationManager({
           </div>
         )}
 
-        {/* Statistiques rapides */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
@@ -416,7 +411,6 @@ export function RegistrationManager({
           </Card>
         </div>
 
-        {/* Filtres et actions */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -512,7 +506,6 @@ export function RegistrationManager({
               </div>
             </div>
 
-            {/* Actions bulk */}
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t">
               <span className="text-sm text-muted-foreground">
                 {selectedRegistrations.length} sélectionnée(s)
@@ -591,7 +584,6 @@ export function RegistrationManager({
           </CardContent>
         </Card>
 
-        {/* Liste des inscriptions */}
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -793,7 +785,6 @@ export function RegistrationManager({
         </Card>
       </div>
 
-      {/* Modal de confirmation pour actions bulk */}
       <AlertDialog open={!!bulkAction} onOpenChange={() => setBulkAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

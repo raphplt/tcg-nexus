@@ -193,7 +193,6 @@ export const DeckForm: React.FC<DeckFormProps> = ({ formats, deck }) => {
           .filter((c) => c.id !== undefined)
           .map((c) => ({ id: c.id as number }));
 
-        // Identify modified cards requiring quantity/role updates
         const cardsToUpdate = currentCards
           .filter((c) => c.id !== undefined)
           .map((c) => {

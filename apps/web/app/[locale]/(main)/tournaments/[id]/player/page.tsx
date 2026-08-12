@@ -44,7 +44,6 @@ export default function PlayerDashboardPage() {
   const { tournament } = useTournament(id as string);
   const { getPlayerRanking } = useRankings(id as string);
 
-  // Récupérer les matches du joueur
   const { data: playerMatches = [] } = useQuery<Match[]>({
     queryKey: ["player", user?.player?.id, "tournament", id, "matches"],
     queryFn: () =>
@@ -52,7 +51,6 @@ export default function PlayerDashboardPage() {
     enabled: !!user?.player?.id && !!id,
   });
 
-  // Classement du joueur
   const playerRanking = user?.player ? getPlayerRanking(user.player.id) : null;
 
   const getStatusIcon = (status: string) => {
@@ -153,7 +151,6 @@ export default function PlayerDashboardPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
@@ -169,9 +166,7 @@ export default function PlayerDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar - Stats du joueur */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Profil joueur */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -200,7 +195,6 @@ export default function PlayerDashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Statistiques personnelles */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -243,7 +237,6 @@ export default function PlayerDashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Prochain match */}
             {nextMatch && (
               <Card>
                 <CardHeader>
@@ -284,7 +277,6 @@ export default function PlayerDashboardPage() {
             )}
           </div>
 
-          {/* Contenu principal - Historique des matches */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
@@ -389,7 +381,6 @@ export default function PlayerDashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Liens rapides */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <Button variant="outline" className="h-auto p-4" asChild>
                 <Link href={`/tournaments/${id}/bracket`}>

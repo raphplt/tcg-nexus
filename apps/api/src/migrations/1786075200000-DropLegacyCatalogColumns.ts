@@ -1,18 +1,17 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 /**
- * Supprime les colonnes linguistiques du catalogue.
+ * Drops the catalog's localized columns.
  *
- * Elles faisaient double emploi avec les tables de traduction depuis la
- * migration `CatalogTranslations` : le modèle ne privilégie aucune langue, une
- * carte n'a donc pas à porter un nom, et un set pas à porter un logo.
+ * They duplicated the translation tables introduced by `CatalogTranslations`:
+ * no locale is privileged, so a card should not carry a name, nor a set a logo.
  *
- * `illustrator` reste sur `card` : c'est un nom propre, il ne se traduit pas.
- * Les données de jeu — hp, types, faiblesses, coût de retraite, catégorie
- * normalisée — restent elles aussi non linguistiques.
+ * `illustrator` stays on `card`: it is a proper noun and is not translated.
+ * Game data — hp, types, weaknesses, retreat cost, normalized category — is
+ * likewise not localized.
  *
- * Migration destructive : le `down` recrée les colonnes et y recopie la langue
- * par défaut, mais une valeur corrigée à la main d'un seul côté serait perdue.
+ * Destructive migration: `down` recreates the columns and refills them from
+ * the default locale, but a value edited by hand on one side only would be lost.
  */
 export class DropLegacyCatalogColumns1786075200000
   implements MigrationInterface

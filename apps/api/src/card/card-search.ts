@@ -1,27 +1,31 @@
 import { SelectQueryBuilder } from "typeorm";
 
 /**
- * Conditions SQL portant sur les libellés du catalogue.
+ * SQL conditions targeting catalog labels.
  *
- * Depuis la bascule multilingue, `card`, `pokemon_set` et `pokemon_serie` ne
- * portent plus aucun champ linguistique : nom, rareté, description et image
- * vivent dans les tables de traduction, une ligne par langue.
+ * Since the multilingual switch, `card`, `pokemon_set` and `pokemon_serie`
+ * carry no localized field: name, rarity, description and image live in the
+ * translation tables, one row per locale.
  *
- * Ces conditions passent par des `EXISTS` plutôt que par des jointures : une
- * jointure sur une relation « un-à-plusieurs » multiplierait les lignes et
- * fausserait les `limit` des appelants.
+ * These conditions use `EXISTS` rather than joins: joining a one-to-many
+ * relation would multiply rows and break the callers' `limit`.
  *
- * `immutable_unaccent` rend les comparaisons insensibles aux diacritiques —
- * « pokemon » trouve « Pokémon ». C'est un wrapper IMMUTABLE autour de
- * `unaccent`, seul indexable : l'expression doit être écrite exactement comme
- * dans l'index trigram de `card_translation`, sinon Postgres l'ignore.
- * Fonction et extensions sont créées par la migration `CatalogTranslations`
- * et par `SeedService.enableExtensions()`.
+ * `immutable_unaccent` makes comparisons diacritic-insensitive — "pokemon"
+ * finds "Pokémon". It is an IMMUTABLE wrapper around `unaccent`, the only
+ * indexable form: the expression must be written exactly as in the
+ * `card_translation` trigram index, otherwise Postgres ignores it.
+ * The function and extensions are created by the `CatalogTranslations`
+ * migration and by `SeedService.enableExtensions()`.
  */
 
 /**
- * Recherche plein texte sur une carte, toutes langues confondues : un
- * francophone qui tape « Charizard » doit trouver Dracaufeu, et l'inverse.
+ * Full-text card search across every locale: a French speaker typing
+ * "Charizard" must find Dracaufeu, and the other way around.
+ *
+ * @param qb Query builder to extend.
+ * @param search Raw user input.
+ * @param options Alias of the card table, when it is not `card`.
+ * @returns The same query builder, with the search condition applied.
  */
 export function applyCardSearch<T extends object>(
   qb: SelectQueryBuilder<T>,
@@ -56,9 +60,13 @@ export function applyCardSearch<T extends object>(
 }
 
 /**
- * Fragment SQL testant le nom d'une carte dans toutes les langues, à composer
- * dans un `OR` avec d'autres critères (vendeur, description d'annonce…).
- * Le paramètre attendu est un motif `%…%` déjà en minuscules.
+ * SQL fragment testing a card name across every locale, meant to be composed
+ * in an `OR` with other criteria (seller, listing description…).
+ * The bound parameter is expected to be a lowercase `%…%` pattern.
+ *
+ * @param alias Alias of the card table.
+ * @param param Name of the bound search parameter.
+ * @returns SQL fragment.
  */
 export function cardNameMatchesSql(alias: string, param = "search"): string {
   return `EXISTS (
@@ -69,8 +77,13 @@ export function cardNameMatchesSql(alias: string, param = "search"): string {
 }
 
 /**
- * Sous-requête scalaire renvoyant le nom d'une carte dans une langue, pour un
- * `ORDER BY` ou un `SELECT` qui a besoin d'une valeur unique par carte.
+ * Scalar subquery returning a card name in one locale, for a `SELECT` needing
+ * a single value per card. Not usable directly in `ORDER BY`: TypeORM would
+ * parse the subquery as an alias — join the translations instead.
+ *
+ * @param alias Alias of the card table.
+ * @param localeParam Name of the bound locale parameter.
+ * @returns SQL fragment.
  */
 export function localizedNameSql(alias: string, localeParam = "sortLocale") {
   return `(
@@ -80,7 +93,13 @@ export function localizedNameSql(alias: string, localeParam = "sortLocale") {
   )`;
 }
 
-/** Sous-requête scalaire renvoyant la rareté d'une carte dans une langue. */
+/**
+ * Scalar subquery returning a card rarity in one locale.
+ *
+ * @param alias Alias of the card table.
+ * @param localeParam Name of the bound locale parameter.
+ * @returns SQL fragment.
+ */
 export function localizedRaritySql(alias: string, localeParam = "sortLocale") {
   return `(
     SELECT ct.rarity FROM card_translation ct
@@ -90,9 +109,14 @@ export function localizedRaritySql(alias: string, localeParam = "sortLocale") {
 }
 
 /**
- * Filtre sur la rareté. La valeur reçue est un libellé affiché, donc dans une
- * langue donnée : on la cherche dans toutes les langues pour qu'un filtre posé
- * en anglais fonctionne aussi sur une session française.
+ * Rarity filter. The incoming value is a displayed label, hence tied to one
+ * locale: it is matched across every locale so a filter picked in English also
+ * works during a French session.
+ *
+ * @param qb Query builder to extend.
+ * @param rarity Rarity label to match.
+ * @param options Alias of the card table, when it is not `card`.
+ * @returns The same query builder, with the filter applied.
  */
 export function applyRarityFilter<T extends object>(
   qb: SelectQueryBuilder<T>,

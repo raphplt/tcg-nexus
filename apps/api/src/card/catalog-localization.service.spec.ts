@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CatalogLocalizationService } from "./catalog-localization.service";
 import { PokemonSerieTranslation } from "../pokemon-series/entities/pokemon-serie-translation.entity";
+import { SealedProductLocale } from "../sealed-product/entities/sealed-product-locale.entity";
 import { PokemonSetTranslation } from "../pokemon-set/entities/pokemon-set-translation.entity";
 import { CardTranslation } from "./entities/card-translation.entity";
 
@@ -10,6 +11,14 @@ describe("CatalogLocalizationService", () => {
   const find = jest.fn();
   const findSets = jest.fn().mockResolvedValue([]);
   const findSeries = jest.fn().mockResolvedValue([]);
+  const getRawMany = jest.fn().mockResolvedValue([]);
+  const sealedQueryBuilder = {
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    getRawMany,
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +36,10 @@ describe("CatalogLocalizationService", () => {
           provide: getRepositoryToken(PokemonSerieTranslation),
           useValue: { find: findSeries },
         },
+        {
+          provide: getRepositoryToken(SealedProductLocale),
+          useValue: { createQueryBuilder: () => sealedQueryBuilder },
+        },
       ],
     }).compile();
 
@@ -34,6 +47,7 @@ describe("CatalogLocalizationService", () => {
     find.mockReset();
     findSets.mockReset().mockResolvedValue([]);
     findSeries.mockReset().mockResolvedValue([]);
+    getRawMany.mockReset().mockResolvedValue([]);
   });
 
   const card = (id: string, name: string) => ({

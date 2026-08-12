@@ -25,8 +25,7 @@ interface SealedProductsPreviewProps {
 }
 
 /**
- * Mise en avant des produits scellés sur la home marketplace.
- * Toggle entre "populaire" (basé sur les events) et "récent" (createdAt).
+ * Displays sealed products on the marketplace home page and switches between popularity and recency.
  */
 export function SealedProductsPreview({
   defaultMode = "popular",

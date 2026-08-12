@@ -11,7 +11,7 @@ export function useTheme() {
 
   useEffect(() => {
     setMounted(true);
-    // Récupérer le thème depuis localStorage au montage
+
     const savedTheme = (localStorage.getItem("theme") as Theme) || "light";
     setTheme(savedTheme);
   }, []);
@@ -21,14 +21,12 @@ export function useTheme() {
 
     const root = document.documentElement;
 
-    // Fonction pour détecter le thème système
     const getSystemTheme = (): "light" | "dark" => {
       return window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
     };
 
-    // Déterminer le thème résolu
     let newResolvedTheme: "light" | "dark";
     if (theme === "system") {
       newResolvedTheme = getSystemTheme();
@@ -38,15 +36,12 @@ export function useTheme() {
 
     setResolvedTheme(newResolvedTheme);
 
-    // Appliquer le thème au DOM
     root.classList.remove("light", "dark");
     root.classList.add(newResolvedTheme);
     root.setAttribute("data-theme", newResolvedTheme);
 
-    // Sauvegarder dans localStorage
     localStorage.setItem("theme", theme);
 
-    // Écouter les changements de thème système seulement si le thème est "system"
     if (theme === "system") {
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
       const handleChange = () => {

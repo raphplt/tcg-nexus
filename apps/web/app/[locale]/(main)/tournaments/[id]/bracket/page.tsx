@@ -125,7 +125,6 @@ export default function BracketPage() {
       className={`min-h-screen bg-background px-4 py-10 ${isFullscreen ? "fixed inset-0 z-50 overflow-auto" : ""}`}
     >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             {!isFullscreen && (
@@ -195,7 +194,6 @@ export default function BracketPage() {
           </div>
         </div>
 
-        {/* Mon match en cours */}
         {myMatch && (
           <Card className="mb-6 border-primary/40 bg-primary/5">
             <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">

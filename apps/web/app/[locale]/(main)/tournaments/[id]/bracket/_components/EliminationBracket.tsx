@@ -65,7 +65,6 @@ function BracketMatchComponent({
       }}
     >
       <CardContent className="p-3">
-        {/* Header du match */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             {getPhaseIcon(match.phase)}
@@ -80,9 +79,7 @@ function BracketMatchComponent({
           )}
         </div>
 
-        {/* Joueurs */}
         <div className="space-y-2">
-          {/* Joueur A */}
           <div
             className={`flex items-center gap-2 p-2 rounded ${
               isWinner(match.playerA?.id)
@@ -110,12 +107,10 @@ function BracketMatchComponent({
             )}
           </div>
 
-          {/* VS */}
           <div className="text-center">
             <span className="text-xs font-bold text-muted-foreground">VS</span>
           </div>
 
-          {/* Joueur B */}
           <div
             className={`flex items-center gap-2 p-2 rounded ${
               isWinner(match.playerB?.id)
@@ -236,7 +231,6 @@ export function EliminationBracket({
         ))}
       </div>
 
-      {/* Légende */}
       <div className="mt-8 flex justify-center">
         <Card className="w-auto">
           <CardContent className="p-4">

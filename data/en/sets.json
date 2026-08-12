@@ -64,6 +64,69 @@
   },
   {
     "cardCount": {
+      "firstEd": 0,
+      "holo": 12,
+      "normal": 0,
+      "official": 12,
+      "reverse": 0,
+      "total": 12
+    },
+    "id": "2015xy",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2015",
+    "releaseDate": "2015-11-27",
+    "abbreviation": {
+      "official": "MCD15"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 12,
+      "normal": 0,
+      "official": 12,
+      "reverse": 0,
+      "total": 12
+    },
+    "id": "2016xy",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2016",
+    "releaseDate": "2016-08-20",
+    "abbreviation": {
+      "official": "MCD16"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 12,
+      "normal": 0,
+      "official": 12,
+      "reverse": 0,
+      "total": 12
+    },
+    "id": "2017sm",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2017",
+    "releaseDate": "2017-08-03",
+    "abbreviation": {
+      "official": "MCD17"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
       "firstEd": 104,
       "holo": 64,
       "normal": 346,
@@ -532,6 +595,30 @@
       "official": "COL"
     },
     "serieId": "col"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 34,
+      "reverse": 0,
+      "total": 34
+    },
+    "id": "dc1",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/double-crisis/logo.webp",
+    "name": "Double Crisis",
+    "releaseDate": "2015-03-25",
+    "symbol": "https://cdn.tcg-nexus.org/sets/double-crisis/symbol.png",
+    "tcgOnline": "DCR",
+    "abbreviation": {
+      "official": "DCR"
+    },
+    "serieId": "xy"
   },
   {
     "cardCount": {
@@ -1237,6 +1324,30 @@
     "name": "Unseen Forces Unown Collection",
     "releaseDate": "2005-08-22",
     "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 83,
+      "reverse": 0,
+      "total": 117
+    },
+    "id": "g1",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/generations/logo.webp",
+    "name": "Generations",
+    "releaseDate": "2016-02-22",
+    "symbol": "https://cdn.tcg-nexus.org/sets/generations/symbol.png",
+    "tcgOnline": "GEN",
+    "abbreviation": {
+      "official": "GEN"
+    },
+    "serieId": "xy"
   },
   {
     "cardCount": {
@@ -1952,6 +2063,148 @@
       "firstEd": 0,
       "holo": 0,
       "normal": 0,
+      "official": 149,
+      "reverse": 0,
+      "total": 172
+    },
+    "id": "sm1",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/sun-moon/logo.webp",
+    "name": "Sun & Moon",
+    "releaseDate": "2017-02-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sun-moon/symbol.png",
+    "tcgOnline": "SUM",
+    "abbreviation": {
+      "official": "SUM"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 145,
+      "reverse": 0,
+      "total": 169
+    },
+    "id": "sm2",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/guardians-rising/logo.webp",
+    "name": "Guardians Rising",
+    "releaseDate": "2017-05-05",
+    "symbol": "https://cdn.tcg-nexus.org/sets/guardians-rising/symbol.png",
+    "tcgOnline": "GRI",
+    "abbreviation": {
+      "official": "GRI"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 71,
+      "normal": 103,
+      "official": 147,
+      "reverse": 117,
+      "total": 169
+    },
+    "id": "sm3",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/burning-shadows/logo.webp",
+    "name": "Burning Shadows",
+    "releaseDate": "2017-08-04",
+    "symbol": "https://cdn.tcg-nexus.org/sets/burning-shadows/symbol.png",
+    "tcgOnline": "BUS",
+    "abbreviation": {
+      "official": "BUS"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 73,
+      "reverse": 0,
+      "total": 78
+    },
+    "id": "sm3.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "name": "Shining Legends",
+    "releaseDate": "2017-10-06",
+    "tcgOnline": "SLG",
+    "abbreviation": {
+      "official": "SLG"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 111,
+      "reverse": 0,
+      "total": 125
+    },
+    "id": "sm4",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/crimson-invasion/logo.webp",
+    "name": "Crimson Invasion",
+    "releaseDate": "2017-11-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/crimson-invasion/symbol.png",
+    "tcgOnline": "CIN",
+    "abbreviation": {
+      "official": "CIN"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 2,
+      "normal": 2,
+      "official": 248,
+      "reverse": 0,
+      "total": 248
+    },
+    "id": "smp",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/sm-black-star-promos/logo.webp",
+    "name": "SM Black Star Promos",
+    "releaseDate": "2017-02-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sm-black-star-promos/symbol.png",
+    "tcgOnline": "PR-SM",
+    "abbreviation": {
+      "official": "SMP"
+    },
+    "serieId": "sm"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
       "official": 10,
       "reverse": 0,
       "total": 10
@@ -2192,6 +2445,50 @@
       "reverse": 0,
       "total": 30
     },
+    "id": "tk-sm-l",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "SM trainer Kit (Lycanroc)",
+    "releaseDate": "2017-04-21",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sm-trainer-kit-lycanroc/symbol.png",
+    "abbreviation": {
+      "official": "TK10L"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-sm-r",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "SM trainer Kit (Alolan Raichu)",
+    "releaseDate": "2017-04-21",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sm-trainer-kit-alolan-raichu/symbol.png",
+    "abbreviation": {
+      "official": "TK10A"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
     "id": "tk-xy-b",
     "legal": {
       "expanded": false,
@@ -2214,6 +2511,50 @@
       "reverse": 0,
       "total": 30
     },
+    "id": "tk-xy-latia",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Latias)",
+    "releaseDate": "2015-04-29",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-latias/symbol.png",
+    "abbreviation": {
+      "official": "TK8A"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-latio",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Latios)",
+    "releaseDate": "2015-04-29",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-latios/symbol.png",
+    "abbreviation": {
+      "official": "TK8O"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
     "id": "tk-xy-n",
     "legal": {
       "expanded": false,
@@ -2224,6 +2565,50 @@
     "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-noivern/symbol.png",
     "abbreviation": {
       "official": "TK6N"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-p",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Pikachu Libre)",
+    "releaseDate": "2016-04-27",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-pikachu-libre/symbol.png",
+    "abbreviation": {
+      "official": "TK9P"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-su",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Suicune)",
+    "releaseDate": "2016-04-27",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-suicune/symbol.png",
+    "abbreviation": {
+      "official": "TK9S"
     },
     "serieId": "tk"
   },
@@ -2342,6 +2727,78 @@
       "firstEd": 0,
       "holo": 0,
       "normal": 0,
+      "official": 124,
+      "reverse": 0,
+      "total": 129
+    },
+    "id": "xy10",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/fates-collide/logo.webp",
+    "name": "Fates Collide",
+    "releaseDate": "2016-05-02",
+    "symbol": "https://cdn.tcg-nexus.org/sets/fates-collide/symbol.png",
+    "tcgOnline": "FCO",
+    "abbreviation": {
+      "official": "FCO"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 114,
+      "reverse": 0,
+      "total": 116
+    },
+    "id": "xy11",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/steam-siege/logo.webp",
+    "name": "Steam Siege",
+    "releaseDate": "2016-08-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/steam-siege/symbol.png",
+    "tcgOnline": "STS",
+    "abbreviation": {
+      "official": "STS"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 108,
+      "reverse": 0,
+      "total": 113
+    },
+    "id": "xy12",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/evolutions/logo.webp",
+    "name": "Evolutions",
+    "releaseDate": "2016-11-02",
+    "symbol": "https://cdn.tcg-nexus.org/sets/evolutions/symbol.png",
+    "tcgOnline": "EVO",
+    "abbreviation": {
+      "official": "EVO"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
       "official": 106,
       "reverse": 0,
       "total": 110
@@ -2430,6 +2887,102 @@
     "tcgOnline": "PRC",
     "abbreviation": {
       "official": "PRC"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 108,
+      "reverse": 0,
+      "total": 112
+    },
+    "id": "xy6",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/roaring-skies/logo.webp",
+    "name": "Roaring Skies",
+    "releaseDate": "2015-05-06",
+    "symbol": "https://cdn.tcg-nexus.org/sets/roaring-skies/symbol.png",
+    "tcgOnline": "ROS",
+    "abbreviation": {
+      "official": "ROS"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 98,
+      "reverse": 0,
+      "total": 101
+    },
+    "id": "xy7",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/ancient-origins/logo.webp",
+    "name": "Ancient Origins",
+    "releaseDate": "2015-08-12",
+    "symbol": "https://cdn.tcg-nexus.org/sets/ancient-origins/symbol.png",
+    "tcgOnline": "AOR",
+    "abbreviation": {
+      "official": "AOR"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 162,
+      "reverse": 0,
+      "total": 165
+    },
+    "id": "xy8",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/breakthrough/logo.webp",
+    "name": "BREAKthrough",
+    "releaseDate": "2015-11-04",
+    "symbol": "https://cdn.tcg-nexus.org/sets/breakthrough/symbol.png",
+    "tcgOnline": "BKT",
+    "abbreviation": {
+      "official": "BKT"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 122,
+      "reverse": 0,
+      "total": 126
+    },
+    "id": "xy9",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/breakpoint/logo.webp",
+    "name": "BREAKpoint",
+    "releaseDate": "2016-02-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/breakpoint/symbol.png",
+    "tcgOnline": "BKP",
+    "abbreviation": {
+      "official": "BKP"
     },
     "serieId": "xy"
   },

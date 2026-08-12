@@ -218,7 +218,6 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
 
   return (
     <div className="space-y-6">
-      {/* Statistiques */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           label="Total"
@@ -250,7 +249,6 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
         />
       </div>
 
-      {/* Liste des matches */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -435,7 +433,6 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
         </CardContent>
       </Card>
 
-      {/* Dialog édition score */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -35,14 +35,11 @@ export const useCurrencyStore = create<CurrencyState>()(
       convertPrice: (price: number, fromCurrency: string) => {
         const targetCurrency = get().currency;
 
-        // Si la devise source est la même que la cible, pas de conversion
         if (fromCurrency === targetCurrency) return price;
 
-        // Convertir d'abord en EUR (devise de base)
         const rateFrom = EXCHANGE_RATES[fromCurrency as Currency] || 1;
         const priceInEur = price / rateFrom;
 
-        // Convertir ensuite vers la devise cible
         const rateTo = EXCHANGE_RATES[targetCurrency] || 1;
         return priceInEur * rateTo;
       },

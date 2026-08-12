@@ -310,9 +310,6 @@ export function AdminOrdersTable() {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {/* Les lignes affichent l'instantané figé
-                                        à l'achat : il reste exact même si
-                                        l'annonce a changé depuis. */}
                                     {selectedOrder.orderItems.map((item) => (
                                       <TableRow key={item.id}>
                                         <TableCell>

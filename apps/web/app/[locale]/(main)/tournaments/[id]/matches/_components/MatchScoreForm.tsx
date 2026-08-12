@@ -151,7 +151,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4 items-center">
-            {/* Joueur A */}
             <div
               className={`text-center p-4 rounded-lg ${
                 match.winner?.id === match.playerA?.id
@@ -171,14 +170,12 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
               )}
             </div>
 
-            {/* VS */}
             <div className="text-center">
               <span className="text-4xl font-bold text-muted-foreground">
                 VS
               </span>
             </div>
 
-            {/* Joueur B */}
             <div
               className={`text-center p-4 rounded-lg ${
                 match.winner?.id === match.playerB?.id
@@ -220,9 +217,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Interface de score */}
             <div className="grid grid-cols-3 gap-4 items-center">
-              {/* Joueur A */}
               <div className="text-center">
                 <Avatar className="w-16 h-16 mx-auto mb-3">
                   <AvatarFallback className="text-lg">
@@ -247,7 +242,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 </div>
               </div>
 
-              {/* VS avec preview du vainqueur */}
               <div className="text-center">
                 <span className="text-4xl font-bold text-muted-foreground mb-4 block">
                   VS
@@ -267,7 +261,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                 )}
               </div>
 
-              {/* Joueur B */}
               <div className="text-center">
                 <Avatar className="w-16 h-16 mx-auto mb-3">
                   <AvatarFallback className="text-lg">
@@ -293,7 +286,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
               </div>
             </div>
 
-            {/* Options supplémentaires */}
             <div className="space-y-4 pt-4 border-t">
               <div className="flex items-center space-x-2">
                 <Switch id="forfeit" {...register("isForfeit")} />
@@ -313,7 +305,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 pt-4">
               <AlertDialogTrigger asChild>
                 <Button
@@ -333,7 +324,6 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
         </CardContent>
       </Card>
 
-      {/* Confirmation Modal */}
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>

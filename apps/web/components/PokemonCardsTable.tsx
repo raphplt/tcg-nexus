@@ -91,7 +91,6 @@ const POKEMON_RARITIES = [
   { value: "Promo", labelKey: "rarityPromo" },
 ];
 
-//TODO : à refactoriser, trop long
 export function PokemonCardsTable({
   initialPage = 1,
   itemsPerPage = 12,
@@ -104,12 +103,10 @@ export function PokemonCardsTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
-  // Cards and pagination states
   const [cards, setCards] = useState<PokemonCardType[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Series and Sets states
   const [series, setSeries] = useState<PokemonSerieType[]>([]);
   const [sets, setSets] = useState<PokemonSetType[]>([]);
   const [selectedSerie, setSelectedSerie] = useState<PokemonSerieType | null>(
@@ -117,14 +114,12 @@ export function PokemonCardsTable({
   );
   const [selectedSet, setSelectedSet] = useState<PokemonSetType | null>(null);
 
-  // Custom Filters
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
   const [displayFormat, setDisplayFormat] = useState<"grid" | "table">("grid");
 
   const observerRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Load series & sets on mount
   useEffect(() => {
     const loadMetadata = async () => {
       try {
@@ -133,7 +128,7 @@ export function PokemonCardsTable({
           pokemonCardService.getAllSets(),
         ]);
         setSeries(allSeries);
-        // Sort sets by release date descending
+
         const sortedSets = [...allSets].sort((a, b) => {
           const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
           const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
@@ -231,7 +226,6 @@ export function PokemonCardsTable({
     fetchCards,
   ]);
 
-  // Déclencher le chargement de la page suivante
   useEffect(() => {
     if (currentPage > 1) {
       fetchCards(
@@ -256,7 +250,6 @@ export function PokemonCardsTable({
     fetchCards,
   ]);
 
-  // Observer pour le scroll infini
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -279,18 +272,15 @@ export function PokemonCardsTable({
     };
   }, [hasMore, loading]);
 
-  // Fonction pour effectuer une recherche
   const handleSearch = useCallback((query: string) => {
     setActiveSearch(query);
   }, []);
 
-  // Fonction pour nettoyer la recherche
   const clearSearch = useCallback(() => {
     setSearchQuery("");
     setActiveSearch("");
   }, []);
 
-  // Reset filters
   const resetFilters = () => {
     setSelectedType("all");
     setSelectedRarity("all");
@@ -299,13 +289,11 @@ export function PokemonCardsTable({
     clearSearch();
   };
 
-  // Filter sets according to selected series
   const filteredSets = useMemo(() => {
     if (!selectedSerie) return sets;
     return sets.filter((set) => set.serie?.id === selectedSerie.id);
   }, [selectedSerie, sets]);
 
-  // Détermine quelles données utiliser (recherche ou pagination normale)
   const currentData = useMemo(() => {
     if (!selectedSet && !activeSearch.trim()) return null;
     return {
@@ -340,7 +328,7 @@ export function PokemonCardsTable({
 
   const handleSetSelect = (set: PokemonSetType) => {
     setSelectedSet(set);
-    // Find matching serie if not set yet
+
     if (!selectedSerie && set.serie) {
       setSelectedSerie(set.serie);
     }
@@ -349,7 +337,6 @@ export function PokemonCardsTable({
 
   return (
     <div className="space-y-8">
-      {/* 1. Exploration Panel (Séries et Extensions) */}
       <Card className="border-border/40 bg-card/60 backdrop-blur-md overflow-hidden shadow-2xl">
         <CardHeader className="border-b border-border/40 pb-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -361,7 +348,6 @@ export function PokemonCardsTable({
               <CardDescription>{t("explorerSubtitle")}</CardDescription>
             </div>
 
-            {/* View Mode Toggle & Reset */}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -394,7 +380,6 @@ export function PokemonCardsTable({
             </div>
           </div>
 
-          {/* Breadcrumb Navigation */}
           <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground mt-4 bg-muted/40 p-2 rounded-lg border border-border/20">
             <span
               onClick={() => {
@@ -432,7 +417,6 @@ export function PokemonCardsTable({
         </CardHeader>
 
         <CardContent className="pt-6">
-          {/* A. View Series (when selectedSerie is null) */}
           {!selectedSerie && (
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -470,7 +454,6 @@ export function PokemonCardsTable({
             </div>
           )}
 
-          {/* B. View Sets in selected Serie */}
           {selectedSerie && !selectedSet && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
@@ -561,7 +544,6 @@ export function PokemonCardsTable({
             </div>
           )}
 
-          {/* C. View Selected Set Banner */}
           {selectedSet && (
             <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/20 rounded-xl p-4">
               <div className="w-20 h-20 flex items-center justify-center bg-background/50 rounded-xl p-2 border border-border/20">
@@ -635,7 +617,6 @@ export function PokemonCardsTable({
         </CardContent>
       </Card>
 
-      {/* 2. Cards Display and Filtering Panel */}
       <Card className="border-border/40 bg-card/60 backdrop-blur-md shadow-2xl">
         <CardHeader className="border-b border-border/40 pb-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -652,9 +633,7 @@ export function PokemonCardsTable({
               </CardTitle>
             </div>
 
-            {/* Filter selectors & Search */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Type Select */}
               <div className="w-[140px]">
                 <Select
                   value={selectedType}
@@ -677,7 +656,6 @@ export function PokemonCardsTable({
                 </Select>
               </div>
 
-              {/* Rarity Select */}
               <div className="w-[160px]">
                 <Select
                   value={selectedRarity}
@@ -700,7 +678,6 @@ export function PokemonCardsTable({
                 </Select>
               </div>
 
-              {/* Search Form */}
               <form
                 onSubmit={handleSearchSubmit}
                 className="flex items-center gap-2 flex-1 sm:flex-initial min-w-[240px]"
@@ -797,7 +774,7 @@ export function PokemonCardsTable({
                       alt={card.name || "Pokemon Card"}
                       className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
                     />
-                    {/* Diagonal light sweep/holographic shimmer on hover */}
+
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out pointer-events-none" />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -826,7 +803,6 @@ export function PokemonCardsTable({
                       </div>
                     </div>
 
-                    {/* Rarity */}
                     {card.rarity && (
                       <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between">
                         <Badge

@@ -9,7 +9,7 @@ type ApiErrorPayload = {
   message?: string;
 };
 
-/** Code métier stable renvoyé par l'API, indépendant de la langue. */
+/** Stable domain code returned by the API, independent of language. */
 export function extractApiErrorCode(error: unknown): string | null {
   return (error as ApiErrorPayload | null)?.response?.data?.code ?? null;
 }
@@ -46,8 +46,7 @@ type Translator = (
 ) => string;
 
 /**
- * Traduit une erreur API depuis son code métier.
- * Ordre de repli : traduction du code -> message renvoyé par l'API -> défaut.
+ * Translates an API error from its domain code. Falls back to the API message, then the default translation.
  */
 export function translateApiError(
   error: unknown,
@@ -58,7 +57,7 @@ export function translateApiError(
 
   if (code) {
     const translated = t(code, extractApiErrorParams(error));
-    // next-intl renvoie la clé quand la traduction manque
+
     if (translated && translated !== code && !translated.startsWith("⚠️")) {
       return translated;
     }

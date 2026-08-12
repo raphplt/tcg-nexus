@@ -27,7 +27,6 @@ export function LocaleSelector() {
   const [isPending, startTransition] = useTransition();
 
   const onChange = (next: string) => {
-    // la préférence suit l'utilisateur d'un navigateur à l'autre
     if (isAuthenticated) {
       userService
         .updateProfile({ preferredLocale: next })

@@ -4,13 +4,14 @@ import { CatalogLocalizationService } from "src/card/catalog-localization.servic
 import { CardTranslation } from "src/card/entities/card-translation.entity";
 import { PokemonSerieTranslation } from "src/pokemon-series/entities/pokemon-serie-translation.entity";
 import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
+import { SealedProductLocale } from "src/sealed-product/entities/sealed-product-locale.entity";
 
 /**
- * Module autonome pour la résolution des libellés du catalogue.
+ * Standalone module for catalog label resolution.
  *
- * Isolé de `CardModule` : beaucoup de services en ont besoin (marketplace,
- * collections, decks, recherche, scan…) et l'importer ne doit pas entraîner
- * tout le module carte dans son sillage.
+ * Kept out of `CardModule`: many services need it (marketplace, collections,
+ * decks, search, scan) and importing it should not drag the whole card module
+ * along.
  */
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-tran
       CardTranslation,
       PokemonSetTranslation,
       PokemonSerieTranslation,
+      SealedProductLocale,
     ]),
   ],
   providers: [CatalogLocalizationService],

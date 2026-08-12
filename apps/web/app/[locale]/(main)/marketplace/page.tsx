@@ -46,7 +46,6 @@ export default function MarketplaceHomePage() {
     loadingRecentListings,
   } = useMarketplaceHome();
 
-  // Filter to distinguish physical TCG sets from mobile (Pocket) TCG sets
   const physicalSets = sets?.filter((set) => set.serie?.id !== "tcgp") || [];
   const pocketSets = sets?.filter((set) => set.serie?.id === "tcgp") || [];
 
@@ -80,11 +79,8 @@ export default function MarketplaceHomePage() {
           </div>
         </div>
 
-        {/* Layout en deux colonnes pour les écrans larges */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Colonne Principale (Gauche - 3/4) */}
           <div className="lg:col-span-3 space-y-12">
-            {/* Cartes tendances */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -126,7 +122,6 @@ export default function MarketplaceHomePage() {
               )}
             </section>
 
-            {/* Cartes populaires */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -167,14 +162,12 @@ export default function MarketplaceHomePage() {
               )}
             </section>
 
-            {/* Produits scellés (toggle populaires/récents) */}
             <SealedProductsPreview
               defaultMode="popular"
               limit={8}
               gridCols="grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
             />
 
-            {/* Sets */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -203,7 +196,6 @@ export default function MarketplaceHomePage() {
               )}
             </section>
 
-            {/* Pocket Sets */}
             {!loadingSets && pocketSets.length > 0 && (
               <section>
                 <div className="flex items-center gap-3 mb-6">
@@ -219,9 +211,7 @@ export default function MarketplaceHomePage() {
             )}
           </div>
 
-          {/* Colonne Latérale (Droite - 1/4) */}
           <div className="space-y-8 lg:sticky lg:top-4 lg:self-start">
-            {/* Dernières offres */}
             <Card className="border bg-card/40 backdrop-blur-xs">
               <CardHeader className="pb-3 border-b border-border/40">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -317,7 +307,6 @@ export default function MarketplaceHomePage() {
               </CardContent>
             </Card>
 
-            {/* Meilleurs vendeurs */}
             <Card className="border bg-card/40 backdrop-blur-xs">
               <CardHeader className="pb-3 border-b border-border/40">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">

@@ -34,21 +34,22 @@ export interface CatalogImportReport {
   sets: number;
   cardsCreated: number;
   cardsUpdated: number;
-  /** Nombre de traductions écrites, par langue. */
+  /** Number of translations written, per locale. */
   translations: Record<string, number>;
 }
 
 const BATCH_SIZE = 500;
 
 /**
- * Importe le catalogue Pokémon depuis le dataset (`data/<locale>/`) vers la base.
+ * Imports the Pokémon catalog from the dataset (`data/<locale>/`) into the
+ * database.
  *
- * Le modèle ne privilégie aucune langue : `card`, `pokemon_set` et
- * `pokemon_serie` ne portent que les données non linguistiques, chaque langue
- * activée ayant sa ligne dans la table de traduction correspondante.
+ * No locale is privileged: `card`, `pokemon_set` and `pokemon_serie` only hold
+ * non-localized data, each enabled locale having its own row in the matching
+ * translation table.
  *
- * L'import est idempotent : les entités sont mises à jour, jamais dupliquées,
- * et une langue absente d'un run ne supprime jamais ses traductions.
+ * The import is idempotent: entities are updated, never duplicated, and a
+ * locale missing from a run never has its translations removed.
  */
 @Injectable()
 export class CatalogImportService {
@@ -72,9 +73,9 @@ export class CatalogImportService {
   ) {}
 
   /**
-   * Langues à importer : celles demandées, restreintes à celles réellement
-   * présentes dans le dataset. Une langue jamais scrapée est ignorée avec un
-   * avertissement plutôt que de produire des traductions vides.
+   * Locales to import: the requested ones, restricted to those actually
+   * present in the dataset. A locale that was never scraped is skipped with a
+   * warning rather than producing empty translations.
    */
   private availableLocales(requested?: DatasetLocale[]): DatasetLocale[] {
     const dataDir = resolveDataDir();
@@ -93,9 +94,8 @@ export class CatalogImportService {
   }
 
   /**
-   * Ordre de repli pour les champs non linguistiques et les colonnes héritées
-   * de `card` : la langue par défaut d'abord, pour que l'affichage actuel reste
-   * inchangé tant que les lectures n'ont pas basculé sur les traductions.
+   * Fallback order for non-localized fields: the default locale first, so the
+   * values picked stay stable from one run to the next.
    */
   private orderByFallback(locales: DatasetLocale[]): DatasetLocale[] {
     return [...locales].sort((a, b) => {
@@ -446,9 +446,9 @@ export class CatalogImportService {
   // --- Utilitaires ----------------------------------------------------------
 
   /**
-   * Première langue disponible pour cette entité, dans l'ordre de repli.
-   * Les champs non linguistiques (hp, types, prix…) sont identiques d'une
-   * langue à l'autre : n'importe laquelle fait l'affaire.
+   * First locale available for this entity, in fallback order.
+   * Non-localized fields (hp, types, pricing…) are identical across locales,
+   * so any of them will do.
    */
   private pickFallback<T>(
     perLocale: Record<string, T>,

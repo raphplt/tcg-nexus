@@ -114,7 +114,7 @@ export function TranslationsManager({
   );
 }
 
-/** Textarea qui s'ajuste à son contenu : une ligne pour la plupart des clés. */
+/** Textarea sized to its content; one line is sufficient for most keys. */
 function AutoTextarea({
   value,
   onChange,

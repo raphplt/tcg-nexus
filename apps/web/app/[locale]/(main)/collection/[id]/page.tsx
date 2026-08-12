@@ -59,7 +59,6 @@ const CollectionDetailPage = () => {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const limit = 10;
 
-  // Fetch collection metadata
   useEffect(() => {
     const fetchCollection = async () => {
       try {
@@ -75,7 +74,6 @@ const CollectionDetailPage = () => {
     if (id) fetchCollection();
   }, [id]);
 
-  // Debounced search term
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,7 +84,6 @@ const CollectionDetailPage = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Fetch paginated items
   const { data: itemsData, isLoading: itemsLoading } = usePaginatedQuery<
     PaginatedResult<CollectionItemType>
   >(
@@ -127,7 +124,6 @@ const CollectionDetailPage = () => {
   const meta = itemsData?.meta;
   const items = itemsData?.data || [];
 
-  // Format date helper
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
@@ -136,7 +132,6 @@ const CollectionDetailPage = () => {
     });
   };
 
-  // Generate pagination pages with ellipsis
   const generatePaginationPages = () => {
     if (!meta) return [];
     const pages: (number | "ellipsis")[] = [];
@@ -146,43 +141,35 @@ const CollectionDetailPage = () => {
     const sidePages = 2;
 
     if (totalPages <= maxVisiblePages) {
-      // Render all pages if count <= 7
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always show first page
       pages.push(1);
 
       let startPage = Math.max(2, currentPage - sidePages);
       let endPage = Math.min(totalPages - 1, currentPage + sidePages);
 
-      // Adjust boundaries when close to start
       if (currentPage <= sidePages + 2) {
         endPage = Math.min(maxVisiblePages - 2, totalPages - 1);
       }
 
-      // Adjust boundaries when close to end
       if (currentPage >= totalPages - sidePages - 1) {
         startPage = Math.max(2, totalPages - maxVisiblePages + 2);
       }
 
-      // Add leading ellipsis if gap exists
       if (startPage > 2) {
         pages.push("ellipsis");
       }
 
-      // Add middle page numbers
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
 
-      // Add trailing ellipsis if gap exists
       if (endPage < totalPages - 1) {
         pages.push("ellipsis");
       }
 
-      // Always show last page
       pages.push(totalPages);
     }
 
@@ -243,7 +230,6 @@ const CollectionDetailPage = () => {
           </CardContent>
         </Card>
 
-        {/* Barre de recherche et tri */}
         <Card className="mb-6 bg-card/80 backdrop-blur-sm border-2">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -288,7 +274,6 @@ const CollectionDetailPage = () => {
           </CardContent>
         </Card>
 
-        {/* Tableau des cartes */}
         {itemsLoading ? (
           <Card className="bg-card/80 backdrop-blur-sm border-2">
             <CardContent className="pt-6">
@@ -422,7 +407,6 @@ const CollectionDetailPage = () => {
           </Card>
         )}
 
-        {/* Pagination */}
         {meta && items.length > 0 && (
           <Card className="bg-card/80 backdrop-blur-sm border-2">
             <CardContent className="pt-6">

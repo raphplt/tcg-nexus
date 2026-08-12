@@ -34,7 +34,7 @@ export default function RankingsPage() {
       if (tournament?.status === "in_progress") {
         refetch();
       }
-    }, 30000); // Refresh toutes les 30 secondes
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [autoRefresh, tournament?.status, refetch]);
@@ -90,7 +90,6 @@ export default function RankingsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild>
@@ -143,7 +142,6 @@ export default function RankingsPage() {
           </div>
         </div>
 
-        {/* Podium pour les 3 premiers */}
         {rankings.length >= 3 && tournament?.status === "finished" && (
           <Card className="mb-6">
             <CardHeader>
@@ -154,7 +152,6 @@ export default function RankingsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
-                {/* 2ème place */}
                 <div className="text-center order-1">
                   <div className="bg-gray-100 rounded-lg p-4 h-24 flex items-end justify-center">
                     <Medal className="w-8 h-8 text-gray-400" />
@@ -167,7 +164,6 @@ export default function RankingsPage() {
                   </div>
                 </div>
 
-                {/* 1ère place */}
                 <div className="text-center order-2">
                   <div className="bg-yellow-100 rounded-lg p-4 h-32 flex items-end justify-center">
                     <Crown className="w-10 h-10 text-yellow-500" />
@@ -185,7 +181,6 @@ export default function RankingsPage() {
                   </div>
                 </div>
 
-                {/* 3ème place */}
                 <div className="text-center order-3">
                   <div className="bg-orange-100 rounded-lg p-4 h-20 flex items-end justify-center">
                     <Medal className="w-6 h-6 text-orange-400" />
@@ -202,7 +197,6 @@ export default function RankingsPage() {
           </Card>
         )}
 
-        {/* Statistiques globales */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card>
@@ -248,7 +242,6 @@ export default function RankingsPage() {
           </div>
         )}
 
-        {/* Classement détaillé */}
         <RankingsDisplay
           rankings={rankings}
           tournament={tournament}

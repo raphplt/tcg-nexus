@@ -126,7 +126,6 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
         </Card>
       </div>
 
-      {/* Barre de recherche */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -145,7 +144,6 @@ export function TabParticipants({ registrations }: TabParticipantsProps) {
             />
           </div>
 
-          {/* Table des participants */}
           <div className="rounded-lg border overflow-hidden">
             <Table>
               <TableHeader>

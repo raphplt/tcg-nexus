@@ -8,7 +8,7 @@ import { invalidateMessagesCache } from "@/i18n/messages";
 export type TranslationEntry = {
   path: string;
   values: Record<SupportedLocale, string>;
-  /** true si la valeur vient de la base et non du dictionnaire du dépôt */
+  /** Whether the value comes from the database rather than the repository dictionary. */
   overridden: Partial<Record<SupportedLocale, boolean>>;
 };
 
@@ -32,8 +32,8 @@ async function cookieHeader(): Promise<string> {
 }
 
 /**
- * Les Server Actions sont des endpoints publics : le rôle admin est revérifié
- * ici, la protection de la route ne suffit pas.
+ * Server Actions are public endpoints, so administrator access is rechecked
+ * here instead of relying solely on route protection.
  */
 async function assertAdmin(): Promise<void> {
   const response = await fetch(`${apiBaseUrl()}/auth/profile`, {
@@ -118,7 +118,7 @@ export async function loadTranslations(): Promise<TranslationEntry[]> {
 }
 
 export type SystemContentItem = {
-  /** préfixe de clé dans le dictionnaire, ex. SystemContent.faq.12 */
+  /** Dictionary key prefix, for example `SystemContent.faq.12`. */
   keyPrefix: string;
   category: string;
   fields: Array<{
@@ -129,9 +129,7 @@ export type SystemContentItem = {
 };
 
 /**
- * Les contenus système (FAQ...) n'ont pas encore de table de traduction côté
- * API : la version française fait référence et les autres langues sont
- * stockées comme des clés ordinaires, sous SystemContent.
+ * System content such as FAQs has no API translation table yet. French is the reference version, and other languages are stored as ordinary `SystemContent` keys.
  */
 export async function loadSystemContent(): Promise<SystemContentItem[]> {
   await assertAdmin();
@@ -181,8 +179,7 @@ export async function loadSystemContent(): Promise<SystemContentItem[]> {
 }
 
 export type SaveResult =
-  | { ok: true; saved: number }
-  | { ok: false; error: string };
+  { ok: true; saved: number } | { ok: false; error: string };
 
 export async function saveTranslations(
   changes: Array<{ path: string; locale: string; value: string }>,

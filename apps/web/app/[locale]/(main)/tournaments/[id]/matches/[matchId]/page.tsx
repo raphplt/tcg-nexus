@@ -137,7 +137,6 @@ export default function MatchPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
@@ -164,7 +163,6 @@ export default function MatchPage() {
             </div>
           </div>
 
-          {/* Actions rapides */}
           <div className="flex flex-wrap gap-2">
             {canSafelyStart && (
               <Button
@@ -192,9 +190,7 @@ export default function MatchPage() {
           </div>
         </div>
 
-        {/* Contenu principal */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Informations du match */}
           <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader>
@@ -257,7 +253,6 @@ export default function MatchPage() {
               </CardContent>
             </Card>
 
-            {/* Navigation */}
             <Card>
               <CardHeader>
                 <CardTitle>{t("navigation")}</CardTitle>
@@ -280,7 +275,6 @@ export default function MatchPage() {
             </Card>
           </div>
 
-          {/* Zone de jeu / fallback admin */}
           <div className="lg:col-span-2">
             {permissions.isPlayerInMatch ? (
               <GameBoard matchId={match.id} />

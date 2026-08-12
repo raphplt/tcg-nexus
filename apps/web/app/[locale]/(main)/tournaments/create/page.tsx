@@ -519,7 +519,6 @@ export default function CreateTournamentPage() {
                 />
               </div>
 
-              {/* Option admin pour remplir le tournoi avec 8 joueurs */}
               {isAdmin && (
                 <div className="col-span-2 p-4 border border-amber-500/30 rounded-lg bg-amber-500/5">
                   <FormField

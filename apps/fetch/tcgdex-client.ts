@@ -1,12 +1,12 @@
 /**
- * Accès à TCGdex par langue, et règles de filtrage communes aux scripts.
+ * Per-locale TCGdex access, plus the filtering rules shared by the scripts.
  */
 import type { DatasetLocale } from "@repo/pokemon-dataset";
 import TCGdex from "@tcgdex/sdk";
 
 const clients = new Map<DatasetLocale, TCGdex>();
 
-/** Une instance de SDK par langue : la langue est figée à l'instanciation. */
+/** One SDK instance per locale: the language is fixed at construction time. */
 export function tcgdexFor(locale: DatasetLocale): TCGdex {
   const existing = clients.get(locale);
   if (existing) return existing;
@@ -17,18 +17,23 @@ export function tcgdexFor(locale: DatasetLocale): TCGdex {
 }
 
 /**
- * Interroge TCGdex dans une langue donnée.
+ * Queries TCGdex in a given locale.
  *
- * Les types du SDK sont des classes nominales sans signature d'index : on les
- * réexpose sous la forme souple du dataset, qui conserve la réponse brute.
+ * SDK types are nominal classes without an index signature: results are
+ * re-exposed under the dataset's looser shape, which keeps the raw response.
+ *
+ * @param locale Target locale.
+ * @param endpoint TCGdex endpoint to query.
+ * @param id Optional resource identifier.
+ * @returns Parsed response, or null when the resource is missing.
  */
 export async function fetchFrom<T>(
   locale: DatasetLocale,
   endpoint: "series" | "sets" | "cards",
   id?: string,
 ): Promise<T | null> {
-  // `fetch` est surchargé endpoint par endpoint dans le SDK ; on l'appelle via
-  // une signature générique pour pouvoir passer l'endpoint en paramètre.
+  // `fetch` is overloaded per endpoint in the SDK; it is called through a
+  // generic signature so the endpoint can be passed as a parameter.
   const call = tcgdexFor(locale).fetch.bind(tcgdexFor(locale)) as (
     ...args: string[]
   ) => Promise<unknown>;
@@ -39,8 +44,8 @@ export async function fetchFrom<T>(
 }
 
 /**
- * Pokémon Pocket est un jeu distinct, hors périmètre du catalogue.
- * Ses sets sont reconnaissables au nom, à la série ou à des ids connus.
+ * Pokémon Pocket is a separate game, out of scope for this catalog.
+ * Its sets are recognizable by name, by series, or by known ids.
  */
 export const POCKET_SET_IDS = new Set([
   "A1",

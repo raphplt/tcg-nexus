@@ -55,7 +55,6 @@ export default function PokedlePage() {
 
   const maxGuesses = 6;
 
-  // Generate target card
   const initGame = useCallback(async () => {
     setLoading(true);
     setGuesses([]);
@@ -85,7 +84,7 @@ export default function PokedlePage() {
           types: ["Lightning"],
           stage: "Basic",
           rarity: "Common",
-          // Pas d'image -> getCardImage renvoie le placeholder local.
+
           set: { name: "Célébrations" },
         } as any);
       }
@@ -100,7 +99,6 @@ export default function PokedlePage() {
     initGame();
   }, [initGame]);
 
-  // Search autocomplete
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
       setSearchResults([]);
@@ -214,7 +212,6 @@ export default function PokedlePage() {
 
   return (
     <PageWrapper maxWidth="xl" gradient="secondary" className="space-y-6">
-      {/* Header */}
       <div className="tcg-surface p-4 flex items-center justify-between bg-card/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link href="/pokemon/mini-games">
@@ -247,7 +244,6 @@ export default function PokedlePage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Visual Deblur Area */}
           <div className="lg:col-span-4 flex flex-col items-center gap-4">
             <Card className="tcg-surface overflow-hidden w-full max-w-60 shadow-md">
               <CardContent className="p-4 flex justify-center items-center relative aspect-[5/7] bg-zinc-950/5 dark:bg-zinc-950/20">
@@ -278,9 +274,7 @@ export default function PokedlePage() {
             </Badge>
           </div>
 
-          {/* Input & Table */}
           <div className="lg:col-span-8 space-y-6">
-            {/* Game states */}
             {gameState === "won" && (
               <div className="rounded-lg border border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 p-6 text-center space-y-3">
                 <h3 className="text-lg font-black uppercase">
@@ -318,7 +312,6 @@ export default function PokedlePage() {
               </div>
             )}
 
-            {/* Input Box */}
             {gameState === "playing" && (
               <div className="relative">
                 <div className="relative">
@@ -335,7 +328,6 @@ export default function PokedlePage() {
                   />
                 </div>
 
-                {/* Dropdown list */}
                 {showSearchDropdown && searchResults.length > 0 && (
                   <div className="absolute z-50 left-0 right-0 mt-2 bg-popover border border-border shadow-xl rounded-lg max-h-60 overflow-y-auto divide-y divide-border/60">
                     {searchResults.map((res) => (
@@ -363,7 +355,6 @@ export default function PokedlePage() {
               </div>
             )}
 
-            {/* Guess Table */}
             {guesses.length > 0 && (
               <div className="space-y-3">
                 <h3 className="font-heading text-sm font-bold uppercase text-muted-foreground tracking-wider">
@@ -387,7 +378,6 @@ export default function PokedlePage() {
                           key={idx}
                           className="hover:bg-muted/10 transition-colors"
                         >
-                          {/* Name */}
                           <td
                             className={`p-3 font-bold ${
                               g.checks.name === "correct"
@@ -397,7 +387,7 @@ export default function PokedlePage() {
                           >
                             {g.card.name}
                           </td>
-                          {/* Types */}
+
                           <td
                             className={`p-3 font-bold ${
                               g.checks.types === "correct"
@@ -409,7 +399,7 @@ export default function PokedlePage() {
                           >
                             {g.typesVal}
                           </td>
-                          {/* Generation */}
+
                           <td
                             className={`p-3 font-bold ${
                               g.checks.generation === "correct"
@@ -424,7 +414,7 @@ export default function PokedlePage() {
                                 ? "⬇️"
                                 : ""}
                           </td>
-                          {/* HP */}
+
                           <td
                             className={`p-3 font-bold ${
                               g.checks.hp === "correct"
@@ -439,7 +429,7 @@ export default function PokedlePage() {
                                 ? "⬇️"
                                 : ""}
                           </td>
-                          {/* Stage */}
+
                           <td
                             className={`p-3 font-bold ${
                               g.checks.stage === "correct"
@@ -449,7 +439,7 @@ export default function PokedlePage() {
                           >
                             {g.stageVal}
                           </td>
-                          {/* Rarity */}
+
                           <td
                             className={`p-3 font-bold ${
                               g.checks.rarity === "correct"

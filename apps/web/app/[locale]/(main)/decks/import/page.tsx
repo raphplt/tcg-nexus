@@ -52,7 +52,6 @@ function DeckImportContent() {
   const [code, setCode] = useState(codeFromUrl);
   const [previewCode, setPreviewCode] = useState(codeFromUrl);
 
-  // JSON import state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [jsonData, setJsonData] = useState<DeckExportJson | null>(null);
   const [jsonFileName, setJsonFileName] = useState<string>("");
@@ -180,7 +179,6 @@ function DeckImportContent() {
         <p className="text-muted-foreground mt-2">{t("subtitle")}</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2">
         <Button
           variant={activeTab === "code" ? "default" : "outline"}
@@ -198,7 +196,6 @@ function DeckImportContent() {
         </Button>
       </div>
 
-      {/* Share Code Tab */}
       {activeTab === "code" && (
         <>
           <Card>
@@ -373,7 +370,6 @@ function DeckImportContent() {
         </>
       )}
 
-      {/* JSON File Tab */}
       {activeTab === "json" && (
         <>
           <Card>

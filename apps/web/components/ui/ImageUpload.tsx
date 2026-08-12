@@ -81,15 +81,12 @@ export function ImageUpload({
 
       {value ? (
         <div className="relative flex items-center justify-center rounded-lg border bg-muted/30 p-4 h-48 overflow-hidden group">
-          {/* Preview Image */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
             alt={label || "Uploaded image"}
             className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
           />
 
-          {/* Overlays / Action button */}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button
               type="button"

@@ -3,7 +3,6 @@ import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import React from "react";
 
-// Polyfill for pointer capture (required by Radix UI Select in jsdom)
 if (typeof Element !== "undefined") {
   Element.prototype.hasPointerCapture =
     Element.prototype.hasPointerCapture || (() => false);
@@ -15,7 +14,6 @@ if (typeof Element !== "undefined") {
     Element.prototype.scrollIntoView || (() => {});
 }
 
-// Mock ResizeObserver for Radix UI components
 class ResizeObserverMock {
   observe() {}
   unobserve() {}
@@ -107,8 +105,6 @@ vi.mock("next/link", () => ({
   })(),
 }));
 
-// Les composants naviguent via les wrappers localisés : même mock que next/link
-// et next/navigation, mais sur @/i18n/navigation.
 vi.mock("@/i18n/navigation", () => ({
   __esModule: true,
   Link: (() => {
@@ -132,8 +128,6 @@ vi.mock("@/i18n/navigation", () => ({
   permanentRedirect: vi.fn(),
 }));
 
-// Les tests rendent des composants isolés, sans NextIntlClientProvider : on
-// résout les clés directement dans le dictionnaire français.
 vi.mock("next-intl", async (importOriginal) => {
   const actual = await importOriginal<typeof import("next-intl")>();
   const messages = (await import("../messages/fr.json")).default as Record<

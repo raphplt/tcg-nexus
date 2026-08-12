@@ -27,7 +27,6 @@ export const FavoriteButton = ({ cardId }: { cardId: string }) => {
     }
   }, [cardId]);
 
-  // Nettoyer le timeout au démontage
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {

@@ -1,11 +1,11 @@
 /**
- * Compare la couverture du catalogue entre langues, sans rien écrire.
+ * Compares catalog coverage across locales, without writing anything.
  *
- *   npm run coverage-report              # dataset local
- *   npm run coverage-report -- --remote  # confronte au catalogue TCGdex
+ *   npm run coverage-report              # local dataset
+ *   npm run coverage-report -- --remote  # compares against the TCGdex catalog
  *
- * C'est la métrique qui décide de l'activation d'une langue : une langue dont
- * il manque un tiers des sets ne doit pas être proposée aux utilisateurs.
+ * This is the metric that decides whether a locale can be enabled: a locale
+ * missing a third of the sets should not be offered to users.
  */
 import {
   type DatasetLocale,
@@ -56,7 +56,7 @@ function localCoverage(locale: DatasetLocale) {
   };
 }
 
-/** Sets présents dans une langue et absents d'une autre. */
+/** Sets present in one locale and missing from another. */
 function reportGaps(coverages: LocaleCoverage[]) {
   if (coverages.length < 2) return;
 

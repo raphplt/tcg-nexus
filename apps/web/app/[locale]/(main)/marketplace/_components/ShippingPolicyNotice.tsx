@@ -10,8 +10,7 @@ interface ShippingPolicyNoticeProps {
 }
 
 /**
- * Les frais de port et le délai d'expédition sont imposés par la plateforme :
- * on les affiche au vendeur au lieu de les lui faire saisir.
+ * The platform defines shipping fees and handling time, so they are displayed instead of entered by the seller.
  */
 export function ShippingPolicyNotice({
   productKind = "card",

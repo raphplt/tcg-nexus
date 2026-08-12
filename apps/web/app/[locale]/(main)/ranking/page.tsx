@@ -151,12 +151,10 @@ function RankingRow({
           : "border-transparent hover:border-border hover:bg-muted/40"
       }`}
     >
-      {/* Rank */}
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted font-bold tabular-nums text-muted-foreground">
         {player.rank}
       </div>
 
-      {/* Avatar + Name */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage
@@ -177,10 +175,8 @@ function RankingRow({
         </p>
       </div>
 
-      {/* Score */}
       <p className="shrink-0 text-lg font-black tabular-nums">{player.score}</p>
 
-      {/* Tendency */}
       <div className="hidden shrink-0 sm:block">
         <TendencyBadge tendency={player.tendency} />
       </div>
@@ -286,7 +282,6 @@ export default function RankingPage() {
   return (
     <PageWrapper maxWidth="xl" gradient="none" className="tcg-page--ranking">
       <div className="space-y-8">
-        {/* Header */}
         <section className="tcg-surface tcg-surface--hero p-8">
           <div className="space-y-6">
             <Badge className="rounded-full border-0 bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10">
@@ -303,7 +298,6 @@ export default function RankingPage() {
               </p>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -355,7 +349,6 @@ export default function RankingPage() {
               )}
             </div>
 
-            {/* Current user summary */}
             {myPosition && (
               <div className="flex flex-wrap items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
                 <div className="flex items-center gap-2">
@@ -387,7 +380,6 @@ export default function RankingPage() {
           </div>
         </section>
 
-        {/* Podium - page 1 only */}
         {isFirstPage && !isLoading && top3.length === 3 && (
           <section className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-end">
             <PodiumCard player={top3[1]!} position={2} />
@@ -396,11 +388,9 @@ export default function RankingPage() {
           </section>
         )}
 
-        {/* Table */}
         <section className="relative">
           <Card className="tcg-surface overflow-hidden">
             <CardContent className="p-0">
-              {/* Table Header */}
               <div className="flex items-center gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 <div className="w-9 text-center">#</div>
                 <div className="flex-1">{t("player")}</div>
@@ -411,7 +401,6 @@ export default function RankingPage() {
                 <div className="block w-6 sm:hidden" />
               </div>
 
-              {/* Rows */}
               {isLoading ? (
                 <div className="space-y-1 p-2">
                   {Array.from({ length: 10 }).map((_, i) => (
@@ -438,14 +427,12 @@ export default function RankingPage() {
                 </div>
               )}
 
-              {/* Sticky user row when not visible */}
               {myPosition && myPosition.rank > 0 && !isUserVisibleInPage && (
                 <StickyUserRow player={myPosition} />
               )}
             </CardContent>
           </Card>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-2">
               <Button

@@ -20,7 +20,6 @@ export function TabRules({ tournament }: TabRulesProps) {
   const t = useTranslations("TournamentRules");
   return (
     <div className="space-y-6">
-      {/* Règles principales */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -47,7 +46,6 @@ export function TabRules({ tournament }: TabRulesProps) {
         </CardContent>
       </Card>
 
-      {/* Informations complémentaires */}
       {tournament.additionalInfo && (
         <Card>
           <CardHeader className="pb-3">
@@ -64,7 +62,6 @@ export function TabRules({ tournament }: TabRulesProps) {
         </Card>
       )}
 
-      {/* Résumé des conditions */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -154,7 +151,6 @@ export function TabRules({ tournament }: TabRulesProps) {
         </CardContent>
       </Card>
 
-      {/* Conseils */}
       <Card className="bg-primary/5 border-primary/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">

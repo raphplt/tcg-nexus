@@ -91,10 +91,8 @@ export function TabRankings({ rankings }: TabRankingsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Podium - Top 3 */}
       {topThree.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Réorganiser pour afficher 2-1-3 sur desktop */}
           {[topThree[1], topThree[0], topThree[2]]
             .filter((r): r is Ranking => r !== undefined)
             .map((ranking) => {
@@ -164,7 +162,6 @@ export function TabRankings({ rankings }: TabRankingsProps) {
         </div>
       )}
 
-      {/* Tableau complet */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">

@@ -6,11 +6,14 @@ import {
 } from "./supported-locales";
 
 /**
- * Langue de la requête, lue dans `Accept-Language` (envoyé par le web).
- * On ne garde que la première langue reconnue ; à défaut, la langue par défaut.
+ * Request locale, read from `Accept-Language` (sent by the web app).
+ * Only the first recognized language is kept; otherwise the default locale.
  *
- * L'en-tête a la forme `fr-FR,fr;q=0.9,en;q=0.8` : on ne compare que le
- * préfixe de langue, la variante régionale ne nous concerne pas.
+ * The header looks like `fr-FR,fr;q=0.9,en;q=0.8`: only the language prefix is
+ * compared, the regional variant is irrelevant here.
+ *
+ * @param header Raw `Accept-Language` header value.
+ * @returns Supported locale to serve.
  */
 export function resolveRequestLocale(header?: string): SupportedLocale {
   if (!header) return DEFAULT_LOCALE;
@@ -24,7 +27,7 @@ export function resolveRequestLocale(header?: string): SupportedLocale {
   return DEFAULT_LOCALE;
 }
 
-/** `@RequestLocale() locale: SupportedLocale` dans une signature de contrôleur. */
+/** `@RequestLocale() locale: SupportedLocale` in a controller signature. */
 export const RequestLocale = createParamDecorator(
   (_data: unknown, context: ExecutionContext): SupportedLocale => {
     const request = context.switchToHttp().getRequest<{

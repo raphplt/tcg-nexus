@@ -198,7 +198,6 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start">
           <Button variant="ghost" size="sm" asChild>
             <Link href={`/tournaments/${id}`}>
@@ -225,7 +224,6 @@ export default function MatchesPage() {
           </Button>
         </div>
 
-        {/* Statistiques rapides */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
@@ -267,7 +265,6 @@ export default function MatchesPage() {
           </Card>
         </div>
 
-        {/* Filtres */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -358,7 +355,6 @@ export default function MatchesPage() {
           </CardContent>
         </Card>
 
-        {/* Liste des matches */}
         <Card>
           <CardContent className="overflow-x-auto p-0">
             <Table>
@@ -510,7 +506,6 @@ export default function MatchesPage() {
           </CardContent>
         </Card>
 
-        {/* Actions rapides pour les organisateurs */}
         {permissions.canStartMatches &&
           tournament?.status === "in_progress" && (
             <Card className="mt-6">

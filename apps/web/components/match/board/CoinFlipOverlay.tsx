@@ -52,7 +52,6 @@ export function CoinFlipOverlay({
     <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-6">
         <AnimatePresence mode="wait">
-          {/* Coin flip animation */}
           {(phase === "intro" ||
             phase === "flipping" ||
             phase === "result") && (
@@ -64,7 +63,6 @@ export function CoinFlipOverlay({
               transition={{ duration: 0.4 }}
               className="flex flex-col items-center gap-5"
             >
-              {/* Title */}
               <motion.h2
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -73,7 +71,6 @@ export function CoinFlipOverlay({
                 {t("coinFlip")}
               </motion.h2>
 
-              {/* Coin */}
               <div className="relative h-32 w-32" style={{ perspective: 800 }}>
                 <motion.div
                   className="absolute inset-0"
@@ -104,7 +101,6 @@ export function CoinFlipOverlay({
                   }
                   style={{ transformStyle: "preserve-3d" }}
                 >
-                  {/* Heads */}
                   <div
                     className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-[0_0_30px_rgba(251,191,36,0.4)] border-4 border-amber-600/40"
                     style={{ backfaceVisibility: "hidden" }}
@@ -116,7 +112,7 @@ export function CoinFlipOverlay({
                       </span>
                     </div>
                   </div>
-                  {/* Tails */}
+
                   <div
                     className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-br from-slate-300 via-gray-400 to-slate-500 shadow-[0_0_30px_rgba(148,163,184,0.4)] border-4 border-slate-600/40"
                     style={{
@@ -134,7 +130,6 @@ export function CoinFlipOverlay({
                 </motion.div>
               </div>
 
-              {/* Result text */}
               {phase === "result" && (
                 <motion.p
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -148,7 +143,6 @@ export function CoinFlipOverlay({
             </motion.div>
           )}
 
-          {/* Choice phase */}
           {phase === "choose" && (
             <motion.div
               key="choose-section"

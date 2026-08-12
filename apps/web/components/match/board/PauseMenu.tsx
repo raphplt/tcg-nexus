@@ -38,7 +38,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
 
   return (
     <>
-      {/* Gear button */}
       <button
         onClick={toggle}
         className={cn(
@@ -50,7 +49,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
         <Settings className="w-4 h-4" />
       </button>
 
-      {/* Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -71,7 +69,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
               className="w-full max-w-sm mx-4"
             >
               <div className="bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
                   <h2 className="text-lg font-bold text-white tracking-wide">
                     Pause
@@ -84,7 +81,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                   </button>
                 </div>
 
-                {/* Menu items */}
                 <div className="p-4 space-y-2">
                   <MenuButton
                     icon={<Play className="w-5 h-5" />}

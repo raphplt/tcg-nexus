@@ -49,7 +49,6 @@ export function PlayerField({
         isOpponent && "flex-col-reverse",
       )}
     >
-      {/* Player name and turn indicator */}
       <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
         <span
           className={cn(
@@ -73,7 +72,6 @@ export function PlayerField({
         )}
       </div>
 
-      {/* Bench row */}
       <div className="flex items-center gap-1.5">
         <AnimatePresence initial={false} mode="popLayout">
           {benchSlots.map((pokemon, i) => (
@@ -110,7 +108,6 @@ export function PlayerField({
         </AnimatePresence>
       </div>
 
-      {/* Active Pokemon */}
       <motion.div
         layout
         transition={{ type: "spring", damping: 20, stiffness: 200 }}
@@ -125,14 +122,12 @@ export function PlayerField({
         />
       </motion.div>
 
-      {/* Side info: deck, prizes, discard */}
       <div
         className={cn(
           "absolute flex flex-col items-center gap-2",
           isOpponent ? "right-4 top-2" : "left-4 bottom-2",
         )}
       >
-        {/* Deck pile */}
         <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
           <div className="relative group">
             <GameCard name="Deck" faceDown size="sm" disabled />
@@ -147,7 +142,6 @@ export function PlayerField({
           </div>
         </div>
 
-        {/* Prize cards */}
         <div className="rounded-2xl border border-white/10 bg-black/35 p-2 backdrop-blur-sm">
           <div className="relative">
             <div className="flex flex-col gap-0.5">
@@ -174,7 +168,6 @@ export function PlayerField({
           </div>
         </div>
 
-        {/* Discard pile */}
         {player.discard.length > 0 && (
           <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
             <div className="relative">

@@ -45,7 +45,7 @@ export interface SealedProduct {
   contents?: SealedProductContents | null;
   sku?: string;
   upc?: string;
-  /** Chemin relatif dans R2, ex : "pokecardex/AQ/Booster_Aquapolis_Arcanin.png" */
+  /** Relative R2 path, for example "pokecardex/AQ/Booster_Aquapolis_Arcanin.png". */
   image?: string;
   locales?: SealedProductLocale[];
   createdAt: string;

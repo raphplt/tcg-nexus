@@ -77,7 +77,6 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     fetchCards();
   }, [page, open]);
 
-  // Scroll to bottom pour pagination
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const bottom =
       e.currentTarget.scrollTop + e.currentTarget.clientHeight >=

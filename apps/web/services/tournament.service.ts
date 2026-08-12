@@ -40,14 +40,14 @@ export interface BulkRegistrationActionResult {
 
 export const tournamentService = {
   /**
-   * Récupère un tournoi par son ID
+   * Retrieves a tournament by its identifier.
    */
   async getById(tournamentId: string | number): Promise<Tournament> {
     return authedFetch<Tournament>("GET", `/tournaments/${tournamentId}`);
   },
 
   /**
-   * Récupère les tournois d'un joueur
+   * Retrieves a player's tournaments.
    */
   async getPlayerTournaments(
     playerId: number,
@@ -61,7 +61,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère un match d'un tournoi
+   * Retrieves a tournament match.
    */
   async getTournamentMatch(
     tournamentId: number,
@@ -86,7 +86,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les inscriptions d'un tournoi
+   * Retrieves tournament registrations.
    */
   async getRegistrations(
     tournamentId: number,
@@ -98,7 +98,7 @@ export const tournamentService = {
   },
 
   /**
-   * Inscription à un tournoi
+   * Registers the current user for a tournament.
    */
   async register(
     tournamentId: number,
@@ -112,7 +112,7 @@ export const tournamentService = {
   },
 
   /**
-   * Quitte un tournoi ou sa liste d'attente
+   * Leaves a tournament or its waiting list.
    */
   async unregister(tournamentId: number, playerId: number): Promise<void> {
     return authedFetch<void>(
@@ -122,7 +122,7 @@ export const tournamentService = {
   },
 
   /**
-   * Confirme une inscription
+   * Confirms a registration.
    */
   async confirmRegistration(
     tournamentId: number,
@@ -135,7 +135,7 @@ export const tournamentService = {
   },
 
   /**
-   * Annule une inscription
+   * Cancels a registration.
    */
   async cancelRegistration(
     tournamentId: number,
@@ -165,7 +165,7 @@ export const tournamentService = {
   },
 
   /**
-   * Effectue le check-in d'un joueur
+   * Checks in a player.
    */
   async checkIn(
     tournamentId: number,
@@ -178,14 +178,14 @@ export const tournamentService = {
   },
 
   /**
-   * Crée un tournoi
+   * Creates a tournament.
    */
   async create(payload: CreateTournamentDto): Promise<Tournament> {
     return authedFetch<Tournament>("POST", `/tournaments`, { data: payload });
   },
 
   /**
-   * Récupère les tournois paginés
+   * Retrieves paginated tournaments.
    */
   async getPaginated(
     params: TournamentQueryParams,
@@ -196,7 +196,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les tournois futurs
+   * Retrieves upcoming tournaments.
    */
   async getUpcomingTournaments(
     params: TournamentQueryParams,
@@ -207,7 +207,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les tournois passés
+   * Retrieves past tournaments.
    */
   async getPastTournaments(
     params: TournamentQueryParams,
@@ -218,7 +218,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère le bracket d'un tournoi
+   * Retrieves a tournament bracket.
    */
   async getBracket(tournamentId: number): Promise<BracketStructure> {
     return authedFetch<BracketStructure>(
@@ -228,7 +228,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les matches d'un tournoi
+   * Retrieves tournament matches.
    */
   async getTournamentMatches(tournamentId: number): Promise<Match[]> {
     const result = await authedFetch<{
@@ -245,7 +245,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les rankings d'un tournoi
+   * Retrieves tournament rankings.
    */
   async getRankings(tournamentId: number): Promise<Ranking[]> {
     return authedFetch<Ranking[]>(
@@ -254,14 +254,14 @@ export const tournamentService = {
     );
   },
   /**
-   * Récupère la progression du tournoi
+   * Retrieves tournament progress.
    */
   async getProgress(tournamentId: number): Promise<any> {
     return authedFetch<any>("GET", `/tournaments/${tournamentId}/progress`);
   },
 
   /**
-   * Récupère les transitions disponibles
+   * Retrieves available state transitions.
    */
   async getAvailableTransitions(
     tournamentId: number,
@@ -273,7 +273,7 @@ export const tournamentService = {
   },
 
   /**
-   * Démarre le tournoi
+   * Starts the tournament.
    */
   async startTournament(
     tournamentId: number,
@@ -287,7 +287,7 @@ export const tournamentService = {
   },
 
   /**
-   * Termine le tournoi
+   * Finishes the tournament.
    */
   async finishTournament(tournamentId: number): Promise<Tournament> {
     return authedFetch<Tournament>(
@@ -297,7 +297,7 @@ export const tournamentService = {
   },
 
   /**
-   * Annule le tournoi
+   * Cancels the tournament.
    */
   async cancelTournament(
     tournamentId: number,
@@ -311,7 +311,7 @@ export const tournamentService = {
   },
 
   /**
-   * Passe au round suivant
+   * Advances the tournament to the next round.
    */
   async advanceRound(
     tournamentId: number,
@@ -323,7 +323,7 @@ export const tournamentService = {
   },
 
   /**
-   * Met à jour le statut du tournoi
+   * Updates tournament status.
    */
   async updateStatus(
     tournamentId: number,
@@ -337,7 +337,7 @@ export const tournamentService = {
   },
 
   /**
-   * Remplit le tournoi avec des joueurs aléatoires (admin only)
+   * Fills the tournament with random players (admin only).
    */
   async fillWithPlayers(
     tournamentId: number,
@@ -351,7 +351,7 @@ export const tournamentService = {
   },
 
   /**
-   * Check-in tous les joueurs confirmés (admin only)
+   * Checks in all confirmed players (admin only).
    */
   async checkInAllPlayers(
     tournamentId: number,
@@ -363,7 +363,7 @@ export const tournamentService = {
   },
 
   /**
-   * Met à jour un match (score, statut)
+   * Updates a match score or status.
    */
   async updateMatch(
     tournamentId: number,

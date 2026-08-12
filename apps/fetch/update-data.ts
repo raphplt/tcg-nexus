@@ -1,14 +1,14 @@
 /**
- * Récupère le catalogue Pokémon depuis TCGdex, langue par langue, et l'écrit
- * dans le dataset local (`data/<locale>/`).
+ * Fetches the Pokémon catalog from TCGdex, locale by locale, and writes it to
+ * the local dataset (`data/<locale>/`).
  *
- *   npm run update-data                        # langues de LOCALES, sinon toutes
- *   npm run update-data -- --locale=en         # une langue précise
- *   npm run update-data -- --refresh           # re-récupère les sets déjà connus
+ *   npm run update-data                        # locales from LOCALES, else all
+ *   npm run update-data -- --locale=en         # one specific locale
+ *   npm run update-data -- --refresh           # re-fetches already known sets
  *
- * Chaque langue a son propre état : un set déjà récupéré en `fr` est bien
- * re-téléchargé en `en`. Les sets sont enregistrés au fil de l'eau, un run
- * interrompu reprend donc où il s'est arrêté.
+ * Each locale keeps its own state: a set already fetched in `fr` is still
+ * downloaded in `en`. Sets are persisted as they complete, so an interrupted
+ * run resumes where it stopped.
  */
 import {
   type DatasetCard,
@@ -35,14 +35,14 @@ import {
 } from "./tcgdex-client.js";
 
 /**
- * Les images de cartes sont ré-hébergées sur R2 (`cards/<locale>/…`). Elles
- * dépendent de la langue : le texte de la carte est imprimé sur l'illustration.
- * Passer `MIGRATE_CARD_IMAGES_TO_R2=false` pour les laisser sur le CDN TCGdex.
+ * Card images are re-hosted on R2 (`cards/<locale>/…`). They are
+ * locale-dependent: the card text is printed on the artwork itself.
+ * Set `MIGRATE_CARD_IMAGES_TO_R2=false` to leave them on the TCGdex CDN.
  */
 const MIGRATE_CARD_IMAGES_TO_R2 =
   process.env.MIGRATE_CARD_IMAGES_TO_R2 !== "false";
 
-/** Requêtes cartes simultanées. TCGdex tolère mal les rafales trop larges. */
+/** Concurrent card requests. TCGdex tolerates wide bursts poorly. */
 const FETCH_CONCURRENCY = Number(process.env.FETCH_CONCURRENCY ?? 5);
 
 const dataDir = resolveDataDir();
@@ -53,7 +53,7 @@ function localesFromArgs(): DatasetLocale[] {
   return localesFromEnv(flag ? flag.slice("--locale=".length) : undefined);
 }
 
-/** Fusionne les entrées connues et les nouvelles, en gardant l'ordre stable. */
+/** Merges known and incoming entries, keeping a stable order. */
 function mergeById<T extends { id: string }>(
   existing: T[],
   incoming: T[],
@@ -101,7 +101,7 @@ async function importSeries(locale: DatasetLocale, pocketSeries: Set<string>) {
   return merged;
 }
 
-/** Récupère les cartes d'un set, avec un pool de requêtes parallèles. */
+/** Fetches a set's cards through a pool of parallel requests. */
 async function fetchSetCards(
   locale: DatasetLocale,
   setId: string,
@@ -126,7 +126,7 @@ async function fetchSetCards(
           if (migrated?.uploaded) card.image = migrated.newBase;
         }
       } catch (error) {
-        // Une carte manquante ne doit pas interrompre le set : on journalise.
+        // A missing card must not abort the set: log and carry on.
         console.error(`\n  carte ${cardRef.id} (${locale}) : ${String(error)}`);
       }
 
@@ -152,8 +152,8 @@ async function importSets(locale: DatasetLocale, pocketSeries: Set<string>) {
   if (!remote) throw new Error(`Sets indisponibles en ${locale}.`);
 
   const candidates = remote.filter((set) => !isPocketSet(set, pocketSeries));
-  // L'état « déjà récupéré » est propre à la langue : il se lit sur la
-  // présence du fichier de cartes, pas sur la seule liste des sets.
+  // The "already fetched" state is per locale: it is read from the presence
+  // of the cards file, not from the sets list alone.
   const pending = refresh
     ? candidates
     : candidates.filter((set) => !hasSetCards(locale, set.id, dataDir));
@@ -204,8 +204,8 @@ async function importSets(locale: DatasetLocale, pocketSeries: Set<string>) {
       writeSetCards(locale, setRef.id, cards, dataDir);
     }
 
-    // Le set n'est enregistré qu'une fois ses cartes écrites : un run
-    // interrompu le reprendra au prochain passage.
+    // The set is only recorded once its cards are written: an interrupted run
+    // picks it up again on the next pass.
     sets = mergeById(sets, [{ ...setMetadata, id: setRef.id, serieId }]);
     writeSets(locale, sets, dataDir);
   }

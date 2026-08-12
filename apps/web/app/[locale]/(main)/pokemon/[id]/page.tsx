@@ -6,8 +6,8 @@ interface PageProps {
 }
 
 /**
- * La fiche carte a été fusionnée avec la page marketplace, orientée vente.
- * On conserve l'ancienne URL pour ne pas casser les liens existants.
+ * The card page was merged into the sales-oriented marketplace page.
+ * The legacy URL is retained to preserve existing links.
  */
 export default async function PokemonCardRedirectPage({ params }: PageProps) {
   const { id, locale } = await params;

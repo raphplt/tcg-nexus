@@ -97,7 +97,6 @@ export function VisualMatchBoardView({
         : t("defeat")
       : null;
 
-  // Detect attack events for flash animation
   const [attackFlash, setAttackFlash] = useState<"player" | "opponent" | null>(
     null,
   );
@@ -119,7 +118,6 @@ export function VisualMatchBoardView({
     prevLogLenRef.current = recentLog.length;
   }, [recentLog, enginePlayerId]);
 
-  // Confetti for victory
   const confettiParticles = useMemo(() => {
     if (winnerLabel !== t("victory")) return [];
     return Array.from({ length: 40 }, (_, i) => ({
@@ -138,7 +136,6 @@ export function VisualMatchBoardView({
     }));
   }, [winnerLabel]);
 
-  // Loading state
   if (!gameState || !enginePlayerId || !viewerPlayer || !opponentPlayer) {
     return (
       <div className="flex items-center justify-center h-dvh bg-gradient-to-b from-slate-950 to-slate-900">
@@ -169,7 +166,6 @@ export function VisualMatchBoardView({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_40%)]" />
       </div>
 
-      {/* Animated ambient border glow */}
       <div
         className={cn(
           "absolute inset-0 pointer-events-none z-0 transition-opacity duration-1000",
@@ -182,7 +178,6 @@ export function VisualMatchBoardView({
         <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent" />
       </div>
 
-      {/* ═══════════ HUD TOP BAR ═══════════ */}
       <div className="relative z-30 border-b border-white/8 bg-black/35 px-3 py-3 backdrop-blur-md md:px-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -237,7 +232,6 @@ export function VisualMatchBoardView({
         </div>
       </div>
 
-      {/* Error toast */}
       <AnimatePresence>
         {lastError && (
           <motion.div
@@ -251,7 +245,6 @@ export function VisualMatchBoardView({
         )}
       </AnimatePresence>
 
-      {/* ═══════════ GAME BOARD ═══════════ */}
       <div className="relative min-h-0 flex-1 overflow-clip">
         {introCard || mobileFeedEntries.length ? (
           <div className="relative z-20 space-y-3 px-3 pt-3 lg:hidden">
@@ -272,9 +265,7 @@ export function VisualMatchBoardView({
               className="mx-auto w-full max-w-4xl origin-center scale-[0.72] sm:scale-[0.82] lg:scale-[0.94] xl:scale-100"
               style={{ perspective: "800px" }}
             >
-              {/* Board surface */}
               <div className="relative space-y-3 overflow-clip rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95),0_-4px_30px_-10px_rgba(6,182,212,0.08)] sm:px-6 sm:py-5 [transform:rotateX(8deg)]">
-                {/* Mat texture - hex pattern */}
                 <div className="absolute inset-0 rounded-[2rem] opacity-[0.045] pointer-events-none">
                   <svg
                     className="w-full h-full"
@@ -300,12 +291,10 @@ export function VisualMatchBoardView({
                   </svg>
                 </div>
 
-                {/* Radial glow overlay */}
                 <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07)_0%,transparent_70%)] pointer-events-none" />
                 <div className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300/16 to-transparent pointer-events-none" />
                 <div className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/6 to-transparent pointer-events-none" />
 
-                {/* Opponent field */}
                 <motion.div
                   className="relative"
                   animate={
@@ -325,14 +314,13 @@ export function VisualMatchBoardView({
                   />
                 </motion.div>
 
-                {/* Center divider - battle zone */}
                 <div className="flex items-center gap-4 py-1">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                   <div className="relative">
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-100/25">
                       Arena
                     </span>
-                    {/* Active turn glow on VS */}
+
                     <div
                       className={cn(
                         "absolute -inset-3 rounded-full blur-xl transition-opacity duration-700",
@@ -345,7 +333,6 @@ export function VisualMatchBoardView({
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </div>
 
-                {/* Player field */}
                 <motion.div
                   className="relative"
                   animate={
@@ -353,7 +340,6 @@ export function VisualMatchBoardView({
                   }
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Active glow when it's our turn */}
                   {isMyTurn && (
                     <div className="absolute -inset-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 -z-10 animate-pulse" />
                   )}
@@ -397,7 +383,6 @@ export function VisualMatchBoardView({
                     disabled={!canAct && interaction.mode === "idle"}
                   />
 
-                  {/* Attack panel overlay */}
                   <AnimatePresence>
                     {interaction.mode === "choosing_attack" &&
                       viewerPlayer.active && (
@@ -429,7 +414,6 @@ export function VisualMatchBoardView({
           </div>
         </div>
 
-        {/* Attack flash overlay */}
         <AnimatePresence>
           {attackFlash && (
             <motion.div
@@ -447,12 +431,10 @@ export function VisualMatchBoardView({
           )}
         </AnimatePresence>
 
-        {/* Event log (floating, right side) */}
         <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 xl:block">
           <CombatFeedCard entries={desktopFeedEntries} />
         </div>
 
-        {/* Turn banner overlay */}
         <TurnBanner
           activePlayerId={gameState.activePlayerId}
           enginePlayerId={enginePlayerId}
@@ -460,7 +442,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* ═══════════ HAND BAR ═══════════ */}
       <div className="relative z-30">
         <HandBar
           hand={viewerPlayer.hand || []}
@@ -470,7 +451,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* ═══════════ ACTION BAR ═══════════ */}
       <div className="relative z-30">
         <ActionBar
           mode={interaction.mode}
@@ -482,7 +462,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* Prompt overlay */}
       {pendingPrompt &&
         (pendingPrompt.type === "CHOOSE_FIRST_PLAYER" ? (
           <CoinFlipOverlay
@@ -498,7 +477,6 @@ export function VisualMatchBoardView({
           />
         ))}
 
-      {/* ═══════════ VICTORY / DEFEAT OVERLAY ═══════════ */}
       <AnimatePresence>
         {winnerLabel && sessionStatus === "FINISHED" && (
           <motion.div
@@ -506,7 +484,6 @@ export function VisualMatchBoardView({
             animate={{ opacity: 1 }}
             className="absolute inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-md"
           >
-            {/* Confetti for victory */}
             {winnerLabel === t("victory") &&
               confettiParticles.map((p) => (
                 <motion.div
@@ -537,7 +514,6 @@ export function VisualMatchBoardView({
                 />
               ))}
 
-            {/* Defeat shake */}
             <motion.div
               initial={{ scale: 0.8, y: 30 }}
               animate={

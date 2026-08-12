@@ -3,18 +3,22 @@ import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { TrainerType } from "src/common/enums/trainerType";
 
 /**
- * Normalise une chaîne destinée au stockage : forme Unicode canonique et
- * espaces superflus supprimés. Les accents sont conservés — « Pokémon » doit
- * rester « Pokémon » en base.
+ * Normalizes a string meant for storage: canonical Unicode form, trimmed.
+ * Accents are preserved — "Pokémon" must stay "Pokémon" in the database.
+ *
+ * @param str Raw string.
+ * @returns Normalized string.
  */
 export function cleanString(str: string): string {
   return str.normalize("NFC").trim();
 }
 
 /**
- * Normalise une chaîne pour la *comparer* à une valeur connue. La perte des
- * accents et de la casse est voulue ici ; ne jamais utiliser pour une valeur
- * stockée.
+ * Normalizes a string in order to *compare* it against a known value. Losing
+ * accents and case is intentional here; never use it for a stored value.
+ *
+ * @param value Raw string.
+ * @returns Comparable, accent-free lowercase string.
  */
 export function normalizeForMapping(value?: string): string {
   if (!value) return "";
@@ -29,8 +33,11 @@ export function normalizeForMapping(value?: string): string {
 }
 
 /**
- * Les libellés TCGdex sont traduits ; le mapping accepte donc les variantes
- * française et anglaise pour aboutir à la même valeur d'enum.
+ * TCGdex labels are translated, so the mapping accepts both the French and
+ * English wording and resolves them to the same enum value.
+ *
+ * @param value Raw category label.
+ * @returns Matching enum value, or undefined when unknown.
  */
 export function mapPokemonCategory(
   value?: string,

@@ -40,8 +40,6 @@ export function NotificationBell() {
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  // les notifications récentes portent une clé ; les anciennes gardent leur
-  // texte rendu au moment de l'envoi
   const renderTitle = (n: UserNotification) =>
     n.translationKey
       ? t(`items.${n.translationKey}.title`, n.translationParams ?? {})
@@ -235,7 +233,6 @@ export function NotificationBell() {
                         {renderBody(n)}
                       </p>
 
-                      {/* CTA dynamic button */}
                       {hasAction && (
                         <div className="pt-1.5">
                           <Button

@@ -144,7 +144,6 @@ export function RankingsManager({ tournamentId }: RankingsManagerProps) {
         </div>
       )}
 
-      {/* Tableau complet */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

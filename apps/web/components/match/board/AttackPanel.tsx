@@ -43,7 +43,6 @@ export function AttackPanel({
   return (
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-50 w-80 max-w-[90vw]">
       <div className="bg-slate-900/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-slate-800/80 to-slate-800/60 border-b border-white/10">
           <span className="text-sm font-bold text-white tracking-wide">
             {pokemon.name}
@@ -56,7 +55,6 @@ export function AttackPanel({
           </button>
         </div>
 
-        {/* Attacks */}
         <div className="p-3 space-y-2">
           {pokemon.attacks.map((attack, index) => (
             <motion.button
@@ -74,7 +72,6 @@ export function AttackPanel({
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  {/* Energy cost */}
                   <div className="flex gap-0.5">
                     {attack.cost.map((type, i) => {
                       const img = typeToImage[type];
@@ -117,7 +114,6 @@ export function AttackPanel({
           ))}
         </div>
 
-        {/* Retreat */}
         {onRetreat && benchPokemon.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}

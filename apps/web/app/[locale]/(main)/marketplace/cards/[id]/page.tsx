@@ -131,7 +131,6 @@ export default function CardDetailPage() {
           </div>
         </div>
 
-        {/* Sans aucune offre ni filtre actif, la BuyBox suffit à porter le message */}
         {!hasNoOfferAtAll && (
           <ListingsTable
             listings={listings}

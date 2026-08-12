@@ -1,4 +1,5 @@
 import {
+  applyRarityFilter,
   cardNameMatchesSql,
   localizedNameSql,
 } from "src/card/card-search";
@@ -883,38 +884,40 @@ export class MarketplaceService {
         "listing.pokemonCard.id = card.id AND (listing.expiresAt IS NULL OR listing.expiresAt > :now) AND listing.quantityAvailable > 0 AND listing.status = :activeStatus",
         { now: new Date(), activeStatus: ListingStatus.ACTIVE },
       )
+      // Labels are applied by `CatalogLocalizationInterceptor` from the
+      // identifiers: selecting them here is neither possible nor needed.
       .select([
         "card.id",
-        "card.name",
-        "card.image",
-        "card.rarity",
+        "card.tcgDexId",
         "card.localId",
         "card.pricing",
         "set.id",
-        "set.name",
-        "set.logo",
-        "set.symbol",
         "serie.id",
-        "serie.name",
       ])
       .addSelect("COUNT(DISTINCT listing.id)", "listing_count")
       .addSelect("MIN(listing.price)", "min_price")
       .addSelect("AVG(listing.price)", "avg_price")
+      // Joined on a single locale, so it stays one-to-one and can safely take
+      // part in the grouping and ordering.
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
       .groupBy("card.id")
-      .addGroupBy("card.name")
-      .addGroupBy("card.image")
-      .addGroupBy("card.rarity")
+      .addGroupBy("card.tcgDexId")
       .addGroupBy("card.localId")
       .addGroupBy("card.pricing")
       .addGroupBy("set.id")
-      .addGroupBy("set.name")
-      .addGroupBy("set.logo")
-      .addGroupBy("set.symbol")
       .addGroupBy("serie.id")
-      .addGroupBy("serie.name");
+      .addGroupBy("sortTranslation.name")
+      .addGroupBy("sortTranslation.rarity");
 
     if (search) {
-      qb.andWhere("card.name ILIKE :search", { search: `%${search}%` });
+      qb.andWhere(cardNameMatchesSql("card"), {
+        search: `%${search.toLowerCase()}%`,
+      });
     }
     if (setId) {
       qb.andWhere("set.id = :setId", { setId });
@@ -923,7 +926,7 @@ export class MarketplaceService {
       qb.andWhere("serie.id = :serieId", { serieId });
     }
     if (rarity) {
-      qb.andWhere("card.rarity = :rarity", { rarity });
+      applyRarityFilter(qb, rarity);
     }
     if (currency) {
       qb.andWhere("(listing.currency = :currency OR listing.id IS NULL)", {
@@ -952,13 +955,13 @@ export class MarketplaceService {
       // Since we added it to GROUP BY, we can reference it directly
       qb.orderBy("card.localId", sortOrder);
       // Add secondary sort by name for consistency
-      qb.addOrderBy("card.name", "ASC");
+      qb.addOrderBy("sortTranslation.name", "ASC");
     } else if (sortBy === "name" || sortBy === "rarity") {
-      // Safe fields that are in GROUP BY
-      qb.orderBy(`card.${sortBy}`, sortOrder);
+      // Localized fields, taken from the joined translation
+      qb.orderBy(`sortTranslation.${sortBy}`, sortOrder);
     } else {
       // Fallback to name if sortBy is not recognized
-      qb.orderBy("card.name", sortOrder);
+      qb.orderBy("sortTranslation.name", sortOrder);
     }
 
     const validated = PaginationHelper.validateParams({ page, limit });
@@ -967,7 +970,9 @@ export class MarketplaceService {
       validated.limit,
     );
 
-    qb.skip(skip).take(validated.limit);
+    // `offset`/`limit` rather than `skip`/`take`: the latter wraps the query in
+    // a DISTINCT subquery that cannot see the joined sort column.
+    qb.offset(skip).limit(validated.limit);
 
     const [total, { entities, raw }] = await Promise.all([
       qb.getCount(),

@@ -20,7 +20,7 @@ export function hasReferencePrices(pricing?: CardPricing | null) {
   );
 }
 
-/** Prix constatés sur les places de marché externes, à titre indicatif. */
+/** Indicative prices observed on external marketplaces. */
 export function ReferencePrices({
   marketPricing,
   cardName,

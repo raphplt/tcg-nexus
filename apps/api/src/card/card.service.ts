@@ -310,8 +310,11 @@ export class CardService implements OnModuleInit {
         { sortLocale: DEFAULT_LOCALE },
       )
       .orderBy("sortTranslation.name", "ASC")
-      .skip(offset)
-      .take(validLimit);
+      // `offset`/`limit` rather than `skip`/`take`: the latter wraps the query
+      // in a DISTINCT subquery that cannot see the joined sort column. Safe
+      // here since every join is one-to-one.
+      .offset(offset)
+      .limit(validLimit);
 
     if (game) {
       qb.where("card.game = :game", { game });

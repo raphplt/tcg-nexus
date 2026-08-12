@@ -1,14 +1,13 @@
 /**
- * Récupère le dataset publié sur R2 dans `data/`.
+ * Pulls the dataset published on R2 into `data/`.
  *
- *   npm run data:pull                 # toutes les langues du manifeste
- *   LOCALES=fr npm run data:pull      # une seule langue
- *   npm run data:pull -- --force      # ignore les empreintes locales
+ *   npm run data:pull                 # every locale in the manifest
+ *   LOCALES=fr npm run data:pull      # a single locale
+ *   npm run data:pull -- --force      # ignores local checksums
  *
- * Aucune credential nécessaire : la lecture passe par le domaine public du
- * bucket. C'est ce qui permet à n'importe quel poste, et au conteneur de
- * production, de disposer du catalogue sans re-scraper TCGdex ni transférer
- * les fichiers à la main.
+ * No credentials needed: reads go through the bucket's public domain. The
+ * repository already ships the dataset, so this is only useful to refresh a
+ * deployed environment without rebuilding its image.
  */
 import {
   type DatasetLocale,
@@ -67,7 +66,7 @@ async function fetchManifest(): Promise<DatasetManifest> {
   return (await response.json()) as DatasetManifest;
 }
 
-/** Le fichier local est-il déjà identique à celui du manifeste ? */
+/** Is the local file already identical to the manifest entry? */
 function isUpToDate(absolutePath: string, expectedSha: string): boolean {
   if (force || !fs.existsSync(absolutePath)) return false;
   return sha256File(absolutePath) === expectedSha;
@@ -151,8 +150,8 @@ async function pull() {
     return;
   }
 
-  // Le manifeste local n'est écrit qu'une fois tous les fichiers en place :
-  // sa présence atteste d'un dataset complet.
+  // The local manifest is only written once every file is in place: its
+  // presence attests to a complete dataset.
   writeManifest(manifest, dataDir);
   console.log(`Dataset récupéré dans ${dataDir}.`);
 }

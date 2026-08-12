@@ -48,7 +48,6 @@ export function TabOrganizers({
   const t = useTranslations("TabOrganizers");
   return (
     <div className="space-y-6">
-      {/* Organisateurs */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -109,7 +108,6 @@ export function TabOrganizers({
         </CardContent>
       </Card>
 
-      {/* Notifications */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -175,7 +173,6 @@ export function TabOrganizers({
         </CardContent>
       </Card>
 
-      {/* Contact */}
       <Card className="bg-primary/5 border-primary/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">

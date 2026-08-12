@@ -558,7 +558,10 @@ export class CollectionService {
     }
 
     const totalItems = await queryBuilder.getCount();
-    const items = await queryBuilder.skip(skip).take(limit).getMany();
+    // `offset`/`limit` rather than `skip`/`take`: the latter wraps the query in
+    // a DISTINCT subquery that cannot see the joined sort column. Safe here
+    // since every join resolves to at most one row per item.
+    const items = await queryBuilder.offset(skip).limit(limit).getMany();
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

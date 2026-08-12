@@ -45,7 +45,6 @@ export function TurnBanner({
           transition={{ duration: 0.3 }}
           className="absolute inset-0 z-[80] flex items-center justify-center pointer-events-none"
         >
-          {/* Backdrop flash */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 0.3, 0] }}
@@ -56,7 +55,6 @@ export function TurnBanner({
             )}
           />
 
-          {/* Banner */}
           <motion.div
             initial={{ scale: 0.5, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -68,7 +66,6 @@ export function TurnBanner({
             }}
             className="relative text-center"
           >
-            {/* Glow behind text */}
             <div
               className={cn(
                 "absolute inset-0 blur-3xl opacity-60 -z-10 scale-150",

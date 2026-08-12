@@ -28,9 +28,9 @@ function resolve(path: string): unknown {
 }
 
 /**
- * Associe chaque `useTranslations("Namespace")` aux `t("cle")` littéraux qui
- * suivent dans le même fichier. Les clés construites dynamiquement ne sont pas
- * vérifiables et sont ignorées.
+ * Associates each `useTranslations("Namespace")` call with literal `t("key")`
+ * usages in the same file. Dynamically constructed keys cannot be verified and
+ * are ignored.
  */
 function collectUsages(source: string): string[] {
   const namespaces = [...source.matchAll(/useTranslations\("([^"]+)"\)/g)].map(
@@ -39,11 +39,10 @@ function collectUsages(source: string): string[] {
   if (namespaces.length === 0) return [];
 
   const keys = [...source.matchAll(/\bt\("([^"]+)"/g)].map((m) => m[1]);
-  // un seul namespace : rattachement direct
   if (namespaces.length === 1) {
     return keys.map((key) => `${namespaces[0]}.${key}`);
   }
-  // plusieurs namespaces : la clé est valide si elle existe dans l'un d'eux
+
   return keys.map((key) => {
     const hit = namespaces.find((ns) => resolve(`${ns}.${key}`) !== undefined);
     return `${hit ?? namespaces[0]}.${key}`;

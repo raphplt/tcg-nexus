@@ -92,7 +92,6 @@ function SealedListingsContent() {
     sortBy,
   });
 
-  // Handle searchParams url changes to reset page and items list
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
     setProductType(
@@ -109,7 +108,6 @@ function SealedListingsContent() {
     setItems([]);
   }, [searchParams]);
 
-  // Accumulate loaded products
   useEffect(() => {
     if (data?.data) {
       if (page === 1) {
@@ -126,7 +124,6 @@ function SealedListingsContent() {
 
   const hasMore = data ? page < data.meta.totalPages : false;
 
-  // IntersectionObserver for infinite scrolling
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -374,7 +371,7 @@ function SealedListingsContent() {
                 <SealedProductCard key={product.id} product={product} />
               ))}
             </div>
-            {/* Elément sentinelle pour le scroll infini */}
+
             <div
               ref={observerRef}
               className="py-8 flex justify-center items-center"
