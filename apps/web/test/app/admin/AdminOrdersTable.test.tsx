@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AdminOrdersTable } from "@/app/(main)/(protected)/admin/_components/AdminOrdersTable";
+import { AdminOrdersTable } from "@/app/[locale]/(main)/(protected)/admin/_components/AdminOrdersTable";
 import { adminService } from "@/services/admin.service";
 import { UserRole } from "@/types/auth";
 import { Rarity } from "@/types/listing";
@@ -134,7 +134,7 @@ describe("AdminOrdersTable", () => {
       screen.getByRole("button", { name: /Voir commande 1/i }),
     );
     await screen.findByText(/Pikachu/);
-    // Use getAllByText since the amount appears multiple times in the dialog
+
     expect(screen.getAllByText(/122\.50\s*EUR/i).length).toBeGreaterThan(0);
   });
 
@@ -142,18 +142,15 @@ describe("AdminOrdersTable", () => {
     render(<AdminOrdersTable />);
     await screen.findByText(/Ada Lovelace/);
 
-    // Open the status update dialog
     await userEvent.click(
       screen.getByRole("button", { name: /Mettre à jour le statut de 1/i }),
     );
 
-    // Verify the dialog is open and contains the update button
     const updateButton = await screen.findByRole("button", {
       name: /Mettre à jour/i,
     });
     expect(updateButton).toBeInTheDocument();
 
-    // Click the update button (uses current status from modal state)
     await userEvent.click(updateButton);
 
     await waitFor(() =>

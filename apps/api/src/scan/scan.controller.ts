@@ -23,7 +23,7 @@ export class ScanController {
 
   @Post("recognize")
   @ApiConsumes("multipart/form-data")
-  // `images` = rafale ; `image` gardé pour la compat mono-frame
+  // `images` = multi-frame burst; `image` kept for single-frame backwards compatibility
   @UseInterceptors(
     FileFieldsInterceptor(
       [

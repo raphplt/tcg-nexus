@@ -21,7 +21,6 @@ class CardEventTracker {
   private viewTimeout: NodeJS.Timeout | null = null;
 
   constructor() {
-    // Générer un sessionId unique pour cette session
     this.sessionId = this.generateSessionId();
   }
 
@@ -30,7 +29,7 @@ class CardEventTracker {
   }
 
   /**
-   * Enregistre un événement de carte
+   * Records a card event.
    */
   private async recordEvent(
     cardId: string,
@@ -45,25 +44,22 @@ class CardEventTracker {
         context,
       });
     } catch (error) {
-      // Échec silencieux pour ne pas perturber l'UX
       console.debug("Failed to record card event:", error);
     }
   }
 
   /**
-   * Track une vue de carte (avec déduplication par session)
+   * Tracks a card view with session-level deduplication.
    */
   async trackView(cardId: string, context?: CardEventContext): Promise<void> {
     const cacheKey = `view-${cardId}`;
 
-    // Éviter les doublons dans la même session
     if (this.viewCache.has(cacheKey)) {
       return;
     }
 
     this.viewCache.add(cacheKey);
 
-    // Réinitialiser le cache après 24h (simulation d'une nouvelle journée)
     if (this.viewTimeout) {
       clearTimeout(this.viewTimeout);
     }
@@ -78,7 +74,7 @@ class CardEventTracker {
   }
 
   /**
-   * Track une recherche
+   * Tracks a search.
    */
   async trackSearch(
     cardId: string,
@@ -92,7 +88,7 @@ class CardEventTracker {
   }
 
   /**
-   * Track l'ajout aux favoris
+   * Tracks adding a card to favorites.
    */
   async trackFavorite(
     cardId: string,
@@ -102,7 +98,7 @@ class CardEventTracker {
   }
 
   /**
-   * Track l'ajout au panier
+   * Tracks adding a card to the cart.
    */
   async trackAddToCart(
     cardId: string,
@@ -116,7 +112,7 @@ class CardEventTracker {
   }
 
   /**
-   * Track une vente (appelé côté backend lors de la création d'une commande)
+   * Tracks a sale when an order is created by the backend.
    */
   async trackSale(cardId: string, context?: CardEventContext): Promise<void> {
     await this.recordEvent(cardId, CardEventType.SALE, context);

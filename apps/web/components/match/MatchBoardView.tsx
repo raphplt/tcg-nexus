@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,10 +37,10 @@ interface MatchBoardViewProps {
   onRespondPrompt: (response: MatchPromptResponseInput) => void;
 }
 
-const sessionStatusLabels: Record<string, string> = {
-  WAITING_FOR_DECKS: "En attente des decks",
-  ACTIVE: "En cours",
-  FINISHED: "Terminé",
+const sessionStatusKeys: Record<string, string> = {
+  WAITING_FOR_DECKS: "waitingForDecks",
+  ACTIVE: "inProgress",
+  FINISHED: "finished",
 };
 
 export function MatchBoardView({
@@ -55,6 +56,7 @@ export function MatchBoardView({
   onDispatchAction,
   onRespondPrompt,
 }: MatchBoardViewProps) {
+  const t = useTranslations("MatchBoard");
   const [promptSelections, setPromptSelections] = useState<string[]>([]);
   const [promptNumericChoice, setPromptNumericChoice] = useState<number | null>(
     null,
@@ -102,7 +104,7 @@ export function MatchBoardView({
     return (
       <Card className="tcg-surface">
         <CardContent className="py-8 text-sm text-muted-foreground">
-          Initialisation du terrain...
+          {t("initializing")}
         </CardContent>
       </Card>
     );
@@ -118,8 +120,8 @@ export function MatchBoardView({
   const winnerLabel =
     sessionStatus === "FINISHED" && gameState.winnerId
       ? gameState.winnerId === enginePlayerId
-        ? "Victoire"
-        : "Défaite"
+        ? t("victory")
+        : t("defeat")
       : null;
 
   const submitPrompt = (pass = false) => {
@@ -154,12 +156,14 @@ export function MatchBoardView({
             <Badge
               variant={sessionStatus === "FINISHED" ? "default" : "secondary"}
             >
-              {sessionStatusLabels[sessionStatus] ?? sessionStatus}
+              {(sessionStatusKeys[sessionStatus]
+                ? t(sessionStatusKeys[sessionStatus])
+                : sessionStatus) ?? sessionStatus}
             </Badge>
             <Badge variant="outline">Tour {gameState.turnNumber}</Badge>
             <Badge variant="outline">
               {gameState.activePlayerId === enginePlayerId
-                ? "Votre tour"
+                ? t("yourTurn")
                 : "Tour adverse"}
             </Badge>
             {winnerLabel ? <Badge>{winnerLabel}</Badge> : null}
@@ -251,7 +255,7 @@ export function MatchBoardView({
           />
           <Card className="tcg-surface">
             <CardHeader>
-              <CardTitle>Votre main</CardTitle>
+              <CardTitle>{t("yourHand")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -297,7 +301,7 @@ export function MatchBoardView({
               </div>
               {!viewerPlayer.hand?.length ? (
                 <div className="tcg-empty-state px-4 py-5 text-sm text-slate-500">
-                  Votre main est vide.
+                  {t("emptyHand")}
                 </div>
               ) : null}
             </CardContent>
@@ -306,7 +310,7 @@ export function MatchBoardView({
 
         <Card className="tcg-surface">
           <CardHeader>
-            <CardTitle>Actions</CardTitle>
+            <CardTitle>{t("actions")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(viewerPlayer.active?.attacks || []).map((attack, attackIndex) => (
@@ -360,7 +364,7 @@ export function MatchBoardView({
               disabled={!canAct}
               onClick={() => onDispatchAction({ type: "END_TURN" })}
             >
-              Finir le tour
+              {t("endTurn")}
             </Button>
 
             <div className="space-y-2 border-t pt-3 text-xs text-muted-foreground">
@@ -386,6 +390,7 @@ function BoardPlayer({
   player: SanitizedGameState["players"][string];
   isCurrentTurn: boolean;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <Card className="tcg-surface">
       <CardHeader>
@@ -393,7 +398,7 @@ function BoardPlayer({
           <span>
             {title} : {player.name}
           </span>
-          {isCurrentTurn ? <Badge>Tour en cours</Badge> : null}
+          {isCurrentTurn ? <Badge>{t("currentTurn")}</Badge> : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -424,6 +429,7 @@ function PokemonPanel({
   label: string;
   pokemon: SanitizedPokemonCardView | null;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <div className="tcg-note-card p-3">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -449,7 +455,9 @@ function PokemonPanel({
           ) : null}
         </div>
       ) : (
-        <div className="mt-2 text-sm text-muted-foreground">Aucun Pokémon</div>
+        <div className="mt-2 text-sm text-muted-foreground">
+          {t("noPokemon")}
+        </div>
       )}
     </div>
   );
@@ -474,9 +482,10 @@ function HandCardActions({
   onEvolve: (targetPokemonInstanceId: string) => void;
   disabled: boolean;
 }) {
+  const t = useTranslations("MatchBoard");
   const evolutionTargets = [activePokemon, ...bench].filter(
     (pokemon): pokemon is SanitizedPokemonCardView =>
-      Boolean(pokemon) && card.stage !== "De base",
+      Boolean(pokemon) && card.stage !== t("basic"),
   );
 
   return (
@@ -484,18 +493,18 @@ function HandCardActions({
       <div className="font-medium">{card.name}</div>
       <div className="text-xs text-muted-foreground">{card.category}</div>
       <div className="mt-2 flex flex-wrap gap-2">
-        {card.category === "Pokémon" && card.stage === "De base" ? (
+        {card.category === t("pokemon") && card.stage === t("basic") ? (
           <Button
             size="sm"
             variant="outline"
             disabled={disabled}
             onClick={onPlayBasicToBench}
           >
-            Jouer sur le banc
+            {t("playOnBench")}
           </Button>
         ) : null}
 
-        {card.category === "Énergie"
+        {card.category === t("energy")
           ? [activePokemon, ...bench]
               .filter((pokemon): pokemon is SanitizedPokemonCardView =>
                 Boolean(pokemon),
@@ -524,7 +533,7 @@ function HandCardActions({
           </Button>
         ) : null}
 
-        {card.category === "Pokémon" && card.stage !== "De base"
+        {card.category === t("pokemon") && card.stage !== t("basic")
           ? evolutionTargets.map((pokemon) => (
               <Button
                 key={`${card.instanceId}-${pokemon.instanceId}`}

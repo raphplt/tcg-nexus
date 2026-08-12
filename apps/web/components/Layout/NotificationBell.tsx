@@ -1,8 +1,9 @@
 "use client";
 
+import type { UserNotification } from "@/types/notification";
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useNotifications } from "@/contexts/NotificationContext";
 import {
   Popover,
@@ -26,6 +27,8 @@ import {
 } from "lucide-react";
 
 export function NotificationBell() {
+  const locale = useLocale();
+  const t = useTranslations("Notifications");
   const router = useRouter();
   const {
     notifications,
@@ -37,7 +40,22 @@ export function NotificationBell() {
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Helper to format relative time in French
+  // Les clés viennent de l'API ("tournament.started") et sont résolues en messages imbriqués.
+  // On retombe sur le texte déjà traduit côté serveur si la clé est inconnue du front.
+  const renderTitle = (n: UserNotification) => {
+    const key = `items.${n.translationKey}.title`;
+    return n.translationKey && t.has(key)
+      ? t(key, n.translationParams ?? {})
+      : n.title;
+  };
+
+  const renderBody = (n: UserNotification) => {
+    const key = `items.${n.translationKey}.body`;
+    return n.translationKey && t.has(key)
+      ? t(key, n.translationParams ?? {})
+      : n.body;
+  };
+
   const formatRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
@@ -46,11 +64,12 @@ export function NotificationBell() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return "À l'instant";
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours} h`;
-    if (diffDays === 1) return "Hier";
-    return `Il y a ${diffDays} j`;
+    const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+    if (diffMins < 1) return formatter.format(0, "second");
+    if (diffMins < 60) return formatter.format(-diffMins, "minute");
+    if (diffHours < 24) return formatter.format(-diffHours, "hour");
+    return formatter.format(-diffDays, "day");
   };
 
   const getNotificationIcon = (type: string) => {
@@ -115,7 +134,7 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="relative h-9 w-9 rounded-full border border-border bg-background/50 hover:bg-accent/80 hover:text-accent-foreground"
-          aria-label="Open notifications"
+          aria-label={t("open")}
         >
           <div className="relative">
             {unreadCount > 0 ? (
@@ -138,13 +157,13 @@ export function NotificationBell() {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-muted/20">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">Notifications</h3>
+            <h3 className="font-semibold text-sm">{t("title")}</h3>
             {unreadCount > 0 && (
               <Badge
                 variant="secondary"
                 className="px-1.5 py-0 text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20"
               >
-                {unreadCount} nouvelle{unreadCount > 1 ? "s" : ""}
+                {t("newCount", { count: unreadCount })}
               </Badge>
             )}
           </div>
@@ -156,7 +175,7 @@ export function NotificationBell() {
               className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg gap-1"
             >
               <CheckCheck className="h-3.5 w-3.5" />
-              Tout lire
+              {t("markAllAsRead")}
             </Button>
           )}
         </div>
@@ -165,7 +184,7 @@ export function NotificationBell() {
           {loading && notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-xs gap-2">
               <span className="h-5 w-5 animate-spin border-2 border-primary border-t-transparent rounded-full" />
-              Chargement des notifications...
+              {t("loading")}
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[260px] text-muted-foreground text-center px-6 gap-3">
@@ -174,10 +193,10 @@ export function NotificationBell() {
               </div>
               <div className="space-y-1">
                 <p className="font-medium text-sm text-foreground">
-                  Aucune notification
+                  {t("emptyTitle")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Vous êtes à jour ! Toutes les alertes s'afficheront ici.
+                  {t("emptyDescription")}
                 </p>
               </div>
             </div>
@@ -210,17 +229,16 @@ export function NotificationBell() {
                         <p
                           className={`text-xs font-semibold leading-none ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}
                         >
-                          {n.title}
+                          {renderTitle(n)}
                         </p>
                         <span className="text-[10px] text-muted-foreground select-none shrink-0">
                           {formatRelativeTime(n.createdAt)}
                         </span>
                       </div>
                       <p className="text-xs leading-normal text-muted-foreground">
-                        {n.body}
+                        {renderBody(n)}
                       </p>
 
-                      {/* CTA dynamic button */}
                       {hasAction && (
                         <div className="pt-1.5">
                           <Button
@@ -229,8 +247,8 @@ export function NotificationBell() {
                             className="h-6 px-2 text-[10px] font-medium bg-accent/60 hover:bg-accent rounded-md gap-1"
                           >
                             {n.data?.casualSessionId
-                              ? "Rejoindre la partie"
-                              : "Accéder au match"}
+                              ? t("joinGame")
+                              : t("openMatch")}
                             <ExternalLink className="h-2.5 w-2.5" />
                           </Button>
                         </div>
@@ -246,7 +264,8 @@ export function NotificationBell() {
                             markAsRead(n.id);
                           }}
                           className="h-6 w-6 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground"
-                          title="Marquer comme lu"
+                          title={t("markAsRead")}
+                          aria-label={t("markAsRead")}
                         >
                           <Check className="h-3 w-3" />
                         </Button>
@@ -259,7 +278,8 @@ export function NotificationBell() {
                           deleteNotification(n.id);
                         }}
                         className="h-6 w-6 rounded-md hover:bg-destructive/15 text-muted-foreground hover:text-destructive"
-                        title="Supprimer"
+                        title={t("delete")}
+                        aria-label={t("delete")}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

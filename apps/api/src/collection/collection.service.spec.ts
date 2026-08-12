@@ -1,3 +1,4 @@
+import { CardService } from "../card/card.service";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -42,7 +43,11 @@ describe("CollectionService", () => {
 
   const createQueryBuilder = () => {
     const qb: any = {
+      leftJoin: jest.fn().mockReturnThis(),
+      offset: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      setParameter: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
@@ -81,6 +86,10 @@ describe("CollectionService", () => {
         {
           provide: getRepositoryToken(PokemonSet),
           useValue: mockPokemonSetRepo,
+        },
+        {
+          provide: CardService,
+          useValue: { getSetRarities: jest.fn().mockResolvedValue([]) },
         },
       ],
     }).compile();
@@ -220,7 +229,8 @@ describe("CollectionService", () => {
       "pokemonCard.name",
       "DESC",
     );
-    expect(qb.orderBy).toHaveBeenCalledWith("pokemonCard.name", "DESC");
+    // Names live in card_translation: sorting joins it on the default locale.
+    expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "DESC");
   });
 
   it("should throw when collection missing on pagination", async () => {

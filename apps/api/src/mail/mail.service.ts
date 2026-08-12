@@ -1,19 +1,34 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { MailerService } from "@nestjs-modules/mailer";
+import { MailI18nService } from "./mail-i18n.service";
 
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
 
-  constructor(private readonly mailerService: MailerService) {}
+  constructor(
+    private readonly mailerService: MailerService,
+    private readonly i18n: MailI18nService,
+  ) {}
 
-  async sendTicketCreated(to: string, ticketId: number, subject: string) {
+  async sendTicketCreated(
+    to: string,
+    ticketId: number,
+    subject: string,
+    locale?: string | null,
+  ) {
+    const template = "ticket-created";
     try {
       await this.mailerService.sendMail({
         to,
-        subject: `[TCG Nexus] Ticket #${ticketId} créé : ${subject}`,
-        template: "ticket-created",
-        context: { ticketId, subject },
+        subject: this.i18n.subject(template, locale, { ticketId, subject }),
+        template,
+        context: {
+          ticketId,
+          subject,
+          t: this.i18n.texts(template, locale),
+          lang: this.i18n.resolveLocale(locale),
+        },
       });
       this.logger.log(`Email ticket-created envoyé à ${to}`);
     } catch (error) {
@@ -29,13 +44,25 @@ export class MailService {
     ticketSubject: string,
     senderName: string,
     messagePreview: string,
+    locale?: string | null,
   ) {
+    const template = "ticket-reply";
     try {
       await this.mailerService.sendMail({
         to,
-        subject: `[TCG Nexus] Nouvelle réponse sur le ticket #${ticketId} : ${ticketSubject}`,
-        template: "ticket-reply",
-        context: { ticketId, ticketSubject, senderName, messagePreview },
+        subject: this.i18n.subject(template, locale, {
+          ticketId,
+          ticketSubject,
+        }),
+        template,
+        context: {
+          ticketId,
+          ticketSubject,
+          senderName,
+          messagePreview,
+          t: this.i18n.texts(template, locale),
+          lang: this.i18n.resolveLocale(locale),
+        },
       });
       this.logger.log(`Email ticket-reply envoyé à ${to}`);
     } catch (error) {

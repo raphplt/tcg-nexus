@@ -1,5 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PutObjectCommand, DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  PutObjectCommand,
+  DeleteObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 @Injectable()
 export class R2StorageService {
@@ -39,7 +43,11 @@ export class R2StorageService {
    * @param contentType Content type of the file (e.g. image/webp)
    * @returns Public URL of the uploaded asset, or null if R2 is not configured
    */
-  async uploadFile(buffer: Buffer, key: string, contentType: string): Promise<string | null> {
+  async uploadFile(
+    buffer: Buffer,
+    key: string,
+    contentType: string,
+  ): Promise<string | null> {
     if (!this.s3Client) {
       this.logger.error("Cannot upload: R2 S3Client is not initialized.");
       return null;
@@ -90,7 +98,10 @@ export class R2StorageService {
       );
       this.logger.log(`Successfully deleted asset from R2: ${key}`);
     } catch (error) {
-      this.logger.error(`Failed to delete file from R2 for url/key ${fileUrl}:`, error);
+      this.logger.error(
+        `Failed to delete file from R2 for url/key ${fileUrl}:`,
+        error,
+      );
     }
   }
 }

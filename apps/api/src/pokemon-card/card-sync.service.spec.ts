@@ -30,7 +30,13 @@ jest.mock("@tcgdex/sdk", () => {
               symbol: "set-symbol",
               releaseDate: "2026-01-01",
               legal: { standard: true, expanded: true },
-              cardCount: { total: 2, official: 2, reverse: 0, holo: 0, firstEd: 0 },
+              cardCount: {
+                total: 2,
+                official: 2,
+                reverse: 0,
+                holo: 0,
+                firstEd: 0,
+              },
               serie: { id: "sv", name: "Écarlate et Violet" },
               cards: [
                 { id: `${id}-1`, localId: "1", name: "Pikachu" },
@@ -83,7 +89,9 @@ describe("CardSyncService", () => {
     savedSeries = [];
     serieRepoMock = {
       findOne: jest.fn().mockImplementation(({ where }: any) => {
-        return Promise.resolve(savedSeries.find((s) => s.id === where.id) || null);
+        return Promise.resolve(
+          savedSeries.find((s) => s.id === where.id) || null,
+        );
       }),
       create: jest.fn().mockImplementation((dto) => dto),
       save: jest.fn().mockImplementation((dto) => {
@@ -113,7 +121,10 @@ describe("CardSyncService", () => {
         { provide: getRepositoryToken(PokemonSerie), useValue: serieRepoMock },
         { provide: getRepositoryToken(PokemonSet), useValue: setRepoMock },
         { provide: getRepositoryToken(Card), useValue: cardRepoMock },
-        { provide: getRepositoryToken(PokemonCardDetails), useValue: detailsRepoMock },
+        {
+          provide: getRepositoryToken(PokemonCardDetails),
+          useValue: detailsRepoMock,
+        },
       ],
     }).compile();
 
@@ -154,7 +165,10 @@ describe("CardSyncService", () => {
 
   it("should skip existing sets that are already complete in DB", async () => {
     savedSeries.push({ id: "sv", name: "Serie" }); // serie exists
-    setRepoMock.findOne.mockResolvedValue({ id: "sv01", cardCount: { total: 2 } }); // set exists
+    setRepoMock.findOne.mockResolvedValue({
+      id: "sv01",
+      cardCount: { total: 2 },
+    }); // set exists
     cardRepoMock.count.mockResolvedValue(2); // cards exist in database
 
     const stats = await service.syncAll();

@@ -3,6 +3,7 @@ import { CardGame } from "src/common/enums/cardGame";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
+import { PokemonSetTranslation } from "./pokemon-set-translation.entity";
 
 /**
  * Objet embarqué pour le nombre de cartes dans le set
@@ -53,15 +54,6 @@ export class PokemonSet {
   @Column({ type: "enum", enum: CardGame, default: CardGame.Pokemon })
   game: CardGame;
 
-  @Column()
-  name: string;
-
-  @Column({ nullable: true })
-  logo?: string;
-
-  @Column({ nullable: true })
-  symbol?: string;
-
   @Column(() => CardCount)
   cardCount: CardCount;
 
@@ -95,4 +87,21 @@ export class PokemonSet {
     (sealedProduct) => sealedProduct.pokemonSet,
   )
   sealedProducts: SealedProduct[];
+
+  /** Nom, logo et symbole du set, une ligne par langue activée. */
+  @OneToMany(
+    () => PokemonSetTranslation,
+    (translation) => translation.set,
+    { cascade: true },
+  )
+  translations?: PokemonSetTranslation[];
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  name?: string;
+  logo?: string;
+  symbol?: string;
 }

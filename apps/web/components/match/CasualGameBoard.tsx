@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Users, Wifi, WifiOff } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ import type {
   OnlineMatchLogEntry,
   SanitizedGameState,
 } from "@/types/match-online";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
 interface CasualGameBoardProps {
@@ -27,6 +28,8 @@ interface CasualGameBoardProps {
 }
 
 export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
+  const t = useTranslations("CasualGame");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
   const [sessionView, setSessionView] = useState<CasualSessionView | null>(
@@ -142,7 +145,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       <Card className="tcg-surface">
         <CardContent className="flex items-center justify-center gap-3 py-10 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement de la partie...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -153,10 +156,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-3 py-8 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" />
-          {extractApiErrorMessage(
-            sessionQuery.error,
-            "Impossible de charger cette partie.",
-          )}
+          {translateApiError(sessionQuery.error, tError, t("loadError"))}
         </CardContent>
       </Card>
     );
@@ -168,10 +168,8 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
         <CardContent className="space-y-4 p-6 text-center">
           <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary" />
           <div className="space-y-2">
-            <h2 className="text-xl font-bold">En attente de l'adversaire</h2>
-            <p className="text-sm text-muted-foreground">
-              La partie commencera dès que les deux decks seront validés.
-            </p>
+            <h2 className="text-xl font-bold">{t("waitingOpponent")}</h2>
+            <p className="text-sm text-muted-foreground">{t("waitingDecks")}</p>
           </div>
           <Badge variant="outline">vs {liveSession.opponentName}</Badge>
         </CardContent>
@@ -183,9 +181,9 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
     return (
       <Card className="tcg-surface">
         <CardContent className="space-y-4 p-6 text-center">
-          <h2 className="text-xl font-bold">Partie annulée</h2>
+          <h2 className="text-xl font-bold">{t("gameCancelled")}</h2>
           <Button asChild className="rounded-full">
-            <Link href="/play">Retour</Link>
+            <Link href="/play">{t("back")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -194,7 +192,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
 
   const emitAction = (action: MatchBoardActionInput) => {
     if (!socketRef.current || !enginePlayerId) {
-      setLastError("La connexion temps réel n'est pas encore prête.");
+      setLastError(t("realtimeNotReady"));
       return;
     }
     setLastError(null);
@@ -206,7 +204,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
 
   const emitPromptResponse = (response: MatchPromptResponseInput) => {
     if (!socketRef.current) {
-      setLastError("La connexion temps réel n'est pas encore prête.");
+      setLastError(t("realtimeNotReady"));
       return;
     }
     setLastError(null);
@@ -230,13 +228,13 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
           ) : (
             <WifiOff className="h-4 w-4 text-amber-500" />
           )}
-          {isConnected ? "Temps réel connecté" : "Reconnexion..."}
+          {isConnected ? t("realtimeConnected") : "Reconnexion..."}
           {opponentDisconnected ? (
             <Badge
               variant="outline"
               className="border-amber-500 text-amber-500"
             >
-              Adversaire déconnecté
+              {t("opponentDisconnected")}
             </Badge>
           ) : null}
         </div>
@@ -260,19 +258,19 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
           <Card className="tcg-surface tcg-surface--highlight">
             <CardContent className="space-y-4 p-6">
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Partie terminée</h2>
+                <h2 className="text-2xl font-bold">{t("gameOver")}</h2>
                 <p className="text-sm leading-6 text-slate-600">
                   {liveGameState?.winnerId === enginePlayerId
-                    ? "Vous avez remporté ce match !"
-                    : "Votre adversaire a remporté ce match."}
+                    ? t("youWon")
+                    : t("opponentWon")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full">
-                  <Link href="/play">Nouvelle partie</Link>
+                  <Link href="/play">{t("newGame")}</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full">
-                  <Link href="/play">Retour</Link>
+                  <Link href="/play">{t("back")}</Link>
                 </Button>
               </div>
             </CardContent>

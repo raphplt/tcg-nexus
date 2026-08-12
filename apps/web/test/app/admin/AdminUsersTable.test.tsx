@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AdminUsersTable } from "@/app/(main)/(protected)/admin/_components/AdminUsersTable";
+import { AdminUsersTable } from "@/app/[locale]/(main)/(protected)/admin/_components/AdminUsersTable";
 import { adminService } from "@/services/admin.service";
 import { type User, UserRole } from "@/types/auth";
 
@@ -59,10 +59,8 @@ describe("AdminUsersTable", () => {
     await userEvent.type(screen.getByLabelText(/Email/), "grace@example.com");
     await userEvent.type(screen.getByLabelText(/Mot de passe/), "secret123");
 
-    // Toggle switches
     await userEvent.click(screen.getByRole("switch", { name: /Compte pro/i }));
 
-    // Click create button (uses default role from form state)
     await userEvent.click(screen.getByRole("button", { name: /Créer/i }));
 
     await waitFor(() =>

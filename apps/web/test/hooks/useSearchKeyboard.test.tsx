@@ -87,7 +87,7 @@ describe("useSearchKeyboard", () => {
   it("incrémente l'index sélectionné sur ArrowDown sans dépasser la fin", () => {
     const handlers = setup({ isOpen: true, itemCount: 3, selectedIndex: 2 });
     dispatch({ key: "ArrowDown" });
-    // déjà sur le dernier index (2 = 3 - 1), on reste à 2
+
     expect(handlers.onSelectedIndexChange).toHaveBeenCalledWith(2);
   });
 

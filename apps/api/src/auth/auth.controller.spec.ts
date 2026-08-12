@@ -118,7 +118,7 @@ describe("AuthController", () => {
     await controller.register({} as any, res, req);
 
     expect(res.cookie).toHaveBeenCalledTimes(2);
-    // rememberMe=false → cookie refreshToken doit être un cookie de session (pas de maxAge)
+    // rememberMe=false → refreshToken cookie should be a session cookie (no maxAge)
     expect(cookies[1][2].maxAge).toBeUndefined();
     expect(res.json).toHaveBeenCalledWith({
       user: { id: 2, email: "b" },

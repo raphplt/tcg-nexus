@@ -26,7 +26,7 @@ export class CardPopularityMetrics {
   @Column({ type: "date" })
   date: Date;
 
-  // Compteurs d'événements pour la journée
+  // Event counters for the day
   @Column({ type: "int", default: 0 })
   views: number;
 
@@ -42,7 +42,7 @@ export class CardPopularityMetrics {
   @Column({ type: "int", default: 0 })
   sales: number;
 
-  // Métriques marketplace
+  // Marketplace summary metrics
   @Column({ type: "int", default: 0 })
   listingCount: number;
 
@@ -52,7 +52,7 @@ export class CardPopularityMetrics {
   @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   avgPrice: number;
 
-  // Scores calculés
+  // Calculated popularity and trend scores
   @Column({ type: "decimal", precision: 10, scale: 4, default: 0 })
   popularityScore: number;
 

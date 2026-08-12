@@ -1,7 +1,3 @@
-// ─── Module 6 : CardResolver ──────────────────────────────────────────────────
-// Orchestre les 5 modules précédents et produit le ScanResolution final.
-// C'est le seul point d'entrée du pipeline depuis l'UI.
-
 import { api } from "@/services/api";
 import { cardDetector } from "./card-detector";
 import { perspectiveCorrector } from "./card-detector";
@@ -36,7 +32,7 @@ const log = (
   console.log(`[CardResolver:${step}] ${detail} (${entry.durationMs}ms)`);
 };
 
-/** Appelle l'API pour récupérer les candidats textuels */
+/** Retrieves text-based candidates from the API. */
 const fetchCandidates = async (
   signal: ScanSignal,
 ): Promise<CardSearchResult[]> => {
@@ -45,7 +41,6 @@ const fetchCandidates = async (
   if (signal.ocrLocalId) params.localId = signal.ocrLocalId;
   if (signal.ocrSetTotal) params.setTotal = signal.ocrSetTotal;
 
-  // Appel à l'endpoint scan-match existant
   const res = await api.post<{ card: CardSearchResult; score: number }[]>(
     "/pokemon-card/scan-match",
     params,
@@ -65,7 +60,6 @@ export const cardResolver = {
     const logs: ScanStepLog[] = [];
     let t0: number;
 
-    // ── Étape 1 : Détection ───────────────────────────────────────────────────
     t0 = Date.now();
     const detected = cardDetector.detect(frameCrop);
     log(
@@ -76,7 +70,6 @@ export const cardResolver = {
       `found=${detected.found} ratio=${detected.aspectRatio} confidence=${detected.confidence}`,
     );
 
-    // ── Étape 2 : Rectification ───────────────────────────────────────────────
     t0 = Date.now();
     let rectified;
     try {
@@ -96,7 +89,6 @@ export const cardResolver = {
       );
     }
 
-    // ── Étape 3 : OCR ciblé (2 zones) ────────────────────────────────────────
     t0 = Date.now();
     let ocrResult;
     try {
@@ -118,7 +110,6 @@ export const cardResolver = {
       );
     }
 
-    // ── Étape 4 : VisualMatcher (Phase 2 stub) ────────────────────────────────
     t0 = Date.now();
     const visualResult = await visualMatcher.match(rectified.base64);
     log(
@@ -129,7 +120,6 @@ export const cardResolver = {
       `method=${visualResult.method} matches=${visualResult.topMatches.length}`,
     );
 
-    // ── Construction du signal ────────────────────────────────────────────────
     const signal: ScanSignal = {
       ocrName: ocrResult.nameZone.candidateName,
       ocrLocalId: ocrResult.numberZone.localId,
@@ -140,7 +130,6 @@ export const cardResolver = {
       visualMatches: visualResult.topMatches,
     };
 
-    // Pas de signal du tout → on ne peut pas chercher
     if (
       !signal.ocrName &&
       !signal.ocrLocalId &&
@@ -159,7 +148,6 @@ export const cardResolver = {
       );
     }
 
-    // ── Étape 5 : Fetch candidats + Ranking ───────────────────────────────────
     t0 = Date.now();
     let candidates: CardSearchResult[] = [];
     try {
@@ -171,7 +159,6 @@ export const cardResolver = {
 
     const ranked: RankedCandidate[] = candidateRanker.rank(candidates, signal);
 
-    // ── Étape 6 : Résolution finale ───────────────────────────────────────────
     t0 = Date.now();
     const best = ranked[0] ?? null;
     const topScore = best?.score ?? 0;
@@ -201,8 +188,6 @@ export const cardResolver = {
     };
   },
 };
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
 
 const emptyResolution = (
   logs: ScanStepLog[],

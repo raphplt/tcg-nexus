@@ -27,6 +27,7 @@ export class NotificationService {
     body: string,
     type = "info",
     data: Record<string, any> | null = null,
+    translation?: { key: string; params: Record<string, any> },
   ): Promise<Notification> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -39,13 +40,15 @@ export class NotificationService {
       body,
       type,
       data,
+      translationKey: translation?.key ?? null,
+      translationParams: translation?.params ?? null,
       isRead: false,
     });
 
     const savedNotification =
       await this.notificationRepository.save(notification);
 
-    // Envoi en temps réel via WebSocket (sans la relation user pour alléger)
+    // Real-time dispatch via WebSocket (omitting user relation to payload size)
     const socketPayload = {
       id: savedNotification.id,
       title: savedNotification.title,
@@ -57,14 +60,14 @@ export class NotificationService {
     };
     this.notificationGateway.sendNotificationToUser(userId, socketPayload);
 
-    // Déclenchement de la notification push
+    // Trigger push notification
     this.triggerPushNotification(userId, title, body, data);
 
     return savedNotification;
   }
 
   /**
-   * Retourne la liste paginée des notifications d'un utilisateur.
+   * Returns the paginated list of a user's notifications.
    */
   async getNotifications(
     userId: number,
@@ -95,13 +98,13 @@ export class NotificationService {
         order: { createdAt: "DESC" },
         skip,
         take: limit,
-    });
+      });
 
     const unreadCount = await this.notificationRepository.count({
       where: { user: { id: userId }, isRead: false },
     });
 
-    // Suppression du champ user pour ne pas exposer de données sensibles
+    // Omit user relation property from payload to avoid leaking user info
     const data = notifications.map(({ user, ...rest }) => rest);
 
     return {
@@ -196,7 +199,7 @@ export class NotificationService {
 
     if (existing) {
       if (existing.user.id !== userId) {
-        // Réassignation du token s'il appartenait à un autre utilisateur
+        // Reassign token if previously registered under another user ID
         const user = await this.userRepository.findOne({
           where: { id: userId },
         });
@@ -227,7 +230,7 @@ export class NotificationService {
   }
 
   /**
-   * Supprime un token push enregistré.
+   * Unregisters a push device token.
    */
   async unregisterToken(
     userId: number,
@@ -245,7 +248,7 @@ export class NotificationService {
   }
 
   /**
-   * Méthode interne pour envoyer les notifications push (Expo).
+   * Internal helper to dispatch Expo push notifications.
    */
   private async triggerPushNotification(
     userId: number,
@@ -274,7 +277,7 @@ export class NotificationService {
         await this.sendExpoPushNotifications(expoTokens, title, body, data);
       }
 
-      // Log pour le diagnostic
+      // Diagnostic logging
       console.log(
         `Push Notifications triggered for User ID ${userId}: Title="${title}". Platforms: ${deviceTokens
           .map((t) => t.platform)

@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useState } from "react";
 import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { Badge } from "@/components/ui/badge";
@@ -14,13 +15,15 @@ import {
   trainingMatchService,
 } from "@/services/training-match.service";
 import { TrainingSessionView } from "@/types/training-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 
 interface TrainingBoardProps {
   sessionId: number;
 }
 
 export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
+  const t = useTranslations("TrainingBoard");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -44,9 +47,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(
-        extractApiErrorMessage(error, "Impossible de résoudre cette action."),
-      );
+      setLastError(translateApiError(error, tError, t("actionError")));
     },
   });
 
@@ -57,9 +58,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(
-        extractApiErrorMessage(error, "Impossible de valider cette réponse."),
-      );
+      setLastError(translateApiError(error, tError, t("responseError")));
     },
   });
 
@@ -71,7 +70,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       <Card className="tcg-surface">
         <CardContent className="flex items-center justify-center gap-3 py-10 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement du match d’entraînement...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -81,10 +80,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
     return (
       <Card className="border-destructive/40">
         <CardContent className="py-8 text-sm text-destructive">
-          {extractApiErrorMessage(
-            sessionQuery.error,
-            "Impossible de charger ce match d’entraînement.",
-          )}
+          {translateApiError(sessionQuery.error, tError, t("loadError"))}
         </CardContent>
       </Card>
     );
@@ -100,14 +96,14 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       isBusy={isBusy}
       headerAside={
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Badge variant="outline">Mode synchrone</Badge>
+          <Badge variant="outline">{t("syncMode")}</Badge>
           {isBusy ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               L’IA joue son tour...
             </span>
           ) : (
-            <span>Prêt</span>
+            <span>{t("ready")}</span>
           )}
         </div>
       }
@@ -116,21 +112,21 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
           <Card className="tcg-surface tcg-surface--highlight">
             <CardContent className="space-y-4 p-6">
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Partie terminée</h2>
+                <h2 className="text-2xl font-bold">{t("gameOver")}</h2>
                 <p className="text-sm leading-6 text-slate-600">
                   {session.winnerSide === "PLAYER"
-                    ? "Vous avez remporté ce match d’entraînement."
+                    ? t("youWon")
                     : session.winnerSide === "AI"
-                      ? "L’IA a remporté ce match d’entraînement."
-                      : "Le match s’est terminé sans vainqueur déclaré."}
+                      ? t("aiWon")
+                      : t("noWinner")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full">
-                  <Link href="/play#training-ai">Nouvelle partie</Link>
+                  <Link href="/play#training-ai">{t("newGame")}</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full">
-                  <Link href="/play">Retour à /play</Link>
+                  <Link href="/play">{t("backToPlay")}</Link>
                 </Button>
               </div>
             </CardContent>

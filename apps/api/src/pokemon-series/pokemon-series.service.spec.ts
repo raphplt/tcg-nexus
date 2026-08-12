@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { PokemonSerieTranslation } from "./entities/pokemon-serie-translation.entity";
 import { PokemonSerie } from "./entities/pokemon-serie.entity";
 import { PokemonSeriesService } from "./pokemon-series.service";
 
@@ -25,6 +26,12 @@ describe("PokemonSeriesService", () => {
     delete: jest.fn(),
   };
 
+  const mockTranslationRepository = {
+    upsert: jest.fn(),
+    findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -33,22 +40,33 @@ describe("PokemonSeriesService", () => {
           provide: getRepositoryToken(PokemonSerie),
           useValue: mockRepository,
         },
+        {
+          provide: getRepositoryToken(PokemonSerieTranslation),
+          useValue: mockTranslationRepository,
+        },
       ],
     }).compile();
 
     service = module.get<PokemonSeriesService>(PokemonSeriesService);
+    jest.clearAllMocks();
   });
 
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  it("should create a pokemon series", async () => {
-    const dto = { name: "Series" } as any;
-    mockRepository.create.mockReturnValue(dto);
-    mockRepository.save.mockResolvedValue({ id: 1, ...dto });
+  it("should create a pokemon series and its default translation", async () => {
+    const dto = { id: "neo", name: "Neo" } as any;
+    mockRepository.create.mockReturnValue({ id: "neo" });
+    mockRepository.save.mockResolvedValue({ id: "neo" });
+    mockTranslationRepository.findOneOrFail.mockResolvedValue({});
+    mockRepository.findOne.mockResolvedValue({ id: "neo" });
 
-    await expect(service.create(dto)).resolves.toEqual({ id: 1, ...dto });
+    await expect(service.create(dto)).resolves.toEqual({ id: "neo" });
+    expect(mockTranslationRepository.upsert).toHaveBeenCalledWith(
+      { serieId: "neo", locale: "fr", name: "Neo" },
+      ["serieId", "locale"],
+    );
   });
 
   it("should find all with custom query builder", async () => {
@@ -56,21 +74,38 @@ describe("PokemonSeriesService", () => {
     expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith("serie");
   });
 
-  it("should find one series by id", async () => {
-    mockRepository.findOne.mockResolvedValue({ id: "2", name: "Neo" });
-    await expect(service.findOne("2")).resolves.toEqual({
-      id: "2",
-      name: "Neo",
+  it("should find one series without selecting dropped columns", async () => {
+    mockRepository.findOne.mockResolvedValue({ id: "2" });
+
+    await expect(service.findOne("2")).resolves.toEqual({ id: "2" });
+    expect(mockRepository.findOne).toHaveBeenCalledWith({
+      where: { id: "2", game: "POKEMON" },
     });
   });
 
-  it("should update and return entity", async () => {
-    mockRepository.update.mockResolvedValue({ affected: 1 });
-    mockRepository.findOne.mockResolvedValue({ id: "3", name: "Updated" });
+  it("should write the name to the translation of the requested locale", async () => {
+    mockTranslationRepository.findOneOrFail.mockResolvedValue({});
+    mockRepository.findOne.mockResolvedValue({ id: "3" });
 
     await expect(
-      service.update("3", { name: "Updated" } as any),
-    ).resolves.toEqual({ id: "3", name: "Updated" });
+      service.update("3", { name: "Updated", locale: "en" } as any),
+    ).resolves.toEqual({ id: "3" });
+    expect(mockTranslationRepository.upsert).toHaveBeenCalledWith(
+      { serieId: "3", locale: "en", name: "Updated" },
+      ["serieId", "locale"],
+    );
+  });
+
+  it("should leave the logo untouched when only the name changes", async () => {
+    mockTranslationRepository.findOneOrFail.mockResolvedValue({});
+    mockRepository.findOne.mockResolvedValue({ id: "4" });
+
+    await service.updateVisual("4", "fr", { name: "Base", logo: undefined });
+
+    expect(mockTranslationRepository.upsert).toHaveBeenCalledWith(
+      { serieId: "4", locale: "fr", name: "Base" },
+      ["serieId", "locale"],
+    );
   });
 
   it("should delete series", async () => {

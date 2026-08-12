@@ -3,7 +3,7 @@ import { secureApi } from "@/utils/fetch";
 
 export interface AuthSessionResponse {
   user: User;
-  /** Expiration absolue du access token en ms Unix (source de vérité côté serveur). */
+  /** Absolute access-token expiration as Unix milliseconds; the server is authoritative. */
   accessTokenExpiresAt?: number;
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { SanitizedHandCardView } from "@/types/match-online";
@@ -18,26 +19,25 @@ export function HandBar({
   onCardClick,
   disabled = false,
 }: HandBarProps) {
+  const t = useTranslations("MatchBoard");
   if (!hand.length) {
     return (
       <div className="flex h-16 items-center justify-center text-sm font-medium tracking-wide text-white/30">
-        Votre main est vide.
+        {t("emptyHand")}
       </div>
     );
   }
 
   const count = hand.length;
-  // How much each card overlaps its neighbor (more cards = tighter)
+
   const overlap = count <= 5 ? -8 : count <= 10 ? -28 : -40;
 
   return (
     <div className="relative h-36 sm:h-40">
-      {/* Card count label */}
       <div className="absolute right-3 top-1 z-10 text-[10px] font-bold uppercase tracking-[0.22em] text-white/25">
         {count} carte{count > 1 ? "s" : ""}
       </div>
 
-      {/* Cards row — centered, overlapping, bottom-anchored */}
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-center">
         <AnimatePresence initial={false} mode="popLayout">
           {hand.map((card, index) => {
@@ -45,11 +45,9 @@ export function HandBar({
             const mid = (count - 1) / 2;
             const offset = index - mid;
 
-            // Fan rotation: ±15° max spread
             const maxAngle = Math.min(count * 2.5, 20);
             const rotation = count > 1 ? (offset / mid) * maxAngle : 0;
 
-            // Arc: cards at edges sit lower
             const normalizedOffset = count > 1 ? Math.abs(offset / mid) : 0;
             const arc = normalizedOffset ** 2 * 24;
 
@@ -72,7 +70,7 @@ export function HandBar({
                 }}
                 className={cn(
                   "relative flex-shrink-0",
-                  // Push cards down so only top ~55% shows; hover reveals full card
+
                   "translate-y-[45%]",
                   !isSelected &&
                     "hover:-translate-y-4 hover:!rotate-0 hover:scale-110",
@@ -98,21 +96,21 @@ export function HandBar({
                   onClick={() => onCardClick(card)}
                   disabled={disabled}
                 />
-                {/* Category badge */}
+
                 <div
                   className={cn(
                     "absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-0.5",
                     "text-[7px] font-bold uppercase tracking-wider shadow-md",
-                    card.category === "Pokémon" && "bg-blue-600 text-white",
+                    card.category === t("pokemon") && "bg-blue-600 text-white",
                     card.category === "Dresseur" && "bg-rose-600 text-white",
-                    card.category === "Énergie" && "bg-amber-600 text-white",
+                    card.category === t("energy") && "bg-amber-600 text-white",
                   )}
                 >
-                  {card.category === "Pokémon"
-                    ? card.stage === "De base"
+                  {card.category === t("pokemon")
+                    ? card.stage === t("basic")
                       ? "BASE"
                       : "EVO"
-                    : card.category === "Énergie"
+                    : card.category === t("energy")
                       ? "NRJ"
                       : "DRS"}
                 </div>

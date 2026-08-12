@@ -28,7 +28,11 @@ export default function TournamentsLayout() {
             isAdminOrModerator ? (
               <Link href="/tournaments/create" asChild>
                 <Pressable hitSlop={10}>
-                  <Ionicons name="add-circle" size={28} color={colors.primary} />
+                  <Ionicons
+                    name="add-circle"
+                    size={28}
+                    color={colors.primary}
+                  />
                 </Pressable>
               </Link>
             ) : null,

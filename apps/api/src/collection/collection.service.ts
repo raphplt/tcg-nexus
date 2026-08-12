@@ -1,3 +1,9 @@
+import { CardService } from "src/card/card.service";
+import {
+  DEFAULT_LOCALE,
+  type SupportedLocale,
+} from "src/translation/supported-locales";
+import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
 import {
   ForbiddenException,
   Injectable,
@@ -31,6 +37,7 @@ export class CollectionService {
     private cardStateRepository: Repository<CardState>,
     @InjectRepository(PokemonSet)
     private pokemonSetRepository: Repository<PokemonSet>,
+    private readonly cardService: CardService,
   ) {}
 
   private async getOwnedCollection(
@@ -55,6 +62,11 @@ export class CollectionService {
     return collection;
   }
 
+  /**
+   * Retrieves all public collections.
+   *
+   * @returns Array of public Collection entities.
+   */
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.find({
       select: [
@@ -71,6 +83,12 @@ export class CollectionService {
     });
   }
 
+  /**
+   * Finds all collections owned by a specific user.
+   *
+   * @param userId Target user ID.
+   * @returns User's collections.
+   */
   async findByUserId(userId: string): Promise<Collection[]> {
     return await this.collectionRepository.find({
       where: { user: { id: Number(userId) } },
@@ -78,6 +96,12 @@ export class CollectionService {
     });
   }
 
+  /**
+   * Finds a collection by ID.
+   *
+   * @param id Collection UUID.
+   * @returns Collection entity.
+   */
   async findOneById(id: string): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
@@ -89,6 +113,12 @@ export class CollectionService {
     return collection;
   }
 
+  /**
+   * Creates a new user collection or Master Set collection.
+   *
+   * @param createCollectionDto Collection creation parameters.
+   * @returns Created Collection entity.
+   */
   async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
     let masterSet: PokemonSet | undefined;
 
@@ -102,7 +132,7 @@ export class CollectionService {
         );
       }
 
-      // Empêcher la création de doublons pour le même user + set
+      // Prevent duplicate collection creation for the same user and master set
       const existing = await this.collectionRepository.findOne({
         where: {
           user: { id: Number(createCollectionDto.userId) },
@@ -138,6 +168,14 @@ export class CollectionService {
     return await this.collectionRepository.save(collection);
   }
 
+  /**
+   * Adds a Pokémon card to an owned collection or increments item quantity.
+   *
+   * @param collectionId Target collection ID.
+   * @param pokemonCardId Card ID to add.
+   * @param userId Requesting user ID.
+   * @returns Created or updated CollectionItem.
+   */
   async addCardToCollection(
     collectionId: string,
     pokemonCardId: string,
@@ -183,6 +221,14 @@ export class CollectionService {
     return this.collectionItemRepository.save(newItem);
   }
 
+  /**
+   * Decrements or removes a card from an owned collection.
+   *
+   * @param collectionId Target collection ID.
+   * @param pokemonCardId Card ID to remove.
+   * @param userId Requesting user ID.
+   * @returns Updated item or null if completely removed.
+   */
   async removeCardFromCollection(
     collectionId: string,
     pokemonCardId: string,
@@ -207,6 +253,13 @@ export class CollectionService {
     return null;
   }
 
+  /**
+   * Removes a specific collection item by ID.
+   *
+   * @param collectionId Parent collection ID.
+   * @param itemId Item ID.
+   * @param userId Requesting user ID.
+   */
   async removeCollectionItem(
     collectionId: string,
     itemId: number,
@@ -229,6 +282,14 @@ export class CollectionService {
     await this.collectionItemRepository.delete(itemId);
   }
 
+  /**
+   * Updates collection metadata.
+   *
+   * @param id Collection ID.
+   * @param updateCollectionDto Update DTO.
+   * @param userId Requesting user ID.
+   * @returns Updated Collection.
+   */
   async update(
     id: string,
     updateCollectionDto: UpdateCollectionDto,
@@ -254,6 +315,12 @@ export class CollectionService {
     return await this.collectionRepository.save(collection);
   }
 
+  /**
+   * Deletes a collection owned by the user.
+   *
+   * @param id Collection ID.
+   * @param userId Requesting user ID.
+   */
   async delete(id: string, userId: number): Promise<void> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
@@ -273,6 +340,13 @@ export class CollectionService {
     await this.collectionRepository.remove(collection);
   }
 
+  /**
+   * Retrieves a paginated list of public collections.
+   *
+   * @param page 1-based page index.
+   * @param limit Items per page.
+   * @returns Object with collections array and page metadata.
+   */
   async findAllPaginated(
     page: number,
     limit: number,
@@ -300,6 +374,21 @@ export class CollectionService {
     };
   }
 
+  /**
+   * Retrieves paginated items within a specific collection with filtering and sorting support.
+   *
+   * @param collectionId Target collection ID.
+   * @param page Page index.
+   * @param limit Items per page.
+   * @param search Optional search query.
+   * @param sortBy Field to sort by.
+   * @param sortOrder ASC or DESC.
+   * @param setId Optional set filter.
+   * @param serieId Optional series filter.
+   * @param rarity Optional card rarity filter.
+   * @param cardState Optional card state condition filter.
+   * @returns Paginated items and metadata.
+   */
   async findCollectionItemsPaginated(
     collectionId: string,
     page: number = 1,
@@ -323,7 +412,7 @@ export class CollectionService {
       hasPreviousPage: boolean;
     };
   }> {
-    // Vérifier que la collection existe et charger la relation masterSet
+    // Ensure collection exists and load masterSet relation
     const collection = await this.collectionRepository.findOne({
       where: { id: collectionId },
       relations: ["masterSet"],
@@ -352,10 +441,7 @@ export class CollectionService {
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
-        queryBuilder.andWhere(
-          "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search)",
-          { search: `%${search}%` },
-        );
+        applyCardSearch(queryBuilder, search);
       }
 
       if (setId) {
@@ -365,7 +451,7 @@ export class CollectionService {
         queryBuilder.andWhere("serie.id = :serieId", { serieId });
       }
       if (rarity) {
-        queryBuilder.andWhere("card.rarity = :rarity", { rarity });
+        applyRarityFilter(queryBuilder, rarity);
       }
       if (cardState) {
         queryBuilder.andWhere("item.cardState.code = :cardState", {
@@ -384,13 +470,11 @@ export class CollectionService {
           id: item?.id ?? null,
           quantity: item?.quantity ?? 0,
           added_at: item?.added_at ?? null,
+          // `tcgDexId` allows `CatalogLocalizationInterceptor` to attach localized name, image, rarity, and category
           pokemonCard: {
             id: card.id,
-            name: card.name,
-            image: card.image,
+            tcgDexId: card.tcgDexId,
             localId: card.localId,
-            rarity: card.rarity,
-            category: card.category,
             updated: card.updated,
             set: card.set,
           },
@@ -413,7 +497,7 @@ export class CollectionService {
       };
     }
 
-    // Construire la query avec recherche
+    // Build query with filters
     const queryBuilder = this.collectionItemRepository
       .createQueryBuilder("item")
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
@@ -422,15 +506,10 @@ export class CollectionService {
       .leftJoinAndSelect("set.serie", "serie")
       .where("item.collection.id = :collectionId", { collectionId });
 
-    // Ajouter la recherche si fournie
     if (search) {
-      queryBuilder.andWhere(
-        "(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)",
-        { search: `%${search}%` },
-      );
+      applyCardSearch(queryBuilder, search, { alias: "pokemonCard" });
     }
 
-    // Appliquer les filtres avancés
     if (setId) {
       queryBuilder.andWhere("set.id = :setId", { setId });
     }
@@ -440,14 +519,13 @@ export class CollectionService {
     }
 
     if (rarity) {
-      queryBuilder.andWhere("pokemonCard.rarity = :rarity", { rarity });
+      applyRarityFilter(queryBuilder, rarity, { alias: "pokemonCard" });
     }
 
     if (cardState) {
       queryBuilder.andWhere("cardState.code = :cardState", { cardState });
     }
 
-    // Trier
     const validSortBy = [
       "added_at",
       "quantity",
@@ -460,17 +538,30 @@ export class CollectionService {
       sortField === "pokemonCard.name" ||
       sortField === "pokemonCard.rarity"
     ) {
-      queryBuilder.orderBy(sortField, sortOrder);
+      // Name and rarity live in translations. The join is filtered on a single
+      // locale so it stays one-to-one; sorting uses the default locale since no
+      // request language reaches this layer.
+      queryBuilder.leftJoin(
+        "pokemonCard.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      );
+      queryBuilder.orderBy(
+        sortField === "pokemonCard.name"
+          ? "sortTranslation.name"
+          : "sortTranslation.rarity",
+        sortOrder,
+      );
     } else {
       queryBuilder.orderBy(`item.${sortField}`, sortOrder);
     }
 
-    // Compter le total
     const totalItems = await queryBuilder.getCount();
-
-    // Appliquer pagination
-    const items = await queryBuilder.skip(skip).take(limit).getMany();
-
+    // `offset`/`limit` rather than `skip`/`take`: the latter wraps the query in
+    // a DISTINCT subquery that cannot see the joined sort column. Safe here
+    // since every join resolves to at most one row per item.
+    const items = await queryBuilder.offset(skip).limit(limit).getMany();
     const totalPages = Math.ceil(totalItems / limit);
 
     return {
@@ -487,7 +578,10 @@ export class CollectionService {
     };
   }
 
-  async getSetRarities(collectionId: string): Promise<string[]> {
+  async getSetRarities(
+    collectionId: string,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<string[]> {
     const collection = await this.collectionRepository.findOne({
       where: { id: collectionId },
       relations: ["masterSet"],
@@ -501,15 +595,7 @@ export class CollectionService {
       return [];
     }
 
-    const result = await this.cardRepository
-      .createQueryBuilder("card")
-      .select("DISTINCT card.rarity", "rarity")
-      .innerJoin("card.set", "set")
-      .where("set.id = :setId", { setId: collection.masterSet.id })
-      .andWhere("card.rarity IS NOT NULL")
-      .orderBy("card.rarity", "ASC")
-      .getRawMany();
-
-    return result.map((r: { rarity: string }) => r.rarity);
+    // Rarities are localized labels: delegate to CardService which handles locale resolution and fallbacks
+    return this.cardService.getSetRarities(collection.masterSet.id, locale);
   }
 }

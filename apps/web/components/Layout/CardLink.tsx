@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 
@@ -9,6 +10,7 @@ type CardLinkProps = {
 };
 
 const CardLink = ({ title, description, link, icon }: CardLinkProps) => {
+  const t = useTranslations("Common");
   return (
     <a href={link} className="block w-full md:w-1/4">
       <Card className="card-hover h-full cursor-pointer">
@@ -18,7 +20,7 @@ const CardLink = ({ title, description, link, icon }: CardLinkProps) => {
         </CardHeader>
         <CardContent>
           <p className="mb-2 text-sm text-default-900 h-10">{description}</p>
-          <span className="text-primary font-medium">Voir plus →</span>
+          <span className="text-primary font-medium">{t("seeMore")}</span>
         </CardContent>
       </Card>
     </a>

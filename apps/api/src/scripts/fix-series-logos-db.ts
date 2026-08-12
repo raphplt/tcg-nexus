@@ -12,7 +12,10 @@ async function bootstrap() {
   const dataSource = app.get(DataSource);
   const pokemonSerieRepository = dataSource.getRepository(PokemonSerie);
 
-  const seriesJsonPath = path.resolve(__dirname, "../../../../data/pokemon_series.json");
+  const seriesJsonPath = path.resolve(
+    __dirname,
+    "../../../../data/pokemon_series.json",
+  );
 
   if (!fs.existsSync(seriesJsonPath)) {
     console.error(`❌ Series JSON file not found at: ${seriesJsonPath}`);
@@ -33,17 +36,23 @@ async function bootstrap() {
 
       if (dbSerie) {
         if (dbSerie.logo !== serieData.logo) {
-          console.log(`  Updating logo for ${dbSerie.name} (${dbSerie.id}): ${dbSerie.logo} -> ${serieData.logo}`);
+          console.log(
+            `  Updating logo for ${dbSerie.name} (${dbSerie.id}): ${dbSerie.logo} -> ${serieData.logo}`,
+          );
           dbSerie.logo = serieData.logo;
           await pokemonSerieRepository.save(dbSerie);
           updatedCount++;
         }
       } else {
-        console.log(`  ⚠️  Series ${serieData.name} (${serieData.id}) not found in DB`);
+        console.log(
+          `  ⚠️  Series ${serieData.name} (${serieData.id}) not found in DB`,
+        );
       }
     }
 
-    console.log(`🎉 Finished! Updated ${updatedCount} series logos in database.`);
+    console.log(
+      `🎉 Finished! Updated ${updatedCount} series logos in database.`,
+    );
   } catch (error) {
     console.error("❌ Database update failed:", error);
   }

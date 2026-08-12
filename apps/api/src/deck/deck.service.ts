@@ -1,6 +1,8 @@
+import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import {
   BadRequestException,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -49,7 +51,15 @@ export class DeckService {
     private readonly deckShareRepo: Repository<DeckShare>,
     @InjectRepository(SavedDeck)
     private readonly savedDeckRepo: Repository<SavedDeck>,
+    private readonly localization: CatalogLocalizationService,
   ) {}
+  /**
+   * Creates a new deck for a user along with its card compositions.
+   *
+   * @param user Owner user entity.
+   * @param dto Deck creation payload.
+   * @returns Newly created Deck entity with cards.
+   */
   async createDeck(user: User, dto: CreateDeckDto) {
     const format = await this.formatRepo.findOneBy({ id: dto.formatId });
     if (!format) throw new NotFoundException("Format introuvable");
@@ -67,7 +77,7 @@ export class DeckService {
     });
 
     await this.decksRepository.save(deck);
-    // Créer les DeckCards
+    // Create DeckCard entities
     const cards: DeckCard[] = [];
     for (const carte of dto.cards) {
       const cardEntity = await this.cardRepo.findOneBy({ id: carte.cardId });
@@ -82,7 +92,7 @@ export class DeckService {
       });
       cards.push(deckCard);
     }
-    // Sauvegarder toutes les cartes
+    // Save all deck cards
     await this.deckCardRepo.save(cards);
     return await this.decksRepository.findOne({
       where: { id: deck.id },
@@ -90,6 +100,12 @@ export class DeckService {
     });
   }
 
+  /**
+   * Retrieves all public decks matching parameters.
+   *
+   * @param params Query and pagination parameters.
+   * @returns Paginated result of public decks.
+   */
   async findAll(params: FindAllDecksParams = {}) {
     const {
       formatId = 0,
@@ -127,6 +143,13 @@ export class DeckService {
     );
   }
 
+  /**
+   * Retrieves all decks owned by a user.
+   *
+   * @param user User entity.
+   * @param params Query and pagination parameters.
+   * @returns Paginated result of user decks.
+   */
   async findAllFromUser(user: User, params: FindAllDecksParams = {}) {
     const {
       formatId = 0,
@@ -163,6 +186,14 @@ export class DeckService {
       sortOrder,
     );
   }
+
+  /**
+   * Retrieves public decks belonging to a user ID.
+   *
+   * @param userId Target user ID.
+   * @param params Pagination options.
+   * @returns Paginated public decks.
+   */
   async findPublicDecksByUser(
     userId: number,
     params: { page?: number; limit?: number } = {},
@@ -178,6 +209,12 @@ export class DeckService {
     return { items, total, page, limit };
   }
 
+  /**
+   * Retrieves a deck by ID with all populated card relations.
+   *
+   * @param id Deck ID.
+   * @returns Deck entity.
+   */
   async findOneWithCards(id: number): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },
@@ -195,6 +232,12 @@ export class DeckService {
     return deck;
   }
 
+  /**
+   * Performs strategic analysis on deck composition (type ratios, energy curve, warnings).
+   *
+   * @param id Deck ID.
+   * @returns Analysis result metrics and suggestions DTO.
+   */
   async analyzeDeck(id: number): Promise<AnalyzeDeckResultDto> {
     const deck = await this.decksRepository.findOne({
       where: { id },
@@ -204,6 +247,9 @@ export class DeckService {
     if (!deck) throw new NotFoundException("Deck not found");
 
     const cards = deck.cards || [];
+    // Analysis compares card names (energy matching): labels originate from localized translations and must be resolved first
+    await this.localization.resolveLabels(cards);
+
     const totalCards = cards.reduce((sum, card) => sum + (card.qty || 0), 0);
 
     const typeMap = new Map<string, number>();
@@ -221,8 +267,7 @@ export class DeckService {
         typeMap.set(type, (typeMap.get(type) || 0) + quantity),
       );
 
-      const categoryLabel =
-        card.pokemonDetails?.category || card.category || "Unknown";
+      const categoryLabel = card.pokemonDetails?.category || "Unknown";
       const normalizedCategory = categoryLabel.toLowerCase().replace("é", "e");
 
       let mappedCategory = categoryLabel;
@@ -355,6 +400,14 @@ export class DeckService {
     };
   }
 
+  /**
+   * Updates an existing deck's name, format, or card list.
+   *
+   * @param deckId Deck ID.
+   * @param user Deck owner.
+   * @param dto Update parameters.
+   * @returns Updated Deck.
+   */
   async updateDeck(deckId: number, user: User, dto: UpdateDeckDto) {
     const deck = await this.decksRepository.findOne({
       where: { id: deckId, user: { id: user.id } },
@@ -378,7 +431,7 @@ export class DeckService {
     }
     await this.decksRepository.save(deck);
 
-    // Supprimer les cartes
+    // Delete removed deck cards
     if (dto.cardsToRemove && dto.cardsToRemove.length) {
       await this.deckCardRepo.delete(dto.cardsToRemove.map((c) => c.id));
     }
@@ -398,7 +451,7 @@ export class DeckService {
         });
         cards.push(deckCard);
       }
-      // Sauvegarder toutes les cartes
+      // Save newly added cards
       await this.deckCardRepo.save(cards);
     }
 
@@ -417,7 +470,7 @@ export class DeckService {
         }
         await this.deckCardRepo.save(cardEntity);
       }
-      // Sauvegarder toutes les cartes
+      // Save updated cards
       await this.deckCardRepo.save(cards);
     }
 
@@ -427,12 +480,25 @@ export class DeckService {
     });
   }
 
+  /**
+   * Deletes a deck by ID.
+   *
+   * @param id Deck ID.
+   */
   async remove(id: number) {
     const deck = await this.decksRepository.findOne({ where: { id } });
     if (!deck) throw new NotFoundException(`Deck #${id} not found`);
     await this.decksRepository.remove(deck);
     return { message: `Deck ${deck.name} supprimé avec succès` };
   }
+
+  /**
+   * Creates a duplicate copy of a deck for the user.
+   *
+   * @param id Target deck ID to clone.
+   * @param user User cloning the deck.
+   * @returns Newly cloned Deck.
+   */
   async cloneDeck(id: number, user: User): Promise<Deck> {
     const deck = await this.decksRepository.findOne({
       where: { id },
@@ -464,11 +530,22 @@ export class DeckService {
     return this.findOneWithCards(saved.id);
   }
 
+  /**
+   * Increments view count for a deck.
+   *
+   * @param id Deck ID.
+   */
   async incrementViews(id: number) {
     await this.decksRepository.increment({ id }, "views", 1);
     return { message: "View incremented" };
   }
 
+  /**
+   * Saves a public deck to a user's saved deck library.
+   *
+   * @param deckId Target deck ID.
+   * @param user User saving the deck.
+   */
   async saveDeckToLibrary(deckId: number, user: User) {
     const deck = await this.decksRepository.findOne({
       where: { id: deckId },
@@ -496,17 +573,33 @@ export class DeckService {
     return { saved: true, alreadySaved: false };
   }
 
+  /**
+   * Removes a saved deck from a user's library.
+   *
+   * @param deckId Saved deck ID.
+   * @param user User entity.
+   */
   async removeDeckFromLibrary(deckId: number, user: User) {
     const result = await this.savedDeckRepo.delete({
       user: { id: user.id },
       deck: { id: deckId },
     });
     if (!result.affected) {
-      throw new NotFoundException("Ce deck n'est pas dans votre bibliothèque");
+      throw new ForbiddenException({
+        code: "DECK_NOT_IN_LIBRARY",
+        message: "Ce deck n'est pas dans votre bibliothèque",
+      });
     }
     return { saved: false };
   }
 
+  /**
+   * Retrieves all decks saved in a user's library.
+   *
+   * @param user User entity.
+   * @param params Query and pagination parameters.
+   * @returns Paginated list of saved decks.
+   */
   async findSavedDecks(user: User, params: FindAllDecksParams = {}) {
     const {
       formatId = 0,
@@ -559,6 +652,12 @@ export class DeckService {
     };
   }
 
+  /**
+   * Returns array of deck IDs saved by the specified user.
+   *
+   * @param user Target user entity.
+   * @returns Array of deck IDs.
+   */
   async findSavedDeckIds(user: User): Promise<number[]> {
     const rows = await this.savedDeckRepo
       .createQueryBuilder("savedDeck")
@@ -579,6 +678,14 @@ export class DeckService {
     return code;
   }
 
+  /**
+   * Generates a unique share code for a deck.
+   *
+   * @param id Deck ID.
+   * @param user Deck owner user.
+   * @param dto Share options including expiration date.
+   * @returns Share code object.
+   */
   async shareDeck(
     id: number,
     user: User,
@@ -611,6 +718,13 @@ export class DeckService {
     return { code };
   }
 
+  /**
+   * Imports a shared deck using a share code.
+   *
+   * @param code Share code.
+   * @param user Importing user entity.
+   * @returns Cloned Deck entity.
+   */
   async importDeck(code: string, user: User): Promise<Deck> {
     const deckShare = await this.deckShareRepo.findOne({
       where: { code },
@@ -621,7 +735,10 @@ export class DeckService {
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException("Ce code de partage a expiré");
+      throw new NotFoundException({
+        code: "SHARE_CODE_EXPIRED",
+        message: "Ce code de partage a expiré",
+      });
     }
 
     const sourceDeck = deckShare.deck;
@@ -649,6 +766,12 @@ export class DeckService {
     return this.findOneWithCards(saved.id);
   }
 
+  /**
+   * Retrieves deck entity details associated with a share code without importing.
+   *
+   * @param code Share code.
+   * @returns Shared Deck entity.
+   */
   async getDeckForImport(code: string): Promise<Deck> {
     const deckShare = await this.deckShareRepo.findOne({
       where: { code },
@@ -665,7 +788,10 @@ export class DeckService {
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException("Ce code de partage a expiré");
+      throw new NotFoundException({
+        code: "SHARE_CODE_EXPIRED",
+        message: "Ce code de partage a expiré",
+      });
     }
 
     return deckShare.deck;

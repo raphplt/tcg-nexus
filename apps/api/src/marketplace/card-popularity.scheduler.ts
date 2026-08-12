@@ -9,8 +9,7 @@ export class CardPopularityScheduler {
   constructor(private readonly cardPopularityService: CardPopularityService) {}
 
   /**
-   * Exécute l'agrégation quotidienne des métriques
-   * Tous les jours à 3h du matin (heure creuse)
+   * Executes daily card metrics aggregation cron job at 03:00 AM (off-peak hours).
    */
   @Cron("0 3 * * *", {
     name: "aggregate-daily-metrics",
@@ -21,7 +20,7 @@ export class CardPopularityScheduler {
     const startTime = Date.now();
 
     try {
-      // Agrégation pour le jour précédent
+      // Aggregation for the previous calendar day
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
@@ -40,7 +39,9 @@ export class CardPopularityScheduler {
   }
 
   /**
-   * Permet de déclencher manuellement l'agrégation (pour tests ou récupération)
+   * Triggers metrics aggregation manually for a target date (admin/test support).
+   *
+   * @param targetDate Optional target date.
    */
   async triggerAggregation(targetDate?: Date) {
     this.logger.log("Manual aggregation triggered");

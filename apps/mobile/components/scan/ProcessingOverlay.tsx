@@ -14,7 +14,6 @@ import { colors } from "@/constants/theme";
 export function ProcessingOverlay({ uri }: { uri: string | null }) {
   const { height } = useWindowDimensions();
   const sweep = useRef(new Animated.Value(0)).current;
-  // fondu d'entrée pour éviter le flash quand l'overlay recouvre la caméra
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

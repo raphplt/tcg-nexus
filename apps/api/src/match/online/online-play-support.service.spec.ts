@@ -4,12 +4,24 @@ import { OnlinePlaySupportService } from "./online-play-support.service";
 describe("OnlinePlaySupportService", () => {
   let service: OnlinePlaySupportService;
   let cardRepository: { find: jest.Mock };
+  let cardTranslationRepository: { find: jest.Mock };
+  let localization: { resolveLabels: jest.Mock };
 
   beforeEach(() => {
     cardRepository = {
       find: jest.fn(),
     };
-    service = new OnlinePlaySupportService(cardRepository as any);
+    cardTranslationRepository = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+    localization = {
+      resolveLabels: jest.fn(async (payload) => payload),
+    };
+    service = new OnlinePlaySupportService(
+      cardRepository as any,
+      cardTranslationRepository as any,
+      localization as any,
+    );
   });
 
   it("should validate an eligible online deck", () => {

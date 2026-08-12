@@ -19,7 +19,6 @@ export function useCardDetails({
   currencyFilter = "all",
   cardStateFilter = "all",
 }: UseCardDetailsParams) {
-  // Récupère les détails de la carte
   const {
     data: card,
     isLoading: loadingCard,
@@ -30,7 +29,6 @@ export function useCardDetails({
     enabled: !!cardId,
   });
 
-  // Récupère les statistiques de la carte
   const {
     data: stats,
     isLoading: loadingStats,
@@ -48,7 +46,6 @@ export function useCardDetails({
     enabled: !!cardId,
   });
 
-  // Récupère les offres disponibles pour la carte
   const {
     data: listings,
     isLoading: loadingListings,
@@ -70,7 +67,6 @@ export function useCardDetails({
     enabled: !!cardId,
   });
 
-  // Track view event
   useEffect(() => {
     if (cardId && card) {
       cardEventTracker.trackView(cardId, {
@@ -79,7 +75,6 @@ export function useCardDetails({
     }
   }, [cardId, card]);
 
-  // Computed values
   const filteredListings = listings?.data || [];
   const minPriceListing =
     filteredListings.length > 0

@@ -8,28 +8,28 @@ import {
 
 export const cartService = {
   /**
-   * Récupère le panier de l'utilisateur connecté
+   * Retrieves the current user's cart.
    */
   async getMyCart(): Promise<UserCart> {
     return authedFetch<UserCart>("GET", "/user-cart/me");
   },
 
   /**
-   * Récupère un panier par son ID
+   * Retrieves a cart by its identifier.
    */
   async getCartById(id: number): Promise<UserCart> {
     return authedFetch<UserCart>("GET", `/user-cart/${id}`);
   },
 
   /**
-   * Ajoute un item au panier
+   * Adds an item to the cart.
    */
   async addItemToCart(data: CreateCartItemDto): Promise<CartItem> {
     return authedFetch<CartItem>("POST", "/user-cart/items", { data });
   },
 
   /**
-   * Met à jour la quantité d'un item dans le panier
+   * Updates a cart item quantity.
    */
   async updateCartItem(
     itemId: number,
@@ -41,21 +41,21 @@ export const cartService = {
   },
 
   /**
-   * Supprime un item du panier
+   * Removes an item from the cart.
    */
   async removeItemFromCart(itemId: number): Promise<void> {
     return authedFetch<void>("DELETE", `/user-cart/items/${itemId}`);
   },
 
   /**
-   * Vide le panier
+   * Empties the cart.
    */
   async clearCart(): Promise<void> {
     return authedFetch<void>("DELETE", "/user-cart/me/clear");
   },
 
   /**
-   * Supprime un panier
+   * Deletes a cart.
    */
   async deleteCart(id: number): Promise<void> {
     return authedFetch<void>("DELETE", `/user-cart/${id}`);

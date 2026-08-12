@@ -14,9 +14,10 @@ export class SeedController {
     private readonly sealedProductService: SealedProductService,
   ) {}
 
-  @Post("importSeries")
-  importSeries() {
-    return this.seedService.importPokemonSeries();
+  /** Importe séries, sets, cartes et traductions depuis le dataset local. */
+  @Post("importCatalog")
+  importCatalog() {
+    return this.seedService.importPokemon();
   }
 
   @Post("all")

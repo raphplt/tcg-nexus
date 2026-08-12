@@ -1,10 +1,12 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
+  const t = useTranslations("Theme");
   const { setTheme, resolvedTheme, mounted } = useTheme();
 
   const toggleTheme = () => {
@@ -15,12 +17,11 @@ export function ThemeToggle() {
     }
   };
 
-  // Éviter le scintillement lors du montage
   if (!mounted) {
     return (
       <Button variant="ghost" size="icon" disabled className="h-9 w-9 relative">
         <div className="h-4 w-4" />
-        <span className="sr-only">Chargement du thème...</span>
+        <span className="sr-only">{t("loading")}</span>
       </Button>
     );
   }
@@ -31,14 +32,14 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       className="h-9 w-9 relative hover:bg-accent transition-colors"
-      title={`Changer vers le thème ${resolvedTheme === "dark" ? "clair" : "sombre"}`}
+      title={resolvedTheme === "dark" ? t("switchToLight") : t("switchToDark")}
     >
       {resolvedTheme === "dark" ? (
         <Sun className="h-4 w-4 transition-all" />
       ) : (
         <Moon className="h-4 w-4 transition-all" />
       )}
-      <span className="sr-only">Changer de thème</span>
+      <span className="sr-only">{t("toggle")}</span>
     </Button>
   );
 }

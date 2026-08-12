@@ -29,6 +29,7 @@ import { TournamentReward } from "../tournament/entities/tournament-reward.entit
 import { BracketService } from "../tournament/services/bracket.service";
 import { SeedingService } from "../tournament/services/seeding.service";
 import { User } from "../user/entities/user.entity";
+import { CatalogImportService } from "./catalog-import.service";
 import { SeedService } from "./seed.service";
 
 // Mock @faker-js/faker
@@ -190,6 +191,12 @@ describe("SeedService", () => {
             get: jest.fn(),
           },
         },
+        {
+          provide: CatalogImportService,
+          useValue: {
+            importCatalog: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -198,5 +205,19 @@ describe("SeedService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("cleanString", () => {
+    it("conserve les accents", () => {
+      expect(service.cleanString("Pokémon")).toBe("Pokémon");
+      expect(service.cleanString("Étincelles Déferlantes")).toBe(
+        "Étincelles Déferlantes",
+      );
+      expect(service.cleanString("Zénith Suprême")).toBe("Zénith Suprême");
+    });
+
+    it("supprime les espaces superflus", () => {
+      expect(service.cleanString("  Dracaufeu ex  ")).toBe("Dracaufeu ex");
+    });
   });
 });

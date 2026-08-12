@@ -60,7 +60,7 @@ export class SeedingService {
         return this.eloBasedSeeding(players);
 
       case SeedingMethod.MANUAL:
-        // Pour l'instant, retourne l'ordre donné
+        // Returns input order for manual seeding mode
         return this.manualSeeding(players);
 
       default:
@@ -69,12 +69,12 @@ export class SeedingService {
   }
 
   /**
-   * Seeding aléatoire
+   * Random seeding using Fisher-Yates shuffle algorithm.
    */
   private randomSeeding(players: Player[]): SeededPlayer[] {
     const shuffled = [...players];
 
-    // Algorithme de Fisher-Yates pour un mélange équitable
+    // Fisher-Yates algorithm for fair shuffling
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -87,12 +87,12 @@ export class SeedingService {
   }
 
   /**
-   * Seeding basé sur le ranking global des joueurs
+   * Seeding based on global player ranking statistics.
    */
   private async rankingBasedSeeding(
     players: Player[],
   ): Promise<SeededPlayer[]> {
-    // Récupérer les rankings globaux des joueurs
+    // Fetch global player ranking statistics
     const playerRankings = await this.rankingRepository
       .createQueryBuilder("ranking")
       .select([
@@ -107,7 +107,7 @@ export class SeedingService {
       .groupBy("ranking.playerId")
       .getRawMany<PlayerRankingStats>();
 
-    // Créer un map pour un accès rapide
+    // Build lookup map for fast access
     const rankingMap = new Map<
       number,
       { avgPoints: number; avgWinRate: number; tournamentCount: number }
@@ -120,16 +120,16 @@ export class SeedingService {
       });
     });
 
-    // Calculer un score composite pour chaque joueur
+    // Compute composite score for each player
     const playersWithScores = players.map((player) => {
       const ranking = rankingMap.get(player.id);
       let score = 0;
 
       if (ranking) {
-        // Score basé sur points moyens (70%) et winRate (30%)
+        // Score based on average points (70%) and win rate (30%)
         score = ranking.avgPoints * 0.7 + ranking.avgWinRate * 0.3;
 
-        // Bonus pour l'expérience (nombre de tournois)
+        // Experience bonus based on tournament count
         score += Math.min(ranking.tournamentCount * 0.5, 5);
       }
 
@@ -137,11 +137,11 @@ export class SeedingService {
         ...player,
         score,
         ranking: ranking?.avgPoints || 0,
-        seed: 0, // Sera défini plus tard
+        seed: 0, // Assigned below
       } as SeededPlayer;
     });
 
-    // Trier par score décroissant
+    // Sort by descending score
     playersWithScores.sort((a, b) => (b.score || 0) - (a.score || 0));
 
     return playersWithScores.map((player, index) => ({
@@ -194,13 +194,13 @@ export class SeedingService {
     const playerCount = seededPlayers.length;
     const nextPowerOfTwo = Math.pow(2, Math.ceil(Math.log2(playerCount)));
 
-    // Ordre de placement optimal pour un bracket équilibré
+    // Optimal slot ordering for balanced bracket placement
     const bracketOrder: number[] = [];
 
-    // Génère l'ordre de placement selon l'algorithme standard
+    // Generate bracket placement order via standard algorithm
     this.generateBracketOrder(bracketOrder, 1, nextPowerOfTwo, false);
 
-    // Réorganise les joueurs selon cet ordre
+    // Reorder players according to bracket order
     const reorderedPlayers: SeededPlayer[] = [];
 
     for (let i = 0; i < playerCount; i++) {
@@ -210,7 +210,7 @@ export class SeedingService {
         if (seededPlayers[playerIndex]) {
           reorderedPlayers.push({
             ...seededPlayers[playerIndex],
-            seed: i + 1, // Nouveau seed basé sur la position dans le bracket
+            seed: i + 1, // Updated seed based on bracket position
           });
         }
       }
@@ -220,7 +220,7 @@ export class SeedingService {
   }
 
   /**
-   * Algorithme récursif pour générer l'ordre optimal du bracket
+   * Recursive algorithm generating optimal bracket placement order.
    */
   private generateBracketOrder(
     order: number[],
@@ -245,10 +245,10 @@ export class SeedingService {
   }
 
   /**
-   * Valide qu'un seeding est correct
+   * Validates that seed numbers are unique and sequential.
    */
   validateSeeding(seededPlayers: SeededPlayer[]): boolean {
-    // Vérifier que tous les seeds sont uniques et séquentiels
+    // Verify that all seeds are unique and sequential
     const seeds = seededPlayers.map((p) => p.seed).sort((a, b) => a - b);
 
     for (let i = 0; i < seeds.length; i++) {
@@ -261,7 +261,7 @@ export class SeedingService {
   }
 
   /**
-   * Récupère les statistiques d'un joueur pour le seeding
+   * Retrieves player stats for seeding purposes.
    */
   async getPlayerSeedingStats(playerId: number): Promise<{
     avgPoints: number;
@@ -282,7 +282,7 @@ export class SeedingService {
       ])
       .getRawOne<PlayerDetailedStats>();
 
-    // Récupérer les 5 derniers tournois pour la forme récente
+    // Retrieve last 5 tournaments for recent form calculation
     const recentRankings = await this.rankingRepository
       .createQueryBuilder("ranking")
       .leftJoin("ranking.tournament", "tournament")

@@ -44,3 +44,62 @@ describe("AllExceptionsFilter", () => {
     );
   });
 });
+
+describe("AllExceptionsFilter — contrat de code", () => {
+  it("expose le code métier porté par l'exception", () => {
+    const { host, response } = createHost("/players/42");
+    const filter = new AllExceptionsFilter();
+    filter.catch(
+      new HttpException(
+        { code: "PLAYER_NOT_FOUND", message: "Joueur non trouvé" },
+        HttpStatus.NOT_FOUND,
+      ),
+      host,
+    );
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: "PLAYER_NOT_FOUND",
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "Joueur non trouvé",
+      }),
+    );
+  });
+
+  it("retombe sur un code générique selon le statut", () => {
+    const { host, response } = createHost();
+    const filter = new AllExceptionsFilter();
+    filter.catch(new HttpException({}, HttpStatus.FORBIDDEN), host);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "FORBIDDEN" }),
+    );
+  });
+
+  it("regroupe les erreurs de validation sous VALIDATION_ERROR", () => {
+    const { host, response } = createHost();
+    const filter = new AllExceptionsFilter();
+    filter.catch(
+      new HttpException(
+        { message: ["email must be an email"] },
+        HttpStatus.BAD_REQUEST,
+      ),
+      host,
+    );
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: "VALIDATION_ERROR",
+        fields: { messages: ["email must be an email"] },
+      }),
+    );
+  });
+
+  it("masque le message technique d'une erreur interne en production", () => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    const { host, response } = createHost();
+    new AllExceptionsFilter().catch(new Error("stack trace secrète"), host);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Une erreur interne est survenue." }),
+    );
+    process.env.NODE_ENV = previous;
+  });
+});

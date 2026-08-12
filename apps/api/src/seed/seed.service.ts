@@ -77,8 +77,13 @@ import {
   SeedingMethod,
   SeedingService,
 } from "src/tournament/services/seeding.service";
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { User } from "src/user/entities/user.entity";
 import { DeepPartial, Repository } from "typeorm";
+import {
+  type CatalogImportReport,
+  CatalogImportService,
+} from "./catalog-import.service";
 
 const SEED_AVATARS = [
   "/images/avatars/pikachu.png",
@@ -151,19 +156,24 @@ export class SeedService {
     private readonly bracketService: BracketService,
     private readonly matchService: MatchService,
     private readonly configService: ConfigService,
+    private readonly catalogImportService: CatalogImportService,
   ) {}
 
   /**
-   * Clean special characters from a string
-   * @param {string} str - The string to clean
-   * @returns {string} - The cleaned string
+   * Normalise une chaîne destinée au stockage : espaces superflus supprimés,
+   * forme Unicode canonique. Les accents sont conservés — « Pokémon » doit
+   * rester « Pokémon » en base.
    */
   cleanString(str: string): string {
-    // Convert special characters to their ASCII equivalents or remove them
-    // eslint-disable-next-line no-control-regex
-    return str.normalize("NFKD").replace(/[^\x00-\x7F]/g, "");
+    return str.normalize("NFC").trim();
   }
 
+  /**
+   * Normalise une chaîne pour la *comparer* à une valeur connue (mapping des
+   * catégories, types de dresseur, types d'énergie). Ici la perte des accents
+   * est voulue : elle rend la comparaison insensible à la casse et aux
+   * diacritiques. Ne jamais utiliser pour une valeur stockée.
+   */
   private normalizeForMapping(value?: string): string {
     if (!value) return "";
     return (
@@ -284,293 +294,15 @@ export class SeedService {
     return await this.cardStateRepository.find();
   }
   /**
-   * Seed the database with the Pokemon Series data
-   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
-   * @throws {Error} If a Serie is not found
-   */
-  /**
-   * Seed the database with the Pokemon Series data
-   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemonSeries() {
-    const dataPath = path.resolve(
-      __dirname,
-      "../../../../data/pokemon_series.json",
-    );
-    if (!fs.existsSync(dataPath)) {
-      console.warn(`Series file not found at ${dataPath}`);
-      return [];
-    }
-
-    const seriesData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
-    const series: PokemonSerie[] = [];
-
-    for (const serieData of seriesData as DeepPartial<PokemonSerie>[]) {
-      const existingSerie = await this.pokemonSerieRepository.findOne({
-        where: { name: serieData.name },
-      });
-
-      if (!existingSerie) {
-        const newSerie = this.pokemonSerieRepository.create({
-          ...serieData,
-          game: CardGame.Pokemon,
-        });
-        series.push(newSerie);
-      }
-    }
-
-    if (series.length > 0) {
-      await this.pokemonSerieRepository.save(series);
-    }
-
-    return series;
-  }
-
-  /**
-   * Seed the database with the Pokemon Sets data
-   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  /**
-   * Seed the database with the Pokemon Sets data
-   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemonSets() {
-    const dataPath = path.resolve(
-      __dirname,
-      "../../../../data/pokemon_sets.json",
-    );
-    if (!fs.existsSync(dataPath)) {
-      console.warn(`Sets file not found at ${dataPath}`);
-      return [];
-    }
-    const setsData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
-    const sets: PokemonSet[] = [];
-
-    for (const setData of setsData as DeepPartial<PokemonSet>[]) {
-      const existingSet = await this.pokemonSetRepository.findOne({
-        where: { name: setData.name },
-      });
-
-      if (!existingSet) {
-        // Prefer explicit serieId from JSON, fallback to nested serie?.id if present
-        const serieId = (setData as any).serieId ?? (setData as any).serie?.id;
-
-        if (!serieId) {
-          // No series information, skip this set to avoid wrong linkage
-          const warnMsg = `Set '${setData.name as string}' (id: ${(setData as any).id}) without serieId – skipped.`;
-          console.warn(warnMsg);
-          continue;
-        }
-
-        const serie = await this.pokemonSerieRepository.findOne({
-          where: { id: serieId as string },
-        });
-
-        if (!serie) {
-          console.warn(
-            `Serie with id '${String(serieId)}' not found for set '${setData.name as string}' – skipped.`,
-          );
-          continue;
-        }
-
-        // Remove foreign key hints from raw JSON to avoid confusion, then attach relation
-        const setProps = { ...(setData as Record<string, unknown>) };
-        delete (setProps as any).serieId;
-        delete (setProps as any).serie;
-
-        // Logo and symbol URLs are now provided by update-data.ts
-        // No need to construct them here
-
-        const newSet = this.pokemonSetRepository.create({
-          ...(setProps as DeepPartial<PokemonSet>),
-          game: CardGame.Pokemon,
-          serie,
-        });
-        sets.push(newSet);
-      }
-    }
-
-    if (sets.length > 0) {
-      await this.pokemonSetRepository.save(sets);
-    }
-
-    return sets;
-  }
-
-  /**
-   * Seed the database with the Pokemon Series and Sets data
+   * Importe le catalogue Pokémon (séries, sets, cartes et leurs traductions)
+   * depuis le dataset local. Voir `CatalogImportService`.
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
-   * @throws {Error} If a Serie is not found
+   * Les trois anciennes méthodes ne faisaient qu'une passe monolingue sur
+   * `data/` ; elles délèguent désormais à un import unique, qui traite toutes
+   * les langues activées en une fois.
    */
-  /**
-   * Seed the database with the Pokemon Series and Sets data
-   *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemon(): Promise<{
-    series: PokemonSerie[];
-    sets: PokemonSet[];
-  }> {
-    const series = await this.importPokemonSeries();
-    const sets = await this.importPokemonSets();
-
-    const dataPath = path.resolve(__dirname, "../../../../data");
-    // Removed the large 'cards' array to save memory
-
-    // Recursively find all JSON files in dataPath that are NOT the series/sets files
-    const getAllFiles = (dir: string, fileList: string[] = []) => {
-      const files = fs.readdirSync(dir);
-      files.forEach((file) => {
-        const filePath = path.join(dir, file);
-        if (fs.statSync(filePath).isDirectory()) {
-          getAllFiles(filePath, fileList);
-        } else {
-          if (
-            file.endsWith(".json") &&
-            !file.endsWith("pokemon_series.json") &&
-            !file.endsWith("pokemon_sets.json")
-          ) {
-            fileList.push(filePath);
-          }
-        }
-      });
-      return fileList;
-    };
-
-    const cardFiles = getAllFiles(dataPath);
-
-    console.log(`Found ${cardFiles.length} card files to process.`);
-
-    let processedFiles = 0;
-    const batchSize = 100; // Process cards in batches of 100
-    let cardBatch: Card[] = [];
-    let metricsSavedCards = 0;
-
-    for (const filePath of cardFiles) {
-      try {
-        const fileContent = fs.readFileSync(filePath, "utf-8");
-        const parsedContent = JSON.parse(fileContent);
-
-        const cardsData = Array.isArray(parsedContent)
-          ? parsedContent
-          : [parsedContent];
-
-        for (const cardData of cardsData) {
-          const setId = cardData.set?.id;
-          if (!setId) {
-            continue;
-          }
-          const set = await this.pokemonSetRepository.findOne({
-            where: { id: setId },
-          });
-          if (!set) {
-            continue;
-          }
-
-          const name = cardData.name
-            ? this.cleanString(cardData.name as string)
-            : "";
-          const illustrator = cardData.illustrator
-            ? this.cleanString(cardData.illustrator as string)
-            : null;
-          const description = cardData.description
-            ? this.cleanString(cardData.description as string)
-            : null;
-          const evolveFrom = cardData.evolveFrom
-            ? this.cleanString(cardData.evolveFrom as string)
-            : null;
-          const effect = cardData.effect
-            ? this.cleanString(cardData.effect as string)
-            : null;
-
-          const card = this.pokemonCardRepository.create({
-            game: CardGame.Pokemon,
-            tcgDexId: cardData.id,
-            localId: cardData.localId,
-            name,
-            image: cardData.image,
-            category: cardData.category,
-            illustrator,
-            rarity: cardData.rarity,
-            variants: cardData.variants,
-            variantsDetailed: cardData.variants_detailed,
-            legal: cardData.legal,
-            updated: cardData.updated,
-            pricing: cardData.pricing,
-            set,
-          } as DeepPartial<Card>);
-
-          const details = this.pokemonCardDetailsRepository.create({
-            category: this.mapPokemonCategory(cardData.category),
-            dexId: cardData.dexId,
-            hp: cardData.hp,
-            types: cardData.types,
-            evolveFrom,
-            description,
-            effect,
-            level: cardData.level,
-            stage: cardData.stage,
-            suffix: cardData.suffix,
-            item: cardData.item,
-            abilities: cardData.abilities,
-            attacks: cardData.attacks,
-            weaknesses: cardData.weaknesses,
-            resistances: cardData.resistances,
-            retreat: cardData.retreat,
-            regulationMark: cardData.regulationMark,
-            trainerType: this.mapTrainerType(cardData.trainerType),
-            energyType: this.mapEnergyType(cardData.energyType),
-            boosters: cardData.boosters,
-          } as DeepPartial<PokemonCardDetails>);
-
-          details.card = card;
-          card.pokemonDetails = details;
-
-          cardBatch.push(card);
-        }
-      } catch (jsonError) {
-        console.error(
-          `Failed to parse JSON content for ${filePath}:`,
-          jsonError,
-        );
-      }
-
-      // Check if batch is full and save
-      if (cardBatch.length >= batchSize) {
-        await this.pokemonCardRepository.save(cardBatch);
-        metricsSavedCards += cardBatch.length;
-        cardBatch = []; // Clear memory
-      }
-
-      // Update progress bar
-      processedFiles++;
-      const total = cardFiles.length;
-      const percentage = Math.round((processedFiles / total) * 100);
-      const width = 40;
-      const filled = Math.round((width * processedFiles) / total);
-      const empty = width - filled;
-      const bar = "█".repeat(filled) + "░".repeat(empty);
-      process.stdout.write(
-        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`,
-      );
-    }
-
-    // Save remaining cards in batch
-    if (cardBatch.length > 0) {
-      await this.pokemonCardRepository.save(cardBatch);
-      metricsSavedCards += cardBatch.length;
-    }
-
-    process.stdout.write("\n"); // New line after progress bar
-    console.log(`Successfully saved a total of ${metricsSavedCards} cards.`);
-
-    // Return empty cards array as we don't want to load them all back into memory
-    return { series, sets };
+  async importPokemon(): Promise<CatalogImportReport> {
+    return this.catalogImportService.importCatalog();
   }
 
   /**
@@ -611,6 +343,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -626,6 +359,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -641,6 +375,7 @@ export class SeedService {
         isActive: true,
         emailVerified: false,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -659,6 +394,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -681,7 +417,7 @@ export class SeedService {
     if (users.length > 0) {
       await this.userRepository.save(users);
 
-      // Créer les collections par défaut pour chaque nouvel utilisateur
+      // Create default collections for each new user
       for (const user of users) {
         await this.createDefaultCollections(user.id);
       }
@@ -715,6 +451,7 @@ export class SeedService {
       isActive: true,
       emailVerified: true,
       preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
       decks: [],
       collections: [],
     });
@@ -738,7 +475,7 @@ export class SeedService {
       );
       return [];
     }
-    // Crée quelques joueurs (réutilise si déjà existants)
+    // Create seed players (reusing existing entities if present)
     const players: Player[] = [];
 
     // Get existing users to create players for them
@@ -770,12 +507,13 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });
       await this.userRepository.save(newUser);
 
-      // Créer les collections par défaut pour le nouvel utilisateur
+      // Create default collections for new user
       await this.createDefaultCollections(newUser.id);
 
       const player = this.playerRepository.create({ user: newUser });
@@ -783,7 +521,7 @@ export class SeedService {
       players.push(player);
     }
 
-    // Prépare plusieurs configs de tournois
+    // Prepare tournament configurations
     const now = Date.now();
     const tournamentsData = [
       {
@@ -872,7 +610,7 @@ export class SeedService {
         }
       }
 
-      // Récompense
+      // Tournament reward
       let reward = await this.tournamentRewardRepository.findOne({
         where: { tournament: { id: tournament.id }, position: 1 },
         relations: ["tournament"],
@@ -1012,11 +750,11 @@ export class SeedService {
     tournamentType: TournamentType = TournamentType.SINGLE_ELIMINATION,
     seedingMethod: SeedingMethod = SeedingMethod.RANKING,
   ): Promise<Tournament> {
-    // 1. Créer ou récupérer des utilisateurs/joueurs
+    // 1. Create or retrieve users/players
     const players: Player[] = [];
     const users = await this.userRepository.find({ take: playerCount });
 
-    // Si pas assez d'utilisateurs, en créer
+    // Create extra users if insufficient existing count
     let currentUserCount = users.length;
     while (currentUserCount < playerCount) {
       const userIndex = currentUserCount + 1;
@@ -1031,18 +769,19 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });
       await this.userRepository.save(newUser);
 
-      // Créer les collections par défaut pour le nouvel utilisateur
+      // Create default collections for new user
       await this.createDefaultCollections(newUser.id);
       users.push(newUser);
       currentUserCount++;
     }
 
-    // Créer les joueurs associés
+    // Create associated player profiles
     for (const user of users.slice(0, playerCount)) {
       let player = await this.playerRepository.findOne({
         where: { user: { id: user.id } },
@@ -1055,13 +794,13 @@ export class SeedService {
       players.push(player);
     }
 
-    // 2. Créer le tournoi
+    // 2. Create tournament entity
     const tournament = this.tournamentRepository.create({
       name,
       description: `Tournoi automatique avec ${playerCount} joueurs`,
       location: "Tournoi de démonstration",
       startDate: new Date(),
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 jours
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // +7 days
       type: tournamentType,
       status: TournamentStatus.REGISTRATION_OPEN,
       isFinished: false,
@@ -1071,7 +810,7 @@ export class SeedService {
     });
     await this.tournamentRepository.save(tournament);
 
-    // 3. Inscrire tous les joueurs
+    // 3. Register all players
     for (const player of players) {
       const registration = this.tournamentRegistrationRepository.create({
         tournament,
@@ -1083,7 +822,7 @@ export class SeedService {
       await this.tournamentRegistrationRepository.save(registration);
     }
 
-    // 4. Ajouter les configurations du tournoi
+    // 4. Add tournament configurations
     const pricing = this.tournamentPricingRepository.create({
       tournament,
       type: PricingType.FREE,
@@ -1102,7 +841,7 @@ export class SeedService {
     });
     await this.tournamentRewardRepository.save(reward);
 
-    // 5. Appliquer le seeding
+    // 5. Apply player seeding
     console.log(`🎯 Application du seeding méthode: ${seedingMethod}`);
     const seededPlayers = await this.seedingService.seedPlayers(
       players,
@@ -1110,23 +849,23 @@ export class SeedService {
       seedingMethod,
     );
 
-    // 6. Démarrer le tournoi AVANT de générer le bracket
+    // 6. Start tournament BEFORE generating bracket
     tournament.players = seededPlayers;
     tournament.status = TournamentStatus.IN_PROGRESS;
     tournament.currentRound = 1;
     await this.tournamentRepository.save(tournament);
 
-    // 7. Générer le bracket complet (maintenant que le tournoi est IN_PROGRESS)
-    console.log("🏆 Génération du bracket...");
+    // 7. Generate full bracket structure (tournament status IN_PROGRESS)
+    console.log("🏆 Generating bracket...");
     const bracketStructure = await this.bracketService.generateBracket(
       tournament.id,
     );
 
-    // 8. Mettre à jour le nombre total de rounds
+    // 8. Update total rounds count
     tournament.totalRounds = bracketStructure.totalRounds;
     await this.tournamentRepository.save(tournament);
 
-    // 9. Créer les rankings initiaux
+    // 9. Initialize standings rankings
     for (let i = 0; i < seededPlayers.length; i++) {
       const ranking = this.rankingRepository.create({
         tournament,
@@ -1317,9 +1056,9 @@ export class SeedService {
       console.log("⚠️  Skipping test listings seed in production environment.");
       return;
     }
-    // Récupère tous les utilisateurs (vendeurs) et un échantillon de cartes Pokémon
+    // Fetch seller users and sample card records
     const sellers = await this.userRepository.find();
-    // Limiter à 1500 cartes pour éviter les performances trop longues
+    // Cap at 1500 cards for performance
     const cards = await this.pokemonCardRepository.find({ take: 1500 });
 
     if (sellers.length < 1 || cards.length < 1) {
@@ -1341,35 +1080,35 @@ export class SeedService {
     const priceHistoriesToCreate: PriceHistory[] = [];
     const now = new Date();
 
-    // Pour chaque carte, créer entre 0 et 5 listings (au lieu de 20)
+    // Create between 0 and 5 listings per card
     for (const card of cards) {
-      // Nombre aléatoire de listings pour cette carte (entre 0 et 5)
+      // Random listings count for current card (0 to 5)
       const listingCount = Math.floor(Math.random() * 6);
 
       for (let i = 0; i < listingCount; i++) {
-        // Sélectionner un vendeur aléatoire
+        // Pick random seller
         const randomSeller =
           sellers[Math.floor(Math.random() * sellers.length)];
 
-        // Générer un prix aléatoire entre 0.50 et 100.00
+        // Generate random price between 0.50 and 100.00
         const basePrice = Math.random() * 99.5 + 0.5;
         const price = Math.round(basePrice * 100) / 100;
 
-        // Sélectionner une devise aléatoire
+        // Select random currency
         const currency =
           currencies[Math.floor(Math.random() * currencies.length)];
 
-        // Sélectionner un état aléatoire
+        // Select random card condition state
         const cardState =
           cardStates[Math.floor(Math.random() * cardStates.length)];
 
-        // Quantité disponible entre 1 et 5
+        // Available quantity between 1 and 5
         const quantityAvailable = Math.floor(Math.random() * 5) + 1;
 
         const status =
           Math.random() < 0.1 ? ListingStatus.INACTIVE : ListingStatus.ACTIVE;
 
-        // Créer le listing
+        // Instantiate listing entity
         const listing = this.listingRepository.create({
           seller: randomSeller,
           pokemonCard: card,
@@ -1385,7 +1124,7 @@ export class SeedService {
 
         listingsToCreate.push(listing);
 
-        // Créer seulement 1-2 entrées d'historique au lieu de 1-5
+        // Generate 1-2 price history entries per listing
         const historicalEntries = Math.floor(Math.random() * 2) + 1;
 
         for (let j = 0; j < historicalEntries; j++) {
@@ -1423,7 +1162,7 @@ export class SeedService {
       }
     }
 
-    // Sauvegarder en batch (par lots de 500 pour éviter les problèmes de mémoire)
+    // Save in batches of 500 to optimize memory usage
     const batchSize = 500;
     let savedCount = 0;
 
@@ -1622,7 +1361,7 @@ export class SeedService {
     }
     console.log("🌱 Starting card events seed...");
     const users = await this.userRepository.find();
-    const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limiter à 200 cartes
+    const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limit to 200 cards
 
     console.log(`Found ${users.length} users and ${cards.length} cards`);
 
@@ -1636,7 +1375,7 @@ export class SeedService {
     const eventsToCreate: CardEvent[] = [];
     const now = new Date();
 
-    // Pour chaque carte, générer des événements sur les 90 derniers jours
+    // Generate event history for each card spanning the past 90 days
     for (const card of cards) {
       // Nombre d'événements pour cette carte (entre 10 et 500)
       const eventCount = Math.floor(Math.random() * 491) + 10;
@@ -2002,7 +1741,18 @@ export class SeedService {
    */
   async enableExtensions() {
     await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-    console.log("✅ Extension Postgres pg_trgm activée.");
+    // unaccent : la recherche de cartes doit trouver « Pokémon » quand on
+    // tape « pokemon », dans toutes les langues du catalogue.
+    await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS unaccent;`);
+    // Wrapper IMMUTABLE, seule forme indexable — voir la migration
+    // CatalogTranslations et `applyCardSearch`.
+    await this.userRepository.query(`
+      CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+      RETURNS text
+      LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS
+      $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
+    `);
+    console.log("✅ Extensions Postgres pg_trgm et unaccent activées.");
   }
 
   /**

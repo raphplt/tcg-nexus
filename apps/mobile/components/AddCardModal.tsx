@@ -42,7 +42,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
   >({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Debounce manual search
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedManualSearch(manualSearch.trim());
@@ -51,7 +50,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     return () => clearTimeout(timer);
   }, [manualSearch]);
 
-  // Execute manual search
   useEffect(() => {
     if (!isVisible) {
       return;
@@ -94,7 +92,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     };
   }, [debouncedManualSearch, isVisible]);
 
-  // Reset and fetch initial quantities when modal opens
   useEffect(() => {
     if (isVisible) {
       setManualSearch("");
@@ -128,7 +125,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
     }
   }, [isVisible, collectionId]);
 
-  // Auto-clear success banner message
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => {
@@ -144,7 +140,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       return;
     }
 
-    // Optimistically update quantities
     setCollectionQuantities((prev) => ({
       ...prev,
       [cardId]: (prev[cardId] || 0) + 1,
@@ -157,7 +152,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       toast.showSuccess(`${card.name || "Carte"} ajoutée.`);
       await onCardAdded();
     } catch (error) {
-      // Revert optimistic update
       setCollectionQuantities((prev) => ({
         ...prev,
         [cardId]: Math.max(0, (prev[cardId] || 1) - 1),
@@ -181,7 +175,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       return;
     }
 
-    // Optimistically update quantities
     setCollectionQuantities((prev) => {
       const next = { ...prev };
       const current = next[cardId] ?? 0;
@@ -200,7 +193,6 @@ export const AddCardModal: React.FC<AddCardModalProps> = ({
       toast.showSuccess(`${card.name || "Carte"} retirée.`);
       await onCardAdded();
     } catch (error) {
-      // Revert optimistic update
       setCollectionQuantities((prev) => ({
         ...prev,
         [cardId]: currentQty,

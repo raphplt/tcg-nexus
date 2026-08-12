@@ -436,7 +436,9 @@ export default function CollectionDetailsScreen() {
     }
 
     if (Platform.OS === "web") {
-      const confirmed = window.confirm(`Confirmer la suppression de "${collection.name}" ?`);
+      const confirmed = window.confirm(
+        `Confirmer la suppression de "${collection.name}" ?`,
+      );
       if (confirmed) {
         collectionService
           .deleteCollection(collectionId)
@@ -490,7 +492,6 @@ export default function CollectionDetailsScreen() {
           return;
         }
         setIsDeletingItemId(item.id);
-        // Optimistic update
         setItems((prev) =>
           prev.map((val) =>
             val.pokemonCard?.id === item.pokemonCard?.id
@@ -503,7 +504,6 @@ export default function CollectionDetailsScreen() {
           toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
           void loadCollectionHeader();
         } catch (error) {
-          // Revert optimistic update
           setItems((prev) =>
             prev.map((val) =>
               val.pokemonCard?.id === item.pokemonCard?.id
@@ -522,7 +522,6 @@ export default function CollectionDetailsScreen() {
       }
     }
 
-    // Optimistic update
     setItems((prev) =>
       prev.map((val) =>
         val.pokemonCard?.id === item.pokemonCard?.id
@@ -539,7 +538,6 @@ export default function CollectionDetailsScreen() {
       toast.showSuccess(`${item.pokemonCard.name || "Carte"} retirée.`);
       void loadCollectionHeader();
     } catch (error) {
-      // Revert optimistic update
       setItems((prev) =>
         prev.map((val) =>
           val.pokemonCard?.id === item.pokemonCard?.id
@@ -558,7 +556,6 @@ export default function CollectionDetailsScreen() {
 
     const currentQty = Number(item.quantity || 0);
 
-    // Optimistic update
     setItems((prev) =>
       prev.map((val) =>
         val.pokemonCard?.id === item.pokemonCard?.id
@@ -582,7 +579,6 @@ export default function CollectionDetailsScreen() {
       toast.showSuccess(`${item.pokemonCard.name || "Carte"} ajoutée.`);
       void loadCollectionHeader();
     } catch (error) {
-      // Revert optimistic update
       setItems((prev) =>
         prev.map((val) =>
           val.pokemonCard?.id === item.pokemonCard?.id

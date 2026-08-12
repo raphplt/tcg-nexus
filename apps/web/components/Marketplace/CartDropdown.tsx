@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,10 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import { SEALED_PLACEHOLDER, getSealedImageUrl, getSealedName } from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl } from "@/utils/sealedImage";
 
 const CartDropdown = () => {
+  const t = useTranslations("Cart");
   const [isOpen, setIsOpen] = useState(false);
   const { cart, isLoading, fetchCart, removeItem } = useCartStore();
   const { formatPrice, currency } = useCurrencyStore();
@@ -66,7 +68,7 @@ const CartDropdown = () => {
           </div>
         ) : cartItems.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            Votre panier est vide
+            {t("emptyTitle")}
           </div>
         ) : (
           <>
@@ -89,7 +91,7 @@ const CartDropdown = () => {
                       alt={
                         (item.listing.productKind === "sealed" ||
                         item.listing.sealedProduct
-                          ? getSealedName(item.listing.sealedProduct)
+                          ? item.listing.sealedProduct?.name
                           : item.listing.pokemonCard?.name) || "Produit"
                       }
                       fill
@@ -100,8 +102,7 @@ const CartDropdown = () => {
                     <p className="text-sm font-medium truncate">
                       {item.listing.productKind === "sealed" ||
                       item.listing.sealedProduct
-                        ? getSealedName(item.listing.sealedProduct) ||
-                          "Produit scellé"
+                        ? item.listing.sealedProduct?.name || t("sealedProduct")
                         : item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -131,14 +132,14 @@ const CartDropdown = () => {
             <DropdownMenuSeparator />
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold">Total:</span>
+                <span className="text-sm font-semibold">{t("totalLabel")}</span>
                 <span className="text-lg font-bold text-primary">
                   {formatPrice(total, currency)}
                 </span>
               </div>
               <Button asChild className="w-full" size="sm">
                 <Link href="/cart" onClick={() => setIsOpen(false)}>
-                  Voir le panier
+                  {t("viewCart")}
                 </Link>
               </Button>
             </div>

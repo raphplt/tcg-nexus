@@ -15,8 +15,7 @@ export interface PokecardexSeries {
 }
 
 /**
- * Service de scraping pokecardex.com via Puppeteer (headless browser).
- * Le site est une SPA React, donc on rend le JS avant de scraper le DOM.
+ * Scrapes Pokécardex through Puppeteer. The React SPA must render before its DOM is queried.
  */
 export class PokecardexService {
   private readonly baseUrl = "https://www.pokecardex.com";
@@ -48,7 +47,7 @@ export class PokecardexService {
   }
 
   /**
-   * Récupère la liste des séries depuis la page /series.
+   * Retrieves the series list from the `/series` page.
    */
   async fetchSeriesList(): Promise<PokecardexSeries[]> {
     const page = await this.newPage();
@@ -71,7 +70,6 @@ export class PokecardexService {
           if (!match) return;
           const id = match[1];
 
-          // Récupérer le nom depuis un élément texte à côté
           let name = "";
           const parent = el.closest("[class]");
           if (parent) {
@@ -99,7 +97,7 @@ export class PokecardexService {
   }
 
   /**
-   * Scrape les produits scellés d'une série en cliquant sur l'onglet "Produits".
+   * Scrapes sealed products from a series by selecting its Products tab.
    *
    * Les images de produits suivent le pattern :
    * https://www.pokecardex.com/assets/images/sets/{CODE}/{category}/{file}.png
@@ -113,7 +111,6 @@ export class PokecardexService {
         timeout: 45000,
       });
 
-      // Cliquer sur le bouton "Produits"
       const clicked = await page.evaluate(() => {
         const walker = document.createTreeWalker(
           document.body,
@@ -130,7 +127,6 @@ export class PokecardexService {
 
       if (!clicked) return [];
 
-      // Laisser le contenu se charger
       await new Promise((r) => setTimeout(r, 2500));
 
       const setName = await page.title().then((t) => {
@@ -150,7 +146,6 @@ export class PokecardexService {
           }[] = [];
           const seenUrls = new Set<string>();
 
-          // Filtrer uniquement les images de produits (pattern d'URL spécifique)
           const productImgPattern =
             /\/assets\/images\/sets\/[^/]+\/([^/]+)\/(.+)$/;
 
@@ -175,7 +170,6 @@ export class PokecardexService {
             else if (category.includes("deck")) productType = "deck";
             else if (category.includes("tripack")) productType = "tripack";
             else if (category === "divers") {
-              // Catégorie "divers" = coffrets, collection boxes, etc.
               const nameLower = (img.alt || filename).toLowerCase();
               if (
                 nameLower.includes("etb") ||

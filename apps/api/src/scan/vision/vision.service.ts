@@ -23,8 +23,7 @@ export interface VisionMatchCandidate {
   url: string;
 }
 
-// mieux vaut échouer vite (repli OCR brut) que faire patienter ; surchargeable
-// pour le banc d'essai qui laisse vision finir
+// Fast fail timeout preferred over hanging request (fallbacks to raw OCR); overridable via VISION_TIMEOUT_MS env var
 const REQUEST_TIMEOUT_MS = Number(process.env.VISION_TIMEOUT_MS) || 15000;
 const MATCH_TIMEOUT_MS = 15000;
 
@@ -82,7 +81,7 @@ export class VisionService {
       return new Map((data.results ?? []).map((r) => [r.id, r.score]));
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Match visuel KO, classement texte conservé: ${reason}`);
+      this.logger.warn(`Visual match failed, text ranking kept: ${reason}`);
       return new Map();
     } finally {
       clearTimeout(timeout);
@@ -115,8 +114,7 @@ export class VisionService {
     }
   }
 
-  // envoie toute la rafale ; le service OCRise en parallèle et renvoie le meilleur
-  // nom et le meilleur numéro fusionnés
+  // Sends full image burst; vision service OCRs in parallel and returns merged best name and card number
   async preprocessBatch(images: Buffer[]): Promise<VisionResult | null> {
     if (images.length === 0) return null;
     if (images.length === 1) return this.preprocess(images[0]);

@@ -7,7 +7,6 @@ describe("SeedController", () => {
   let controller: SeedController;
   const mockService = {
     enableExtensions: jest.fn(),
-    importPokemonSeries: jest.fn(),
     seedUsers: jest.fn(),
     seedTournaments: jest.fn(),
     seedFaq: jest.fn(),
@@ -39,9 +38,9 @@ describe("SeedController", () => {
     jest.clearAllMocks();
   });
 
-  it("should import series", () => {
-    mockService.importPokemonSeries.mockReturnValue("ok");
-    expect(controller.importSeries()).toBe("ok");
+  it("should import catalog", () => {
+    mockService.importPokemon.mockReturnValue("ok");
+    expect(controller.importCatalog()).toBe("ok");
   });
 
   it("should seed all", async () => {

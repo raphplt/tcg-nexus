@@ -20,7 +20,6 @@ export const scanService = {
       formData.append("game", game);
     }
 
-    // le pipeline vision + OCR peut être long, surtout au 1er scan
     const response = await secureApi.post<ScanRecognizeResponse>(
       "/scan/recognize",
       formData,

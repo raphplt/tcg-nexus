@@ -20,7 +20,6 @@ interface CardDetailModalProps {
 }
 
 const energyToImageName: Record<string, string> = {
-  // French
   plante: "Type-Plante-JCC.png",
   feu: "Type-Feu-JCC.png",
   eau: "Type-Eau-JCC.png",
@@ -33,7 +32,6 @@ const energyToImageName: Record<string, string> = {
   fée: "Type-Fée-JCC.png",
   combat: "Type-Combat-JCC.png",
 
-  // English
   grass: "Type-Plante-JCC.png",
   fire: "Type-Feu-JCC.png",
   water: "Type-Eau-JCC.png",

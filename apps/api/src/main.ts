@@ -1,5 +1,5 @@
-import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";
-import { NestFactory, Reflector } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
@@ -8,6 +8,9 @@ import { AllExceptionsFilter } from "./common/http-exception.filter";
 
 dotenv.config();
 
+/**
+ * Bootstraps the NestJS application instance, configuring global pipes, filters, interceptors, CORS, and Swagger documentation.
+ */
 export async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -25,7 +28,7 @@ export async function bootstrap() {
             scheme: "bearer",
             bearerFormat: "JWT",
             name: "Authorization",
-            description: "Entrer le token JWT",
+            description: "Enter JWT token",
             in: "header",
           },
           "bearerAuth",
@@ -53,10 +56,6 @@ export async function bootstrap() {
 
     app.useGlobalFilters(new AllExceptionsFilter());
 
-    app.useGlobalInterceptors(
-      new ClassSerializerInterceptor(app.get(Reflector)),
-    );
-
     app.enableCors({
       origin:
         process.env.NODE_ENV === "production"
@@ -72,7 +71,6 @@ export async function bootstrap() {
     server.headersTimeout = 70000;
 
     await app.listen(port, "0.0.0.0").then(() => {
-      // console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`🚀 Server running on http://0.0.0.0:${port}`);
       console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
     });

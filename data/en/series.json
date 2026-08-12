@@ -1,0 +1,503 @@
+[
+  {
+    "id": "base",
+    "logo": "https://cdn.tcg-nexus.org/series/en/base/logo.webp",
+    "name": "Base",
+    "firstSet": {
+      "cardCount": {
+        "official": 102,
+        "total": 102
+      },
+      "id": "base1",
+      "logo": "https://assets.tcgdex.net/en/base/base1/logo",
+      "name": "Base Set"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 82,
+        "total": 83
+      },
+      "id": "base5",
+      "logo": "https://assets.tcgdex.net/en/base/base5/logo",
+      "name": "Team Rocket",
+      "symbol": "https://assets.tcgdex.net/univ/base/base5/symbol"
+    },
+    "releaseDate": "1999-01-09"
+  },
+  {
+    "id": "bw",
+    "logo": "https://cdn.tcg-nexus.org/series/en/bw/logo.webp",
+    "name": "Black & White",
+    "firstSet": {
+      "cardCount": {
+        "official": 114,
+        "total": 115
+      },
+      "id": "bw1",
+      "logo": "https://assets.tcgdex.net/en/bw/bw1/logo",
+      "name": "Black & White",
+      "symbol": "https://assets.tcgdex.net/univ/bw/bw1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 25,
+        "total": 25
+      },
+      "id": "rc",
+      "name": "Radiant Collection"
+    },
+    "releaseDate": "2011-04-25"
+  },
+  {
+    "id": "col",
+    "logo": "https://cdn.tcg-nexus.org/series/en/col/logo.webp",
+    "name": "Call of Legends",
+    "firstSet": {
+      "cardCount": {
+        "official": 95,
+        "total": 106
+      },
+      "id": "col1",
+      "logo": "https://assets.tcgdex.net/en/col/col1/logo",
+      "name": "Call of Legends",
+      "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 95,
+        "total": 106
+      },
+      "id": "col1",
+      "logo": "https://assets.tcgdex.net/en/col/col1/logo",
+      "name": "Call of Legends",
+      "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol"
+    },
+    "releaseDate": "2011-02-09"
+  },
+  {
+    "id": "dp",
+    "logo": "https://cdn.tcg-nexus.org/series/en/dp/logo.webp",
+    "name": "Diamond & Pearl",
+    "firstSet": {
+      "cardCount": {
+        "official": 130,
+        "total": 130
+      },
+      "id": "dp1",
+      "logo": "https://assets.tcgdex.net/en/dp/dp1/logo",
+      "name": "Diamond & Pearl",
+      "symbol": "https://assets.tcgdex.net/univ/dp/dp1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 100,
+        "total": 106
+      },
+      "id": "dp7",
+      "logo": "https://assets.tcgdex.net/en/dp/dp7/logo",
+      "name": "Stormfront",
+      "symbol": "https://assets.tcgdex.net/univ/dp/dp7/symbol"
+    },
+    "releaseDate": "2007-05-01"
+  },
+  {
+    "id": "ecard",
+    "logo": "https://cdn.tcg-nexus.org/series/en/ecard/logo.webp",
+    "name": "E-Card",
+    "firstSet": {
+      "cardCount": {
+        "official": 10,
+        "total": 10
+      },
+      "id": "sp",
+      "name": "Sample",
+      "symbol": "https://assets.tcgdex.net/univ/ecard/sp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 144,
+        "total": 182
+      },
+      "id": "ecard3",
+      "logo": "https://assets.tcgdex.net/en/ecard/ecard3/logo",
+      "name": "Skyridge",
+      "symbol": "https://assets.tcgdex.net/univ/ecard/ecard3/symbol"
+    },
+    "releaseDate": "2002-08-01"
+  },
+  {
+    "id": "ex",
+    "logo": "https://cdn.tcg-nexus.org/series/en/ex/logo.webp",
+    "name": "EX",
+    "firstSet": {
+      "cardCount": {
+        "official": 109,
+        "total": 109
+      },
+      "id": "ex1",
+      "logo": "https://assets.tcgdex.net/en/ex/ex1/logo",
+      "name": "Ruby & Sapphire",
+      "symbol": "https://assets.tcgdex.net/univ/ex/ex1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 108,
+        "total": 108
+      },
+      "id": "ex16",
+      "logo": "https://assets.tcgdex.net/en/ex/ex16/logo",
+      "name": "Power Keepers",
+      "symbol": "https://assets.tcgdex.net/univ/ex/ex16/symbol"
+    },
+    "releaseDate": "2003-07-01"
+  },
+  {
+    "id": "gym",
+    "logo": "https://cdn.tcg-nexus.org/series/en/gym/logo.webp",
+    "name": "Gym",
+    "firstSet": {
+      "cardCount": {
+        "official": 132,
+        "total": 132
+      },
+      "id": "gym1",
+      "logo": "https://assets.tcgdex.net/en/gym/gym1/logo",
+      "name": "Gym Heroes",
+      "symbol": "https://assets.tcgdex.net/univ/gym/gym1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 132,
+        "total": 132
+      },
+      "id": "gym2",
+      "logo": "https://assets.tcgdex.net/en/gym/gym2/logo",
+      "name": "Gym Challenge",
+      "symbol": "https://assets.tcgdex.net/univ/gym/gym2/symbol"
+    },
+    "releaseDate": "2000-08-14"
+  },
+  {
+    "id": "hgss",
+    "logo": "https://cdn.tcg-nexus.org/series/en/hgss/logo.webp",
+    "name": "HeartGold & SoulSilver",
+    "firstSet": {
+      "cardCount": {
+        "official": 123,
+        "total": 124
+      },
+      "id": "hgss1",
+      "logo": "https://assets.tcgdex.net/en/hgss/hgss1/logo",
+      "name": "HeartGold SoulSilver",
+      "symbol": "https://assets.tcgdex.net/univ/hgss/hgss1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 102,
+        "total": 103
+      },
+      "id": "hgss4",
+      "logo": "https://assets.tcgdex.net/en/hgss/hgss4/logo",
+      "name": "Triumphant",
+      "symbol": "https://assets.tcgdex.net/univ/hgss/hgss4/symbol"
+    },
+    "releaseDate": "2010-02-10"
+  },
+  {
+    "id": "lc",
+    "logo": "https://cdn.tcg-nexus.org/series/en/lc/logo.webp",
+    "name": "Legendary Collection",
+    "firstSet": {
+      "cardCount": {
+        "official": 110,
+        "total": 110
+      },
+      "id": "lc",
+      "logo": "https://assets.tcgdex.net/en/lc/lc/logo",
+      "name": "Legendary Collection",
+      "symbol": "https://assets.tcgdex.net/univ/lc/lc/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 110,
+        "total": 110
+      },
+      "id": "lc",
+      "logo": "https://assets.tcgdex.net/en/lc/lc/logo",
+      "name": "Legendary Collection",
+      "symbol": "https://assets.tcgdex.net/univ/lc/lc/symbol"
+    },
+    "releaseDate": "2002-05-24"
+  },
+  {
+    "id": "mc",
+    "name": "McDonald's Collection",
+    "firstSet": {
+      "cardCount": {
+        "official": 12,
+        "total": 12
+      },
+      "id": "2011bw",
+      "name": "McDonald's Collection 2011"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 15,
+        "total": 15
+      },
+      "id": "2024sv",
+      "name": "McDonald's Collection 2024"
+    },
+    "releaseDate": "2011-06-17"
+  },
+  {
+    "id": "me",
+    "logo": "https://cdn.tcg-nexus.org/series/en/me/logo.webp",
+    "name": "Mega Evolution",
+    "firstSet": {
+      "cardCount": {
+        "official": 8,
+        "total": 8
+      },
+      "id": "mee",
+      "name": "Mega Evolution Energy"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 84,
+        "total": 120
+      },
+      "id": "me05",
+      "logo": "https://assets.tcgdex.net/en/me/me05/logo",
+      "name": "Pitch Black",
+      "symbol": "https://assets.tcgdex.net/univ/me/me05/symbol"
+    },
+    "releaseDate": "2025-09-25"
+  },
+  {
+    "id": "misc",
+    "name": "Miscellaneous",
+    "firstSet": {
+      "cardCount": {
+        "official": 1,
+        "total": 1
+      },
+      "id": "miscp",
+      "name": "Miscellaneous Promos"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 160,
+        "total": 160
+      },
+      "id": "jumbo",
+      "name": "Jumbo cards"
+    },
+    "releaseDate": "1996-01-01"
+  },
+  {
+    "id": "neo",
+    "logo": "https://cdn.tcg-nexus.org/series/en/neo/logo.webp",
+    "name": "Neo",
+    "firstSet": {
+      "cardCount": {
+        "official": 111,
+        "total": 111
+      },
+      "id": "neo1",
+      "logo": "https://assets.tcgdex.net/en/neo/neo1/logo",
+      "name": "Neo Genesis",
+      "symbol": "https://assets.tcgdex.net/univ/neo/neo1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 105,
+        "total": 113
+      },
+      "id": "neo4",
+      "logo": "https://assets.tcgdex.net/en/neo/neo4/logo",
+      "name": "Neo Destiny",
+      "symbol": "https://assets.tcgdex.net/univ/neo/neo4/symbol"
+    },
+    "releaseDate": "2000-12-16"
+  },
+  {
+    "id": "pl",
+    "logo": "https://cdn.tcg-nexus.org/series/en/pl/logo.webp",
+    "name": "Platinum",
+    "firstSet": {
+      "cardCount": {
+        "official": 127,
+        "total": 133
+      },
+      "id": "pl1",
+      "logo": "https://assets.tcgdex.net/en/pl/pl1/logo",
+      "name": "Platinum",
+      "symbol": "https://assets.tcgdex.net/univ/pl/pl1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 16,
+        "total": 16
+      },
+      "id": "ru1",
+      "logo": "https://assets.tcgdex.net/en/pl/ru1/logo",
+      "name": "Pokémon Rumble",
+      "symbol": "https://assets.tcgdex.net/univ/pl/ru1/symbol"
+    },
+    "releaseDate": "2009-02-11"
+  },
+  {
+    "id": "pop",
+    "logo": "https://cdn.tcg-nexus.org/series/en/pop/logo.webp",
+    "name": "POP",
+    "firstSet": {
+      "cardCount": {
+        "official": 40,
+        "total": 40
+      },
+      "id": "np",
+      "logo": "https://assets.tcgdex.net/en/pop/np/logo",
+      "name": "Nintendo Black Star Promos",
+      "symbol": "https://assets.tcgdex.net/univ/pop/np/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 17,
+        "total": 17
+      },
+      "id": "pop9",
+      "logo": "https://assets.tcgdex.net/en/pop/pop9/logo",
+      "name": "POP Series 9",
+      "symbol": "https://assets.tcgdex.net/univ/pop/pop9/symbol"
+    },
+    "releaseDate": "2003-10-01"
+  },
+  {
+    "id": "sm",
+    "logo": "https://cdn.tcg-nexus.org/series/en/sm/logo.webp",
+    "name": "Sun & Moon",
+    "firstSet": {
+      "cardCount": {
+        "official": 149,
+        "total": 172
+      },
+      "id": "sm1",
+      "logo": "https://assets.tcgdex.net/en/sm/sm1/logo",
+      "name": "Sun & Moon",
+      "symbol": "https://assets.tcgdex.net/univ/sm/sm1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 236,
+        "total": 271
+      },
+      "id": "sm12",
+      "logo": "https://assets.tcgdex.net/en/sm/sm12/logo",
+      "name": "Cosmic Eclipse",
+      "symbol": "https://assets.tcgdex.net/univ/sm/sm12/symbol"
+    },
+    "releaseDate": "2017-02-03"
+  },
+  {
+    "id": "sv",
+    "logo": "https://cdn.tcg-nexus.org/series/en/sv/logo.webp",
+    "name": "Scarlet & Violet",
+    "firstSet": {
+      "cardCount": {
+        "official": 198,
+        "total": 258
+      },
+      "id": "sv01",
+      "logo": "https://assets.tcgdex.net/en/sv/sv01/logo",
+      "name": "Scarlet & Violet",
+      "symbol": "https://assets.tcgdex.net/univ/sv/sv01/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 86,
+        "total": 173
+      },
+      "id": "sv10.5w",
+      "logo": "https://assets.tcgdex.net/en/sv/sv10.5w/logo",
+      "name": "White Flare",
+      "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5w/symbol"
+    },
+    "releaseDate": "2023-03-31"
+  },
+  {
+    "id": "swsh",
+    "logo": "https://cdn.tcg-nexus.org/series/en/swsh/logo.webp",
+    "name": "Sword & Shield",
+    "firstSet": {
+      "cardCount": {
+        "official": 307,
+        "total": 307
+      },
+      "id": "swshp",
+      "logo": "https://assets.tcgdex.net/en/swsh/swshp/logo",
+      "name": "SWSH Black Star Promos",
+      "symbol": "https://assets.tcgdex.net/univ/swsh/swshp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 159,
+        "total": 160
+      },
+      "id": "swsh12.5",
+      "logo": "https://assets.tcgdex.net/en/swsh/swsh12.5/logo",
+      "name": "Crown Zenith",
+      "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12.5/symbol"
+    },
+    "releaseDate": "2019-11-15"
+  },
+  {
+    "id": "tk",
+    "name": "Trainer kits",
+    "firstSet": {
+      "cardCount": {
+        "official": 10,
+        "total": 10
+      },
+      "id": "tk-ex-latio",
+      "name": "EX trainer Kit (Latios)",
+      "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latio/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 30,
+        "total": 30
+      },
+      "id": "tk-sm-r",
+      "name": "SM trainer Kit (Alolan Raichu)",
+      "symbol": "https://assets.tcgdex.net/univ/tk/tk-sm-r/symbol"
+    },
+    "releaseDate": "2004-07-01"
+  },
+  {
+    "id": "xy",
+    "logo": "https://cdn.tcg-nexus.org/series/en/xy/logo.webp",
+    "name": "XY",
+    "firstSet": {
+      "cardCount": {
+        "official": 211,
+        "total": 216
+      },
+      "id": "xyp",
+      "logo": "https://assets.tcgdex.net/en/xy/xyp/logo",
+      "name": "XY Black Star Promos",
+      "symbol": "https://assets.tcgdex.net/univ/xy/xyp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 108,
+        "total": 113
+      },
+      "id": "xy12",
+      "logo": "https://assets.tcgdex.net/en/xy/xy12/logo",
+      "name": "Evolutions",
+      "symbol": "https://assets.tcgdex.net/univ/xy/xy12/symbol"
+    },
+    "releaseDate": "2013-10-12"
+  }
+]

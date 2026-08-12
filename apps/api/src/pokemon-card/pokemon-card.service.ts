@@ -1,3 +1,8 @@
+import {
+  applyCardSearch,
+  applyRarityFilter,
+  cardNameMatchesSql,
+} from "src/card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -24,11 +29,9 @@ export class PokemonCardService {
       id: card.id,
       tcgDexId: card.tcgDexId,
       localId: card.localId,
-      name: card.name,
-      image: card.image,
-      category: details?.category ?? card.category,
+      // Name, image, rarity, and category are attached by CatalogLocalizationInterceptor in request locale
+      category: details?.category,
       illustrator: card.illustrator,
-      rarity: card.rarity,
       variants: card.variants,
       variantsDetailed: card.variantsDetailed,
       set: card.set,
@@ -161,10 +164,7 @@ export class PokemonCardService {
       return [];
     }
 
-    qb.andWhere(
-      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
-      { search: `%${search}%` },
-    );
+    applyCardSearch(qb, search);
 
     const cards = await qb.getMany();
     return cards.map((card) => this.toPokemonCardResponse(card));
@@ -269,10 +269,7 @@ export class PokemonCardService {
       .where("card.game = :game", { game: CardGame.Pokemon });
 
     if (search && search.trim() !== "") {
-      qb.andWhere(
-        "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
-        { search: `%${search}%` },
-      );
+      applyCardSearch(qb, search);
     }
 
     if (setId && setId.trim() !== "") {
@@ -284,7 +281,7 @@ export class PokemonCardService {
     }
 
     if (rarity && rarity.trim() !== "") {
-      qb.andWhere("card.rarity = :rarity", { rarity });
+      applyRarityFilter(qb, rarity);
     }
 
     if (type && type.trim() !== "") {
@@ -327,7 +324,7 @@ export class PokemonCardService {
     }
 
     if (rarity && rarity.trim() !== "") {
-      qb.andWhere("pokemonCard.rarity = :rarity", { rarity });
+      applyRarityFilter(qb, rarity, { alias: "pokemonCard" });
     }
 
     if (setId && setId.trim() !== "") {
@@ -374,8 +371,7 @@ export class PokemonCardService {
         .toLowerCase()
         .trim();
 
-    // Variantes du localId : "063" → ["063", "63"]
-    // pour gérer les BDD qui stockent avec ou sans padding
+    // LocalId variations: "063" → ["063", "63"] to support database records stored with or without leading zero padding
     const rawLocalId = (localId || setNumber || "").trim();
     const localIdVariants: string[] = [];
     if (rawLocalId) {
@@ -390,8 +386,7 @@ export class PokemonCardService {
       }
     }
 
-    // ── ÉTAPE 1 : requête AND (nom + numéro ensemble) ────────────────────
-    // Plus précise — si les deux critères sont disponibles
+    // ── STEP 1: Strict AND query (name + set number combined) ─────────────
     let cards: Card[] = [];
 
     if (cardName?.trim() && localIdVariants.length > 0) {
@@ -409,21 +404,23 @@ export class PokemonCardService {
         .leftJoinAndSelect("card.set", "set")
         .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
         .where("card.game = :game", { game: andParams.game })
-        .andWhere("card.name ILIKE :cardName", { cardName: andParams.cardName })
+        .andWhere(cardNameMatchesSql("card", "cardName"), {
+          cardName: String(andParams.cardName).toLowerCase(),
+        })
         .andWhere(`(${localIdConds.join(" OR ")})`, andParams)
         .limit(5);
 
       cards = await andQb.getMany();
     }
 
-    // ── ÉTAPE 2 : fallback OR si rien trouvé ────────────────────────────
+    // ── STEP 2: Fallback OR query if no match ──────────────────────────────
     if (cards.length === 0) {
       const orConditions: string[] = [];
       const orParams: Record<string, string> = {};
 
       if (cardName?.trim()) {
-        orConditions.push("card.name ILIKE :cardName");
-        orParams.cardName = `%${cardName.trim()}%`;
+        orConditions.push(cardNameMatchesSql("card", "cardName"));
+        orParams.cardName = `%${cardName.trim().toLowerCase()}%`;
       }
 
       if (localIdVariants.length > 0) {
@@ -441,7 +438,11 @@ export class PokemonCardService {
       }
 
       if (setName?.trim()) {
-        orConditions.push("set.name ILIKE :setName");
+        // Set names live in translations, matched across every locale.
+        orConditions.push(`EXISTS (
+          SELECT 1 FROM pokemon_set_translation st
+          WHERE st.set_id = "card"."setId" AND st.name ILIKE :setName
+        )`);
         orParams.setName = `%${setName.trim()}%`;
       }
 
@@ -472,7 +473,7 @@ export class PokemonCardService {
       const nLocalId = norm(card.localId);
       const nSet = norm(card.set?.name);
 
-      // LocalId
+      // LocalId matching
       const localIdExact = nLocalIdVariants.some((v) => v && nLocalId === v);
       const localIdPartial =
         !localIdExact &&
@@ -481,7 +482,7 @@ export class PokemonCardService {
       if (localIdExact) score += 60;
       else if (localIdPartial) score += 30;
 
-      // Nom
+      // Card Name matching
       const nameExact = nTargetName && nName === nTargetName;
       const nameContains =
         !nameExact && nTargetName && nName.includes(nTargetName);
@@ -496,11 +497,7 @@ export class PokemonCardService {
       else if (nameContains) score += 30;
       else if (namePartial) score += 20;
 
-      // ★ BONUS COMBINÉ — le cœur du fix ★
-      // Seule une carte qui a à la fois le bon nom ET le bon numéro reçoit ce bonus.
-      // "Abra 063" → score 60+50+120 = 230
-      // "Machop 063" → score 60 seulement
-      // "Abra 025" → score 50 seulement (si OCR donne 063 comme numéro)
+      // Combined Bonus (Bonus applied when both card name and localId match)
       const hasName = nameExact || nameContains || namePartial;
       const hasLocalId = localIdExact || localIdPartial;
       if (hasName && hasLocalId) score += 120;

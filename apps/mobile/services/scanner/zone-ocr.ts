@@ -5,7 +5,6 @@ import type { RectifiedCard } from "@/types/scanner";
 const GOOGLE_VISION_URL = "https://vision.googleapis.com/v1/images:annotate";
 const OCR_SPACE_URL = "https://api.ocr.space/parse/image";
 
-// ─── Stopwords — lignes entières à rejeter (égalité exacte après normalize) ──
 const NAME_STOPWORDS_EXACT = new Set([
   "hp",
   "pv",
@@ -23,21 +22,16 @@ const NAME_STOPWORDS_EXACT = new Set([
   "uncommon",
 ]);
 
-// ─── Préfixes/mots-clés à rejeter si la ligne les CONTIENT ───────────────────
-// Ces termes apparaissent souvent collés à d'autres mots sur les cartes FR/EN.
 const NAME_STOPWORDS_CONTAINS = [
-  // Stades (FR)
   "niveau de base",
   "stade 1",
   "stade 2",
   "pokemon de base",
   "pokemon stade",
-  // Stades (EN)
   "basic pokemon",
   "stage 1",
   "stage 2",
   "level up",
-  // Infos techniques
   "game freak",
   "nintendo",
   "creatures",
@@ -46,10 +40,8 @@ const NAME_STOPWORDS_CONTAINS = [
   "©",
   "™",
   "®",
-  // Énergie
   "energie",
   "energy",
-  // Niveaux numériques ex: "Niv.52"
   "niv.",
 ];
 
@@ -60,8 +52,6 @@ const normalize = (s: string): string =>
     .toLowerCase()
     .trim();
 
-// ─── Parsing du numéro de set ─────────────────────────────────────────────────
-
 interface ParsedNumber {
   localId?: string;
   setTotal?: string;
@@ -69,7 +59,6 @@ interface ParsedNumber {
 }
 
 const parseSetNumber = (text: string): ParsedNumber => {
-  // Format classique : "063/198" ou "63/198"
   const classic = text.match(/\b(\d{1,3})\s*\/\s*(\d{1,3})\b/);
   if (classic?.[1] && classic?.[2]) {
     return {
@@ -79,7 +68,6 @@ const parseSetNumber = (text: string): ParsedNumber => {
     };
   }
 
-  // Format spécial : TG01/TG30, GG01/GG70, etc.
   const special = text.match(
     /\b([A-Z]{1,3}\d{1,3})\s*\/\s*([A-Z]{0,3}\d{1,3})\b/,
   );
@@ -93,31 +81,21 @@ const parseSetNumber = (text: string): ParsedNumber => {
   return {};
 };
 
-// ─── Parsing du nom de carte ──────────────────────────────────────────────────
-
 const isStopLine = (line: string): boolean => {
   const n = normalize(line);
-  // Trop court ou purement numérique
   if (n.length < 2) return true;
   if (/^\d+$/.test(n)) return true;
-  // Format numéro de set
   if (/\d{1,3}\s*\/\s*\d{1,3}/.test(n)) return true;
-  // Égalité exacte
   if (NAME_STOPWORDS_EXACT.has(n)) return true;
-  // Contient un mot-clé stop (ex: "Niveau de base" contient "niveau de base")
   if (NAME_STOPWORDS_CONTAINS.some((kw) => n.includes(kw))) return true;
-  // Ligne trop courte (1 seule lettre/chiffre) ou que des symboles
   if (!/[a-zA-ZÀ-ÿ]{2,}/.test(n)) return true;
   return false;
 };
 
 const extractCardName = (lines: string[]): string | undefined => {
-  // On cherche parmi les 10 premières lignes la première valide
   const top10 = lines.slice(0, 10);
   return top10.find((line) => !isStopLine(line))?.trim();
 };
-
-// ─── Détection de langue ──────────────────────────────────────────────────────
 
 const detectLanguage = (text: string): "fr" | "en" | "ja" | "unknown" => {
   if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(text)) return "ja";
@@ -143,8 +121,6 @@ const detectLanguage = (text: string): "fr" | "en" | "ja" | "unknown" => {
   if (enScore > frScore) return "en";
   return "unknown";
 };
-
-// ─── Appels aux providers OCR ─────────────────────────────────────────────────
 
 const callGoogleVision = async (base64: string): Promise<string> => {
   const apiKey = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY?.trim();
@@ -204,8 +180,6 @@ const ocrText = async (base64: string): Promise<string> => {
   );
 };
 
-// ─── Crop d'une zone de la carte normalisée ───────────────────────────────────
-
 const cropZone = async (
   cardUri: string,
   cardW: number,
@@ -233,15 +207,11 @@ const cropZone = async (
   return result.base64;
 };
 
-// ─── Module 3 : ZoneOCR ──────────────────────────────────────────────────────
-
 import type { ZoneOcrResult } from "@/types/scanner";
 
 export const zoneOcr = {
   /**
-   * Extrait le nom (zone haute) et le numéro (zone basse) de la carte normalisée.
-   * Les deux appels OCR sont exécutés en parallèle.
-   * Jamais d'OCR sur l'image entière — uniquement sur les 2 zones ciblées.
+   * Extracts the name from the top zone and the number from the bottom zone of a normalized card. Both targeted OCR requests run in parallel.
    */
   async extract(card: RectifiedCard): Promise<ZoneOcrResult> {
     const t0 = Date.now();
@@ -296,7 +266,6 @@ export const zoneOcr = {
       nameZone: {
         rawText: nameText,
         candidateName,
-        // Confiance basée sur la longueur du texte extrait (heuristique simple)
         confidence: nameText.length > 5 ? 0.8 : 0.3,
       },
       numberZone: {

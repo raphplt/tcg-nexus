@@ -304,7 +304,7 @@ describe("AuthService", () => {
       await expect(service.refreshTokens(1, "staletoken")).rejects.toThrow(
         UnauthorizedException,
       );
-      // Replay suspecté → toutes les sessions sont nuked
+      // Suspected token replay → all sessions nuked
       expect(userService.updateRefreshToken).toHaveBeenCalledWith(1, null);
       warnSpy.mockRestore();
     });
@@ -340,7 +340,7 @@ describe("AuthService", () => {
       await expect(service.refreshTokens(1, "token")).rejects.toThrow(
         UnauthorizedException,
       );
-      // Pas de refreshToken stocké → pas de nuke (rien à invalider)
+      // No stored refreshToken → no nuke (nothing to invalidate)
       expect(userService.updateRefreshToken).not.toHaveBeenCalled();
     });
   });

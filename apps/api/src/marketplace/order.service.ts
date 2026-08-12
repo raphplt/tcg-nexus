@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -15,6 +16,7 @@ import {
 } from "../common/enums/fulfillment-status";
 import { ProductKind } from "../common/enums/product-kind";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
@@ -150,7 +152,7 @@ export class OrderService {
     }
   }
 
-  // verrou pessimiste : deux acheteurs ne peuvent pas prendre le dernier exemplaire
+  // Pessimistic locking to prevent race conditions on last remaining stock items
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
@@ -240,9 +242,8 @@ export class OrderService {
   }
 
   /**
-   * Un vendeur expédie un seul colis : on ne facture qu'une fois ses frais de
-   * port, au tarif le plus élevé qu'il déclare dans la commande. Le montant est
-   * porté par la ligne concernée, les autres lignes du même vendeur sont à 0.
+   * Allocates shipping costs per seller. When a seller ships multiple items in a single package,
+   * only the single highest shipping cost is charged across all items from that seller.
    */
   private allocateShipping(
     cartItems: CartItem[],
@@ -308,13 +309,19 @@ export class OrderService {
     };
   }
 
+  /**
+   * Label used in checkout error messages. Sealed products carry no name of
+   * their own: it is read from the loaded translations, preferring the default
+   * locale.
+   */
   private describeItem(item: CartItem): string {
     const { listing } = item;
-    return (
-      listing.pokemonCard?.name ??
-      listing.sealedProduct?.nameEn ??
-      "Produit inconnu"
-    );
+    const locales = listing.sealedProduct?.locales ?? [];
+    const sealedName =
+      locales.find((locale) => locale.locale === DEFAULT_LOCALE)?.name ??
+      locales[0]?.name;
+
+    return listing.pokemonCard?.name ?? sealedName ?? "Produit inconnu";
   }
 
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {
@@ -354,7 +361,7 @@ export class OrderService {
     return this.findOrderById(orderId, user.id);
   }
 
-  // idempotent : webhook et retour client peuvent arriver dans n'importe quel ordre
+  // Idempotent handler: Stripe webhooks and client callback events can arrive out-of-order
   private async markOrderPaid(
     paymentIntentId: string,
     intent: {
@@ -384,7 +391,7 @@ export class OrderService {
     }
 
     if (order.status !== OrderStatus.PENDING) {
-      return; // déjà traité (webhook et retour client peuvent se croiser)
+      return; // Already processed (webhook and client return events can arrive out of order)
     }
 
     order.status = OrderStatus.PAID;
@@ -802,7 +809,10 @@ export class OrderService {
     }
 
     if (orderItem.order.status === OrderStatus.PENDING) {
-      throw new BadRequestException("Cette commande n'a pas encore été payée");
+      throw new BadRequestException({
+        code: "ORDER_NOT_PAID",
+        message: "Cette commande n'a pas encore été payée",
+      });
     }
 
     const allowed = FULFILLMENT_TRANSITIONS[orderItem.fulfillmentStatus] ?? [];

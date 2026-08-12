@@ -11,7 +11,7 @@ import {
 } from "typeorm";
 
 @Entity()
-@Index(["tournament", "player"], { unique: true }) // Un joueur ne peut avoir qu'un seul classement par tournoi
+@Index(["tournament", "player"], { unique: true }) // Unique constraint: A player can only have one ranking entry per tournament
 export class Ranking {
   @PrimaryGeneratedColumn()
   id: number;

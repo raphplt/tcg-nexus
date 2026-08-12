@@ -7,7 +7,6 @@ export function useTournament(id: string) {
   const queryClient = useQueryClient();
   const tournamentId = parseInt(id);
 
-  // Données du tournoi
   const {
     data: tournament,
     isLoading,
@@ -93,7 +92,6 @@ export function useTournament(id: string) {
   });
 
   return {
-    // Données
     tournament,
     progress,
     transitions,
@@ -107,7 +105,6 @@ export function useTournament(id: string) {
     advanceRound: advanceRoundMutation.mutate,
     updateStatus: updateStatusMutation.mutate,
 
-    // États des mutations
     isStarting: startMutation.isPending,
     isFinishing: finishMutation.isPending,
     isCancelling: cancelMutation.isPending,

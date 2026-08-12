@@ -25,11 +25,10 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  @ApiOperation({ summary: "Get paginated user notifications with optional filter" })
-  findAll(
-    @CurrentUser() user: User,
-    @Query() query: GetNotificationsQueryDto,
-  ) {
+  @ApiOperation({
+    summary: "Get paginated user notifications with optional filter",
+  })
+  findAll(@CurrentUser() user: User, @Query() query: GetNotificationsQueryDto) {
     return this.notificationService.getNotifications(
       user.id,
       query.page ?? 1,
@@ -70,7 +69,9 @@ export class NotificationController {
   }
 
   @Post("register-device")
-  @ApiOperation({ summary: "Register a device token (ticket alias of /tokens)" })
+  @ApiOperation({
+    summary: "Register a device token (ticket alias of /tokens)",
+  })
   registerDevice(
     @CurrentUser() user: User,
     @Body() registerTokenDto: RegisterTokenDto,

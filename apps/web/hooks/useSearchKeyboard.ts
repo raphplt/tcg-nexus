@@ -10,11 +10,6 @@ type UseSearchKeyboardOptions = {
   onSelectedIndexChange: (index: number) => void;
 };
 
-// Gère tous les raccourcis clavier de la barre de recherche globale :
-// - Cmd/Ctrl+K et "/" pour ouvrir
-// - Escape pour fermer
-// - ArrowUp/ArrowDown pour naviguer dans la liste courante
-// - Enter pour valider la sélection
 export function useSearchKeyboard({
   isOpen,
   itemCount,

@@ -3,7 +3,6 @@ import { PokemonCardsType } from "./enums/pokemonCardsType";
 import { TrainerType } from "./enums/trainerType";
 import { Rarity } from "./listing";
 
-// TCGPlayer pricing for a single variant (normal, holofoil, reverseHolofoil, etc.)
 export interface TcgPlayerVariantPricing {
   productId: number;
   lowPrice: number | null;
@@ -13,7 +12,6 @@ export interface TcgPlayerVariantPricing {
   directLowPrice: number | null;
 }
 
-// TCGPlayer pricing container
 export interface TcgPlayerPricing {
   unit: string;
   updated: string;
@@ -24,7 +22,6 @@ export interface TcgPlayerPricing {
   "1stEditionNormal"?: TcgPlayerVariantPricing;
 }
 
-// CardMarket pricing container
 export interface CardMarketPricing {
   unit: string;
   updated: string;
@@ -43,7 +40,6 @@ export interface CardMarketPricing {
   "trend-holo": number | null;
 }
 
-// Combined pricing from both sources
 export interface CardPricing {
   tcgplayer?: TcgPlayerPricing | null;
   cardmarket?: CardMarketPricing | null;

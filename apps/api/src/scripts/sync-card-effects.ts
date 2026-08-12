@@ -1,22 +1,20 @@
 /**
- * Synchronise les effets parsés (card-effects-registry.json) vers la base de
- * données PostgreSQL.
+ * Synchronizes parsed card definitions (card-effects-registry.json) into PostgreSQL database.
  *
- * Usage :
- *   npm run sync:effects              -- utilise le registry par défaut
- *   npm run sync:effects -- --registry /chemin/vers/registry.json
+ * Usage:
+ *   npm run sync:effects              -- uses default registry path
+ *   npm run sync:effects -- --registry /path/to/registry.json
  *
- * Pré-requis :
- *   - La base de données doit être accessible (variables DATABASE_*)
- *   - card-effects-registry.json doit exister dans packages/effect-parser/
- *     (généré par `npm run parse` dans ce même dossier)
+ * Prerequisites:
+ *   - Database connection available (DATABASE_* environment variables)
+ *   - card-effects-registry.json exists in packages/effect-parser/
  */
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "src/app.module";
 import { CardEffectsSyncService } from "src/card/card-effects-sync.service";
 
 async function main() {
-  // Résoudre un éventuel --registry argument
+  // Resolve optional --registry CLI flag argument
   const registryFlagIdx = process.argv.indexOf("--registry");
   const customRegistry =
     registryFlagIdx !== -1 ? process.argv[registryFlagIdx + 1] : undefined;

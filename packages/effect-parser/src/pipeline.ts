@@ -3,8 +3,6 @@ import { resolve } from "node:path";
 import { parse } from "csv-parse/sync";
 import type { CardInput } from "./prompt-builder.js";
 
-// ─── CSV Row types ───────────────────────────────────────────
-
 interface CardRow {
   id: string;
   tcgDexId: string;
@@ -43,8 +41,6 @@ interface ParsedAbility {
   effect?: string;
 }
 
-// ─── CSV Loading ─────────────────────────────────────────────
-
 function loadCSV<T>(filePath: string): T[] {
   const content = readFileSync(filePath, "utf-8");
   return parse(content, {
@@ -62,7 +58,6 @@ function tryParseJSON<T>(value: string | undefined): T | null {
   try {
     return JSON.parse(value) as T;
   } catch {
-    // Try fixing common CSV-escaped JSON issues
     try {
       const fixed = value.replace(/""/g, '"');
       return JSON.parse(fixed) as T;
@@ -71,8 +66,6 @@ function tryParseJSON<T>(value: string | undefined): T | null {
     }
   }
 }
-
-// ─── Main pipeline ───────────────────────────────────────────
 
 export interface PipelineOptions {
   cardsCsvPath: string;
@@ -91,13 +84,11 @@ export function loadCardsFromCSV(opts: PipelineOptions): CardInput[] {
   const details = loadCSV<DetailsRow>(opts.detailsCsvPath);
   console.log(`  ${details.length} details loaded`);
 
-  // Index details by card_id
   const detailsMap = new Map<string, DetailsRow>();
   for (const d of details) {
     detailsMap.set(d.card_id, d);
   }
 
-  // Join and transform
   const cardInputs: CardInput[] = [];
 
   for (const card of cards) {
@@ -107,12 +98,10 @@ export function loadCardsFromCSV(opts: PipelineOptions): CardInput[] {
     const category = mapCategory(card.category);
     if (!category) continue;
 
-    // Parse JSON fields
     const attacks = tryParseJSON<ParsedAttack[]>(detail.attacks);
     const abilities = tryParseJSON<ParsedAbility[]>(detail.abilities);
     const types = tryParseJSON<string[]>(detail.types);
 
-    // Filter: skip cards with no effect text to parse
     if (opts.filterWithEffects !== false) {
       const hasAttackEffect = attacks?.some((a) => a.effect) ?? false;
       const hasAbilityEffect = abilities?.some((a) => a.effect) ?? false;
@@ -172,8 +161,6 @@ function mapCategory(cat: string): "Pokémon" | "Dresseur" | "Énergie" | null {
   if (cat === "Énergie" || cat === "Energy") return "Énergie";
   return null;
 }
-
-// ─── Export for CLI ──────────────────────────────────────────
 
 export function exportCardInputsToJSON(opts: PipelineOptions): void {
   const cardInputs = loadCardsFromCSV(opts);

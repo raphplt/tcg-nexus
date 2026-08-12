@@ -10,12 +10,10 @@ const getImageSize = (
     Image.getSize(uri, (width, height) => resolve({ width, height }), reject);
   });
 
-// ─── Module 1 : CardDetector ──────────────────────────────────────────────────
-
 /**
- * Vérifie que le cadre UI capturé correspond au ratio d'une carte Pokémon.
+ * Verifies that the captured UI frame matches the Pokémon card aspect ratio.
  * Phase 1 MVP : validation du ratio uniquement (pas de ML, pas de contour detection).
- * Phase 2 : détection temps réel dans le flux caméra avec OpenCV WASM.
+ * Phase 2 adds real-time camera-stream detection through OpenCV WASM.
  */
 export const cardDetector = {
   detect(frameCrop: FrameCrop): DetectedCard {
@@ -35,12 +33,10 @@ export const cardDetector = {
   },
 };
 
-// ─── Module 2 : PerspectiveCorrector ─────────────────────────────────────────
-
 /**
- * Normalise la carte à NORMALIZED_WIDTH × NORMALIZED_HEIGHT via crop + resize.
- * Phase 1 MVP : transform affine depuis les coordonnées du cadre UI.
- * Phase 2 : homographie réelle si 4 coins détectés par le CardDetector.
+ * Normalizes a card to NORMALIZED_WIDTH × NORMALIZED_HEIGHT through cropping and resizing.
+ * The MVP uses an affine transform based on UI frame coordinates.
+ * Phase 2 uses a homography when CardDetector identifies four corners.
  */
 export const perspectiveCorrector = {
   async rectify(

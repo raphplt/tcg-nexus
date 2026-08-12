@@ -44,7 +44,6 @@ export function useGameBoardInteraction(
     (card: SanitizedHandCardView) => {
       if (!canAct) return;
 
-      // Toggle off if same card
       if (state.selectedHandCard?.instanceId === card.instanceId) {
         cancel();
         return;
@@ -69,7 +68,6 @@ export function useGameBoardInteraction(
           hintText: "Cliquez sur le Pokémon à faire évoluer.",
         });
       } else if (card.category === "Dresseur") {
-        // Trainers are played immediately
         onDispatchAction({
           type: "PLAY_TRAINER",
           payload: { trainerCardInstanceId: card.instanceId },
@@ -147,22 +145,18 @@ export function useGameBoardInteraction(
     [onDispatchAction, cancel],
   );
 
-  // Compute valid target IDs for highlighting
   const validTargetIds = useMemo<string[]>(() => {
     if (!viewer) return [];
 
     switch (state.mode) {
       case "placing_pokemon":
-        // Bench slots (or active if empty)
         return ["empty_bench"];
       case "attaching_energy":
-        // All own pokemon
         return [
           ...(viewer.active ? [viewer.active.instanceId] : []),
           ...viewer.bench.map((p) => p.instanceId),
         ];
       case "evolving":
-        // Pokemon that can evolve
         return [
           ...(viewer.active ? [viewer.active.instanceId] : []),
           ...viewer.bench.map((p) => p.instanceId),

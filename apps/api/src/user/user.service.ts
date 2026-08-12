@@ -23,6 +23,12 @@ export class UserService {
     private readonly followService: UserFollowService,
   ) {}
 
+  /**
+   * Creates a new user entity and hashes their password.
+   *
+   * @param createUserDto User creation DTO.
+   * @returns Newly created User entity.
+   */
   async create(createUserDto: CreateUserDto): Promise<User> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
@@ -44,6 +50,11 @@ export class UserService {
     return this.findOne(savedUser.id);
   }
 
+  /**
+   * Retrieves all registered users.
+   *
+   * @returns Array of User entities.
+   */
   async findAll(): Promise<User[]> {
     return this.userRepository.find({
       select: [
@@ -55,6 +66,7 @@ export class UserService {
         "isActive",
         "isPro",
         "preferredCurrency",
+        "preferredLocale",
         "emailVerified",
         "createdAt",
         "updatedAt",
@@ -62,6 +74,12 @@ export class UserService {
     });
   }
 
+  /**
+   * Finds a user by ID and ensures their player profile is populated.
+   *
+   * @param id User ID.
+   * @returns Populated User entity.
+   */
   async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -75,6 +93,7 @@ export class UserService {
         "isActive",
         "isPro",
         "preferredCurrency",
+        "preferredLocale",
         "emailVerified",
         "createdAt",
         "updatedAt",
@@ -93,6 +112,12 @@ export class UserService {
     return hydratedUser;
   }
 
+  /**
+   * Finds a user entity by ID without throwing an exception.
+   *
+   * @param id User ID.
+   * @returns User entity or null.
+   */
   async findById(id: number): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -101,6 +126,12 @@ export class UserService {
     return this.ensurePlayerProfile(user);
   }
 
+  /**
+   * Finds a user entity by email.
+   *
+   * @param email User email.
+   * @returns User entity or null.
+   */
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { email },
@@ -109,6 +140,13 @@ export class UserService {
     return this.ensurePlayerProfile(user);
   }
 
+  /**
+   * Retrieves public profile information for a user.
+   *
+   * @param id User ID.
+   * @param requesterId Optional requesting user ID.
+   * @returns DTO containing public profile data.
+   */
   async findPublicProfile(
     id: number,
     requesterId?: number,
@@ -135,6 +173,13 @@ export class UserService {
     });
   }
 
+  /**
+   * Updates an existing user's profile.
+   *
+   * @param id User ID.
+   * @param updateUserDto Update payload.
+   * @returns Updated User entity.
+   */
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
@@ -156,12 +201,10 @@ export class UserService {
   }
 
   /**
-   * Met à jour le refresh token d'un utilisateur.
+   * Updates a user's refresh token, retaining the previous token in a grace period for concurrent requests.
    *
-   * Quand un nouveau token est fourni, l'ancien hash est conservé dans
-   * `previousRefreshToken` pendant `REFRESH_TOKEN_GRACE_WINDOW_MS` afin
-   * d'absorber les courses entre plusieurs refresh concurrents (par exemple
-   * le middleware SSR et l'intercepteur XHR qui peuvent tirer en parallèle).
+   * @param userId User identifier.
+   * @param refreshToken Plaintext refresh token or null to clear.
    */
   async updateRefreshToken(
     userId: number,
@@ -196,6 +239,11 @@ export class UserService {
 
   static readonly REFRESH_TOKEN_GRACE_WINDOW_MS = 30 * 1000;
 
+  /**
+   * Deletes a user by ID.
+   *
+   * @param id User ID.
+   */
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);
     await this.userRepository.remove(user);

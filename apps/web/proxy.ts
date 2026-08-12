@@ -1,5 +1,15 @@
+import createIntlMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromPathname,
+  stripLocaleFromPathname,
+  type SupportedLocale,
+} from "@/i18n/config";
+import { routing } from "@/i18n/routing";
 import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/utils/constants";
+
+const intlMiddleware = createIntlMiddleware(routing);
 
 type AuthCheckResult = {
   authenticated: boolean;
@@ -176,41 +186,74 @@ function applyRefreshedCookies(
   return response;
 }
 
+function localizedUrl(
+  request: NextRequest,
+  locale: SupportedLocale,
+  pathnameWithoutLocale: string,
+): URL {
+  const normalized = pathnameWithoutLocale === "/" ? "" : pathnameWithoutLocale;
+  return new URL(`/${locale}${normalized}`, request.url);
+}
+
+/**
+ * Main middleware proxy handling internationalization routing and route authentication checks.
+ *
+ * @param request Incoming Next.js request.
+ * @returns Response or redirect matching route access rules.
+ */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const locale = getLocaleFromPathname(pathname);
+
+  // Without locale prefix in pathname, next-intl resolves language and redirects.
+  // Authentication check runs on subsequent localized request.
+  if (!locale) {
+    return intlMiddleware(request);
+  }
+
+  const basePathname = stripLocaleFromPathname(pathname);
 
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route),
+    basePathname.startsWith(route),
   );
-  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  const isAuthRoute = AUTH_ROUTES.some((route) =>
+    basePathname.startsWith(route),
+  );
 
   if (!isProtectedRoute && !isAuthRoute) {
-    return NextResponse.next();
+    return intlMiddleware(request);
   }
 
   const result = await checkAuth(request);
 
   if (isProtectedRoute) {
     if (!result.authenticated) {
-      const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("redirect", pathname);
+      const loginUrl = localizedUrl(request, locale, "/auth/login");
+      loginUrl.searchParams.set(
+        "redirect",
+        `${pathname}${request.nextUrl.search}`,
+      );
       return NextResponse.redirect(loginUrl);
     }
 
-    return applyRefreshedCookies(NextResponse.next(), result.refreshedCookies);
+    return applyRefreshedCookies(
+      intlMiddleware(request),
+      result.refreshedCookies,
+    );
   }
 
-  // isAuthRoute
   if (result.authenticated) {
-    const homeRedirect = NextResponse.redirect(new URL("/", request.url));
+    const homeRedirect = NextResponse.redirect(
+      localizedUrl(request, locale, "/"),
+    );
     return applyRefreshedCookies(homeRedirect, result.refreshedCookies);
   }
 
-  return NextResponse.next();
+  return intlMiddleware(request);
 }
 
 export default proxy;
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|public).*)"],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };

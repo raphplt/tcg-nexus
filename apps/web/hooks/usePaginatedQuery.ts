@@ -1,15 +1,13 @@
 import { useQuery, UseQueryOptions, QueryKey } from "@tanstack/react-query";
 
 /**
- * Hook réutilisable pour la pagination, le filtre et le tri avec Tanstack Query
- * @param key Clé de la query (ex: ['tournaments'])
- * @param fetcherFn Fonction fetcher qui prend les params (page, limit, ...)
- * @param params Paramètres de pagination, filtre, tri
- * @param options Options Tanstack Query
+ * Reusable TanStack Query hook for pagination, filtering, and sorting.
+ * @param key Query key (for example, `['tournaments']`).
+ * @param fetcherFn Fetcher function accepting query parameters such as page and limit.
+ * @param params Pagination, filtering, and sorting parameters.
+ * @param options - TanStack Query options.
  * @returns { data, isLoading, error, refetch, ... }
  *
- * Utilisation :
- * const { data, isLoading } = usePaginatedQuery<PaginatedResult<Tournament>>(['tournaments'], tournamentService.getPaginated, { page, limit, search })
  */
 export function usePaginatedQuery<T = any>(
   key: QueryKey,

@@ -6,10 +6,12 @@ import Image from "next/image";
 import { Layers } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { decksService } from "@/services/decks.service";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Skeleton } from "../ui/skeleton";
+import { useTranslations } from "next-intl";
 
 const TrendingDecks = () => {
+  const t = useTranslations("Home");
   const { data, isLoading } = useQuery({
     queryKey: ["decks", "trending"],
     queryFn: () =>
@@ -24,7 +26,7 @@ const TrendingDecks = () => {
     return (
       <Card className="p-6 mt-8">
         <div className="flex items-center justify-between mb-4">
-          <H2>Derniers Decks</H2>
+          <H2>{t("decks.latest")}</H2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -49,9 +51,9 @@ const TrendingDecks = () => {
   return (
     <Card className="p-6 mt-8">
       <div className="flex items-center justify-between mb-4">
-        <H2>Meilleurs Decks</H2>
+        <H2>{t("decks.best")}</H2>
         <Link href="/decks" className="text-sm text-primary hover:underline">
-          Voir tout
+          {t("decks.viewAll")}
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -82,15 +84,17 @@ const TrendingDecks = () => {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold truncate">{deck.name}</div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {deck.format?.type || "Format inconnu"} • Par{" "}
-                  {deck.user?.firstName || "Anonyme"}
+                  {t("decks.by", {
+                    format: deck.format?.type || t("decks.unknownFormat"),
+                    author: deck.user?.firstName || t("decks.anonymous"),
+                  })}
                 </div>
               </div>
             </Link>
           ))
         ) : (
           <div className="col-span-2 text-center text-muted-foreground py-8">
-            Aucun deck trouvé.
+            {t("decks.empty")}
           </div>
         )}
       </div>

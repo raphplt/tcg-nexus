@@ -23,13 +23,13 @@ import {
 } from "lucide-react";
 
 export interface SubItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 export interface NavItem {
-  label: string;
+  labelKey: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   requireAuth?: boolean;
@@ -38,62 +38,62 @@ export interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { label: "Accueil", href: "/", icon: Home },
+  { labelKey: "home", href: "/", icon: Home },
   {
-    label: "Marketplace",
+    labelKey: "marketplace",
     href: "/marketplace",
     icon: ShoppingBag,
     subItems: [
-      { label: "Explorer", href: "/marketplace", icon: Search },
-      { label: "Cartes", href: "/marketplace/cards", icon: ShoppingBag },
+      { labelKey: "browse", href: "/marketplace", icon: Search },
+      { labelKey: "cards", href: "/marketplace/cards", icon: ShoppingBag },
       {
-        label: "Produits scellés",
+        labelKey: "sealedProducts",
         href: "/marketplace/sealed",
         icon: Package,
       },
       {
-        label: "Créer une annonce",
+        labelKey: "createListing",
         href: "/marketplace/create",
         icon: PenLine,
       },
       {
-        label: "Mon panier",
+        labelKey: "cart",
         href: "/cart",
         icon: ShoppingCart,
       },
     ],
   },
-  { label: "Jouer", href: "/play", icon: Swords },
-  { label: "Classement", href: "/ranking", icon: Medal },
+  { labelKey: "play", href: "/play", icon: Swords },
+  { labelKey: "leaderboard", href: "/ranking", icon: Medal },
   {
-    label: "Tournois",
+    labelKey: "tournaments",
     href: "/tournaments",
     icon: Trophy,
     subItems: [
-      { label: "Explorer", href: "/tournaments", icon: Search },
+      { labelKey: "browse", href: "/tournaments", icon: Search },
       {
-        label: "Créer un tournoi",
+        labelKey: "createTournament",
         href: "/tournaments/create",
         icon: Plus,
       },
     ],
   },
   {
-    label: "Decks",
+    labelKey: "decks",
     href: "/decks",
     icon: Library,
     subItems: [
-      { label: "Explorer", href: "/decks", icon: Search },
-      { label: "Créer un deck", href: "/decks/create", icon: Plus },
-      { label: "Importer", href: "/decks/import", icon: Import },
+      { labelKey: "browse", href: "/decks", icon: Search },
+      { labelKey: "createDeck", href: "/decks/create", icon: Plus },
+      { labelKey: "importDeck", href: "/decks/import", icon: Import },
     ],
   },
 ];
 
 const discoverNavItems: NavItem[] = [
-  { label: "Pokedex", href: "/pokemon", icon: Store },
+  { labelKey: "pokedex", href: "/pokemon", icon: Store },
   {
-    label: "Mini-jeux",
+    labelKey: "miniGames",
     href: "/pokemon/mini-games",
     icon: Dices,
   },
@@ -101,51 +101,51 @@ const discoverNavItems: NavItem[] = [
 
 const userNavItems: NavItem[] = [
   {
-    label: "Dashboard",
+    labelKey: "dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
     requireAuth: true,
     subItems: [
-      { label: "Vue d'ensemble", href: "/dashboard", icon: LayoutDashboard },
+      { labelKey: "overview", href: "/dashboard", icon: LayoutDashboard },
       {
-        label: "Mes tournois",
+        labelKey: "myTournaments",
         href: "/dashboard/my-tournaments",
         icon: Trophy,
       },
     ],
   },
   {
-    label: "Collection",
+    labelKey: "collection",
     href: "/collection",
     icon: FolderHeart,
     requireAuth: true,
   },
   {
-    label: "Mes decks",
+    labelKey: "myDecks",
     href: "/decks/me",
     icon: Library,
     requireAuth: true,
   },
   {
-    label: "Mon panier",
+    labelKey: "cart",
     href: "/cart",
     icon: ShoppingCart,
     requireAuth: true,
   },
   {
-    label: "Mes commandes",
+    labelKey: "myOrders",
     href: "/orders",
     icon: ClipboardList,
     requireAuth: true,
   },
   {
-    label: "Mes ventes",
+    labelKey: "mySales",
     href: "/marketplace/sales",
     icon: PackageCheck,
     requireAuth: true,
   },
   {
-    label: "Paramètres",
+    labelKey: "settings",
     href: "/settings",
     icon: Settings,
     requireAuth: true,
@@ -153,11 +153,11 @@ const userNavItems: NavItem[] = [
 ];
 
 const secondaryNavItems: NavItem[] = [
-  { label: "FAQ", href: "/faq", icon: HelpCircle },
+  { labelKey: "faq", href: "/faq", icon: HelpCircle },
 ];
 
 const adminNavItems: NavItem[] = [
-  { label: "Admin", href: "/admin", icon: Shield, requireRole: "admin" },
+  { labelKey: "admin", href: "/admin", icon: Shield, requireRole: "admin" },
 ];
 
 export const navItems = {

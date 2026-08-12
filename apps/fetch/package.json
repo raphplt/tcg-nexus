@@ -5,10 +5,14 @@
   "scripts": {
     "start": "node --import ./register-tsnode.mjs server.ts",
     "update-data": "tsx update-data.ts",
+    "data:migrate-layout": "tsx migrate-dataset-layout.ts",
+    "data:pull": "tsx data-pull.ts",
+    "data:push": "tsx data-push.ts",
+    "coverage-report": "tsx coverage-report.ts",
     "update-sealed": "tsx update-sealed.ts",
+    "sealed-coverage": "tsx sealed-coverage.ts",
     "migrate-card-images": "tsx migrate-card-images-r2.ts",
-    "migrate-all-to-r2": "tsx migrate-all-to-r2.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test *.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +29,8 @@
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.978.0",
+    "@repo/pokemon-dataset": "*",
+    "@tcgdex/sdk": "^2.6.0",
     "@types/adm-zip": "^0.5.7",
     "adm-zip": "^0.5.16",
     "cheerio": "^1.0.0-rc.12",

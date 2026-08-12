@@ -30,23 +30,29 @@ import { OrderService } from "./order.service";
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  /**
+   * Initiates checkout by reserving stock and creating a Stripe PaymentIntent.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("checkout")
   @ApiOperation({
     summary:
-      "Crée la commande, réserve le stock et ouvre le paiement Stripe associé",
+      "Creates order, reserves stock, and opens associated Stripe payment session",
   })
   startCheckout(@Body() dto: StartCheckoutDto, @CurrentUser() user: User) {
     return this.orderService.startCheckout(dto, user);
   }
 
+  /**
+   * Confirms order completion using Stripe payment intent status verification.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("orders/:id/confirm")
   @ApiOperation({
     summary:
-      "Confirme la commande à partir de l'état réel du paiement chez Stripe",
+      "Confirms order using actual payment intent status retrieved from Stripe",
   })
   confirmOrder(
     @Param("id", ParseIntPipe) id: number,
@@ -55,6 +61,9 @@ export class OrderController {
     return this.orderService.confirmOrderPayment(id, user);
   }
 
+  /**
+   * Retrieves all orders placed by the current user.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("orders")
@@ -62,14 +71,23 @@ export class OrderController {
     return this.orderService.findOrdersByBuyerId(user.id);
   }
 
+  /**
+   * Retrieves pending sales and fulfillment tasks for the authenticated seller.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("sales")
-  @ApiOperation({ summary: "Ventes à traiter par le vendeur connecté" })
+  @ApiOperation({
+    summary:
+      "Retrieves order sales requiring fulfillment for the authenticated seller",
+  })
   getMySales(@Query() query: SellerSalesQueryDto, @CurrentUser() user: User) {
     return this.orderService.findSalesBySellerId(user.id, query);
   }
 
+  /**
+   * Retrieves revenue metrics for the authenticated seller.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("sales/revenue")
@@ -77,10 +95,16 @@ export class OrderController {
     return this.orderService.getSellerRevenue(user.id);
   }
 
+  /**
+   * Updates fulfillment status and tracking info for an order item.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Patch("sales/:id/fulfillment")
-  @ApiOperation({ summary: "Fait avancer l'expédition d'une ligne vendue" })
+  @ApiOperation({
+    summary:
+      "Updates fulfillment status and tracking information for a sold order item",
+  })
   updateFulfillment(
     @Param("id", ParseIntPipe) id: number,
     @Body() dto: UpdateFulfillmentDto,
@@ -89,6 +113,9 @@ export class OrderController {
     return this.orderService.updateFulfillment(id, dto, user);
   }
 
+  /**
+   * Retrieves details of a specific order owned by the user.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("orders/:id")
@@ -99,6 +126,9 @@ export class OrderController {
     return this.orderService.findOrderById(id, user.id);
   }
 
+  /**
+   * Administrative search for platform orders across buyers and sellers.
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
@@ -107,6 +137,9 @@ export class OrderController {
     return this.orderService.findAllOrders(query);
   }
 
+  /**
+   * Administrative retrieval of any order details.
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
@@ -115,6 +148,9 @@ export class OrderController {
     return this.orderService.findOrderByIdAsAdmin(id);
   }
 
+  /**
+   * Administrative order status override.
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)

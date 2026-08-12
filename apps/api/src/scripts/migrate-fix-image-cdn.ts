@@ -2,19 +2,19 @@ import "reflect-metadata";
 import * as dotenv from "dotenv";
 import { DataSource } from "typeorm";
 
-// Charge le .env local par défaut
+// Load local .env by default
 dotenv.config();
 
 /**
- * Migration ponctuelle : réécriture des URLs d'images stockées avec l'ancien
- * hôte R2 "public" (`*.r2.dev`, désactivé en prod) vers le domaine custom
- * `cdn.tcg-nexus.org`. Les objets vivent dans le même bucket : seul le préfixe
- * public a changé, donc un simple REPLACE suffit.
+ * One-off migration script: rewrites image URLs stored with legacy R2 "public" host
+ * (`*.r2.dev`, disabled in production) to the custom domain `cdn.tcg-nexus.org`.
+ * Objects remain in the same bucket: only the public prefix has changed,
+ * so a simple REPLACE is sufficient.
  *
- * Idempotent : peut être relancé sans risque (ne touche que les lignes encore
- * sur l'ancien hôte).
+ * Idempotent: can be executed safely multiple times (only affects rows still
+ * on the legacy host).
  *
- * Usage : `npm run migrate:fix-image-cdn` (ou ts-node sur ce fichier).
+ * Usage: `npm run migrate:fix-image-cdn` (or run with ts-node).
  */
 
 const LEGACY_HOST = "pub-27752f7846b4433d8e74edcc8bdc1dc8.r2.dev";
@@ -71,8 +71,7 @@ async function rewriteColumn(
     return 0;
   }
 
-  // RETURNING id : avec le driver pg, queryRunner.query renvoie les lignes
-  // retournées, donc result.length = nombre de lignes effectivement modifiées.
+  // RETURNING id: pg driver queryRunner.query returns affected rows array, length = count of updated rows
   const result = await queryRunner.query(
     `UPDATE public.${table}
        SET ${column} = REPLACE(${column}, $1, $2)

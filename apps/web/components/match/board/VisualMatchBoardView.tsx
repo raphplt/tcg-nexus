@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { Shield, Swords, Zap } from "lucide-react";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -9,10 +10,10 @@ import type {
 } from "@/components/match/MatchBoardView";
 import { cn } from "@/lib/utils";
 
-const sessionStatusLabels: Record<string, string> = {
-  WAITING_FOR_DECKS: "En attente des decks",
-  ACTIVE: "En cours",
-  FINISHED: "Terminé",
+const sessionStatusKeys: Record<string, string> = {
+  WAITING_FOR_DECKS: "waitingForDecks",
+  ACTIVE: "inProgress",
+  FINISHED: "finished",
 };
 
 import type {
@@ -58,6 +59,7 @@ export function VisualMatchBoardView({
   onRespondPrompt,
   onForfeit,
 }: VisualMatchBoardViewProps) {
+  const t = useTranslations("MatchBoard");
   const viewerPlayer =
     enginePlayerId && gameState
       ? (gameState.players[enginePlayerId] ?? null)
@@ -91,11 +93,10 @@ export function VisualMatchBoardView({
   const winnerLabel =
     sessionStatus === "FINISHED" && gameState?.winnerId
       ? gameState.winnerId === enginePlayerId
-        ? "Victoire"
-        : "Défaite"
+        ? t("victory")
+        : t("defeat")
       : null;
 
-  // Detect attack events for flash animation
   const [attackFlash, setAttackFlash] = useState<"player" | "opponent" | null>(
     null,
   );
@@ -117,9 +118,8 @@ export function VisualMatchBoardView({
     prevLogLenRef.current = recentLog.length;
   }, [recentLog, enginePlayerId]);
 
-  // Confetti for victory
   const confettiParticles = useMemo(() => {
-    if (winnerLabel !== "Victoire") return [];
+    if (winnerLabel !== t("victory")) return [];
     return Array.from({ length: 40 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -136,7 +136,6 @@ export function VisualMatchBoardView({
     }));
   }, [winnerLabel]);
 
-  // Loading state
   if (!gameState || !enginePlayerId || !viewerPlayer || !opponentPlayer) {
     return (
       <div className="flex items-center justify-center h-dvh bg-gradient-to-b from-slate-950 to-slate-900">
@@ -147,7 +146,7 @@ export function VisualMatchBoardView({
             <div className="absolute inset-2 border-2 border-emerald-400 border-b-transparent rounded-full animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
           </div>
           <p className="text-white/40 text-sm font-medium tracking-wider uppercase">
-            Initialisation du terrain...
+            {t("initializing")}
           </p>
         </div>
       </div>
@@ -167,7 +166,6 @@ export function VisualMatchBoardView({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.08),transparent_40%)]" />
       </div>
 
-      {/* Animated ambient border glow */}
       <div
         className={cn(
           "absolute inset-0 pointer-events-none z-0 transition-opacity duration-1000",
@@ -180,12 +178,11 @@ export function VisualMatchBoardView({
         <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-emerald-500/20 to-transparent" />
       </div>
 
-      {/* ═══════════ HUD TOP BAR ═══════════ */}
       <div className="relative z-30 border-b border-white/8 bg-black/35 px-3 py-3 backdrop-blur-md md:px-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-wrap items-center gap-2.5">
             <HudPlayerChip
-              name="Vous"
+              name={t("you")}
               prizesRemaining={viewerPlayer.prizesRemaining}
               active={isMyTurn}
               tone="emerald"
@@ -200,7 +197,10 @@ export function VisualMatchBoardView({
 
           <div className="flex flex-wrap items-center gap-2">
             <HudBadge>
-              {sessionStatusLabels[sessionStatus] ?? sessionStatus}
+              {(() => {
+                const key = sessionStatusKeys[sessionStatus];
+                return key ? t(key) : sessionStatus;
+              })()}
             </HudBadge>
             <HudBadge>{`Tour ${gameState.turnNumber}`}</HudBadge>
             <HudBadge>{formatPhaseLabel(gameState.gamePhase)}</HudBadge>
@@ -211,11 +211,11 @@ export function VisualMatchBoardView({
                 ) : (
                   <Zap className="h-3 w-3" />
                 )}
-                {isMyTurn ? "Votre tour" : "Tour adverse"}
+                {isMyTurn ? t("yourTurn") : "Tour adverse"}
               </span>
             </HudBadge>
             {winnerLabel ? (
-              <HudBadge tone={winnerLabel === "Victoire" ? "amber" : "rose"}>
+              <HudBadge tone={winnerLabel === t("victory") ? "amber" : "rose"}>
                 {winnerLabel}
               </HudBadge>
             ) : null}
@@ -232,7 +232,6 @@ export function VisualMatchBoardView({
         </div>
       </div>
 
-      {/* Error toast */}
       <AnimatePresence>
         {lastError && (
           <motion.div
@@ -246,7 +245,6 @@ export function VisualMatchBoardView({
         )}
       </AnimatePresence>
 
-      {/* ═══════════ GAME BOARD ═══════════ */}
       <div className="relative min-h-0 flex-1 overflow-clip">
         {introCard || mobileFeedEntries.length ? (
           <div className="relative z-20 space-y-3 px-3 pt-3 lg:hidden">
@@ -267,9 +265,7 @@ export function VisualMatchBoardView({
               className="mx-auto w-full max-w-4xl origin-center scale-[0.72] sm:scale-[0.82] lg:scale-[0.94] xl:scale-100"
               style={{ perspective: "800px" }}
             >
-              {/* Board surface */}
               <div className="relative space-y-3 overflow-clip rounded-[2rem] border border-cyan-400/12 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_35%),radial-gradient(circle_at_bottom,rgba(16,185,129,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.82),rgba(2,6,23,0.96))] px-4 py-4 shadow-[0_36px_120px_-48px_rgba(2,6,23,0.95),0_-4px_30px_-10px_rgba(6,182,212,0.08)] sm:px-6 sm:py-5 [transform:rotateX(8deg)]">
-                {/* Mat texture - hex pattern */}
                 <div className="absolute inset-0 rounded-[2rem] opacity-[0.045] pointer-events-none">
                   <svg
                     className="w-full h-full"
@@ -295,12 +291,10 @@ export function VisualMatchBoardView({
                   </svg>
                 </div>
 
-                {/* Radial glow overlay */}
                 <div className="absolute inset-0 rounded-[2rem] bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07)_0%,transparent_70%)] pointer-events-none" />
                 <div className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-cyan-300/16 to-transparent pointer-events-none" />
                 <div className="absolute left-1/2 top-8 bottom-8 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/6 to-transparent pointer-events-none" />
 
-                {/* Opponent field */}
                 <motion.div
                   className="relative"
                   animate={
@@ -320,14 +314,13 @@ export function VisualMatchBoardView({
                   />
                 </motion.div>
 
-                {/* Center divider - battle zone */}
                 <div className="flex items-center gap-4 py-1">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                   <div className="relative">
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-100/25">
                       Arena
                     </span>
-                    {/* Active turn glow on VS */}
+
                     <div
                       className={cn(
                         "absolute -inset-3 rounded-full blur-xl transition-opacity duration-700",
@@ -340,7 +333,6 @@ export function VisualMatchBoardView({
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </div>
 
-                {/* Player field */}
                 <motion.div
                   className="relative"
                   animate={
@@ -348,7 +340,6 @@ export function VisualMatchBoardView({
                   }
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Active glow when it's our turn */}
                   {isMyTurn && (
                     <div className="absolute -inset-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 -z-10 animate-pulse" />
                   )}
@@ -392,7 +383,6 @@ export function VisualMatchBoardView({
                     disabled={!canAct && interaction.mode === "idle"}
                   />
 
-                  {/* Attack panel overlay */}
                   <AnimatePresence>
                     {interaction.mode === "choosing_attack" &&
                       viewerPlayer.active && (
@@ -424,7 +414,6 @@ export function VisualMatchBoardView({
           </div>
         </div>
 
-        {/* Attack flash overlay */}
         <AnimatePresence>
           {attackFlash && (
             <motion.div
@@ -442,12 +431,10 @@ export function VisualMatchBoardView({
           )}
         </AnimatePresence>
 
-        {/* Event log (floating, right side) */}
         <div className="absolute right-4 top-1/2 z-20 hidden -translate-y-1/2 xl:block">
           <CombatFeedCard entries={desktopFeedEntries} />
         </div>
 
-        {/* Turn banner overlay */}
         <TurnBanner
           activePlayerId={gameState.activePlayerId}
           enginePlayerId={enginePlayerId}
@@ -455,7 +442,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* ═══════════ HAND BAR ═══════════ */}
       <div className="relative z-30">
         <HandBar
           hand={viewerPlayer.hand || []}
@@ -465,7 +451,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* ═══════════ ACTION BAR ═══════════ */}
       <div className="relative z-30">
         <ActionBar
           mode={interaction.mode}
@@ -477,7 +462,6 @@ export function VisualMatchBoardView({
         />
       </div>
 
-      {/* Prompt overlay */}
       {pendingPrompt &&
         (pendingPrompt.type === "CHOOSE_FIRST_PLAYER" ? (
           <CoinFlipOverlay
@@ -493,7 +477,6 @@ export function VisualMatchBoardView({
           />
         ))}
 
-      {/* ═══════════ VICTORY / DEFEAT OVERLAY ═══════════ */}
       <AnimatePresence>
         {winnerLabel && sessionStatus === "FINISHED" && (
           <motion.div
@@ -501,8 +484,7 @@ export function VisualMatchBoardView({
             animate={{ opacity: 1 }}
             className="absolute inset-0 z-[90] flex items-center justify-center bg-black/70 backdrop-blur-md"
           >
-            {/* Confetti for victory */}
-            {winnerLabel === "Victoire" &&
+            {winnerLabel === t("victory") &&
               confettiParticles.map((p) => (
                 <motion.div
                   key={p.id}
@@ -532,11 +514,10 @@ export function VisualMatchBoardView({
                 />
               ))}
 
-            {/* Defeat shake */}
             <motion.div
               initial={{ scale: 0.8, y: 30 }}
               animate={
-                winnerLabel === "Défaite"
+                winnerLabel === t("defeat")
                   ? {
                       scale: 1,
                       y: 0,
@@ -557,12 +538,12 @@ export function VisualMatchBoardView({
                 }}
                 className={cn(
                   "text-6xl font-black tracking-tight",
-                  winnerLabel === "Victoire"
+                  winnerLabel === t("victory")
                     ? "text-yellow-400 drop-shadow-[0_0_40px_rgba(250,204,21,0.5)]"
                     : "text-red-400 drop-shadow-[0_0_40px_rgba(248,113,113,0.5)]",
                 )}
               >
-                {winnerLabel === "Victoire" ? "VICTOIRE !" : "DÉFAITE"}
+                {winnerLabel === t("victory") ? "VICTOIRE !" : t("defeatUpper")}
               </motion.h2>
 
               {gameState.winnerReason && (
@@ -666,6 +647,7 @@ function CombatFeedCard({
   entries: OnlineMatchLogEntry[];
   compact?: boolean;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <div
       className={cn(
@@ -692,7 +674,7 @@ function CombatFeedCard({
         ))}
       </AnimatePresence>
       {entries.length === 0 ? (
-        <div className="text-[11px] text-white/20">Aucun événement</div>
+        <div className="text-[11px] text-white/20">{t("noEvent")}</div>
       ) : null}
     </div>
   );
@@ -723,6 +705,7 @@ function formatLogEntry(entry: OnlineMatchLogEntry) {
 }
 
 function formatPhaseLabel(phase?: string | null) {
+  const t = useTranslations("MatchBoard");
   if (!phase) return "Phase";
 
   const labels: Record<string, string> = {
@@ -730,7 +713,7 @@ function formatPhaseLabel(phase?: string | null) {
     Mulligan: "Mulligan",
     Play: "Action",
     Attack: "Attaque",
-    BetweenTurns: "Entre tours",
+    BetweenTurns: t("betweenTurns"),
     Finished: "Fin",
   };
 
@@ -738,11 +721,12 @@ function formatPhaseLabel(phase?: string | null) {
 }
 
 function formatWinReason(reason: string): string {
+  const t = useTranslations("MatchBoard");
   const reasons: Record<string, string> = {
-    PrizeOut: "Toutes les cartes récompenses récupérées !",
-    DeckOut: "Plus de cartes dans le deck adverse.",
-    NoPokemon: "L'adversaire n'a plus de Pokémon en jeu.",
-    Forfeit: "L'adversaire a abandonné.",
+    PrizeOut: t("allPrizesTaken"),
+    DeckOut: t("opponentDeckEmpty"),
+    NoPokemon: t("opponentNoPokemon"),
+    Forfeit: t("opponentForfeited"),
   };
   return reasons[reason] ?? reason;
 }

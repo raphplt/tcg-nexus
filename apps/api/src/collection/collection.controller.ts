@@ -1,3 +1,5 @@
+import { RequestLocale } from "src/translation/request-locale";
+import type { SupportedLocale } from "src/translation/supported-locales";
 import {
   Body,
   Controller,
@@ -115,8 +117,11 @@ export class CollectionController {
     description: "Liste des raretés",
   })
   @ApiResponse({ status: 404, description: "Collection non trouvée" })
-  async getSetRarities(@Param("id") id: string): Promise<string[]> {
-    return this.collectionService.getSetRarities(id);
+  async getSetRarities(
+    @Param("id") id: string,
+    @RequestLocale() locale: SupportedLocale,
+  ): Promise<string[]> {
+    return this.collectionService.getSetRarities(id, locale);
   }
 
   @Get("my/collections")

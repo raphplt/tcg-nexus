@@ -29,7 +29,10 @@ export function CollectionCard({
     <View style={styles.card}>
       <Pressable
         onPress={() => onPress(collection)}
-        style={({ pressed }) => [styles.cardInner, pressed && styles.cardPressed]}
+        style={({ pressed }) => [
+          styles.cardInner,
+          pressed && styles.cardPressed,
+        ]}
       >
         <View style={styles.preview}>
           {previewItems.length > 0 ? (
@@ -58,10 +61,15 @@ export function CollectionCard({
           )}
 
           <View
-            style={[styles.badge, isPublic ? styles.badgePublic : styles.badgePrivate]}
+            style={[
+              styles.badge,
+              isPublic ? styles.badgePublic : styles.badgePrivate,
+            ]}
           >
             <Ionicons
-              color={isPublic ? colors.primaryForeground : colors.mutedForeground}
+              color={
+                isPublic ? colors.primaryForeground : colors.mutedForeground
+              }
               name={isPublic ? "eye" : "lock-closed"}
               size={11}
             />
@@ -91,7 +99,9 @@ export function CollectionCard({
                 name={isPublic ? "lock-open-outline" : "lock-closed-outline"}
                 size={13}
               />
-              <Text style={styles.metaText}>{isPublic ? "Public" : "Privé"}</Text>
+              <Text style={styles.metaText}>
+                {isPublic ? "Public" : "Privé"}
+              </Text>
             </View>
             <View style={styles.metaRow}>
               <Ionicons

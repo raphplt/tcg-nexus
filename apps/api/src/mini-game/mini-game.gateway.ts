@@ -115,10 +115,12 @@ export class MiniGameGateway
         );
         if (playerIndex !== -1) {
           // Notify opponent
-          this.server.to(`minigame:room:${sessionId}`).emit("player_disconnected", {
-            userId: user.id,
-            userName: session.players[playerIndex].userName,
-          });
+          this.server
+            .to(`minigame:room:${sessionId}`)
+            .emit("player_disconnected", {
+              userId: user.id,
+              userName: session.players[playerIndex].userName,
+            });
           // End session if in finished state or clean up later
           this.activeSessions.delete(sessionId);
         }
@@ -215,9 +217,7 @@ export class MiniGameGateway
 
       this.activeSessions.set(sessionId, session);
 
-      // Emit to both. `selfId` = l'id du destinataire lui-même : le client
-      // n'a plus à deviner "qui suis-je" par élimination (fragile si
-      // opponent est momentanément null / à la reconnexion).
+      // Emit to both sockets. `selfId` = recipient's own ID so client does not need to deduce identity by elimination
       this.server.to(opponent.socketId).emit("minigame_matched", {
         sessionId,
         gameType: data.gameType,
@@ -379,7 +379,11 @@ export class MiniGameGateway
 
   @SubscribeMessage("minigame_submit_guess")
   handleSubmitGuess(
-    @MessageBody() data: { sessionId: string; guess: number; timeTaken: number },
+    @MessageBody() data: {
+      sessionId: string;
+      guess: number;
+      timeTaken: number;
+    },
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -531,7 +535,10 @@ export class MiniGameGateway
     }
   }
 
-  private async drawRandomCards(count: number, setId?: string): Promise<Card[]> {
+  private async drawRandomCards(
+    count: number,
+    setId?: string,
+  ): Promise<Card[]> {
     const qb = this.cardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set");
@@ -552,7 +559,15 @@ export class MiniGameGateway
 
   private generateMockCard() {
     const id = `mock_${Math.random().toString(36).substr(2, 9)}`;
-    const names = ["Dracaufeu", "Pikachu", "Mewtwo", "Tortank", "Florizarre", "Lugia", "Evoli"];
+    const names = [
+      "Dracaufeu",
+      "Pikachu",
+      "Mewtwo",
+      "Tortank",
+      "Florizarre",
+      "Lugia",
+      "Evoli",
+    ];
     const rarities = ["Rare Holo", "Ultra Rare", "Secret Rare", "Common"];
     const randomName = names[Math.floor(Math.random() * names.length)];
     const randomRarity = rarities[Math.floor(Math.random() * rarities.length)];
@@ -579,14 +594,19 @@ export class MiniGameGateway
         data: this.generateMockCard(),
       };
     } else {
-      const names = ["Booster Base Set", "Display Épée et Bouclier", "Coffret Evoli", "ETB Destinées Occultes"];
+      const names = [
+        "Booster Base Set",
+        "Display Épée et Bouclier",
+        "Coffret Evoli",
+        "ETB Destinées Occultes",
+      ];
       const randomName = names[Math.floor(Math.random() * names.length)];
       const randomPrice = parseFloat((Math.random() * 300 + 10).toFixed(2));
       return {
         type: "sealed",
         data: {
           id: `mock_sealed_${index}`,
-          nameEn: randomName,
+          name: randomName,
           productType: "booster",
           image: "pokecardex/AQ/Booster_Aquapolis_Arcanin.png",
           mockPrice: randomPrice,
@@ -632,9 +652,13 @@ export class MiniGameGateway
         hasGuessed: p.guesses.some((g) => g.round === session.round),
         guesses: p.guesses,
       })),
-      currentItem: session.gameType === "juste_prix" && session.round > 0
-        ? this.sanitizeItemsForClient([session.items[session.round - 1]], "juste_prix")[0]
-        : null,
+      currentItem:
+        session.gameType === "juste_prix" && session.round > 0
+          ? this.sanitizeItemsForClient(
+              [session.items[session.round - 1]],
+              "juste_prix",
+            )[0]
+          : null,
     };
   }
 

@@ -9,11 +9,12 @@ import {
   ShoppingCart,
   User,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import CartDropdown from "@/components/Marketplace/CartDropdown";
 import { CurrencySelector } from "@/components/Shared/CurrencySelector";
+import { LocaleSelector } from "@/components/Shared/LocaleSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,13 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "@/i18n/navigation";
 import { getUserDisplayName, getUserInitials } from "@/utils/text";
 import { NotificationBell } from "./NotificationBell";
 import SearchBar from "./SearchBar";
 
 export function TopBar() {
+  const t = useTranslations("Navigation");
   const [mounted, setMounted] = useState(false);
   const { isAuthenticated, user, logout, isLoading } = useAuth();
 
@@ -68,6 +71,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <LocaleSelector />
         <CurrencySelector />
         <ThemeToggle />
         {isAuthenticated && <CartDropdown />}
@@ -78,7 +82,7 @@ export function TopBar() {
         ) : showAuthButtons ? (
           <div className="flex items-center gap-2">
             <Button asChild size="sm">
-              <Link href="/auth/login">Se connecter</Link>
+              <Link href="/auth/login">{t("login")}</Link>
             </Button>
             <Button
               asChild
@@ -86,7 +90,7 @@ export function TopBar() {
               size="sm"
               className="hidden sm:inline-flex"
             >
-              <Link href="/auth/register">S&apos;inscrire</Link>
+              <Link href="/auth/register">{t("register")}</Link>
             </Button>
           </div>
         ) : showUserMenu ? (
@@ -116,28 +120,28 @@ export function TopBar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/profile" className="flex items-center">
-                  <User className="mr-2 h-4 w-4" /> Profil
+                  <User className="mr-2 h-4 w-4" /> {t("profile")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="flex items-center">
-                  <Settings className="mr-2 h-4 w-4" /> Paramètres
+                  <Settings className="mr-2 h-4 w-4" /> {t("settings")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/cart" className="flex items-center">
-                  <ShoppingCart className="mr-2 h-4 w-4" /> Mon panier
+                  <ShoppingCart className="mr-2 h-4 w-4" /> {t("cart")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/orders" className="flex items-center">
-                  <ClipboardList className="mr-2 h-4 w-4" /> Mes commandes
+                  <ClipboardList className="mr-2 h-4 w-4" /> {t("orders")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/marketplace/sales" className="flex items-center">
-                  <Package className="mr-2 h-4 w-4" /> Mes ventes
+                  <Package className="mr-2 h-4 w-4" /> {t("sales")}
                 </Link>
               </DropdownMenuItem>
               {user.role === "admin" && (
@@ -145,7 +149,7 @@ export function TopBar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/admin" className="flex items-center">
-                      <Shield className="mr-2 h-4 w-4" /> Admin
+                      <Shield className="mr-2 h-4 w-4" /> {t("admin")}
                     </Link>
                   </DropdownMenuItem>
                 </>
@@ -155,7 +159,7 @@ export function TopBar() {
                 onClick={logout}
                 className="flex items-center cursor-pointer"
               >
-                <LogOut className="mr-2 h-4 w-4" /> Se deconnecter
+                <LogOut className="mr-2 h-4 w-4" /> {t("logout")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

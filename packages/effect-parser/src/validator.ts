@@ -58,7 +58,6 @@ export function checkCoherence(cardId: string, effects: CardEffects): string[] {
   if (effects.kind === "pokemon") {
     for (const [atkName, atk] of Object.entries(effects.attacks)) {
       for (const eff of atk.effects) {
-        // DAMAGE to SELF is unusual — might be a parsing error
         if (
           eff.type === "DAMAGE" &&
           eff.target === "SELF" &&
@@ -69,7 +68,6 @@ export function checkCoherence(cardId: string, effects: CardEffects): string[] {
           );
         }
 
-        // HEAL to OPPONENT is unusual
         if (eff.type === "HEAL" && eff.target === "OPPONENT_ACTIVE") {
           warnings.push(
             `[${cardId}] ${atkName}: HEAL targeting OPPONENT_ACTIVE is unusual`,

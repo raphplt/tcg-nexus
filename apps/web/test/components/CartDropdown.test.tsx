@@ -136,9 +136,8 @@ describe("CartDropdown", () => {
       currencyStore.convertPrice(10, Currency.USD) * 2 +
       currencyStore.convertPrice(5, Currency.EUR) * 1;
 
-    // Use formatPrice from the store to get the exact formatted value
     const expectedTotal = currencyStore.formatPrice(totalValue, Currency.EUR);
-    // Find the total in the price display span (text-lg font-bold)
+
     expect(
       screen.getByText((content) => {
         const normalizedContent = content.replace(/\s+/g, " ");

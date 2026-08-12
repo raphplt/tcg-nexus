@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import {
   BadRequestException,
   ForbiddenException,
@@ -59,6 +60,7 @@ describe("MarketplaceService", () => {
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
+    offset: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
     getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
     getMany: jest.fn().mockResolvedValue([]),
@@ -209,6 +211,13 @@ describe("MarketplaceService", () => {
         { provide: DataSource, useValue: mockDataSource },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         { provide: OrderService, useValue: mockOrderService },
+        {
+          provide: CatalogLocalizationService,
+          useValue: {
+            localize: jest.fn(async (payload) => payload),
+            resolveLabels: jest.fn(async (payload) => payload),
+          },
+        },
       ],
     }).compile();
 
@@ -376,8 +385,9 @@ describe("MarketplaceService", () => {
       expect(qb.andWhere).toHaveBeenCalledWith("listing.price <= :priceMax", {
         priceMax: 100,
       });
+      // Name lives in card_translation: search uses an EXISTS subquery.
       expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining("LOWER(pokemonCard.name) LIKE"),
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
     });
@@ -394,7 +404,7 @@ describe("MarketplaceService", () => {
         sellerId: 1,
       });
       expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining("LIKE :search"),
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
       expect(qb.andWhere).toHaveBeenCalledWith(
@@ -454,7 +464,7 @@ describe("MarketplaceService", () => {
         price: 10,
         currency: Currency.EUR,
         cardState: CardState.NM,
-        // Valeurs qu'un client tenterait de forcer
+        // Values a client might attempt to override
         shippingCost: 42,
         handlingTimeDays: 25,
       } as CreateListingDto;
@@ -844,8 +854,9 @@ describe("MarketplaceService", () => {
         sortBy: "price",
       });
 
+      // Names live in card_translation: matched through an EXISTS subquery.
       expect(qb.andWhere).toHaveBeenCalledWith(
-        "card.name ILIKE :search",
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
       expect(qb.having).toHaveBeenCalledWith(
@@ -875,9 +886,11 @@ describe("MarketplaceService", () => {
       expect(qb.andWhere).toHaveBeenCalledWith("serie.id = :serieId", {
         serieId: "serie1",
       });
-      expect(qb.andWhere).toHaveBeenCalledWith("card.rarity = :rarity", {
-        rarity: "rare",
-      });
+      // Rarity is a localized label: matched across every locale.
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining("ct.rarity = :cardRarity"),
+        { cardRarity: "rare" },
+      );
       expect(qb.andWhere).toHaveBeenCalledWith(
         "(listing.currency = :currency OR listing.id IS NULL)",
         { currency: "USD" },
@@ -890,7 +903,7 @@ describe("MarketplaceService", () => {
         expect.stringContaining("<= :priceMax"),
         expect.objectContaining({ priceMax: 50 }),
       );
-      expect(qb.orderBy).toHaveBeenCalledWith("card.name", "ASC");
+      expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "ASC");
     });
   });
 });

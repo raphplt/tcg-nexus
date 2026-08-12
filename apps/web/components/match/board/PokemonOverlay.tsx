@@ -48,7 +48,6 @@ export function PokemonOverlay({
   const currentHp = Math.max(0, pokemon.hp - pokemon.damageCounters);
   const hpPercent = (currentHp / pokemon.hp) * 100;
 
-  // Damage pop animation
   const prevDamageRef = useRef(pokemon.damageCounters);
   const [damagePop, setDamagePop] = useState<number | null>(null);
   const [hpFlash, setHpFlash] = useState(false);
@@ -71,7 +70,6 @@ export function PokemonOverlay({
 
   return (
     <>
-      {/* HP bar at bottom */}
       <div
         className={cn(
           "absolute bottom-0 left-0 right-0 h-2 bg-black/60 overflow-hidden",
@@ -90,7 +88,7 @@ export function PokemonOverlay({
           animate={{ width: `${hpPercent}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
-        {/* Flash overlay on damage */}
+
         <AnimatePresence>
           {hpFlash && (
             <motion.div
@@ -104,7 +102,6 @@ export function PokemonOverlay({
         </AnimatePresence>
       </div>
 
-      {/* HP text */}
       <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 bg-black/70 rounded px-1 py-0.5">
         <span
           className={cn(
@@ -120,7 +117,6 @@ export function PokemonOverlay({
         </span>
       </div>
 
-      {/* Damage pop */}
       <AnimatePresence>
         {damagePop !== null && (
           <motion.div
@@ -137,7 +133,6 @@ export function PokemonOverlay({
         )}
       </AnimatePresence>
 
-      {/* Damage counters */}
       {pokemon.damageCounters > 0 && !compact && (
         <motion.div
           key={pokemon.damageCounters}
@@ -152,7 +147,6 @@ export function PokemonOverlay({
         </motion.div>
       )}
 
-      {/* Special conditions */}
       {pokemon.specialConditions.length > 0 && (
         <div className="absolute top-1 left-1 flex flex-col gap-0.5">
           {pokemon.specialConditions.map((condition) => (
@@ -172,7 +166,6 @@ export function PokemonOverlay({
         </div>
       )}
 
-      {/* Attached energies below card */}
       {pokemon.attachedEnergies.length > 0 && !compact && (
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-0.5">
           {pokemon.attachedEnergies.map((energy) => {

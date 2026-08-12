@@ -179,7 +179,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await authService.logout({ skipErrorToast: true });
     } catch {
-      // The local session must always be cleared, even if the backend is unavailable.
     } finally {
       await storeLogout();
       setIsLoading(false);

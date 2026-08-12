@@ -31,11 +31,9 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
 
-  // Éviter l'hydratation mismatch en attendant que le composant soit monté
   useEffect(() => {
     setMounted(true);
 
-    // Appliquer le thème initial après le montage
     const storedTheme = localStorage.getItem(storageKey) as Theme;
     if (storedTheme) {
       setTheme(storedTheme);
@@ -72,7 +70,6 @@ export function ThemeProvider({
     },
   };
 
-  // Pendant l'hydratation, ne pas rendre le contenu pour éviter les différences
   if (!mounted) {
     return (
       <ThemeProviderContext.Provider {...props} value={value}>

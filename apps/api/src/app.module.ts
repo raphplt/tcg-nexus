@@ -1,7 +1,7 @@
 import { join } from "node:path";
-import { Module } from "@nestjs/common";
+import { ClassSerializerInterceptor, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule } from "@nestjs/throttler";
@@ -14,6 +14,8 @@ import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { BadgeModule } from "./badge/badge.module";
 import { CardModule } from "./card/card.module";
+import { CatalogLocalizationInterceptor } from "./card/catalog-localization.interceptor";
+import { CatalogLocalizationModule } from "./translation/catalog-localization.module";
 import { CardStateModule } from "./card-state/card-state.module";
 import { CollectionModule } from "./collection/collection.module";
 import { CollectionItemModule } from "./collection-item/collection-item.module";
@@ -22,6 +24,7 @@ import { DeckModule } from "./deck/deck.module";
 import { DeckCardModule } from "./deck-card/deck-card.module";
 import { DeckFormatModule } from "./deck-format/deck-format.module";
 import { FaqModule } from "./faq/faq.module";
+import { TranslationModule } from "./translation/translation.module";
 import { FeedModule } from "./feed/feed.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
@@ -102,6 +105,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     AiModule,
     UserCartModule,
     FaqModule,
+    TranslationModule,
     SupportTicketModule,
     BadgeModule,
     DashboardModule,
@@ -111,6 +115,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     NotificationModule,
     ScanModule,
     MiniGameModule,
+    CatalogLocalizationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -118,6 +123,18 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Interceptor order matters: the first registered wraps the others, so it
+    // transforms the response last. Serialization must come after localization,
+    // which needs the entity instances the repositories return — a series
+    // narrowed down to its identifier is only recognizable by its class.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CatalogLocalizationInterceptor,
     },
   ],
 })

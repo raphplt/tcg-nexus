@@ -1,3 +1,5 @@
+import { CatalogLocalizationService } from "src/card/catalog-localization.service";
+import { CardTranslation } from "src/card/entities/card-translation.entity";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { randomUUID } from "crypto";
@@ -39,6 +41,9 @@ export class OnlinePlaySupportService {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
+    @InjectRepository(CardTranslation)
+    private readonly cardTranslationRepository: Repository<CardTranslation>,
+    private readonly localization: CatalogLocalizationService,
   ) {}
 
   listReferenceDeckPresets(): ReferenceOnlineDeck[] {
@@ -186,16 +191,29 @@ export class OnlinePlaySupportService {
       .map((card) => card.name)
       .filter((value): value is string => Boolean(value));
 
+    // Reference deck card names are resolved across all localized translations so presets match regardless of language
+    const idsFromNames = names.length
+      ? (
+          await this.cardTranslationRepository.find({
+            where: { name: In(names) },
+            select: ["cardId"],
+          })
+        ).map((translation) => translation.cardId)
+      : [];
+
     const candidates =
-      tcgDexIds.length || names.length
+      tcgDexIds.length || idsFromNames.length
         ? await this.cardRepository.find({
             where: [
               ...(tcgDexIds.length ? [{ tcgDexId: In(tcgDexIds) }] : []),
-              ...(names.length ? [{ name: In(names) }] : []),
+              ...(idsFromNames.length ? [{ id: In(idsFromNames) }] : []),
             ],
             relations: ["pokemonDetails"],
           })
         : [];
+
+    // `byName` compares card labels: labels must be resolved first.
+    await this.localization.resolveLabels(candidates);
     const byTcgDexId = new Map<string, Card>();
     const byName = new Map<string, Card>();
 
@@ -361,8 +379,8 @@ export class OnlinePlaySupportService {
   private mapCardEntityToBaseCard(card: Card): TcgDexCard {
     const details = card.pokemonDetails;
 
-    // Priorité 1 : effets synchronisés en base (via npm run sync:effects)
-    // Priorité 2 : fallback sur le JSON chargé au boot (rétro-compat)
+    // Priority 1: Card effects synchronized in database (via npm run sync:effects)
+    // Priority 2: Fallback to JSON definition loaded at startup (backward compatibility)
     const dbEffects = details?.parsedEffects as
       | import("./online-card-registry").SupportedCardDefinition
       | null

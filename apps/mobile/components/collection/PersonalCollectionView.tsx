@@ -54,7 +54,6 @@ export function PersonalCollectionView() {
     [collections],
   );
 
-  // Set selection modal state
   const [isSetSelectionVisible, setIsSetSelectionVisible] = useState(false);
   const [allSets, setAllSets] = useState<PokemonSetType[]>([]);
   const [isLoadingSets, setIsLoadingSets] = useState(false);
@@ -222,9 +221,11 @@ export function PersonalCollectionView() {
 
   const handleDeleteCollection = (collection: UserCollection) => {
     console.log("delete collection", collection);
-    
+
     if (Platform.OS === "web") {
-      const confirmed = window.confirm(`Confirmer la suppression de "${collection.name}" ?`);
+      const confirmed = window.confirm(
+        `Confirmer la suppression de "${collection.name}" ?`,
+      );
       if (confirmed) {
         collectionService
           .deleteCollection(collection.id)
