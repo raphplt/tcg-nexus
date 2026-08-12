@@ -331,8 +331,8 @@ export default function SellerPage() {
                   <SelectItem value="createdAt-ASC">
                     {t("sortOldest")}
                   </SelectItem>
-                  <SelectItem value="name-ASC">Nom (A-Z)</SelectItem>
-                  <SelectItem value="name-DESC">Nom (Z-A)</SelectItem>
+                  <SelectItem value="name-ASC">{t("sortNameAsc")}</SelectItem>
+                  <SelectItem value="name-DESC">{t("sortNameDesc")}</SelectItem>
                   <SelectItem value="price-ASC">{t("sortPriceAsc")}</SelectItem>
                   <SelectItem value="price-DESC">
                     {t("sortPriceDesc")}
@@ -388,7 +388,7 @@ export default function SellerPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>{t("product")}</TableHead>
-                        <TableHead>État / Condition</TableHead>
+                        <TableHead>{t("conditionColumn")}</TableHead>
                         <TableHead>{t("price")}</TableHead>
                         <TableHead>{t("quantity")}</TableHead>
                         <TableHead>{t("date")}</TableHead>

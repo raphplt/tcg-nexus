@@ -193,7 +193,7 @@ export default function CreateTournamentPage() {
       <div className="max-w-xl mx-auto mt-20">
         <Alert variant="destructive">
           <ShieldAlert className="h-5 w-5" />
-          <AlertTitle>Accès refusé</AlertTitle>
+          <AlertTitle>{t("accessDenied")}</AlertTitle>
           <AlertDescription>{t("organizerRequired")}</AlertDescription>
         </Alert>
       </div>
@@ -290,7 +290,7 @@ export default function CreateTournamentPage() {
                             onValueChange={setPlacesValue}
                           />
                           <CommandList>
-                            <CommandEmpty>Aucune adresse trouvée.</CommandEmpty>
+                            <CommandEmpty>{t("noAddressFound")}</CommandEmpty>
                             <CommandGroup>
                               {placesStatus === "OK" &&
                                 placesData.map(({ place_id, description }) => (

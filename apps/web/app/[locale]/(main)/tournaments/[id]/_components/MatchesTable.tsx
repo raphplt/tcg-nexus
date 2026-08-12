@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import {
   Table,
@@ -15,16 +16,19 @@ interface MatchesTableProps {
 }
 
 export function MatchesTable({ matches, formatDate }: MatchesTableProps) {
+  const t = useTranslations("MatchesTable");
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>#</TableHead>
-          <TableHead>Ronde</TableHead>
-          <TableHead className="hidden md:table-cell">Phase</TableHead>
-          <TableHead>Statut</TableHead>
-          <TableHead className="hidden lg:table-cell">Planifié</TableHead>
-          <TableHead className="hidden sm:table-cell">Score</TableHead>
+          <TableHead>{t("round")}</TableHead>
+          <TableHead className="hidden md:table-cell">{t("phase")}</TableHead>
+          <TableHead>{t("status")}</TableHead>
+          <TableHead className="hidden lg:table-cell">
+            {t("statusScheduled")}
+          </TableHead>
+          <TableHead className="hidden sm:table-cell">{t("score")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

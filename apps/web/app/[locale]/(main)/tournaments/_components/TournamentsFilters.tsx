@@ -93,7 +93,7 @@ export function TournamentsFilters({
         {user?.isPro && (
           <div className="flex justify-end">
             <Link href="/tournaments/create">
-              <Button variant="default">Créer un tournoi</Button>
+              <Button variant="default">{t("create")}</Button>
             </Link>
           </div>
         )}
@@ -101,7 +101,7 @@ export function TournamentsFilters({
       {showAdvanced && (
         <div className="flex flex-wrap gap-4 items-end mt-4">
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">{t("type")}</Label>
             <Select
               value={filters.type || "ALL"}
               onValueChange={(value) =>
@@ -181,7 +181,7 @@ export function TournamentsFilters({
             />
           </div>
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="sortBy">Trier par</Label>
+            <Label htmlFor="sortBy">{t("sortBy")}</Label>
             <Select
               value={filters.sortBy || ""}
               onValueChange={(value) => setFilters({ sortBy: value })}

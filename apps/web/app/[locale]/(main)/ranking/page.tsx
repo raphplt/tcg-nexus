@@ -404,7 +404,7 @@ export default function RankingPage() {
               <div className="flex items-center gap-4 border-b px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 <div className="w-9 text-center">#</div>
                 <div className="flex-1">{t("player")}</div>
-                <div className="w-16 text-right">ELO</div>
+                <div className="w-16 text-right">{t("elo")}</div>
                 <div className="hidden w-24 text-right sm:block">
                   {t("trend")}
                 </div>

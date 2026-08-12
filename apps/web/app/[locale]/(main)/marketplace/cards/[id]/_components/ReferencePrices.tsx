@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrencyStore } from "@/store/currency.store";
@@ -24,6 +25,7 @@ export function ReferencePrices({
   marketPricing,
   cardName,
 }: ReferencePricesProps) {
+  const t = useTranslations("ReferencePrices");
   const { formatPrice } = useCurrencyStore();
 
   const cmPrice = getCardMarketPrice(marketPricing?.cardmarket);
@@ -33,11 +35,11 @@ export function ReferencePrices({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold">Prix de référence</h3>
+      <h3 className="text-sm font-semibold">{t("title")}</h3>
       <dl className="space-y-2 text-sm">
         {cmPrice != null && (
           <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">Cardmarket (tendance)</dt>
+            <dt className="text-muted-foreground">{t("cardmarketTrend")}</dt>
             <dd className="font-semibold tabular-nums">
               {formatPrice(cmPrice, "EUR")}
             </dd>
@@ -45,7 +47,7 @@ export function ReferencePrices({
         )}
         {tcgPrice != null && (
           <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">TCGplayer (marché)</dt>
+            <dt className="text-muted-foreground">{t("tcgplayerMarket")}</dt>
             <dd className="font-semibold tabular-nums">
               {formatPrice(tcgPrice, "USD")}
             </dd>

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, IsNull, Repository } from "typeorm";
 import { Match, MatchStatus } from "../../match/entities/match.entity";
@@ -229,7 +234,10 @@ export class TournamentStateService {
     });
 
     if (!tournament) {
-      throw new BadRequestException("Tournoi non trouvé");
+      throw new BadRequestException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const previousStatus = tournament.status;
@@ -373,7 +381,10 @@ export class TournamentStateService {
     });
 
     if (!tournament) {
-      throw new BadRequestException("Tournoi non trouvé");
+      throw new BadRequestException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const availableTransitions = this.getAvailableTransitions(

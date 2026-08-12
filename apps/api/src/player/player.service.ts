@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Ranking } from "src/ranking/entities/ranking.entity";
 import { TournamentStatus } from "src/tournament/entities/tournament.entity";
@@ -36,7 +32,10 @@ export class PlayerService {
     });
 
     if (!player) {
-      throw new NotFoundException("Joueur non trouvé");
+      throw new NotFoundException({
+        code: "PLAYER_NOT_FOUND",
+        message: "Joueur non trouvé",
+      });
     }
 
     return player;
@@ -61,7 +60,10 @@ export class PlayerService {
     });
 
     if (!player) {
-      throw new NotFoundException("Joueur non trouvé");
+      throw new NotFoundException({
+        code: "PLAYER_NOT_FOUND",
+        message: "Joueur non trouvé",
+      });
     }
 
     const rankings = await this.rankingRepository.find({
@@ -114,7 +116,10 @@ export class PlayerService {
       .filter((id): id is number => typeof id === "number");
 
     if (tournamentIds.length === 0) {
-      throw new BadRequestException("Aucun tournoi valide trouvé");
+      throw new NotFoundException({
+        code: "NO_VALID_TOURNAMENT",
+        message: "Aucun tournoi valide trouvé",
+      });
     }
 
     const counts = await this.rankingRepository

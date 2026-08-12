@@ -255,7 +255,7 @@ export function MatchBoardView({
           />
           <Card className="tcg-surface">
             <CardHeader>
-              <CardTitle>Votre main</CardTitle>
+              <CardTitle>{t("yourHand")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -310,7 +310,7 @@ export function MatchBoardView({
 
         <Card className="tcg-surface">
           <CardHeader>
-            <CardTitle>Actions</CardTitle>
+            <CardTitle>{t("actions")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {(viewerPlayer.active?.attacks || []).map((attack, attackIndex) => (
@@ -390,6 +390,7 @@ function BoardPlayer({
   player: SanitizedGameState["players"][string];
   isCurrentTurn: boolean;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <Card className="tcg-surface">
       <CardHeader>
@@ -397,7 +398,7 @@ function BoardPlayer({
           <span>
             {title} : {player.name}
           </span>
-          {isCurrentTurn ? <Badge>Tour en cours</Badge> : null}
+          {isCurrentTurn ? <Badge>{t("currentTurn")}</Badge> : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -428,6 +429,7 @@ function PokemonPanel({
   label: string;
   pokemon: SanitizedPokemonCardView | null;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <div className="tcg-note-card p-3">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -453,7 +455,9 @@ function PokemonPanel({
           ) : null}
         </div>
       ) : (
-        <div className="mt-2 text-sm text-muted-foreground">Aucun Pokémon</div>
+        <div className="mt-2 text-sm text-muted-foreground">
+          {t("noPokemon")}
+        </div>
       )}
     </div>
   );

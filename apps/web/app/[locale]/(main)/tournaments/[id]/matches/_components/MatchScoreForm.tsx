@@ -261,7 +261,9 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
                   </div>
                 )}
                 {watchedValues.playerAScore === watchedValues.playerBScore && (
-                  <p className="text-sm font-medium text-blue-600">Égalité</p>
+                  <p className="text-sm font-medium text-blue-600">
+                    {t("draw")}
+                  </p>
                 )}
               </div>
 
@@ -339,7 +341,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
             <AlertDialogDescription>
               {formData && (
                 <div className="space-y-3">
-                  <p>Voulez-vous enregistrer ce résultat ?</p>
+                  <p>{t("confirmSave")}</p>
 
                   <div className="bg-muted p-3 rounded">
                     <div className="flex justify-between items-center">
@@ -367,7 +369,7 @@ export function MatchScoreForm({ match, onSuccess }: MatchScoreFormProps) {
 
                   {formData.notes && (
                     <div>
-                      <p className="text-sm font-medium">Notes :</p>
+                      <p className="text-sm font-medium">{t("notesLabel")}</p>
                       <p className="text-sm text-muted-foreground">
                         {formData.notes}
                       </p>

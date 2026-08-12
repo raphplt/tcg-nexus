@@ -91,7 +91,7 @@ const DecksFilters = ({
       {showAdvanced && (
         <div className="flex flex-wrap gap-4 items-end mt-4">
           <div className="flex flex-col gap-1 min-w-[140px]">
-            <Label htmlFor="format">Type</Label>
+            <Label htmlFor="format">{t("type")}</Label>
             <Select
               value={filters.format || "ALL"}
               onValueChange={(value) =>

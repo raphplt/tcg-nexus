@@ -139,7 +139,7 @@ const CardForm = () => {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Vérification de l'authentification...</span>
+        <span className="ml-2">{t("checkingAuth")}</span>
       </div>
     );
   }
@@ -632,7 +632,7 @@ const CardForm = () => {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (optionnel)</FormLabel>
+                  <FormLabel>{t("descriptionOptional")}</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder={t("descriptionPlaceholder")}

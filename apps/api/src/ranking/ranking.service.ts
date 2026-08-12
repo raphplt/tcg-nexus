@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { Deck } from "../deck/entities/deck.entity";
@@ -254,7 +254,10 @@ export class RankingService {
     });
 
     if (!player) {
-      throw new NotFoundException("Joueur non trouvé");
+      throw new NotFoundException({
+        code: "PLAYER_NOT_FOUND",
+        message: "Joueur non trouvé",
+      });
     }
 
     const { currentRank, oldRank } = await this.buildRankingSnapshot(
@@ -285,14 +288,20 @@ export class RankingService {
       where: { id: tournamentId },
     });
     if (!tournament) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const player = await this.playerRepository.findOne({
       where: { id: playerId },
     });
     if (!player) {
-      throw new NotFoundException("Joueur non trouvé");
+      throw new NotFoundException({
+        code: "PLAYER_NOT_FOUND",
+        message: "Joueur non trouvé",
+      });
     }
 
     const ranking = this.rankingRepository.create({
@@ -387,7 +396,10 @@ export class RankingService {
     });
 
     if (!tournament) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const playerStats = this.calculatePlayerStatistics(tournament);
@@ -633,7 +645,10 @@ export class RankingService {
     });
 
     if (!tournament) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     return this.getTournamentRankings(tournamentId);

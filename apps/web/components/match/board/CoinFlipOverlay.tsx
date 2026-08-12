@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
@@ -22,6 +23,7 @@ export function CoinFlipOverlay({
   isBusy = false,
   onRespond,
 }: CoinFlipOverlayProps) {
+  const t = useTranslations("MatchBoard");
   const [phase, setPhase] = useState<Phase>("intro");
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -68,7 +70,7 @@ export function CoinFlipOverlay({
                 animate={{ opacity: 1 }}
                 className="text-xl font-bold text-white/90"
               >
-                Pile ou Face !
+                {t("coinFlip")}
               </motion.h2>
 
               {/* Coin */}
@@ -159,9 +161,7 @@ export function CoinFlipOverlay({
                 <h3 className="text-lg font-bold text-white">
                   {winnerName}, qui commence ?
                 </h3>
-                <p className="text-xs text-white/50 mt-1">
-                  Vous avez remporte le pile ou face
-                </p>
+                <p className="text-xs text-white/50 mt-1">{t("coinFlipWon")}</p>
               </div>
 
               <div className="p-6">

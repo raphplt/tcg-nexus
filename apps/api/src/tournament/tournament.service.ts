@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ConflictException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, LessThan, MoreThanOrEqual, Repository } from "typeorm";
@@ -75,7 +69,10 @@ export class TournamentService {
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new NotFoundException("Utilisateur non trouvé");
+      throw new NotFoundException({
+        code: "USER_NOT_FOUND",
+        message: "Utilisateur non trouvé",
+      });
     }
 
     return this.tournamentRepository.manager.transaction(async (manager) => {
@@ -302,7 +299,10 @@ export class TournamentService {
           lock: { mode: "pessimistic_write" },
         });
         if (!lockedTournament) {
-          throw new NotFoundException("Tournoi non trouvé");
+          throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
         }
 
         const tournament = await tournamentRepository.findOne({
@@ -310,7 +310,10 @@ export class TournamentService {
           relations: ["players"],
         });
         if (!tournament) {
-          throw new NotFoundException("Tournoi non trouvé");
+          throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
         }
 
         const player = await playerRepository.findOne({
@@ -421,7 +424,10 @@ export class TournamentService {
     });
 
     if (!registration) {
-      throw new NotFoundException("Inscription non trouvée");
+      throw new NotFoundException({
+        code: "REGISTRATION_NOT_FOUND",
+        message: "Inscription non trouvée",
+      });
     }
 
     await this.updateRegistrationsInBulk(tournamentId, {
@@ -680,11 +686,17 @@ export class TournamentService {
     const match = await this.matchService.findOne(matchId);
 
     if (!match) {
-      throw new NotFoundException("Match non trouvé");
+      throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
     }
 
     if (match.tournament?.id !== tournamentId) {
-      throw new NotFoundException("Match non trouvé dans ce tournoi");
+      throw new NotFoundException({
+        code: "MATCH_NOT_IN_TOURNAMENT",
+        message: "Match non trouvé dans ce tournoi",
+      });
     }
 
     return match;
@@ -788,7 +800,10 @@ export class TournamentService {
           lock: { mode: "pessimistic_write" },
         });
         if (!lockedTournament) {
-          throw new NotFoundException("Tournoi non trouvé");
+          throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
         }
 
         const tournament = await tournamentRepository.findOne({
@@ -796,7 +811,10 @@ export class TournamentService {
           relations: ["players"],
         });
         if (!tournament) {
-          throw new NotFoundException("Tournoi non trouvé");
+          throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
         }
         this.ensureRegistrationsCanBeManaged(tournament);
 
@@ -986,7 +1004,10 @@ export class TournamentService {
     });
 
     if (!registration) {
-      throw new NotFoundException("Inscription non trouvée");
+      throw new NotFoundException({
+        code: "REGISTRATION_NOT_FOUND",
+        message: "Inscription non trouvée",
+      });
     }
 
     const isOwnRegistration = registration.player.user?.id === user.id;
@@ -1017,7 +1038,10 @@ export class TournamentService {
     this.ensureRegistrationsCanBeManaged(registration.tournament);
 
     if (registration.checkedIn) {
-      throw new BadRequestException("Check-in déjà effectué");
+      throw new BadRequestException({
+        code: "CHECK_IN_ALREADY_DONE",
+        message: "Check-in déjà effectué",
+      });
     }
 
     const result = await this.updateRegistrationsInBulk(tournamentId, {
@@ -1047,7 +1071,10 @@ export class TournamentService {
         lock: { mode: "pessimistic_write" },
       });
       if (!lockedTournament) {
-        throw new NotFoundException("Tournoi non trouvé");
+        throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
       }
 
       const tournament = await tournamentRepository.findOne({
@@ -1055,7 +1082,10 @@ export class TournamentService {
         relations: ["players"],
       });
       if (!tournament) {
-        throw new NotFoundException("Tournoi non trouvé");
+        throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
       }
       if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
         throw new BadRequestException(
@@ -1147,7 +1177,10 @@ export class TournamentService {
         lock: { mode: "pessimistic_write" },
       });
       if (!tournament) {
-        throw new NotFoundException("Tournoi non trouvé");
+        throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
       }
       this.ensureRegistrationsCanBeManaged(tournament);
 

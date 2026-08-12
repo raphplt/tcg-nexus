@@ -667,7 +667,7 @@ export function PokemonCardsTable({
                     <SelectValue placeholder={t("filterByType")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="all">{t("allTypes")}</SelectItem>
                     {POKEMON_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {t(type.labelKey)}
@@ -690,7 +690,7 @@ export function PokemonCardsTable({
                     <SelectValue placeholder={t("filterByRarity")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Toutes les raretés</SelectItem>
+                    <SelectItem value="all">{t("allRarities")}</SelectItem>
                     {POKEMON_RARITIES.map((rarity) => (
                       <SelectItem key={rarity.value} value={rarity.value}>
                         {t(rarity.labelKey)}
@@ -762,7 +762,7 @@ export function PokemonCardsTable({
               <div className="rounded-full bg-primary/10 p-4 mb-4 text-primary">
                 <Sparkles className="w-8 h-8 animate-pulse" />
               </div>
-              <h3 className="font-bold text-lg mb-1">Prêt à explorer ?</h3>
+              <h3 className="font-bold text-lg mb-1">{t("readyToExplore")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-4">
                 {t("selectSet")}
               </p>
@@ -847,11 +847,11 @@ export function PokemonCardsTable({
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent bg-muted/40">
-                    <TableHead className="w-[80px]">Image</TableHead>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Set</TableHead>
-                    <TableHead>Numéro</TableHead>
-                    <TableHead>Rareté</TableHead>
+                    <TableHead className="w-[80px]">{t("image")}</TableHead>
+                    <TableHead>{t("name")}</TableHead>
+                    <TableHead>{t("set")}</TableHead>
+                    <TableHead>{t("number")}</TableHead>
+                    <TableHead>{t("rarity")}</TableHead>
                     <TableHead className="text-right">HP</TableHead>
                   </TableRow>
                 </TableHeader>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
@@ -15,6 +16,7 @@ import { Deck } from "@/types/Decks";
 import { useQuery } from "@tanstack/react-query";
 
 export default function UpdateDeckPage() {
+  const t = useTranslations("DeckUpdate");
   const { isAuthenticated } = useAuth();
   const { id } = useParams();
   const [formatList, setFormatList] = useState<DeckFormat[]>([]);
@@ -49,9 +51,9 @@ export default function UpdateDeckPage() {
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
         <Alert className="mx-auto max-w-3xl" variant="destructive">
           <AlertCircleIcon />
-          <AlertTitle>Connexion requise.</AlertTitle>
+          <AlertTitle>{t("loginRequiredTitle")}</AlertTitle>
           <AlertDescription>
-            <p>Vous devez être connecté pour modifier un deck.</p>
+            <p>{t("loginRequired")}</p>
           </AlertDescription>
         </Alert>
       </div>
@@ -71,9 +73,9 @@ export default function UpdateDeckPage() {
       <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
         <Alert className="mx-auto max-w-3xl" variant="destructive">
           <AlertCircleIcon />
-          <AlertTitle>Erreur</AlertTitle>
+          <AlertTitle>{t("error")}</AlertTitle>
           <AlertDescription>
-            <p>Impossible de charger le deck.</p>
+            <p>{t("loadError")}</p>
           </AlertDescription>
         </Alert>
       </div>
@@ -85,7 +87,7 @@ export default function UpdateDeckPage() {
       <div className="mx-auto max-w-3/4 space-y-6">
         <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-secondary/10">
           <CardHeader>
-            <CardTitle className="text-3xl">Modifier le deck</CardTitle>
+            <CardTitle className="text-3xl">{t("title")}</CardTitle>
           </CardHeader>
         </Card>
         <Card className="shadow-xl border-border/60">

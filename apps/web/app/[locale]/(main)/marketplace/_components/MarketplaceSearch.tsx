@@ -81,7 +81,7 @@ const MarketplaceSearch = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">{t("name")}</SelectItem>
-              <SelectItem value="price">Prix</SelectItem>
+              <SelectItem value="price">{t("price")}</SelectItem>
               <SelectItem value="popularity">{t("popularity")}</SelectItem>
             </SelectContent>
           </Select>
@@ -163,7 +163,7 @@ const MarketplaceSearch = ({
             </div>
 
             <div>
-              <Label>État</Label>
+              <Label>{t("condition")}</Label>
               <Select
                 value={filters.cardState || "all"}
                 onValueChange={(value) =>

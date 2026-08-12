@@ -19,7 +19,7 @@ import {
   OnlineMatchSessionView,
   SanitizedGameState,
 } from "@/types/match-online";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
 interface GameBoardProps {
@@ -28,6 +28,7 @@ interface GameBoardProps {
 
 export default function GameBoard({ matchId }: GameBoardProps) {
   const t = useTranslations("GameBoard");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
   const {
@@ -70,7 +71,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       });
     },
     onError: (error: unknown) => {
-      setError(extractApiErrorMessage(error, t("deckSelectError")));
+      setError(translateApiError(error, tError, t("deckSelectError")));
     },
   });
 
@@ -235,7 +236,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
   const renderDeckSelection = () => (
     <Card className="tcg-surface">
       <CardHeader>
-        <CardTitle>Choix du deck online</CardTitle>
+        <CardTitle>{t("deckChoice")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {(eligibilityQuery.data?.eligibleDecks || []).map((deck) => (
@@ -284,7 +285,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     return (
       <Card className="tcg-surface">
         <CardHeader>
-          <CardTitle>Session online en attente</CardTitle>
+          <CardTitle>{t("sessionPending")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <p>{t("deckSelected")}</p>

@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
   SetMetadata,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
@@ -71,7 +73,10 @@ export class TournamentOrganizerGuard implements CanActivate {
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     // Vérifier si l'utilisateur est organisateur du tournoi

@@ -1,0 +1,45 @@
+{
+  "common": {
+    "brand": "TCG Nexus",
+    "support": "TCG Nexus - Support",
+    "greeting": "Hello,",
+    "automatic": "© TCG Nexus — This is an automated message, please do not reply."
+  },
+  "ticket-created": {
+    "subject": "[TCG Nexus] Ticket #{ticketId} created: {subject}",
+    "intro": "Your support ticket has been created. Our team will get back to you as soon as possible.",
+    "subjectLabel": "Subject:",
+    "outro": "You can follow your ticket from your support area on TCG Nexus."
+  },
+  "ticket-reply": {
+    "subject": "[TCG Nexus] New reply on ticket #{ticketId}: {ticketSubject}",
+    "intro": "A new reply has been added to your ticket",
+    "outro": "Sign in to your support area on TCG Nexus to read the full conversation and reply."
+  },
+  "tournament-started": {
+    "subject": "[TCG Nexus] The {name} tournament has started",
+    "title": "The {name} tournament has started",
+    "intro": "Good luck! Follow the bracket live:",
+    "action": "Open tournament"
+  },
+  "tournament-finished": {
+    "subject": "[TCG Nexus] The {name} tournament is over",
+    "action": "View detailed results"
+  },
+  "marketplace-sale": {
+    "subject": "[TCG Nexus] Sale completed",
+    "title": "Sale completed",
+    "action": "View order"
+  },
+  "order-shipped": {
+    "subject": "[TCG Nexus] Your order has been shipped",
+    "title": "Your order has been shipped",
+    "action": "Track order"
+  },
+  "match-reminder": {
+    "subject": "[TCG Nexus] Reminder: your match is tomorrow",
+    "title": "Reminder: your match is tomorrow",
+    "intro": "Do not forget your match scheduled in 24 hours.",
+    "details": "Match details"
+  }
+}

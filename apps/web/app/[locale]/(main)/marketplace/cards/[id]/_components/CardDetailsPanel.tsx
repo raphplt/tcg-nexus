@@ -57,7 +57,7 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
   return (
     <section className="rounded-xl border bg-card shadow-sm">
       <div className="px-6 pt-6 pb-2">
-        <h2 className="text-lg font-semibold">Fiche de la carte</h2>
+        <h2 className="text-lg font-semibold">{t("cardSheet")}</h2>
         <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
@@ -113,7 +113,9 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
             <AccordionContent className="space-y-3">
               {(card.weaknesses?.length ?? 0) > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-28">Faiblesses</span>
+                  <span className="text-muted-foreground w-28">
+                    {t("weaknesses")}
+                  </span>
                   {card.weaknesses?.map((w, i) => (
                     <Badge key={i} variant="outline" className="gap-1">
                       <EnergyIcon type={w.type} size={14} />
@@ -137,7 +139,9 @@ export function CardDetailsPanel({ card }: CardDetailsPanelProps) {
               )}
               {card.retreat != null && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-28">Retraite</span>
+                  <span className="text-muted-foreground w-28">
+                    {t("retreat")}
+                  </span>
                   <span className="font-medium">
                     {card.retreat} énergie{card.retreat > 1 ? "s" : ""}
                   </span>

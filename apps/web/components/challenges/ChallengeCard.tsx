@@ -4,6 +4,7 @@ import {
   ActiveChallengeData,
   challengeService,
 } from "@/services/challenge.service";
+import { useTranslations } from "next-intl";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ export function ChallengeCard({
   activeChallenge,
   onClaimed,
 }: ChallengeCardProps) {
+  const t = useTranslations("Challenges");
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimed, setClaimed] = useState(activeChallenge.isClaimed);
 
@@ -76,7 +78,7 @@ export function ChallengeCard({
           {/* Progress bar area */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              <span>Progress</span>
+              <span>{t("progress")}</span>
               <span>
                 {currentProgress} / {challenge.targetValue}
               </span>

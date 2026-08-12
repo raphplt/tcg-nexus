@@ -226,7 +226,7 @@ export default function PokedlePage() {
             <Layers className="h-4 w-4" />
           </div>
           <div>
-            <H1 className="text-lg! sm:text-xl!">Pokédle</H1>
+            <H1 className="text-lg! sm:text-xl!">{t("title")}</H1>
             <p className="text-[10px] text-muted-foreground">{t("subtitle")}</p>
           </div>
         </div>
@@ -304,7 +304,7 @@ export default function PokedlePage() {
 
             {gameState === "lost" && (
               <div className="rounded-lg border border-red-500/20 bg-red-500/10 text-red-500 p-6 text-center space-y-3">
-                <h3 className="text-lg font-black uppercase">Dommage !</h3>
+                <h3 className="text-lg font-black uppercase">{t("tooBad")}</h3>
                 <p className="text-sm font-bold">
                   Le Pokémon mystère était {targetCard?.name}.
                 </p>
@@ -373,12 +373,12 @@ export default function PokedlePage() {
                   <table className="w-full text-center border-collapse">
                     <thead>
                       <tr className="bg-muted/50 border-b border-border text-[10px] font-bold uppercase text-muted-foreground">
-                        <th className="p-3">Pokémon</th>
-                        <th className="p-3">Types</th>
-                        <th className="p-3">Génération</th>
+                        <th className="p-3">{t("pokemon")}</th>
+                        <th className="p-3">{t("types")}</th>
+                        <th className="p-3">{t("generation")}</th>
                         <th className="p-3">HP</th>
-                        <th className="p-3">Stage</th>
-                        <th className="p-3">Rareté</th>
+                        <th className="p-3">{t("stage")}</th>
+                        <th className="p-3">{t("rarity")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/40 font-semibold text-xs">

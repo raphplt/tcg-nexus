@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { CanActivate, ExecutionContext, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Request } from "express";
 import { UserRole } from "src/common/enums/user";
@@ -26,7 +21,10 @@ export class TournamentVisibilityGuard implements CanActivate {
     const tournamentId = Number(request.params?.id);
 
     if (!Number.isInteger(tournamentId) || tournamentId <= 0) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const tournament = await this.tournamentRepository.findOne({
@@ -35,7 +33,10 @@ export class TournamentVisibilityGuard implements CanActivate {
     });
 
     if (!tournament) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     if (tournament.isPublic) {
@@ -44,7 +45,10 @@ export class TournamentVisibilityGuard implements CanActivate {
 
     const user = request.user as User | undefined;
     if (!user) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     if (user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR) {
@@ -61,7 +65,10 @@ export class TournamentVisibilityGuard implements CanActivate {
     });
 
     if (!organizer) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     return true;

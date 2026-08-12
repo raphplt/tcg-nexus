@@ -5,6 +5,8 @@ export interface UserNotification {
   isRead: boolean;
   type: string;
   data: Record<string, any> | null;
+  translationKey?: string | null;
+  translationParams?: Record<string, any> | null;
   createdAt: string;
   updatedAt: string;
 }

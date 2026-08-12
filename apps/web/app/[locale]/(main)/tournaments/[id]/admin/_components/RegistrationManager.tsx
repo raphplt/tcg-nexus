@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/table";
 import { tournamentService } from "@/services/tournament.service";
 import { TournamentRegistration } from "@/types/tournament";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { useLocale, useTranslations } from "next-intl";
 
 type BulkAction = "confirm" | "cancel" | "check_in";
@@ -79,6 +79,7 @@ export function RegistrationManager({
   tournamentStatus,
 }: RegistrationManagerProps) {
   const t = useTranslations("RegistrationManager");
+  const tError = useTranslations("ApiErrors");
   const locale = useLocale();
   const queryClient = useQueryClient();
   const [selectedRegistrations, setSelectedRegistrations] = useState<number[]>(
@@ -128,7 +129,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(extractApiErrorMessage(error, t("confirmError")));
+      toast.error(translateApiError(error, tError, t("confirmError")));
     },
   });
 
@@ -151,7 +152,7 @@ export function RegistrationManager({
     },
     onError: (error: unknown) => {
       toast.error(
-        extractApiErrorMessage(error, "Impossible d'annuler l'inscription."),
+        translateApiError(error, tError, "Impossible d'annuler l'inscription."),
       );
     },
   });
@@ -164,7 +165,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(extractApiErrorMessage(error, t("checkInError")));
+      toast.error(translateApiError(error, tError, t("checkInError")));
     },
   });
 
@@ -192,7 +193,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(extractApiErrorMessage(error, t("bulkActionError")));
+      toast.error(translateApiError(error, tError, t("bulkActionError")));
     },
   });
 
@@ -206,7 +207,7 @@ export function RegistrationManager({
       await refreshTournamentQueries();
     },
     onError: (error: unknown) => {
-      toast.error(extractApiErrorMessage(error, t("globalCheckInError")));
+      toast.error(translateApiError(error, tError, t("globalCheckInError")));
     },
   });
 
@@ -308,7 +309,7 @@ export function RegistrationManager({
     const escapeCsvCell = (value: string | number) =>
       `"${String(value).replaceAll('"', '""')}"`;
     const csv = [
-      [t("player"), "Statut", t("checkIn"), t("registration"), "Notes"]
+      [t("player"), t("status"), t("checkIn"), t("registration"), t("notes")]
         .map(escapeCsvCell)
         .join(","),
       ...filteredRegistrations.map((reg) =>
@@ -360,7 +361,7 @@ export function RegistrationManager({
               <div className="text-2xl font-bold text-blue-600">
                 {stats.total}
               </div>
-              <div className="text-sm text-muted-foreground">Total</div>
+              <div className="text-sm text-muted-foreground">{t("total")}</div>
             </CardContent>
           </Card>
           <Card>
@@ -442,7 +443,7 @@ export function RegistrationManager({
               </div>
 
               <div className="space-y-2">
-                <Label>Statut</Label>
+                <Label>{t("status")}</Label>
                 <Select
                   value={filters.status || "all"}
                   onValueChange={(value) =>
@@ -469,7 +470,9 @@ export function RegistrationManager({
                     <SelectItem value="cancelled">
                       {t("statusCancelledPlural")}
                     </SelectItem>
-                    <SelectItem value="eliminated">Éliminées</SelectItem>
+                    <SelectItem value="eliminated">
+                      {t("eliminatedPlural")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -615,10 +618,10 @@ export function RegistrationManager({
                     />
                   </TableHead>
                   <TableHead>{t("player")}</TableHead>
-                  <TableHead>Statut</TableHead>
+                  <TableHead>{t("status")}</TableHead>
                   <TableHead>{t("checkIn")}</TableHead>
                   <TableHead>{t("registration")}</TableHead>
-                  <TableHead>Notes</TableHead>
+                  <TableHead>{t("notes")}</TableHead>
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>

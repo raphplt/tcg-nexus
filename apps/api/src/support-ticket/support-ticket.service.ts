@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateSupportTicketDto } from "./dto/create-support-ticket.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { SupportTicket } from "./entities/support-ticket.entity";
@@ -32,7 +28,10 @@ export class SupportTicketService {
 
   private assertOwnerOrStaff(ticket: SupportTicket, user: User) {
     if (!this.isStaff(user) && ticket.user.id !== user.id) {
-      throw new ForbiddenException("Vous n'avez pas accès à ce ticket");
+      throw new ForbiddenException({
+        code: "TICKET_ACCESS_DENIED",
+        message: "Vous n'avez pas accès à ce ticket",
+      });
     }
   }
 
@@ -59,6 +58,7 @@ export class SupportTicketService {
       user.email,
       savedTicket.id,
       savedTicket.subject,
+      user.preferredLocale,
     );
 
     return savedTicket;
@@ -74,7 +74,10 @@ export class SupportTicketService {
     this.assertOwnerOrStaff(ticket, user);
 
     if (ticket.status === SupportTicketStatusType.closed) {
-      throw new ForbiddenException("Ce ticket est fermé");
+      throw new ForbiddenException({
+        code: "TICKET_CLOSED",
+        message: "Ce ticket est fermé",
+      });
     }
 
     const message = this.messageRepo.create({
@@ -101,6 +104,7 @@ export class SupportTicketService {
         ticket.subject,
         senderName,
         preview,
+        ticket.user.preferredLocale,
       );
     }
     // Utilisateur répond -> pas de notification auto (le staff consulte le dashboard)

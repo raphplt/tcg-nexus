@@ -74,7 +74,7 @@ export default function PlayerDashboardPage() {
     if (!user?.player) return null;
 
     if (match.status !== "finished" && match.status !== "forfeit") {
-      return <Badge variant="outline">À jouer</Badge>;
+      return <Badge variant="outline">{t("toPlay")}</Badge>;
     }
 
     const isPlayerA = match.playerA?.id === user.player.id;
@@ -212,7 +212,7 @@ export default function PlayerDashboardPage() {
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 bg-green-50 rounded">
                     <div className="font-bold text-green-700">{wins}</div>
-                    <div className="text-xs text-green-600">Victoires</div>
+                    <div className="text-xs text-green-600">{t("wins")}</div>
                   </div>
                   <div className="p-2 bg-red-50 rounded">
                     <div className="font-bold text-red-700">{losses}</div>
@@ -220,14 +220,14 @@ export default function PlayerDashboardPage() {
                   </div>
                   <div className="p-2 bg-yellow-50 rounded">
                     <div className="font-bold text-yellow-700">{draws}</div>
-                    <div className="text-xs text-yellow-600">Égalités</div>
+                    <div className="text-xs text-yellow-600">{t("draws")}</div>
                   </div>
                 </div>
 
                 {playerRanking && (
                   <div className="pt-3 border-t space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Points :</span>
+                      <span>{t("pointsLabel")}</span>
                       <span className="font-medium">
                         {playerRanking.points}
                       </span>
@@ -297,12 +297,12 @@ export default function PlayerDashboardPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Ronde</TableHead>
+                      <TableHead>{t("round")}</TableHead>
                       <TableHead>{t("opponent")}</TableHead>
                       <TableHead>{t("result")}</TableHead>
-                      <TableHead>Score</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t("score")}</TableHead>
+                      <TableHead>{t("date")}</TableHead>
+                      <TableHead>{t("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -419,7 +419,7 @@ export default function PlayerDashboardPage() {
                 <Link href={`/tournaments/${id}/matches`}>
                   <div className="text-center">
                     <Clock className="w-6 h-6 mx-auto mb-2" />
-                    <div className="font-medium">Tous les matchs</div>
+                    <div className="font-medium">{t("allMatches")}</div>
                     <div className="text-xs text-muted-foreground">
                       {t("viewSchedule")}
                     </div>

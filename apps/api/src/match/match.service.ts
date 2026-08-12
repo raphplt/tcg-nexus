@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Deck } from "src/deck/entities/deck.entity";
@@ -130,7 +126,10 @@ export class MatchService {
         where: { id: tournamentId },
       });
     if (!tournament) {
-      throw new NotFoundException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
     if (
       !skipStatusCheck &&
@@ -193,10 +192,16 @@ export class MatchService {
     }
 
     if (!tournament || !playerA || !playerB) {
-      throw new BadRequestException("Données invalides");
+      throw new BadRequestException({
+        code: "INVALID_DATA",
+        message: "Données invalides",
+      });
     }
     if (!round || !phase || !scheduledDate || !notes) {
-      throw new BadRequestException("Données invalides");
+      throw new BadRequestException({
+        code: "INVALID_DATA",
+        message: "Données invalides",
+      });
     }
 
     const matchData: Partial<Match> = {
@@ -385,7 +390,10 @@ export class MatchService {
           lock: { mode: "pessimistic_write" },
         });
         if (!tournament) {
-          throw new NotFoundException("Tournoi non trouvé");
+          throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
         }
         if (tournament.status !== TournamentStatus.IN_PROGRESS) {
           throw new BadRequestException(
@@ -471,7 +479,10 @@ export class MatchService {
       });
 
       if (!lockedMatch) {
-        throw new NotFoundException("Match non trouvé");
+        throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
       }
 
       const match = await manager.findOne(Match, {
@@ -487,7 +498,10 @@ export class MatchService {
       });
 
       if (!match) {
-        throw new NotFoundException("Match non trouvé");
+        throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
       }
 
       if (match.status !== MatchStatus.IN_PROGRESS) {
@@ -602,7 +616,10 @@ export class MatchService {
         lock: { mode: "pessimistic_write" },
       });
       if (!lockedMatch) {
-        throw new NotFoundException("Match non trouvé");
+        throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
       }
 
       const match = await manager.findOne(Match, {
@@ -610,7 +627,10 @@ export class MatchService {
         relations: ["tournament", "playerA", "playerB", "winner"],
       });
       if (!match) {
-        throw new NotFoundException("Match non trouvé");
+        throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
       }
 
       if (

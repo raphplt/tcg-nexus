@@ -181,7 +181,9 @@ export default function SealedProductDetailPage({ params }: PageProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Vendre ce produit</CardTitle>
+                <CardTitle className="text-lg">
+                  {t("sellThisProduct")}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <SellSealedForm sealedProductId={product.id} />

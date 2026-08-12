@@ -2,6 +2,7 @@ import { Exclude } from "class-transformer";
 import { UserBadge } from "src/badge/entities/user-badge.entity";
 import { Collection } from "src/collection/entities/collection.entity";
 import { Currency } from "src/common/enums/currency";
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { UserRole } from "src/common/enums/user";
 import { Deck } from "src/deck/entities/deck.entity";
 import { Player } from "src/player/entities/player.entity";
@@ -56,6 +57,9 @@ export class User {
     default: Currency.EUR,
   })
   preferredCurrency: Currency;
+
+  @Column({ type: "varchar", length: 10, default: DEFAULT_LOCALE })
+  preferredLocale: string;
 
   @Column({ default: false })
   isPro: boolean;

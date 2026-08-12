@@ -42,24 +42,28 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   value,
   onChange,
   options,
-}) => (
-  <div className="space-y-1.5">
-    <Label>{label}</Label>
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">Tout afficher</SelectItem>
-        {options?.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-);
+}) => {
+  const t = useTranslations("DeckCardFilters");
+
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">{t("showAll")}</SelectItem>
+          {options?.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
 
 interface CardFilterSectionProps {
   searchInput: string;
@@ -138,7 +142,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
                 <SelectContent>
                   <SelectItem value="name">{t("name")}</SelectItem>
                   <SelectItem value="localId">{t("number")}</SelectItem>
-                  <SelectItem value="price">Prix</SelectItem>
+                  <SelectItem value="price">{t("price")}</SelectItem>
                   <SelectItem value="popularity">{t("popularity")}</SelectItem>
                 </SelectContent>
               </Select>
@@ -245,7 +249,7 @@ export const CardFilterSection: React.FC<CardFilterSectionProps> = ({
 
               <div className="flex items-end gap-2">
                 <div className="space-y-1.5 flex-1">
-                  <Label>Prix (€)</Label>
+                  <Label>{t("priceEur")}</Label>
                   <div className="flex items-center gap-1">
                     <Input
                       type="number"

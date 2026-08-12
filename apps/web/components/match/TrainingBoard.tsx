@@ -15,7 +15,7 @@ import {
   trainingMatchService,
 } from "@/services/training-match.service";
 import { TrainingSessionView } from "@/types/training-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 
 interface TrainingBoardProps {
   sessionId: number;
@@ -23,6 +23,7 @@ interface TrainingBoardProps {
 
 export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
   const t = useTranslations("TrainingBoard");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(extractApiErrorMessage(error, t("actionError")));
+      setLastError(translateApiError(error, tError, t("actionError")));
     },
   });
 
@@ -57,7 +58,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       syncSessionInCache(result.session);
     },
     onError: (error: unknown) => {
-      setLastError(extractApiErrorMessage(error, t("responseError")));
+      setLastError(translateApiError(error, tError, t("responseError")));
     },
   });
 
@@ -79,7 +80,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
     return (
       <Card className="border-destructive/40">
         <CardContent className="py-8 text-sm text-destructive">
-          {extractApiErrorMessage(sessionQuery.error, t("loadError"))}
+          {translateApiError(sessionQuery.error, tError, t("loadError"))}
         </CardContent>
       </Card>
     );
@@ -95,14 +96,14 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
       isBusy={isBusy}
       headerAside={
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-          <Badge variant="outline">Mode synchrone</Badge>
+          <Badge variant="outline">{t("syncMode")}</Badge>
           {isBusy ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               L’IA joue son tour...
             </span>
           ) : (
-            <span>Prêt</span>
+            <span>{t("ready")}</span>
           )}
         </div>
       }
@@ -111,7 +112,7 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
           <Card className="tcg-surface tcg-surface--highlight">
             <CardContent className="space-y-4 p-6">
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Partie terminée</h2>
+                <h2 className="text-2xl font-bold">{t("gameOver")}</h2>
                 <p className="text-sm leading-6 text-slate-600">
                   {session.winnerSide === "PLAYER"
                     ? t("youWon")
@@ -122,10 +123,10 @@ export default function TrainingBoard({ sessionId }: TrainingBoardProps) {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild className="rounded-full">
-                  <Link href="/play#training-ai">Nouvelle partie</Link>
+                  <Link href="/play#training-ai">{t("newGame")}</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-full">
-                  <Link href="/play">Retour à /play</Link>
+                  <Link href="/play">{t("backToPlay")}</Link>
                 </Button>
               </div>
             </CardContent>

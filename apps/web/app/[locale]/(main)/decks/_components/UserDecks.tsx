@@ -45,13 +45,13 @@ export default function UserDecks() {
             <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{t("import")}</span>
-              <span className="sm:hidden">Importer</span>
+              <span className="sm:hidden">{t("importShort")}</span>
             </Button>
           </Link>
           <Link href="/decks/create">
             <Button size="sm">
               <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Nouveau Deck</span>
+              <span className="hidden sm:inline">{t("newDeck")}</span>
               <span className="sm:hidden">{t("new")}</span>
             </Button>
           </Link>

@@ -8,6 +8,7 @@ export interface UpdateProfileData {
   email?: string;
   avatarUrl?: string;
   preferredCurrency?: string;
+  preferredLocale?: string;
 }
 
 export interface UpdatePasswordData {

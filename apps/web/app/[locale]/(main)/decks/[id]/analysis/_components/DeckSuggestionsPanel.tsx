@@ -40,7 +40,7 @@ export function DeckSuggestionsPanel({ analysis }: DeckSuggestionsPanelProps) {
       {analysis.warnings.length > 0 && (
         <Alert variant="destructive" className="border-destructive/60">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Points à surveiller</AlertTitle>
+          <AlertTitle>{t("watchPoints")}</AlertTitle>
           <AlertDescription>
             <ul className="space-y-1 text-sm">
               {analysis.warnings.map((w, i) => (

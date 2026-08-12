@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
 import { Repository } from "typeorm";
@@ -502,7 +497,10 @@ export class DeckService {
       deck: { id: deckId },
     });
     if (!result.affected) {
-      throw new NotFoundException("Ce deck n'est pas dans votre bibliothèque");
+      throw new ForbiddenException({
+        code: "DECK_NOT_IN_LIBRARY",
+        message: "Ce deck n'est pas dans votre bibliothèque",
+      });
     }
     return { saved: false };
   }
@@ -621,7 +619,10 @@ export class DeckService {
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException("Ce code de partage a expiré");
+      throw new NotFoundException({
+        code: "SHARE_CODE_EXPIRED",
+        message: "Ce code de partage a expiré",
+      });
     }
 
     const sourceDeck = deckShare.deck;
@@ -665,7 +666,10 @@ export class DeckService {
 
     const now = new Date();
     if (deckShare.expiresAt && deckShare.expiresAt < now) {
-      throw new NotFoundException("Ce code de partage a expiré");
+      throw new NotFoundException({
+        code: "SHARE_CODE_EXPIRED",
+        message: "Ce code de partage a expiré",
+      });
     }
 
     return deckShare.deck;

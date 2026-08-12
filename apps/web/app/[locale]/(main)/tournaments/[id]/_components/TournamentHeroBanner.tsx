@@ -259,7 +259,7 @@ export function TournamentHeroBanner({
               <CardContent className="p-3 text-center">
                 <Swords className="size-5 mx-auto mb-1 text-primary" />
                 <p className="text-lg font-bold">{matchesCount}</p>
-                <p className="text-xs text-muted-foreground">Matchs</p>
+                <p className="text-xs text-muted-foreground">{t("matches")}</p>
               </CardContent>
             </Card>
           </div>

@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
+import { NotificationI18nService } from "./notification-i18n.service";
+import { MailI18nService } from "../mail/mail-i18n.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { UserService } from "../user/user.service";
@@ -61,11 +64,17 @@ export class NotificationListener {
     private readonly notificationService: NotificationService,
     private readonly emailService: EmailNotificationService,
     private readonly userService: UserService,
+    private readonly mailI18n: MailI18nService,
+    private readonly notificationI18n: NotificationI18nService,
   ) {}
 
-  private formatAmount(amount: number, currency = "EUR"): string {
+  private formatAmount(
+    amount: number,
+    currency = "EUR",
+    locale: string = DEFAULT_LOCALE,
+  ): string {
     try {
-      return new Intl.NumberFormat("fr-FR", {
+      return new Intl.NumberFormat(locale, {
         style: "currency",
         currency,
       }).format(amount);
@@ -74,20 +83,30 @@ export class NotificationListener {
     }
   }
 
+  /**
+   * `type` sert aussi de clé de traduction : title/body sont rendus dans la
+   * langue du destinataire, et la clé est conservée pour un rendu ultérieur.
+   */
   private async safeCreate(
     userId: number,
-    title: string,
-    body: string,
     type: string,
     data: Record<string, any>,
+    params: Record<string, any> = {},
   ): Promise<void> {
     try {
+      const user = await this.userService.findById(userId);
+      const rendered = this.notificationI18n.render(
+        type,
+        user?.preferredLocale,
+        params,
+      );
       await this.notificationService.createNotification(
         userId,
-        title,
-        body,
+        rendered.title,
+        rendered.body,
         type,
         data,
+        { key: type, params },
       );
     } catch (err) {
       this.logger.error(
@@ -98,18 +117,22 @@ export class NotificationListener {
 
   private async sendEmailToUser(
     userId: number,
-    subject: string,
     template: string,
     context: Record<string, any>,
   ): Promise<void> {
     try {
       const user = await this.userService.findById(userId);
       if (!user?.email) return;
+      const locale = user.preferredLocale;
       await this.emailService.sendCritical(
         user.email,
-        subject,
+        this.mailI18n.subject(template, locale, context),
         template,
-        context,
+        {
+          ...context,
+          t: this.mailI18n.texts(template, locale),
+          lang: this.mailI18n.resolveLocale(locale),
+        },
       );
     } catch (err) {
       this.logger.error(
@@ -124,14 +147,12 @@ export class NotificationListener {
     for (const userId of payload.participantUserIds) {
       await this.safeCreate(
         userId,
-        "Tournoi démarré",
-        `Le tournoi "${payload.name}" a démarré.`,
         "tournament.started",
         { link, tournamentId: payload.tournamentId },
+        { name: payload.name },
       );
       await this.sendEmailToUser(
         userId,
-        "Votre tournoi a démarré",
         "tournament-started",
         { name: payload.name, link },
       );
@@ -146,14 +167,12 @@ export class NotificationListener {
     for (const entry of payload.rankings) {
       await this.safeCreate(
         entry.userId,
-        "Tournoi terminé",
-        `Résultats du tournoi "${payload.name}" disponibles.`,
         "tournament.finished",
         { link, tournamentId: payload.tournamentId, rank: entry.rank },
+        { name: payload.name },
       );
       await this.sendEmailToUser(
         entry.userId,
-        "Résultats du tournoi",
         "tournament-finished",
         { name: payload.name, link, rank: entry.rank },
       );
@@ -167,14 +186,11 @@ export class NotificationListener {
     const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
     await this.safeCreate(
       payload.userId,
-      "Match demain",
-      "Vous avez un match prévu demain.",
       "tournament.match_reminder",
       { link, tournamentId: payload.tournamentId, matchId: payload.matchId },
     );
     await this.sendEmailToUser(
       payload.userId,
-      "Rappel: votre match est demain",
       "match-reminder",
       { link },
     );
@@ -191,8 +207,6 @@ export class NotificationListener {
     if (payload.playerAUserId) {
       await this.safeCreate(
         payload.playerAUserId,
-        "Match prêt",
-        "Votre match peut commencer.",
         "match.ready",
         data,
       );
@@ -200,8 +214,6 @@ export class NotificationListener {
     if (payload.playerBUserId) {
       await this.safeCreate(
         payload.playerBUserId,
-        "Match prêt",
-        "Votre match peut commencer.",
         "match.ready",
         data,
       );
@@ -212,10 +224,9 @@ export class NotificationListener {
   async onBadgeUnlocked(payload: BadgeUnlockedPayload): Promise<void> {
     await this.safeCreate(
       payload.userId,
-      "Nouveau badge débloqué",
-      `Vous avez obtenu le badge "${payload.badgeName}".`,
       "badge.unlocked",
       { link: "/profile", badgeCode: payload.badgeCode },
+      { badgeName: payload.badgeName },
     );
   }
 
@@ -223,10 +234,9 @@ export class NotificationListener {
   async onFollowCreated(payload: FollowCreatedPayload): Promise<void> {
     await this.safeCreate(
       payload.followedUserId,
-      "Nouveau follower",
-      `${payload.followerName} vous suit désormais.`,
       "follow.created",
       { link: `/users/${payload.followerUserId}` },
+      { followerName: payload.followerName },
     );
   }
 
@@ -234,10 +244,9 @@ export class NotificationListener {
   async onFollowRemoved(payload: FollowRemovedPayload): Promise<void> {
     await this.safeCreate(
       payload.followedUserId,
-      "Vous avez perdu un follower",
-      `${payload.followerName} ne vous suit plus.`,
       "follow.removed",
       { link: `/users/${payload.followerUserId}` },
+      { followerName: payload.followerName },
     );
   }
 
@@ -247,14 +256,12 @@ export class NotificationListener {
     const amount = this.formatAmount(payload.total, payload.currency);
     await this.safeCreate(
       payload.sellerUserId,
-      "Vente réalisée",
-      `Vous avez vendu pour ${amount}.`,
       "marketplace.sale",
       { link, orderId: payload.orderId, total: payload.total },
+      { amount },
     );
     await this.sendEmailToUser(
       payload.sellerUserId,
-      "Vente réalisée",
       "marketplace-sale",
       { orderId: payload.orderId, total: payload.total, link },
     );
@@ -265,8 +272,6 @@ export class NotificationListener {
     const link = `/orders/${payload.orderId}`;
     await this.safeCreate(
       payload.buyerUserId,
-      "Commande expédiée",
-      "Votre commande a été expédiée.",
       "order.shipped",
       {
         link,
@@ -276,7 +281,6 @@ export class NotificationListener {
     );
     await this.sendEmailToUser(
       payload.buyerUserId,
-      "Votre commande a été expédiée",
       "order-shipped",
       {
         orderId: payload.orderId,

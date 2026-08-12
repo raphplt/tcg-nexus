@@ -301,10 +301,10 @@
 //     let returnVal = "";
 //     switch (role) {
 //       case "main":
-//         returnVal = "Principal";
+//         returnVal = t("main");
 //         break;
 //       case "side":
-//         returnVal = "Secondaire";
+//         returnVal = t("side");
 //         break;
 //     }
 //     return returnVal;
@@ -325,11 +325,11 @@
 //       const response = await decksService.update(parseInt(id), updateData);
 
 //       if (response) {
-//         toast.success("Deck modifié avec succès !");
+//         toast.success(t("updated"));
 //       }
 //     } catch (err) {
 //       console.error(err);
-//       toast.error("Erreur lors de la modification du deck");
+//       toast.error(t("updateError"));
 //     } finally {
 //       setLoading(false);
 //     }
@@ -382,11 +382,11 @@
 //             name="name"
 //             render={({ field }) => (
 //               <FormItem>
-//                 <FormLabel>Nom du deck</FormLabel>
+//                 <FormLabel>{t("name")}</FormLabel>
 //                 <FormControl>
 //                   <Input
 //                     {...field}
-//                     placeholder="Nom du deck"
+//                     placeholder={t("name")}
 //                   />
 //                 </FormControl>
 //                 <FormMessage />
@@ -399,14 +399,14 @@
 //             name="formatId"
 //             render={({ field }) => (
 //               <FormItem>
-//                 <FormLabel>Format</FormLabel>
+//                 <FormLabel>{t("format")}</FormLabel>
 //                 <FormControl>
 //                   <Select
 //                     value={field.value ? field.value.toString() : ""}
 //                     onValueChange={(v) => field.onChange(Number(v))}
 //                   >
 //                     <SelectTrigger>
-//                       <SelectValue placeholder="Choisissez un format" />
+//                       <SelectValue placeholder={t("chooseFormat")} />
 //                     </SelectTrigger>
 //                     <SelectContent>
 //                       {formats.map((f: FormatOption) => (
@@ -437,7 +437,7 @@
 //                     onCheckedChange={field.onChange}
 //                   />
 //                 </FormControl>
-//                 <FormLabel>Public</FormLabel>
+//                 <FormLabel>{t("isPublic")}</FormLabel>
 //               </FormItem>
 //             )}
 //           />
@@ -445,7 +445,7 @@
 //           {/* Liste des cartes */}
 //           <div>
 //             <div className="flex justify-between items-center mb-2">
-//               <FormLabel>Cartes ajoutées</FormLabel>
+//               <FormLabel>{t("addedCards")}</FormLabel>
 //               <Button
 //                 type="button"
 //                 onClick={() => setShowCardModal(true)}
@@ -525,7 +525,7 @@
 //               type="submit"
 //               disabled={loading}
 //             >
-//               {loading ? <Loader2 className="animate-spin" /> : "Modifier"}
+//               {loading ? <Loader2 className="animate-spin" /> : t("submit")}
 //             </Button>
 //           </div>
 //         </form>
@@ -542,7 +542,7 @@
 //           </DialogHeader>
 //           <div className="grid gap-4">
 //             <div className="grid gap-3">
-//               <Label htmlFor="cardQty">Quantité</Label>
+//               <Label htmlFor="cardQty">{t("quantity")}</Label>
 //               <Input
 //                 id="cardQty"
 //                 type="number"
@@ -559,7 +559,7 @@
 //               />
 //             </div>
 //             <div className="grid gap-3">
-//               <Label>Rôle</Label>
+//               <Label>{t("role")}</Label>
 //               <Select
 //                 defaultValue={currentCard?.role ?? ""}
 //                 onValueChange={(v) => {
@@ -571,18 +571,18 @@
 //                 }}
 //               >
 //                 <SelectTrigger className="w-32">
-//                   <SelectValue placeholder="Choisir un rôle" />
+//                   <SelectValue placeholder={t("chooseRole")} />
 //                 </SelectTrigger>
 //                 <SelectContent>
-//                   <SelectItem value="main">Principal</SelectItem>
-//                   <SelectItem value="side">Secondaire</SelectItem>
+//                   <SelectItem value="main">{t("main")}</SelectItem>
+//                   <SelectItem value="side">{t("side")}</SelectItem>
 //                 </SelectContent>
 //               </Select>
 //             </div>
 //           </div>
 //           <DialogFooter>
 //             <DialogClose asChild>
-//               <Button variant="outline">Annuler</Button>
+//               <Button variant="outline">{t("cancel")}</Button>
 //             </DialogClose>
 //             <Button
 //               onClick={() => {
@@ -610,6 +610,7 @@
 // };
 
 //TODO : j'ai la flemme de corriger ce code mais il y a des erreurs partout
+import { useTranslations } from "next-intl";
 import React from "react";
 import { DeckFormProps } from "@/types/formDeck";
 

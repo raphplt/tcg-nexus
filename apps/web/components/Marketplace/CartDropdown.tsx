@@ -137,7 +137,7 @@ const CartDropdown = () => {
             <DropdownMenuSeparator />
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold">Total:</span>
+                <span className="text-sm font-semibold">{t("totalLabel")}</span>
                 <span className="text-lg font-bold text-primary">
                   {formatPrice(total, currency)}
                 </span>

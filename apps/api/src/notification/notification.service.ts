@@ -27,6 +27,7 @@ export class NotificationService {
     body: string,
     type = "info",
     data: Record<string, any> | null = null,
+    translation?: { key: string; params: Record<string, any> },
   ): Promise<Notification> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
@@ -39,6 +40,8 @@ export class NotificationService {
       body,
       type,
       data,
+      translationKey: translation?.key ?? null,
+      translationParams: translation?.params ?? null,
       isRead: false,
     });
 

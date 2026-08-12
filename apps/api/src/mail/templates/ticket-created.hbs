@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{lang}}">
 <head>
   <meta charset="utf-8" />
   <style>
@@ -16,19 +16,19 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>TCG Nexus - Support</h1>
+      <h1>{{t.support}}</h1>
     </div>
     <div class="content">
-      <p>Bonjour,</p>
-      <p>Votre ticket de support a bien été créé. Notre équipe vous répondra dans les meilleurs délais.</p>
+      <p>{{t.greeting}}</p>
+      <p>{{t.intro}}</p>
       <div class="ticket-box">
         <strong>Ticket #{{ticketId}}</strong><br/>
-        <strong>Sujet :</strong> {{subject}}
+        <strong>{{t.subjectLabel}}</strong> {{subject}}
       </div>
-      <p>Vous pouvez suivre l'avancement de votre ticket depuis votre espace support sur TCG Nexus.</p>
+      <p>{{t.outro}}</p>
     </div>
     <div class="footer">
-      <p>&copy; TCG Nexus — Ce message est automatique, merci de ne pas y répondre.</p>
+      <p>{{t.automatic}}</p>
     </div>
   </div>
 </body>

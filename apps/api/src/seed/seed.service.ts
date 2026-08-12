@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -611,6 +612,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -626,6 +628,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -641,6 +644,7 @@ export class SeedService {
         isActive: true,
         emailVerified: false,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -659,6 +663,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -715,6 +720,7 @@ export class SeedService {
       isActive: true,
       emailVerified: true,
       preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
       decks: [],
       collections: [],
     });
@@ -770,6 +776,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });
@@ -1031,6 +1038,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
+      preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });

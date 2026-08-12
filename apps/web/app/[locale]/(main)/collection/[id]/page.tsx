@@ -106,7 +106,7 @@ const CollectionDetailPage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Chargement...</p>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -321,15 +321,19 @@ const CollectionDetailPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-24">Image</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Set</TableHead>
-                      <TableHead className="text-center">Quantité</TableHead>
-                      <TableHead>État</TableHead>
-                      <TableHead>Rareté</TableHead>
+                      <TableHead className="w-24">{t("image")}</TableHead>
+                      <TableHead>{t("name")}</TableHead>
+                      <TableHead>{t("set")}</TableHead>
+                      <TableHead className="text-center">
+                        {t("quantity")}
+                      </TableHead>
+                      <TableHead>{t("condition")}</TableHead>
+                      <TableHead>{t("rarity")}</TableHead>
                       <TableHead className="text-center">PV</TableHead>
-                      <TableHead>Types</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>{t("types")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -5,13 +5,14 @@ import { Award } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { badgeService } from "@/services/badge.service";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface UserBadgesBlockProps {
   userId: number;
 }
 
 export function UserBadgesBlock({ userId }: UserBadgesBlockProps) {
+  const t = useTranslations("PublicProfile");
   const locale = useLocale();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-badges", userId],
@@ -26,7 +27,7 @@ export function UserBadgesBlock({ userId }: UserBadgesBlockProps) {
         <div className="p-2 bg-yellow-500/10 rounded-lg">
           <Award className="w-5 h-5 text-yellow-500" />
         </div>
-        <h2 className="text-xl font-semibold">Badges</h2>
+        <h2 className="text-xl font-semibold">{t("badges")}</h2>
         {data && (
           <span className="text-xs text-muted-foreground ml-auto">
             {data.length}
@@ -35,9 +36,7 @@ export function UserBadgesBlock({ userId }: UserBadgesBlockProps) {
       </div>
 
       {isLoading && <Skeleton className="h-24 w-full" />}
-      {isError && (
-        <p className="text-sm text-destructive">Erreur de chargement</p>
-      )}
+      {isError && <p className="text-sm text-destructive">{t("loadError")}</p>}
 
       {!isLoading && !isError && hasBadges && (
         <div className="space-y-3">

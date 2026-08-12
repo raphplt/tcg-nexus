@@ -112,7 +112,7 @@ export default function SellerSalesPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
-            <Link href="/profile">Gérer mes annonces</Link>
+            <Link href="/profile">{t("manageListings")}</Link>
           </Button>
           <Button asChild>
             <Link href="/marketplace/create">

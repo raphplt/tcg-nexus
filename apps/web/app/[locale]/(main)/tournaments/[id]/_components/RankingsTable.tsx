@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import {
   Table,
@@ -14,12 +15,13 @@ interface RankingsTableProps {
 }
 
 export function RankingsTable({ rankings }: RankingsTableProps) {
+  const t = useTranslations("RankingsTable");
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Rang</TableHead>
-          <TableHead>Points</TableHead>
+          <TableHead>{t("rank")}</TableHead>
+          <TableHead>{t("points")}</TableHead>
           <TableHead className="hidden sm:table-cell">V</TableHead>
           <TableHead className="hidden sm:table-cell">D</TableHead>
           <TableHead className="hidden sm:table-cell">N</TableHead>

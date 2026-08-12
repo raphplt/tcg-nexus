@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react";
 import Image from "next/image";
@@ -15,6 +16,7 @@ interface UserDecksTabProps {
 }
 
 export function UserDecksTab({ userId }: UserDecksTabProps) {
+  const t = useTranslations("PublicProfile");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-public-decks", userId],
     queryFn: () => decksService.getPublicDecksByUser(userId),
@@ -30,10 +32,12 @@ export function UserDecksTab({ userId }: UserDecksTabProps) {
     );
   }
   if (isError) {
-    return <p className="text-sm text-destructive">Erreur de chargement</p>;
+    return <p className="text-sm text-destructive">{t("loadError")}</p>;
   }
   if (!data || data.items.length === 0) {
-    return <p className="text-sm text-muted-foreground">Aucun deck public</p>;
+    return (
+      <p className="text-sm text-muted-foreground">{t("noPublicDecks")}</p>
+    );
   }
 
   return (
@@ -46,6 +50,7 @@ export function UserDecksTab({ userId }: UserDecksTabProps) {
 }
 
 function PublicDeckCard({ deck }: { deck: Deck }) {
+  const t = useTranslations("PublicProfile");
   const previewCards = (deck.cards ?? []).slice(0, 3);
 
   return (
@@ -66,7 +71,7 @@ function PublicDeckCard({ deck }: { deck: Deck }) {
                   {deckCard.card?.image ? (
                     <Image
                       src={`${deckCard.card.image}/high.webp`}
-                      alt={deckCard.card.name || "Carte"}
+                      alt={deckCard.card.name || t("cardAlt")}
                       fill
                       className="object-contain drop-shadow-lg"
                     />
@@ -90,7 +95,7 @@ function PublicDeckCard({ deck }: { deck: Deck }) {
             className="absolute top-3 right-3 z-20 bg-primary/90 hover:bg-primary backdrop-blur-md shadow-lg"
             variant="default"
           >
-            {deck.format?.type || "Standard"}
+            {deck.format?.type || t("standardFormat")}
           </Badge>
         </div>
 

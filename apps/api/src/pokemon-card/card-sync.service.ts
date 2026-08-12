@@ -1,4 +1,4 @@
-import { Injectable, Logger, ConflictException } from "@nestjs/common";
+import { ConflictException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -129,7 +129,10 @@ export class CardSyncService {
     cardsSynced: number;
   }> {
     if (this.isSyncing) {
-      throw new ConflictException("Une synchronisation est déjà en cours.");
+      throw new ConflictException({
+        code: "SYNC_ALREADY_RUNNING",
+        message: "Une synchronisation est déjà en cours.",
+      });
     }
 
     this.isSyncing = true;

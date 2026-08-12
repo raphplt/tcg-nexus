@@ -256,7 +256,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
         <CardContent className="space-y-4">
           {/* Statut actuel */}
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Statut :</span>
+            <span className="text-sm font-medium">{t("status")}</span>
             <Badge className={statusInfo.color}>
               {statusInfo.icon}
               <span className="ml-1">
@@ -307,19 +307,19 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             <div className="pt-4 border-t">
               <div className="text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span>Ronde actuelle :</span>
+                  <span>{t("currentRound")}</span>
                   <span className="font-medium">
                     {tournament.currentRound}/{tournament.totalRounds}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Matches :</span>
+                  <span>{t("matchesLabel")}</span>
                   <span className="font-medium">
                     {tournament.matches?.length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Joueurs :</span>
+                  <span>{t("playersLabel")}</span>
                   <span className="font-medium">
                     {tournament.players?.length || 0}
                   </span>
@@ -347,7 +347,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
                   <p>{t("startConfirm")}</p>
 
                   <div className="space-y-2">
-                    <Label htmlFor="seeding-method">Méthode de seeding :</Label>
+                    <Label htmlFor="seeding-method">{t("seedingMethod")}</Label>
                     <Select
                       value={actionData.startOptions?.seedingMethod || "random"}
                       onValueChange={(value) =>
@@ -364,9 +364,13 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="random">Aléatoire</SelectItem>
-                        <SelectItem value="ranking">Par classement</SelectItem>
-                        <SelectItem value="elo">Par ELO</SelectItem>
+                        <SelectItem value="random">
+                          {t("seedRandom")}
+                        </SelectItem>
+                        <SelectItem value="ranking">
+                          {t("seedRanking")}
+                        </SelectItem>
+                        <SelectItem value="elo">{t("seedElo")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -403,7 +407,7 @@ export function TournamentControls({ tournament }: TournamentControlsProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => handleAction(confirmAction!)}
               disabled={isLoading}

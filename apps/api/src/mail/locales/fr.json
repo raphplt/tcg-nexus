@@ -1,0 +1,45 @@
+{
+  "common": {
+    "brand": "TCG Nexus",
+    "support": "TCG Nexus - Support",
+    "greeting": "Bonjour,",
+    "automatic": "© TCG Nexus — Ce message est automatique, merci de ne pas y répondre."
+  },
+  "ticket-created": {
+    "subject": "[TCG Nexus] Ticket #{ticketId} créé : {subject}",
+    "intro": "Votre ticket de support a bien été créé. Notre équipe vous répondra dans les meilleurs délais.",
+    "subjectLabel": "Sujet :",
+    "outro": "Vous pouvez suivre l'avancement de votre ticket depuis votre espace support sur TCG Nexus."
+  },
+  "ticket-reply": {
+    "subject": "[TCG Nexus] Nouvelle réponse sur le ticket #{ticketId} : {ticketSubject}",
+    "intro": "Une nouvelle réponse a été ajoutée à votre ticket",
+    "outro": "Connectez-vous à votre espace support sur TCG Nexus pour consulter la conversation complète et répondre."
+  },
+  "tournament-started": {
+    "subject": "[TCG Nexus] Le tournoi {name} a démarré",
+    "title": "Le tournoi {name} a démarré",
+    "intro": "Bonne chance ! Suivez le bracket en direct :",
+    "action": "Ouvrir le tournoi"
+  },
+  "tournament-finished": {
+    "subject": "[TCG Nexus] Le tournoi {name} est terminé",
+    "action": "Voir les résultats détaillés"
+  },
+  "marketplace-sale": {
+    "subject": "[TCG Nexus] Vente réalisée",
+    "title": "Vente réalisée",
+    "action": "Voir la commande"
+  },
+  "order-shipped": {
+    "subject": "[TCG Nexus] Votre commande a été expédiée",
+    "title": "Votre commande a été expédiée",
+    "action": "Suivre la commande"
+  },
+  "match-reminder": {
+    "subject": "[TCG Nexus] Rappel : votre match est demain",
+    "title": "Rappel : votre match est demain",
+    "intro": "N'oubliez pas votre match prévu dans 24h.",
+    "details": "Détails du match"
+  }
+}

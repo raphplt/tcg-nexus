@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Award, Medal, RefreshCw, TrendingUp, Trophy } from "lucide-react";
 import React from "react";
@@ -21,6 +22,7 @@ interface RankingsManagerProps {
 }
 
 export function RankingsManager({ tournamentId }: RankingsManagerProps) {
+  const t = useTranslations("RankingsManager");
   const { data: tournament, isLoading } = useQuery<Tournament>({
     queryKey: ["tournament", tournamentId],
     queryFn: () => tournamentService.getById(String(tournamentId)),
@@ -81,10 +83,9 @@ export function RankingsManager({ tournamentId }: RankingsManagerProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center h-64 text-center">
           <Trophy className="size-12 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium">Classement non disponible</h3>
+          <h3 className="text-lg font-medium">{t("unavailable")}</h3>
           <p className="text-muted-foreground mt-2 max-w-md">
-            Le classement sera disponible une fois que les premiers matches
-            auront été joués.
+            {t("availableAfterMatches")}
           </p>
         </CardContent>
       </Card>
@@ -132,7 +133,7 @@ export function RankingsManager({ tournamentId }: RankingsManagerProps) {
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Pts</p>
+                        <p className="text-muted-foreground">{t("pts")}</p>
                         <p className="font-bold">{ranking.points}</p>
                       </div>
                     </div>
@@ -156,12 +157,12 @@ export function RankingsManager({ tournamentId }: RankingsManagerProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="w-16">Rang</TableHead>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead className="text-center">Victoires</TableHead>
-                  <TableHead className="text-center">Défaites</TableHead>
-                  <TableHead className="text-center">Ratio</TableHead>
-                  <TableHead className="text-center">Points</TableHead>
+                  <TableHead className="w-16">{t("rank")}</TableHead>
+                  <TableHead>{t("player")}</TableHead>
+                  <TableHead className="text-center">{t("wins")}</TableHead>
+                  <TableHead className="text-center">{t("losses")}</TableHead>
+                  <TableHead className="text-center">{t("ratio")}</TableHead>
+                  <TableHead className="text-center">{t("points")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

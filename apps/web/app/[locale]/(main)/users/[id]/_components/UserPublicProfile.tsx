@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { notFound, useParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,7 @@ import { UserBadgesBlock } from "./UserBadgesBlock";
 import { UserMarketplaceBlock } from "./UserMarketplaceBlock";
 
 export default function UserPublicProfile() {
+  const t = useTranslations("PublicProfile");
   const { id } = useParams();
   const userId = Number(id);
 
@@ -53,8 +55,8 @@ export default function UserPublicProfile() {
         <div className="lg:col-span-2">
           <Tabs defaultValue="decks" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-              <TabsTrigger value="decks">Decks publics</TabsTrigger>
-              <TabsTrigger value="tournaments">Tournois</TabsTrigger>
+              <TabsTrigger value="decks">{t("publicDecks")}</TabsTrigger>
+              <TabsTrigger value="tournaments">{t("tournaments")}</TabsTrigger>
             </TabsList>
             <TabsContent value="decks">
               <UserDecksTab userId={userId} />

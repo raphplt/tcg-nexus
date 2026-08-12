@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import React, { useState, useEffect, useRef } from "react";
 import {
   Popover,
@@ -25,6 +26,7 @@ interface CardComboboxProps {
 }
 
 export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
+  const t = useTranslations("CardSelector");
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState<string>("");
   const [cards, setCards] = useState<PokemonCardType[]>([]);
@@ -118,12 +120,12 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
-          {selectedCard ? selectedCard.name : "Sélectionner une carte"}
+          {selectedCard ? selectedCard.name : t("selectCard")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-2">
         <Input
-          placeholder="Rechercher une carte..."
+          placeholder={t("searchPlaceholder")}
           value={input}
           onChange={(e) => handleSearchChange(e.target.value)}
         />
@@ -155,14 +157,14 @@ export function CardSelector({ onSelect, resetSignal }: CardComboboxProps) {
             />
             <Select defaultValue={role} onValueChange={setRole}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="Choisir" />
+                <SelectValue placeholder={t("choose")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="main">Principal</SelectItem>
-                <SelectItem value="side">Secondaire</SelectItem>
+                <SelectItem value="main">{t("main")}</SelectItem>
+                <SelectItem value="side">{t("side")}</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={handleAddCard}>Ajouter</Button>
+            <Button onClick={handleAddCard}>{t("add")}</Button>
           </div>
         )}
       </PopoverContent>

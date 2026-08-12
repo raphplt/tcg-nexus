@@ -12,6 +12,7 @@ export interface User {
   emailVerified?: boolean;
   player?: Player;
   preferredCurrency?: string;
+  preferredLocale?: string;
   createdAt: Date;
 }
 

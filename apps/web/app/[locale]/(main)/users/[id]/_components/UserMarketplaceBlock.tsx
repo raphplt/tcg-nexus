@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingBag, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ interface UserMarketplaceBlockProps {
 }
 
 export function UserMarketplaceBlock({ userId }: UserMarketplaceBlockProps) {
+  const t = useTranslations("PublicProfile");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-marketplace-stats", userId],
     queryFn: () => marketplaceService.getSellerStatistics(userId),
@@ -25,11 +27,11 @@ export function UserMarketplaceBlock({ userId }: UserMarketplaceBlockProps) {
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {isLoading && <Skeleton className="h-16 w-full" />}
-        {isError && <p className="text-destructive">Erreur de chargement</p>}
+        {isError && <p className="text-destructive">{t("loadError")}</p>}
         {data && (
           <>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Ventes</span>
+              <span className="text-muted-foreground">{t("sales")}</span>
               <span className="font-medium">{data.totalSales ?? 0}</span>
             </div>
             <div className="flex justify-between">

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import React from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,11 +17,12 @@ interface ParticipantsTableProps {
 }
 
 export function ParticipantsTable({ participants }: ParticipantsTableProps) {
+  const t = useTranslations("ParticipantsTable");
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Joueur</TableHead>
+          <TableHead>{t("player")}</TableHead>
           <TableHead className="hidden sm:table-cell">ID</TableHead>
         </TableRow>
       </TableHeader>

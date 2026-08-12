@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Award, Medal, TrendingUp, Trophy } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import React from "react";
@@ -43,6 +44,7 @@ const PlayerName = ({ player }: { player: any }) => {
 };
 
 export function TabRankings({ rankings }: TabRankingsProps) {
+  const t = useTranslations("TabRankings");
   const sortedRankings = [...rankings].sort((a, b) => a.rank - b.rank);
   const topThree = sortedRankings.slice(0, 3);
 
@@ -77,7 +79,7 @@ export function TabRankings({ rankings }: TabRankingsProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center h-64 text-center">
           <Trophy className="size-12 text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium">Classement non disponible</h3>
+          <h3 className="text-lg font-medium">{t("unavailable")}</h3>
           <p className="text-muted-foreground mt-2 max-w-md">
             Le classement sera disponible une fois que les premiers matches
             auront été joués.
@@ -134,7 +136,9 @@ export function TabRankings({ rankings }: TabRankingsProps) {
                         <p className="text-2xl font-bold text-primary">
                           {ranking.points}
                         </p>
-                        <p className="text-xs text-muted-foreground">Points</p>
+                        <p className="text-xs text-muted-foreground">
+                          {t("points")}
+                        </p>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-green-500">
@@ -173,9 +177,9 @@ export function TabRankings({ rankings }: TabRankingsProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="w-16">Rang</TableHead>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead className="text-center">Points</TableHead>
+                  <TableHead className="w-16">{t("rank")}</TableHead>
+                  <TableHead>{t("player")}</TableHead>
+                  <TableHead className="text-center">{t("points")}</TableHead>
                   <TableHead className="text-center hidden sm:table-cell">
                     V
                   </TableHead>

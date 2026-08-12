@@ -235,7 +235,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
           bgColor="bg-green-500/10"
         />
         <StatCard
-          label="En cours"
+          label={t("statusInProgress")}
           value={stats.inProgress}
           icon={<PlayCircle className="size-5" />}
           color="text-yellow-500"
@@ -262,23 +262,31 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
               <Filter className="size-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Statut" />
+                  <SelectValue placeholder={t("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="scheduled">Planifié</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="finished">Terminé</SelectItem>
-                  <SelectItem value="forfeit">Forfait</SelectItem>
-                  <SelectItem value="cancelled">Annulé</SelectItem>
+                  <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                  <SelectItem value="scheduled">
+                    {t("statusScheduled")}
+                  </SelectItem>
+                  <SelectItem value="in_progress">
+                    {t("statusInProgress")}
+                  </SelectItem>
+                  <SelectItem value="finished">
+                    {t("statusFinished")}
+                  </SelectItem>
+                  <SelectItem value="forfeit">{t("statusForfeit")}</SelectItem>
+                  <SelectItem value="cancelled">
+                    {t("statusCancelled")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Select value={roundFilter} onValueChange={setRoundFilter}>
                 <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Ronde" />
+                  <SelectValue placeholder={t("round")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les rondes</SelectItem>
+                  <SelectItem value="all">{t("allRounds")}</SelectItem>
                   {rounds.map((round) => (
                     <SelectItem key={round} value={round.toString()}>
                       Ronde {round}
@@ -296,10 +304,10 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-16">{t("match")}</TableHead>
                   <TableHead>{t("playerA")}</TableHead>
-                  <TableHead className="text-center">Score</TableHead>
+                  <TableHead className="text-center">{t("score")}</TableHead>
                   <TableHead>{t("playerB")}</TableHead>
-                  <TableHead>Ronde</TableHead>
-                  <TableHead>Statut</TableHead>
+                  <TableHead>{t("round")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
                   <TableHead className="text-right">{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -403,7 +411,7 @@ export function MatchManager({ tournamentId }: MatchManagerProps) {
                               onClick={() => handleEditMatch(match)}
                             >
                               <Edit className="size-4 mr-1" />
-                              Score
+                              {t("score")}
                             </Button>
                           )}
                         </div>

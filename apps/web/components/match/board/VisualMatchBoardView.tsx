@@ -671,6 +671,7 @@ function CombatFeedCard({
   entries: OnlineMatchLogEntry[];
   compact?: boolean;
 }) {
+  const t = useTranslations("MatchBoard");
   return (
     <div
       className={cn(
@@ -697,7 +698,7 @@ function CombatFeedCard({
         ))}
       </AnimatePresence>
       {entries.length === 0 ? (
-        <div className="text-[11px] text-white/20">Aucun événement</div>
+        <div className="text-[11px] text-white/20">{t("noEvent")}</div>
       ) : null}
     </div>
   );

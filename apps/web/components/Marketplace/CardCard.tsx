@@ -167,7 +167,7 @@ export function CardCard({
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Aucune offre</p>
+                <p className="text-sm text-muted-foreground">{t("noOffer")}</p>
               )}
             </div>
           </div>

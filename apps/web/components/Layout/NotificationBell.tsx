@@ -1,5 +1,6 @@
 "use client";
 
+import type { UserNotification } from "@/types/notification";
 import React, { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -38,6 +39,18 @@ export function NotificationBell() {
     deleteNotification,
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+
+  // les notifications récentes portent une clé ; les anciennes gardent leur
+  // texte rendu au moment de l'envoi
+  const renderTitle = (n: UserNotification) =>
+    n.translationKey
+      ? t(`items.${n.translationKey}.title`, n.translationParams ?? {})
+      : n.title;
+
+  const renderBody = (n: UserNotification) =>
+    n.translationKey
+      ? t(`items.${n.translationKey}.body`, n.translationParams ?? {})
+      : n.body;
 
   const formatRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
@@ -212,14 +225,14 @@ export function NotificationBell() {
                         <p
                           className={`text-xs font-semibold leading-none ${!n.isRead ? "text-foreground" : "text-muted-foreground"}`}
                         >
-                          {n.title}
+                          {renderTitle(n)}
                         </p>
                         <span className="text-[10px] text-muted-foreground select-none shrink-0">
                           {formatRelativeTime(n.createdAt)}
                         </span>
                       </div>
                       <p className="text-xs leading-normal text-muted-foreground">
-                        {n.body}
+                        {renderBody(n)}
                       </p>
 
                       {/* CTA dynamic button */}

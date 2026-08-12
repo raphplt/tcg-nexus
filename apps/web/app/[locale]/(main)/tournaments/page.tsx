@@ -629,7 +629,9 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
     >
       <div className="flex items-start gap-4">
         <div className="min-w-24 rounded-md bg-foreground px-3 py-2 text-center text-background">
-          <p className="text-xs uppercase tracking-[0.18em] opacity-70">Date</p>
+          <p className="text-xs uppercase tracking-[0.18em] opacity-70">
+            {t("date")}
+          </p>
           <p className="mt-1 text-sm font-semibold">
             {formatDate(tournament.startDate, locale)}
           </p>

@@ -35,6 +35,14 @@ export class Notification {
   @Column({ type: "jsonb", nullable: true })
   data: Record<string, any> | null;
 
+  // title/body restent rendus pour l'historique ; les nouvelles notifications
+  // sont traduites à l'affichage depuis la clé et ses paramètres
+  @Column({ type: "varchar", nullable: true })
+  translationKey: string | null;
+
+  @Column({ type: "jsonb", nullable: true })
+  translationParams: Record<string, any> | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

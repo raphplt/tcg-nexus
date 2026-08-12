@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "crypto";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
@@ -27,7 +32,10 @@ export class SealedEventService {
       select: ["id"],
     });
     if (!product) {
-      throw new BadRequestException("Produit scellé introuvable");
+      throw new NotFoundException({
+        code: "SEALED_PRODUCT_NOT_FOUND",
+        message: "Produit scellé introuvable",
+      });
     }
 
     // Hash IP pour conformité RGPD (même pattern que CardPopularityService)

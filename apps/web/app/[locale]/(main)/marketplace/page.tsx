@@ -89,7 +89,7 @@ export default function MarketplaceHomePage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <Flame className="w-6 h-6 text-primary" />
-                  <H2>Cartes tendances</H2>
+                  <H2>{t("sections.trendingCards")}</H2>
                 </div>
                 <Button variant="ghost" asChild>
                   <Link href="/marketplace/cards?sortBy=popularity">
@@ -131,7 +131,7 @@ export default function MarketplaceHomePage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <Star className="w-6 h-6 text-primary" />
-                  <H2>Cartes populaires</H2>
+                  <H2>{t("sections.popularCards")}</H2>
                 </div>
                 <Button variant="ghost" asChild>
                   <Link href="/marketplace/cards?sortBy=popularity">

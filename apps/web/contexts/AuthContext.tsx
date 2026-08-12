@@ -1,5 +1,6 @@
 "use client";
 
+import { isSupportedLocale } from "@/i18n/config";
 import { useRouter } from "@/i18n/navigation";
 import React, {
   createContext,
@@ -61,7 +62,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const { user: loggedInUser } = await authService.login(credentials);
       setUser(loggedInUser);
-      router.push("/");
+
+      const preferred = loggedInUser?.preferredLocale;
+      if (isSupportedLocale(preferred)) {
+        router.push("/", { locale: preferred });
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       console.error("Login failed:", error);
       throw error;

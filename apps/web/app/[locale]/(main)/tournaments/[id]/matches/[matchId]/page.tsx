@@ -198,7 +198,7 @@ export default function MatchPage() {
           <div className="lg:col-span-1 space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Informations</CardTitle>
+                <CardTitle>{t("information")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
@@ -260,7 +260,7 @@ export default function MatchPage() {
             {/* Navigation */}
             <Card>
               <CardHeader>
-                <CardTitle>Navigation</CardTitle>
+                <CardTitle>{t("navigation")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button variant="outline" className="w-full" asChild>
@@ -288,7 +288,7 @@ export default function MatchPage() {
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Mode administration</CardTitle>
+                    <CardTitle>{t("adminMode")}</CardTitle>
                   </CardHeader>
                   <CardContent className="text-sm text-muted-foreground">
                     {t("adminNotice")}

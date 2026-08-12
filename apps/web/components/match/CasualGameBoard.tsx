@@ -20,7 +20,7 @@ import type {
   OnlineMatchLogEntry,
   SanitizedGameState,
 } from "@/types/match-online";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
 interface CasualGameBoardProps {
@@ -29,6 +29,7 @@ interface CasualGameBoardProps {
 
 export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   const t = useTranslations("CasualGame");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
   const [sessionView, setSessionView] = useState<CasualSessionView | null>(
@@ -155,7 +156,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
       <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-3 py-8 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" />
-          {extractApiErrorMessage(sessionQuery.error, t("loadError"))}
+          {translateApiError(sessionQuery.error, tError, t("loadError"))}
         </CardContent>
       </Card>
     );

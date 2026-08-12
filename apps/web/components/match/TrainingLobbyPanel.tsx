@@ -21,7 +21,7 @@ import {
   TrainingLobbyView,
   TrainingSessionSummary,
 } from "@/types/training-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 
 const difficultyKeys: Record<TrainingDifficulty, string> = {
   easy: "difficultyEasy",
@@ -30,6 +30,7 @@ const difficultyKeys: Record<TrainingDifficulty, string> = {
 
 export function TrainingLobbyPanel() {
   const t = useTranslations("TrainingLobby");
+  const tError = useTranslations("ApiErrors");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
@@ -104,7 +105,7 @@ export function TrainingLobbyPanel() {
       router.push(`/play/training/${session.sessionId}`);
     },
     onError: (error: unknown) => {
-      setLastError(extractApiErrorMessage(error, t("startError")));
+      setLastError(translateApiError(error, tError, t("startError")));
     },
   });
 
@@ -124,7 +125,7 @@ export function TrainingLobbyPanel() {
       <Card id="training-ai" className="border-destructive/40">
         <CardContent className="space-y-3 p-6">
           <p className="text-sm text-destructive">
-            {extractApiErrorMessage(lobbyQuery.error, t("loadError"))}
+            {translateApiError(lobbyQuery.error, tError, t("loadError"))}
           </p>
           <Button
             variant="outline"
@@ -147,7 +148,7 @@ export function TrainingLobbyPanel() {
               {t("title")}
             </Badge>
             <Badge variant="secondary">BO1</Badge>
-            <Badge variant="outline">Reprise incluse</Badge>
+            <Badge variant="outline">{t("resumeIncluded")}</Badge>
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold leading-tight">

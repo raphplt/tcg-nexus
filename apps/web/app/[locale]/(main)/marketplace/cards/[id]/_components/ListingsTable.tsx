@@ -235,7 +235,7 @@ export function ListingsTable({
           <p className="font-medium">{t("noMatch")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("emptyHelp")}</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/marketplace/create">Mettre cette carte en vente</Link>
+            <Link href="/marketplace/create">{t("sellThisCard")}</Link>
           </Button>
         </div>
       )}

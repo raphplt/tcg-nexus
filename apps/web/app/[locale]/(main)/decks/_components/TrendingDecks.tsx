@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { decksService } from "@/services/decks.service";
 import DeckCard from "./DeckCard";
@@ -6,6 +7,7 @@ import { H2 } from "@components/Shared/Titles";
 import { Flame } from "lucide-react";
 
 export default function TrendingDecks() {
+  const t = useTranslations("TrendingDecks");
   const { data, isLoading } = useQuery({
     queryKey: ["trending-decks"],
     queryFn: () =>
@@ -19,7 +21,7 @@ export default function TrendingDecks() {
   if (isLoading) {
     return (
       <div className="space-y-4 mb-12">
-        <H2>Tendances</H2>
+        <H2>{t("title")}</H2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
@@ -34,7 +36,8 @@ export default function TrendingDecks() {
   return (
     <div className="space-y-6 mb-12">
       <H2 className="flex items-center gap-2">
-        <Flame className="w-6 h-6 text-orange-500" /> Tendances
+        <Flame className="w-6 h-6 text-orange-500" />
+        {t("title")}
       </H2>
 
       <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide">

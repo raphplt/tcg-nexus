@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -38,9 +38,7 @@ export class CollectionItemService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  /**
-   * Ajouter une carte Pokémon dans la wishlist d'un user
-   */
+  // Ajouter une carte Pokémon dans la wishlist d'un user
   async addToWishlist(
     userId: number | string,
     pokemonCardId: string,
@@ -49,31 +47,36 @@ export class CollectionItemService {
 
     // Vérifier que l'utilisateur existe
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+    if (!user) throw new NotFoundException({
+        code: "USER_NOT_FOUND",
+        message: "Utilisateur non trouvé",
+      });
 
     // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
+    if (!card) throw new NotFoundException({
+        code: "CARD_NOT_FOUND",
+        message: "Carte Pokémon non trouvée",
+      });
 
     // Récupérer la wishlist existante (insensible à la casse)
     let wishlist = await this.collectionRepo.findOne({
       where: {
         user: { id: userIdNum },
-        name: "Wishlist", // Utiliser le nom avec majuscule pour cohérence
+        name: "Wishlist",
       },
       relations: ["items", "items.pokemonCard"],
     });
 
     if (!wishlist) {
-      // Créer une wishlist uniquement si elle n'existe vraiment pas (cela ne devrait pas arriver)
       console.warn(
-        `Aucune wishlist trouvée pour l'utilisateur ${userIdNum}. Création d'une wishlist d'urgence.`,
+        `Aucune wishlist trouvée pour l'utilisateur ${userIdNum}. Création en cours`,
       );
       wishlist = this.collectionRepo.create({
         name: "Wishlist",
-        description: "Default wishlist (auto-generated)",
+        description: "Default wishlist",
         user,
         isPublic: false,
       });
@@ -90,7 +93,7 @@ export class CollectionItemService {
 
     // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStateCode.NM },
+      where: { code: CardStatejCode.NM },
     });
 
     if (!defaultCardState) {
@@ -125,13 +128,19 @@ export class CollectionItemService {
 
     // Vérifier que l'utilisateur existe
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+    if (!user) throw new NotFoundException({
+        code: "USER_NOT_FOUND",
+        message: "Utilisateur non trouvé",
+      });
 
     // Vérifier que la carte existe
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
+    if (!card) throw new NotFoundException({
+        code: "CARD_NOT_FOUND",
+        message: "Carte Pokémon non trouvée",
+      });
 
     // Récupérer les Favorites
     const favorites = await this.collectionRepo.findOne({
@@ -193,12 +202,18 @@ export class CollectionItemService {
       where: { id: collectionId as string },
       relations: ["items", "items.pokemonCard", "user"],
     });
-    if (!collection) throw new NotFoundException("Collection non trouvée");
+    if (!collection) throw new NotFoundException({
+        code: "COLLECTION_NOT_FOUND",
+        message: "Collection non trouvée",
+      });
 
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException("Carte Pokémon non trouvée");
+    if (!card) throw new NotFoundException({
+        code: "CARD_NOT_FOUND",
+        message: "Carte Pokémon non trouvée",
+      });
 
     let item = collection.items?.find((i) => i.pokemonCard?.id === card.id);
 
@@ -247,13 +262,19 @@ export class CollectionItemService {
       where: { id: collectionId as string },
       relations: ["items", "items.sealedProduct", "user"],
     });
-    if (!collection) throw new NotFoundException("Collection non trouvée");
+    if (!collection) throw new NotFoundException({
+        code: "COLLECTION_NOT_FOUND",
+        message: "Collection non trouvée",
+      });
 
     const sealedProduct = await this.sealedProductRepo.findOne({
       where: { id: sealedProductId },
     });
     if (!sealedProduct)
-      throw new NotFoundException("Produit scellé non trouvé");
+      throw new NotFoundException({
+        code: "SEALED_PRODUCT_NOT_FOUND",
+        message: "Produit scellé non trouvé",
+      });
 
     const condition = sealedCondition ?? SealedCondition.SEALED;
 
@@ -296,13 +317,19 @@ export class CollectionItemService {
     const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException("Utilisateur non trouvé");
+    if (!user) throw new NotFoundException({
+        code: "USER_NOT_FOUND",
+        message: "Utilisateur non trouvé",
+      });
 
     const sealedProduct = await this.sealedProductRepo.findOne({
       where: { id: sealedProductId },
     });
     if (!sealedProduct)
-      throw new NotFoundException("Produit scellé non trouvé");
+      throw new NotFoundException({
+        code: "SEALED_PRODUCT_NOT_FOUND",
+        message: "Produit scellé non trouvé",
+      });
 
     const wishlist = await this.collectionRepo.findOne({
       where: {

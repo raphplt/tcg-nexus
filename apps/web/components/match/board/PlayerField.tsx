@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { SanitizedPlayerView } from "@/types/match-online";
@@ -35,6 +36,7 @@ export function PlayerField({
   highlightedEmptyBench = false,
   disabled = false,
 }: PlayerFieldProps) {
+  const t = useTranslations("MatchBoard");
   const benchSlots = Array.from(
     { length: MAX_BENCH },
     (_, i) => player.bench[i] ?? null,
@@ -55,7 +57,7 @@ export function PlayerField({
             isOpponent ? "text-rose-200/80" : "text-cyan-200/80",
           )}
         >
-          {isOpponent ? player.name : "Vous"}
+          {isOpponent ? player.name : t("you")}
         </span>
         <span className="text-[10px] text-white/35">
           Main {player.handCount}
@@ -178,7 +180,7 @@ export function PlayerField({
             <div className="relative">
               <GameCard
                 image={player.discard[player.discard.length - 1]?.image}
-                name="Défausse"
+                name={t("discard")}
                 size="sm"
                 disabled
                 className="opacity-70"
@@ -190,7 +192,7 @@ export function PlayerField({
               </div>
             </div>
             <div className="mt-1 text-center text-[8px] uppercase tracking-[0.18em] text-white/30">
-              Défausse
+              {t("discard")}
             </div>
           </div>
         )}

@@ -1293,7 +1293,7 @@ function FinishedPanel({
         {p1Score === p2Score ? (
           <span className="text-amber-500">{t("perfectTie")}</span>
         ) : p1Score > p2Score ? (
-          <span className="text-green-500">Victoire de Joueur 1 ! 🔵</span>
+          <span className="text-green-500">{t("player1Victory")}</span>
         ) : (
           <span className="text-red-500">Victoire de {loserName} ! 🔴</span>
         )}

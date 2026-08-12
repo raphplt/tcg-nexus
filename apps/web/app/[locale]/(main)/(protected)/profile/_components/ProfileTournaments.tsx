@@ -64,11 +64,15 @@ export const ProfileTournaments = () => {
     switch (status) {
       case "FINISHED":
         return (
-          <Badge className="bg-green-500 hover:bg-green-600">Terminé</Badge>
+          <Badge className="bg-green-500 hover:bg-green-600">
+            {t("finished")}
+          </Badge>
         );
       case "IN_PROGRESS":
         return (
-          <Badge className="bg-blue-500 hover:bg-blue-600">En cours</Badge>
+          <Badge className="bg-blue-500 hover:bg-blue-600">
+            {t("inProgress")}
+          </Badge>
         );
       case "REGISTRATION_OPEN":
         return (
@@ -85,7 +89,7 @@ export const ProfileTournaments = () => {
     return (
       <Card className="p-8 text-center">
         <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Aucun profil joueur</h3>
+        <h3 className="text-lg font-semibold mb-2">{t("noPlayerProfile")}</h3>
         <p className="text-muted-foreground">{t("playerProfileRequired")}</p>
       </Card>
     );

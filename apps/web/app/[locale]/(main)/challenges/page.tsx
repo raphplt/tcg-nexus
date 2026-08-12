@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   challengeService,
@@ -10,6 +11,7 @@ import { Target, CalendarDays, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ChallengesPage() {
+  const t = useTranslations("Challenges");
   const { user } = useAuth();
 
   const { data, isLoading, error } = useQuery<ChallengeResponse>({
@@ -28,7 +30,7 @@ export default function ChallengesPage() {
   if (error) {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center">
-        <p className="text-muted-foreground">Could not load challenges.</p>
+        <p className="text-muted-foreground">{t("loadError")}</p>
       </div>
     );
   }
@@ -36,7 +38,7 @@ export default function ChallengesPage() {
   return (
     <div className="container mx-auto max-w-4xl py-8 px-4 space-y-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Challenges</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground">
           Complete daily and weekly challenges to earn XP and level up your
           player profile.
@@ -46,7 +48,7 @@ export default function ChallengesPage() {
       <div className="space-y-6">
         <div className="flex items-center gap-2 border-b pb-2">
           <Target className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Daily Quests</h2>
+          <h2 className="text-xl font-semibold">{t("daily")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data?.daily.length ? (
@@ -64,7 +66,7 @@ export default function ChallengesPage() {
       <div className="space-y-6 pt-4">
         <div className="flex items-center gap-2 border-b pb-2">
           <CalendarDays className="w-5 h-5 text-primary" />
-          <h2 className="text-xl font-semibold">Weekly Quests</h2>
+          <h2 className="text-xl font-semibold">{t("weekly")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data?.weekly.length ? (

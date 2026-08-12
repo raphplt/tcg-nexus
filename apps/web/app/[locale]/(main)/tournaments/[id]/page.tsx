@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { tournamentService } from "@/services/tournament.service";
 import { Tournament } from "@/types/tournament";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 
 import { TournamentHeroBanner } from "./_components/TournamentHeroBanner";
 import {
@@ -31,6 +31,7 @@ import {
 
 function formatDate(date?: string | null) {
   const t = useTranslations("TournamentDetail");
+  const tError = useTranslations("ApiErrors");
   if (!date) return "-";
   try {
     return new Date(date).toLocaleString(undefined, {
@@ -99,6 +100,7 @@ const ErrorView = ({ message }: { message?: string }) => {
 };
 
 export default function TournamentDetailsPage() {
+  const tError = useTranslations("ApiErrors");
   const t = useTranslations("TournamentDetail");
   const { id } = useParams();
   const { user } = useAuth();
@@ -132,7 +134,7 @@ export default function TournamentDetailsPage() {
       );
       await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     } catch (error) {
-      toast.error(extractApiErrorMessage(error, t("registerError")));
+      toast.error(translateApiError(error, tError, t("registerError")));
     }
   };
 
@@ -143,7 +145,7 @@ export default function TournamentDetailsPage() {
       toast.success(t("leftTournament"));
       await queryClient.invalidateQueries({ queryKey: ["tournament", id] });
     } catch (error) {
-      toast.error(extractApiErrorMessage(error, t("unregisterError")));
+      toast.error(translateApiError(error, tError, t("unregisterError")));
       throw error;
     }
   };

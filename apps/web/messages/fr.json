@@ -19,7 +19,8 @@
     "delete": "Supprimer",
     "edit": "Modifier",
     "close": "Fermer",
-    "back": "Retour"
+    "back": "Retour",
+    "seeMore": "Voir plus →"
   },
   "Navigation": {
     "login": "Se connecter",
@@ -186,7 +187,9 @@
     "sections": {
       "seriesAndSets": "Séries et extensions",
       "pocketSets": "Extensions Pokémon TCG Pocket (Mobile)",
-      "latestListings": "Dernières offres"
+      "latestListings": "Dernières offres",
+      "popularCards": "Cartes populaires",
+      "trendingCards": "Cartes tendances"
     },
     "empty": {
       "trending": "Aucune carte en tendance pour le moment",
@@ -229,7 +232,11 @@
     "emptyDescription": "Explorez notre marketplace pour trouver des cartes à ajouter à votre panier",
     "emptyAction": "Découvrir le marketplace",
     "sealedProduct": "Produit scellé",
-    "viewCart": "Voir le panier"
+    "viewCart": "Voir le panier",
+    "summary": "Résumé",
+    "itemColumn": "Article",
+    "itemsColumn": "Articles",
+    "totalLabel": "Total:"
   },
   "Checkout": {
     "title": "Paiement",
@@ -277,7 +284,8 @@
     "filterToShip": "À expédier",
     "filterPreparing": "En préparation",
     "filterShipped": "Expédiées",
-    "filterDelivered": "Livrées"
+    "filterDelivered": "Livrées",
+    "manageListings": "Gérer mes annonces"
   },
   "Sealed": {
     "sortNewest": "Plus récents",
@@ -289,19 +297,32 @@
     "noResults": "Aucun produit scellé trouvé.",
     "searchPlaceholder": "Rechercher un produit...",
     "typePlaceholder": "Type de produit",
-    "seriesPlaceholder": "Série"
+    "seriesPlaceholder": "Série",
+    "title": "Produits scellés",
+    "search": "Recherche",
+    "name": "Nom",
+    "minPrice": "Prix min",
+    "maxPrice": "Prix max",
+    "set": "Set",
+    "type": "Type",
+    "sort": "Tri",
+    "allSets": "Tous les sets",
+    "allTypes": "Tous les types",
+    "allSeries": "Toutes les séries"
   },
   "SealedDetail": {
     "noImage": "Pas d'image disponible",
     "noImageShort": "Pas d'image",
     "loginRequired": "Vous devez être connecté pour ajouter au panier",
     "addedToCart": "Article ajouté au panier !",
-    "addError": "Erreur lors de l'ajout au panier"
+    "addError": "Erreur lors de l'ajout au panier",
+    "sellThisProduct": "Vendre ce produit"
   },
   "CardCard": {
     "marketPrice": "Prix de référence",
     "popularityTooltip": "Popularité calculée sur 90 jours",
-    "momentumTooltip": "Momentum récent (7 jours vs 30 jours)"
+    "momentumTooltip": "Momentum récent (7 jours vs 30 jours)",
+    "noOffer": "Aucune offre"
   },
   "Tournaments": {
     "hero": {
@@ -367,7 +388,8 @@
     "toBeConfirmed": "À confirmer",
     "dateToBeConfirmed": "Date à confirmer",
     "locationToBeConfirmed": "Lieu à confirmer",
-    "registerError": "Erreur lors de l'inscription au tournoi :"
+    "registerError": "Erreur lors de l'inscription au tournoi :",
+    "date": "Date"
   },
   "Ranking": {
     "title": "Classement global des joueurs",
@@ -386,7 +408,8 @@
     "loadError": "Erreur lors du chargement du classement.",
     "empty": "Aucun joueur classé pour le moment.",
     "previous": "Précédent",
-    "next": "Suivant"
+    "next": "Suivant",
+    "elo": "ELO"
   },
   "Settings": {
     "title": "Paramètres",
@@ -475,7 +498,45 @@
     "joinGame": "Rejoindre la partie",
     "openMatch": "Accéder au match",
     "markAsRead": "Marquer comme lu",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "items": {
+      "tournament.started": {
+        "title": "Tournoi démarré",
+        "body": "Le tournoi \"{name}\" a démarré."
+      },
+      "tournament.finished": {
+        "title": "Tournoi terminé",
+        "body": "Résultats du tournoi \"{name}\" disponibles."
+      },
+      "tournament.match_reminder": {
+        "title": "Match demain",
+        "body": "Vous avez un match prévu demain."
+      },
+      "match.ready": {
+        "title": "Match prêt",
+        "body": "Votre match peut commencer."
+      },
+      "badge.unlocked": {
+        "title": "Nouveau badge débloqué",
+        "body": "Vous avez obtenu le badge \"{badgeName}\"."
+      },
+      "follow.created": {
+        "title": "Nouveau follower",
+        "body": "{followerName} vous suit désormais."
+      },
+      "follow.removed": {
+        "title": "Vous avez perdu un follower",
+        "body": "{followerName} ne vous suit plus."
+      },
+      "marketplace.sale": {
+        "title": "Vente réalisée",
+        "body": "Vous avez vendu pour {amount}."
+      },
+      "order.shipped": {
+        "title": "Commande expédiée",
+        "body": "Votre commande a été expédiée."
+      }
+    }
   },
   "AuthHeader": {
     "openUserMenu": "Ouvrir le menu utilisateur",
@@ -737,7 +798,16 @@
     "noResults": "Aucune carte trouvée",
     "empty": "Aucune carte dans cette collection",
     "tryOtherKeywords": "Essayez avec d'autres mots-clés",
-    "startAdding": "Commencez par ajouter des cartes à votre collection"
+    "startAdding": "Commencez par ajouter des cartes à votre collection",
+    "actions": "Actions",
+    "loading": "Chargement...",
+    "image": "Image",
+    "name": "Nom",
+    "quantity": "Quantité",
+    "rarity": "Rareté",
+    "set": "Set",
+    "types": "Types",
+    "condition": "État"
   },
   "CreateCollection": {
     "title": "Créer une collection",
@@ -785,7 +855,9 @@
     "success": "Tournoi créé avec succès !",
     "error": "Erreur lors de la création du tournoi.",
     "submitting": "Création en cours...",
-    "submit": "Créer le tournoi"
+    "submit": "Créer le tournoi",
+    "accessDenied": "Accès refusé",
+    "noAddressFound": "Aucune adresse trouvée."
   },
   "TournamentControls": {
     "title": "Contrôles du tournoi",
@@ -799,12 +871,20 @@
     "startHelp": "Générer le tableau et commencer les matchs",
     "reopenRegistrations": "Rouvrir les inscriptions",
     "reopenRegistrationsHelp": "Permettre de nouvelles inscriptions",
-    "cancel": "Annuler le tournoi",
+    "cancel": "Annuler",
     "cancelHelp": "Annuler définitivement le tournoi",
     "startConfirm": "Êtes-vous sûr de vouloir démarrer le tournoi ? Cette action générera le bracket et ne pourra pas être annulée.",
     "nextRoundConfirm": "Passer au round suivant ? Assurez-vous que tous les matches du round actuel sont terminés.",
     "finishConfirm": "Terminer le tournoi ? Les classements finaux seront calculés et le tournoi sera marqué comme terminé.",
-    "cancelReasonPlaceholder": "Expliquez pourquoi le tournoi est annulé..."
+    "cancelReasonPlaceholder": "Expliquez pourquoi le tournoi est annulé...",
+    "seedRandom": "Aléatoire",
+    "seedElo": "Par ELO",
+    "seedRanking": "Par classement",
+    "seedingMethod": "Méthode de seeding :",
+    "currentRound": "Ronde actuelle :",
+    "status": "Statut :",
+    "playersLabel": "Joueurs :",
+    "matchesLabel": "Matches :"
   },
   "TournamentRules": {
     "title": "Règlement du tournoi",
@@ -846,7 +926,10 @@
     "variantReverse": "Reverse",
     "variantHolo": "Holographique",
     "variantFirstEdition": "Première édition",
-    "variantPromo": "Promo"
+    "variantPromo": "Promo",
+    "weaknesses": "Faiblesses",
+    "retreat": "Retraite",
+    "cardSheet": "Fiche de la carte"
   },
   "BuyBox": {
     "startingAt": "À partir de",
@@ -873,7 +956,8 @@
     "price": "Prix",
     "total": "Total",
     "condition": "État",
-    "add": "Ajouter"
+    "add": "Ajouter",
+    "sellThisCard": "Mettre cette carte en vente"
   },
   "Pokedex": {
     "title": "Pokédex",
@@ -911,7 +995,16 @@
     "raritySpecialIllustrationRare": "Illustration Spéciale Rare",
     "rarityHyperRare": "Hyper Rare",
     "raritySecretRare": "Secret Rare",
-    "rarityPromo": "Promo"
+    "rarityPromo": "Promo",
+    "name": "Nom",
+    "number": "Numéro",
+    "rarity": "Rareté",
+    "set": "Set",
+    "allTypes": "Tous les types",
+    "allRarities": "Toutes les raretés",
+    "readyToExplore": "Prêt à explorer ?",
+    "pokemonCards": "Cartes Pokémon",
+    "image": "Image"
   },
   "SupportCreate": {
     "title": "Créer un ticket",
@@ -950,7 +1043,8 @@
     "importError": "Impossible d'importer le deck",
     "loginRequired": "Vous devez être connecté pour importer un deck",
     "invalidJson": "Format JSON invalide. Le fichier doit contenir \"name\", \"format\" et \"cards\".",
-    "unreadableFile": "Impossible de lire le fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide."
+    "unreadableFile": "Impossible de lire le fichier. Assurez-vous qu'il s'agit d'un fichier JSON valide.",
+    "importFromJson": "Importer depuis un fichier JSON"
   },
   "TournamentMatches": {
     "loadError": "La liste des matchs n'a pas pu être chargée.",
@@ -985,7 +1079,13 @@
     "phaseFinal": "Finale",
     "phaseSemiFinal": "Demi-finale",
     "phaseQuarterFinal": "Quart de finale",
-    "phaseQualification": "Qualification"
+    "phaseQualification": "Qualification",
+    "quickActions": "Actions rapides",
+    "cancel": "Annuler",
+    "time": "Heure",
+    "players": "Joueurs",
+    "phase": "Phase",
+    "total": "Total"
   },
   "TournamentPlayer": {
     "playerProfileRequired": "Vous devez avoir un profil joueur pour accéder à cette page.",
@@ -1005,7 +1105,16 @@
     "losses": "Défaites",
     "rankings": "Classements",
     "bracket": "Tableau",
-    "result": "Résultat"
+    "result": "Résultat",
+    "actions": "Actions",
+    "date": "Date",
+    "pointsLabel": "Points :",
+    "round": "Ronde",
+    "score": "Score",
+    "allMatches": "Tous les matchs",
+    "wins": "Victoires",
+    "draws": "Égalités",
+    "toPlay": "À jouer"
   },
   "CreateListing": {
     "loginRequired": "Vous devez être connecté pour créer une vente.",
@@ -1045,7 +1154,11 @@
     "actions": "Actions",
     "all": "Tous",
     "name": "Nom",
-    "price": "Prix"
+    "price": "Prix",
+    "loginRequiredTitle": "Connexion requise.",
+    "pageTitle": "Créer une vente",
+    "descriptionOptional": "Description (optionnel)",
+    "checkingAuth": "Vérification de l'authentification..."
   },
   "Play": {
     "subtitle": "Tournois, entraînement et duel en ligne.",
@@ -1173,7 +1286,8 @@
     "resumeGame": "Reprendre une partie",
     "difficultyEasy": "Facile",
     "difficultyStandard": "Standard",
-    "sessionInfo": "Difficulté {difficulty} • Tour {turn}"
+    "sessionInfo": "Difficulté {difficulty} • Tour {turn}",
+    "resumeIncluded": "Reprise incluse"
   },
   "Matchmaking": {
     "loading": "Chargement du matchmaking...",
@@ -1195,7 +1309,8 @@
     "searchRanked": "Chercher un match classé",
     "searchOpponent": "Chercher un adversaire",
     "yourTurn": "À vous",
-    "opponentFound": "Adversaire trouvé !"
+    "opponentFound": "Adversaire trouvé !",
+    "standard": "Standard"
   },
   "MatchBoard": {
     "initializing": "Initialisation du terrain...",
@@ -1223,7 +1338,15 @@
     "allPrizesTaken": "Toutes les cartes récompenses récupérées !",
     "opponentDeckEmpty": "Plus de cartes dans le deck adverse.",
     "opponentNoPokemon": "L'adversaire n'a plus de Pokémon en jeu.",
-    "opponentForfeited": "L'adversaire a abandonné."
+    "opponentForfeited": "L'adversaire a abandonné.",
+    "discard": "Défausse",
+    "coinFlip": "Pile ou Face !",
+    "coinFlipWon": "Vous avez remporté le pile ou face",
+    "actions": "Actions",
+    "noPokemon": "Aucun Pokémon",
+    "currentTurn": "Tour en cours",
+    "noEvent": "Aucun événement",
+    "yourHand": "Votre main"
   },
   "GameBoard": {
     "loading": "Chargement de la session online...",
@@ -1236,7 +1359,9 @@
     "blocked": "Bloqué",
     "opponentDeckReady": "Deck adverse prêt",
     "waitingOpponentDeck": "En attente du deck adverse",
-    "realtimeConnected": "Temps réel connecté"
+    "realtimeConnected": "Temps réel connecté",
+    "deckChoice": "Choix du deck online",
+    "sessionPending": "Session online en attente"
   },
   "MiniGames": {
     "eyebrow": "Découverte",
@@ -1376,7 +1501,8 @@
     "opening": "Ouverture en cours…",
     "player1": "Joueur 1",
     "player2": "Joueur 2",
-    "solo": "Solo"
+    "solo": "Solo",
+    "player1Victory": "Victoire de Joueur 1 ! 🔵"
   },
   "Pokedle": {
     "subtitle": "Devine le Pokémon mystère à partir des attributs",
@@ -1385,7 +1511,14 @@
     "retry": "Réessayer",
     "previousGuesses": "Essais précédents",
     "searchPlaceholder": "Entrez le nom d'un Pokémon...",
-    "mysteryCard": "Carte mystère"
+    "mysteryCard": "Carte mystère",
+    "title": "Pokédle",
+    "tooBad": "Dommage !",
+    "generation": "Génération",
+    "rarity": "Rareté",
+    "stage": "Stage",
+    "types": "Types",
+    "pokemon": "Pokémon"
   },
   "WhosThatPokemon": {
     "title": "Qui est ce Pokémon ?",
@@ -1419,7 +1552,9 @@
     "chooseRarity": "Choisir une rareté",
     "chooseSeries": "Choisir une série",
     "unknownBlock": "Bloc inconnu",
-    "none": "Aucun"
+    "none": "Aucun",
+    "title": "Smash or Pass",
+    "noFilter": "Aucun filtre"
   },
   "Admin": {
     "badge": "Admin",
@@ -1681,7 +1816,12 @@
     "statusInProgress": "En cours",
     "statusFinished": "Terminé",
     "statusForfeit": "Forfait",
-    "statusCancelled": "Annulé"
+    "statusCancelled": "Annulé",
+    "round": "Ronde",
+    "score": "Score",
+    "status": "Statut",
+    "allStatuses": "Tous les statuts",
+    "allRounds": "Toutes les rondes"
   },
   "RegistrationManager": {
     "readOnlyNotice": "Les inscriptions sont maintenant en lecture seule. Elles ne peuvent plus être modifiées après le démarrage ou l'annulation du tournoi.",
@@ -1722,7 +1862,11 @@
     "bulkConfirmed": "{count, plural, one {# inscription confirmée} other {# inscriptions confirmées}}",
     "bulkCancelled": "{count, plural, one {# inscription annulée} other {# inscriptions annulées}}",
     "bulkCheckedIn": "{count, plural, one {# inscription enregistrée au check-in} other {# inscriptions enregistrées au check-in}}",
-    "bulkPromoted": "{count, plural, one {# joueur promu depuis la liste d'attente.} other {# joueurs promus depuis la liste d'attente.}}"
+    "bulkPromoted": "{count, plural, one {# joueur promu depuis la liste d'attente.} other {# joueurs promus depuis la liste d'attente.}}",
+    "notes": "Notes",
+    "status": "Statut",
+    "total": "Total",
+    "eliminatedPlural": "Éliminées"
   },
   "TournamentAdmin": {
     "loadError": "Impossible de charger le tournoi.",
@@ -1766,7 +1910,10 @@
     "statusScheduled": "Programmé",
     "statusInProgress": "En cours",
     "statusFinished": "Terminé",
-    "statusForfeit": "Forfait"
+    "statusForfeit": "Forfait",
+    "adminMode": "Mode administration",
+    "navigation": "Navigation",
+    "information": "Informations"
   },
   "SellerProfile": {
     "notFound": "Vendeur non trouvé",
@@ -1794,7 +1941,11 @@
     "quantity": "Quantité",
     "actions": "Actions",
     "date": "Date",
-    "cards": "Cartes"
+    "cards": "Cartes",
+    "sortNameAsc": "Nom (A-Z)",
+    "sortNameDesc": "Nom (Z-A)",
+    "information": "Informations",
+    "conditionColumn": "État / Condition"
   },
   "Faq": {
     "badge": "Centre d'aide",
@@ -1829,7 +1980,9 @@
     "popularity": "Popularité",
     "ascending": "Croissant",
     "descending": "Décroissant",
-    "name": "Nom"
+    "name": "Nom",
+    "price": "Prix",
+    "condition": "État"
   },
   "Bracket": {
     "loadError": "Les données du tableau n'ont pas pu être chargées.",
@@ -1873,7 +2026,8 @@
     "loss": "Défaite :",
     "draw": "Égalité :",
     "pointsPerMatch": "Points par match :",
-    "totalMatches": "Total matches :"
+    "totalMatches": "Total matches :",
+    "actions": "Actions"
   },
   "TabOverview": {
     "about": "À propos du tournoi",
@@ -1926,7 +2080,10 @@
     "ascending": "Croissant",
     "descending": "Décroissant",
     "name": "Nom",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "priceEur": "Prix (€)",
+    "price": "Prix",
+    "showAll": "Tout afficher"
   },
   "DeckAnalysis": {
     "title": "Analyse du deck",
@@ -1963,7 +2120,8 @@
     "unlistTooltip": "Retirer l'annonce de la vente",
     "onSale": "En vente",
     "showAll": "Tout afficher",
-    "deleteConfirm": "Supprimer cette annonce ?"
+    "deleteConfirm": "Supprimer cette annonce ?",
+    "cancel": "Annuler"
   },
   "EditListing": {
     "title": "Modifier l'annonce",
@@ -1987,7 +2145,8 @@
     "currency": "Devise",
     "language": "Langue",
     "visibility": "Visibilité",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "priceLabel": "Prix"
   },
   "MatchScoreForm": {
     "noPermission": "Vous n'avez pas les permissions pour modifier ce match.",
@@ -2001,7 +2160,10 @@
     "score": "Score",
     "statusScheduled": "Programmé",
     "statusFinished": "Terminé",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "notesLabel": "Notes :",
+    "confirmSave": "Voulez-vous enregistrer ce résultat ?",
+    "draw": "Égalité"
   },
   "TournamentHistory": {
     "title": "Historique des tournois",
@@ -2020,7 +2182,8 @@
     "periodLastMonth": "Dernier mois",
     "period3Months": "3 mois",
     "periodYear": "Année",
-    "periodAll": "Tout"
+    "periodAll": "Tout",
+    "eloEvolution": "Évolution ELO"
   },
   "TournamentHero": {
     "private": "Privé",
@@ -2034,7 +2197,8 @@
     "register": "S'inscrire au tournoi",
     "registrationsClosed": "Inscriptions fermées",
     "leaveConfirm": "Quitter ce tournoi ?",
-    "waitlist": "Liste d'attente"
+    "waitlist": "Liste d'attente",
+    "matches": "Matchs"
   },
   "TournamentsFilters": {
     "reset": "Réinitialiser",
@@ -2050,7 +2214,10 @@
     "order": "Ordre",
     "ascending": "Ascendant",
     "descending": "Descendant",
-    "status": "Statut"
+    "status": "Statut",
+    "sortBy": "Trier par",
+    "type": "Type",
+    "create": "Créer un tournoi"
   },
   "ProfileTournaments": {
     "title": "Mes tournois",
@@ -2060,7 +2227,10 @@
     "viewUpcoming": "Voir les tournois à venir",
     "viewDetails": "Voir détails",
     "loadError": "Impossible de charger vos tournois",
-    "eloHistory": "Historique ELO"
+    "eloHistory": "Historique ELO",
+    "inProgress": "En cours",
+    "finished": "Terminé",
+    "noPlayerProfile": "Aucun profil joueur"
   },
   "CasualGame": {
     "loading": "Chargement de la partie...",
@@ -2084,7 +2254,12 @@
     "loadError": "Impossible de charger ce match d'entraînement.",
     "youWon": "Vous avez remporté ce match d'entraînement.",
     "aiWon": "L'IA a remporté ce match d'entraînement.",
-    "noWinner": "Le match s'est terminé sans vainqueur déclaré."
+    "noWinner": "Le match s'est terminé sans vainqueur déclaré.",
+    "syncMode": "Mode synchrone",
+    "newGame": "Nouvelle partie",
+    "gameOver": "Partie terminée",
+    "ready": "Prêt",
+    "backToPlay": "Retour à /play"
   },
   "OrderDetail": {
     "backToOrders": "Retour à mes commandes",
@@ -2210,7 +2385,8 @@
     "noSuggestions": "Aucun ajustement recommandé",
     "balanced": "Le deck semble équilibré, aucune recommandation automatique pour le moment.",
     "cardsToAdd": "Cartes à ajouter",
-    "duplicates": "Doublons détectés"
+    "duplicates": "Doublons détectés",
+    "watchPoints": "Points à surveiller"
   },
   "DeckInfo": {
     "title": "Informations",
@@ -2246,7 +2422,8 @@
     "sortBy": "Trier par",
     "ascending": "Ascendant",
     "descending": "Descendant",
-    "create": "Créer un deck"
+    "create": "Créer un deck",
+    "type": "Type"
   },
   "DeckOverviewStats": {
     "formatValid": "Format respecté",
@@ -2262,7 +2439,8 @@
     "energyCost": "Coût en énergies",
     "typeDistribution": "Répartition des types",
     "noTypes": "Aucun type détecté.",
-    "type": "Type"
+    "type": "Type",
+    "categories": "Catégories"
   },
   "ShareDeck": {
     "title": "Partager le deck",
@@ -2314,14 +2492,17 @@
     "confirmPayment": "Confirmer le paiement",
     "unexpectedError": "Une erreur inattendue est survenue.",
     "orderConfirmed": "Commande confirmée !",
-    "paymentReceived": "Paiement reçu, confirmation en cours."
+    "paymentReceived": "Paiement reçu, confirmation en cours.",
+    "cancel": "Annuler",
+    "deliveryTo": "Livraison à"
   },
   "DeckCreate": {
     "title": "Nouveau deck",
     "subtitle": "Recherchez vos cartes avec des filtres avancés, ajustez les quantités et prévisualisez votre deck avant de le publier.",
     "formatsError": "Erreur lors du chargement des formats",
     "loginRequired": "Connexion requise.",
-    "loginRequiredHelp": "Vous devez être connecté pour créer un deck."
+    "loginRequiredHelp": "Vous devez être connecté pour créer un deck.",
+    "submit": "Créer un deck"
   },
   "UserDecks": {
     "title": "Mes decks",
@@ -2329,7 +2510,9 @@
     "createFirst": "Créer mon premier deck",
     "create": "Créer un deck",
     "import": "Importer un deck",
-    "new": "Nouveau"
+    "new": "Nouveau",
+    "newDeck": "Nouveau deck",
+    "importShort": "Importer"
   },
   "DeckAnalysisPage": {
     "title": "Analyse du deck",
@@ -2403,5 +2586,180 @@
     "quantity": "Quantité",
     "condition": "État",
     "descriptionOptional": "Description (optionnelle)"
+  },
+  "ProfileActivity": {
+    "title": "Activité récente",
+    "subtitle": "Nombre d'actions sur les 7 derniers jours",
+    "empty": "Aucune activité récente"
+  },
+  "Feed": {
+    "empty": "Suivez d'autres joueurs pour voir leurs decks publiés et leurs inscriptions à des tournois ici.",
+    "loadError": "Erreur de chargement du feed",
+    "title": "Activité",
+    "noRecentActivity": "Aucune activité récente"
+  },
+  "RankingsManager": {
+    "availableAfterMatches": "Le classement sera disponible une fois que les premiers matches auront été joués.",
+    "unavailable": "Classement non disponible",
+    "player": "Joueur",
+    "points": "Points",
+    "pts": "Pts",
+    "rank": "Rang",
+    "ratio": "Ratio",
+    "wins": "Victoires",
+    "losses": "Défaites"
+  },
+  "SealedListings": {
+    "title": "Annonces disponibles",
+    "action": "Action",
+    "price": "Prix",
+    "quantity": "Quantité",
+    "stock": "Stock",
+    "seller": "Vendeur",
+    "condition": "État"
+  },
+  "SealedStats": {
+    "title": "Prix du marché",
+    "activeListings": "Annonces actives",
+    "maxPrice": "Prix maximum",
+    "minPrice": "Prix minimum",
+    "avgPrice": "Prix moyen",
+    "totalStock": "Stock total"
+  },
+  "PublicProfile": {
+    "badges": "Badges",
+    "sales": "Ventes",
+    "loadError": "Erreur de chargement",
+    "noTournaments": "Aucun tournoi",
+    "noPublicDecks": "Aucun deck public",
+    "cardAlt": "Carte",
+    "standardFormat": "Standard",
+    "publicDecks": "Decks publics",
+    "tournaments": "Tournois"
+  },
+  "Challenges": {
+    "title": "Défis",
+    "loadError": "Impossible de charger les défis.",
+    "daily": "Défis quotidiens",
+    "weekly": "Défis hebdomadaires",
+    "progress": "Progression"
+  },
+  "DeckUpdate": {
+    "title": "Modifier le deck",
+    "loginRequiredTitle": "Connexion requise.",
+    "loginRequired": "Vous devez être connecté pour modifier un deck.",
+    "error": "Erreur",
+    "loadError": "Impossible de charger le deck."
+  },
+  "DeckUpdateForm": {
+    "chooseFormat": "Choisissez un format",
+    "updated": "Deck modifié avec succès !",
+    "updateError": "Erreur lors de la modification du deck",
+    "submit": "Modifier",
+    "name": "Nom du deck",
+    "main": "Principal",
+    "side": "Secondaire",
+    "cancel": "Annuler",
+    "addedCards": "Cartes ajoutées",
+    "format": "Format",
+    "isPublic": "Public",
+    "quantity": "Quantité",
+    "role": "Rôle",
+    "chooseRole": "Choisir un rôle"
+  },
+  "ShippingPolicy": {
+    "autoRate": "Tarif d'expédition appliqué automatiquement",
+    "handledByNexus": "Expédition prise en charge par TCG Nexus"
+  },
+  "CardSelector": {
+    "choose": "Choisir",
+    "searchPlaceholder": "Rechercher une carte...",
+    "selectCard": "Sélectionner une carte",
+    "add": "Ajouter",
+    "main": "Principal",
+    "side": "Secondaire"
+  },
+  "MatchesTable": {
+    "phase": "Phase",
+    "statusScheduled": "Planifié",
+    "round": "Ronde",
+    "score": "Score",
+    "status": "Statut"
+  },
+  "RankingsTable": {
+    "points": "Points",
+    "rank": "Rang"
+  },
+  "TabRankings": {
+    "points": "Points",
+    "rank": "Rang",
+    "unavailable": "Classement non disponible",
+    "player": "Joueur"
+  },
+  "DeckCardList": {
+    "side": "Side",
+    "main": "Main"
+  },
+  "DeckScores": {
+    "overallScore": "Score global"
+  },
+  "DeckRadar": {
+    "title": "Profil du deck"
+  },
+  "TrendingDecks": {
+    "title": "Tendances"
+  },
+  "ReferencePrices": {
+    "title": "Prix de référence",
+    "cardmarketTrend": "Cardmarket (tendance)",
+    "tcgplayerMarket": "TCGplayer (marché)"
+  },
+  "ProfileHeader": {
+    "settings": "Paramètres"
+  },
+  "MainProfile": {
+    "tournaments": "Tournois",
+    "sales": "Ventes",
+    "overview": "Vue d'ensemble"
+  },
+  "PriceChart": {
+    "title": "Historique des prix"
+  },
+  "ParticipantsTable": {
+    "player": "Joueur"
+  },
+  "ApiErrors": {
+    "UNAUTHORIZED_ACCESS": "Accès non autorisé",
+    "NO_VALID_TOURNAMENT": "Aucun tournoi valide trouvé",
+    "CARD_NOT_FOUND": "Carte Pokémon introuvable",
+    "SHARE_CODE_EXPIRED": "Ce code de partage a expiré",
+    "DECK_NOT_IN_LIBRARY": "Ce deck n'est pas dans votre bibliothèque",
+    "TICKET_CLOSED": "Ce ticket est fermé",
+    "TOURNAMENT_ALREADY_CANCELLED": "Ce tournoi est déjà annulé",
+    "LISTING_EXPIRED": "Cette annonce a expiré",
+    "ORDER_NOT_PAID": "Cette commande n'a pas encore été payée",
+    "CHECK_IN_ALREADY_DONE": "Check-in déjà effectué",
+    "COLLECTION_NOT_FOUND": "Collection introuvable",
+    "INVALID_DATA": "Données invalides",
+    "REGISTRATION_NOT_FOUND": "Inscription introuvable",
+    "PLAYER_NOT_FOUND": "Joueur introuvable",
+    "TOURNAMENT_NOT_IN_PROGRESS": "Le tournoi doit être en cours",
+    "TOURNAMENT_ALREADY_FINISHED": "Le tournoi est déjà terminé",
+    "MATCH_NOT_FOUND": "Match introuvable",
+    "MATCH_NOT_IN_TOURNAMENT": "Match introuvable dans ce tournoi",
+    "SEALED_PRODUCT_NOT_FOUND": "Produit scellé introuvable",
+    "TOURNAMENT_NOT_FOUND": "Tournoi introuvable",
+    "SYNC_ALREADY_RUNNING": "Une synchronisation est déjà en cours.",
+    "USER_NOT_FOUND": "Utilisateur introuvable",
+    "TICKET_ACCESS_DENIED": "Vous n'avez pas accès à ce ticket",
+    "NOT_REGISTERED_TO_TOURNAMENT": "Vous n'êtes pas inscrit à ce tournoi",
+    "BAD_REQUEST": "Requête invalide.",
+    "UNAUTHORIZED": "Non autorisé.",
+    "FORBIDDEN": "Accès interdit.",
+    "NOT_FOUND": "Ressource introuvable.",
+    "CONFLICT": "Conflit de données.",
+    "VALIDATION_ERROR": "Certaines informations sont invalides.",
+    "TOO_MANY_REQUESTS": "Trop de requêtes, réessayez dans un instant.",
+    "INTERNAL_ERROR": "Une erreur interne est survenue."
   }
 }

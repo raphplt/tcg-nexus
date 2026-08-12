@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
@@ -54,7 +56,10 @@ export class TournamentOwnerGuard implements CanActivate {
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     // Vérifier si l'utilisateur est propriétaire du tournoi

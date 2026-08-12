@@ -221,7 +221,7 @@ export default function CartPage() {
             <div className="lg:col-span-2 space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Articles</CardTitle>
+                  <CardTitle>{t("itemsColumn")}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
@@ -230,7 +230,7 @@ export default function CartPage() {
                         <TableHead className="hidden w-[100px] sm:table-cell">
                           Image
                         </TableHead>
-                        <TableHead>Article</TableHead>
+                        <TableHead>{t("itemColumn")}</TableHead>
                         <TableHead className="hidden md:table-cell">
                           {t("condition")}
                         </TableHead>
@@ -404,7 +404,7 @@ export default function CartPage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Résumé</CardTitle>
+                  <CardTitle>{t("summary")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">

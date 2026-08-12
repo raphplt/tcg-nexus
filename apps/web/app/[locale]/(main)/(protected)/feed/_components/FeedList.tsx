@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Rss } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { feedService } from "@/services/feed.service";
 import { FeedItemCard } from "./FeedItemCard";
 
 export function FeedList() {
+  const t = useTranslations("Feed");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["feed"],
     queryFn: () => feedService.getFeed(),
@@ -23,19 +25,14 @@ export function FeedList() {
     );
   }
   if (isError) {
-    return (
-      <p className="text-sm text-destructive">Erreur de chargement du feed</p>
-    );
+    return <p className="text-sm text-destructive">{t("loadError")}</p>;
   }
   if (!data || data.length === 0) {
     return (
       <Card className="p-8 flex flex-col items-center text-center gap-3">
         <Rss className="h-10 w-10 text-muted-foreground/40" />
-        <h3 className="text-lg font-semibold">Aucune activité récente</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
-          Suivez d&apos;autres joueurs pour voir leurs decks publiés et leurs
-          inscriptions à des tournois ici.
-        </p>
+        <h3 className="text-lg font-semibold">{t("noRecentActivity")}</h3>
+        <p className="text-sm text-muted-foreground max-w-md">{t("empty")}</p>
       </Card>
     );
   }

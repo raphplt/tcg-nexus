@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, Repository } from "typeorm";
 import {
@@ -79,7 +84,10 @@ export class BracketService {
     });
 
     if (!tournament) {
-      throw new BadRequestException("Tournoi non trouvé");
+      throw new BadRequestException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
@@ -278,7 +286,10 @@ export class BracketService {
     });
 
     if (!tournament) {
-      throw new BadRequestException("Tournoi non trouvé");
+      throw new BadRequestException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     const rounds: { index: number; matches: BracketNode[] }[] = [];

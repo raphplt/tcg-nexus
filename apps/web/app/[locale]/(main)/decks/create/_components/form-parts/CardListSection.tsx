@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import React from "react";
 import Image from "next/image";
 import {
@@ -41,6 +42,7 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
   setRoleByCard,
   addCard,
 }) => {
+  const t = useTranslations("DeckCardList");
   return (
     <div className="space-y-4">
       <Separator />
@@ -116,8 +118,8 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="main">Main</SelectItem>
-                          <SelectItem value="side">Side</SelectItem>
+                          <SelectItem value="main">{t("main")}</SelectItem>
+                          <SelectItem value="side">{t("side")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

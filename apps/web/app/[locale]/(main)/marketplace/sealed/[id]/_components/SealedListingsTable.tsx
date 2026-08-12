@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,12 +40,13 @@ export function SealedListingsTable({
   addingToListingId,
   isCartLoading,
 }: SealedListingsTableProps) {
+  const t = useTranslations("SealedListings");
   const { formatPrice } = useCurrencyStore();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Annonces disponibles</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -57,12 +59,12 @@ export function SealedListingsTable({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vendeur</TableHead>
-                <TableHead>État</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Quantité</TableHead>
-                <TableHead>Prix</TableHead>
-                <TableHead>Action</TableHead>
+                <TableHead>{t("seller")}</TableHead>
+                <TableHead>{t("condition")}</TableHead>
+                <TableHead>{t("stock")}</TableHead>
+                <TableHead>{t("quantity")}</TableHead>
+                <TableHead>{t("price")}</TableHead>
+                <TableHead>{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

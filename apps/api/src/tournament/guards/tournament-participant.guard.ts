@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Not, Repository } from "typeorm";
@@ -55,7 +57,10 @@ export class TournamentParticipantGuard implements CanActivate {
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
     // Si un playerId est spécifié, vérifier que c'est le joueur de l'utilisateur
@@ -106,7 +111,10 @@ export class TournamentParticipantGuard implements CanActivate {
       });
 
       if (!registration) {
-        throw new ForbiddenException("Vous n'êtes pas inscrit à ce tournoi");
+        throw new ForbiddenException({
+        code: "NOT_REGISTERED_TO_TOURNAMENT",
+        message: "Vous n'êtes pas inscrit à ce tournoi",
+      });
       }
 
       request.tournamentPlayer = player;

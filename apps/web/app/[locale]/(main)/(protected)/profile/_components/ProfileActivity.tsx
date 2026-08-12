@@ -2,13 +2,14 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Activity, BarChart3 } from "lucide-react";
 import type { DashboardActivityDay } from "@/types/dashboard";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface ProfileActivityProps {
   activity?: DashboardActivityDay[];
 }
 
 export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
+  const t = useTranslations("ProfileActivity");
   const locale = useLocale();
   const hasActivity = activity && activity.some((day) => day.events > 0);
   const maxEvents = hasActivity
@@ -28,7 +29,7 @@ export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
     <Card className="p-6">
       <div className="flex items-center space-x-2 mb-6">
         <Activity className="w-5 h-5 text-primary" />
-        <h2 className="text-xl font-semibold">Activité récente</h2>
+        <h2 className="text-xl font-semibold">{t("title")}</h2>
       </div>
 
       {hasActivity ? (
@@ -54,15 +55,13 @@ export const ProfileActivity = ({ activity }: ProfileActivityProps) => {
             </div>
           ))}
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Nombre d&apos;actions sur les 7 derniers jours
+            {t("subtitle")}
           </p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <BarChart3 className="h-8 w-8 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">
-            Aucune activité récente
-          </p>
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
         </div>
       )}
     </Card>

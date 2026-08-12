@@ -15,15 +15,25 @@ import {
   type SupportedLocale,
 } from "@/i18n/config";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { userService } from "@/services/user.service";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function LocaleSelector() {
   const locale = useLocale() as SupportedLocale;
+  const { isAuthenticated } = useAuth();
   const t = useTranslations("Common");
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
   const onChange = (next: string) => {
+    // la préférence suit l'utilisateur d'un navigateur à l'autre
+    if (isAuthenticated) {
+      userService
+        .updateProfile({ preferredLocale: next })
+        .catch(() => undefined);
+    }
+
     const query = Object.fromEntries(
       new URLSearchParams(window.location.search),
     );

@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { AlertCircleIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
@@ -14,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import CardForm from "./_components/cardForm";
 const CreateSell = () => {
+  const t = useTranslations("CreateListing");
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
     return (
@@ -23,9 +25,9 @@ const CreateSell = () => {
         </div>
         <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
-          <AlertTitle>Connexion requise.</AlertTitle>
+          <AlertTitle>{t("loginRequiredTitle")}</AlertTitle>
           <AlertDescription>
-            <p>Vous devez être connecté pour créer une vente.</p>
+            <p>{t("loginRequired")}</p>
           </AlertDescription>
         </Alert>
       </div>
@@ -38,7 +40,7 @@ const CreateSell = () => {
       </div>
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
-          <CardTitle>Créer une vente</CardTitle>
+          <CardTitle>{t("pageTitle")}</CardTitle>
           <CardDescription>
             Veuillez remplir ce formulaire pour pouvoir créer une vente.
           </CardDescription>

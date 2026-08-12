@@ -64,7 +64,7 @@ import type {
   TrainingLobbyView,
   TrainingSessionSummary,
 } from "@/types/training-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
 type MatchBucket = "all" | "live" | "ready" | "done";
@@ -171,8 +171,12 @@ const formatPhase = (phase: string, t: Translate) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
-const getNeutralErrorMessage = (error: unknown, fallback: string) => {
-  const message = extractApiErrorMessage(error, fallback).trim();
+const getNeutralErrorMessage = (
+  error: unknown,
+  fallback: string,
+  tError: Translate,
+) => {
+  const message = translateApiError(error, tError, fallback).trim();
   const normalized = message.toLowerCase();
 
   if (
@@ -191,6 +195,7 @@ const getMatchBucket = (
   status: PlayHubMatchSummary["status"],
 ): PlayerMatchRecord["bucket"] => {
   const t = useTranslations("Play");
+  const tError = useTranslations("ApiErrors");
   if (status === "in_progress") return "live";
   if (status === "scheduled") return "ready";
   return "done";
@@ -863,6 +868,7 @@ function PlayTournamentTab({
   hasSearch: boolean;
   historyIsTrimmed: boolean;
 }) {
+  const tError = useTranslations("ApiErrors");
   const t = useTranslations("Play");
   const hasMatches =
     liveMatches.length > 0 ||
@@ -919,6 +925,7 @@ function PlayTournamentTab({
             message={getNeutralErrorMessage(
               query.error,
               t("tournamentMatchesError"),
+              tError,
             )}
             onRetry={() => void query.refetch()}
           />
@@ -1094,6 +1101,7 @@ function PlayTrainingTab({
 }: {
   query: UseQueryResult<TrainingLobbyView>;
 }) {
+  const tError = useTranslations("ApiErrors");
   const t = useTranslations("Play");
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -1175,7 +1183,9 @@ function PlayTrainingTab({
       router.push(`/play/training/${session.sessionId}`);
     },
     onError: (error: unknown) => {
-      setLastError(getNeutralErrorMessage(error, t("trainingStartError")));
+      setLastError(
+        getNeutralErrorMessage(error, t("trainingStartError"), tError),
+      );
     },
   });
 
@@ -1186,7 +1196,11 @@ function PlayTrainingTab({
   if (query.error || !query.data) {
     return (
       <PlayErrorState
-        message={getNeutralErrorMessage(query.error, t("trainingLoadError"))}
+        message={getNeutralErrorMessage(
+          query.error,
+          t("trainingLoadError"),
+          tError,
+        )}
         onRetry={() => void query.refetch()}
       />
     );
@@ -1458,6 +1472,7 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
 }
 
 function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
+  const tError = useTranslations("ApiErrors");
   const t = useTranslations("Play");
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
@@ -1619,7 +1634,11 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   if (query.error || !query.data) {
     return (
       <PlayErrorState
-        message={getNeutralErrorMessage(query.error, t("duelLoadError"))}
+        message={getNeutralErrorMessage(
+          query.error,
+          t("duelLoadError"),
+          tError,
+        )}
         onRetry={() => void query.refetch()}
       />
     );

@@ -98,7 +98,7 @@ export default function CheckoutForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-md border bg-muted/40 p-3 text-sm">
-        <p className="font-medium">Livraison à</p>
+        <p className="font-medium">{t("deliveryTo")}</p>
         <p className="text-muted-foreground">{shippingAddress}</p>
       </div>
 
@@ -131,7 +131,7 @@ export default function CheckoutForm({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmPayment}>
               {t("confirmPayment")}
             </AlertDialogAction>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DeckScoreSummary, scoreTone } from "../_utils/scores";
@@ -22,6 +23,7 @@ const toneRing: Record<ReturnType<typeof scoreTone>, string> = {
 };
 
 export function DeckScoresPanel({ summary }: DeckScoresPanelProps) {
+  const t = useTranslations("DeckScores");
   const tone = scoreTone(summary.global);
 
   return (
@@ -29,7 +31,7 @@ export function DeckScoresPanel({ summary }: DeckScoresPanelProps) {
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle>Score global</CardTitle>
+            <CardTitle>{t("overallScore")}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Évaluation calculée à partir des indicateurs ci-dessous.
             </p>

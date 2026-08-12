@@ -378,7 +378,7 @@ function DeckImportContent() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Importer depuis un fichier JSON</CardTitle>
+              <CardTitle>{t("importFromJson")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">{t("fileHelp")}</p>

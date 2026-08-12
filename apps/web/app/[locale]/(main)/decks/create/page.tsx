@@ -68,7 +68,7 @@ export default function CreateDeckPage() {
       <div className="max-w-3/4 mx-auto space-y-6">
         <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-secondary/10">
           <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl">Créer un deck</CardTitle>
+            <CardTitle className="text-3xl">{t("submit")}</CardTitle>
             <CardDescription className="text-base">
               {t("subtitle")}
             </CardDescription>

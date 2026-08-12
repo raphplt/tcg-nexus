@@ -195,7 +195,7 @@ export function RankingsDisplay({
                 <TableHead className="text-center">{t("points")}</TableHead>
                 <TableHead className="text-center">{t("wdl")}</TableHead>
                 <TableHead className="text-center">% Victoires</TableHead>
-                <TableHead className="text-center">Actions</TableHead>
+                <TableHead className="text-center">{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

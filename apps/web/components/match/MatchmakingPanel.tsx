@@ -30,7 +30,7 @@ import type {
   CasualLobbyView,
   CasualSessionSummary,
 } from "@/types/casual-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -38,6 +38,7 @@ type MatchmakingStatus = "idle" | "queued" | "matched";
 
 export function MatchmakingPanel() {
   const t = useTranslations("Matchmaking");
+  const tError = useTranslations("ApiErrors");
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
@@ -172,7 +173,7 @@ export function MatchmakingPanel() {
       <Card className="tcg-surface tcg-surface--dark">
         <CardContent className="space-y-3 p-6">
           <p className="text-sm text-destructive">
-            {extractApiErrorMessage(lobbyQuery.error, t("loadError"))}
+            {translateApiError(lobbyQuery.error, tError, t("loadError"))}
           </p>
           <Button
             variant="outline"
@@ -341,7 +342,7 @@ export function MatchmakingPanel() {
 
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">BO1</Badge>
-          <Badge variant="secondary">Standard</Badge>
+          <Badge variant="secondary">{t("standard")}</Badge>
           <Badge variant="secondary">60 cartes</Badge>
         </div>
       </CardContent>

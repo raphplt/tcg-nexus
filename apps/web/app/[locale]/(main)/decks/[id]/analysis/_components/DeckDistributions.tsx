@@ -55,7 +55,7 @@ export function DeckDistributions({ analysis }: DeckDistributionsProps) {
 
       <Card className="border-primary/20 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Catégories</CardTitle>
+          <CardTitle className="text-base">{t("categories")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">

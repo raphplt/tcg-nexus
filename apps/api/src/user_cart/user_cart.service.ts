@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Listing } from "src/marketplace/entities/listing.entity";
 import { User } from "src/user/entities/user.entity";
@@ -121,7 +117,10 @@ export class UserCartService {
     }
 
     if (listing.expiresAt && new Date(listing.expiresAt) <= new Date()) {
-      throw new BadRequestException("Cette annonce a expiré");
+      throw new BadRequestException({
+        code: "LISTING_EXPIRED",
+        message: "Cette annonce a expiré",
+      });
     }
 
     // Vérifier la disponibilité

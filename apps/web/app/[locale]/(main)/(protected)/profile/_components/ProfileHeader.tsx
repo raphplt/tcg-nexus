@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Shield, Mail, Calendar, Settings } from "lucide-react";
 import { User, UserRole } from "@/types/auth";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface ProfileHeaderProps {
   user: User;
 }
 
 export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
+  const t = useTranslations("ProfileHeader");
   const locale = useLocale();
   const getUserInitials = (firstName: string, lastName: string) => {
     return (
@@ -93,7 +94,7 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
           <Button asChild variant="outline" className="space-x-2">
             <Link href="/settings">
               <Settings className="w-4 h-4" />
-              <span>Paramètres</span>
+              <span>{t("settings")}</span>
             </Link>
           </Button>
         </div>

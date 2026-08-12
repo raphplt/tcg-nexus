@@ -232,7 +232,7 @@ export default function MatchesPage() {
               <div className="text-2xl font-bold text-blue-600">
                 {stats.total}
               </div>
-              <div className="text-sm text-muted-foreground">Total</div>
+              <div className="text-sm text-muted-foreground">{t("total")}</div>
             </CardContent>
           </Card>
           <Card>
@@ -366,11 +366,11 @@ export default function MatchesPage() {
                 <TableRow>
                   <TableHead>{t("match")}</TableHead>
                   <TableHead>{t("round")}</TableHead>
-                  <TableHead>Phase</TableHead>
-                  <TableHead>Joueurs</TableHead>
+                  <TableHead>{t("phase")}</TableHead>
+                  <TableHead>{t("players")}</TableHead>
                   <TableHead>{t("score")}</TableHead>
                   <TableHead>{t("status")}</TableHead>
-                  <TableHead>Heure</TableHead>
+                  <TableHead>{t("time")}</TableHead>
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -515,7 +515,7 @@ export default function MatchesPage() {
           tournament?.status === "in_progress" && (
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Actions rapides</CardTitle>
+                <CardTitle>{t("quickActions")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-3">
@@ -558,7 +558,9 @@ export default function MatchesPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isStarting}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isStarting}>
+              {t("cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               disabled={startableMatches.length === 0 || isStarting}
               onClick={() => {

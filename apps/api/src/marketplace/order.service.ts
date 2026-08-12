@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, ForbiddenException, HttpStatus, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, LessThan, Repository } from "typeorm";
@@ -802,7 +796,10 @@ export class OrderService {
     }
 
     if (orderItem.order.status === OrderStatus.PENDING) {
-      throw new BadRequestException("Cette commande n'a pas encore été payée");
+      throw new BadRequestException({
+        code: "ORDER_NOT_PAID",
+        message: "Cette commande n'a pas encore été payée",
+      });
     }
 
     const allowed = FULFILLMENT_TRANSITIONS[orderItem.fulfillmentStatus] ?? [];

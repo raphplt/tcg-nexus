@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +12,7 @@ interface UserTournamentsTabProps {
 }
 
 export function UserTournamentsTab({ playerId }: UserTournamentsTabProps) {
+  const t = useTranslations("PublicProfile");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["user-public-tournaments", playerId],
     queryFn: () => playerService.getTournamentHistory(playerId!, "all"),
@@ -18,7 +20,9 @@ export function UserTournamentsTab({ playerId }: UserTournamentsTabProps) {
   });
 
   if (!playerId) {
-    return <p className="text-sm text-muted-foreground">Aucun tournoi</p>;
+    return (
+      <p className="text-sm text-muted-foreground">{t("noTournaments")}</p>
+    );
   }
   if (isLoading) {
     return (
@@ -29,11 +33,13 @@ export function UserTournamentsTab({ playerId }: UserTournamentsTabProps) {
     );
   }
   if (isError) {
-    return <p className="text-sm text-destructive">Erreur de chargement</p>;
+    return <p className="text-sm text-destructive">{t("loadError")}</p>;
   }
   const history = data?.history ?? [];
   if (history.length === 0) {
-    return <p className="text-sm text-muted-foreground">Aucun tournoi</p>;
+    return (
+      <p className="text-sm text-muted-foreground">{t("noTournaments")}</p>
+    );
   }
   return (
     <ul className="grid gap-3">

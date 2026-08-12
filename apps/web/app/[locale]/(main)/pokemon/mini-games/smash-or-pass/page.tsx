@@ -384,7 +384,7 @@ export default function PokemonMatchPage() {
                 <Heart className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <H1 className="text-lg! sm:text-xl!">Smash or Pass</H1>
+                <H1 className="text-lg! sm:text-xl!">{t("title")}</H1>
                 <p className="text-[11px] text-muted-foreground sm:text-xs">
                   {t("swipeHelp")}
                 </p>
@@ -425,7 +425,7 @@ export default function PokemonMatchPage() {
                       placeholder={t("chooseBlock")}
                       onValueChange={setSelectedSerie}
                     >
-                      <SelectItem value="None">Aucun filtre</SelectItem>
+                      <SelectItem value="None">{t("noFilter")}</SelectItem>
                       {series.map((serie: PokemonSerieType) => (
                         <SelectItem key={serie.id} value={serie.id.toString()}>
                           {serie.name}
@@ -439,7 +439,7 @@ export default function PokemonMatchPage() {
                       placeholder={t("chooseRarity")}
                       onValueChange={setSelectedRarity}
                     >
-                      <SelectItem value="None">Aucun filtre</SelectItem>
+                      <SelectItem value="None">{t("noFilter")}</SelectItem>
                       {Object.values(PokemonRarity).map((rarity) => (
                         <SelectItem key={rarity} value={rarity}>
                           {rarity}
@@ -453,7 +453,7 @@ export default function PokemonMatchPage() {
                       placeholder={t("chooseSeries")}
                       onValueChange={setSelectedSet}
                     >
-                      <SelectItem value="None">Aucun filtre</SelectItem>
+                      <SelectItem value="None">{t("noFilter")}</SelectItem>
                       {sets.map((set: PokemonSetType) => (
                         <SelectItem key={set.id} value={set.id.toString()}>
                           {set.name}

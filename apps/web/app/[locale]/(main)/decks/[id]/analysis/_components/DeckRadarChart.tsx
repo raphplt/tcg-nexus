@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
   PolarAngleAxis,
@@ -17,6 +18,7 @@ interface DeckRadarChartProps {
 }
 
 export function DeckRadarChart({ summary }: DeckRadarChartProps) {
+  const t = useTranslations("DeckRadar");
   const data = useMemo(
     () =>
       summary.scores.map((s) => ({
@@ -29,7 +31,7 @@ export function DeckRadarChart({ summary }: DeckRadarChartProps) {
   return (
     <Card className="border-primary/20 shadow-sm">
       <CardHeader>
-        <CardTitle>Profil du deck</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-72">

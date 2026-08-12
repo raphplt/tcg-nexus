@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/utils/price";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface PriceChartProps {
   data: Array<{ price: number; currency: string; recordedAt: Date | string }>;
@@ -27,12 +27,13 @@ export function PriceChart({
   className,
   showTrend = true,
 }: PriceChartProps) {
+  const t = useTranslations("PriceChart");
   const locale = useLocale();
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Historique des prix</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64 flex items-center justify-center text-muted-foreground">
@@ -100,7 +101,7 @@ export function PriceChart({
     <Card className={className}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Historique des prix</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           {showTrend && (
             <div className="flex items-center gap-2">
               {trend > 0 ? (

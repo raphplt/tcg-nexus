@@ -178,12 +178,12 @@ function SealedListingsContent() {
         <div className="mb-6">
           <MarketplaceBreadcrumb />
         </div>
-        <H1 className="mb-6 text-center">Produits scellés</H1>
+        <H1 className="mb-6 text-center">{t("title")}</H1>
 
         <Card className="mb-6">
           <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="md:col-span-2">
-              <Label className="text-xs">Recherche</Label>
+              <Label className="text-xs">{t("search")}</Label>
               <Input
                 placeholder={t("searchPlaceholder")}
                 value={search}
@@ -195,7 +195,7 @@ function SealedListingsContent() {
             </div>
 
             <div>
-              <Label className="text-xs">Type</Label>
+              <Label className="text-xs">{t("type")}</Label>
               <Select
                 value={productType ?? "all"}
                 onValueChange={(value) => {
@@ -210,7 +210,7 @@ function SealedListingsContent() {
                   <SelectValue placeholder={t("typePlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
+                  <SelectItem value="all">{t("allTypes")}</SelectItem>
                   {Object.values(SealedProductType).map((type) => (
                     <SelectItem key={type} value={type}>
                       {sealedProductTypeLabels[type]}
@@ -221,7 +221,7 @@ function SealedListingsContent() {
             </div>
 
             <div>
-              <Label className="text-xs">Tri</Label>
+              <Label className="text-xs">{t("sort")}</Label>
               <Select
                 value={sortBy}
                 onValueChange={(value) => {
@@ -235,7 +235,7 @@ function SealedListingsContent() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={SealedSortBy.NAME}>Nom</SelectItem>
+                  <SelectItem value={SealedSortBy.NAME}>{t("name")}</SelectItem>
                   <SelectItem value={SealedSortBy.RECENT}>
                     {t("sortNewest")}
                   </SelectItem>
@@ -267,7 +267,7 @@ function SealedListingsContent() {
                   <SelectValue placeholder={t("seriesPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les séries</SelectItem>
+                  <SelectItem value="all">{t("allSeries")}</SelectItem>
                   {series?.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -278,7 +278,7 @@ function SealedListingsContent() {
             </div>
 
             <div>
-              <Label className="text-xs">Set</Label>
+              <Label className="text-xs">{t("set")}</Label>
               <Select
                 value={setId ?? "all"}
                 onValueChange={(value) => {
@@ -289,10 +289,10 @@ function SealedListingsContent() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Set" />
+                  <SelectValue placeholder={t("set")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les sets</SelectItem>
+                  <SelectItem value="all">{t("allSets")}</SelectItem>
                   {sets?.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -303,7 +303,7 @@ function SealedListingsContent() {
             </div>
 
             <div>
-              <Label className="text-xs">Prix min</Label>
+              <Label className="text-xs">{t("minPrice")}</Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -318,7 +318,7 @@ function SealedListingsContent() {
             </div>
 
             <div>
-              <Label className="text-xs">Prix max</Label>
+              <Label className="text-xs">{t("maxPrice")}</Label>
               <Input
                 type="number"
                 inputMode="decimal"

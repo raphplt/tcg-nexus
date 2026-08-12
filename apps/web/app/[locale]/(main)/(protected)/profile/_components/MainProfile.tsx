@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -12,6 +13,7 @@ import { ProfileTournaments } from "./ProfileTournaments";
 import { ProfileSales } from "./ProfileSales";
 
 const MainProfile = () => {
+  const t = useTranslations("MainProfile");
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: dashboard, isLoading: isDashboardLoading } = useDashboard();
 
@@ -37,9 +39,9 @@ const MainProfile = () => {
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-          <TabsTrigger value="overview">Vue d&apos;ensemble</TabsTrigger>
-          <TabsTrigger value="tournaments">Tournois</TabsTrigger>
-          <TabsTrigger value="sales">Ventes</TabsTrigger>
+          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+          <TabsTrigger value="tournaments">{t("tournaments")}</TabsTrigger>
+          <TabsTrigger value="sales">{t("sales")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
