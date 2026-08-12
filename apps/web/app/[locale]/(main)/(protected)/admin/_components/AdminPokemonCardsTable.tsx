@@ -282,7 +282,7 @@ export function AdminPokemonCardsTable() {
 
   return (
     <Card>
-      <CardHeader className="flex items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>{t("title")}</CardTitle>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
