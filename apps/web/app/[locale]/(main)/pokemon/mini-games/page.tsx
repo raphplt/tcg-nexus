@@ -190,7 +190,7 @@ export default function MiniGamesHubPage() {
                       className="w-full font-semibold shadow-sm hover:shadow transition-all duration-300"
                     >
                       <Link href={game.href}>
-                        Jouer maintenant
+                        {t("playNow")}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
