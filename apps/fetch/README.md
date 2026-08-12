@@ -4,31 +4,48 @@ Ce microservice est une application Express.js qui interagit avec l’API TCGdex
 
 ## Dataset du catalogue
 
-Le catalogue Pokémon (séries, sets, cartes) vit dans `data/`, hors dépôt
-(`data/*` est ignoré par git). Il est **publié sur R2** et récupéré par
-`npm run data:pull` : aucun transfert manuel entre postes, aucun re-scrape.
+Le catalogue Pokémon (séries, sets, cartes) vit dans `data/` et **est versionné
+dans le dépôt**. Un `git clone` suffit donc à disposer des cartes : ni
+re-scrape d'une heure, ni fichiers à copier d'un poste à l'autre, ni volume à
+alimenter sur le serveur — l'image Docker de l'API les embarque.
 
 ```
 data/
-├── manifest.json                     empreintes des fichiers, base du pull
 ├── fr/
 │   ├── series.json
 │   ├── sets.json
 │   └── cards/<setId>.ndjson.br       une ligne par carte, compressé Brotli
-└── en/                               même structure
+├── en/                               même structure
+└── sealed_products.json
 ```
 
 Le format NDJSON compressé remplace les ~20 000 fichiers JSON indentés :
 **80 Mo → 2,7 Mo par langue**, 172 fichiers au lieu de 20 222, et un set entier
 se lit d'un coup. Le catalogue complet se charge en moins d'une seconde.
 
+C'est ce qui rend le versionnement raisonnable. Deux réflexes à garder :
+
+- le scraper ne réécrit que les **nouveaux** sets — quelques dizaines de Ko
+  par mois dans l'historique ;
+- `update-data -- --refresh` réécrit tout (les prix bougent chaque jour) et
+  ajoute ~3 Mo à l'historique. À faire rarement, et volontairement.
+
 ### Démarrer sur un nouveau poste
 
 ```sh
-cd apps/fetch
-npm run data:pull        # récupère le dataset publié (aucune credential requise)
-cd ../api
+cd apps/api
 npm run import:catalog   # importe séries, sets, cartes et traductions en base
+```
+
+### Rafraîchir le catalogue sans redéployer
+
+`data:push` et `data:pull` publient le dataset sur R2 et l'en récupèrent. Le
+dépôt reste la source de vérité : ces commandes ne servent qu'à mettre à jour
+un environnement déjà déployé sans reconstruire l'image.
+
+```sh
+npm run data:push        # mainteneur, credentials R2 requises
+npm run data:pull        # sur la cible ; écrase les fichiers locaux
 ```
 
 ### Variables d'environnement
@@ -44,8 +61,8 @@ La lecture (`data:pull`) passe par le domaine public et n'en a pas besoin.
 
 | Script | Rôle |
 | --- | --- |
-| `npm run data:pull` | Récupère le dataset publié. Ne télécharge que les fichiers dont l'empreinte diffère. `--force` pour tout retélécharger. |
-| `npm run data:push` | Publie le dataset local sur R2. Réservé au mainteneur (credentials requises). N'envoie que le delta. |
+| `npm run data:pull` | Récupère le dataset publié sur R2. Ne télécharge que les fichiers dont l'empreinte diffère. `--force` pour tout retélécharger. Inutile en développement : le dépôt fait foi. |
+| `npm run data:push` | Publie le dataset local sur R2, pour rafraîchir un environnement déployé. Réservé au mainteneur (credentials requises). N'envoie que le delta. |
 | `npm run update-data` | Scrape TCGdex langue par langue. `--locale=en` pour une langue, `--refresh` pour re-récupérer les sets déjà connus. Uploade logos/symboles de sets sur R2. |
 | `npm run coverage-report` | Compare la couverture entre langues, sans rien écrire. `--remote` confronte au catalogue TCGdex. C'est la métrique qui décide de l'activation d'une langue. |
 | `npm run data:migrate-layout` | Conversion unique de l'ancienne arborescence `data/<serie>/<set>/<carte>.json`. `--prune` supprime l'ancienne. |

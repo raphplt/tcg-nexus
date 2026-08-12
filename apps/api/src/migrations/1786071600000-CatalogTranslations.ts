@@ -16,6 +16,17 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
     // La recherche de cartes compare des libellés accentués : « pokemon » doit
     // trouver « Pokémon », dans toutes les langues du catalogue.
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS unaccent`);
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+
+    // `unaccent` est déclarée STABLE (elle dépend d'un dictionnaire), donc
+    // inutilisable dans un index. Ce wrapper fige le dictionnaire et devient
+    // IMMUTABLE, ce qui rend l'expression indexable.
+    await queryRunner.query(`
+      CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+      RETURNS text
+      LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS
+      $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$
+    `);
 
     // Une carte reste une seule ligne quel que soit le nombre de langues :
     // c'est ce qui empêche un backfill de dupliquer les cartes et de casser
@@ -51,6 +62,15 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
     await queryRunner.query(`
       CREATE INDEX "IDX_card_translation_locale_name"
       ON "card_translation" ("locale", "name")
+    `);
+
+    // La recherche est un `ILIKE '%…%'` sur une expression : seul un index
+    // trigram peut la servir. Sans lui, chaque recherche parcourt les 40 000
+    // traductions.
+    await queryRunner.query(`
+      CREATE INDEX "IDX_card_translation_name_trgm"
+      ON "card_translation"
+      USING gin (immutable_unaccent("name") gin_trgm_ops)
     `);
 
     await queryRunner.query(`
@@ -111,8 +131,10 @@ export class CatalogTranslations1786071600000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE "pokemon_serie_translation"`);
     await queryRunner.query(`DROP TABLE "pokemon_set_translation"`);
+    await queryRunner.query(`DROP INDEX "IDX_card_translation_name_trgm"`);
     await queryRunner.query(`DROP INDEX "IDX_card_translation_locale_name"`);
     await queryRunner.query(`DROP TABLE "card_translation"`);
     await queryRunner.query(`DROP INDEX "UQ_card_game_tcgDexId"`);
+    await queryRunner.query(`DROP FUNCTION IF EXISTS immutable_unaccent(text)`);
   }
 }

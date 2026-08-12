@@ -1744,6 +1744,14 @@ export class SeedService {
     // unaccent : la recherche de cartes doit trouver « Pokémon » quand on
     // tape « pokemon », dans toutes les langues du catalogue.
     await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS unaccent;`);
+    // Wrapper IMMUTABLE, seule forme indexable — voir la migration
+    // CatalogTranslations et `applyCardSearch`.
+    await this.userRepository.query(`
+      CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+      RETURNS text
+      LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE AS
+      $$ SELECT public.unaccent('public.unaccent'::regdictionary, $1) $$;
+    `);
     console.log("✅ Extensions Postgres pg_trgm et unaccent activées.");
   }
 

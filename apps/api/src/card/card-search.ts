@@ -12,8 +12,12 @@ import { SelectQueryBuilder } from "typeorm";
  * une relation « un-à-plusieurs » multiplierait les lignes et fausserait les
  * `limit` des appelants.
  *
- * `unaccent` rend la recherche insensible aux diacritiques — « pokemon » trouve
- * « Pokémon ». L'extension est créée par `SeedService.enableExtensions()`.
+ * `immutable_unaccent` rend la recherche insensible aux diacritiques —
+ * « pokemon » trouve « Pokémon ». C'est un wrapper IMMUTABLE autour de
+ * `unaccent`, seul indexable : l'expression doit être écrite exactement comme
+ * dans l'index trigram de `card_translation`, sinon Postgres l'ignore.
+ * Fonction et extensions sont créées par la migration `CatalogTranslations`
+ * et par `SeedService.enableExtensions()`.
  */
 export function applyCardSearch<T extends object>(
   qb: SelectQueryBuilder<T>,
@@ -27,19 +31,19 @@ export function applyCardSearch<T extends object>(
   const conditions = [
     // Colonnes héritées de `card`, conservées le temps que toutes les données
     // soient passées par les traductions.
-    `unaccent(${alias}.name) ILIKE unaccent(:cardSearch)`,
+    `immutable_unaccent(${alias}.name) ILIKE immutable_unaccent(:cardSearch)`,
     `${alias}.rarity ILIKE :cardSearch`,
     `${alias}.localId ILIKE :cardSearch`,
     // L'illustrateur est un nom propre : il ne se traduit pas et reste sur `card`.
-    `unaccent(${alias}.illustrator) ILIKE unaccent(:cardSearch)`,
-    `unaccent(${set}.name) ILIKE unaccent(:cardSearch)`,
-    `unaccent(${details}.description) ILIKE unaccent(:cardSearch)`,
+    `immutable_unaccent(${alias}.illustrator) ILIKE immutable_unaccent(:cardSearch)`,
+    `immutable_unaccent(${set}.name) ILIKE immutable_unaccent(:cardSearch)`,
+    `immutable_unaccent(${details}.description) ILIKE immutable_unaccent(:cardSearch)`,
     `EXISTS (
       SELECT 1 FROM card_translation ct
       WHERE ct.card_id = ${alias}.id
         AND (
-          unaccent(ct.name) ILIKE unaccent(:cardSearch)
-          OR unaccent(ct.description) ILIKE unaccent(:cardSearch)
+          immutable_unaccent(ct.name) ILIKE immutable_unaccent(:cardSearch)
+          OR immutable_unaccent(ct.description) ILIKE immutable_unaccent(:cardSearch)
         )
     )`,
   ];

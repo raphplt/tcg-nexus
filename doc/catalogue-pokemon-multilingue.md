@@ -347,13 +347,17 @@ ce qui rend le retour arrière possible.
 | Modèle | Trois tables de traduction, index unique `(game, tcgDexId)`, migration additive qui recopie l'existant en `fr`. |
 | Import | `CatalogImportService` : upsert des entités et des traductions, idempotent, ~6 s pour 19 424 cartes. `npm run import:catalog`. |
 | API | Résolution de la langue via `Accept-Language`, appliquée par un intercepteur global — donc aussi aux cartes imbriquées dans les listings, collections et decks. |
-| Recherche | `applyCardSearch` interroge `card_translation` toutes langues confondues, via `EXISTS` pour ne pas fausser les `limit`, et `unaccent` pour ignorer les diacritiques. Branché sur `card.service`, `search.service` et `pokemon-card.service`. |
+| Recherche | `applyCardSearch` interroge `card_translation` toutes langues confondues, via `EXISTS` pour ne pas fausser les `limit`, et `immutable_unaccent` pour ignorer les diacritiques. Index GIN trigram sur l'expression indexée. Branché sur `card.service`, `search.service` et `pokemon-card.service`. |
+| Sets et séries | Traduits comme les cartes par le même intercepteur, y compris imbriqués (`card.set.serie`). Les faux positifs de détection sont filtrés par la base : sans traduction, l'objet reste intact. |
+| Administration | `?withTranslations=true` attache toutes les langues sous `translations`, sans masquer la vue résolue. |
+| Distribution | `data/` versionné (175 fichiers, ~3 Mo), embarqué dans l'image Docker de l'API (`TCG_DATA_DIR=/app/data`). Le volume `/srv/tcg-nexus/data` n'est plus nécessaire. |
 | Recherche | `applyCardSearch` interroge `card_translation` par `EXISTS`, toutes langues confondues, avec `unaccent` : « etincelles » trouve « Étincelles Déferlantes », « Charizard » trouvera « Dracaufeu ». |
 
-Vérifié de bout en bout : `Accept-Language: en` renvoie le nom, l'image et la
-description anglais ; `de` retombe sur la langue par défaut ; chercher
-« Charizard » trouve Dracaufeu, « zenith » trouve le set « Zénith Suprême ».
-Les 875 tests de l'API passent.
+Vérifié de bout en bout : `Accept-Language: en` renvoie nom, image, description,
+nom de set et nom de série anglais ; `de` retombe sur la langue par défaut ;
+chercher « Charizard » trouve Dracaufeu, « zenith » trouve « Zénith Suprême » ;
+l'index trigram est bien utilisé (`Bitmap Index Scan`, 0,9 ms). Le build Docker
+de l'API passe et l'image contient les 172 sets. Les 877 tests de l'API passent.
 
 ### Reste à faire
 

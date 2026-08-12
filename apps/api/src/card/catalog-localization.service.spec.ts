@@ -1,25 +1,39 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { CardLocalizationService } from "./card-localization.service";
+import { CatalogLocalizationService } from "./catalog-localization.service";
+import { PokemonSerieTranslation } from "../pokemon-series/entities/pokemon-serie-translation.entity";
+import { PokemonSetTranslation } from "../pokemon-set/entities/pokemon-set-translation.entity";
 import { CardTranslation } from "./entities/card-translation.entity";
 
-describe("CardLocalizationService", () => {
-  let service: CardLocalizationService;
+describe("CatalogLocalizationService", () => {
+  let service: CatalogLocalizationService;
   const find = jest.fn();
+  const findSets = jest.fn().mockResolvedValue([]);
+  const findSeries = jest.fn().mockResolvedValue([]);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CardLocalizationService,
+        CatalogLocalizationService,
         {
           provide: getRepositoryToken(CardTranslation),
           useValue: { find },
         },
+        {
+          provide: getRepositoryToken(PokemonSetTranslation),
+          useValue: { find: findSets },
+        },
+        {
+          provide: getRepositoryToken(PokemonSerieTranslation),
+          useValue: { find: findSeries },
+        },
       ],
     }).compile();
 
-    service = module.get(CardLocalizationService);
+    service = module.get(CatalogLocalizationService);
     find.mockReset();
+    findSets.mockReset().mockResolvedValue([]);
+    findSeries.mockReset().mockResolvedValue([]);
   });
 
   const card = (id: string, name: string) => ({
@@ -84,8 +98,49 @@ describe("CardLocalizationService", () => {
     expect(find).toHaveBeenCalledTimes(1);
   });
 
-  it("ne requête rien quand le payload ne contient aucune carte", async () => {
+  it("ne requête rien quand le payload ne contient aucune entité", async () => {
     await service.localize({ message: "ok" }, "en");
     expect(find).not.toHaveBeenCalled();
+    expect(findSets).not.toHaveBeenCalled();
+    expect(findSeries).not.toHaveBeenCalled();
+  });
+
+  it("traduit le set et la série portés par une carte", async () => {
+    find.mockResolvedValue([]);
+    findSets.mockResolvedValue([
+      { setId: "base1", locale: "en", name: "Base Set" },
+    ]);
+    findSeries.mockResolvedValue([
+      { serieId: "base", locale: "en", name: "Base" },
+    ]);
+
+    const payload = await service.localize(
+      {
+        ...card("1", "Dracaufeu"),
+        set: {
+          id: "base1",
+          name: "Set de Base",
+          releaseDate: "1999-01-09",
+          serie: { id: "base", name: "Base" },
+        },
+      },
+      "en",
+    );
+
+    expect(payload.set.name).toBe("Base Set");
+    expect(payload.set.serie.name).toBe("Base");
+  });
+
+  it("laisse intact un objet pris à tort pour un set", async () => {
+    find.mockResolvedValue([]);
+    // Aucune traduction en base pour cet id : la base filtre les faux positifs.
+    findSets.mockResolvedValue([]);
+
+    const payload = await service.localize(
+      { id: "un-objet-quelconque", name: "inchangé", releaseDate: "2020-01-01" },
+      "en",
+    );
+
+    expect(payload.name).toBe("inchangé");
   });
 });

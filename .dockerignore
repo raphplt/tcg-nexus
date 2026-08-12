@@ -19,3 +19,10 @@ yarn-debug.log*
 yarn-error.log*
 
 data.zip
+
+# Catalogue : seules les langues versionnées entrent dans l'image, pas
+# l'ancienne arborescence par carte ni les fichiers de travail.
+data/*
+!data/fr
+!data/en
+!data/sealed_products.json

@@ -14,7 +14,7 @@ import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { BadgeModule } from "./badge/badge.module";
 import { CardModule } from "./card/card.module";
-import { CardLocalizationInterceptor } from "./card/card-localization.interceptor";
+import { CatalogLocalizationInterceptor } from "./card/catalog-localization.interceptor";
 import { CardStateModule } from "./card-state/card-state.module";
 import { CollectionModule } from "./collection/collection.module";
 import { CollectionItemModule } from "./collection-item/collection-item.module";
@@ -124,7 +124,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     },
     {
       provide: APP_INTERCEPTOR,
-      useClass: CardLocalizationInterceptor,
+      useClass: CatalogLocalizationInterceptor,
     },
   ],
 })

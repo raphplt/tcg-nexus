@@ -41,7 +41,16 @@ yarn-error.log*
 *.pem
 .idea
 
+# Dataset du catalogue : versionné sous sa forme compressée (~2,7 Mo par langue),
+# pour qu'un clone suffise à disposer des cartes — sans re-scraper TCGdex ni
+# copier de fichiers à la main. Voir apps/fetch/README.md.
+# Tout le reste de data/ est ignoré : ancienne arborescence, manifeste dérivé,
+# archives de travail.
 data/*
+!data/fr/
+!data/en/
+!data/sealed_products.json
+
 CLAUDE.md
 .claude/*
 
