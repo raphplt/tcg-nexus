@@ -615,12 +615,15 @@
       "title": "Latest articles",
       "error": "Could not load the articles."
     },
-    "marketplace": {
-      "title": "Marketplace",
+    "trendingCards": {
+      "title": "Trending cards",
       "unknownSet": "Unknown set",
-      "unknownRarity": "Unknown rarity",
+      "listings": "{count, plural, =0 {No listing} one {# listing} other {# listings}}",
+      "fromPrice": "from {price}",
+      "noPrice": "No offer",
+      "empty": "No trending card yet",
       "buy": "Buy",
-      "viewAll": "View all listings"
+      "viewAll": "View all cards"
     },
     "randomCard": {
       "title": "Random card",

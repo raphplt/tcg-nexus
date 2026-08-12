@@ -615,12 +615,15 @@
       "title": "Derniers articles",
       "error": "Erreur lors du chargement des articles."
     },
-    "marketplace": {
-      "title": "Marketplace",
+    "trendingCards": {
+      "title": "Cartes tendances",
       "unknownSet": "Extension inconnue",
-      "unknownRarity": "Rareté inconnue",
+      "listings": "{count, plural, =0 {Aucune annonce} one {# annonce} other {# annonces}}",
+      "fromPrice": "dès {price}",
+      "noPrice": "Aucune offre",
+      "empty": "Aucune carte tendance pour le moment",
       "buy": "Acheter",
-      "viewAll": "Voir tous les articles"
+      "viewAll": "Voir toutes les cartes"
     },
     "randomCard": {
       "title": "Carte au hasard",

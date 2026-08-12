@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import React from "react";
 import LatestArticles from "@/components/Home/LatestArticles";
-import MarketplacePreview from "@/components/Home/MarketplacePreview";
 import RandomCard from "@/components/Home/RandomCard";
 import SealedProductsPreview from "@/components/Home/SealedProductsPreview";
 import TournamentPreview from "@/components/Home/TournamentPreview";
+import TrendingCardsPreview from "@/components/Home/TrendingCardsPreview";
 import TrendingDecks from "@/components/Home/TrendingDecks";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,7 +107,7 @@ const HomePage = () => {
             </div>
             <div className="space-y-8">
               <div className="card-hover">
-                <MarketplacePreview />
+                <TrendingCardsPreview />
               </div>
             </div>
           </div>
