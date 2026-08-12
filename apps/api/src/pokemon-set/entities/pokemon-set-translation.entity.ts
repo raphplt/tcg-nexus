@@ -2,8 +2,8 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { PokemonSet } from "./pokemon-set.entity";
 
 /**
- * Nom et visuels d'un set par langue. Le logo et le symbole en font partie :
- * TCGdex les sert par langue, comme les images de cartes.
+ * Name and visuals of a set, one row per language. Logo and symbol belong here:
+ * TCGdex serves them per language, as it does for card images.
  */
 @Entity("pokemon_set_translation")
 export class PokemonSetTranslation {

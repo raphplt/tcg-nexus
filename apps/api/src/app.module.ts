@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { Module } from "@nestjs/common";
+import { ClassSerializerInterceptor, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
@@ -123,6 +123,14 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Interceptor order matters: the first registered wraps the others, so it
+    // transforms the response last. Serialization must come after localization,
+    // which needs the entity instances the repositories return — a series
+    // narrowed down to its identifier is only recognizable by its class.
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ClassSerializerInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

@@ -29,27 +29,38 @@ export function formatDateTime(
   return date.toLocaleString(locale, options);
 }
 
+/** Convertit une valeur potentiellement absente ou textuelle en nombre exploitable. */
+function toNumber(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function formatNumber(
-  value: number,
+  value: number | string | null | undefined,
   locale: SupportedLocale = DEFAULT_LOCALE,
   options?: Intl.NumberFormatOptions,
 ): string {
-  return value.toLocaleString(locale, options);
+  const parsed = toNumber(value);
+  if (parsed === null) return "";
+  return parsed.toLocaleString(locale, options);
 }
 
 export function formatCurrency(
-  value: number,
+  value: number | string | null | undefined,
   currency: string,
   locale: SupportedLocale = DEFAULT_LOCALE,
   options?: Intl.NumberFormatOptions,
 ): string {
+  const parsed = toNumber(value);
+  if (parsed === null) return "—";
   try {
-    return value.toLocaleString(locale, {
+    return parsed.toLocaleString(locale, {
       style: "currency",
       currency,
       ...options,
     });
   } catch {
-    return `${value.toFixed(2)} ${currency}`;
+    return `${parsed.toFixed(2)} ${currency}`;
   }
 }

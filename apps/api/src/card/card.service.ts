@@ -247,7 +247,9 @@ export class CardService implements OnModuleInit {
         );
       return new Map(rows.map((r) => [r.id, Number(r.similarity)]));
     } catch (error) {
-      this.logger.warn(`Visual similarity calculation failed: ${(error as Error).message}`);
+      this.logger.warn(
+        `Visual similarity calculation failed: ${(error as Error).message}`,
+      );
       return new Map();
     }
   }

@@ -1,4 +1,4 @@
-// doit rester aligné avec apps/web/i18n/config.ts
+// Must stay aligned with apps/web/i18n/config.ts
 export const SUPPORTED_LOCALES = ["fr", "en"] as const;
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];

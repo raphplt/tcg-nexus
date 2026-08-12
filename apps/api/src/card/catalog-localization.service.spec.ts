@@ -2,6 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CatalogLocalizationService } from "./catalog-localization.service";
 import { PokemonSerieTranslation } from "../pokemon-series/entities/pokemon-serie-translation.entity";
+import { PokemonSerie } from "../pokemon-series/entities/pokemon-serie.entity";
 import { SealedProductLocale } from "../sealed-product/entities/sealed-product-locale.entity";
 import { PokemonSetTranslation } from "../pokemon-set/entities/pokemon-set-translation.entity";
 import { CardTranslation } from "./entities/card-translation.entity";
@@ -209,6 +210,58 @@ describe("CatalogLocalizationService", () => {
     const translations = payload.translations ?? {};
     expect(Object.keys(translations)).toEqual(["fr", "en"]);
     expect(translations.en.name).toBe("Booster Bundle");
+  });
+
+  it("comble champ par champ ce qui manque dans la langue demandée", async () => {
+    // TCGdex illustrates many old sets in English only: the French name must
+    // survive while the artwork is borrowed from English.
+    find.mockResolvedValue([
+      { cardId: "1", locale: "fr", name: "Dialga", image: null },
+      { cardId: "1", locale: "en", name: "Dialga", image: "en/dp/dp1/1" },
+    ]);
+
+    const payload: { name: string; image?: string } = await service.localize(
+      card("1", "ignoré"),
+      "fr",
+    );
+
+    expect(payload.name).toBe("Dialga");
+    expect(payload.image).toBe("en/dp/dp1/1");
+  });
+
+  it("traduit toutes les occurrences d'une même entité, pas seulement la dernière", async () => {
+    findSeries.mockResolvedValue([
+      { serieId: "mc", locale: "fr", name: "Promo McDonald's" },
+    ]);
+
+    // The same series hangs off every set of a list: each occurrence is a
+    // distinct object and all of them are displayed.
+    const payload = await service.localize(
+      [
+        { id: "2015xy", serie: { id: "mc" } as { id: string; name?: string } },
+        { id: "2016xy", serie: { id: "mc" } as { id: string; name?: string } },
+      ],
+      "fr",
+    );
+
+    expect(payload.map((set) => set.serie.name)).toEqual([
+      "Promo McDonald's",
+      "Promo McDonald's",
+    ]);
+  });
+
+  it("reconnaît une entité TypeORM réduite à son identifiant", async () => {
+    findSeries.mockResolvedValue([
+      { serieId: "base", locale: "fr", name: "Base", logo: "logo.webp" },
+    ]);
+
+    // The series list endpoint only selects the id: nothing in the object's
+    // shape says "series", only its class does.
+    const serie = Object.assign(new PokemonSerie(), { id: "base" });
+    const payload = await service.localize([serie], "fr");
+
+    expect(payload[0].name).toBe("Base");
+    expect(payload[0].logo).toBe("logo.webp");
   });
 
   it("leaves non-set object untouched", async () => {

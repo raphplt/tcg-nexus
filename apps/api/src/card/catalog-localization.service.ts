@@ -25,12 +25,27 @@ const MAX_DEPTH = 8;
  */
 type TranslationIdColumn = "cardId" | "setId" | "serieId" | "sealedProductId";
 
-interface CollectedEntities {
-  cards: Map<string, Localizable>;
-  sets: Map<string, Localizable>;
-  series: Map<string, Localizable>;
-  sealedProducts: Map<string, Localizable>;
-}
+/**
+ * Entities found in a payload, grouped by kind then by identifier. The same
+ * entity often appears several times in one response — a series shared by every
+ * set of a list, a card listed by several sellers — and each occurrence is a
+ * distinct object that must be localized.
+ */
+type EntityKind = "cards" | "sets" | "series" | "sealedProducts";
+
+type CollectedEntities = Record<EntityKind, Map<string, Localizable[]>>;
+
+/**
+ * Class names of the catalog entities. TypeORM hands back real class instances,
+ * which identifies them with certainty — down to a series loaded with nothing
+ * but its identifier, which no heuristic could tell from any other object.
+ */
+const ENTITY_CLASS_KINDS: Record<string, EntityKind> = {
+  Card: "cards",
+  PokemonSet: "sets",
+  PokemonSerie: "series",
+  SealedProduct: "sealedProducts",
+};
 
 function isObject(value: unknown): value is Localizable {
   return (
@@ -38,6 +53,12 @@ function isObject(value: unknown): value is Localizable {
     value !== null &&
     typeof (value as Localizable).id === "string"
   );
+}
+
+/** Entity kind of a class instance, or `undefined` for a plain object. */
+function classKind(value: Localizable): EntityKind | undefined {
+  const name = (value as object).constructor?.name;
+  return name ? ENTITY_CLASS_KINDS[name] : undefined;
 }
 
 /** Card entities uniquely feature a `tcgDexId` property. */
@@ -63,6 +84,23 @@ function isSetLike(value: Localizable, parentKey?: string): boolean {
 /** Series entities are identified by their position, or by a nested sets array. */
 function isSerieLike(value: Localizable, parentKey?: string): boolean {
   return parentKey === "serie" || Array.isArray(value.sets);
+}
+
+/**
+ * Entity kind of a plain object — a trimmed DTO built by a service, which has
+ * lost its class and can only be recognized by its shape or by the key it hangs
+ * from. Checked against the database afterwards, so a wrong guess simply finds
+ * no translation.
+ */
+function plainObjectKind(
+  value: Localizable,
+  parentKey?: string,
+): EntityKind | undefined {
+  if (isCardLike(value)) return "cards";
+  if (isSealedProductLike(value)) return "sealedProducts";
+  if (isSerieLike(value, parentKey)) return "series";
+  if (isSetLike(value, parentKey)) return "sets";
+  return undefined;
 }
 
 /**
@@ -135,27 +173,31 @@ export class CatalogLocalizationService {
       await this.attachAllTranslations(collected);
     }
 
-    for (const [id, card] of cards) {
+    for (const [id, instances] of cards) {
       const translation = cardRows.get(id);
-      if (translation) this.applyCard(card, translation);
+      if (!translation) continue;
+      for (const card of instances) this.applyCard(card, translation);
     }
-    for (const [id, set] of sets) {
+    for (const [id, instances] of sets) {
       const translation = setRows.get(id);
-      if (translation) {
+      if (!translation) continue;
+      for (const set of instances) {
         assign(set, "name", translation.name);
         assign(set, "logo", translation.logo);
         assign(set, "symbol", translation.symbol);
       }
     }
-    for (const [id, serie] of series) {
+    for (const [id, instances] of series) {
       const translation = serieRows.get(id);
-      if (translation) {
+      if (!translation) continue;
+      for (const serie of instances) {
         assign(serie, "name", translation.name);
         assign(serie, "logo", translation.logo);
       }
     }
-    for (const [id, product] of sealedProducts) {
-      assign(product, "name", sealedRows.get(id)?.name);
+    for (const [id, instances] of sealedProducts) {
+      const name = sealedRows.get(id)?.name;
+      for (const product of instances) assign(product, "name", name);
     }
 
     return payload;
@@ -176,8 +218,12 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Loads the translation to apply per entity: the requested locale, or the
-   * fallback locale when the entity has no row in that language.
+   * Loads the translation to apply per entity. The requested language wins, but
+   * each field it leaves empty is filled from the next language available.
+   *
+   * The fallback is per field, not per row: TCGdex illustrates many old sets in
+   * English only, so a French card can carry its name and lack its artwork. A
+   * French label with an English artwork beats a card with no artwork at all.
    */
   private async load<T extends { locale: string }>(
     repository: Repository<T>,
@@ -194,16 +240,20 @@ export class CatalogLocalizationService {
       where: { [idColumn]: In(ids) } as never,
     });
 
-    const byId = new Map<string, T>();
+    const rowsById = new Map<string, T[]>();
     for (const row of rows) {
       const id = (row as unknown as Record<string, string>)[idColumn] as string;
-      const current = byId.get(id);
-      if (
-        !current ||
-        localeRank(row.locale, locale) < localeRank(current.locale, locale)
-      ) {
-        byId.set(id, row);
-      }
+      const group = rowsById.get(id);
+      if (group) group.push(row);
+      else rowsById.set(id, [row]);
+    }
+
+    const byId = new Map<string, T>();
+    for (const [id, group] of rowsById) {
+      group.sort(
+        (a, b) => localeRank(a.locale, locale) - localeRank(b.locale, locale),
+      );
+      byId.set(id, mergeTranslations(group));
     }
 
     return byId;
@@ -230,7 +280,7 @@ export class CatalogLocalizationService {
   private async attachFor<T extends { locale: string }>(
     repository: Repository<T>,
     idColumn: TranslationIdColumn,
-    entities: Map<string, Localizable>,
+    entities: Map<string, Localizable[]>,
   ) {
     if (entities.size === 0) return;
 
@@ -246,8 +296,9 @@ export class CatalogLocalizationService {
       byId.set(id, entry);
     }
 
-    for (const [id, entity] of entities) {
-      entity.translations = byId.get(id) ?? {};
+    for (const [id, instances] of entities) {
+      const translations = byId.get(id) ?? {};
+      for (const entity of instances) entity.translations = translations;
     }
   }
 
@@ -274,12 +325,14 @@ export class CatalogLocalizationService {
     assign(details, "attacks", translation.attacks);
   }
 
-  /** Catalog entities found in the payload, deduplicated by id. */
+  /** Catalog entities found in the payload, grouped by identifier. */
   private collect(payload: unknown): CollectedEntities {
-    const cards = new Map<string, Localizable>();
-    const sets = new Map<string, Localizable>();
-    const series = new Map<string, Localizable>();
-    const sealedProducts = new Map<string, Localizable>();
+    const collected: CollectedEntities = {
+      cards: new Map(),
+      sets: new Map(),
+      series: new Map(),
+      sealedProducts: new Map(),
+    };
     const seen = new Set<unknown>();
 
     const walk = (value: unknown, depth: number, parentKey?: string) => {
@@ -297,11 +350,12 @@ export class CatalogLocalizationService {
       }
 
       if (isObject(value)) {
-        if (isCardLike(value)) cards.set(value.id, value);
-        else if (isSealedProductLike(value))
-          sealedProducts.set(value.id, value);
-        else if (isSerieLike(value, parentKey)) series.set(value.id, value);
-        else if (isSetLike(value, parentKey)) sets.set(value.id, value);
+        const kind = classKind(value) ?? plainObjectKind(value, parentKey);
+        if (kind) {
+          const instances = collected[kind].get(value.id);
+          if (instances) instances.push(value);
+          else collected[kind].set(value.id, [value]);
+        }
       }
 
       for (const [key, nested] of Object.entries(value)) {
@@ -310,7 +364,7 @@ export class CatalogLocalizationService {
     };
 
     walk(payload, 0);
-    return { cards, sets, series, sealedProducts };
+    return collected;
   }
 }
 
@@ -327,4 +381,24 @@ function localeRank(rowLocale: string, requested: SupportedLocale): number {
 
 function assign(target: Record<string, unknown>, key: string, value: unknown) {
   if (value !== undefined && value !== null) target[key] = value;
+}
+
+/**
+ * Merges translation rows already sorted by preference: the first one provides
+ * the values, the following ones only fill the gaps it leaves.
+ */
+function mergeTranslations<T extends { locale: string }>(rows: T[]): T {
+  const [preferred, ...fallbacks] = rows;
+  if (fallbacks.length === 0) return preferred;
+
+  const merged = { ...preferred } as Record<string, unknown>;
+  for (const row of fallbacks) {
+    for (const [key, value] of Object.entries(row)) {
+      // `locale` stays that of the preferred row: it says which language the
+      // entity is displayed in, not where each field came from.
+      if (key !== "locale" && merged[key] == null) assign(merged, key, value);
+    }
+  }
+
+  return merged as T;
 }

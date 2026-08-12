@@ -64,8 +64,12 @@ export class PokemonSetService {
   }
 
   /**
-   * Visuel d'un set pour une langue donnée. Logo et symbole en dépendent :
-   * TCGdex en sert une version par langue, comme les images de cartes.
+   * Visuals of a set in a given language. Logo and symbol depend on it:
+   * TCGdex serves one version per language, as it does for card images.
+   *
+   * @param setId - Set identifier.
+   * @param locale - Target language.
+   * @returns The translation row, or `null` when the language is missing.
    */
   async findVisual(
     setId: string,
@@ -76,7 +80,14 @@ export class PokemonSetService {
     });
   }
 
-  /** Remplace le logo ou le symbole d'un set dans une langue. */
+  /**
+   * Replaces the logo or symbol of a set in a given language.
+   *
+   * @param setId - Set identifier.
+   * @param locale - Target language.
+   * @param visual - Fields to write.
+   * @returns The resulting translation row.
+   */
   async updateVisual(
     setId: string,
     locale: SupportedLocale,

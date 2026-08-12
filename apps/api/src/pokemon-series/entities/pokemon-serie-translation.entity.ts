@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { PokemonSerie } from "./pokemon-serie.entity";
 
-/** Nom et logo d'une série par langue. */
+/** Name and logo of a series, one row per language. */
 @Entity("pokemon_serie_translation")
 export class PokemonSerieTranslation {
   @PrimaryColumn({ name: "serie_id" })

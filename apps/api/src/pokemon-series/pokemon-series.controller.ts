@@ -15,6 +15,8 @@ import {
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Public } from "src/auth/decorators/public.decorator";
+import { RequestLocale } from "src/translation/request-locale";
+import type { SupportedLocale } from "src/translation/supported-locales";
 import { CreatePokemonSeryDto } from "./dto/create-pokemon-sery.dto";
 import { UpdatePokemonSeryDto } from "./dto/update-pokemon-sery.dto";
 import { PokemonSeriesService } from "./pokemon-series.service";
@@ -70,6 +72,7 @@ export class PokemonSeriesController {
   async uploadLogo(
     @Param("id") id: string,
     @UploadedFile() file: Express.Multer.File,
+    @RequestLocale() locale: SupportedLocale,
   ) {
     if (!file) {
       throw new BadRequestException("Aucun fichier fourni");
@@ -80,13 +83,15 @@ export class PokemonSeriesController {
       throw new NotFoundException(`Série ${id} introuvable`);
     }
 
-    // Remove existing logo file from R2 storage if present
-    if (serie.logo) {
-      await this.r2StorageService.deleteFile(serie.logo);
+    // Logo image is localized: replace existing logo image for current locale.
+    const visual = await this.pokemonSeriesService.findVisual(id, locale);
+    if (visual?.logo) {
+      await this.r2StorageService.deleteFile(visual.logo);
     }
 
     const extension = path.extname(file.originalname) || ".webp";
-    const key = `series/${id}/logo${extension}`;
+    // Storage key derived from series ID, stable across locales and namespaced by locale
+    const key = `series/${id}/${locale}/logo${extension}`;
     const logoUrl = await this.r2StorageService.uploadFile(
       file.buffer,
       key,
@@ -97,6 +102,8 @@ export class PokemonSeriesController {
       throw new InternalServerErrorException("Échec de l'upload sur R2");
     }
 
-    return this.pokemonSeriesService.update(id, { logo: logoUrl });
+    return this.pokemonSeriesService.updateVisual(id, locale, {
+      logo: logoUrl,
+    });
   }
 }

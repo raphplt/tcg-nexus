@@ -500,41 +500,53 @@
     "markAsRead": "Marquer comme lu",
     "delete": "Supprimer",
     "items": {
-      "tournament.started": {
-        "title": "Tournoi démarré",
-        "body": "Le tournoi \"{name}\" a démarré."
+      "tournament": {
+        "started": {
+          "title": "Tournoi démarré",
+          "body": "Le tournoi \"{name}\" a démarré."
+        },
+        "finished": {
+          "title": "Tournoi terminé",
+          "body": "Résultats du tournoi \"{name}\" disponibles."
+        },
+        "match_reminder": {
+          "title": "Match demain",
+          "body": "Vous avez un match prévu demain."
+        }
       },
-      "tournament.finished": {
-        "title": "Tournoi terminé",
-        "body": "Résultats du tournoi \"{name}\" disponibles."
+      "match": {
+        "ready": {
+          "title": "Match prêt",
+          "body": "Votre match peut commencer."
+        }
       },
-      "tournament.match_reminder": {
-        "title": "Match demain",
-        "body": "Vous avez un match prévu demain."
+      "badge": {
+        "unlocked": {
+          "title": "Nouveau badge débloqué",
+          "body": "Vous avez obtenu le badge \"{badgeName}\"."
+        }
       },
-      "match.ready": {
-        "title": "Match prêt",
-        "body": "Votre match peut commencer."
+      "follow": {
+        "created": {
+          "title": "Nouveau follower",
+          "body": "{followerName} vous suit désormais."
+        },
+        "removed": {
+          "title": "Vous avez perdu un follower",
+          "body": "{followerName} ne vous suit plus."
+        }
       },
-      "badge.unlocked": {
-        "title": "Nouveau badge débloqué",
-        "body": "Vous avez obtenu le badge \"{badgeName}\"."
+      "marketplace": {
+        "sale": {
+          "title": "Vente réalisée",
+          "body": "Vous avez vendu pour {amount}."
+        }
       },
-      "follow.created": {
-        "title": "Nouveau follower",
-        "body": "{followerName} vous suit désormais."
-      },
-      "follow.removed": {
-        "title": "Vous avez perdu un follower",
-        "body": "{followerName} ne vous suit plus."
-      },
-      "marketplace.sale": {
-        "title": "Vente réalisée",
-        "body": "Vous avez vendu pour {amount}."
-      },
-      "order.shipped": {
-        "title": "Commande expédiée",
-        "body": "Votre commande a été expédiée."
+      "order": {
+        "shipped": {
+          "title": "Commande expédiée",
+          "body": "Votre commande a été expédiée."
+        }
       }
     }
   },

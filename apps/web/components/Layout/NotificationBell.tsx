@@ -40,15 +40,21 @@ export function NotificationBell() {
   } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  const renderTitle = (n: UserNotification) =>
-    n.translationKey
-      ? t(`items.${n.translationKey}.title`, n.translationParams ?? {})
+  // Les clés viennent de l'API ("tournament.started") et sont résolues en messages imbriqués.
+  // On retombe sur le texte déjà traduit côté serveur si la clé est inconnue du front.
+  const renderTitle = (n: UserNotification) => {
+    const key = `items.${n.translationKey}.title`;
+    return n.translationKey && t.has(key)
+      ? t(key, n.translationParams ?? {})
       : n.title;
+  };
 
-  const renderBody = (n: UserNotification) =>
-    n.translationKey
-      ? t(`items.${n.translationKey}.body`, n.translationParams ?? {})
+  const renderBody = (n: UserNotification) => {
+    const key = `items.${n.translationKey}.body`;
+    return n.translationKey && t.has(key)
+      ? t(key, n.translationParams ?? {})
       : n.body;
+  };
 
   const formatRelativeTime = (dateString: string): string => {
     const date = new Date(dateString);
