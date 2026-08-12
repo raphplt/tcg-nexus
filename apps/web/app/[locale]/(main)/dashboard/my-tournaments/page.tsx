@@ -20,7 +20,7 @@ export default function MyTournamentsPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("active");
 
-  // Récupérer les tournois du joueur
+  // Fetch tournaments associated with current player
   const { data: paginatedTournaments, isLoading } = useQuery<
     PaginatedResult<Tournament>
   >({
@@ -47,7 +47,7 @@ export default function MyTournamentsPage() {
 
   const playerTournaments = paginatedTournaments?.data || [];
 
-  // Séparer les tournois par statut
+  // Group tournaments by lifecycle status
   const activeTournaments = playerTournaments.filter(
     (t) =>
       t.status === "registration_open" ||
@@ -63,13 +63,13 @@ export default function MyTournamentsPage() {
     (t) => t.status === "cancelled",
   );
 
-  // Statistiques globales
+  // Overall player performance statistics
   const stats = {
     total: playerTournaments.length,
     active: activeTournaments.length,
     finished: finishedTournaments.length,
     wins: finishedTournaments.filter((t) => {
-      // Vérifier si le joueur a gagné (rang 1)
+      // Check if current player ranked #1 (tournament winner)
       const playerRanking = t.rankings?.find(
         (r) => r.player.id === user?.player?.id,
       );

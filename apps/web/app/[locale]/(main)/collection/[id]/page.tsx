@@ -59,7 +59,7 @@ const CollectionDetailPage = () => {
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const limit = 10;
 
-  // Récupérer les infos de la collection
+  // Fetch collection metadata
   useEffect(() => {
     const fetchCollection = async () => {
       try {
@@ -75,7 +75,7 @@ const CollectionDetailPage = () => {
     if (id) fetchCollection();
   }, [id]);
 
-  // Recherche avec debounce
+  // Debounced search term
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,7 +86,7 @@ const CollectionDetailPage = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Récupérer les items paginés
+  // Fetch paginated items
   const { data: itemsData, isLoading: itemsLoading } = usePaginatedQuery<
     PaginatedResult<CollectionItemType>
   >(
@@ -127,7 +127,7 @@ const CollectionDetailPage = () => {
   const meta = itemsData?.meta;
   const items = itemsData?.data || [];
 
-  // Formater la date
+  // Format date helper
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(locale, {
       day: "numeric",
@@ -136,7 +136,7 @@ const CollectionDetailPage = () => {
     });
   };
 
-  // Générer les pages pour la pagination
+  // Generate pagination pages with ellipsis
   const generatePaginationPages = () => {
     if (!meta) return [];
     const pages: (number | "ellipsis")[] = [];
@@ -146,43 +146,43 @@ const CollectionDetailPage = () => {
     const sidePages = 2;
 
     if (totalPages <= maxVisiblePages) {
-      // Afficher toutes les pages si moins de 7
+      // Render all pages if count <= 7
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Toujours afficher la première page
+      // Always show first page
       pages.push(1);
 
       let startPage = Math.max(2, currentPage - sidePages);
       let endPage = Math.min(totalPages - 1, currentPage + sidePages);
 
-      // Ajuster si on est proche du début
+      // Adjust boundaries when close to start
       if (currentPage <= sidePages + 2) {
         endPage = Math.min(maxVisiblePages - 2, totalPages - 1);
       }
 
-      // Ajuster si on est proche de la fin
+      // Adjust boundaries when close to end
       if (currentPage >= totalPages - sidePages - 1) {
         startPage = Math.max(2, totalPages - maxVisiblePages + 2);
       }
 
-      // Ajouter ellipsis au début si nécessaire
+      // Add leading ellipsis if gap exists
       if (startPage > 2) {
         pages.push("ellipsis");
       }
 
-      // Ajouter les pages autour de la page courante
+      // Add middle page numbers
       for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
       }
 
-      // Ajouter ellipsis à la fin si nécessaire
+      // Add trailing ellipsis if gap exists
       if (endPage < totalPages - 1) {
         pages.push("ellipsis");
       }
 
-      // Toujours afficher la dernière page
+      // Always show last page
       pages.push(totalPages);
     }
 

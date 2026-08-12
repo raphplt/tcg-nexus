@@ -316,7 +316,7 @@ export default function JustePrixPage() {
         data: {
           name: "Dracaufeu",
           set: { name: "Booster Set" },
-          // Pas d'image -> getCardImage renvoie le placeholder local (pokemontcg.io n'est pas whitelisté).
+          // Missing image -> getCardImage returns local fallback placeholder
         },
         correctPrice: 45.0,
       });
@@ -377,7 +377,7 @@ export default function JustePrixPage() {
       setSoloGuesses([]);
       setRoundResult("playing");
     } else {
-      // Dépasse le dernier index -> currentItem devient undefined -> écran résultats.
+      // Exceeded last item index -> currentItem becomes undefined -> trigger results screen
       setCurrentRound(items.length + 1);
     }
   };
@@ -419,7 +419,7 @@ export default function JustePrixPage() {
       setP2Guess(null);
       setLocalPvpTurn("p1");
     } else {
-      // Dépasse le dernier index -> currentItem undefined -> écran résultats.
+      // Exceeded last item index -> currentItem undefined -> trigger results screen
       setCurrentRound(items.length + 1);
     }
   };
@@ -471,7 +471,7 @@ export default function JustePrixPage() {
     if (currentItem.type === "card") {
       return getCardImage(data);
     }
-    // Produit scellé : URL CDN via le helper dédié (l'ancien bucket r2.dev est coupé en prod).
+    // Sealed product: CDN URL via helper (legacy r2.dev bucket disabled in production)
     return getSealedImageUrl(data) || SEALED_PLACEHOLDER;
   }, [currentItem]);
 

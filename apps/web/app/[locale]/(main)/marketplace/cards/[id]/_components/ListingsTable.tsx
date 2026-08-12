@@ -63,7 +63,7 @@ export function ListingsTable({
   const t = useTranslations("ListingsTable");
   const { formatPrice } = useCurrencyStore();
 
-  // Les offres les moins chères port compris arrivent en tête
+  // Sort listings by lowest total cost (price + shipping) first
   const sortedListings = useMemo(
     () =>
       [...listings].sort(

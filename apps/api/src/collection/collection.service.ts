@@ -3,12 +3,7 @@ import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "src/translation/supported-locales";
-import {
-  applyCardSearch,
-  applyRarityFilter,
-  localizedNameSql,
-  localizedRaritySql,
-} from "src/card/card-search";
+import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
 import {
   ForbiddenException,
   Injectable,
@@ -539,13 +534,25 @@ export class CollectionService {
     ];
     const sortField = validSortBy.includes(sortBy) ? sortBy : "added_at";
 
-    if (sortField === "pokemonCard.name") {
-      // Card name and rarity originate from localized translations: sorting defaults to default locale
-      queryBuilder.setParameter("sortLocale", DEFAULT_LOCALE);
-      queryBuilder.orderBy(localizedNameSql("pokemonCard"), sortOrder);
-    } else if (sortField === "pokemonCard.rarity") {
-      queryBuilder.setParameter("sortLocale", DEFAULT_LOCALE);
-      queryBuilder.orderBy(localizedRaritySql("pokemonCard"), sortOrder);
+    if (
+      sortField === "pokemonCard.name" ||
+      sortField === "pokemonCard.rarity"
+    ) {
+      // Name and rarity live in translations. The join is filtered on a single
+      // locale so it stays one-to-one; sorting uses the default locale since no
+      // request language reaches this layer.
+      queryBuilder.leftJoin(
+        "pokemonCard.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      );
+      queryBuilder.orderBy(
+        sortField === "pokemonCard.name"
+          ? "sortTranslation.name"
+          : "sortTranslation.rarity",
+        sortOrder,
+      );
     } else {
       queryBuilder.orderBy(`item.${sortField}`, sortOrder);
     }

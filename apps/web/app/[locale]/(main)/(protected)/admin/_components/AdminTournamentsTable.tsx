@@ -168,7 +168,7 @@ export function AdminTournamentsTable() {
     const start = new Date(form.startDate);
     let end = new Date(form.endDate);
 
-    // Garantir une fin après le début pour satisfaire la validation API
+    // Guarantee end date is after start date to meet API validation constraints
     if (end <= start) {
       end = new Date(start.getTime() + 60 * 60 * 1000);
     }

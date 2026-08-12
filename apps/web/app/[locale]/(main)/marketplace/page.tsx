@@ -46,7 +46,7 @@ export default function MarketplaceHomePage() {
     loadingRecentListings,
   } = useMarketplaceHome();
 
-  // Filtrer pour séparer le TCG physique et le TCG Mobile (Pocket)
+  // Filter to distinguish physical TCG sets from mobile (Pocket) TCG sets
   const physicalSets = sets?.filter((set) => set.serie?.id !== "tcgp") || [];
   const pocketSets = sets?.filter((set) => set.serie?.id === "tcgp") || [];
 

@@ -70,8 +70,8 @@ interface DifficultyConfig {
   labelKey: string;
   descKey: string;
   time: number;
-  baseBlur: number; // flou au début de la manche (max)
-  minBlur: number; // flou plancher en fin de chrono (toujours caché)
+  baseBlur: number; // Initial round blur intensity (maximum)
+  minBlur: number; // Floor blur intensity at timer end (always obscured)
   brightness: number;
   mult: number;
   distractors: "far" | "mix" | "similar";

@@ -10,7 +10,7 @@ interface CardHeadingProps {
 }
 
 export function CardHeading({ card }: CardHeadingProps) {
-  // Le dénominateur affiché est le nombre de cartes officielles du set
+  // Displayed denominator corresponds to official set card count
   const officialCount = card.set?.cardCount?.official;
   const cardNumber = card.localId
     ? officialCount

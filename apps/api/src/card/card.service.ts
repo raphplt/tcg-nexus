@@ -7,7 +7,7 @@ import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "../translation/supported-locales";
-import { applyCardSearch, localizedNameSql } from "./card-search";
+import { applyCardSearch } from "./card-search";
 import { Card } from "./entities/card.entity";
 import { CardTranslation } from "./entities/card-translation.entity";
 
@@ -296,13 +296,20 @@ export class CardService implements OnModuleInit {
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
-    // Card names live in localized translations: sorting uses a subquery on default locale as `order: { name }` does not map to an entity column.
+    // Card names live in translations. The join is filtered on a single locale,
+    // so it stays one-to-one and does not inflate the paginated row count.
+    // A subquery in `orderBy` would be parsed as an alias by TypeORM.
     const qb = this.cardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
       .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .orderBy(localizedNameSql("card"), "ASC")
-      .setParameter("sortLocale", DEFAULT_LOCALE)
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
+      .orderBy("sortTranslation.name", "ASC")
       .skip(offset)
       .take(validLimit);
 

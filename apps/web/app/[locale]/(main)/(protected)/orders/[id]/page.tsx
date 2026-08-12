@@ -61,8 +61,8 @@ function OrderDetailsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Stripe renvoie ici après un paiement par redirection (3DS, Amazon Pay) :
-  // sans cette confirmation la commande resterait Pending jusqu'au webhook.
+  // Stripe redirects back here after authentication flow (3DS, Amazon Pay):
+  // without explicit confirmation the order would remain PENDING until webhook delivery.
   const cameBackFromStripe = !!searchParams.get("payment_intent");
   const redirectFailed =
     !!searchParams.get("redirect_status") &&
@@ -77,7 +77,7 @@ function OrderDetailsContent() {
           await paymentService.confirmOrder(orderId);
           await fetchCart();
         } catch {
-          // le webhook Stripe fera foi
+          // Stripe webhook will reconcile status asynchronously if client confirmation fails
         }
       }
 

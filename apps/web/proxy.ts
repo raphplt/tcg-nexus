@@ -195,12 +195,18 @@ function localizedUrl(
   return new URL(`/${locale}${normalized}`, request.url);
 }
 
+/**
+ * Main middleware proxy handling internationalization routing and route authentication checks.
+ *
+ * @param request Incoming Next.js request.
+ * @returns Response or redirect matching route access rules.
+ */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = getLocaleFromPathname(pathname);
 
-  // Sans locale dans l'URL, next-intl choisit la langue et redirige :
-  // l'authentification sera contrôlée à la requête suivante.
+  // Without locale prefix in pathname, next-intl resolves language and redirects.
+  // Authentication check runs on subsequent localized request.
   if (!locale) {
     return intlMiddleware(request);
   }

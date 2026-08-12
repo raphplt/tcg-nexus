@@ -43,15 +43,15 @@ import { API_BASE_URL } from "@/utils/fetch";
 import { getCardImage } from "@/utils/images";
 
 // ---------------------------------------------------------------------------
-// Constantes de la roulette
+// Roulette UI constants
 // ---------------------------------------------------------------------------
-const CARD_W = 112; // largeur d'une carte (w-28)
-const CARD_GAP = 16; // gap-4
-const STRIDE = CARD_W + CARD_GAP; // pas réel entre deux cartes = 128px
-const WINNER_INDEX = 34; // position de la carte gagnante dans le ruban
-const TRAIL = 8; // cartes après la gagnante (évite un vide à droite)
-const SPIN_DURATION = 2.3; // secondes par carte
-const PACK_SIZE = 6; // cartes par booster
+const CARD_W = 112; // Card width (w-28)
+const CARD_GAP = 16; // Gap (gap-4)
+const STRIDE = CARD_W + CARD_GAP; // Step distance between cards = 128px
+const WINNER_INDEX = 34; // Position index of winning card in the strip
+const TRAIL = 8; // Trailing card count following winner to prevent empty right edge
+const SPIN_DURATION = 2.3; // Duration in seconds per card
+const PACK_SIZE = 6; // Cards per booster pack
 const PLACEHOLDER = "/images/carte-pokemon-dos.jpg";
 
 type Side = "p1" | "p2";
@@ -116,8 +116,7 @@ const pickRandom = <T,>(arr: T[]): T =>
   arr[Math.floor(Math.random() * arr.length)]!;
 
 // ---------------------------------------------------------------------------
-// <CardImg> : <img> natif, fallback placeholder onError (aucune dépendance à
-// remotePatterns de next/image — les URLs mock/legacy ne cassent plus le jeu).
+// <CardImg>: native <img> with placeholder onError fallback
 // ---------------------------------------------------------------------------
 function CardImg({
   card,
@@ -148,10 +147,7 @@ function CardImg({
 }
 
 // ---------------------------------------------------------------------------
-// <CardRoulette> : un mini-spin qui s'arrête, centré, sur `target`.
-// Le ruban est remonté à chaque `spinId` (key => remount => rejoue l'anim).
-// La translation est calculée en pixels réels à partir de la largeur mesurée
-// du conteneur — plus de `50%` fantôme ni de largeur de carte erronée.
+// <CardRoulette>: animated spin stopping centered on `target` card.
 // ---------------------------------------------------------------------------
 function CardRoulette({
   target,
@@ -184,10 +180,10 @@ function CardRoulette({
     }
     strip[WINNER_INDEX] = { ...target, uid: nextUid() };
 
-    // Attendre un frame pour que le conteneur soit mesurable.
+    // Allow one animation frame for container width measurement
     const raf = requestAnimationFrame(() => {
       const vw = viewportRef.current?.offsetWidth ?? 640;
-      // Jitter aléatoire pour ne pas toujours s'arrêter pile au centre.
+      // Random jitter offset so roulette does not land strictly centered every time
       const jitter = (Math.random() - 0.5) * (CARD_W - 34);
       const winnerCenter = WINNER_INDEX * STRIDE + CARD_W / 2;
       const x = vw / 2 - winnerCenter + jitter;
@@ -1231,7 +1227,7 @@ export default function CaseOpeningPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Sous-composants de présentation
+// Presentation sub-components
 // ---------------------------------------------------------------------------
 function RevealTray({
   reveal,

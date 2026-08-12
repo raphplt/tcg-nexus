@@ -43,6 +43,27 @@
   },
   {
     "cardCount": {
+      "firstEd": 0,
+      "holo": 12,
+      "normal": 0,
+      "official": 12,
+      "reverse": 0,
+      "total": 12
+    },
+    "id": "2014xy",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2014",
+    "releaseDate": "2014-05-23",
+    "abbreviation": {
+      "official": "MCD14"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
       "firstEd": 104,
       "holo": 64,
       "normal": 346,
@@ -2167,6 +2188,94 @@
       "firstEd": 0,
       "holo": 0,
       "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-b",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Bisharp)",
+    "releaseDate": "2014-11-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-bisharp/symbol.png",
+    "abbreviation": {
+      "official": "TK7A"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-n",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Noivern)",
+    "releaseDate": "2014-03-12",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-noivern/symbol.png",
+    "abbreviation": {
+      "official": "TK6N"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-sy",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Sylveon)",
+    "releaseDate": "2014-03-12",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-sylveon/symbol.png",
+    "abbreviation": {
+      "official": "TK6S"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 30,
+      "reverse": 0,
+      "total": 30
+    },
+    "id": "tk-xy-w",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "XY trainer Kit (Wigglytuff)",
+    "releaseDate": "2014-11-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy-trainer-kit-wigglytuff/symbol.png",
+    "abbreviation": {
+      "official": "TK7B"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
       "official": 7,
       "reverse": 0,
       "total": 7
@@ -2201,6 +2310,126 @@
     "tcgOnline": "KSS",
     "abbreviation": {
       "official": "KSS"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 146,
+      "reverse": 0,
+      "total": 146
+    },
+    "id": "xy1",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/xy/logo.webp",
+    "name": "XY",
+    "releaseDate": "2014-02-05",
+    "symbol": "https://cdn.tcg-nexus.org/sets/xy/symbol.png",
+    "tcgOnline": "XY",
+    "abbreviation": {
+      "official": "XY"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 106,
+      "reverse": 0,
+      "total": 110
+    },
+    "id": "xy2",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/flashfire/logo.webp",
+    "name": "Flashfire",
+    "releaseDate": "2014-05-07",
+    "symbol": "https://cdn.tcg-nexus.org/sets/flashfire/symbol.png",
+    "tcgOnline": "FLF",
+    "abbreviation": {
+      "official": "FLF"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 111,
+      "reverse": 0,
+      "total": 114
+    },
+    "id": "xy3",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/furious-fists/logo.webp",
+    "name": "Furious Fists",
+    "releaseDate": "2014-08-13",
+    "symbol": "https://cdn.tcg-nexus.org/sets/furious-fists/symbol.png",
+    "tcgOnline": "FFI",
+    "abbreviation": {
+      "official": "FFI"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 119,
+      "reverse": 0,
+      "total": 124
+    },
+    "id": "xy4",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/phantom-forces/logo.webp",
+    "name": "Phantom Forces",
+    "releaseDate": "2014-11-05",
+    "symbol": "https://cdn.tcg-nexus.org/sets/phantom-forces/symbol.png",
+    "tcgOnline": "PHF",
+    "abbreviation": {
+      "official": "PHF"
+    },
+    "serieId": "xy"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 160,
+      "reverse": 0,
+      "total": 164
+    },
+    "id": "xy5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/primal-clash/logo.webp",
+    "name": "Primal Clash",
+    "releaseDate": "2015-02-04",
+    "symbol": "https://cdn.tcg-nexus.org/sets/primal-clash/symbol.png",
+    "tcgOnline": "PRC",
+    "abbreviation": {
+      "official": "PRC"
     },
     "serieId": "xy"
   },
