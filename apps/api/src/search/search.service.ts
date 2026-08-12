@@ -1,3 +1,4 @@
+import { applyCardSearch } from "../card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -111,17 +112,13 @@ export class SearchService {
     query: string,
     limit: number,
   ): Promise<SearchResultItem[]> {
-    const cards = await this.pokemonCardRepository
+    const qb = this.pokemonCardRepository
       .createQueryBuilder("card")
       .leftJoinAndSelect("card.set", "set")
       .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .where("card.game = :game", { game: CardGame.Pokemon })
-      .andWhere(
-        "(card.name ILIKE :query OR card.rarity ILIKE :query OR pokemonDetails.description ILIKE :query OR set.name ILIKE :query OR card.illustrator ILIKE :query)",
-        { query: `%${query}%` },
-      )
-      .limit(limit)
-      .getMany();
+      .where("card.game = :game", { game: CardGame.Pokemon });
+
+    const cards = await applyCardSearch(qb, query).limit(limit).getMany();
 
     return cards.map((card) => ({
       id: card.id,

@@ -1,6 +1,7 @@
 import { CardGame } from "src/common/enums/cardGame";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { PokemonSerieTranslation } from "./pokemon-serie-translation.entity";
 
 @Entity()
 export class PokemonSerie {
@@ -22,4 +23,12 @@ export class PokemonSerie {
     (pokemonSet) => pokemonSet.serie,
   )
   sets: PokemonSet[];
+
+  /** Nom et logo par langue ; `name` et `logo` ci-dessus en sont l'héritage. */
+  @OneToMany(
+    () => PokemonSerieTranslation,
+    (translation) => translation.serie,
+    { cascade: true },
+  )
+  translations?: PokemonSerieTranslation[];
 }

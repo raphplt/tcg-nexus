@@ -93,7 +93,7 @@ export class CollectionItemService {
 
     // Récupérer le CardState NM par défaut
     const defaultCardState = await this.cardStateRepo.findOne({
-      where: { code: CardStatejCode.NM },
+      where: { code: CardStateCode.NM },
     });
 
     if (!defaultCardState) {

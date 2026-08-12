@@ -3,6 +3,7 @@ import { CardGame } from "src/common/enums/cardGame";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn } from "typeorm";
+import { PokemonSetTranslation } from "./pokemon-set-translation.entity";
 
 /**
  * Objet embarqué pour le nombre de cartes dans le set
@@ -95,4 +96,12 @@ export class PokemonSet {
     (sealedProduct) => sealedProduct.pokemonSet,
   )
   sealedProducts: SealedProduct[];
+
+  /** Nom et visuels par langue ; `name`, `logo` et `symbol` en sont l'héritage. */
+  @OneToMany(
+    () => PokemonSetTranslation,
+    (translation) => translation.set,
+    { cascade: true },
+  )
+  translations?: PokemonSetTranslation[];
 }

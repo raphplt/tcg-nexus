@@ -43,6 +43,35 @@ export const s3Client = new S3Client({
   },
 });
 
+/** Cache long : convient aux assets immuables une fois publiés (images). */
+const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
+
+/**
+ * Envoie un buffer sur R2 sous la clé donnée.
+ * Retourne l'URL publique finale, ou null en cas d'échec.
+ */
+export async function uploadBufferToR2(
+  body: Buffer,
+  key: string,
+  options: { contentType?: string; cacheControl?: string } = {},
+): Promise<string | null> {
+  try {
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: key,
+        Body: body,
+        ContentType: options.contentType || "application/octet-stream",
+        CacheControl: options.cacheControl || IMMUTABLE_CACHE,
+      }),
+    );
+    return `${R2_PUBLIC_URL}/${key}`;
+  } catch (error) {
+    console.error(`Échec upload -> ${key}:`, error);
+    return null;
+  }
+}
+
 /**
  * Télécharge une ressource distante et l'upload sur R2 sous la clé donnée.
  * Retourne l'URL publique finale, ou null en cas d'échec.
@@ -56,20 +85,11 @@ export async function uploadToR2(
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} sur ${sourceUrl}`);
     }
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(await response.arrayBuffer());
 
-    await s3Client.send(
-      new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: key,
-        Body: buffer,
-        ContentType: response.headers.get("content-type") || "image/png",
-        // Cache long : ces assets sont immuables une fois publiés.
-        CacheControl: "public, max-age=31536000, immutable",
-      }),
-    );
-    return `${R2_PUBLIC_URL}/${key}`;
+    return await uploadBufferToR2(buffer, key, {
+      contentType: response.headers.get("content-type") || "image/png",
+    });
   } catch (error) {
     console.error(`Échec upload ${sourceUrl} -> ${key}:`, error);
     return null;

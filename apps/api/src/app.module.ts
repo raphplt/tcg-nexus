@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ThrottlerModule } from "@nestjs/throttler";
@@ -14,6 +14,7 @@ import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
 import { BadgeModule } from "./badge/badge.module";
 import { CardModule } from "./card/card.module";
+import { CardLocalizationInterceptor } from "./card/card-localization.interceptor";
 import { CardStateModule } from "./card-state/card-state.module";
 import { CollectionModule } from "./collection/collection.module";
 import { CollectionItemModule } from "./collection-item/collection-item.module";
@@ -120,6 +121,10 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CardLocalizationInterceptor,
     },
   ],
 })

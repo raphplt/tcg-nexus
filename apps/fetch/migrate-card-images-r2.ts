@@ -24,8 +24,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import {
   assertR2Config,
-  migrateCardImageToR2,
   cardKeyPrefixFromTcgdex,
+  migrateCardImageToR2,
   R2_PUBLIC_URL,
 } from "./r2.js";
 
@@ -110,7 +110,10 @@ async function processFile(file: string, args: Args, stats: Stats) {
   // Si l'image pointe déjà sur le CDN, on réécrit l'URL vers TCGdex pour pouvoir
   // la télécharger et forcer le téléversement dans le nouveau bucket R2 vide.
   if (image && R2_PUBLIC_URL && image.startsWith(R2_PUBLIC_URL)) {
-    image = image.replace(`${R2_PUBLIC_URL}/cards`, "https://assets.tcgdex.net");
+    image = image.replace(
+      `${R2_PUBLIC_URL}/cards`,
+      "https://assets.tcgdex.net",
+    );
   }
 
   // Pas d'image exploitable -> on saute.

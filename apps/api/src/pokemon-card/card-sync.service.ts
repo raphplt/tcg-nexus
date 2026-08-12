@@ -1,4 +1,4 @@
-import { ConflictException, HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { ConflictException, Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -33,9 +33,10 @@ export class CardSyncService {
 
   private cleanString(str?: string): string {
     if (!str) return "";
-    return str.normalize("NFKD").replace(/[^\x00-\x7F]/g, "");
+    return str.normalize("NFC").trim();
   }
 
+  // Normalise une chaîne pour la comparaison à une valeur connue (par exemple, une valeur stockée)
   private normalizeForMapping(value?: string): string {
     if (!value) return "";
     return value
@@ -101,9 +102,7 @@ export class CardSyncService {
     }
   }
 
-  /**
-   * Tâche planifiée automatique (Tous les jours à 4h00 du matin)
-   */
+  // Cron job pour la synchronisation automatique des cartes Pokémon
   @Cron("0 4 * * *")
   async handleCron() {
     this.logger.log("Déclenchement de la synchronisation automatique des cartes Pokémon...");
@@ -120,9 +119,7 @@ export class CardSyncService {
     }
   }
 
-  /**
-   * Méthode principale de synchronisation
-   */
+  // Méthode principale de synchronisation
   async syncAll(): Promise<{
     seriesInserted: number;
     setsInserted: number;
@@ -149,8 +146,7 @@ export class CardSyncService {
         throw new Error("Impossible de récupérer les listes distantes de TCGdex.");
       }
 
-      // 1. Ingestion/Mise à jour des Séries
-      // On filtre "pocket" pour rester aligné avec le microservice fetch
+      // 1. Ingestion ou mise à jour des séries (suppression des séries Pokémon "pocket")
       const pocketSeriesIds = new Set(
         remoteSeries
           .filter((s: any) => s.name.toLowerCase().includes("pocket"))
@@ -180,7 +176,7 @@ export class CardSyncService {
         }
       }
 
-      // 2. Ingestion/Mise à jour des Sets et Cartes associées
+      // 2. Ingestion ou mise à jour des Sets et Cartes associées
       const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
 
       for (const setRef of remoteSets) {
@@ -203,7 +199,7 @@ export class CardSyncService {
 
         if (!dbSet) {
           this.logger.log("Nouveau set détecté : " + setRef.name + " (" + setRef.id + ")");
-          
+
           const serie = await this.pokemonSerieRepository.findOne({
             where: { id: String(actualSerieId) },
           });
@@ -240,7 +236,6 @@ export class CardSyncService {
         }
 
         // 3. Synchronisation des cartes pour ce set
-        // Si le nombre de cartes en base est inférieur au total attendu du set, on synchronise
         const dbCardsCount = await this.pokemonCardRepository.count({
           where: { set: { id: dbSet.id } },
         });
@@ -316,7 +311,6 @@ export class CardSyncService {
                   `Erreur lors de la récupération de la carte ${cardRef.id} : ${(cardErr as Error).message}`,
                 );
               }
-              // Petit délai d'attente pour ménager l'API
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
           }

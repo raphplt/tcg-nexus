@@ -1,3 +1,4 @@
+import { applyCardSearch } from "src/card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -161,10 +162,7 @@ export class PokemonCardService {
       return [];
     }
 
-    qb.andWhere(
-      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
-      { search: `%${search}%` },
-    );
+    applyCardSearch(qb, search);
 
     const cards = await qb.getMany();
     return cards.map((card) => this.toPokemonCardResponse(card));
@@ -269,10 +267,7 @@ export class PokemonCardService {
       .where("card.game = :game", { game: CardGame.Pokemon });
 
     if (search && search.trim() !== "") {
-      qb.andWhere(
-        "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search)",
-        { search: `%${search}%` },
-      );
+      applyCardSearch(qb, search);
     }
 
     if (setId && setId.trim() !== "") {

@@ -1,4 +1,3 @@
-import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -78,8 +77,13 @@ import {
   SeedingMethod,
   SeedingService,
 } from "src/tournament/services/seeding.service";
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { User } from "src/user/entities/user.entity";
 import { DeepPartial, Repository } from "typeorm";
+import {
+  type CatalogImportReport,
+  CatalogImportService,
+} from "./catalog-import.service";
 
 const SEED_AVATARS = [
   "/images/avatars/pikachu.png",
@@ -152,19 +156,24 @@ export class SeedService {
     private readonly bracketService: BracketService,
     private readonly matchService: MatchService,
     private readonly configService: ConfigService,
+    private readonly catalogImportService: CatalogImportService,
   ) {}
 
   /**
-   * Clean special characters from a string
-   * @param {string} str - The string to clean
-   * @returns {string} - The cleaned string
+   * Normalise une chaîne destinée au stockage : espaces superflus supprimés,
+   * forme Unicode canonique. Les accents sont conservés — « Pokémon » doit
+   * rester « Pokémon » en base.
    */
   cleanString(str: string): string {
-    // Convert special characters to their ASCII equivalents or remove them
-    // eslint-disable-next-line no-control-regex
-    return str.normalize("NFKD").replace(/[^\x00-\x7F]/g, "");
+    return str.normalize("NFC").trim();
   }
 
+  /**
+   * Normalise une chaîne pour la *comparer* à une valeur connue (mapping des
+   * catégories, types de dresseur, types d'énergie). Ici la perte des accents
+   * est voulue : elle rend la comparaison insensible à la casse et aux
+   * diacritiques. Ne jamais utiliser pour une valeur stockée.
+   */
   private normalizeForMapping(value?: string): string {
     if (!value) return "";
     return (
@@ -285,293 +294,15 @@ export class SeedService {
     return await this.cardStateRepository.find();
   }
   /**
-   * Seed the database with the Pokemon Series data
-   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
-   * @throws {Error} If a Serie is not found
-   */
-  /**
-   * Seed the database with the Pokemon Series data
-   * @returns {Promise<PokemonSerie[]>} The Pokemon Series created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemonSeries() {
-    const dataPath = path.resolve(
-      __dirname,
-      "../../../../data/pokemon_series.json",
-    );
-    if (!fs.existsSync(dataPath)) {
-      console.warn(`Series file not found at ${dataPath}`);
-      return [];
-    }
-
-    const seriesData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
-    const series: PokemonSerie[] = [];
-
-    for (const serieData of seriesData as DeepPartial<PokemonSerie>[]) {
-      const existingSerie = await this.pokemonSerieRepository.findOne({
-        where: { name: serieData.name },
-      });
-
-      if (!existingSerie) {
-        const newSerie = this.pokemonSerieRepository.create({
-          ...serieData,
-          game: CardGame.Pokemon,
-        });
-        series.push(newSerie);
-      }
-    }
-
-    if (series.length > 0) {
-      await this.pokemonSerieRepository.save(series);
-    }
-
-    return series;
-  }
-
-  /**
-   * Seed the database with the Pokemon Sets data
-   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  /**
-   * Seed the database with the Pokemon Sets data
-   * @returns {Promise<PokemonSet[]>} The Pokemon Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemonSets() {
-    const dataPath = path.resolve(
-      __dirname,
-      "../../../../data/pokemon_sets.json",
-    );
-    if (!fs.existsSync(dataPath)) {
-      console.warn(`Sets file not found at ${dataPath}`);
-      return [];
-    }
-    const setsData = JSON.parse(fs.readFileSync(dataPath, "utf-8"));
-    const sets: PokemonSet[] = [];
-
-    for (const setData of setsData as DeepPartial<PokemonSet>[]) {
-      const existingSet = await this.pokemonSetRepository.findOne({
-        where: { name: setData.name },
-      });
-
-      if (!existingSet) {
-        // Prefer explicit serieId from JSON, fallback to nested serie?.id if present
-        const serieId = (setData as any).serieId ?? (setData as any).serie?.id;
-
-        if (!serieId) {
-          // No series information, skip this set to avoid wrong linkage
-          const warnMsg = `Set '${setData.name as string}' (id: ${(setData as any).id}) without serieId – skipped.`;
-          console.warn(warnMsg);
-          continue;
-        }
-
-        const serie = await this.pokemonSerieRepository.findOne({
-          where: { id: serieId as string },
-        });
-
-        if (!serie) {
-          console.warn(
-            `Serie with id '${String(serieId)}' not found for set '${setData.name as string}' – skipped.`,
-          );
-          continue;
-        }
-
-        // Remove foreign key hints from raw JSON to avoid confusion, then attach relation
-        const setProps = { ...(setData as Record<string, unknown>) };
-        delete (setProps as any).serieId;
-        delete (setProps as any).serie;
-
-        // Logo and symbol URLs are now provided by update-data.ts
-        // No need to construct them here
-
-        const newSet = this.pokemonSetRepository.create({
-          ...(setProps as DeepPartial<PokemonSet>),
-          game: CardGame.Pokemon,
-          serie,
-        });
-        sets.push(newSet);
-      }
-    }
-
-    if (sets.length > 0) {
-      await this.pokemonSetRepository.save(sets);
-    }
-
-    return sets;
-  }
-
-  /**
-   * Seed the database with the Pokemon Series and Sets data
+   * Importe le catalogue Pokémon (séries, sets, cartes et leurs traductions)
+   * depuis le dataset local. Voir `CatalogImportService`.
    *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
-   * @throws {Error} If a Serie is not found
+   * Les trois anciennes méthodes ne faisaient qu'une passe monolingue sur
+   * `data/` ; elles délèguent désormais à un import unique, qui traite toutes
+   * les langues activées en une fois.
    */
-  /**
-   * Seed the database with the Pokemon Series and Sets data
-   *
-   * @returns {Promise<{ series: PokemonSerie[], sets: PokemonSet[], cards: Card[] }>} The Pokemon Series and Sets created
-   * @throws {Error} If a Serie is not found
-   */
-  async importPokemon(): Promise<{
-    series: PokemonSerie[];
-    sets: PokemonSet[];
-  }> {
-    const series = await this.importPokemonSeries();
-    const sets = await this.importPokemonSets();
-
-    const dataPath = path.resolve(__dirname, "../../../../data");
-    // Removed the large 'cards' array to save memory
-
-    // Recursively find all JSON files in dataPath that are NOT the series/sets files
-    const getAllFiles = (dir: string, fileList: string[] = []) => {
-      const files = fs.readdirSync(dir);
-      files.forEach((file) => {
-        const filePath = path.join(dir, file);
-        if (fs.statSync(filePath).isDirectory()) {
-          getAllFiles(filePath, fileList);
-        } else {
-          if (
-            file.endsWith(".json") &&
-            !file.endsWith("pokemon_series.json") &&
-            !file.endsWith("pokemon_sets.json")
-          ) {
-            fileList.push(filePath);
-          }
-        }
-      });
-      return fileList;
-    };
-
-    const cardFiles = getAllFiles(dataPath);
-
-    console.log(`Found ${cardFiles.length} card files to process.`);
-
-    let processedFiles = 0;
-    const batchSize = 100; // Process cards in batches of 100
-    let cardBatch: Card[] = [];
-    let metricsSavedCards = 0;
-
-    for (const filePath of cardFiles) {
-      try {
-        const fileContent = fs.readFileSync(filePath, "utf-8");
-        const parsedContent = JSON.parse(fileContent);
-
-        const cardsData = Array.isArray(parsedContent)
-          ? parsedContent
-          : [parsedContent];
-
-        for (const cardData of cardsData) {
-          const setId = cardData.set?.id;
-          if (!setId) {
-            continue;
-          }
-          const set = await this.pokemonSetRepository.findOne({
-            where: { id: setId },
-          });
-          if (!set) {
-            continue;
-          }
-
-          const name = cardData.name
-            ? this.cleanString(cardData.name as string)
-            : "";
-          const illustrator = cardData.illustrator
-            ? this.cleanString(cardData.illustrator as string)
-            : null;
-          const description = cardData.description
-            ? this.cleanString(cardData.description as string)
-            : null;
-          const evolveFrom = cardData.evolveFrom
-            ? this.cleanString(cardData.evolveFrom as string)
-            : null;
-          const effect = cardData.effect
-            ? this.cleanString(cardData.effect as string)
-            : null;
-
-          const card = this.pokemonCardRepository.create({
-            game: CardGame.Pokemon,
-            tcgDexId: cardData.id,
-            localId: cardData.localId,
-            name,
-            image: cardData.image,
-            category: cardData.category,
-            illustrator,
-            rarity: cardData.rarity,
-            variants: cardData.variants,
-            variantsDetailed: cardData.variants_detailed,
-            legal: cardData.legal,
-            updated: cardData.updated,
-            pricing: cardData.pricing,
-            set,
-          } as DeepPartial<Card>);
-
-          const details = this.pokemonCardDetailsRepository.create({
-            category: this.mapPokemonCategory(cardData.category),
-            dexId: cardData.dexId,
-            hp: cardData.hp,
-            types: cardData.types,
-            evolveFrom,
-            description,
-            effect,
-            level: cardData.level,
-            stage: cardData.stage,
-            suffix: cardData.suffix,
-            item: cardData.item,
-            abilities: cardData.abilities,
-            attacks: cardData.attacks,
-            weaknesses: cardData.weaknesses,
-            resistances: cardData.resistances,
-            retreat: cardData.retreat,
-            regulationMark: cardData.regulationMark,
-            trainerType: this.mapTrainerType(cardData.trainerType),
-            energyType: this.mapEnergyType(cardData.energyType),
-            boosters: cardData.boosters,
-          } as DeepPartial<PokemonCardDetails>);
-
-          details.card = card;
-          card.pokemonDetails = details;
-
-          cardBatch.push(card);
-        }
-      } catch (jsonError) {
-        console.error(
-          `Failed to parse JSON content for ${filePath}:`,
-          jsonError,
-        );
-      }
-
-      // Check if batch is full and save
-      if (cardBatch.length >= batchSize) {
-        await this.pokemonCardRepository.save(cardBatch);
-        metricsSavedCards += cardBatch.length;
-        cardBatch = []; // Clear memory
-      }
-
-      // Update progress bar
-      processedFiles++;
-      const total = cardFiles.length;
-      const percentage = Math.round((processedFiles / total) * 100);
-      const width = 40;
-      const filled = Math.round((width * processedFiles) / total);
-      const empty = width - filled;
-      const bar = "█".repeat(filled) + "░".repeat(empty);
-      process.stdout.write(
-        `\r  [${bar}] ${percentage}% (${processedFiles}/${total}) - Saved: ${metricsSavedCards}`,
-      );
-    }
-
-    // Save remaining cards in batch
-    if (cardBatch.length > 0) {
-      await this.pokemonCardRepository.save(cardBatch);
-      metricsSavedCards += cardBatch.length;
-    }
-
-    process.stdout.write("\n"); // New line after progress bar
-    console.log(`Successfully saved a total of ${metricsSavedCards} cards.`);
-
-    // Return empty cards array as we don't want to load them all back into memory
-    return { series, sets };
+  async importPokemon(): Promise<CatalogImportReport> {
+    return this.catalogImportService.importCatalog();
   }
 
   /**
@@ -612,7 +343,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -628,7 +359,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -644,7 +375,7 @@ export class SeedService {
         isActive: true,
         emailVerified: false,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -663,7 +394,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
         tournamentOrganizers: [],
@@ -776,7 +507,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });
@@ -1038,7 +769,7 @@ export class SeedService {
         isActive: true,
         emailVerified: true,
         preferredCurrency: Currency.EUR,
-      preferredLocale: DEFAULT_LOCALE,
+        preferredLocale: DEFAULT_LOCALE,
         decks: [],
         collections: [],
       });
@@ -2010,7 +1741,10 @@ export class SeedService {
    */
   async enableExtensions() {
     await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-    console.log("✅ Extension Postgres pg_trgm activée.");
+    // unaccent : la recherche de cartes doit trouver « Pokémon » quand on
+    // tape « pokemon », dans toutes les langues du catalogue.
+    await this.userRepository.query(`CREATE EXTENSION IF NOT EXISTS unaccent;`);
+    console.log("✅ Extensions Postgres pg_trgm et unaccent activées.");
   }
 
   /**

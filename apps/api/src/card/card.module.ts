@@ -4,13 +4,22 @@ import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CardController } from "./card.controller";
 import { CardService } from "./card.service";
 import { CardEffectsSyncService } from "./card-effects-sync.service";
+import { CardLocalizationService } from "./card-localization.service";
 import { Card } from "./entities/card.entity";
+import { CardTranslation } from "./entities/card-translation.entity";
 import { PokemonCardDetails } from "./entities/pokemon-card-details.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Card, PokemonCardDetails, PokemonSet])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Card,
+      CardTranslation,
+      PokemonCardDetails,
+      PokemonSet,
+    ]),
+  ],
   controllers: [CardController],
-  providers: [CardService, CardEffectsSyncService],
-  exports: [CardService, CardEffectsSyncService],
+  providers: [CardService, CardEffectsSyncService, CardLocalizationService],
+  exports: [CardService, CardEffectsSyncService, CardLocalizationService],
 })
 export class CardModule {}

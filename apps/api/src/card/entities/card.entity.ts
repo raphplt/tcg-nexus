@@ -5,11 +5,13 @@ import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import {
   Column,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { CardTranslation } from "./card-translation.entity";
 import { PokemonCardDetails } from "./pokemon-card-details.entity";
 
 export type CardVariants = {
@@ -72,6 +74,13 @@ export type CardPricingData = {
 };
 
 @Entity("card")
+// Une carte = une ligne, toutes langues confondues. Sans cette contrainte, un
+// import dans une nouvelle langue pourrait dupliquer les cartes et détacher
+// les decks, collections et annonces qui les référencent.
+@Index(["game", "tcgDexId"], {
+  unique: true,
+  where: '"tcgDexId" IS NOT NULL',
+})
 export class Card {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -144,4 +153,17 @@ export class Card {
     (collectionItem) => collectionItem.pokemonCard,
   )
   collectionItems: CollectionItem[];
+
+  /**
+   * Champs linguistiques de la carte, une ligne par langue activée.
+   * Les colonnes `name`, `image`, `category` et `rarity` ci-dessus en sont les
+   * doublons hérités : elles seront supprimées une fois toutes les lectures
+   * passées par les traductions.
+   */
+  @OneToMany(
+    () => CardTranslation,
+    (translation) => translation.card,
+    { cascade: true },
+  )
+  translations?: CardTranslation[];
 }

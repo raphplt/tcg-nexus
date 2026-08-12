@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { applyCardSearch } from "./card-search";
 import { Card } from "./entities/card.entity";
 
 const stripAccents = (value: string): string =>
@@ -199,10 +200,7 @@ export class CardService implements OnModuleInit {
       qb.where("card.game = :game", { game });
     }
 
-    qb.andWhere(
-      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search OR card.localId ILIKE :search)",
-      { search: `%${search}%` },
-    );
+    applyCardSearch(qb, search);
 
     return qb.getMany();
   }

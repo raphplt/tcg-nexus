@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
 import { CardGame } from "../common/enums/cardGame";
 import { CardService } from "./card.service";
-import { Public } from "../auth/decorators/public.decorator";
 
 @ApiTags("cards")
 @Controller("cards")

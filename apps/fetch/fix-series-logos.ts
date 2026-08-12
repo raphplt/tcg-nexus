@@ -2,7 +2,7 @@ import TCGdex from "@tcgdex/sdk";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { uploadToR2, assertR2Config } from "./r2.js";
+import { assertR2Config, uploadToR2 } from "./r2.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,10 +40,10 @@ async function fixSeriesLogos() {
       const hasExtension = /\.[a-z0-9]+$/i.test(urlObj.pathname);
       const sourceUrl = hasExtension ? details.logo : `${details.logo}.webp`;
       const key = `series/${serie.id}/logo.webp`;
-      
+
       console.log(`  Uploading ${sourceUrl} to R2...`);
       const logoUrl = await uploadToR2(sourceUrl, key);
-      
+
       if (logoUrl) {
         serie.logo = logoUrl;
         updatedCount++;
@@ -58,7 +58,9 @@ async function fixSeriesLogos() {
 
   if (updatedCount > 0) {
     fs.writeFileSync(SERIES_FILE, JSON.stringify(series, null, 4));
-    console.log(`\n🎉 Finished! Updated ${updatedCount} series logos in pokemon_series.json.`);
+    console.log(
+      `\n🎉 Finished! Updated ${updatedCount} series logos in pokemon_series.json.`,
+    );
   } else {
     console.log("\nNo logos were updated.");
   }

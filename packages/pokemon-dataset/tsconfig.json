@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // Imports sans extension : le module est consommé à la fois par apps/fetch
+    // (ESM via tsx) et apps/api (CommonJS via ts-node). NodeNext imposerait des
+    // suffixes `.js` que ts-node ne sait pas résoudre.
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

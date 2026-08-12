@@ -10,7 +10,7 @@ RUN apt-get update \
         tesseract-ocr-fra \
     && rm -rf /var/lib/apt/lists/*
 
-COPY vision/requirements.txt .
+COPY apps/vision/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 \
@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 \
     && pip install --no-cache-dir open_clip_torch==2.30.0
 RUN python -c "import open_clip; open_clip.create_model_and_transforms('ViT-B-32', pretrained='laion2b_s34b_b79k')"
 
-COPY vision/app ./app
+COPY apps/vision/app ./app
 
 EXPOSE 8000
 
