@@ -2,11 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
 import { H1 } from "@/components/Shared/Titles";
-import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSealedProducts } from "@/hooks/useSealedProducts";
 import { pokemonCardService } from "@/services/pokemonCard.service";
@@ -77,7 +77,7 @@ function SealedListingsContent() {
     ? Number(debouncedPriceMax)
     : undefined;
 
-  const { data, isLoading, error } = useSealedProducts({
+  const { data, isLoading, error, refetch } = useSealedProducts({
     page,
     limit: 24,
     search: debouncedSearch || undefined,
@@ -92,12 +92,16 @@ function SealedListingsContent() {
   // Handle searchParams url changes to reset page and items list
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
-    setProductType((searchParams.get("productType") as SealedProductType) || undefined);
+    setProductType(
+      (searchParams.get("productType") as SealedProductType) || undefined,
+    );
     setSetId(searchParams.get("setId") || undefined);
     setSeriesId(searchParams.get("seriesId") || undefined);
     setPriceMin(searchParams.get("priceMin") || "");
     setPriceMax(searchParams.get("priceMax") || "");
-    setSortBy((searchParams.get("sortBy") as SealedSortBy) || SealedSortBy.NAME);
+    setSortBy(
+      (searchParams.get("sortBy") as SealedSortBy) || SealedSortBy.NAME,
+    );
     setPage(1);
     setItems([]);
   }, [searchParams]);
@@ -109,8 +113,8 @@ function SealedListingsContent() {
         setItems(data.data);
       } else {
         setItems((prev) => {
-          const existingIds = new Set(prev.map(i => i.id));
-          const newItems = data.data.filter(i => !existingIds.has(i.id));
+          const existingIds = new Set(prev.map((i) => i.id));
+          const newItems = data.data.filter((i) => !existingIds.has(i.id));
           return [...prev, ...newItems];
         });
       }
@@ -338,9 +342,15 @@ function SealedListingsContent() {
         </Card>
 
         {error && (
-          <Card className="mb-6">
-            <CardContent className="pt-6 text-center text-destructive">
-              Une erreur est survenue lors du chargement des produits.
+          <Card className="mb-6 border-destructive">
+            <CardContent className="pt-6 text-center space-y-4">
+              <p className="text-destructive">
+                Impossible de charger les produits scellés. Réessayez dans un
+                instant.
+              </p>
+              <Button variant="outline" onClick={() => refetch()}>
+                Réessayer
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -365,7 +375,10 @@ function SealedListingsContent() {
               ))}
             </div>
             {/* Elément sentinelle pour le scroll infini */}
-            <div ref={observerRef} className="py-8 flex justify-center items-center">
+            <div
+              ref={observerRef}
+              className="py-8 flex justify-center items-center"
+            >
               {isLoading && page > 1 && <Spinner size="medium" />}
             </div>
           </>

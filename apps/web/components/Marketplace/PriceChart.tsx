@@ -41,6 +41,19 @@ export function PriceChart({
     );
   }
 
+  // Sur l'axe on arrondit à l'unité pour éviter les libellés tronqués
+  const formatAxisPrice = (value: number) => {
+    try {
+      return Number(value).toLocaleString("fr-FR", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0,
+      });
+    } catch {
+      return `${Math.round(Number(value))}`;
+    }
+  };
+
   const chartData = data
     .map((item) => {
       const d = new Date(item.recordedAt);
@@ -122,12 +135,14 @@ export function PriceChart({
               <XAxis
                 dataKey="date"
                 className="text-xs"
-                tick={{ fill: "currentColor" }}
+                tick={{ fill: "var(--muted-foreground)" }}
+                tickMargin={8}
               />
               <YAxis
                 className="text-xs"
-                tick={{ fill: "currentColor" }}
-                tickFormatter={(v) => formatPrice(v, currency)}
+                tick={{ fill: "var(--muted-foreground)" }}
+                width={64}
+                tickFormatter={formatAxisPrice}
               />
               <Tooltip content={CustomTooltip} />
               <Line

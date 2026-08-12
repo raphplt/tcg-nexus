@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { SealedCondition, sealedConditionLabels } from "@/types/sealed-product";
 import { currencyOptions } from "@/utils/variables";
+import { ShippingPolicyNotice } from "../../../_components/ShippingPolicyNotice";
 
 interface SellSealedFormProps {
   sealedProductId: string;
@@ -143,6 +144,8 @@ export default function SellSealedForm({
           </Select>
         </div>
       </div>
+
+      <ShippingPolicyNotice productKind="sealed" />
 
       <div className="space-y-1">
         <Label htmlFor="sealed-description">Description (optionnelle)</Label>

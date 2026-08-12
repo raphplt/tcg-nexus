@@ -273,6 +273,30 @@ export class SealedProductService {
       );
     }
 
+    if (filter.sortBy === SealedSortBy.POPULARITY) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - POPULARITY_WINDOW_DAYS);
+
+      const weightCase = Object.entries(SEALED_EVENT_WEIGHTS)
+        .map(([type, weight]) => `WHEN '${type}' THEN ${weight}`)
+        .join(" ");
+
+      qb.leftJoin(
+        "sealed_event",
+        "popularityEvent",
+        'popularityEvent.sealed_product_id = sealedProduct.id AND popularityEvent."createdAt" >= :popularityCutoff',
+        { popularityCutoff: cutoff },
+      );
+      qb.addSelect(
+        `COALESCE(SUM(CASE popularityEvent."eventType" ${weightCase} ELSE 0 END), 0)`,
+        "popularity_score",
+      );
+      qb.groupBy("sealedProduct.id")
+        .addGroupBy("pokemonSet.id")
+        .addGroupBy("serie.id")
+        .addGroupBy("locales.id");
+    }
+
     const needsListingJoin =
       typeof filter.priceMin === "number" ||
       typeof filter.priceMax === "number" ||
@@ -326,9 +350,7 @@ export class SealedProductService {
       case SealedSortBy.PRICE_DESC:
         return { sort: "min_price", order: "DESC" };
       case SealedSortBy.POPULARITY:
-        // Non déterministe, on retombe sur ordre par nom pour l'instant.
-        // Le tri par popularité est géré via findPopular().
-        return { sort: "sealedProduct.nameEn", order: "ASC" };
+        return { sort: "popularity_score", order: "DESC" };
       case SealedSortBy.NAME:
       default:
         return { sort: "sealedProduct.nameEn", order: "ASC" };

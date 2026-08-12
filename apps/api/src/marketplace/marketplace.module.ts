@@ -21,7 +21,9 @@ import {
 } from "./entities";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
-import { PaymentController } from "./payment.controller";
+import { OrderController } from "./order.controller";
+import { OrderService } from "./order.service";
+import { OrderReservationScheduler } from "./order-reservation.scheduler";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
@@ -48,18 +50,20 @@ import { WebhookController } from "./webhook.controller";
   ],
   controllers: [
     MarketplaceController,
+    OrderController,
     CardPopularityController,
     SealedEventController,
-    PaymentController,
     WebhookController,
   ],
   providers: [
     MarketplaceService,
+    OrderService,
     CardPopularityService,
     CardPopularityScheduler,
+    OrderReservationScheduler,
     SealedEventService,
     StripeService,
   ],
-  exports: [MarketplaceService, SealedEventService],
+  exports: [MarketplaceService, OrderService, SealedEventService],
 })
 export class MarketplaceModule {}

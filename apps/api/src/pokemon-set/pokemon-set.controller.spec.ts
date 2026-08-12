@@ -30,6 +30,10 @@ describe("PokemonSetController", () => {
           useValue: mockPokemonSetService,
         },
         {
+          provide: R2StorageService,
+          useValue: mockR2StorageService,
+        },
+        {
           provide: getRepositoryToken(PokemonSet),
           useValue: {},
         },

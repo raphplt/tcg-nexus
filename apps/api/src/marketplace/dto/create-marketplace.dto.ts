@@ -7,6 +7,8 @@ import {
   IsString,
   Min,
 } from "class-validator";
+import { Languages } from "src/common/enums/languages";
+import { ListingStatus } from "src/common/enums/listing-status";
 import { CardState } from "src/common/enums/pokemonCardsType";
 import { ProductKind } from "src/common/enums/product-kind";
 import { SealedCondition } from "src/common/enums/sealed-condition";
@@ -18,7 +20,6 @@ export class CreateListingDto {
   @IsPositive()
   sellerId?: number;
 
-  /** Type de produit listé. Détermine quel champ FK doit être renseigné. */
   @IsOptional()
   @IsEnum(ProductKind)
   productKind?: ProductKind;
@@ -46,6 +47,14 @@ export class CreateListingDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsEnum(Languages)
+  language?: Languages;
+
+  @IsOptional()
+  @IsEnum(ListingStatus)
+  status?: ListingStatus;
 
   /** Requis si productKind = card */
   @IsOptional()

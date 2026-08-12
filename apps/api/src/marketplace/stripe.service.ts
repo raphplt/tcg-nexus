@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 
@@ -29,8 +34,8 @@ export class StripeService implements OnModuleInit {
 
   private ensureInitialized() {
     if (!this.initialized) {
-      throw new Error(
-        "Stripe is not configured. Payment operations are unavailable.",
+      throw new ServiceUnavailableException(
+        "Le paiement est momentanément indisponible (Stripe non configuré).",
       );
     }
   }

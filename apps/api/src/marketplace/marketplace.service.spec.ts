@@ -3,38 +3,35 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
+import { ListingStatus } from "../common/enums/listing-status";
 import { CardState } from "../common/enums/pokemonCardsType";
+import { ProductKind } from "../common/enums/product-kind";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
 import { CardPopularityService } from "./card-popularity.service";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
-import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateListingDto } from "./dto/update-marketplace.dto";
 import { Listing } from "./entities/listing.entity";
-import { Order, OrderStatus } from "./entities/order.entity";
+import { Order } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
-import {
-  PaymentStatus,
-  PaymentTransaction,
-} from "./entities/payment-transaction.entity";
+import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { PriceHistory } from "./entities/price-history.entity";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { MarketplaceService } from "./marketplace.service";
+import { OrderService } from "./order.service";
+import { SHIPPING_POLICY } from "./shipping-policy";
 import { StripeService } from "./stripe.service";
 
 describe("MarketplaceService", () => {
   let service: MarketplaceService;
   let listingRepo: any;
-  let orderRepo: any;
-  let userCartService: any;
   let priceHistoryRepo: any;
-  let eventEmitter: any;
 
   // Mock definitions needed in scope
   let mockListingRepo: any;
@@ -47,6 +44,7 @@ describe("MarketplaceService", () => {
   let mockUserCartService: any;
   let mockUserRepository: any;
   let mockCardPopularityService: any;
+  let mockOrderService: any;
   let mockDataSource: any;
   let mockManager: any;
 
@@ -70,6 +68,7 @@ describe("MarketplaceService", () => {
     addGroupBy: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
     having: jest.fn().mockReturnThis(),
+    andHaving: jest.fn().mockReturnThis(),
     getRawMany: jest.fn().mockResolvedValue([]),
     getCount: jest.fn().mockResolvedValue(0),
     getRawAndEntities: jest.fn().mockResolvedValue({ entities: [], raw: [] }),
@@ -118,6 +117,7 @@ describe("MarketplaceService", () => {
     mockOrderItemRepo = {
       create: jest.fn(),
       save: jest.fn(),
+      createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
     mockStripeService = {
@@ -138,6 +138,12 @@ describe("MarketplaceService", () => {
 
     mockCardPopularityService = {
       recordEvent: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockOrderService = {
+      getSellerRevenue: jest
+        .fn()
+        .mockResolvedValue({ totalSales: 0, revenueByCurrency: {} }),
     };
 
     mockManager = {
@@ -204,102 +210,19 @@ describe("MarketplaceService", () => {
         { provide: CardPopularityService, useValue: mockCardPopularityService },
         { provide: DataSource, useValue: mockDataSource },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: OrderService, useValue: mockOrderService },
       ],
     }).compile();
 
     service = module.get<MarketplaceService>(MarketplaceService);
     listingRepo = module.get(getRepositoryToken(Listing));
-    orderRepo = module.get(getRepositoryToken(Order));
-    userCartService = module.get(UserCartService);
     priceHistoryRepo = module.get(getRepositoryToken(PriceHistory));
-    eventEmitter = module.get(EventEmitter2);
 
     jest.clearAllMocks();
   });
 
   it("should be defined", () => {
     expect(service).toBeDefined();
-  });
-
-  describe("createOrder", () => {
-    const user = { id: 1 } as User;
-    const dto: CreateOrderDto = {
-      paymentIntentId: "pi_123",
-      shippingAddress: "123 Main St",
-    };
-
-    const buildManager = (freshListing: any, savedOrder: any = { id: 1 }) => ({
-      findOne: jest.fn().mockResolvedValue(freshListing),
-      create: jest.fn().mockReturnValue({}),
-      save: jest
-        .fn()
-        .mockImplementation(async (entity, value) =>
-          entity === Order ? savedOrder : value,
-        ),
-      decrement: jest.fn(),
-    });
-
-    beforeEach(() => {
-      mockStripeService.retrievePaymentIntent.mockResolvedValue({
-        status: "succeeded",
-        amount: 2000,
-        currency: "usd",
-      });
-    });
-
-    it("should create an order successfully", async () => {
-      const listing = {
-        id: 1,
-        price: 10,
-        quantityAvailable: 5,
-        currency: Currency.USD,
-      };
-      const cart = {
-        cartItems: [{ listing, quantity: 2 }],
-      };
-      userCartService.findCartByUserId.mockResolvedValue(cart);
-      mockListingRepo.findOne.mockResolvedValue({
-        id: 1,
-        price: 10,
-        quantityAvailable: 5,
-      });
-      orderRepo.create.mockReturnValue({});
-      orderRepo.save.mockResolvedValue({ id: 1 });
-
-      const result = await service.createOrder(dto, user);
-
-      expect(result).toEqual({ id: 1 });
-      expect(mockManager.save).toHaveBeenCalled();
-      expect(userCartService.clearCart).toHaveBeenCalledWith(user.id);
-    });
-
-    it("should throw BadRequestException if cart is empty", async () => {
-      userCartService.findCartByUserId.mockResolvedValue({ cartItems: [] });
-      await expect(service.createOrder(dto, user)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it("should throw BadRequestException if insufficient quantity", async () => {
-      const listing = {
-        id: 1,
-        price: 10,
-        quantityAvailable: 1,
-        currency: Currency.USD,
-      };
-      const cart = {
-        cartItems: [{ listing, quantity: 2 }],
-      };
-      userCartService.findCartByUserId.mockResolvedValue(cart);
-      mockListingRepo.findOne.mockResolvedValue({
-        id: 1,
-        price: 10,
-        quantityAvailable: 1,
-      });
-      await expect(service.createOrder(dto, user)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
   });
 
   describe("update ownership", () => {
@@ -344,6 +267,38 @@ describe("MarketplaceService", () => {
       );
       expect(res).toBeDefined();
       expect(listingRepo.save).toHaveBeenCalled();
+    });
+
+    it("records a price history point when the price changes", async () => {
+      const priced = { ...listing, price: 100, currency: Currency.EUR };
+      listingRepo.findOne.mockResolvedValueOnce(priced).mockResolvedValueOnce({
+        ...priced,
+        price: 200,
+        pokemonCard: { id: "c1" },
+      });
+      listingRepo.save.mockImplementation(async (l: Listing) => l);
+      priceHistoryRepo.create.mockImplementation((data: any) => data);
+
+      await service.update(10, { price: 200 } as UpdateListingDto, owner);
+
+      expect(priceHistoryRepo.save).toHaveBeenCalled();
+    });
+
+    it("does not record history when the price is unchanged", async () => {
+      listingRepo.findOne.mockResolvedValue({
+        ...listing,
+        price: 100,
+        currency: Currency.EUR,
+      });
+      listingRepo.save.mockImplementation(async (l: Listing) => l);
+
+      await service.update(
+        10,
+        { description: "nouvelle description" } as UpdateListingDto,
+        owner,
+      );
+
+      expect(priceHistoryRepo.save).not.toHaveBeenCalled();
     });
   });
 
@@ -494,18 +449,145 @@ describe("MarketplaceService", () => {
         service.create({} as any, { id: 1 } as User),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it("applies the platform shipping policy instead of seller values", async () => {
+      const dto = {
+        pokemonCardId: "c1",
+        price: 10,
+        currency: Currency.EUR,
+        cardState: CardState.NM,
+        // Valeurs qu'un client tenterait de forcer
+        shippingCost: 42,
+        handlingTimeDays: 25,
+      } as CreateListingDto;
+
+      listingRepo.create.mockImplementation((data: any) => data);
+      listingRepo.save.mockResolvedValue({ id: 1 });
+      listingRepo.findOne.mockResolvedValue({ id: 1 });
+
+      await service.create(dto, { id: 1 } as User);
+
+      expect(listingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shippingCost: SHIPPING_POLICY.rates[ProductKind.CARD].cost,
+          handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
+        }),
+      );
+    });
+
+    it("applies the sealed rate for sealed listings", async () => {
+      const dto = {
+        sealedProductId: "s1",
+        productKind: ProductKind.SEALED,
+        price: 60,
+        currency: Currency.EUR,
+      } as CreateListingDto;
+
+      listingRepo.create.mockImplementation((data: any) => data);
+      listingRepo.save.mockResolvedValue({ id: 2 });
+      listingRepo.findOne.mockResolvedValue({ id: 2 });
+
+      await service.create(dto, { id: 1 } as User);
+
+      expect(listingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shippingCost: SHIPPING_POLICY.rates[ProductKind.SEALED].cost,
+        }),
+      );
+    });
+  });
+
+  describe("getPriceSuggestion", () => {
+    const mockAggregates = (
+      sameState: Record<string, string> | null,
+      allStates: Record<string, string> | null,
+    ) => {
+      const sameStateQb = createMockQb();
+      sameStateQb.getRawOne.mockResolvedValue(sameState);
+      const allStatesQb = createMockQb();
+      allStatesQb.getRawOne.mockResolvedValue(allStates);
+
+      mockListingRepo.createQueryBuilder
+        .mockReturnValueOnce(sameStateQb)
+        .mockReturnValueOnce(allStatesQb);
+    };
+
+    it("suggests the average of listings in the same state", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: null,
+      });
+      mockAggregates(
+        { count: "3", minPrice: "10", maxPrice: "20", avgPrice: "15.005" },
+        { count: "5", minPrice: "8", maxPrice: "30", avgPrice: "18" },
+      );
+
+      const result = await service.getPriceSuggestion("c1", CardState.NM);
+
+      expect(result.basis).toBe("same-state");
+      expect(result.suggestedPrice).toBe(15.01);
+      expect(result.listings.count).toBe(3);
+    });
+
+    it("falls back to all states then to the market price", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: { cardmarket: { trend: 12.3 } },
+      });
+      mockAggregates({ count: "0" }, { count: "0" });
+
+      const result = await service.getPriceSuggestion("c1", CardState.NM);
+
+      expect(result.basis).toBe("market");
+      expect(result.suggestedPrice).toBe(12.3);
+    });
+
+    it("returns no suggestion when nothing is available", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue({
+        id: "c1",
+        pricing: null,
+      });
+      mockAggregates({ count: "0" }, { count: "0" });
+
+      const result = await service.getPriceSuggestion("c1");
+
+      expect(result.basis).toBeNull();
+      expect(result.suggestedPrice).toBeNull();
+    });
+
+    it("throws when the card does not exist", async () => {
+      mockPokemonCardRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.getPriceSuggestion("unknown")).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 
   describe("getCardStatistics", () => {
+    const mockStatsQueries = (
+      currencyRows: Array<{ currency: string; count: string }>,
+      aggregates: Record<string, string | null> | null,
+    ) => {
+      const currencyQb = createMockQb();
+      currencyQb.getRawMany.mockResolvedValue(currencyRows);
+      const statsQb = createMockQb();
+      statsQb.getRawOne.mockResolvedValue(aggregates);
+
+      mockListingRepo.createQueryBuilder
+        .mockReturnValueOnce(currencyQb)
+        .mockReturnValueOnce(statsQb);
+
+      return { currencyQb, statsQb };
+    };
+
     it("calculates average, min, max correctly", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
+      mockStatsQueries([{ currency: "EUR", count: "3" }], {
         totalListings: "3",
         minPrice: "10",
         maxPrice: "30",
         avgPrice: "20",
       });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([
         { price: 15, recordedAt: new Date() },
       ]);
@@ -516,41 +598,59 @@ describe("MarketplaceService", () => {
       expect(stats.maxPrice).toBe(30);
       expect(stats.avgPrice).toBe(20);
       expect(stats.totalListings).toBe(3);
+      expect(stats.currency).toBe("EUR");
       expect(stats.priceHistory).toHaveLength(1);
     });
 
     it("handles empty listings", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
-        totalListings: "0",
-        minPrice: null,
-        maxPrice: null,
-        avgPrice: null,
-      });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
+      mockStatsQueries([], null);
 
       const stats = await service.getCardStatistics("c1");
       expect(stats.totalListings).toBe(0);
       expect(stats.minPrice).toBeNull();
     });
 
+    it("aggregates in a single currency instead of mixing them", async () => {
+      const { statsQb } = mockStatsQueries(
+        [
+          { currency: "USD", count: "5" },
+          { currency: "EUR", count: "2" },
+        ],
+        {
+          totalListings: "5",
+          minPrice: "8",
+          maxPrice: "12",
+          avgPrice: "10",
+        },
+      );
+      mockPriceHistoryRepo.find.mockResolvedValue([]);
+
+      const stats = await service.getCardStatistics("c1");
+
+      expect(stats.currency).toBe("USD");
+      expect(stats.availableCurrencies).toEqual(["USD", "EUR"]);
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
+        "listing.currency = :statsCurrency",
+        { statsCurrency: "USD" },
+      );
+    });
+
     it("applies currency and cardState filters", async () => {
-      const qb = createMockQb();
-      qb.getRawOne.mockResolvedValue({
+      const { statsQb } = mockStatsQueries([{ currency: "EUR", count: "1" }], {
         totalListings: "1",
         minPrice: "5",
         maxPrice: "5",
         avgPrice: "5",
       });
-      mockListingRepo.createQueryBuilder.mockReturnValue(qb);
       mockPriceHistoryRepo.find.mockResolvedValue([]);
 
       await service.getCardStatistics("card", "EUR", "NM");
 
-      expect(qb.andWhere).toHaveBeenCalledWith("listing.currency = :currency", {
-        currency: "EUR",
-      });
-      expect(qb.andWhere).toHaveBeenCalledWith(
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
+        "listing.currency = :statsCurrency",
+        { statsCurrency: "EUR" },
+      );
+      expect(statsQb.andWhere).toHaveBeenCalledWith(
         "listing.cardState = :cardState",
         { cardState: "NM" },
       );
@@ -562,6 +662,16 @@ describe("MarketplaceService", () => {
           }),
         }),
       );
+    });
+
+    it("returns no aggregate when the requested currency has no listing", async () => {
+      mockStatsQueries([{ currency: "EUR", count: "3" }], null);
+
+      const stats = await service.getCardStatistics("c1", "JPY");
+
+      expect(stats.totalListings).toBe(0);
+      expect(stats.currency).toBe("JPY");
+      expect(stats.availableCurrencies).toEqual(["EUR"]);
     });
   });
 
@@ -600,17 +710,18 @@ describe("MarketplaceService", () => {
   });
 
   describe("getBestSellers", () => {
-    it("returns best sellers based on orders", async () => {
-      const orderQb = createMockQb();
-      orderQb.getRawMany.mockResolvedValue([
+    it("returns best sellers based on their own order lines", async () => {
+      const itemQb = createMockQb();
+      itemQb.getRawMany.mockResolvedValue([
         {
           seller_id: 1,
           seller_firstName: "John",
           total_sales: "100",
           total_revenue: "5000",
+          currency: "EUR",
         },
       ]);
-      mockOrderRepo.createQueryBuilder.mockReturnValue(orderQb);
+      mockOrderItemRepo.createQueryBuilder.mockReturnValue(itemQb);
 
       // Ensure listingRepo returns empty to simulate no "listing-only" top sellers
       const listingQb = createMockQb();
@@ -621,11 +732,12 @@ describe("MarketplaceService", () => {
       expect(result).toHaveLength(1);
       expect(result[0].seller.firstName).toBe("John");
       expect(result[0].totalSales).toBe(100);
+      expect(result[0].currency).toBe("EUR");
     });
 
     it("returns early when enough sellers from orders", async () => {
-      const orderQb = createMockQb();
-      orderQb.getRawMany.mockResolvedValue([
+      const itemQb = createMockQb();
+      itemQb.getRawMany.mockResolvedValue([
         {
           seller_id: 1,
           seller_firstName: "John",
@@ -634,18 +746,19 @@ describe("MarketplaceService", () => {
           seller_isPro: false,
           total_sales: "2",
           total_revenue: "10",
+          currency: "EUR",
         },
       ]);
-      mockOrderRepo.createQueryBuilder.mockReturnValue(orderQb);
+      mockOrderItemRepo.createQueryBuilder.mockReturnValue(itemQb);
 
       await service.getBestSellers(1);
       expect(mockListingRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it("falls back to active listings if orders not enough", async () => {
-      const orderQb = createMockQb();
-      orderQb.getRawMany.mockResolvedValue([]); // No sales
-      mockOrderRepo.createQueryBuilder.mockReturnValue(orderQb);
+    it("falls back to active listings without inventing revenue", async () => {
+      const itemQb = createMockQb();
+      itemQb.getRawMany.mockResolvedValue([]); // No sales
+      mockOrderItemRepo.createQueryBuilder.mockReturnValue(itemQb);
 
       const listingQb = createMockQb();
       listingQb.getRawMany.mockResolvedValue([
@@ -661,30 +774,35 @@ describe("MarketplaceService", () => {
       const result = await service.getBestSellers(10);
       expect(result).toHaveLength(1);
       expect(result[0].seller.firstName).toBe("Alice");
-      expect(result[0].totalRevenue).toBe(2000);
+      expect(result[0].totalRevenue).toBe(0);
     });
   });
 
   describe("getSellerStatistics", () => {
-    it("calculates seller stats", async () => {
+    beforeEach(() => {
       mockUserRepository.findOne.mockResolvedValue({
         id: 1,
         firstName: "Seller",
         lastName: "One",
-        email: "seller@test.com",
         avatarUrl: "avatar",
         isPro: false,
         createdAt: new Date(),
       });
       listingRepo.find.mockResolvedValue([
-        { id: 1, expiresAt: new Date(Date.now() + 10000) },
+        {
+          id: 1,
+          status: ListingStatus.ACTIVE,
+          quantityAvailable: 2,
+          expiresAt: new Date(Date.now() + 10000),
+        },
       ]);
-      const orderQb = createMockQb();
-      orderQb.getMany.mockResolvedValue([
-        { totalAmount: 100 },
-        { totalAmount: 200 },
-      ]);
-      mockOrderRepo.createQueryBuilder.mockReturnValue(orderQb);
+    });
+
+    it("reports revenue computed from the seller's own lines", async () => {
+      mockOrderService.getSellerRevenue.mockResolvedValue({
+        totalSales: 2,
+        revenueByCurrency: { EUR: 300 },
+      });
 
       const stats = await service.getSellerStatistics(1);
 
@@ -692,7 +810,28 @@ describe("MarketplaceService", () => {
       expect(stats.activeListings).toBe(1);
       expect(stats.totalSales).toBe(2);
       expect(stats.totalRevenue).toBe(300);
+      expect(stats.currency).toBe("EUR");
       expect(stats.avgOrderValue).toBe(150);
+    });
+
+    it("does not sum revenue across currencies", async () => {
+      mockOrderService.getSellerRevenue.mockResolvedValue({
+        totalSales: 3,
+        revenueByCurrency: { EUR: 100, USD: 200 },
+      });
+
+      const stats = await service.getSellerStatistics(1);
+
+      expect(stats.totalRevenue).toBeNull();
+      expect(stats.currency).toBeNull();
+      expect(stats.revenueByCurrency).toEqual({ EUR: 100, USD: 200 });
+    });
+
+    it("does not expose the seller email", async () => {
+      await service.getSellerStatistics(1);
+
+      const select = mockUserRepository.findOne.mock.calls[0][0].select;
+      expect(select).not.toContain("email");
     });
   });
 
@@ -749,255 +888,11 @@ describe("MarketplaceService", () => {
         "(listing.cardState = :cardState OR listing.id IS NULL)",
         { cardState: "NM" },
       );
-      expect(qb.having).toHaveBeenCalledWith(
+      expect(qb.andHaving).toHaveBeenCalledWith(
         expect.stringContaining("<= :priceMax"),
         expect.objectContaining({ priceMax: 50 }),
       );
       expect(qb.orderBy).toHaveBeenCalledWith("card.name", "ASC");
-    });
-  });
-
-  describe("findAllOrders", () => {
-    it("returns filtered orders", async () => {
-      const qb = createMockQb();
-      mockOrderRepo.createQueryBuilder.mockReturnValue(qb);
-
-      await service.findAllOrders({ status: OrderStatus.PAID, buyerId: 1 });
-
-      expect(qb.andWhere).toHaveBeenCalledWith("order.status = :status", {
-        status: OrderStatus.PAID,
-      });
-      expect(qb.andWhere).toHaveBeenCalledWith("buyer.id = :buyerId", {
-        buyerId: 1,
-      });
-    });
-
-    it("applies seller filter", async () => {
-      const qb = createMockQb();
-      mockOrderRepo.createQueryBuilder.mockReturnValue(qb);
-
-      await service.findAllOrders({ sellerId: 2 } as any);
-
-      expect(qb.andWhere).toHaveBeenCalledWith("seller.id = :sellerId", {
-        sellerId: 2,
-      });
-    });
-  });
-
-  describe("orders retrieval", () => {
-    it("findOrdersByBuyerId delegates to repository", async () => {
-      mockOrderRepo.find.mockResolvedValue([{ id: 1 }]);
-      const res = await service.findOrdersByBuyerId(3);
-      expect(res).toHaveLength(1);
-      expect(mockOrderRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { buyer: { id: 3 } } }),
-      );
-    });
-
-    it("findOrderById throws not found", async () => {
-      mockOrderRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOrderById(1, 1)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("findOrderById forbids other users", async () => {
-      mockOrderRepo.findOne.mockResolvedValue({
-        id: 1,
-        buyer: { id: 99 },
-      });
-      await expect(service.findOrderById(1, 1)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
-    it("findOrderById returns order for owner", async () => {
-      mockOrderRepo.findOne.mockResolvedValue({
-        id: 1,
-        buyer: { id: 5 },
-      });
-      await expect(service.findOrderById(1, 5)).resolves.toEqual(
-        expect.objectContaining({ id: 1 }),
-      );
-    });
-
-    it("findOrderByIdAsAdmin throws when missing", async () => {
-      mockOrderRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOrderByIdAsAdmin(10)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it("updateOrderStatus uses admin lookup", async () => {
-      const order = { id: 1, status: OrderStatus.PENDING };
-      jest
-        .spyOn(service, "findOrderByIdAsAdmin")
-        .mockResolvedValue(order as any);
-      mockOrderRepo.save.mockResolvedValue({
-        ...order,
-        status: OrderStatus.PAID,
-      });
-
-      const res = await service.updateOrderStatus(1, OrderStatus.PAID);
-      expect(service.findOrderByIdAsAdmin).toHaveBeenCalledWith(1);
-      expect(res.status).toBe(OrderStatus.PAID);
-    });
-
-    it("updateOrderStatus emits order.shipped when transitioning to SHIPPED", async () => {
-      const order = { id: 1, status: OrderStatus.PAID, buyer: { id: 7 } };
-      jest
-        .spyOn(service, "findOrderByIdAsAdmin")
-        .mockResolvedValue(order as any);
-      mockOrderRepo.save.mockResolvedValue({
-        ...order,
-        status: OrderStatus.SHIPPED,
-      });
-
-      await service.updateOrderStatus(1, OrderStatus.SHIPPED);
-
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
-        "order.shipped",
-        expect.objectContaining({ buyerUserId: 7, orderId: 1 }),
-      );
-    });
-
-    it("updateOrderStatus does not re-emit order.shipped when already shipped", async () => {
-      const order = { id: 1, status: OrderStatus.SHIPPED, buyer: { id: 7 } };
-      jest
-        .spyOn(service, "findOrderByIdAsAdmin")
-        .mockResolvedValue(order as any);
-      mockOrderRepo.save.mockResolvedValue({ ...order });
-
-      await service.updateOrderStatus(1, OrderStatus.SHIPPED);
-
-      expect(eventEmitter.emit).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("payment webhooks", () => {
-    describe("handlePaymentSucceeded", () => {
-      it("does nothing when no matching payment transaction is found", async () => {
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
-
-        await service.handlePaymentSucceeded("pi_missing");
-
-        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
-        expect(mockOrderRepo.save).not.toHaveBeenCalled();
-      });
-
-      it("marks payment completed and order paid when pending", async () => {
-        const order = { id: 5, status: OrderStatus.PENDING };
-        const payment = {
-          id: 1,
-          status: PaymentStatus.INITIATED,
-          order,
-        };
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
-
-        await service.handlePaymentSucceeded("pi_123");
-
-        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: PaymentStatus.COMPLETED }),
-        );
-        expect(mockOrderRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: OrderStatus.PAID }),
-        );
-      });
-
-      it("does not resave payment or order when already completed/paid", async () => {
-        const order = { id: 5, status: OrderStatus.PAID };
-        const payment = {
-          id: 1,
-          status: PaymentStatus.COMPLETED,
-          order,
-        };
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
-
-        await service.handlePaymentSucceeded("pi_123");
-
-        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
-        expect(mockOrderRepo.save).not.toHaveBeenCalled();
-      });
-    });
-
-    describe("handlePaymentFailed", () => {
-      it("does nothing when no matching payment transaction is found", async () => {
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
-
-        await service.handlePaymentFailed("pi_missing");
-
-        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
-        expect(mockOrderRepo.save).not.toHaveBeenCalled();
-      });
-
-      it("marks payment failed, cancels order and restores stock", async () => {
-        const order = {
-          id: 5,
-          status: OrderStatus.PENDING,
-          orderItems: [{ quantity: 2, listing: { id: 42 } }],
-        };
-        const payment = { id: 1, status: PaymentStatus.INITIATED, order };
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
-
-        await service.handlePaymentFailed("pi_123");
-
-        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: PaymentStatus.FAILED }),
-        );
-        expect(mockOrderRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: OrderStatus.CANCELLED }),
-        );
-        expect(mockListingRepo.increment).toHaveBeenCalledWith(
-          { id: 42 },
-          "quantityAvailable",
-          2,
-        );
-      });
-    });
-
-    describe("handlePaymentRefunded", () => {
-      it("does nothing when no matching payment transaction is found", async () => {
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(null);
-
-        await service.handlePaymentRefunded("pi_missing");
-
-        expect(mockPaymentTransactionRepo.save).not.toHaveBeenCalled();
-        expect(mockOrderRepo.save).not.toHaveBeenCalled();
-      });
-
-      it("marks payment refunded, refunds order and restores stock", async () => {
-        const order = {
-          id: 5,
-          status: OrderStatus.PAID,
-          orderItems: [{ quantity: 1, listing: { id: 42 } }],
-        };
-        const payment = { id: 1, status: PaymentStatus.COMPLETED, order };
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
-
-        await service.handlePaymentRefunded("pi_123");
-
-        expect(mockPaymentTransactionRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: PaymentStatus.REFUNDED }),
-        );
-        expect(mockOrderRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({ status: OrderStatus.REFUNDED }),
-        );
-        expect(mockListingRepo.increment).toHaveBeenCalledWith(
-          { id: 42 },
-          "quantityAvailable",
-          1,
-        );
-      });
-
-      it("does not restore stock when order has no items", async () => {
-        const order = { id: 5, status: OrderStatus.PAID };
-        const payment = { id: 1, status: PaymentStatus.COMPLETED, order };
-        mockPaymentTransactionRepo.findOne.mockResolvedValue(payment);
-
-        await service.handlePaymentRefunded("pi_123");
-
-        expect(mockListingRepo.increment).not.toHaveBeenCalled();
-      });
     });
   });
 });

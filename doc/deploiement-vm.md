@@ -121,6 +121,21 @@ curl -I http://127.0.0.1:3002
 
 ---
 
+## 4 bis. Appliquer les migrations
+
+En production `synchronize` est désactivé (voir [ADR-004](./adr/004-typeorm-synchronize.md)) : le schéma évolue par migrations.
+
+```bash
+docker compose -f docker-compose.deploy.yml exec api npm run migration:show
+docker compose -f docker-compose.deploy.yml exec api npm run migration:run
+```
+
+Alternative : poser `DATABASE_MIGRATIONS_RUN=true` dans l'environnement de l'API, les migrations en attente sont alors jouées au démarrage.
+
+Sur une base entièrement neuve, il faut d'abord créer le schéma complet — la baseline n'est pas encore versionnée. La procédure est décrite dans [doc/migrations.md](./migrations.md).
+
+---
+
 ## 5. Seeder la base (dans le container API)
 
 Le script de seed interactif est plus simple avec `exec`:

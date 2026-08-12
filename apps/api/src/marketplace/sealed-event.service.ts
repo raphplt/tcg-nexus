@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "crypto";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
@@ -8,8 +8,6 @@ import { SealedEvent } from "./entities/sealed-event.entity";
 
 @Injectable()
 export class SealedEventService {
-  private readonly logger = new Logger(SealedEventService.name);
-
   constructor(
     @InjectRepository(SealedEvent)
     private readonly sealedEventRepository: Repository<SealedEvent>,
@@ -29,7 +27,7 @@ export class SealedEventService {
       select: ["id"],
     });
     if (!product) {
-      throw new BadRequestException("Sealed product not found");
+      throw new BadRequestException("Produit scellé introuvable");
     }
 
     // Hash IP pour conformité RGPD (même pattern que CardPopularityService)

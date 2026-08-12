@@ -1,20 +1,21 @@
 "use client";
 
-import { Suspense, useState, useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { H1 } from "@/components/Shared/Titles";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { CardListItem } from "@/components/Marketplace/CardListItem";
+import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { ViewToggle } from "@/components/Marketplace/ViewToggle";
+import { H1 } from "@/components/Shared/Titles";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cardEventTracker } from "@/services/card-event-tracker.service";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useViewMode } from "@/hooks/useViewMode";
-import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
-import { useMarketplaceCards, FilterState } from "@/hooks/useMarketplace";
-import MarketplaceSearch from "../_components/MarketplaceSearch";
 import { Spinner } from "@/components/ui/spinner";
+import { useDebounce } from "@/hooks/useDebounce";
+import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
+import { useViewMode } from "@/hooks/useViewMode";
+import { cardEventTracker } from "@/services/card-event-tracker.service";
+import MarketplaceSearch from "../_components/MarketplaceSearch";
 
 export default function MarketplaceCardsPage() {
   return (
@@ -64,7 +65,7 @@ function MarketplaceCardsContent() {
     sortOrder: (searchParams.get("sortOrder") as "ASC" | "DESC") || "ASC",
   });
 
-  const { sets, series, data, isLoading, error } = useMarketplaceCards(
+  const { sets, series, data, isLoading, error, refetch } = useMarketplaceCards(
     filters,
     page,
   );
@@ -116,8 +117,10 @@ function MarketplaceCardsContent() {
         setItems(data.data);
       } else {
         setItems((prev) => {
-          const existingIds = new Set(prev.map(i => i.card?.id || i.id));
-          const newItems = data.data.filter((i: any) => !existingIds.has(i.card?.id || i.id));
+          const existingIds = new Set(prev.map((i) => i.card?.id || i.id));
+          const newItems = data.data.filter(
+            (i: any) => !existingIds.has(i.card?.id || i.id),
+          );
           return [...prev, ...newItems];
         });
       }
@@ -222,9 +225,14 @@ function MarketplaceCardsContent() {
             ))}
           </div>
         ) : error ? (
-          <Card>
-            <CardContent className="py-12 text-center text-destructive">
-              Erreur lors du chargement des cartes
+          <Card className="border-destructive">
+            <CardContent className="py-12 text-center space-y-4">
+              <p className="text-destructive">
+                Impossible de charger les cartes. Réessayez dans un instant.
+              </p>
+              <Button variant="outline" onClick={() => refetch()}>
+                Réessayer
+              </Button>
             </CardContent>
           </Card>
         ) : items.length > 0 ? (
@@ -232,7 +240,8 @@ function MarketplaceCardsContent() {
             <div className="mb-4 flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
                 {data?.meta?.totalItems || items.length} carte
-                {(data?.meta?.totalItems || items.length) > 1 ? "s" : ""} trouvée
+                {(data?.meta?.totalItems || items.length) > 1 ? "s" : ""}{" "}
+                trouvée
                 {(data?.meta?.totalItems || items.length) > 1 ? "s" : ""}
               </span>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -270,9 +279,12 @@ function MarketplaceCardsContent() {
                 })}
               </div>
             )}
-            
+
             {/* Elément sentinelle pour le scroll infini */}
-            <div ref={observerRef} className="py-8 flex justify-center items-center">
+            <div
+              ref={observerRef}
+              className="py-8 flex justify-center items-center"
+            >
               {isLoading && page > 1 && <Spinner size="medium" />}
             </div>
           </>

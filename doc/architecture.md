@@ -161,26 +161,34 @@ sequenceDiagram
   Web->>API: POST /user_cart/items
   API-->>Web: CartItem créé
 
-  Buyer->>Web: Passe commande
-  Web->>API: POST /marketplace/orders
-  API->>API: Crée Order (PENDING) + OrderItems<br/>verrouille le stock du Listing
-  API->>Stripe: PaymentIntent.create
+  Buyer->>Web: Passe commande (adresse de livraison)
+  Web->>API: POST /marketplace/checkout
+  API->>API: SELECT ... FOR UPDATE sur chaque Listing<br/>décrémente le stock, crée Order (PENDING)<br/>snapshot des OrderItems, réservation 20 min
+  API->>Stripe: PaymentIntent.create (metadata: orderId, userId)
   Stripe-->>API: client_secret
+  API->>API: vide le panier
   API-->>Web: { orderId, client_secret }
 
   Web->>Stripe: confirmPayment(client_secret)
   Stripe-->>Web: succès / échec
 
   Stripe-->>API: Webhook payment_intent.succeeded
-  API->>API: Order.status = PAID<br/>PaymentTransaction enregistrée
-  API-->>Web: (Socket.io) ordre mis à jour
+  API->>API: markOrderPaid (idempotent)
+
+  Web->>API: POST /marketplace/orders/:id/confirm
+  API->>Stripe: PaymentIntent.retrieve
+  API->>API: vérifie montant, devise, metadata<br/>markOrderPaid (no-op si déjà payée)
+  API-->>Web: commande à jour
 ```
 
 Points clés :
 
-- La discriminaison entre carte unique et produit scellé se fait via `Listing.productKind` (enum `ProductKind`). Un listing a soit un `pokemonCard`, soit un `sealedProduct`, jamais les deux.
-- Le paiement réel n'est validé **qu'au reçu du webhook Stripe** — pas la réponse du `confirmPayment` côté client (qui est informatif).
-- Les statuts d'une `Order` suivent `PENDING → PAID → SHIPPED`, avec les états terminaux `CANCELLED` et `REFUNDED`.
+- La discrimination entre carte unique et produit scellé se fait via `Listing.productKind` (enum `ProductKind`). Un listing a soit un `pokemonCard`, soit un `sealedProduct`, jamais les deux.
+- Le stock est réservé **au checkout**, pas à la confirmation : sans cela deux acheteurs peuvent payer le même exemplaire unique. Une réservation non payée est libérée au bout de 20 minutes par `OrderReservationScheduler`.
+- L'état du paiement est toujours relu chez Stripe, jamais accepté depuis le client. Webhook et retour client convergent sur la même opération idempotente `markOrderPaid`.
+- Les statuts d'une `Order` suivent `PENDING → PAID → SHIPPED → DELIVERED`, avec les états terminaux `CANCELLED` et `REFUNDED`. Chaque `OrderItem` porte en plus son propre état d'expédition, une commande pouvant concerner plusieurs vendeurs.
+
+Détail complet dans [la documentation marketplace](../apps/docs/docs/backend/marketplace.md).
 
 ## 7. Schéma de base de données
 

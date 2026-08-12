@@ -35,7 +35,7 @@ import {
 import { AdminOrderFilters, adminService } from "@/services/admin.service";
 import { Order, OrderStatus } from "@/types/order";
 import { PaginatedResult } from "@/types/pagination";
-import { getSealedName } from "@/utils/sealedImage";
+import { getFulfillmentLabel } from "@/utils/order";
 
 const statusOptions = Object.values(OrderStatus);
 
@@ -46,6 +46,7 @@ const statusVariant: Record<
   [OrderStatus.PENDING]: "secondary",
   [OrderStatus.PAID]: "default",
   [OrderStatus.SHIPPED]: "outline",
+  [OrderStatus.DELIVERED]: "default",
   [OrderStatus.CANCELLED]: "destructive",
   [OrderStatus.REFUNDED]: "destructive",
 };
@@ -300,39 +301,37 @@ export function AdminOrdersTable() {
                                     <TableRow>
                                       <TableHead>Article</TableHead>
                                       <TableHead>État / Cond.</TableHead>
+                                      <TableHead>Vendeur</TableHead>
+                                      <TableHead>Expédition</TableHead>
                                       <TableHead>Qté</TableHead>
                                       <TableHead>PU</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {selectedOrder.orderItems.map((item) => {
-                                      const isSealed =
-                                        item.listing.productKind === "sealed" ||
-                                        !!item.listing.sealedProduct;
-                                      return (
-                                        <TableRow key={item.id}>
-                                          <TableCell>
-                                            {isSealed
-                                              ? getSealedName(
-                                                  item.listing.sealedProduct,
-                                                ) || "Produit scellé"
-                                              : item.listing.pokemonCard
-                                                  ?.name || "Carte inconnue"}
-                                          </TableCell>
-                                          <TableCell>
-                                            {isSealed
-                                              ? (item.listing.sealedCondition ??
-                                                "Neuf")
-                                              : (item.listing.cardState ?? "")}
-                                          </TableCell>
-                                          <TableCell>{item.quantity}</TableCell>
-                                          <TableCell>
-                                            {formatAmount(item.unitPrice)}{" "}
-                                            {selectedOrder.currency}
-                                          </TableCell>
-                                        </TableRow>
-                                      );
-                                    })}
+                                    {/* Les lignes affichent l'instantané figé
+                                        à l'achat : il reste exact même si
+                                        l'annonce a changé depuis. */}
+                                    {selectedOrder.orderItems.map((item) => (
+                                      <TableRow key={item.id}>
+                                        <TableCell>
+                                          {item.productName}
+                                        </TableCell>
+                                        <TableCell>
+                                          {item.productCondition ?? "—"}
+                                        </TableCell>
+                                        <TableCell>{item.sellerName}</TableCell>
+                                        <TableCell>
+                                          {getFulfillmentLabel(
+                                            item.fulfillmentStatus,
+                                          )}
+                                        </TableCell>
+                                        <TableCell>{item.quantity}</TableCell>
+                                        <TableCell>
+                                          {formatAmount(item.unitPrice)}{" "}
+                                          {selectedOrder.currency}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
                                   </TableBody>
                                 </Table>
                               </div>

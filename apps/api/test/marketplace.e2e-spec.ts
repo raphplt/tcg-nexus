@@ -5,8 +5,8 @@ import { Currency } from "./../src/common/enums/currency";
 import { CardState } from "./../src/common/enums/pokemonCardsType";
 import { ProductKind } from "./../src/common/enums/product-kind";
 import { StripeService } from "./../src/marketplace/stripe.service";
-import { createUser, TestUser } from "./helpers/auth";
 import { createE2eApp } from "./helpers/app";
+import { createUser, TestUser } from "./helpers/auth";
 import { ensureCard } from "./helpers/marketplace";
 
 jest.setTimeout(60000);
@@ -174,24 +174,28 @@ describe("MarketplaceController (e2e)", () => {
     });
   });
 
-  describe("POST /marketplace/orders", () => {
-    it("rejects order creation without authentication", async () => {
+  describe("POST /marketplace/checkout", () => {
+    it("rejects checkout without authentication", async () => {
       await request(httpServer)
-        .post("/marketplace/orders")
-        .send({ paymentIntentId: "pi_test", shippingAddress: "1 rue test" })
+        .post("/marketplace/checkout")
+        .send({ shippingAddress: "12 rue des Cartes, 75001 Paris" })
         .expect(401);
     });
 
-    it("rejects order creation when the cart is empty", async () => {
-      stripeServiceMock.retrievePaymentIntent.mockResolvedValueOnce({
-        status: "succeeded",
-        amount: 0,
-      });
-
+    it("rejects checkout when the cart is empty", async () => {
       const response = await request(httpServer)
-        .post("/marketplace/orders")
+        .post("/marketplace/checkout")
         .set("Authorization", `Bearer ${other.accessToken}`)
-        .send({ paymentIntentId: "pi_test", shippingAddress: "1 rue test" });
+        .send({ shippingAddress: "12 rue des Cartes, 75001 Paris" });
+
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects checkout without a shipping address", async () => {
+      const response = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set("Authorization", `Bearer ${other.accessToken}`)
+        .send({});
 
       expect(response.status).toBe(400);
     });

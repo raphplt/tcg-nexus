@@ -1,7 +1,6 @@
-import { cardStates, currencyOptions } from "@/utils/variables";
 import z from "zod";
+import { cardStates, currencyOptions } from "@/utils/variables";
 
-// Use the keys from cardStates (NM, EX, GD, LP, PL, Poor) for validation
 const cardStateValues = cardStates.map((s) => s.value) as [string, ...string[]];
 
 export const FormSchema = z.object({

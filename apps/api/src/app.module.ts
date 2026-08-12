@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
@@ -25,6 +26,7 @@ import { FaqModule } from "./faq/faq.module";
 import { FeedModule } from "./feed/feed.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
+import { MiniGameModule } from "./mini-game/mini-game.module";
 import { NotificationModule } from "./notification/notification.module";
 import { PlayerModule } from "./player/player.module";
 import { PokemonCardModule } from "./pokemon-card/pokemon-card.module";
@@ -36,13 +38,12 @@ import { SealedProductModule } from "./sealed-product/sealed-product.module";
 import { SearchModule } from "./search/search.module";
 import { SeedModule } from "./seed/seed.module";
 import { StatisticsModule } from "./statistics/statistics.module";
+import { StorageModule } from "./storage/storage.module";
 import { SupportTicketModule } from "./support-ticket/support-ticket.module";
 import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
-import { MiniGameModule } from "./mini-game/mini-game.module";
-import { StorageModule } from "./storage/storage.module";
 
 @Module({
   imports: [
@@ -69,6 +70,8 @@ import { StorageModule } from "./storage/storage.module";
       synchronize:
         process.env.DATABASE_SYNCHRONIZE === "true" ||
         process.env.NODE_ENV !== "production",
+      migrations: [join(__dirname, "migrations", "*.{ts,js}")],
+      migrationsRun: process.env.DATABASE_MIGRATIONS_RUN === "true",
       ssl:
         process.env.NODE_ENV === "production" &&
         process.env.DATABASE_SSL !== "false"

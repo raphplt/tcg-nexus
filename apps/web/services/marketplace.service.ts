@@ -1,13 +1,15 @@
-import type { PaginationParams, PaginatedResult } from "@/types/pagination";
-import type { CardPricing } from "@/types/cardPokemon";
-import { Listing } from "@/types/listing";
-import { fetcher, authedFetch } from "@/utils/fetch";
-import { PokemonCardType } from "@/types/cardPokemon";
 import { User } from "@/types/auth";
+import type { CardPricing } from "@/types/cardPokemon";
+import { PokemonCardType } from "@/types/cardPokemon";
+import { Listing } from "@/types/listing";
+import type { PaginatedResult, PaginationParams } from "@/types/pagination";
+import { authedFetch, fetcher } from "@/utils/fetch";
 
 export interface MarketplaceQueryParams extends PaginationParams {
   search?: string;
   cardState?: string;
+  language?: string;
+  status?: "active" | "inactive";
   currency?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
@@ -43,6 +45,31 @@ export interface CardStatistics {
   marketPricing: CardPricing | null;
 }
 
+export interface PriceSuggestion {
+  cardId: string;
+  cardState: string | null;
+  currency: string;
+  /** Origine du prix conseillé, null si aucune donnée disponible */
+  basis: "same-state" | "all-states" | "market" | null;
+  suggestedPrice: number | null;
+  listings: {
+    count: number;
+    minPrice: number | null;
+    maxPrice: number | null;
+    avgPrice: number | null;
+  };
+  marketPrice: number | null;
+}
+
+export interface ShippingPolicy {
+  handlingTimeDays: number;
+  rates: Array<{
+    productKind: "card" | "sealed";
+    cost: number;
+    label: string;
+  }>;
+}
+
 export interface PopularCard {
   card: PokemonCardType;
   listingCount: number;
@@ -69,7 +96,6 @@ export interface SellerStatistics {
     id: number;
     firstName: string;
     lastName: string;
-    email: string;
     avatarUrl: string;
     isPro: boolean;
     createdAt: string;
@@ -101,6 +127,10 @@ export const marketplaceService = {
    */
   async getListingById(id: string): Promise<Listing> {
     return fetcher<Listing>(`/marketplace/listings/${id}`);
+  },
+
+  async createListing(data: Record<string, unknown>): Promise<Listing> {
+    return authedFetch<Listing>("POST", "/marketplace/listings", { data });
   },
 
   /**
@@ -157,6 +187,30 @@ export const marketplaceService = {
     return fetcher<CardStatistics>(`/marketplace/cards/${cardId}/stats`, {
       params,
     });
+  },
+
+  /**
+   * Récupère le prix conseillé pour mettre une carte en vente
+   */
+  async getPriceSuggestion(
+    cardId: string,
+    cardState?: string,
+    currency?: string,
+  ): Promise<PriceSuggestion> {
+    const params: Record<string, string> = {};
+    if (currency) params.currency = currency;
+    if (cardState) params.cardState = cardState;
+    return fetcher<PriceSuggestion>(
+      `/marketplace/cards/${cardId}/price-suggestion`,
+      { params },
+    );
+  },
+
+  /**
+   * Récupère le barème d'expédition de la plateforme
+   */
+  async getShippingPolicy(): Promise<ShippingPolicy> {
+    return fetcher<ShippingPolicy>("/marketplace/shipping-policy");
   },
 
   /**

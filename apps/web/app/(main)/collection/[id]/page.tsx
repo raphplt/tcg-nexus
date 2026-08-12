@@ -417,7 +417,7 @@ const CollectionDetailPage = () => {
                                 asChild
                                 aria-label="Voir les détails"
                               >
-                                <Link href={`/pokemon/${pokemon.id}`}>
+                                <Link href={`/marketplace/cards/${pokemon.id}`}>
                                   <Info className="w-4 h-4" />
                                 </Link>
                               </Button>

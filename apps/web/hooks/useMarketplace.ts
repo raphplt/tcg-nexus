@@ -4,14 +4,16 @@ import {
   BestSeller,
   marketplaceService,
   PopularCard,
+  PriceSuggestion,
+  ShippingPolicy,
   TrendingCard,
 } from "@/services/marketplace.service";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
 import { PokemonSerieType, PokemonSetType } from "@/types/cardPokemon";
+import { Listing } from "@/types/listing";
 import { PaginatedResult } from "@/types/pagination";
 import type { SealedProduct } from "@/types/sealed-product";
-import { Listing } from "@/types/listing";
 
 export interface FilterState {
   search: string;
@@ -82,11 +84,11 @@ export function useMarketplaceHome() {
   const { data: recentListings, isLoading: loadingRecentListings } = useQuery<
     PaginatedResult<Listing>
   >({
-    queryKey: ["marketplace", "recent-listings", 5],
+    queryKey: ["marketplace", "recent-listings", 8],
     queryFn: () =>
       marketplaceService.getPaginated({
         page: 1,
-        limit: 5,
+        limit: 8,
         sortBy: "createdAt",
         sortOrder: "DESC",
       }),
@@ -131,7 +133,9 @@ export function useMarketplaceCards(
   });
 
   // Récupère les cartes avec données marketplace
-  const { data, isLoading, error } = usePaginatedQuery<PaginatedResult<any>>(
+  const { data, isLoading, error, refetch } = usePaginatedQuery<
+    PaginatedResult<any>
+  >(
     [
       "marketplace-cards",
       page,
@@ -163,5 +167,36 @@ export function useMarketplaceCards(
     data,
     isLoading,
     error,
+    refetch,
   };
+}
+
+/**
+ * Prix conseillé pour mettre une carte en vente (moyenne des annonces
+ * actives, à défaut prix de référence du marché).
+ */
+export function usePriceSuggestion(
+  cardId?: string,
+  cardState?: string,
+  currency?: string,
+) {
+  return useQuery<PriceSuggestion>({
+    queryKey: ["marketplace", "price-suggestion", cardId, cardState, currency],
+    queryFn: () =>
+      marketplaceService.getPriceSuggestion(
+        cardId as string,
+        cardState,
+        currency,
+      ),
+    enabled: Boolean(cardId),
+  });
+}
+
+/** Barème d'expédition imposé par la plateforme */
+export function useShippingPolicy() {
+  return useQuery<ShippingPolicy>({
+    queryKey: ["marketplace", "shipping-policy"],
+    queryFn: () => marketplaceService.getShippingPolicy(),
+    staleTime: 1000 * 60 * 60,
+  });
 }
