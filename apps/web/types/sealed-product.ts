@@ -25,7 +25,6 @@ export enum SealedCondition {
 }
 
 export interface SealedProductLocale {
-  id: number;
   locale: string;
   name: string;
 }
@@ -39,7 +38,11 @@ export interface SealedProductContents {
 
 export interface SealedProduct {
   id: string;
-  nameEn: string;
+  /**
+   * Name resolved by the API in the requested language, falling back to the
+   * default locale. The entity itself carries no name.
+   */
+  name: string;
   productType: SealedProductType;
   pokemonSet?: PokemonSetType | null;
   contents?: SealedProductContents | null;

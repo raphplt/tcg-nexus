@@ -33,10 +33,6 @@ export class SealedProduct {
   @PrimaryColumn()
   id: string;
 
-  @Column()
-  @Index()
-  nameEn: string;
-
   @Column({ type: "enum", enum: SealedProductType })
   productType: SealedProductType;
 
@@ -65,6 +61,10 @@ export class SealedProduct {
   /**
    * Chemin relatif dans le bucket R2 (sans le base URL).
    * Ex : "pokecardex/AQ/Booster_Aquapolis_Arcanin.png"
+   *
+   * NOTE: packaging is translated in reality, but Pokécardex only publishes
+   * the French artwork and no English source exists. The image stays on the
+   * language-neutral entity until one does.
    */
   @Column({ nullable: true })
   image?: string;

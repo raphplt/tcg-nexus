@@ -212,6 +212,48 @@
   },
   {
     "cardCount": {
+      "firstEd": 0,
+      "holo": 6,
+      "normal": 9,
+      "official": 15,
+      "reverse": 0,
+      "total": 15
+    },
+    "id": "2023sv",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2023",
+    "releaseDate": "2023-08-01",
+    "abbreviation": {
+      "official": "MCD23"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 7,
+      "normal": 8,
+      "official": 15,
+      "reverse": 0,
+      "total": 15
+    },
+    "id": "2024sv",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "McDonald's Collection 2024",
+    "releaseDate": "2024-12-04",
+    "abbreviation": {
+      "official": "MCD24"
+    },
+    "serieId": "mc"
+  },
+  {
+    "cardCount": {
       "firstEd": 104,
       "holo": 64,
       "normal": 346,
@@ -1737,6 +1779,206 @@
   {
     "cardCount": {
       "firstEd": 0,
+      "holo": 105,
+      "normal": 131,
+      "official": 132,
+      "reverse": 123,
+      "total": 188
+    },
+    "id": "me01",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/mega-evolution/logo.webp",
+    "name": "Mega Evolution",
+    "releaseDate": "2025-09-26",
+    "symbol": "https://cdn.tcg-nexus.org/sets/mega-evolution/symbol.png",
+    "abbreviation": {
+      "official": "MEG"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 60,
+      "normal": 79,
+      "official": 94,
+      "reverse": 84,
+      "total": 130
+    },
+    "id": "me02",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/phantasmal-flames/logo.webp",
+    "name": "Phantasmal Flames",
+    "releaseDate": "2025-11-14",
+    "abbreviation": {
+      "official": "PFL"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 142,
+      "normal": 153,
+      "official": 217,
+      "reverse": 318,
+      "total": 295
+    },
+    "id": "me02.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/ascended-heroes/logo.webp",
+    "name": "Ascended Heroes",
+    "releaseDate": "2026-01-30",
+    "symbol": "https://cdn.tcg-nexus.org/sets/ascended-heroes/symbol.png",
+    "abbreviation": {
+      "official": "ASC"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 64,
+      "normal": 88,
+      "official": 88,
+      "reverse": 79,
+      "total": 124
+    },
+    "id": "me03",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/perfect-order/logo.webp",
+    "name": "Perfect Order",
+    "releaseDate": "2026-03-27",
+    "symbol": "https://cdn.tcg-nexus.org/sets/perfect-order/symbol.png",
+    "abbreviation": {
+      "official": "POR"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 58,
+      "normal": 68,
+      "official": 86,
+      "reverse": 0,
+      "total": 122
+    },
+    "id": "me04",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/chaos-rising/logo.webp",
+    "name": "Chaos Rising",
+    "releaseDate": "2026-05-22",
+    "symbol": "https://cdn.tcg-nexus.org/sets/chaos-rising/symbol.png",
+    "abbreviation": {
+      "official": "CRI"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 53,
+      "normal": 67,
+      "official": 84,
+      "reverse": 67,
+      "total": 120
+    },
+    "id": "me05",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://assets.tcgdex.net/en/me/me05/logo",
+    "name": "Pitch Black",
+    "releaseDate": "2026-07-17",
+    "symbol": "https://cdn.tcg-nexus.org/sets/pitch-black/symbol.png",
+    "abbreviation": {
+      "official": "PBL"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 8,
+      "official": 8,
+      "reverse": 8,
+      "total": 8
+    },
+    "id": "mee",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "name": "Mega Evolution Energy",
+    "releaseDate": "2025-09-25",
+    "abbreviation": {
+      "official": "MEE"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 88,
+      "normal": 0,
+      "official": 0,
+      "reverse": 0,
+      "total": 60
+    },
+    "id": "mep",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "name": "MEP Black Star Promos",
+    "releaseDate": "2025-09-26",
+    "abbreviation": {
+      "official": "MEP"
+    },
+    "serieId": "me"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 48,
+      "official": 48,
+      "reverse": 0,
+      "total": 48
+    },
+    "id": "mfb",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "name": "My First Battle",
+    "releaseDate": "2023-09-29",
+    "abbreviation": {
+      "official": "MFB"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
       "holo": 1,
       "normal": 0,
       "official": 1,
@@ -2674,6 +2916,347 @@
     "symbol": "https://cdn.tcg-nexus.org/sets/scarlet-violet/symbol.png",
     "abbreviation": {
       "official": "SVI"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 153,
+      "normal": 154,
+      "official": 193,
+      "reverse": 176,
+      "total": 279
+    },
+    "id": "sv02",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/paldea-evolved/logo.webp",
+    "name": "Paldea Evolved",
+    "releaseDate": "2023-06-09",
+    "symbol": "https://cdn.tcg-nexus.org/sets/paldea-evolved/symbol.png",
+    "abbreviation": {
+      "official": "PAL"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 79,
+      "normal": 170,
+      "official": 197,
+      "reverse": 179,
+      "total": 230
+    },
+    "id": "sv03",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/obsidian-flames/logo.webp",
+    "name": "Obsidian Flames",
+    "releaseDate": "2023-08-11",
+    "symbol": "https://cdn.tcg-nexus.org/sets/obsidian-flames/symbol.png",
+    "abbreviation": {
+      "official": "OBF"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 90,
+      "normal": 135,
+      "official": 165,
+      "reverse": 158,
+      "total": 207
+    },
+    "id": "sv03.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/151/logo.webp",
+    "name": "151",
+    "releaseDate": "2023-09-22",
+    "symbol": "https://cdn.tcg-nexus.org/sets/151/symbol.png",
+    "abbreviation": {
+      "official": "MEW"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 148,
+      "normal": 135,
+      "official": 182,
+      "reverse": 166,
+      "total": 266
+    },
+    "id": "sv04",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/paradox-rift/logo.webp",
+    "name": "Paradox Rift",
+    "releaseDate": "2023-11-03",
+    "symbol": "https://cdn.tcg-nexus.org/sets/paradox-rift/symbol.png",
+    "abbreviation": {
+      "official": "PAR"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 183,
+      "normal": 65,
+      "official": 91,
+      "reverse": 85,
+      "total": 245
+    },
+    "id": "sv04.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/paldean-fates/logo.webp",
+    "name": "Paldean Fates",
+    "releaseDate": "2024-01-26",
+    "symbol": "https://cdn.tcg-nexus.org/sets/paldean-fates/symbol.png",
+    "abbreviation": {
+      "official": "PAF"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 125,
+      "normal": 164,
+      "official": 162,
+      "reverse": 143,
+      "total": 218
+    },
+    "id": "sv05",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "name": "Temporal Forces",
+    "releaseDate": "2024-03-22",
+    "symbol": "https://cdn.tcg-nexus.org/sets/temporal-forces/symbol.png",
+    "abbreviation": {
+      "official": "TEF"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 114,
+      "normal": 137,
+      "official": 167,
+      "reverse": 147,
+      "total": 226
+    },
+    "id": "sv06",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/twilight-masquerade/logo.webp",
+    "name": "Twilight Masquerade",
+    "releaseDate": "2024-05-24",
+    "symbol": "https://cdn.tcg-nexus.org/sets/twilight-masquerade/symbol.png",
+    "abbreviation": {
+      "official": "TWM"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 59,
+      "normal": 48,
+      "official": 64,
+      "reverse": 55,
+      "total": 99
+    },
+    "id": "sv06.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/shrouded-fable/logo.webp",
+    "name": "Shrouded Fable",
+    "releaseDate": "2024-08-02",
+    "symbol": "https://cdn.tcg-nexus.org/sets/shrouded-fable/symbol.png",
+    "abbreviation": {
+      "official": "SFA"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 82,
+      "normal": 116,
+      "official": 142,
+      "reverse": 125,
+      "total": 175
+    },
+    "id": "sv07",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/stellar-crown/logo.webp",
+    "name": "Stellar Crown",
+    "releaseDate": "2024-09-13",
+    "abbreviation": {
+      "official": "SCR"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 125,
+      "normal": 163,
+      "official": 191,
+      "reverse": 165,
+      "total": 252
+    },
+    "id": "sv08",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/surging-sparks/logo.webp",
+    "name": "Surging Sparks",
+    "releaseDate": "2024-11-08",
+    "abbreviation": {
+      "official": "SSP"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 127,
+      "normal": 81,
+      "official": 131,
+      "reverse": 268,
+      "total": 180
+    },
+    "id": "sv08.5",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/prismatic-evolutions/logo.webp",
+    "name": "Prismatic Evolutions",
+    "releaseDate": "2025-01-17",
+    "abbreviation": {
+      "official": "PRE"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 103,
+      "normal": 145,
+      "official": 159,
+      "reverse": 143,
+      "total": 190
+    },
+    "id": "sv09",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/journey-together/logo.webp",
+    "name": "Journey Together",
+    "releaseDate": "2025-03-28",
+    "symbol": "https://cdn.tcg-nexus.org/sets/journey-together/symbol.png",
+    "abbreviation": {
+      "official": "JTG"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 119,
+      "normal": 152,
+      "official": 182,
+      "reverse": 165,
+      "total": 244
+    },
+    "id": "sv10",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/destined-rivals/logo.webp",
+    "name": "Destined Rivals",
+    "releaseDate": "2025-05-30",
+    "symbol": "https://cdn.tcg-nexus.org/sets/destined-rivals/symbol.png",
+    "abbreviation": {
+      "official": "DRI"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 102,
+      "normal": 72,
+      "official": 86,
+      "reverse": 232,
+      "total": 172
+    },
+    "id": "sv10.5b",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/black-bolt/logo.webp",
+    "name": "Black Bolt",
+    "releaseDate": "2025-07-17",
+    "symbol": "https://cdn.tcg-nexus.org/sets/black-bolt/symbol.png",
+    "abbreviation": {
+      "official": "BLK"
+    },
+    "serieId": "sv"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 107,
+      "normal": 71,
+      "official": 86,
+      "reverse": 226,
+      "total": 173
+    },
+    "id": "sv10.5w",
+    "legal": {
+      "expanded": true,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/white-flare/logo.webp",
+    "name": "White Flare",
+    "releaseDate": "2025-07-17",
+    "symbol": "https://cdn.tcg-nexus.org/sets/white-flare/symbol.png",
+    "abbreviation": {
+      "official": "WHT"
     },
     "serieId": "sv"
   },

@@ -1,4 +1,11 @@
-import { BadRequestException, ForbiddenException, HttpStatus, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, LessThan, Repository } from "typeorm";
@@ -9,6 +16,7 @@ import {
 } from "../common/enums/fulfillment-status";
 import { ProductKind } from "../common/enums/product-kind";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
@@ -301,13 +309,19 @@ export class OrderService {
     };
   }
 
+  /**
+   * Label used in checkout error messages. Sealed products carry no name of
+   * their own: it is read from the loaded translations, preferring the default
+   * locale.
+   */
   private describeItem(item: CartItem): string {
     const { listing } = item;
-    return (
-      listing.pokemonCard?.name ??
-      listing.sealedProduct?.nameEn ??
-      "Produit inconnu"
-    );
+    const locales = listing.sealedProduct?.locales ?? [];
+    const sealedName =
+      locales.find((locale) => locale.locale === DEFAULT_LOCALE)?.name ??
+      locales[0]?.name;
+
+    return listing.pokemonCard?.name ?? sealedName ?? "Produit inconnu";
   }
 
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {

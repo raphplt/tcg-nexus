@@ -58,7 +58,7 @@ export function SealedProductCard({
             {imageUrl ? (
               <Image
                 src={imageUrl}
-                alt={product.nameEn}
+                alt={product.name}
                 fill
                 className="object-contain group-hover:scale-105 transition-transform duration-200"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -71,7 +71,7 @@ export function SealedProductCard({
           </div>
           <div className="space-y-1">
             <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
-              {product.nameEn}
+              {product.name}
             </h3>
             {product.pokemonSet && (
               <p className="text-sm text-muted-foreground line-clamp-1">

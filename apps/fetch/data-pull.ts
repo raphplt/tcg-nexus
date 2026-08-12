@@ -115,7 +115,10 @@ async function pull() {
   for (const locale of locales) {
     const stats = manifest.stats[locale];
     if (stats) {
-      console.log(`  ${locale} : ${stats.sets} sets, ${stats.cards} cartes`);
+      console.log(
+        `  ${locale} : ${stats.sets} sets, ${stats.cards} cartes, ` +
+          `${stats.sealedProducts ?? 0} produits scellés`,
+      );
     }
   }
 

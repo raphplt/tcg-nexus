@@ -16,11 +16,7 @@ import { CheckoutSession, paymentService } from "@/services/payment.service";
 import { useCartStore, useCartTotal } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import {
-  getSealedImageUrl,
-  getSealedName,
-  SEALED_PLACEHOLDER,
-} from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { estimateShipping } from "@/utils/shipping";
 import CheckoutForm from "./_components/CheckoutForm";
 import ShippingAddressForm from "./_components/ShippingAddressForm";
@@ -132,8 +128,7 @@ export default function CheckoutPage() {
                         SEALED_PLACEHOLDER
                       : getCardImage(item.listing.pokemonCard);
                     const productName = isSealed
-                      ? getSealedName(item.listing.sealedProduct) ||
-                        t("sealedProduct")
+                      ? item.listing.sealedProduct?.name || t("sealedProduct")
                       : item.listing.pokemonCard?.name;
                     const productSub = isSealed
                       ? getConditionLabel(item.listing.sealedCondition) ||

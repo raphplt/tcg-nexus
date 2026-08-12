@@ -1,9 +1,19 @@
-import { sealedProductNameMatchesSql } from "src/card/card-search";
-import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
+import {
+  localizedSealedNameSql,
+  sealedProductNameMatchesSql,
+} from "src/card/card-search";
+import {
+  DEFAULT_LOCALE,
+  SUPPORTED_LOCALES,
+  type SupportedLocale,
+} from "src/translation/supported-locales";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import * as fs from "fs";
-import * as path from "path";
+import {
+  type DatasetSealedProduct,
+  readSealedProducts,
+  sealedProductsFile,
+} from "@repo/pokemon-dataset";
 import { Listing } from "src/marketplace/entities/listing.entity";
 import { PriceHistory } from "src/marketplace/entities/price-history.entity";
 import {
@@ -11,7 +21,7 @@ import {
   SealedEventType,
 } from "src/marketplace/entities/sealed-event.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { DataSource, MoreThan, Repository } from "typeorm";
+import { DataSource, In, MoreThan, Repository } from "typeorm";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { CreateSealedProductDto } from "./dto/create-sealed-product.dto";
 import {
@@ -26,22 +36,14 @@ import {
 import { SealedProductLocale } from "./entities/sealed-product-locale.entity";
 import { SealedProductType } from "./enums/sealed-product-type.enum";
 
-interface SealedProductSeedRecord {
-  id: string;
-  pokecardexSeriesId: string;
-  setName: string;
-  name: string;
-  productType: string;
-  image: string;
-  imageFilename: string;
-}
-
 export interface SealedSeedReport {
   totalRecords: number;
   inserted: number;
   updated: number;
   matchedSets: number;
   unmatchedSetNames: string[];
+  /** Number of products named in each locale. */
+  translations: Record<string, number>;
 }
 
 // Event weights used to calculate popularity scores for sealed products.
@@ -65,8 +67,6 @@ export class SealedProductService {
     private readonly sealedProductRepository: Repository<SealedProduct>,
     @InjectRepository(PokemonSet)
     private readonly pokemonSetRepository: Repository<PokemonSet>,
-    @InjectRepository(PokemonSetTranslation)
-    private readonly setTranslationRepository: Repository<PokemonSetTranslation>,
     @InjectRepository(Listing)
     private readonly listingRepository: Repository<Listing>,
     @InjectRepository(PriceHistory)
@@ -86,7 +86,6 @@ export class SealedProductService {
     return this.dataSource.transaction(async (manager) => {
       const product = manager.create(SealedProduct, {
         id: dto.id,
-        nameEn: dto.nameEn,
         productType: dto.productType,
         pokemonSet: dto.pokemonSetId
           ? ({ id: dto.pokemonSetId } as never)
@@ -98,16 +97,14 @@ export class SealedProductService {
       });
       await manager.save(product);
 
-      if (dto.locales?.length) {
-        const locales = dto.locales.map((l) =>
-          manager.create(SealedProductLocale, {
-            sealedProduct: product,
-            locale: l.locale,
-            name: l.name,
-          }),
-        );
-        await manager.save(locales);
-      }
+      const locales = dto.locales.map((l) =>
+        manager.create(SealedProductLocale, {
+          sealedProductId: product.id,
+          locale: l.locale,
+          name: l.name,
+        }),
+      );
+      await manager.save(locales);
 
       return this.findOneOrFail(dto.id, manager.getRepository(SealedProduct));
     });
@@ -243,7 +240,6 @@ export class SealedProductService {
       const existing = await this.findOneOrFail(id, repo);
 
       Object.assign(existing, {
-        nameEn: dto.nameEn ?? existing.nameEn,
         productType: dto.productType ?? existing.productType,
         contents: (dto.contents ??
           existing.contents) as SealedProductContents | null,
@@ -260,17 +256,15 @@ export class SealedProductService {
       await repo.save(existing);
 
       if (dto.locales) {
-        await manager.delete(SealedProductLocale, { sealedProduct: { id } });
-        if (dto.locales.length) {
-          const locales = dto.locales.map((l) =>
-            manager.create(SealedProductLocale, {
-              sealedProduct: existing,
-              locale: l.locale,
-              name: l.name,
-            }),
-          );
-          await manager.save(locales);
-        }
+        await manager.delete(SealedProductLocale, { sealedProductId: id });
+        const locales = dto.locales.map((l) =>
+          manager.create(SealedProductLocale, {
+            sealedProductId: id,
+            locale: l.locale,
+            name: l.name,
+          }),
+        );
+        await manager.save(locales);
       }
 
       return this.findOneOrFail(id, repo);
@@ -314,10 +308,17 @@ export class SealedProductService {
       // Matched across every locale and diacritic-insensitively, like cards.
       qb.andWhere(
         `(${sealedProductNameMatchesSql("sealedProduct")}
-          OR LOWER(immutable_unaccent(sealedProduct."nameEn")) LIKE immutable_unaccent(:search)
           OR LOWER(sealedProduct.sku) LIKE :search)`,
         { search: `%${filter.search.toLowerCase()}%` },
       );
+    }
+
+    const sortsByName = !filter.sortBy || filter.sortBy === SealedSortBy.NAME;
+    if (sortsByName) {
+      // The product carries no name: ordering goes through the translation of
+      // the default locale, as the marketplace listing sort already does.
+      qb.addSelect(localizedSealedNameSql("sealedProduct"), "localized_name");
+      qb.setParameter("sortLocale", DEFAULT_LOCALE);
     }
 
     if (filter.sortBy === SealedSortBy.POPULARITY) {
@@ -341,7 +342,8 @@ export class SealedProductService {
       qb.groupBy("sealedProduct.id")
         .addGroupBy("pokemonSet.id")
         .addGroupBy("serie.id")
-        .addGroupBy("locales.id");
+        .addGroupBy("locales.sealed_product_id")
+        .addGroupBy("locales.locale");
     }
 
     const needsListingJoin =
@@ -360,7 +362,8 @@ export class SealedProductService {
       qb.groupBy("sealedProduct.id")
         .addGroupBy("pokemonSet.id")
         .addGroupBy("serie.id")
-        .addGroupBy("locales.id");
+        .addGroupBy("locales.sealed_product_id")
+        .addGroupBy("locales.locale");
 
       if (typeof filter.priceMin === "number") {
         qb.having(
@@ -400,7 +403,7 @@ export class SealedProductService {
         return { sort: "popularity_score", order: "DESC" };
       case SealedSortBy.NAME:
       default:
-        return { sort: "sealedProduct.nameEn", order: "ASC" };
+        return { sort: "localized_name", order: "ASC" };
     }
   }
 
@@ -474,42 +477,41 @@ export class SealedProductService {
   }
 
   /**
-   * Seeds sealed products from `sealed_products.json` file.
+   * Seeds sealed products from `data/<locale>/sealed-products.json`.
+   *
+   * The default locale carries the whole catalog; the other locales only hold
+   * the products whose name could be composed, so a missing entry leaves the
+   * product with a single translation rather than an approximate one.
+   *
+   * Idempotent: a second run updates in place and creates no duplicate.
    *
    * @returns Report summarizing seed results.
+   * @throws NotFoundException If the default locale dataset is missing.
    */
   async seedFromJson(): Promise<SealedSeedReport> {
-    // Try multiple candidate paths for data file
-    const candidates = [
-      path.resolve(__dirname, "../../../../data/sealed_products.json"),
-      path.resolve(process.cwd(), "../../data/sealed_products.json"),
-      path.resolve(process.cwd(), "data/sealed_products.json"),
-      path.resolve(process.cwd(), "../data/sealed_products.json"),
-    ];
-    const dataPath = candidates.find((p) => fs.existsSync(p));
-    if (!dataPath) {
-      const tried = candidates.join("\n  - ");
+    const byLocale = new Map<SupportedLocale, DatasetSealedProduct[]>();
+    for (const locale of SUPPORTED_LOCALES) {
+      byLocale.set(locale, readSealedProducts(locale));
+    }
+
+    const records = byLocale.get(DEFAULT_LOCALE) ?? [];
+    if (records.length === 0) {
       throw new NotFoundException(
-        `sealed_products.json not found. Tried:\n  - ${tried}\nRun \`npm run update-sealed\` in apps/fetch first.`,
+        `No sealed product found in ${sealedProductsFile(DEFAULT_LOCALE)}. ` +
+          "Run `npm run update-sealed` in apps/fetch first.",
       );
     }
-    console.log(`[SealedProduct] Seeding from ${dataPath}`);
 
-    const records: SealedProductSeedRecord[] = JSON.parse(
-      fs.readFileSync(dataPath, "utf-8"),
-    );
-
-    // Index PokemonSets by normalized name for matching across all localized translations (supporting EN/FR sealed product names).
-    const allSets = await this.pokemonSetRepository.find();
-    const setById = new Map(allSets.map((set) => [set.id, set]));
-    const setTranslations = await this.setTranslationRepository.find();
-
-    const setByNormalizedName = new Map<string, PokemonSet>();
-    for (const translation of setTranslations) {
-      const set = setById.get(translation.setId);
-      if (!set || !translation.name) continue;
-      setByNormalizedName.set(this.normalizeName(translation.name), set);
+    const namesByProduct = new Map<string, Map<string, string>>();
+    for (const [locale, products] of byLocale) {
+      for (const product of products) {
+        const names = namesByProduct.get(product.id) ?? new Map();
+        names.set(locale, product.name);
+        namesByProduct.set(product.id, names);
+      }
     }
+
+    const sets = await this.resolveSets(records);
 
     const report: SealedSeedReport = {
       totalRecords: records.length,
@@ -517,6 +519,9 @@ export class SealedProductService {
       updated: 0,
       matchedSets: 0,
       unmatchedSetNames: [],
+      translations: Object.fromEntries(
+        [...byLocale].map(([locale, products]) => [locale, products.length]),
+      ),
     };
     const unmatchedSet = new Set<string>();
 
@@ -525,13 +530,11 @@ export class SealedProductService {
       const localeRepo = manager.getRepository(SealedProductLocale);
 
       for (const record of records) {
-        const matchedSet = setByNormalizedName.get(
-          this.normalizeName(record.setName),
-        );
+        const matchedSet = record.setId ? sets.get(record.setId) : undefined;
         if (matchedSet) {
           report.matchedSets++;
         } else {
-          unmatchedSet.add(record.setName);
+          unmatchedSet.add(record.setName ?? record.pokecardexSeriesId);
         }
 
         const productType = this.coerceProductType(record.productType);
@@ -540,7 +543,6 @@ export class SealedProductService {
         });
 
         if (existing) {
-          existing.nameEn = record.name;
           existing.productType = productType;
           existing.image = record.image;
           existing.pokemonSet = matchedSet ?? null;
@@ -549,7 +551,6 @@ export class SealedProductService {
         } else {
           const product = productRepo.create({
             id: record.id,
-            nameEn: record.name,
             productType,
             image: record.image,
             pokemonSet: matchedSet ?? null,
@@ -558,24 +559,15 @@ export class SealedProductService {
           report.inserted++;
         }
 
-        // Upsert FR locale from raw record
-        const existingLocale = await localeRepo.findOne({
-          where: {
-            sealedProduct: { id: record.id },
-            locale: "fr",
-          },
-        });
-        if (existingLocale) {
-          existingLocale.name = record.name;
-          await localeRepo.save(existingLocale);
-        } else {
-          const locale = localeRepo.create({
-            sealedProduct: { id: record.id } as SealedProduct,
-            locale: "fr",
-            name: record.name,
-          });
-          await localeRepo.save(locale);
-        }
+        const names = namesByProduct.get(record.id) ?? new Map();
+        await localeRepo.upsert(
+          [...names].map(([locale, name]) => ({
+            sealedProductId: record.id,
+            locale,
+            name,
+          })),
+          ["sealedProductId", "locale"],
+        );
       }
     });
 
@@ -583,13 +575,29 @@ export class SealedProductService {
     return report;
   }
 
-  private normalizeName(name: string): string {
-    return name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
+  /**
+   * Indexes the sets referenced by the dataset, by TCGdex identifier.
+   *
+   * The dataset resolves the set itself, so matching no longer goes through
+   * the set label — Pokécardex and TCGdex name their sets differently, and
+   * that mismatch used to leave a third of the products setless.
+   */
+  private async resolveSets(
+    records: DatasetSealedProduct[],
+  ): Promise<Map<string, PokemonSet>> {
+    const ids = [
+      ...new Set(
+        records
+          .map((record) => record.setId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+    if (ids.length === 0) return new Map();
+
+    const sets = await this.pokemonSetRepository.find({
+      where: { id: In(ids) },
+    });
+    return new Map(sets.map((set) => [set.id, set]));
   }
 
   private coerceProductType(raw: string): SealedProductType {

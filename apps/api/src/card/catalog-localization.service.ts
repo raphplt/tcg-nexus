@@ -19,6 +19,12 @@ interface Localizable {
 /** Maximum payload traversal depth, guarding against circular references. */
 const MAX_DEPTH = 8;
 
+/**
+ * Column carrying the translated entity's identifier. Every translation table
+ * is keyed by (entity, locale), so a single loader serves them all.
+ */
+type TranslationIdColumn = "cardId" | "setId" | "serieId" | "sealedProductId";
+
 interface CollectedEntities {
   cards: Map<string, Localizable>;
   sets: Map<string, Localizable>;
@@ -39,11 +45,9 @@ function isCardLike(value: Localizable): boolean {
   return typeof value.tcgDexId === "string";
 }
 
-/** Sealed products uniquely feature `productType` or `nameEn`. */
+/** Sealed products uniquely feature a `productType`. */
 function isSealedProductLike(value: Localizable): boolean {
-  return (
-    typeof value.productType === "string" || typeof value.nameEn === "string"
-  );
+  return typeof value.productType === "string";
 }
 
 /** Set entities feature a release date, a symbol, or a card count. */
@@ -119,7 +123,12 @@ export class CatalogLocalizationService {
       this.load(this.cardTranslations, "cardId", [...cards.keys()], locale),
       this.load(this.setTranslations, "setId", [...sets.keys()], locale),
       this.load(this.serieTranslations, "serieId", [...series.keys()], locale),
-      this.loadSealedProductNames([...sealedProducts.keys()], locale),
+      this.load(
+        this.sealedProductLocales,
+        "sealedProductId",
+        [...sealedProducts.keys()],
+        locale,
+      ),
     ]);
 
     if (options.withTranslations) {
@@ -146,8 +155,7 @@ export class CatalogLocalizationService {
       }
     }
     for (const [id, product] of sealedProducts) {
-      // Falls back to `nameEn` when the product has no localized name.
-      assign(product, "name", sealedRows.get(id) ?? product.nameEn);
+      assign(product, "name", sealedRows.get(id)?.name);
     }
 
     return payload;
@@ -173,63 +181,32 @@ export class CatalogLocalizationService {
    */
   private async load<T extends { locale: string }>(
     repository: Repository<T>,
-    idColumn: "cardId" | "setId" | "serieId",
+    idColumn: TranslationIdColumn,
     ids: string[],
     locale: SupportedLocale,
   ): Promise<Map<string, T>> {
     if (ids.length === 0) return new Map();
 
-    const locales =
-      locale === DEFAULT_LOCALE ? [locale] : [locale, DEFAULT_LOCALE];
-
+    // Every locale is loaded, not just the requested one and the default: some
+    // sets only exist in English, and their cards would otherwise come back
+    // with no label at all now that entities carry none.
     const rows = await repository.find({
-      where: { [idColumn]: In(ids), locale: In(locales) } as never,
+      where: { [idColumn]: In(ids) } as never,
     });
 
     const byId = new Map<string, T>();
     for (const row of rows) {
       const id = (row as unknown as Record<string, string>)[idColumn] as string;
       const current = byId.get(id);
-      // The requested locale always wins over the fallback locale.
-      if (!current || row.locale === locale) byId.set(id, row);
-    }
-
-    return byId;
-  }
-
-  /**
-   * Sealed product names live in their own table, keyed by a generated id
-   * rather than by the product: the product id is read from the join column.
-   */
-  private async loadSealedProductNames(
-    ids: string[],
-    locale: SupportedLocale,
-  ): Promise<Map<string, string>> {
-    if (ids.length === 0) return new Map();
-
-    const locales =
-      locale === DEFAULT_LOCALE ? [locale] : [locale, DEFAULT_LOCALE];
-
-    const rows = await this.sealedProductLocales
-      .createQueryBuilder("productLocale")
-      .select("productLocale.sealed_product_id", "productId")
-      .addSelect("productLocale.locale", "locale")
-      .addSelect("productLocale.name", "name")
-      .where("productLocale.sealed_product_id IN (:...ids)", { ids })
-      .andWhere("productLocale.locale IN (:...locales)", { locales })
-      .getRawMany<{ productId: string; locale: string; name: string }>();
-
-    const byId = new Map<string, { locale: string; name: string }>();
-    for (const row of rows) {
-      const current = byId.get(row.productId);
-      if (!current || row.locale === locale) {
-        byId.set(row.productId, { locale: row.locale, name: row.name });
+      if (
+        !current ||
+        localeRank(row.locale, locale) < localeRank(current.locale, locale)
+      ) {
+        byId.set(id, row);
       }
     }
 
-    return new Map(
-      [...byId.entries()].map(([id, value]) => [id, value.name] as const),
-    );
+    return byId;
   }
 
   /**
@@ -242,44 +219,17 @@ export class CatalogLocalizationService {
       this.attachFor(this.cardTranslations, "cardId", collected.cards),
       this.attachFor(this.setTranslations, "setId", collected.sets),
       this.attachFor(this.serieTranslations, "serieId", collected.series),
-      this.attachSealedProductTranslations(collected.sealedProducts),
+      this.attachFor(
+        this.sealedProductLocales,
+        "sealedProductId",
+        collected.sealedProducts,
+      ),
     ]);
-  }
-
-  /**
-   * Sealed product translations live in their own table, keyed by a generated
-   * id, so they cannot go through the generic `attachFor`.
-   */
-  private async attachSealedProductTranslations(
-    entities: Map<string, Localizable>,
-  ) {
-    if (entities.size === 0) return;
-
-    const rows = await this.sealedProductLocales
-      .createQueryBuilder("productLocale")
-      .select("productLocale.sealed_product_id", "productId")
-      .addSelect("productLocale.locale", "locale")
-      .addSelect("productLocale.name", "name")
-      .where("productLocale.sealed_product_id IN (:...ids)", {
-        ids: [...entities.keys()],
-      })
-      .getRawMany<{ productId: string; locale: string; name: string }>();
-
-    const byId = new Map<string, Record<string, { name: string }>>();
-    for (const row of rows) {
-      const entry = byId.get(row.productId) ?? {};
-      entry[row.locale] = { name: row.name };
-      byId.set(row.productId, entry);
-    }
-
-    for (const [id, entity] of entities) {
-      entity.translations = byId.get(id) ?? {};
-    }
   }
 
   private async attachFor<T extends { locale: string }>(
     repository: Repository<T>,
-    idColumn: "cardId" | "setId" | "serieId",
+    idColumn: TranslationIdColumn,
     entities: Map<string, Localizable>,
   ) {
     if (entities.size === 0) return;
@@ -362,6 +312,17 @@ export class CatalogLocalizationService {
     walk(payload, 0);
     return { cards, sets, series, sealedProducts };
   }
+}
+
+/**
+ * Preference order for a translation row: the requested locale first, then the
+ * default locale, then anything else. The last tier matters for entities that
+ * only exist in one language — English-only sets, for instance.
+ */
+function localeRank(rowLocale: string, requested: SupportedLocale): number {
+  if (rowLocale === requested) return 0;
+  if (rowLocale === DEFAULT_LOCALE) return 1;
+  return 2;
 }
 
 function assign(target: Record<string, unknown>, key: string, value: unknown) {

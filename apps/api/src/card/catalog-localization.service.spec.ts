@@ -11,14 +11,7 @@ describe("CatalogLocalizationService", () => {
   const find = jest.fn();
   const findSets = jest.fn().mockResolvedValue([]);
   const findSeries = jest.fn().mockResolvedValue([]);
-  const getRawMany = jest.fn().mockResolvedValue([]);
-  const sealedQueryBuilder = {
-    select: jest.fn().mockReturnThis(),
-    addSelect: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    andWhere: jest.fn().mockReturnThis(),
-    getRawMany,
-  };
+  const findSealed = jest.fn().mockResolvedValue([]);
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +31,7 @@ describe("CatalogLocalizationService", () => {
         },
         {
           provide: getRepositoryToken(SealedProductLocale),
-          useValue: { createQueryBuilder: () => sealedQueryBuilder },
+          useValue: { find: findSealed },
         },
       ],
     }).compile();
@@ -47,7 +40,7 @@ describe("CatalogLocalizationService", () => {
     find.mockReset();
     findSets.mockReset().mockResolvedValue([]);
     findSeries.mockReset().mockResolvedValue([]);
-    getRawMany.mockReset().mockResolvedValue([]);
+    findSealed.mockReset().mockResolvedValue([]);
   });
 
   const card = (id: string, name: string) => ({
@@ -112,6 +105,18 @@ describe("CatalogLocalizationService", () => {
     expect(find).toHaveBeenCalledTimes(1);
   });
 
+  it("retombe sur n'importe quelle langue quand ni la langue demandée ni la langue par défaut n'existent", async () => {
+    // Certains sets n'existent qu'en anglais : leurs cartes doivent tout de
+    // même porter un nom pour un visiteur francophone.
+    find.mockResolvedValue([
+      { cardId: "1", locale: "en", name: "Charizard ex" },
+    ]);
+
+    const payload = await service.localize(card("1", "ignoré"), "fr");
+
+    expect(payload.name).toBe("Charizard ex");
+  });
+
   it("does not execute query when payload contains no entities", async () => {
     await service.localize({ message: "ok" }, "en");
     expect(find).not.toHaveBeenCalled();
@@ -145,13 +150,78 @@ describe("CatalogLocalizationService", () => {
     expect(payload.set.serie.name).toBe("Base");
   });
 
+  const sealedProduct = (id: string) =>
+    ({ id, productType: "booster" }) as {
+      id: string;
+      productType: string;
+      name?: string;
+      translations?: Record<string, { name: string }>;
+    };
+
+  it("nomme un produit scellé dans la langue demandée", async () => {
+    findSealed.mockResolvedValue([
+      {
+        sealedProductId: "jtg-bundle",
+        locale: "fr",
+        name: "Aventures Ensemble - Coffret Dresseur",
+      },
+      {
+        sealedProductId: "jtg-bundle",
+        locale: "en",
+        name: "Journey Together - Booster Bundle",
+      },
+    ]);
+
+    const payload = await service.localize(sealedProduct("jtg-bundle"), "en");
+
+    expect(payload.name).toBe("Journey Together - Booster Bundle");
+  });
+
+  it("retombe sur le français quand le produit scellé n'a pas de nom anglais", async () => {
+    // 28 % des produits n'ont pas de nom composable : ils gardent le français
+    // plutôt qu'un libellé à moitié traduit.
+    findSealed.mockResolvedValue([
+      {
+        sealedProductId: "swsh8-envolee",
+        locale: "fr",
+        name: "Envolée Orageuse",
+      },
+    ]);
+
+    const payload = await service.localize(
+      sealedProduct("swsh8-envolee"),
+      "en",
+    );
+
+    expect(payload.name).toBe("Envolée Orageuse");
+  });
+
+  it("attache toutes les langues d'un produit scellé pour l'admin", async () => {
+    findSealed.mockResolvedValue([
+      { sealedProductId: "jtg-bundle", locale: "fr", name: "Coffret Dresseur" },
+      { sealedProductId: "jtg-bundle", locale: "en", name: "Booster Bundle" },
+    ]);
+
+    const payload = await service.localize(sealedProduct("jtg-bundle"), "fr", {
+      withTranslations: true,
+    });
+
+    const translations = payload.translations ?? {};
+    expect(Object.keys(translations)).toEqual(["fr", "en"]);
+    expect(translations.en.name).toBe("Booster Bundle");
+  });
+
   it("leaves non-set object untouched", async () => {
     find.mockResolvedValue([]);
     // No database translation for this ID: DB filter eliminates false positives.
     findSets.mockResolvedValue([]);
 
     const payload = await service.localize(
-      { id: "un-objet-quelconque", name: "inchangé", releaseDate: "2020-01-01" },
+      {
+        id: "un-objet-quelconque",
+        name: "inchangé",
+        releaseDate: "2020-01-01",
+      },
       "en",
     );
 

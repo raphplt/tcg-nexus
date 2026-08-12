@@ -4,7 +4,7 @@ import { ArrowRight, Package } from "lucide-react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import React from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useMarketplaceHome } from "@/hooks/useMarketplace";
 import { getSealedImageUrl } from "@/utils/sealedImage";
 import { H2 } from "../Shared/Titles";
@@ -13,7 +13,6 @@ import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 
 const SealedProductsPreview = () => {
-  const locale = useLocale();
   const t = useTranslations("Home");
   const { sealedProducts, loadingSealed: isLoading } = useMarketplaceHome();
 
@@ -29,10 +28,6 @@ const SealedProductsPreview = () => {
       <div className="flex flex-col gap-4">
         {sealedProducts?.slice(0, 4).map((product) => {
           const imageUrl = getSealedImageUrl(product);
-          const productName =
-            product.locales?.find(
-              (translation) => translation.locale === locale,
-            )?.name ?? product.nameEn;
           return (
             <div
               key={product.id}
@@ -46,7 +41,7 @@ const SealedProductsPreview = () => {
                   {imageUrl ? (
                     <Image
                       src={imageUrl}
-                      alt={productName}
+                      alt={product.name}
                       fill
                       className="object-contain"
                       sizes="56px"
@@ -58,7 +53,7 @@ const SealedProductsPreview = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">{productName}</div>
+                  <div className="font-semibold truncate">{product.name}</div>
                   <div className="text-xs text-muted-foreground truncate">
                     {product.pokemonSet?.name || ""}
                   </div>

@@ -1,8 +1,11 @@
 # Plan — Produits scellés multilingues
 
-> Statut : à faire, après le chantier `catalogue-pokemon-multilingue.md`
+> Statut : **réalisé le 2026-08-12**
 > Périmètre : `apps/fetch`, `apps/api`, `apps/web`, `data/`
 > Langues visées : `fr` et `en`
+>
+> Ce document conserve l'analyse initiale. Les écarts entre le plan et ce qui a
+> été livré sont consignés en §12.
 
 ## 1. Pourquoi ce chantier
 
@@ -174,11 +177,12 @@ Chaque PR doit rester déployable et conserver l'affichage français.
 
 ## 10. Ce qu'il faut décider avant la première ligne de code
 
-- [ ] `nameEn` : supprimé (option A), renommé (B) ou conservé (C) ?
-- [ ] Qui relit les 288 suffixes traduits ?
-- [ ] Accepte-t-on 37 % de produits en repli français, ou faut-il une passe
-      manuelle sur les 483 noms libres ?
-- [ ] L'image reste-t-elle non linguistique ?
+- [x] `nameEn` : **supprimé** (option A).
+- [x] Les termes traduits sont relisibles dans `apps/fetch/sealed-vocabulary.ts` —
+      48 entrées et non 288, la décomposition ayant fait apparaître que les
+      suffixes se ramènent à un terme suivi de noms de Pokémon.
+- [x] Repli français **assumé** pour 28 % des produits (365 sur 1 288).
+- [x] L'image reste non linguistique, avec un commentaire sur l'entité.
 
 ## 11. Références
 
@@ -186,3 +190,68 @@ Chaque PR doit rester déployable et conserver l'affichage français.
 - `apps/api/src/card/catalog-localization.service.ts` — résolution partagée
 - `apps/api/src/card/card-search.ts` — fragments SQL multilingues
 - `apps/fetch/update-sealed.ts`, `apps/fetch/pokecardex.service.ts` — pipeline actuel
+
+## 12. Ce qui a été livré, et en quoi cela s'écarte du plan
+
+### 12.1 Aucune API bilingue n'existe — vérifié
+
+La recherche d'une source unique FR + EN a été menée avant de coder :
+
+| Source | Scellés | FR + EN | Verdict |
+|---|:--:|:--:|---|
+| TCGdex | ❌ | — | `/v2/en/boosters` et `/v2/en/products` répondent 404 |
+| Cardmarket API 2.0 | ✅ | ✅ | Inscriptions de nouvelles apps **fermées** |
+| TCGCSV (dump TCGplayer) | ✅ | ❌ | Gratuit et complet, mais anglais et marché US |
+| Scrydex (ex-pokemontcg.io) | ❌ | ❌ | Payant, cartes seules |
+| CardTrader | ✅ | ❌ | Blueprints en anglais ; la langue est un attribut d'annonce |
+
+Cardmarket redeviendra la bonne réponse le jour où un compte API sera
+accessible : c'est la seule base qui porte des noms localisés par produit.
+
+### 12.2 La source de traduction était déjà dans le dépôt
+
+Le plan estimait 63 % de couverture et 37 % de repli. La mesure réelle a montré
+que les noms de Pokémon manquants s'obtiennent **gratuitement** en joignant
+`data/fr/cards` et `data/en/cards` sur l'identifiant de carte : 3 342 paires
+FR → EN, sans nouvelle source ni nouveau fichier.
+
+**Couverture obtenue : 923 / 1 288 produits, soit 71,7 %.**
+
+Les 365 restants sont, pour l'essentiel, des noms de decks à thème
+(« Envolée Orageuse », « Fixation Laser ») dont le nom anglais officiel n'est
+dérivable d'aucune règle.
+
+### 12.3 La composition se fait à la source, pas en rétro-ingénierie
+
+Le plan prévoyait un service côté API qui remplirait `sealed_product_locale`
+après coup. Or les noms français ne sont pas scrapés : ils sont **générés** par
+`cleanProductName` dans `update-sealed.ts`, à partir du nom de fichier image.
+La composition a donc été placée au même endroit, dans `apps/fetch` :
+
+- `sealed-vocabulary.ts` — table Pokécardex → TCGdex (139 entrées) et lexique
+  bilingue des termes (48 entrées) ;
+- `sealed-names.ts` — composition et dictionnaires ;
+- `update-sealed.ts --from-legacy` — régénère les deux langues sans rescraper ;
+- `npm run sealed-coverage` — liste les produits non couverts et pourquoi.
+
+Le résultat est versionné dans `data/<locale>/sealed-products.json`, donc
+relisible en revue de code. Le seed ne fait plus que le lire.
+
+### 12.4 Un défaut que le plan n'avait pas vu
+
+86 des 172 `setName` de Pokécardex ne correspondaient à aucun set TCGdex
+(« Diamant & Perle : Tempête » contre « Stormfront »), et l'appariement par
+libellé laissait 578 produits sans set. La table de correspondance par code de
+série résout **1 165 produits sur 1 288** ; le reste (World Championships,
+calendriers, Lamincards, Topps) n'a effectivement aucun set.
+
+### 12.5 Tests
+
+- `apps/fetch/sealed-names.test.ts` — 11 tests sur la composition
+  (`npm test` dans `apps/fetch`, via `node:test` et `tsx`, sans dépendance
+  ajoutée) ;
+- `apps/api/src/card/catalog-localization.service.spec.ts` — résolution par
+  langue, repli français, `withTranslations`.
+
+Non couverts par des tests automatiques : la recherche sans accents et le tri
+par nom localisé, qui passent par du SQL et exigeraient une base réelle.

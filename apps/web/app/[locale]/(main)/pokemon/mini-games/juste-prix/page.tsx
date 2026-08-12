@@ -632,11 +632,7 @@ export default function JustePrixPage() {
                 <div className="relative w-full h-full">
                   <Image
                     src={itemImage}
-                    alt={
-                      currentItem.data.name ||
-                      currentItem.data.nameEn ||
-                      "Produit"
-                    }
+                    alt={currentItem.data.name || "Produit"}
                     fill
                     className="object-contain"
                   />
@@ -653,9 +649,7 @@ export default function JustePrixPage() {
                   : t("sealedProduct")}
               </Badge>
               <h3 className="font-heading text-lg font-bold text-foreground truncate max-w-xs">
-                {currentItem.data.name ||
-                  currentItem.data.nameEn ||
-                  t("unknownName")}
+                {currentItem.data.name || t("unknownName")}
               </h3>
               <p className="text-xs text-muted-foreground">
                 {currentItem.data.set?.name || t("unknownSet")}
@@ -1094,9 +1088,7 @@ export default function JustePrixPage() {
                       : t("sealedProduct")}
                   </Badge>
                   <h3 className="font-heading text-lg font-bold text-foreground truncate max-w-xs">
-                    {currentItem.data.name ||
-                      currentItem.data.nameEn ||
-                      t("unknownName")}
+                    {currentItem.data.name || t("unknownName")}
                   </h3>
                 </div>
               </div>

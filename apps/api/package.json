@@ -47,12 +47,13 @@
     "docker:db-down": "docker-compose -f ../docker-compose.yml down",
     "docker:db-logs": "docker-compose -f ../docker-compose.yml logs -f postgres",
     "dev:full": "npm run docker:db && npm run start:dev",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts",
-    "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts migration:generate",
-    "migration:create": "ts-node ./node_modules/typeorm/cli.js migration:create",
-    "migration:run": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts migration:run",
-    "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts migration:revert",
-    "migration:show": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts migration:show"
+    "typeorm": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts",
+    "migration:generate": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:generate",
+    "migration:create": "typeorm-ts-node-commonjs migration:create",
+    "migration:run": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:run",
+    "migration:revert": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:revert",
+    "migration:show": "NODE_OPTIONS='-r tsconfig-paths/register' typeorm-ts-node-commonjs -d src/data-source.ts migration:show",
+    "migration:baseline": "NODE_OPTIONS='-r tsconfig-paths/register' ts-node ./src/scripts/baseline-migrations.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1078.0",

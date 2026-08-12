@@ -398,7 +398,7 @@ export default function SellerPage() {
                           !!listing.pokemonCard;
                         const productName = isCard
                           ? listing.pokemonCard?.name
-                          : listing.sealedProduct?.nameEn;
+                          : listing.sealedProduct?.name;
                         const productSetName = isCard
                           ? listing.pokemonCard?.set?.name
                           : listing.sealedProduct?.pokemonSet?.name;

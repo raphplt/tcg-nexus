@@ -10,8 +10,9 @@
     "data:push": "tsx data-push.ts",
     "coverage-report": "tsx coverage-report.ts",
     "update-sealed": "tsx update-sealed.ts",
+    "sealed-coverage": "tsx sealed-coverage.ts",
     "migrate-card-images": "tsx migrate-card-images-r2.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test *.test.ts"
   },
   "keywords": [],
   "author": "",

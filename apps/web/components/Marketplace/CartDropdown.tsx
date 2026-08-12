@@ -22,11 +22,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import {
-  SEALED_PLACEHOLDER,
-  getSealedImageUrl,
-  getSealedName,
-} from "@/utils/sealedImage";
+import { SEALED_PLACEHOLDER, getSealedImageUrl } from "@/utils/sealedImage";
 
 const CartDropdown = () => {
   const t = useTranslations("Cart");
@@ -95,7 +91,7 @@ const CartDropdown = () => {
                       alt={
                         (item.listing.productKind === "sealed" ||
                         item.listing.sealedProduct
-                          ? getSealedName(item.listing.sealedProduct)
+                          ? item.listing.sealedProduct?.name
                           : item.listing.pokemonCard?.name) || "Produit"
                       }
                       fill
@@ -106,8 +102,7 @@ const CartDropdown = () => {
                     <p className="text-sm font-medium truncate">
                       {item.listing.productKind === "sealed" ||
                       item.listing.sealedProduct
-                        ? getSealedName(item.listing.sealedProduct) ||
-                          t("sealedProduct")
+                        ? item.listing.sealedProduct?.name || t("sealedProduct")
                         : item.listing.pokemonCard?.name || "Carte inconnue"}
                     </p>
                     <p className="text-xs text-muted-foreground">

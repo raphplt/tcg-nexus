@@ -334,8 +334,7 @@ export class MarketplaceService {
       qb.addSelect(
         `COALESCE(
           ${localizedNameSql("pokemonCard")},
-          ${localizedSealedNameSql("sealedProduct")},
-          sealedProduct."nameEn"
+          ${localizedSealedNameSql("sealedProduct")}
         )`,
         "product_name",
       );

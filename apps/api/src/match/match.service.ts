@@ -1,4 +1,9 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Deck } from "src/deck/entities/deck.entity";
@@ -123,6 +128,7 @@ export class MatchService {
       phase,
       scheduledDate,
       notes,
+      skipStatusCheck,
     } = createMatchDto;
 
     const tournament = await this.tournamentRepository.findOne({
@@ -134,6 +140,15 @@ export class MatchService {
         code: "TOURNAMENT_NOT_FOUND",
         message: "Tournoi non trouvé",
       });
+    }
+
+    if (
+      !skipStatusCheck &&
+      tournament.status !== TournamentStatus.IN_PROGRESS
+    ) {
+      throw new BadRequestException(
+        "Le tournoi doit être en cours pour créer des matches",
+      );
     }
 
     let playerA: Player | null = null;
@@ -410,9 +425,9 @@ export class MatchService {
         });
         if (!tournament) {
           throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+            code: "TOURNAMENT_NOT_FOUND",
+            message: "Tournoi non trouvé",
+          });
         }
         if (tournament.status !== TournamentStatus.IN_PROGRESS) {
           throw new BadRequestException(
@@ -505,9 +520,9 @@ export class MatchService {
 
       if (!lockedMatch) {
         throw new NotFoundException({
-        code: "MATCH_NOT_FOUND",
-        message: "Match non trouvé",
-      });
+          code: "MATCH_NOT_FOUND",
+          message: "Match non trouvé",
+        });
       }
 
       const match = await manager.findOne(Match, {
@@ -524,9 +539,9 @@ export class MatchService {
 
       if (!match) {
         throw new NotFoundException({
-        code: "MATCH_NOT_FOUND",
-        message: "Match non trouvé",
-      });
+          code: "MATCH_NOT_FOUND",
+          message: "Match non trouvé",
+        });
       }
 
       if (match.status !== MatchStatus.IN_PROGRESS) {
@@ -648,9 +663,9 @@ export class MatchService {
       });
       if (!lockedMatch) {
         throw new NotFoundException({
-        code: "MATCH_NOT_FOUND",
-        message: "Match non trouvé",
-      });
+          code: "MATCH_NOT_FOUND",
+          message: "Match non trouvé",
+        });
       }
 
       const match = await manager.findOne(Match, {
@@ -659,9 +674,9 @@ export class MatchService {
       });
       if (!match) {
         throw new NotFoundException({
-        code: "MATCH_NOT_FOUND",
-        message: "Match non trouvé",
-      });
+          code: "MATCH_NOT_FOUND",
+          message: "Match non trouvé",
+        });
       }
 
       if (

@@ -108,7 +108,7 @@ export default function SealedProductDetailPage({ params }: PageProps) {
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
-                        alt={product.nameEn}
+                        alt={product.name}
                         fill
                         className="object-contain"
                         sizes="(max-width: 768px) 100vw, 50vw"
@@ -125,7 +125,7 @@ export default function SealedProductDetailPage({ params }: PageProps) {
               <div className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-2xl">{product.nameEn}</CardTitle>
+                    <CardTitle className="text-2xl">{product.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex flex-wrap gap-2">

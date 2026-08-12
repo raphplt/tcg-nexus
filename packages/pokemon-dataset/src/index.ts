@@ -57,6 +57,26 @@ export interface DatasetSerie {
   [key: string]: unknown;
 }
 
+/**
+ * A sealed product — booster, Elite Trainer Box, portfolio — in one locale.
+ *
+ * `name` and `setName` are localized; every other field is language-neutral
+ * and repeated identically across locales, as for sets. A product missing from
+ * a locale's file simply has no name in that language, and the API falls back.
+ */
+export interface DatasetSealedProduct {
+  id: string;
+  /** Pokécardex series code the product was scraped from, e.g. "JTG". */
+  pokecardexSeriesId: string;
+  /** TCGdex set identifier, null for products belonging to no set. */
+  setId: string | null;
+  setName: string | null;
+  name: string;
+  productType: string;
+  image: string;
+  imageFilename: string;
+}
+
 /** Manifest entry: one dataset file and its checksum. */
 export interface DatasetManifestEntry {
   /** Path relative to `data/`, e.g. `fr/cards/base1.ndjson.br`. */
@@ -70,6 +90,7 @@ export interface DatasetManifestEntry {
 export interface DatasetLocaleStats {
   sets: number;
   cards: number;
+  sealedProducts: number;
 }
 
 /**
@@ -146,6 +167,13 @@ export function seriesFile(locale: DatasetLocale, dataDir = resolveDataDir()) {
   return path.join(localeDir(locale, dataDir), "series.json");
 }
 
+export function sealedProductsFile(
+  locale: DatasetLocale,
+  dataDir = resolveDataDir(),
+) {
+  return path.join(localeDir(locale, dataDir), "sealed-products.json");
+}
+
 export function manifestFile(dataDir = resolveDataDir()) {
   return path.join(dataDir, "manifest.json");
 }
@@ -206,6 +234,24 @@ export function writeSets(
   dataDir = resolveDataDir(),
 ) {
   writeJsonFile(setsFile(locale, dataDir), sets);
+}
+
+export function readSealedProducts(
+  locale: DatasetLocale,
+  dataDir = resolveDataDir(),
+): DatasetSealedProduct[] {
+  return readJsonFile<DatasetSealedProduct[]>(
+    sealedProductsFile(locale, dataDir),
+    [],
+  );
+}
+
+export function writeSealedProducts(
+  locale: DatasetLocale,
+  products: DatasetSealedProduct[],
+  dataDir = resolveDataDir(),
+) {
+  writeJsonFile(sealedProductsFile(locale, dataDir), products);
 }
 
 /** Ids of the sets whose cards are present locally. */
@@ -320,7 +366,7 @@ export function buildManifest(
     const setIds = listSetIds(locale, dataDir);
     let cards = 0;
 
-    for (const name of ["series.json", "sets.json"]) {
+    for (const name of ["series.json", "sets.json", "sealed-products.json"]) {
       const file = path.join(dataDir, locale, name);
       if (fs.existsSync(file)) files.push(entryFor(dataDir, file));
     }
@@ -331,7 +377,11 @@ export function buildManifest(
       cards += readSetCards(locale, setId, dataDir).length;
     }
 
-    stats[locale] = { sets: readSets(locale, dataDir).length, cards };
+    stats[locale] = {
+      sets: readSets(locale, dataDir).length,
+      cards,
+      sealedProducts: readSealedProducts(locale, dataDir).length,
+    };
   }
 
   files.sort((a, b) => a.path.localeCompare(b.path));

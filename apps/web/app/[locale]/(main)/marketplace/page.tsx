@@ -25,11 +25,7 @@ import { useMarketplaceHome } from "@/hooks/useMarketplace";
 import { sealedConditionLabels } from "@/types/sealed-product";
 import { getCardImage } from "@/utils/images";
 import { formatPrice } from "@/utils/price";
-import {
-  getSealedImageUrl,
-  getSealedName,
-  SEALED_PLACEHOLDER,
-} from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 
 export default function MarketplaceHomePage() {
   const t = useTranslations("Marketplace");
@@ -235,7 +231,7 @@ export default function MarketplaceHomePage() {
                     const isCard = listing.productKind === "card";
                     const productName = isCard
                       ? listing.pokemonCard?.name
-                      : getSealedName(listing.sealedProduct);
+                      : (listing.sealedProduct?.name ?? "");
                     const productSetName = isCard
                       ? listing.pokemonCard?.set?.name
                       : listing.sealedProduct?.pokemonSet?.name;

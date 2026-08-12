@@ -23,11 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { marketplaceService } from "@/services/marketplace.service";
 import { Listing, ListingStatus } from "@/types/listing";
 import { getCardImage } from "@/utils/images";
-import {
-  getSealedImageUrl,
-  getSealedName,
-  SEALED_PLACEHOLDER,
-} from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { cardStates, currencyOptions, languages } from "@/utils/variables";
 import { PriceSuggestionHint } from "../../../_components/PriceSuggestionHint";
 import { ShippingPolicyNotice } from "../../../_components/ShippingPolicyNotice";
@@ -158,7 +154,7 @@ export default function EditListingPage() {
 
   const isSealed = !!listing.sealedProduct;
   const productName = isSealed
-    ? getSealedName(listing.sealedProduct) || t("sealedProduct")
+    ? listing.sealedProduct?.name || t("sealedProduct")
     : (listing.pokemonCard?.name ?? "Carte");
   const productImage = isSealed
     ? getSealedImageUrl(listing.sealedProduct) || SEALED_PLACEHOLDER

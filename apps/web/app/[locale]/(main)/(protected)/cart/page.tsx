@@ -48,11 +48,7 @@ import {
 } from "@/store/cart.store";
 import { useCurrencyStore } from "@/store/currency.store";
 import { getCardImage } from "@/utils/images";
-import {
-  getSealedImageUrl,
-  getSealedName,
-  SEALED_PLACEHOLDER,
-} from "@/utils/sealedImage";
+import { getSealedImageUrl, SEALED_PLACEHOLDER } from "@/utils/sealedImage";
 import { estimateShipping } from "@/utils/shipping";
 
 export default function CartPage() {
@@ -262,7 +258,7 @@ export default function CartPage() {
                             SEALED_PLACEHOLDER
                           : getCardImage(item.listing.pokemonCard);
                         const productName = isSealed
-                          ? getSealedName(item.listing.sealedProduct) ||
+                          ? item.listing.sealedProduct?.name ||
                             t("sealedProduct")
                           : item.listing.pokemonCard?.name || "Carte inconnue";
                         const productSub = isSealed

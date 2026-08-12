@@ -141,6 +141,10 @@ async function bootstrap() {
       logSuccess(
         `Produits scellés importés : ${sealedReport.inserted} insérés, ${sealedReport.updated} mis à jour, ${sealedReport.matchedSets} sets matchés`,
       );
+      const perLocale = Object.entries(sealedReport.translations)
+        .map(([locale, count]) => `${locale} : ${count}`)
+        .join(", ");
+      logSuccess(`Noms par langue — ${perLocale}`);
       if (sealedReport.unmatchedSetNames.length > 0) {
         logWarn(
           `${sealedReport.unmatchedSetNames.length} sets non matchés : ${sealedReport.unmatchedSetNames.slice(0, 5).join(", ")}...`,

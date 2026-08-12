@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -44,10 +45,6 @@ export class CreateSealedProductDto {
   @IsNotEmpty()
   id: string;
 
-  @IsString()
-  @IsNotEmpty()
-  nameEn: string;
-
   @IsEnum(SealedProductType)
   productType: SealedProductType;
 
@@ -73,9 +70,14 @@ export class CreateSealedProductDto {
   @IsString()
   image?: string;
 
-  @IsOptional()
+  /**
+   * Localized names, at least one. The product carries no name of its own
+   * since the multilingual switch, so an empty list would create a nameless
+   * product.
+   */
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => SealedProductLocaleDto)
-  locales?: SealedProductLocaleDto[];
+  locales: SealedProductLocaleDto[];
 }
