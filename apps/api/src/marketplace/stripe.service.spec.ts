@@ -31,6 +31,7 @@ describe("StripeService", () => {
     const service = new StripeService(configService);
     expect(service).toBeDefined();
     expect(warnSpy).toHaveBeenCalled();
+    expect(Stripe).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
 
