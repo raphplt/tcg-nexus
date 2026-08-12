@@ -60,6 +60,7 @@ describe("MarketplaceService", () => {
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
+    offset: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
     getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
     getMany: jest.fn().mockResolvedValue([]),
@@ -403,7 +404,7 @@ describe("MarketplaceService", () => {
         sellerId: 1,
       });
       expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining("LIKE :search"),
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
       expect(qb.andWhere).toHaveBeenCalledWith(
@@ -853,8 +854,9 @@ describe("MarketplaceService", () => {
         sortBy: "price",
       });
 
+      // Names live in card_translation: matched through an EXISTS subquery.
       expect(qb.andWhere).toHaveBeenCalledWith(
-        "card.name ILIKE :search",
+        expect.stringContaining("FROM card_translation ct"),
         expect.anything(),
       );
       expect(qb.having).toHaveBeenCalledWith(
@@ -884,9 +886,11 @@ describe("MarketplaceService", () => {
       expect(qb.andWhere).toHaveBeenCalledWith("serie.id = :serieId", {
         serieId: "serie1",
       });
-      expect(qb.andWhere).toHaveBeenCalledWith("card.rarity = :rarity", {
-        rarity: "rare",
-      });
+      // Rarity is a localized label: matched across every locale.
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining("ct.rarity = :cardRarity"),
+        { cardRarity: "rare" },
+      );
       expect(qb.andWhere).toHaveBeenCalledWith(
         "(listing.currency = :currency OR listing.id IS NULL)",
         { currency: "USD" },
@@ -899,7 +903,7 @@ describe("MarketplaceService", () => {
         expect.stringContaining("<= :priceMax"),
         expect.objectContaining({ priceMax: 50 }),
       );
-      expect(qb.orderBy).toHaveBeenCalledWith("card.name", "ASC");
+      expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "ASC");
     });
   });
 });

@@ -20,7 +20,6 @@ export interface CardInput {
   id: string;
   name: string;
   category: "Pokémon" | "Dresseur" | "Énergie";
-  // Pokemon fields
   types?: string[];
   hp?: number;
   stage?: string;
@@ -35,7 +34,6 @@ export interface CardInput {
     effect: string;
   };
   retreat?: number;
-  // Trainer fields
   trainerType?: string;
   effect?: string;
 }

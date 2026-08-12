@@ -24,7 +24,10 @@ import { getCardImage } from "@/utils/images";
 import { CardDetailModal } from "@/components/CardDetailModal";
 
 const normalizeCategory = (cat?: string) =>
-  cat?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || "";
+  cat
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") || "";
 
 export default function DeckDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,7 +40,6 @@ export default function DeckDetailsScreen() {
   const [isSaved, setIsSaved] = useState(false);
   const [isSavedPending, setIsSavedPending] = useState(false);
 
-  // Sharing & Exporting State
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [isSharePending, setIsSharePending] = useState(false);
@@ -46,11 +48,9 @@ export default function DeckDetailsScreen() {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [isExportPending, setIsExportPending] = useState(false);
 
-  // Analysis State
   const [analysis, setAnalysis] = useState<DeckAnalysis | null>(null);
   const [isAnalysisPending, setIsAnalysisPending] = useState(false);
 
-  // Modal Card Detail
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [isCardModalVisible, setIsCardModalVisible] = useState(false);
 
@@ -60,26 +60,29 @@ export default function DeckDetailsScreen() {
     return !!user && !!deck && deck.user?.id === user.id;
   }, [user, deck]);
 
-  const loadDeckData = useCallback(async (showFullLoader = true) => {
-    if (!deckId) return;
-    if (showFullLoader) {
-      setIsLoading(true);
-    }
-    try {
-      const deckData = await deckService.getDeckById(deckId);
-      setDeck(deckData);
-
-      const savedIds = await deckService.getSavedDeckIds();
-      setIsSaved(savedIds.includes(Number(deckId)));
-    } catch (err) {
-      toast.showError(getApiErrorMessage(err));
-      router.back();
-    } finally {
+  const loadDeckData = useCallback(
+    async (showFullLoader = true) => {
+      if (!deckId) return;
       if (showFullLoader) {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, [deckId]);
+      try {
+        const deckData = await deckService.getDeckById(deckId);
+        setDeck(deckData);
+
+        const savedIds = await deckService.getSavedDeckIds();
+        setIsSaved(savedIds.includes(Number(deckId)));
+      } catch (err) {
+        toast.showError(getApiErrorMessage(err));
+        router.back();
+      } finally {
+        if (showFullLoader) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [deckId],
+  );
 
   useEffect(() => {
     void loadDeckData(true);
@@ -189,20 +192,34 @@ export default function DeckDetailsScreen() {
     );
   };
 
-  // Group cards for categories
-  const mainCards = useMemo(() => deck?.cards?.filter((c) => c.role === "main") || [], [deck]);
-  const sideCards = useMemo(() => deck?.cards?.filter((c) => c.role === "side") || [], [deck]);
+  const mainCards = useMemo(
+    () => deck?.cards?.filter((c) => c.role === "main") || [],
+    [deck],
+  );
+  const sideCards = useMemo(
+    () => deck?.cards?.filter((c) => c.role === "side") || [],
+    [deck],
+  );
 
   const pokemonCards = useMemo(
-    () => deck?.cards?.filter((c) => normalizeCategory(c.card?.category) === "pokemon") || [],
+    () =>
+      deck?.cards?.filter(
+        (c) => normalizeCategory(c.card?.category) === "pokemon",
+      ) || [],
     [deck],
   );
   const trainerCards = useMemo(
-    () => deck?.cards?.filter((c) => normalizeCategory(c.card?.category) === "trainer") || [],
+    () =>
+      deck?.cards?.filter(
+        (c) => normalizeCategory(c.card?.category) === "trainer",
+      ) || [],
     [deck],
   );
   const energyCards = useMemo(
-    () => deck?.cards?.filter((c) => normalizeCategory(c.card?.category) === "energy") || [],
+    () =>
+      deck?.cards?.filter(
+        (c) => normalizeCategory(c.card?.category) === "energy",
+      ) || [],
     [deck],
   );
   const otherCards = useMemo(
@@ -242,7 +259,10 @@ export default function DeckDetailsScreen() {
             setIsCardModalVisible(true);
           }
         }}
-        style={({ pressed }) => [styles.cardRowItem, pressed && styles.cardRowItemPressed]}
+        style={({ pressed }) => [
+          styles.cardRowItem,
+          pressed && styles.cardRowItemPressed,
+        ]}
       >
         <View style={styles.cardMiniImageContainer}>
           {card?.image ? (
@@ -260,7 +280,8 @@ export default function DeckDetailsScreen() {
             {card?.name || "Carte inconnue"}
           </Text>
           <Text numberOfLines={1} style={styles.cardSetText}>
-            {card?.set?.name || "Set inconnu"} • {card?.rarity || "Rareté inconnue"}
+            {card?.set?.name || "Set inconnu"} •{" "}
+            {card?.rarity || "Rareté inconnue"}
           </Text>
         </View>
         <View style={styles.qtyBadge}>
@@ -281,7 +302,10 @@ export default function DeckDetailsScreen() {
             setIsCardModalVisible(true);
           }
         }}
-        style={({ pressed }) => [styles.gridCardItem, pressed && styles.cardRowItemPressed]}
+        style={({ pressed }) => [
+          styles.gridCardItem,
+          pressed && styles.cardRowItemPressed,
+        ]}
       >
         <View style={styles.gridImageContainer}>
           {card?.image ? (
@@ -312,11 +336,13 @@ export default function DeckDetailsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Navigation back */}
         <View style={styles.navHeader}>
           <Pressable
             onPress={() => router.back()}
-            style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed && styles.backBtnPressed,
+            ]}
           >
             <Ionicons name="arrow-back" size={20} color={colors.foreground} />
             <Text style={styles.backBtnText}>Decks</Text>
@@ -326,7 +352,10 @@ export default function DeckDetailsScreen() {
             <Pressable
               disabled={isSavedPending}
               onPress={() => void handleToggleSave()}
-              style={({ pressed }) => [styles.bookmarkBtn, pressed && styles.backBtnPressed]}
+              style={({ pressed }) => [
+                styles.bookmarkBtn,
+                pressed && styles.backBtnPressed,
+              ]}
             >
               {isSavedPending ? (
                 <ActivityIndicator color={colors.primary} size="small" />
@@ -341,20 +370,29 @@ export default function DeckDetailsScreen() {
           )}
         </View>
 
-        {/* Deck Header Info */}
         <View style={styles.deckInfoCard}>
           <View style={styles.formatRow}>
             <View style={styles.formatBadge}>
-              <Text style={styles.formatText}>{deck.format?.type || "Standard"}</Text>
+              <Text style={styles.formatText}>
+                {deck.format?.type || "Standard"}
+              </Text>
             </View>
             <View style={styles.viewsBadge}>
-              <Ionicons name="eye-outline" size={12} color={colors.mutedForeground} />
+              <Ionicons
+                name="eye-outline"
+                size={12}
+                color={colors.mutedForeground}
+              />
               <Text style={styles.viewsText}>{deck.views || 0} vues</Text>
             </View>
           </View>
           <Text style={styles.deckTitle}>{deck.name}</Text>
           <Text style={styles.deckAuthor}>
-            Créé par <Text style={styles.authorBold}>{deck.user?.firstName || "Anonyme"}</Text> le{" "}
+            Créé par{" "}
+            <Text style={styles.authorBold}>
+              {deck.user?.firstName || "Anonyme"}
+            </Text>{" "}
+            le{" "}
             {new Date(deck.createdAt).toLocaleDateString("fr-FR", {
               year: "numeric",
               month: "long",
@@ -362,15 +400,21 @@ export default function DeckDetailsScreen() {
             })}
           </Text>
 
-          {/* Action Buttons Row */}
           <View style={styles.actionsRow}>
             {isOwner ? (
               <>
                 <Pressable
                   onPress={() => router.push(`/decks/create?id=${deck.id}`)}
-                  style={({ pressed }) => [styles.actionBtn, pressed && styles.actionBtnPressed]}
+                  style={({ pressed }) => [
+                    styles.actionBtn,
+                    pressed && styles.actionBtnPressed,
+                  ]}
                 >
-                  <Ionicons name="create-outline" size={16} color={colors.primary} />
+                  <Ionicons
+                    name="create-outline"
+                    size={16}
+                    color={colors.primary}
+                  />
                   <Text style={styles.actionBtnText}>Modifier</Text>
                 </Pressable>
                 <Pressable
@@ -381,8 +425,14 @@ export default function DeckDetailsScreen() {
                     pressed && styles.actionBtnPressed,
                   ]}
                 >
-                  <Ionicons name="trash-outline" size={16} color={colors.destructive} />
-                  <Text style={[styles.actionBtnText, styles.actionDeleteText]}>Supprimer</Text>
+                  <Ionicons
+                    name="trash-outline"
+                    size={16}
+                    color={colors.destructive}
+                  />
+                  <Text style={[styles.actionBtnText, styles.actionDeleteText]}>
+                    Supprimer
+                  </Text>
                 </Pressable>
               </>
             ) : null}
@@ -390,14 +440,25 @@ export default function DeckDetailsScreen() {
             <Pressable
               onPress={() => void handleShareDeck()}
               disabled={isSharePending}
-              style={({ pressed }) => [styles.actionBtn, pressed && styles.actionBtnPressed]}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                pressed && styles.actionBtnPressed,
+              ]}
             >
               {isSharePending ? (
                 <ActivityIndicator color={colors.primary} size="small" />
               ) : (
                 <>
-                  <Ionicons name="share-social-outline" size={16} color={colors.secondary} />
-                  <Text style={[styles.actionBtnText, { color: colors.secondary }]}>Partager</Text>
+                  <Ionicons
+                    name="share-social-outline"
+                    size={16}
+                    color={colors.secondary}
+                  />
+                  <Text
+                    style={[styles.actionBtnText, { color: colors.secondary }]}
+                  >
+                    Partager
+                  </Text>
                 </>
               )}
             </Pressable>
@@ -405,21 +466,34 @@ export default function DeckDetailsScreen() {
             <Pressable
               onPress={() => void handleExportJson()}
               disabled={isExportPending}
-              style={({ pressed }) => [styles.actionBtn, pressed && styles.actionBtnPressed]}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                pressed && styles.actionBtnPressed,
+              ]}
             >
               {isExportPending ? (
                 <ActivityIndicator color={colors.primary} size="small" />
               ) : (
                 <>
-                  <Ionicons name="code-working" size={16} color={colors.mutedForeground} />
-                  <Text style={[styles.actionBtnText, { color: colors.mutedForeground }]}>JSON</Text>
+                  <Ionicons
+                    name="code-working"
+                    size={16}
+                    color={colors.mutedForeground}
+                  />
+                  <Text
+                    style={[
+                      styles.actionBtnText,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    JSON
+                  </Text>
                 </>
               )}
             </Pressable>
           </View>
         </View>
 
-        {/* Stats Summary */}
         <View style={styles.statsPanel}>
           <Text style={styles.panelTitle}>Statistiques du Deck</Text>
           <View style={styles.statsGrid}>
@@ -442,21 +516,36 @@ export default function DeckDetailsScreen() {
           </View>
         </View>
 
-        {/* Cards Tabs List (Main / Side) */}
         <View style={styles.tabsContainer}>
           <Pressable
             onPress={() => setActiveTab("main")}
-            style={[styles.tabButton, activeTab === "main" && styles.tabButtonActive]}
+            style={[
+              styles.tabButton,
+              activeTab === "main" && styles.tabButtonActive,
+            ]}
           >
-            <Text style={[styles.tabButtonText, activeTab === "main" && styles.tabButtonTextActive]}>
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === "main" && styles.tabButtonTextActive,
+              ]}
+            >
               Principal ({mainCards.reduce((acc, c) => acc + c.qty, 0)})
             </Text>
           </Pressable>
           <Pressable
             onPress={() => setActiveTab("side")}
-            style={[styles.tabButton, activeTab === "side" && styles.tabButtonActive]}
+            style={[
+              styles.tabButton,
+              activeTab === "side" && styles.tabButtonActive,
+            ]}
           >
-            <Text style={[styles.tabButtonText, activeTab === "side" && styles.tabButtonTextActive]}>
+            <Text
+              style={[
+                styles.tabButtonText,
+                activeTab === "side" && styles.tabButtonTextActive,
+              ]}
+            >
               Side ({sideCards.reduce((acc, c) => acc + c.qty, 0)})
             </Text>
           </Pressable>
@@ -470,17 +559,14 @@ export default function DeckDetailsScreen() {
           ) : (
             <Text style={styles.emptyDeckLabel}>Aucune carte principale.</Text>
           )
+        ) : sideCards.length > 0 ? (
+          <View style={styles.gridContainer}>
+            {sideCards.map(renderCardGridItem)}
+          </View>
         ) : (
-          sideCards.length > 0 ? (
-            <View style={styles.gridContainer}>
-              {sideCards.map(renderCardGridItem)}
-            </View>
-          ) : (
-            <Text style={styles.emptyDeckLabel}>Aucune carte side.</Text>
-          )
+          <Text style={styles.emptyDeckLabel}>Aucune carte side.</Text>
         )}
 
-        {/* Grouped Lists (Pokemon, Trainer, Energy) */}
         {pokemonCards.length > 0 && (
           <View style={styles.sectionPanel}>
             <View style={styles.sectionPanelHeader}>
@@ -491,7 +577,9 @@ export default function DeckDetailsScreen() {
                 </Text>
               </View>
             </View>
-            <View style={styles.rowsList}>{pokemonCards.map(renderCardRow)}</View>
+            <View style={styles.rowsList}>
+              {pokemonCards.map(renderCardRow)}
+            </View>
           </View>
         )}
 
@@ -505,7 +593,9 @@ export default function DeckDetailsScreen() {
                 </Text>
               </View>
             </View>
-            <View style={styles.rowsList}>{trainerCards.map(renderCardRow)}</View>
+            <View style={styles.rowsList}>
+              {trainerCards.map(renderCardRow)}
+            </View>
           </View>
         )}
 
@@ -519,7 +609,9 @@ export default function DeckDetailsScreen() {
                 </Text>
               </View>
             </View>
-            <View style={styles.rowsList}>{energyCards.map(renderCardRow)}</View>
+            <View style={styles.rowsList}>
+              {energyCards.map(renderCardRow)}
+            </View>
           </View>
         )}
 
@@ -537,7 +629,6 @@ export default function DeckDetailsScreen() {
           </View>
         )}
 
-        {/* AI Analysis Section */}
         <View style={styles.analysisPanel}>
           <View style={styles.analysisHeader}>
             <Ionicons name="analytics" size={22} color={colors.primary} />
@@ -548,20 +639,33 @@ export default function DeckDetailsScreen() {
             <View style={styles.analysisResults}>
               <View style={styles.ratioRow}>
                 <Text style={styles.ratioText}>
-                  Ratio Énergies/Pokémon : <Text style={styles.boldText}>{analysis.energyToPokemonRatio.toFixed(2)}</Text>
+                  Ratio Énergies/Pokémon :{" "}
+                  <Text style={styles.boldText}>
+                    {analysis.energyToPokemonRatio.toFixed(2)}
+                  </Text>
                 </Text>
                 <Text style={styles.ratioText}>
-                  Coût moyen d'attaque : <Text style={styles.boldText}>{analysis.averageEnergyCost.toFixed(1)} éner.</Text>
+                  Coût moyen d'attaque :{" "}
+                  <Text style={styles.boldText}>
+                    {analysis.averageEnergyCost.toFixed(1)} éner.
+                  </Text>
                 </Text>
               </View>
 
               {analysis.warnings.length > 0 && (
                 <View style={[styles.alertBox, styles.alertWarning]}>
-                  <Ionicons name="warning-outline" size={16} color={colors.warning} style={styles.alertIcon} />
+                  <Ionicons
+                    name="warning-outline"
+                    size={16}
+                    color={colors.warning}
+                    style={styles.alertIcon}
+                  />
                   <View style={styles.alertContent}>
                     <Text style={styles.alertTitleText}>Avertissements</Text>
                     {analysis.warnings.map((w, index) => (
-                      <Text key={`warn-${index}`} style={styles.alertDescText}>• {w}</Text>
+                      <Text key={`warn-${index}`} style={styles.alertDescText}>
+                        • {w}
+                      </Text>
                     ))}
                   </View>
                 </View>
@@ -569,11 +673,20 @@ export default function DeckDetailsScreen() {
 
               {analysis.suggestions.length > 0 && (
                 <View style={[styles.alertBox, styles.alertInfo]}>
-                  <Ionicons name="information-circle-outline" size={16} color={colors.secondary} style={styles.alertIcon} />
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={16}
+                    color={colors.secondary}
+                    style={styles.alertIcon}
+                  />
                   <View style={styles.alertContent}>
-                    <Text style={styles.alertTitleText}>Suggestions d'amélioration</Text>
+                    <Text style={styles.alertTitleText}>
+                      Suggestions d'amélioration
+                    </Text>
                     {analysis.suggestions.map((s, index) => (
-                      <Text key={`sug-${index}`} style={styles.alertDescText}>• {s}</Text>
+                      <Text key={`sug-${index}`} style={styles.alertDescText}>
+                        • {s}
+                      </Text>
                     ))}
                   </View>
                 </View>
@@ -581,7 +694,9 @@ export default function DeckDetailsScreen() {
 
               {analysis.duplicates.length > 0 && (
                 <View style={styles.duplicatesSection}>
-                  <Text style={styles.duplicatesTitle}>Infractions aux limites de copies (Max 4)</Text>
+                  <Text style={styles.duplicatesTitle}>
+                    Infractions aux limites de copies (Max 4)
+                  </Text>
                   {analysis.duplicates.map((d, index) => (
                     <View key={`dup-${index}`} style={styles.duplicateRow}>
                       <Text style={styles.dupName}>{d.cardName}</Text>
@@ -594,12 +709,16 @@ export default function DeckDetailsScreen() {
           ) : (
             <View style={styles.analysisPlaceholder}>
               <Text style={styles.analysisPlaceholderText}>
-                Obtenez une analyse AI statistique et des conseils stratégiques pour optimiser ce deck.
+                Obtenez une analyse AI statistique et des conseils stratégiques
+                pour optimiser ce deck.
               </Text>
               <Pressable
                 disabled={isAnalysisPending}
                 onPress={() => void handleAnalyzeDeck()}
-                style={({ pressed }) => [styles.analyzeBtn, pressed && styles.backBtnPressed]}
+                style={({ pressed }) => [
+                  styles.analyzeBtn,
+                  pressed && styles.backBtnPressed,
+                ]}
               >
                 {isAnalysisPending ? (
                   <ActivityIndicator color="#ffffff" size="small" />
@@ -615,7 +734,6 @@ export default function DeckDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Share Dialog */}
       <Modal
         animationType="fade"
         transparent
@@ -626,7 +744,8 @@ export default function DeckDetailsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Code de partage généré</Text>
             <Text style={styles.modalDescription}>
-              Partagez ce code avec d'autres dresseurs pour qu'ils puissent importer ce deck dans leur application.
+              Partagez ce code avec d'autres dresseurs pour qu'ils puissent
+              importer ce deck dans leur application.
             </Text>
             <View style={styles.codeContainer}>
               <Text style={styles.codeText}>{shareCode}</Text>
@@ -642,7 +761,12 @@ export default function DeckDetailsScreen() {
                 onPress={() => void handleNativeShareCode()}
                 style={[styles.modalButton, styles.modalButtonConfirm]}
               >
-                <Ionicons name="share-outline" size={16} color="#ffffff" style={{ marginRight: 6 }} />
+                <Ionicons
+                  name="share-outline"
+                  size={16}
+                  color="#ffffff"
+                  style={{ marginRight: 6 }}
+                />
                 <Text style={styles.modalButtonConfirmText}>Partager</Text>
               </Pressable>
             </View>
@@ -650,7 +774,6 @@ export default function DeckDetailsScreen() {
         </View>
       </Modal>
 
-      {/* JSON Export Modal */}
       <Modal
         animationType="slide"
         transparent
@@ -666,7 +789,11 @@ export default function DeckDetailsScreen() {
             <View style={styles.modalActions}>
               <Pressable
                 onPress={() => setExportModalVisible(false)}
-                style={[styles.modalButton, styles.modalButtonCancel, { flex: 1 }]}
+                style={[
+                  styles.modalButton,
+                  styles.modalButtonCancel,
+                  { flex: 1 },
+                ]}
               >
                 <Text style={styles.modalButtonCancelText}>Fermer</Text>
               </Pressable>
@@ -675,7 +802,6 @@ export default function DeckDetailsScreen() {
         </View>
       </Modal>
 
-      {/* Card detail view modal */}
       <CardDetailModal
         card={selectedCard}
         isVisible={isCardModalVisible}

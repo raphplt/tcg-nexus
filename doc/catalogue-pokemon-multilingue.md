@@ -351,6 +351,8 @@ ce qui rend le retour arrière possible.
 | Sets et séries | Traduits comme les cartes par le même intercepteur, y compris imbriqués (`card.set.serie`). Les faux positifs de détection sont filtrés par la base : sans traduction, l'objet reste intact. |
 | Administration | `?withTranslations=true` attache toutes les langues sous `translations`, sans masquer la vue résolue. |
 | Distribution | `data/` versionné (175 fichiers, ~3 Mo), embarqué dans l'image Docker de l'API (`TCG_DATA_DIR=/app/data`). Le volume `/srv/tcg-nexus/data` n'est plus nécessaire. |
+| Colonnes héritées | **Supprimées** : `card`, `pokemon_card_details`, `pokemon_set` et `pokemon_serie` ne portent plus aucun libellé. Migration `DropLegacyCatalogColumns`. |
+| Produits scellés | Résolus par le même intercepteur, depuis `sealed_product_locale`, avec repli sur `nameEn`. |
 | Recherche | `applyCardSearch` interroge `card_translation` par `EXISTS`, toutes langues confondues, avec `unaccent` : « etincelles » trouve « Étincelles Déferlantes », « Charizard » trouvera « Dracaufeu ». |
 
 Vérifié de bout en bout : `Accept-Language: en` renvoie nom, image, description,
@@ -376,6 +378,13 @@ de l'API passe et l'image contient les 172 sets. Les 877 tests de l'API passent.
 
 - **Les images dépendent de la langue** : le plan les classait à tort comme
   non linguistiques (voir §4.1).
+- **`SealedProduct.nameEn` contient du français** (« Origines Antiques ») : le
+  champ porte le nom de la source Pokecardex, pas une traduction anglaise. Il
+  sert désormais de dernier repli, derrière `sealed_product_locale`.
+- **Les libellés sont des propriétés résolues, pas des colonnes** : `card.name`
+  et consorts existent toujours en TypeScript, mais ne sont peuplés qu'après
+  passage de l'intercepteur ou de `resolveLabels`. Un tri ou un filtre SQL doit
+  passer par `card_translation` — voir `card-search.ts`.
 - **795 cartes Pokémon Pocket** avaient échappé au filtre de l'ancien scraper.
   Elles sont exclues du dataset, mais restent en base : les supprimer est une
   opération distincte, à faire en vérifiant les collections et decks qui les

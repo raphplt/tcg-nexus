@@ -1,4 +1,4 @@
-# smoke test : carte synthétique -> preprocess()
+
 
 import base64
 
@@ -7,7 +7,7 @@ import numpy as np
 
 from app.pipeline import preprocess
 
-# fond sombre + carte claire + un peu de texte
+
 img = np.full((900, 700, 3), 30, np.uint8)
 cv2.rectangle(img, (90, 70), (610, 820), (240, 240, 240), -1)
 cv2.putText(img, "Pikachu", (120, 140), cv2.FONT_HERSHEY_SIMPLEX, 1.4, (10, 10, 10), 3)

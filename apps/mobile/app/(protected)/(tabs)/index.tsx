@@ -96,10 +96,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 12 },
-      ]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 12 }]}
       refreshControl={
         <RefreshControl
           onRefresh={onRefresh}
@@ -110,11 +107,12 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
       style={styles.container}
     >
-      {/* En-tête personnalisée */}
       <View style={styles.topBar}>
         <View>
           <Text style={styles.eyebrow}>BONJOUR</Text>
-          <Text style={styles.greeting}>{user?.firstName ?? "Dresseur"} 👋</Text>
+          <Text style={styles.greeting}>
+            {user?.firstName ?? "Dresseur"} 👋
+          </Text>
         </View>
         <Pressable
           onPress={() => router.push("/profile")}
@@ -124,7 +122,6 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      {/* Carte promo / scan */}
       <View style={styles.heroCard}>
         <View style={styles.heroTextBlock}>
           <Text style={styles.heroTitle}>Complète ta collection</Text>
@@ -134,14 +131,16 @@ export default function HomeScreen() {
         </View>
         <Pressable
           onPress={() => router.push("/scan")}
-          style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.heroButton,
+            pressed && styles.pressed,
+          ]}
         >
           <Ionicons color={colors.primary} name="scan" size={18} />
           <Text style={styles.heroButtonText}>Scanner</Text>
         </Pressable>
       </View>
 
-      {/* Statistiques */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{totalCards}</Text>
@@ -165,7 +164,6 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Tournois à venir */}
       {tournaments.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -222,7 +220,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Decks tendances */}
       {trendingDecks.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -268,7 +265,9 @@ export default function HomeScreen() {
                     name="eye-outline"
                     size={12}
                   />
-                  <Text style={styles.tournamentMeta}>{deck.views || 0} vues</Text>
+                  <Text style={styles.tournamentMeta}>
+                    {deck.views || 0} vues
+                  </Text>
                 </View>
               </Pressable>
             ))}
@@ -276,7 +275,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Nouvelles extensions */}
       {newSets.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>

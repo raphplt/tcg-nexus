@@ -172,13 +172,11 @@ class TcgDexService {
   }
 }
 
-// Initialisation d'Express
 const app = express();
 const port = process.env.PORT || 3005;
 const tcgDexService = new TcgDexService();
 const pokecardexService = new PokecardexService();
 
-// Route pour récupérer une carte par son ID
 app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
   try {
     const card = await tcgDexService.getCardById(req.params.id);
@@ -188,7 +186,6 @@ app.get("/tcgdex/cards/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer toutes les séries
 app.get("/tcgdex/series", async (req: Request, res: Response) => {
   try {
     const series = await tcgDexService.getSeries();
@@ -198,7 +195,6 @@ app.get("/tcgdex/series", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer toutes les séries et leurs détails
 app.get("/tcgdex/seriesDetails", async (req: Request, res: Response) => {
   try {
     const series = await tcgDexService.getSeriesDetails();
@@ -208,7 +204,6 @@ app.get("/tcgdex/seriesDetails", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer une série par son ID
 app.get("/tcgdex/series/:id", async (req: Request, res: Response) => {
   try {
     const series = await tcgDexService.getSeriesById(req.params.id);
@@ -218,7 +213,6 @@ app.get("/tcgdex/series/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer un set par son ID
 app.get("/tcgdex/sets/:id", async (req: Request, res: Response) => {
   try {
     const set = await tcgDexService.getSetById(req.params.id);
@@ -227,7 +221,7 @@ app.get("/tcgdex/sets/:id", async (req: Request, res: Response) => {
     res.status(404).json({ error: error.message });
   }
 });
-// Route pour récupérer tous les set
+
 app.get("/tcgdex/sets", async (req: Request, res: Response) => {
   try {
     const set = await tcgDexService.getSets();
@@ -237,7 +231,6 @@ app.get("/tcgdex/sets", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer tous les sets les détails
 app.get("/tcgdex/setsDetails", async (req: Request, res: Response) => {
   try {
     const sets = await tcgDexService.getAllSetsDetails();
@@ -247,7 +240,6 @@ app.get("/tcgdex/setsDetails", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer un set avec toutes ses cartes détaillées
 app.get("/tcgdex/setCard/:id", async (req: Request, res: Response) => {
   try {
     const setWithCards = await tcgDexService.getSetWithCards(req.params.id);
@@ -257,7 +249,6 @@ app.get("/tcgdex/setCard/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer une série complète (bloc) avec tous ses sets et leurs cartes
 app.get("/tcgdex/bloc/:id", async (req: Request, res: Response) => {
   try {
     const bloc = await tcgDexService.getBloc(req.params.id);
@@ -267,7 +258,6 @@ app.get("/tcgdex/bloc/:id", async (req: Request, res: Response) => {
   }
 });
 
-// Route pour récupérer toutes les cartes détaillées
 app.get("/tcgdex/cardsDetailed", async (req: Request, res: Response) => {
   try {
     const cards = await tcgDexService.getAllCardsDetails();
@@ -277,7 +267,6 @@ app.get("/tcgdex/cardsDetailed", async (req: Request, res: Response) => {
   }
 });
 
-// Pokecardex — liste de toutes les séries
 app.get("/pokecardex/series", async (_req: Request, res: Response) => {
   try {
     const series = await pokecardexService.fetchSeriesList();
@@ -287,7 +276,6 @@ app.get("/pokecardex/series", async (_req: Request, res: Response) => {
   }
 });
 
-// Pokecardex — items scellés d'une série
 app.get(
   "/pokecardex/series/:id/sealed",
   async (req: Request, res: Response) => {
@@ -300,7 +288,6 @@ app.get(
   },
 );
 
-// Init Puppeteer au démarrage pour les routes pokecardex
 pokecardexService.init().catch((err) => {
   console.warn(
     "Pokecardex browser init failed (scrape routes will retry):",
@@ -308,7 +295,6 @@ pokecardexService.init().catch((err) => {
   );
 });
 
-// Démarrage du serveur
 app.listen(port, () => {
   console.log(`Fetch from TCGdex en écoute sur le port ${port}`);
 });

@@ -1,5 +1,6 @@
 import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import { applyCardSearch, cardNameMatchesSql } from "../card/card-search";
+import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
@@ -129,7 +130,7 @@ export class SearchService {
       id: card.id,
       type: "card" as const,
       title: card.name || "Carte sans nom",
-      description: `${card.rarity || "Rareté inconnue"} • ${card.set?.name || "Set inconnu"}`,
+      description: `${card.rarity || "Unknown rarity"} • ${card.set?.name || "Unknown set"}`,
       url: `/pokemon/${card.id}`,
       image: card.image,
       metadata: {
@@ -162,7 +163,7 @@ export class SearchService {
       id: tournament.id,
       type: "tournament" as const,
       title: tournament.name,
-      description: `${tournament.location || "Lieu non spécifié"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
+      description: `${tournament.location || "Place not specified"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
       url: `/tournaments/${tournament.id}`,
       metadata: {
         status: tournament.status,
@@ -195,7 +196,7 @@ export class SearchService {
       type: "player" as const,
       title:
         `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
-      description: `${player.user?.email || ""} • ${player.tournaments?.length || 0} tournois`,
+      description: `${player.user?.email || ""} • ${player.tournaments?.length || 0} tournaments`,
       url: `/players/${player.id}`,
       metadata: {
         userId: player.user?.id,
@@ -340,8 +341,16 @@ export class SearchService {
     const popularCards = await this.pokemonCardRepository
       .createQueryBuilder("card")
       .where("card.game = :game", { game: CardGame.Pokemon })
-      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
-      .orderBy("card.name", "ASC")
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
+      .andWhere(cardNameMatchesSql("card", "query"), {
+        query: `%${searchTerm.toLowerCase()}%`,
+      })
+      .orderBy("sortTranslation.name", "ASC")
       .limit(limit)
       .getMany();
 
@@ -390,8 +399,16 @@ export class SearchService {
       .leftJoinAndSelect("card.set", "set")
       .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
       .where("card.game = :game", { game: CardGame.Pokemon })
-      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
-      .orderBy("card.name", "ASC")
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
+      .andWhere(cardNameMatchesSql("card", "query"), {
+        query: `%${searchTerm.toLowerCase()}%`,
+      })
+      .orderBy("sortTranslation.name", "ASC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
@@ -399,8 +416,8 @@ export class SearchService {
       ...cards.map((card) => ({
         id: card.id,
         type: "card" as const,
-        title: card.name || "Carte sans nom",
-        subtitle: card.set?.name || "Set inconnu",
+        title: card.name || "Unnamed card",
+        subtitle: card.set?.name || "Unknown set",
         image: card.image,
       })),
     );
@@ -419,7 +436,7 @@ export class SearchService {
         id: tournament.id,
         type: "tournament" as const,
         title: tournament.name,
-        subtitle: tournament.location || "Lieu non spécifié",
+        subtitle: tournament.location || "Place not specified",
       })),
     );
 
@@ -483,8 +500,16 @@ export class SearchService {
       .leftJoinAndSelect("card.set", "set")
       .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
       .where("card.game = :game", { game: CardGame.Pokemon })
-      .andWhere("card.name ILIKE :query", { query: `%${searchTerm}%` })
-      .orderBy("card.name", "ASC")
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
+      .andWhere(cardNameMatchesSql("card", "query"), {
+        query: `%${searchTerm.toLowerCase()}%`,
+      })
+      .orderBy("sortTranslation.name", "ASC")
       .limit(Math.ceil(limit / 2))
       .getMany();
 
@@ -522,7 +547,7 @@ export class SearchService {
         id: tournament.id,
         type: "tournament" as const,
         title: tournament.name,
-        description: `${tournament.location || "Lieu non spécifié"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
+        description: `${tournament.location || "Place not specified"} • ${tournament.status} • ${tournament.players?.length || 0} joueurs`,
         url: `/tournaments/${tournament.id}`,
         metadata: {
           status: tournament.status,

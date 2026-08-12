@@ -131,8 +131,6 @@ async function push() {
     return;
   }
 
-  // Published last: until the manifest changes, a concurrent `data:pull`
-  // keeps seeing the previous, consistent version.
   const published = await uploadBufferToR2(
     Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`),
     MANIFEST_KEY,

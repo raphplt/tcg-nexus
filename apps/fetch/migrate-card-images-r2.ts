@@ -1,23 +1,5 @@
 /**
- * Backfill : migre les images des cartes DÉJÀ présentes en local
- * (`data/<serie>/<set>/<cardId>.json`) depuis TCGdex vers Cloudflare R2, et
- * réécrit le champ `image` de chaque carte vers l'URL CDN.
- *
- * Caractéristiques :
- *  - Idempotent / reprenable : une carte dont `image` pointe déjà sur le CDN
- *    est ignorée. Relançable sans risque après une interruption.
- *  - Concurrence limitée pour ménager TCGdex et R2.
- *  - Filtres pratiques : `--serie=sv`, `--limit=500`, `--dry-run`,
- *    `--quality=high` (par défaut high+low).
- *
- * ⚠️ Volume : ~19 500 cartes × 2 qualités. À lancer plutôt par série, ou de
- * nuit. Voir aussi la migration DB côté API
- * (`npm run migrate:card-images-cdn`) à exécuter APRÈS ce backfill.
- *
- * Usage :
- *   npx tsx migrate-card-images-r2.ts                 # tout, high+low
- *   npx tsx migrate-card-images-r2.ts --serie=sv      # une série
- *   npx tsx migrate-card-images-r2.ts --dry-run       # simulation
+ * Migrates locally stored card images from TCGdex to Cloudflare R2 and rewrites their `image` fields to CDN URLs. The process is resumable, idempotent, and concurrency-limited.
  */
 import fs from "fs";
 import path from "path";
@@ -64,7 +46,7 @@ function parseArgs(): Args {
   };
 }
 
-/** Liste récursivement tous les fichiers JSON de cartes sous DATA_DIR. */
+/** Recursively lists all card JSON files under DATA_DIR. */
 function listCardFiles(serieFilter?: string): string[] {
   const out: string[] = [];
   const series = fs
@@ -107,8 +89,6 @@ async function processFile(file: string, args: Args, stats: Stats) {
 
   let image: string | undefined = card.image;
 
-  // Si l'image pointe déjà sur le CDN, on réécrit l'URL vers TCGdex pour pouvoir
-  // la télécharger et forcer le téléversement dans le nouveau bucket R2 vide.
   if (image && R2_PUBLIC_URL && image.startsWith(R2_PUBLIC_URL)) {
     image = image.replace(
       `${R2_PUBLIC_URL}/cards`,
@@ -116,7 +96,6 @@ async function processFile(file: string, args: Args, stats: Stats) {
     );
   }
 
-  // Pas d'image exploitable -> on saute.
   if (!image) {
     stats.skipped++;
     return;
@@ -137,14 +116,12 @@ async function processFile(file: string, args: Args, stats: Stats) {
     return;
   }
 
-  // Réécriture du champ image (et du set.logo si présent et TCGdex nu : on le
-  // laisse au normaliseur front, donc on ne touche que `image` ici).
   card.image = result.newBase;
   fs.writeFileSync(file, JSON.stringify(card, null, 4));
   stats.migrated++;
 }
 
-/** Exécute une file de tâches avec un pool de concurrence fixe. */
+/** Runs queued tasks with a fixed concurrency pool. */
 async function runPool(
   files: string[],
   worker: (file: string) => Promise<void>,

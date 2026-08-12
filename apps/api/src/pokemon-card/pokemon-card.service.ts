@@ -1,4 +1,8 @@
-import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
+import {
+  applyCardSearch,
+  applyRarityFilter,
+  cardNameMatchesSql,
+} from "src/card/card-search";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -400,7 +404,9 @@ export class PokemonCardService {
         .leftJoinAndSelect("card.set", "set")
         .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
         .where("card.game = :game", { game: andParams.game })
-        .andWhere("card.name ILIKE :cardName", { cardName: andParams.cardName })
+        .andWhere(cardNameMatchesSql("card", "cardName"), {
+          cardName: String(andParams.cardName).toLowerCase(),
+        })
         .andWhere(`(${localIdConds.join(" OR ")})`, andParams)
         .limit(5);
 
@@ -413,8 +419,8 @@ export class PokemonCardService {
       const orParams: Record<string, string> = {};
 
       if (cardName?.trim()) {
-        orConditions.push("card.name ILIKE :cardName");
-        orParams.cardName = `%${cardName.trim()}%`;
+        orConditions.push(cardNameMatchesSql("card", "cardName"));
+        orParams.cardName = `%${cardName.trim().toLowerCase()}%`;
       }
 
       if (localIdVariants.length > 0) {
@@ -432,7 +438,11 @@ export class PokemonCardService {
       }
 
       if (setName?.trim()) {
-        orConditions.push("set.name ILIKE :setName");
+        // Set names live in translations, matched across every locale.
+        orConditions.push(`EXISTS (
+          SELECT 1 FROM pokemon_set_translation st
+          WHERE st.set_id = "card"."setId" AND st.name ILIKE :setName
+        )`);
         orParams.setName = `%${setName.trim()}%`;
       }
 

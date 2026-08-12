@@ -126,7 +126,6 @@ async function fetchSetCards(
           if (migrated?.uploaded) card.image = migrated.newBase;
         }
       } catch (error) {
-        // A missing card must not abort the set: log and carry on.
         console.error(`\n  carte ${cardRef.id} (${locale}) : ${String(error)}`);
       }
 
@@ -152,8 +151,6 @@ async function importSets(locale: DatasetLocale, pocketSeries: Set<string>) {
   if (!remote) throw new Error(`Sets indisponibles en ${locale}.`);
 
   const candidates = remote.filter((set) => !isPocketSet(set, pocketSeries));
-  // The "already fetched" state is per locale: it is read from the presence
-  // of the cards file, not from the sets list alone.
   const pending = refresh
     ? candidates
     : candidates.filter((set) => !hasSetCards(locale, set.id, dataDir));
@@ -204,8 +201,6 @@ async function importSets(locale: DatasetLocale, pocketSeries: Set<string>) {
       writeSetCards(locale, setRef.id, cards, dataDir);
     }
 
-    // The set is only recorded once its cards are written: an interrupted run
-    // picks it up again on the next pass.
     sets = mergeById(sets, [{ ...setMetadata, id: setRef.id, serieId }]);
     writeSets(locale, sets, dataDir);
   }

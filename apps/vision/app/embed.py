@@ -1,4 +1,4 @@
-# Embeddings d'images (OpenCLIP ViT-B/32) pour la recherche visuelle de cartes.
+
 
 import cv2
 import numpy as np
@@ -17,7 +17,7 @@ try:
     )
     _model.eval()
     HAS_CLIP = True
-except Exception:  # pragma: no cover - dépend de l'environnement
+except Exception:
     HAS_CLIP = False
 
 
@@ -25,11 +25,11 @@ def _to_pil(bgr: np.ndarray):
     return Image.fromarray(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
 
 
-# Fenêtre de l'illustration sur une carte standard (sous le bandeau nom/PV,
-# au-dessus du bloc d'attaques). C'est la zone la plus discriminante : le reste
-# du gabarit (bordures, symboles d'énergie, textes) est commun à toutes les
-# cartes et brouille la comparaison CLIP. On applique le MÊME crop côté
-# catalogue et côté scan pour que les vecteurs soient comparables.
+
+
+
+
+
 ARTWORK_BAND = (0.07, 0.115, 0.86, 0.42)
 
 

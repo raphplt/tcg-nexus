@@ -9,11 +9,6 @@ import { mergeMap } from "rxjs/operators";
 import { resolveRequestLocale } from "src/translation/request-locale";
 import { CatalogLocalizationService } from "./catalog-localization.service";
 
-/**
- * Traduit les entités du catalogue de toutes les réponses de l'API dans la
- * langue de la requête. Voir `CatalogLocalizationService` pour le détail de la
- * résolution.
- */
 @Injectable()
 export class CatalogLocalizationInterceptor implements NestInterceptor {
   constructor(private readonly localization: CatalogLocalizationService) {}
@@ -29,8 +24,6 @@ export class CatalogLocalizationInterceptor implements NestInterceptor {
       Array.isArray(header) ? header[0] : (header as string | undefined),
     );
 
-    // `?withTranslations=true`: Admin view. Since catalog data is public, this parameter exposes no confidential info;
-    // it incurs only one additional DB query per entity type.
     const withTranslations = request?.query?.withTranslations === "true";
 
     return next

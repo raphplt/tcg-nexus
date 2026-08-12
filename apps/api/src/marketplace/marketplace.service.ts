@@ -2,6 +2,10 @@ import {
   applyRarityFilter,
   cardNameMatchesSql,
   localizedNameSql,
+  localizedSealedNameSql,
+  sealedProductNameMatchesSql,
+  serieNameMatchesSql,
+  setNameMatchesSql,
 } from "src/card/card-search";
 import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import {
@@ -186,8 +190,8 @@ export class MarketplaceService {
           ${cardNameMatchesSql("pokemonCard")}
           OR LOWER(seller.firstName) LIKE :search
           OR LOWER(seller.lastName) LIKE :search
-          OR LOWER(set.name) LIKE :search
-          OR LOWER(serie.name) LIKE :search
+          OR ${setNameMatchesSql("set")}
+          OR ${serieNameMatchesSql("serie")}
           OR LOWER(listing.description) LIKE :search
         )`,
         { search: `%${search.toLowerCase()}%` },
@@ -297,7 +301,10 @@ export class MarketplaceService {
 
     if (search) {
       qb.andWhere(
-        `(${cardNameMatchesSql("pokemonCard")} OR LOWER(set.name) LIKE :search OR LOWER(sealedProduct.nameEn) LIKE :search OR LOWER(sealedSet.name) LIKE :search)`,
+        `(${cardNameMatchesSql("pokemonCard")}
+          OR ${setNameMatchesSql("set")}
+          OR ${setNameMatchesSql("sealedSet")}
+          OR ${sealedProductNameMatchesSql("sealedProduct")})`,
         { search: `%${search.toLowerCase()}%` },
       );
     }
@@ -325,7 +332,11 @@ export class MarketplaceService {
     if (sortBy === "name") {
       // Name originates from localized translations: sorting defaults to default locale
       qb.addSelect(
-        `COALESCE(${localizedNameSql("pokemonCard")}, sealedProduct.nameEn)`,
+        `COALESCE(
+          ${localizedNameSql("pokemonCard")},
+          ${localizedSealedNameSql("sealedProduct")},
+          sealedProduct."nameEn"
+        )`,
         "product_name",
       );
       qb.setParameter("sortLocale", DEFAULT_LOCALE);

@@ -150,8 +150,6 @@ async function pull() {
     return;
   }
 
-  // The local manifest is only written once every file is in place: its
-  // presence attests to a complete dataset.
   writeManifest(manifest, dataDir);
   console.log(`Dataset récupéré dans ${dataDir}.`);
 }

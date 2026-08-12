@@ -1,10 +1,5 @@
 /**
- * Met à jour la liste des produits scellés Pokémon via Puppeteer (pokecardex.com).
- *
- * Sortie : `data/sealed_products.json` — consommé par le seed côté API.
- *
- * Les images sont référencées directement depuis pokecardex.com
- * (URL absolue stockée dans le champ `image`).
+ * Updates the Pokémon sealed-product list through Puppeteer and writes `data/sealed_products.json` for the API seed. Images retain their absolute Pokécardex URLs.
  */
 import fs from "fs";
 import path from "path";
@@ -23,7 +18,6 @@ interface SealedProductRecord {
   setName: string;
   name: string;
   productType: string;
-  /** URL absolue de l'image (pokecardex CDN) */
   image: string;
   imageFilename: string;
 }
@@ -41,8 +35,7 @@ function slugify(str: string): string {
 }
 
 /**
- * Mapping exact (clé = filename sans extension ni chiffres finaux, en lowercase)
- * → nom lisible. Toujours préfixé par le set ensuite.
+ * Exact mapping from a normalized filename to a display name. The set name is added afterward.
  */
 const TERM_MAP: Record<string, string> = {
   booster: "Booster",
@@ -97,7 +90,7 @@ const TERM_MAP: Record<string, string> = {
 };
 
 /**
- * Si le nom nettoyé commence par l'un de ces termes, on préfixe par le set.
+ * Names starting with one of these terms receive the set-name prefix.
  */
 const ALWAYS_PREFIX = [
   "booster",
@@ -133,15 +126,13 @@ function cleanProductName(
 ): string {
   let base = filename.replace(/\.\w+$/, "");
 
-  // Retirer préfixes parasites
-  base = base.replace(/^\d+px-/, ""); // "315px-BW1_Booster..."
-  base = base.replace(/^[A-Z]{2,4}\d*_3D_/, ""); // "BW8_3D_Booster..."
-  base = base.replace(/^PO[A-Z]{2,4}\d+_[A-Z]+\d*_/, ""); // "POBW1001_BOX3D_1_"
-  base = base.replace(/^POLL\d+_[A-Z]+_/, ""); // "POLL01_BOX3D_1_"
-  base = base.replace(/[_-](FR|EN|JP|medium)$/i, ""); // suffixes langue
+  base = base.replace(/^\d+px-/, "");
+  base = base.replace(/^[A-Z]{2,4}\d*_3D_/, "");
+  base = base.replace(/^PO[A-Z]{2,4}\d+_[A-Z]+\d*_/, "");
+  base = base.replace(/^POLL\d+_[A-Z]+_/, "");
+  base = base.replace(/[_-](FR|EN|JP|medium)$/i, "");
   base = base.replace(/_/g, " ").trim();
 
-  // Lookup dans le mapping exact — essayer d'abord le nom complet, puis sans chiffres finaux
   const keyFull = base.toLowerCase().replace(/\s+/g, "");
   const keyNoTrailingNum = keyFull.replace(/\d+$/, "");
   const mapped =
@@ -150,15 +141,12 @@ function cleanProductName(
     TERM_MAP[base.toLowerCase()];
 
   if (mapped) {
-    // Si la clé avec chiffres a matché directement, pas de suffixe
-    // Si c'est la clé sans chiffres qui a matché, ajouter le numéro
     const exactMatch = !!TERM_MAP[keyFull];
     const numMatch = !exactMatch ? base.match(/(\d+)$/) : null;
     const suffix = numMatch ? ` ${numMatch[1]}` : "";
     return `${setName} - ${mapped}${suffix}`;
   }
 
-  // Nettoyage standard
   let cleaned = base
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/([a-zA-Z])(\d)/g, "$1 $2")
@@ -167,7 +155,6 @@ function cleanProductName(
 
   cleaned = cleaned.replace(/\s*Recto$/i, "");
 
-  // Si purement numérique ou très court → nom générique basé sur le type
   if (/^\d+$/.test(cleaned) || cleaned.length <= 3) {
     const typeLabel =
       {
@@ -186,7 +173,6 @@ function cleanProductName(
     return `${setName} - ${typeLabel}${suffix}`;
   }
 
-  // Si le nom commence par un terme générique → préfixer
   const cleanedLower = cleaned.toLowerCase();
   const needsPrefix =
     ALWAYS_PREFIX.some((g) => cleanedLower.startsWith(g)) ||
@@ -262,7 +248,6 @@ async function main() {
       console.log(`FAILED (${error.message})`);
     }
 
-    // Soyons polis avec pokecardex
     await new Promise((r) => setTimeout(r, 500));
   }
 

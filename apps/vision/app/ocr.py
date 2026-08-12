@@ -11,7 +11,7 @@ try:
 
     pytesseract.get_tesseract_version()
     HAS_TESSERACT = True
-except Exception:  # pragma: no cover - dépend de l'environnement
+except Exception:
     HAS_TESSERACT = False
 
 LANGS = "eng+fra"
@@ -40,13 +40,13 @@ def _variants(crop: np.ndarray, target_h: int = ROI_TARGET_H):
 
     _, otsu = cv2.threshold(g, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(g)
-    # blackhat : isole le texte sombre d'un fond holographique/dégradé (titres
-    # des cartes ex), là où Otsu/CLAHE échouent complètement.
+
+
     k = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
     blackhat = cv2.morphologyEx(g, cv2.MORPH_BLACKHAT, k)
     _, bh = cv2.threshold(blackhat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # tophat : symétrique du blackhat, isole le texte CLAIR (noms blancs des
-    # full-arts ex/V/VMAX) sur fond sombre/chargé, là où blackhat ne voit rien.
+
+
     tophat = cv2.morphologyEx(g, cv2.MORPH_TOPHAT, k)
     _, th = cv2.threshold(tophat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     ordered = [
@@ -99,7 +99,7 @@ def _name_attempt(im: np.ndarray, psm: int) -> tuple[str, float]:
 
 
 def _number_attempt(im: np.ndarray, psm: int) -> tuple[str, float]:
-    # chiffres seuls + 'eng' uniquement : ~2x plus rapide que eng+fra
+
     words = _words(im, psm, "0123456789/", lang="eng")
     match = NUM_RE.search(" ".join(w for w, _ in words))
     if not match:

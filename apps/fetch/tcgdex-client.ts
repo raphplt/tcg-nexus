@@ -32,8 +32,6 @@ export async function fetchFrom<T>(
   endpoint: "series" | "sets" | "cards",
   id?: string,
 ): Promise<T | null> {
-  // `fetch` is overloaded per endpoint in the SDK; it is called through a
-  // generic signature so the endpoint can be passed as a parameter.
   const call = tcgdexFor(locale).fetch.bind(tcgdexFor(locale)) as (
     ...args: string[]
   ) => Promise<unknown>;

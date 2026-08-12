@@ -205,7 +205,6 @@ export function useScanFlow() {
     setTargetType("collection");
   };
 
-  // Ajoute la carte à la cible choisie : collection perso, wishlist ou favoris.
   const saveCard = async () => {
     if (targetType === "collection") {
       await addCardToCollection();
@@ -266,13 +265,9 @@ export function useScanFlow() {
     setManualResults([]);
     setManualQuery("");
 
-    // mode rafale : on capture BURST_FRAMES frames (le cadrage varie d'une prise
-    // à l'autre, le backend garde la meilleure) ; sinon une seule photo
     const frameCount = burstMode ? BURST_FRAMES : 1;
     const frames: string[] = [];
     try {
-      // on affiche la 1re frame et on lève l'overlay tout de suite, ce qui masque
-      // les micro-gels du preview pendant les captures suivantes
       const first = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         skipProcessing: true,
@@ -284,7 +279,6 @@ export function useScanFlow() {
       setCapturedUri(first.uri);
       setIsProcessing(true);
 
-      // frames restantes capturées derrière l'overlay (aucune en mode mono)
       for (let i = 1; i < frameCount; i++) {
         const picture = await cameraRef.current.takePictureAsync({
           quality: 0.8,
@@ -303,8 +297,6 @@ export function useScanFlow() {
     }
 
     try {
-      // séquentiel et non parallèle : chaque frame est décodée en bitmap plein
-      // format (~48 Mo), tout faire d'un coup dépasse le pool mémoire natif Android
       const optimizedUris: string[] = [];
       for (const uri of frames) {
         optimizedUris.push(await ocrService.optimizeImage(uri));

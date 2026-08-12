@@ -10,8 +10,6 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 
-// === Locales and types ===========================================
-
 /**
  * Catalog locales. Must stay aligned with
  * `apps/api/src/translation/supported-locales.ts` and `apps/web/i18n/config.ts`.
@@ -89,8 +87,6 @@ export interface DatasetManifest {
 
 export const DATASET_FORMAT_VERSION = 1;
 
-// === File locations ==============================================
-
 /**
  * Dataset root. Deliberately independent from `__dirname` /
  * `import.meta.url`: this module is loaded both as CommonJS (apps/api) and as
@@ -136,8 +132,6 @@ export function setCardsFile(
   setId: string,
   dataDir = resolveDataDir(),
 ) {
-  // TCGdex ids are alphanumeric (`sv08.5`, `P-A`); path separators are still
-  // rejected so nothing can ever be written outside the folder.
   if (setId.includes("/") || setId.includes("\\") || setId.includes("..")) {
     throw new Error(`Invalid set identifier: ${setId}`);
   }
@@ -155,8 +149,6 @@ export function seriesFile(locale: DatasetLocale, dataDir = resolveDataDir()) {
 export function manifestFile(dataDir = resolveDataDir()) {
   return path.join(dataDir, "manifest.json");
 }
-
-// === Reading and writing =========================================
 
 /**
  * Cards are stored as Brotli-compressed NDJSON, one file per set.
@@ -185,8 +177,6 @@ function writeJsonFile(file: string, value: unknown) {
   ensureDir(path.dirname(file));
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
-
-// --- Series and sets --------------------------------------------------------
 
 export function readSeries(
   locale: DatasetLocale,
@@ -217,8 +207,6 @@ export function writeSets(
 ) {
   writeJsonFile(setsFile(locale, dataDir), sets);
 }
-
-// --- Cards ------------------------------------------------------------------
 
 /** Ids of the sets whose cards are present locally. */
 export function listSetIds(
@@ -266,8 +254,6 @@ export function writeSetCards(
   const file = setCardsFile(locale, setId, dataDir);
   ensureDir(path.dirname(file));
 
-  // Sorted by id so two successive runs produce the same file — a
-  // prerequisite for the manifest's checksum-based diffing.
   const ndjson = [...cards]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((card) => JSON.stringify(card))
@@ -302,8 +288,6 @@ export function countCards(
   }
   return total;
 }
-
-// === Manifest ====================================================
 
 export function sha256File(file: string): string {
   return crypto

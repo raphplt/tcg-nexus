@@ -242,7 +242,39 @@ export class CatalogLocalizationService {
       this.attachFor(this.cardTranslations, "cardId", collected.cards),
       this.attachFor(this.setTranslations, "setId", collected.sets),
       this.attachFor(this.serieTranslations, "serieId", collected.series),
+      this.attachSealedProductTranslations(collected.sealedProducts),
     ]);
+  }
+
+  /**
+   * Sealed product translations live in their own table, keyed by a generated
+   * id, so they cannot go through the generic `attachFor`.
+   */
+  private async attachSealedProductTranslations(
+    entities: Map<string, Localizable>,
+  ) {
+    if (entities.size === 0) return;
+
+    const rows = await this.sealedProductLocales
+      .createQueryBuilder("productLocale")
+      .select("productLocale.sealed_product_id", "productId")
+      .addSelect("productLocale.locale", "locale")
+      .addSelect("productLocale.name", "name")
+      .where("productLocale.sealed_product_id IN (:...ids)", {
+        ids: [...entities.keys()],
+      })
+      .getRawMany<{ productId: string; locale: string; name: string }>();
+
+    const byId = new Map<string, Record<string, { name: string }>>();
+    for (const row of rows) {
+      const entry = byId.get(row.productId) ?? {};
+      entry[row.locale] = { name: row.name };
+      byId.set(row.productId, entry);
+    }
+
+    for (const [id, entity] of entities) {
+      entity.translations = byId.get(id) ?? {};
+    }
   }
 
   private async attachFor<T extends { locale: string }>(

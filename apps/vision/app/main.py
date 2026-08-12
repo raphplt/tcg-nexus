@@ -9,25 +9,25 @@ app = FastAPI(title="TCG Nexus Vision Service", version="1.0")
 
 
 class PreprocessRequest(BaseModel):
-    image: str  # base64 (jpeg/png)
+    image: str
 
 
 class PreprocessBatchRequest(BaseModel):
-    images: list[str]  # plusieurs frames base64 d'une même carte (rafale)
+    images: list[str]
 
 
 class MatchCandidate(BaseModel):
     id: str
-    url: str  # URL complète de l'image catalogue (ex. .../low.png)
+    url: str
 
 
 class MatchRequest(BaseModel):
-    image: str  # base64 de la photo scannée
+    image: str
     candidates: list[MatchCandidate]
 
 
 class EmbedRequest(BaseModel):
-    images: list[str]  # images base64 (carte entière) -> recadrées sur l'illustration
+    images: list[str]
 
 
 @app.get("/health")

@@ -1,4 +1,4 @@
-# Prétraitement des cartes avant OCR : détection + redressement, normalisation, ROI.
+
 
 import base64
 import math
@@ -15,7 +15,7 @@ from .ocr import read_name, read_number
 try:
     import pytesseract
     from pytesseract import Output
-except Exception:  # pragma: no cover - dépend de l'environnement
+except Exception:
     pytesseract = None
 
 CARD_W = 600
@@ -24,9 +24,9 @@ CARD_H = 838
 MAX_WARP_W = 1024
 MIN_CARD_AREA_RATIO = 0.08
 NAME_BAND = (0.06, 0.0, 0.80, 0.14)
-# Bandes candidates pour le numéro : bas-gauche (cartes récentes) et bas-droite
-# (anciennes). Fines et calées en bas : valable une fois le warp recadré au plus
-# près de la carte (cf. _tighten_to_card), sinon la marge de pochette les décale.
+
+
+
 NUMBER_BANDS = {
     "number": (0.02, 0.885, 0.46, 0.10),
     "number_right": (0.52, 0.885, 0.46, 0.10),
@@ -51,7 +51,7 @@ def _encode_png(img: np.ndarray) -> str:
 
 
 def _order_points(pts: np.ndarray) -> np.ndarray:
-    # haut-gauche, haut-droite, bas-droite, bas-gauche
+
     rect = np.zeros((4, 2), dtype="float32")
     s = pts.sum(axis=1)
     rect[0] = pts[np.argmin(s)]
@@ -66,7 +66,7 @@ def _card_contours(img: np.ndarray) -> list:
     """Contours candidats via 2 indices complémentaires : bords + saturation."""
     candidates = []
 
-    # 1) bords (Canny) + fermeture morpho — marche sur cartes contrastées
+
     gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (5, 5), 0)
     edges = cv2.Canny(gray, 30, 120)
     kernel = np.ones((5, 5), np.uint8)
@@ -77,7 +77,7 @@ def _card_contours(img: np.ndarray) -> list:
         cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
     )
 
-    # 2) saturation — une carte colorée ressort d'un fond neutre (bureau/mur)
+
     sat = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 1]
     _, mask = cv2.threshold(sat, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
@@ -111,7 +111,7 @@ def _find_card_box(img: np.ndarray):
             )
             / diag
         )
-        # grand + centré
+
         score = a / area - 0.6 * dist
         if score > best_score:
             best_score = score
@@ -120,7 +120,7 @@ def _find_card_box(img: np.ndarray):
     if best is None:
         return None
 
-    # minAreaRect tolère les coins arrondis (contrairement à approxPolyDP)
+
     return cv2.boxPoints(cv2.minAreaRect(best)).astype("float32")
 
 
@@ -143,7 +143,7 @@ def _warp_card(img: np.ndarray, box: np.ndarray) -> np.ndarray:
         img, cv2.getPerspectiveTransform(rect, dst), (max_w, max_h)
     )
 
-    # carte détectée couchée -> on la remet debout
+
     if max_w > max_h:
         warped = cv2.rotate(warped, cv2.ROTATE_90_CLOCKWISE)
 
@@ -174,7 +174,7 @@ def _tighten_to_card(card: np.ndarray) -> np.ndarray:
     if h == 0 or w == 0:
         return card
     gray = cv2.cvtColor(card, cv2.COLOR_BGR2GRAY)
-    # la carte ressort (claire) du fond sombre (pochette/tapis)
+
     _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
     cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -183,8 +183,8 @@ def _tighten_to_card(card: np.ndarray) -> np.ndarray:
     x, y, bw, bh = cv2.boundingRect(max(cnts, key=cv2.contourArea))
     area_ratio = (bw * bh) / float(w * h)
     aspect = bw / float(bh) if bh else 0.0
-    # garde-fous : zone assez grande (vraie carte, pas un reflet), ratio plausible
-    # de carte (~0.72), et recadrage réellement utile (sinon on n'y touche pas).
+
+
     if not (0.45 < area_ratio < 0.93) or not (0.55 < aspect < 0.95):
         return card
     pad = int(0.012 * max(w, h))
@@ -194,7 +194,7 @@ def _tighten_to_card(card: np.ndarray) -> np.ndarray:
 
 
 def _normalize(card_bgr: np.ndarray) -> np.ndarray:
-    # CLAHE pour rattraper les éclairages inégaux, puis débruitage léger.
+
     gray = cv2.cvtColor(card_bgr, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     equalized = clahe.apply(gray)
@@ -233,15 +233,15 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     sélection par confiance. Le crop renvoyé sert au debug/log côté API."""
     rois = []
 
-    # nom déjà lu en amont (orientation) -> réutilisé pour éviter un double OCR
+
     if name is None:
         name = _read_name_roi(card)
     name_crop, name_text, name_conf = name
     if name_crop is not None:
         rois.append(_roi("name", NAME_BAND, name_crop, name_text, name_conf))
 
-    # numéro : bas-gauche d'abord (cartes récentes), bas-droite seulement en
-    # repli (anciennes) -> évite des appels OCR inutiles dans le cas courant.
+
+
     for key, band in NUMBER_BANDS.items():
         crop = _crop(card, band)
         if not crop.size:
@@ -258,8 +258,8 @@ def _extract_rois(card: np.ndarray, name=None) -> list:
     return rois
 
 
-# on détecte la carte sur une copie réduite (contours rapides), puis on warpe
-# depuis l'original pour garder la résolution pour l'OCR.
+
+
 DETECT_MAX_W = 900
 
 
@@ -277,7 +277,7 @@ def _to_card(img: np.ndarray) -> tuple[np.ndarray, bool]:
     box = _find_card_box(small)
     if box is not None:
         if scale < 1.0:
-            box = box / scale  # coords détection -> pleine résolution
+            box = box / scale
         return _warp_card(img, box), True
 
     upright = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) if w > h else img
@@ -300,7 +300,7 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     if float(osd.get("orientation_conf", 0.0)) < OSD_MIN_CONF:
         return card
 
-    # rotate = degrés horaires à appliquer pour redresser
+
     rotate = int(osd.get("rotate", 0)) % 360
     if rotate == 90:
         return cv2.rotate(card, cv2.ROTATE_90_CLOCKWISE)
@@ -311,19 +311,19 @@ def _orient_upright(card: np.ndarray) -> np.ndarray:
     return card
 
 
-# au-delà, le nom est jugé bien lu -> carte à l'endroit, on saute le test 0/180
+
 NAME_OK_CONF = 55.0
-# retournement 0/180 : on ne bascule que si le nom retourné est crédible ET
-# nettement meilleur, sinon (foil illisible des deux côtés) on reste à l'endroit.
+
+
 FLIP_MIN_CONF = 45.0
 FLIP_MARGIN = 8.0
 
 
 def _build_result(card: np.ndarray, detected: bool) -> dict:
-    # si le nom sort proprement la carte est à l'endroit ; sinon on départage
-    # 0° vs 180° par la confiance du nom. L'OSD Tesseract est trop peu fiable sur
-    # des cartes (peu de texte, polices stylisées) ; une carte tenue est de toute
-    # façon ~toujours à 0° ou 180° (le warp a déjà remis le paysage en portrait).
+
+
+
+
     name = _read_name_roi(card)
     if name[2] < NAME_OK_CONF:
         flipped = cv2.rotate(card, cv2.ROTATE_180)
@@ -333,7 +333,7 @@ def _build_result(card: np.ndarray, detected: bool) -> dict:
 
     rois = _extract_rois(card, name=name)
     norm = _normalize(cv2.resize(card, (CARD_W, CARD_H)))
-    # embedding CLIP de l'illustration -> recherche visuelle plein-catalogue
+
     emb = embed_artwork([card])
     return {
         "detected": detected,
@@ -362,7 +362,7 @@ def _prepare_frame(image_b64: str):
     la meilleure frame d'une rafale avant l'unique passe OCR."""
     try:
         card, detected = _to_card(_decode(image_b64))
-        # carte détectée privilégiée d'office, puis départage par netteté
+
         score = _sharpness(card) + (1e6 if detected else 0.0)
         return {"card": card, "detected": detected, "score": score}
     except Exception:

@@ -1,6 +1,6 @@
-# Désambiguïsation visuelle par features ORB : compare la carte scannée aux
-# images catalogue des candidats. Robuste au gap photo<->catalogue (contrairement
-# aux hash perceptuels). Aucun précalcul : on télécharge les candidats à la volée.
+
+
+
 
 import urllib.request
 
@@ -9,16 +9,16 @@ import numpy as np
 
 from .pipeline import _decode, _find_card_box, _warp_card
 
-# taille commune scan/catalogue pour comparer à échelle équivalente
+
 _REF_SIZE = (245, 337)
-_RATIO = 0.75  # test de Lowe
+_RATIO = 0.75
 
 _orb = cv2.ORB_create(nfeatures=700)
 _bf = cv2.BFMatcher(cv2.NORM_HAMMING)
 
 
 def _art(gray: np.ndarray) -> np.ndarray:
-    # fenêtre artwork (haut/milieu) : la partie qui distingue vraiment les cartes
+
     h, w = gray.shape
     return gray[int(0.08 * h) : int(0.55 * h), int(0.05 * w) : int(0.95 * w)]
 

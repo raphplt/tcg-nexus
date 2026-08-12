@@ -1,3 +1,4 @@
+import { sealedProductNameMatchesSql } from "src/card/card-search";
 import { PokemonSetTranslation } from "src/pokemon-set/entities/pokemon-set-translation.entity";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -310,9 +311,12 @@ export class SealedProductService {
       });
     }
     if (filter.search) {
+      // Matched across every locale and diacritic-insensitively, like cards.
       qb.andWhere(
-        "(sealedProduct.nameEn ILIKE :search OR locales.name ILIKE :search OR sealedProduct.sku ILIKE :search)",
-        { search: `%${filter.search}%` },
+        `(${sealedProductNameMatchesSql("sealedProduct")}
+          OR LOWER(immutable_unaccent(sealedProduct."nameEn")) LIKE immutable_unaccent(:search)
+          OR LOWER(sealedProduct.sku) LIKE :search)`,
+        { search: `%${filter.search.toLowerCase()}%` },
       );
     }
 

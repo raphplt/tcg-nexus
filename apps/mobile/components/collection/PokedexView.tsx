@@ -115,7 +115,6 @@ export function PokedexView() {
 
   const loadCards = useCallback(
     async (options?: { loadMore?: boolean; refresh?: boolean }) => {
-      // Si on n'a ni recherche, ni set sélectionné, on ne charge pas les cartes
       if (!debouncedSearch && !selectedSetId) {
         setCards([]);
         setMeta(null);

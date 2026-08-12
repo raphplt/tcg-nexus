@@ -4,7 +4,7 @@ import type { CardInput } from "./prompt-builder.js";
 import { checkCoherence } from "./validator.js";
 import type { CardEffectsRegistry } from "./schema.js";
 
-/** Interface commune à EffectParser (LLM) et RuleBasedParser */
+/** Common interface for EffectParser and RuleBasedParser. */
 export interface ParserLike {
   parseBatch(cards: CardInput[]): Promise<ParseResult[]>;
 }
@@ -64,7 +64,6 @@ export async function processBatch(
   const delay = opts?.delayBetweenBatches ?? 1000;
   const checkpointPath = opts?.checkpointPath;
 
-  // Load checkpoint if available
   let checkpoint: Checkpoint | null = null;
   if (checkpointPath) {
     checkpoint = loadCheckpoint(checkpointPath);
@@ -82,7 +81,6 @@ export async function processBatch(
   let successCount = Object.keys(registry).length;
   let failureCount = failures.length;
 
-  // Filter out energy cards and already-processed cards
   const parseable = cards.filter(
     (c) => c.category !== "Énergie" && !processedIds.has(c.id),
   );
@@ -94,7 +92,6 @@ export async function processBatch(
 
   const totalBatches = Math.ceil(parseable.length / batchSize);
 
-  // Graceful shutdown on Ctrl+C
   let interrupted = false;
   const onInterrupt = () => {
     if (interrupted) {
@@ -137,7 +134,6 @@ export async function processBatch(
 
       opts?.onBatchComplete?.(results, batchIndex, totalBatches);
 
-      // Save checkpoint after each batch
       if (checkpointPath) {
         saveCheckpoint(checkpointPath, {
           registry,
@@ -147,7 +143,6 @@ export async function processBatch(
         });
       }
 
-      // Rate limit between batches
       if (!interrupted && i + batchSize < parseable.length && delay > 0) {
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -155,7 +150,6 @@ export async function processBatch(
   } finally {
     process.removeListener("SIGINT", onInterrupt);
 
-    // Final checkpoint save
     if (checkpointPath) {
       saveCheckpoint(checkpointPath, {
         registry,

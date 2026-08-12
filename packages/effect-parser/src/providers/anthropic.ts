@@ -46,7 +46,6 @@ export class AnthropicProvider implements LLMProvider {
     const data = (await res.json()) as any;
     const text = data.content?.[0]?.text ?? "";
 
-    // Extract JSON from markdown code blocks if present
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     return jsonMatch ? jsonMatch[1].trim() : text;
   }

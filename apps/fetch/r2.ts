@@ -1,11 +1,5 @@
 /**
- * Utilitaires Cloudflare R2 partagés par les scripts de fetch.
- *
- * Le bucket R2 est exposé publiquement via le domaine custom
- * `R2_PUBLIC_URL` (= https://cdn.tcg-nexus.org en prod). On y héberge :
- *  - les logos/symboles de sets      -> clés `sets/<slug>/...`
- *  - les produits scellés            -> clés gérées ailleurs
- *  - les images de cartes            -> clés `cards/<locale>/<serie>/<set>/<localId>/<quality>.png`
+ * Shared Cloudflare R2 utilities for fetch scripts. The public bucket hosts set assets, sealed products, and card images.
  */
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
@@ -43,12 +37,13 @@ export const s3Client = new S3Client({
   },
 });
 
-/** Cache long : convient aux assets immuables une fois publiés (images). */
+/** Long-lived cache policy for immutable published assets. */
 const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 
 /**
- * Envoie un buffer sur R2 sous la clé donnée.
- * Retourne l'URL publique finale, ou null en cas d'échec.
+ * Uploads a buffer to R2 under the supplied key.
+ *
+ * @returns Public URL, or null when the upload fails.
  */
 export async function uploadBufferToR2(
   body: Buffer,
@@ -73,8 +68,9 @@ export async function uploadBufferToR2(
 }
 
 /**
- * Télécharge une ressource distante et l'upload sur R2 sous la clé donnée.
- * Retourne l'URL publique finale, ou null en cas d'échec.
+ * Downloads a remote resource and uploads it to R2 under the supplied key.
+ *
+ * @returns Public URL, or null when the upload fails.
  */
 export async function uploadToR2(
   sourceUrl: string,
@@ -100,17 +96,15 @@ const TCGDEX_HOST = "assets.tcgdex.net";
 const CARDS_PREFIX = "cards";
 
 /**
- * À partir d'une URL d'image TCGdex "de base" (sans extension), ex.
- * `https://assets.tcgdex.net/fr/sv/sv08.5/109`, calcule le préfixe de clé R2
- * correspondant : `cards/fr/sv/sv08.5/109`.
+ * Derives an R2 key prefix from an extensionless TCGdex image URL.
  *
- * Retourne null si l'URL n'est pas une image TCGdex (déjà migrée, etc.).
+ * @returns R2 key prefix, or null when the URL is not a TCGdex image.
  */
 export function cardKeyPrefixFromTcgdex(imageBase: string): string | null {
   if (!imageBase || !imageBase.includes(TCGDEX_HOST)) return null;
   try {
     const u = new URL(imageBase);
-    const path = u.pathname.replace(/^\/+/, ""); // ex: "fr/sv/sv08.5/109"
+    const path = u.pathname.replace(/^\/+/, "");
     if (!path) return null;
     return `${CARDS_PREFIX}/${path}`;
   } catch {
@@ -119,20 +113,18 @@ export function cardKeyPrefixFromTcgdex(imageBase: string): string | null {
 }
 
 export interface CardImageMigrationResult {
-  /** Nouvelle URL "de base" sur le CDN (sans extension), à stocker en `image`. */
+  /** New extensionless CDN base URL to store in `image`. */
   newBase: string;
-  /** true si au moins une qualité a été (ré)uploadée. */
+  /** Whether at least one quality was uploaded. */
   uploaded: boolean;
 }
 
 /**
- * Migre les images d'une carte vers R2 : télécharge `<base>/high.png` et
- * `<base>/low.png` depuis TCGdex et les ré-héberge sous
- * `cards/<locale>/<serie>/<set>/<localId>/<quality>.png`.
+ * Migrates a card image from TCGdex to R2 for the requested qualities.
  *
- * @param imageBase URL TCGdex de base (champ `image` de la carte)
- * @param qualities qualités à migrer (par défaut high + low)
- * @returns la nouvelle URL de base à stocker, ou null si non applicable
+ * @param imageBase - TCGdex base URL from the card `image` field.
+ * @param qualities - Image qualities to migrate.
+ * @returns New base URL to store, or null when not applicable.
  */
 export async function migrateCardImageToR2(
   imageBase: string,

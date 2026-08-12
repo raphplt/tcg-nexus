@@ -60,8 +60,7 @@ function migrate() {
     path.join(dataDir, "pokemon_series.json"),
     [],
   );
-  // Pokémon Pocket sets slipped through the old scraper's filter. They belong
-  // to a different game and are not carried over.
+
   const sets = readJson<DatasetSet[]>(
     path.join(dataDir, "pokemon_sets.json"),
     [],
@@ -120,7 +119,6 @@ function migrate() {
       fs.rmSync(serieDir, { recursive: true, force: true });
     }
     for (const file of LEGACY_ROOT_FILES) {
-      // sealed_products.json is not part of the card catalog: kept as-is.
       if (file === "sealed_products.json") continue;
       fs.rmSync(path.join(dataDir, file), { force: true });
     }

@@ -44,6 +44,8 @@ describe("CollectionService", () => {
   const createQueryBuilder = () => {
     const qb: any = {
       leftJoin: jest.fn().mockReturnThis(),
+      offset: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       setParameter: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),

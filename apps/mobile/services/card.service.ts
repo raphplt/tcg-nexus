@@ -37,8 +37,7 @@ export const cardService = {
   },
 
   /**
-   * Recherche textuelle libre dans la BDD Pokémon.
-   * Utilisée par la recherche manuelle dans l'UI de review.
+   * Performs free-text searches in the Pokémon database for manual review.
    */
   async getSetRarities(setId: string): Promise<string[]> {
     const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
@@ -74,8 +73,6 @@ export const cardService = {
     const response = await api.get<PokemonSetType[]>("/pokemon-set");
     return response.data || [];
   },
-
-
 
   async getPaginated(
     params: {

@@ -35,12 +35,12 @@ export function applyCardSearch<T extends object>(
   const alias = options.alias ?? "card";
 
   const conditions = [
-    `${alias}.localId ILIKE :cardSearch`,
+    `"${alias}"."localId" ILIKE :cardSearch`,
     // Illustrator is a proper noun: untranslated on the card entity
-    `immutable_unaccent(${alias}.illustrator) ILIKE immutable_unaccent(:cardSearch)`,
+    `immutable_unaccent("${alias}".illustrator) ILIKE immutable_unaccent(:cardSearch)`,
     `EXISTS (
       SELECT 1 FROM card_translation ct
-      WHERE ct.card_id = ${alias}.id
+      WHERE ct.card_id = "${alias}".id
         AND (
           immutable_unaccent(ct.name) ILIKE immutable_unaccent(:cardSearch)
           OR immutable_unaccent(ct.description) ILIKE immutable_unaccent(:cardSearch)
@@ -49,7 +49,7 @@ export function applyCardSearch<T extends object>(
     )`,
     `EXISTS (
       SELECT 1 FROM pokemon_set_translation st
-      WHERE st.set_id = ${alias}."setId"
+      WHERE st.set_id = "${alias}"."setId"
         AND immutable_unaccent(st.name) ILIKE immutable_unaccent(:cardSearch)
     )`,
   ];
@@ -71,8 +71,78 @@ export function applyCardSearch<T extends object>(
 export function cardNameMatchesSql(alias: string, param = "search"): string {
   return `EXISTS (
     SELECT 1 FROM card_translation ct
-    WHERE ct.card_id = ${alias}.id
+    WHERE ct.card_id = "${alias}".id
       AND LOWER(immutable_unaccent(ct.name)) LIKE immutable_unaccent(:${param})
+  )`;
+}
+
+/**
+ * SQL fragment testing a set name across every locale.
+ * The bound parameter is expected to be a lowercase `%…%` pattern.
+ *
+ * @param alias Alias of the set table.
+ * @param param Name of the bound search parameter.
+ * @returns SQL fragment.
+ */
+export function setNameMatchesSql(alias: string, param = "search"): string {
+  return `EXISTS (
+    SELECT 1 FROM pokemon_set_translation st
+    WHERE st.set_id = "${alias}".id
+      AND LOWER(immutable_unaccent(st.name)) LIKE immutable_unaccent(:${param})
+  )`;
+}
+
+/**
+ * SQL fragment testing a series name across every locale.
+ * The bound parameter is expected to be a lowercase `%…%` pattern.
+ *
+ * @param alias Alias of the series table.
+ * @param param Name of the bound search parameter.
+ * @returns SQL fragment.
+ */
+export function serieNameMatchesSql(alias: string, param = "search"): string {
+  return `EXISTS (
+    SELECT 1 FROM pokemon_serie_translation rt
+    WHERE rt.serie_id = "${alias}".id
+      AND LOWER(immutable_unaccent(rt.name)) LIKE immutable_unaccent(:${param})
+  )`;
+}
+
+/**
+ * SQL fragment testing a sealed product name across every locale.
+ * The bound parameter is expected to be a lowercase `%…%` pattern.
+ *
+ * @param alias Alias of the sealed product table.
+ * @param param Name of the bound search parameter.
+ * @returns SQL fragment.
+ */
+export function sealedProductNameMatchesSql(
+  alias: string,
+  param = "search",
+): string {
+  return `EXISTS (
+    SELECT 1 FROM sealed_product_locale spl
+    WHERE spl.sealed_product_id = "${alias}".id
+      AND LOWER(immutable_unaccent(spl.name)) LIKE immutable_unaccent(:${param})
+  )`;
+}
+
+/**
+ * Scalar subquery returning a sealed product name in one locale, for sorting
+ * or selecting a single value per product.
+ *
+ * @param alias Alias of the sealed product table.
+ * @param localeParam Name of the bound locale parameter.
+ * @returns SQL fragment.
+ */
+export function localizedSealedNameSql(
+  alias: string,
+  localeParam = "sortLocale",
+) {
+  return `(
+    SELECT spl.name FROM sealed_product_locale spl
+    WHERE spl.sealed_product_id = "${alias}".id AND spl.locale = :${localeParam}
+    LIMIT 1
   )`;
 }
 
@@ -88,7 +158,7 @@ export function cardNameMatchesSql(alias: string, param = "search"): string {
 export function localizedNameSql(alias: string, localeParam = "sortLocale") {
   return `(
     SELECT ct.name FROM card_translation ct
-    WHERE ct.card_id = ${alias}.id AND ct.locale = :${localeParam}
+    WHERE ct.card_id = "${alias}".id AND ct.locale = :${localeParam}
     LIMIT 1
   )`;
 }
@@ -103,7 +173,7 @@ export function localizedNameSql(alias: string, localeParam = "sortLocale") {
 export function localizedRaritySql(alias: string, localeParam = "sortLocale") {
   return `(
     SELECT ct.rarity FROM card_translation ct
-    WHERE ct.card_id = ${alias}.id AND ct.locale = :${localeParam}
+    WHERE ct.card_id = "${alias}".id AND ct.locale = :${localeParam}
     LIMIT 1
   )`;
 }
@@ -128,7 +198,7 @@ export function applyRarityFilter<T extends object>(
   return qb.andWhere(
     `EXISTS (
       SELECT 1 FROM card_translation ct
-      WHERE ct.card_id = ${alias}.id AND ct.rarity = :cardRarity
+      WHERE ct.card_id = "${alias}".id AND ct.rarity = :cardRarity
     )`,
     { cardRarity: rarity },
   );

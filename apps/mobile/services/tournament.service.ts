@@ -7,7 +7,7 @@ import type {
 
 export const tournamentService = {
   /**
-   * Récupère la liste des tournois avec filtres et pagination
+   * Retrieves tournaments with filters and pagination.
    */
   async getTournaments(
     query?: TournamentQueryDto,
@@ -22,7 +22,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les tournois à venir
+   * Retrieves upcoming tournaments.
    */
   async getUpcomingTournaments(limit: number = 10): Promise<Tournament[]> {
     const response = await api.get<Tournament[]>("/tournaments/upcoming", {
@@ -32,7 +32,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les tournois passés
+   * Retrieves past tournaments.
    */
   async getPastTournaments(limit: number = 10): Promise<Tournament[]> {
     const response = await api.get<Tournament[]>("/tournaments/past", {
@@ -42,7 +42,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les détails d'un tournoi par son ID
+   * Retrieves tournament details by identifier.
    */
   async getTournamentById(id: number): Promise<Tournament> {
     const response = await api.get<Tournament>(`/tournaments/${id}`);
@@ -50,7 +50,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les statistiques d'un tournoi
+   * Retrieves tournament statistics.
    */
   async getTournamentStats(id: number): Promise<any> {
     const response = await api.get(`/tournaments/${id}/stats`);
@@ -58,7 +58,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère le bracket d'un tournoi
+   * Retrieves a tournament bracket.
    */
   async getBracket(id: number): Promise<any> {
     const response = await api.get(`/tournaments/${id}/bracket`);
@@ -66,7 +66,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les matchs d'un tournoi
+   * Retrieves tournament matches.
    */
   async getTournamentMatches(
     id: number,
@@ -80,7 +80,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère le classement d'un tournoi
+   * Retrieves tournament rankings.
    */
   async getTournamentRankings(id: number): Promise<any> {
     const response = await api.get(`/tournaments/${id}/rankings`);
@@ -88,7 +88,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère le match en attente de l'utilisateur courant pour ce tournoi
+   * Retrieves the current user's pending tournament match.
    */
   async getMyPendingMatch(id: number): Promise<any> {
     const response = await api.get(`/tournaments/${id}/matches/me`);
@@ -96,7 +96,7 @@ export const tournamentService = {
   },
 
   /**
-   * Crée un nouveau tournoi (Admin uniquement)
+   * Creates a new tournament (administrators only).
    */
   async createTournament(data: Partial<Tournament>): Promise<Tournament> {
     const response = await api.post<Tournament>("/tournaments", data);
@@ -104,7 +104,7 @@ export const tournamentService = {
   },
 
   /**
-   * Récupère les tournois d'un joueur
+   * Retrieves a player's tournaments.
    */
   async getPlayerTournaments(
     playerId: number,
@@ -120,7 +120,7 @@ export const tournamentService = {
   },
 
   /**
-   * Inscrit le joueur connecté au tournoi
+   * Registers the current player for a tournament.
    */
   async registerTournament(
     tournamentId: number,
@@ -135,7 +135,7 @@ export const tournamentService = {
   },
 
   /**
-   * Met à jour le statut d'un tournoi (Admin uniquement)
+   * Updates a tournament status (administrators only).
    */
   async updateTournamentStatus(
     id: number,
