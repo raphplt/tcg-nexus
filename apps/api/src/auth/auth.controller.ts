@@ -69,15 +69,10 @@ export class AuthController {
   ) {}
 
   /**
-   * Calcule la maxAge à appliquer aux deux cookies d'auth.
+   * Calculates cookie maxAge values for authentication cookies based on token TTLs.
    *
-   * - Le cookie accessToken est légèrement plus long que le JWT lui-même pour
-   *   que l'intercepteur 401 puisse toujours déclencher un refresh même quand
-   *   le JWT vient juste d'expirer (sinon le navigateur supprimerait le cookie
-   *   avant qu'on ait l'occasion d'agir).
-   * - Le cookie refreshToken vit aussi longtemps que le JWT refresh quand
-   *   `rememberMe=true`. Sinon on retourne `undefined` → cookie de session,
-   *   supprimé à la fermeture du navigateur.
+   * @param rememberMe Whether the session should persist across browser restarts.
+   * @returns Object containing maxAge durations for access and refresh tokens.
    */
   private getCookieMaxAges(rememberMe: boolean): {
     accessTokenMaxAge: number;
@@ -91,6 +86,13 @@ export class AuthController {
     };
   }
 
+  /**
+   * Authenticates user with credentials and sets authentication cookies.
+   *
+   * @param loginDto User credentials.
+   * @param res Express response.
+   * @param req Express request.
+   */
   @UseGuards(LocalAuthGuard)
   @UseGuardsDecorator(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 60 } })
@@ -124,6 +126,14 @@ export class AuthController {
     });
     return;
   }
+
+  /**
+   * Registers a new user account and sets authentication cookies.
+   *
+   * @param registerDto User registration data.
+   * @param res Express response.
+   * @param req Express request.
+   */
   @UseGuardsDecorator(ThrottlerGuard)
   @Throttle({ default: { limit: 3, ttl: 300 } })
   @Post("register")
@@ -157,6 +167,13 @@ export class AuthController {
     return;
   }
 
+  /**
+   * Refreshes JWT access and refresh tokens.
+   *
+   * @param user Authenticated user from refresh guard.
+   * @param res Express response.
+   * @param req Express request.
+   */
   @UseGuards(JwtRefreshGuard)
   @UseGuardsDecorator(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 300 } })
@@ -198,6 +215,13 @@ export class AuthController {
     return;
   }
 
+  /**
+   * Logs out the current user and clears authentication cookies.
+   *
+   * @param user Current authenticated user.
+   * @param res Express response.
+   * @param req Express request.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("logout")
@@ -216,6 +240,12 @@ export class AuthController {
     return;
   }
 
+  /**
+   * Returns current user profile (POST endpoint).
+   *
+   * @param user Current authenticated user.
+   * @returns User profile entity.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Post("profile")
@@ -224,6 +254,12 @@ export class AuthController {
     return this.userService.findOne(user.id);
   }
 
+  /**
+   * Returns current user profile (GET endpoint).
+   *
+   * @param user Current authenticated user.
+   * @returns User profile entity.
+   */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("profile")

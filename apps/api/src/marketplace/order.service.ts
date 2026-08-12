@@ -144,7 +144,7 @@ export class OrderService {
     }
   }
 
-  // verrou pessimiste : deux acheteurs ne peuvent pas prendre le dernier exemplaire
+  // Pessimistic locking to prevent race conditions on last remaining stock items
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
@@ -234,9 +234,8 @@ export class OrderService {
   }
 
   /**
-   * Un vendeur expédie un seul colis : on ne facture qu'une fois ses frais de
-   * port, au tarif le plus élevé qu'il déclare dans la commande. Le montant est
-   * porté par la ligne concernée, les autres lignes du même vendeur sont à 0.
+   * Allocates shipping costs per seller. When a seller ships multiple items in a single package,
+   * only the single highest shipping cost is charged across all items from that seller.
    */
   private allocateShipping(
     cartItems: CartItem[],
@@ -348,7 +347,7 @@ export class OrderService {
     return this.findOrderById(orderId, user.id);
   }
 
-  // idempotent : webhook et retour client peuvent arriver dans n'importe quel ordre
+  // Idempotent handler: Stripe webhooks and client callback events can arrive out-of-order
   private async markOrderPaid(
     paymentIntentId: string,
     intent: {

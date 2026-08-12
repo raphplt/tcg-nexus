@@ -59,7 +59,13 @@ export class TournamentService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  // Créer un nouveau tournoi
+  /**
+   * Creates a new tournament and initializes the creator as OWNER organizer.
+   *
+   * @param createTournamentDto Creation DTO.
+   * @param userId Creator user ID.
+   * @returns Newly saved Tournament entity.
+   */
   async create(
     createTournamentDto: CreateTournamentDto,
     userId: number,
@@ -93,7 +99,12 @@ export class TournamentService {
     });
   }
 
-  // Récupérer tous les tournois avec filtres et pagination
+  /**
+   * Retrieves paginated list of tournaments matching filter query parameters.
+   *
+   * @param query Query and filter options.
+   * @returns Paginated result of tournaments.
+   */
   async findAll(query: TournamentQueryDto) {
     const {
       search,
@@ -117,7 +128,7 @@ export class TournamentService {
       .leftJoinAndSelect("tournament.rewards", "rewards")
       .leftJoinAndSelect("tournament.organizers", "organizers");
 
-    // Filtres de recherche
+    // Search filters
     if (search) {
       queryBuilder.andWhere(
         "(tournament.name ILIKE :search OR tournament.description ILIKE :search)",
@@ -154,7 +165,7 @@ export class TournamentService {
       });
     }
 
-    // Utilise le helper générique pour la pagination et le tri
+    // Paginate results using helper
     return PaginationHelper.paginateQueryBuilder(
       queryBuilder,
       { page, limit },
@@ -163,7 +174,12 @@ export class TournamentService {
     );
   }
 
-  // Récupérer un tournoi par ID
+  /**
+   * Retrieves a single tournament by ID with full relations.
+   *
+   * @param id Tournament ID.
+   * @returns Tournament entity.
+   */
   async findOne(id: number): Promise<Tournament> {
     const tournament = await this.tournamentRepository.findOne({
       where: { id },
@@ -195,14 +211,20 @@ export class TournamentService {
     return tournament;
   }
 
-  // Mettre à jour un tournoi
+  /**
+   * Updates tournament configuration parameters.
+   *
+   * @param id Tournament ID.
+   * @param updateTournamentDto Partial updates.
+   * @returns Updated Tournament.
+   */
   async update(
     id: number,
     updateTournamentDto: UpdateTournamentDto,
   ): Promise<Tournament> {
     const tournament = await this.findOne(id);
 
-    // Vérifier si le tournoi peut être modifié
+    // Verify whether the tournament can be modified
     if (
       tournament.status === TournamentStatus.IN_PROGRESS ||
       tournament.status === TournamentStatus.FINISHED
@@ -226,7 +248,12 @@ export class TournamentService {
     return this.tournamentRepository.save(tournament);
   }
 
-  // Supprimer un tournoi
+  /**
+   * Removes a tournament from the database.
+   *
+   * @param id Tournament ID.
+   * @param requestingUser Requesting user entity for permission check.
+   */
   async remove(id: number, requestingUser?: User): Promise<void> {
     const tournament = await this.findOne(id);
 
@@ -243,7 +270,13 @@ export class TournamentService {
     await this.tournamentRepository.remove(tournament);
   }
 
-  // Mettre à jour le statut d'un tournoi
+  /**
+   * Updates tournament status via orchestration state transition machine.
+   *
+   * @param id Tournament ID.
+   * @param updateStatusDto Target status and reason.
+   * @returns Updated Tournament.
+   */
   async updateStatus(
     id: number,
     updateStatusDto: UpdateTournamentStatusDto,

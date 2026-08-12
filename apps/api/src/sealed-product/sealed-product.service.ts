@@ -42,8 +42,7 @@ export interface SealedSeedReport {
   unmatchedSetNames: string[];
 }
 
-// Poids utilisés pour le score de popularité d'un produit scellé.
-// Même barème que CardPopularityService pour cohérence.
+// Event weights used to calculate popularity scores for sealed products.
 const SEALED_EVENT_WEIGHTS: Record<SealedEventType, number> = {
   [SealedEventType.VIEW]: 1,
   [SealedEventType.SEARCH]: 2,
@@ -73,6 +72,12 @@ export class SealedProductService {
     private readonly dataSource: DataSource,
   ) {}
 
+  /**
+   * Creates a new sealed product entity along with its localized name entries.
+   *
+   * @param dto Sealed product creation parameters.
+   * @returns Newly created SealedProduct.
+   */
   async create(dto: CreateSealedProductDto): Promise<SealedProduct> {
     return this.dataSource.transaction(async (manager) => {
       const product = manager.create(SealedProduct, {
@@ -104,11 +109,23 @@ export class SealedProductService {
     });
   }
 
+  /**
+   * Retrieves all sealed products matching the provided filters.
+   *
+   * @param filter Query filter parameters.
+   * @returns Array of sealed products.
+   */
   async findAll(filter: SealedProductFilterDto = {}): Promise<SealedProduct[]> {
     const qb = await this.buildFilteredQuery(filter);
     return qb.getMany();
   }
 
+  /**
+   * Retrieves a paginated list of sealed products matching filter criteria.
+   *
+   * @param filter Query and pagination parameters.
+   * @returns Paginated result object.
+   */
   async findAllPaginated(
     filter: SealedProductFilterDto = {},
   ): Promise<PaginatedResult<SealedProduct>> {
@@ -123,7 +140,10 @@ export class SealedProductService {
   }
 
   /**
-   * Retourne les N produits scellés les plus récemment créés.
+   * Returns the N most recently created sealed products.
+   *
+   * @param limit Maximum number of products to return.
+   * @returns Array of recent sealed products.
    */
   async findRecent(limit = 8): Promise<SealedProduct[]> {
     const safeLimit = Math.max(1, Math.min(limit, 50));
@@ -134,12 +154,21 @@ export class SealedProductService {
     });
   }
 
+  /**
+   * Finds a sealed product by ID.
+   *
+   * @param id Product ID.
+   * @returns Sealed product entity.
+   */
   async findOne(id: string): Promise<SealedProduct> {
     return this.findOneOrFail(id);
   }
 
   /**
-   * Agrégats de marché pour un produit scellé donné : stats + historique de prix.
+   * Returns market statistics and price history for a given sealed product.
+   *
+   * @param id Product ID.
+   * @returns Market aggregate statistics.
    */
   async getStatistics(id: string) {
     const product = await this.sealedProductRepository.findOne({
@@ -194,6 +223,13 @@ export class SealedProductService {
     };
   }
 
+  /**
+   * Updates an existing sealed product entity.
+   *
+   * @param id Product ID.
+   * @param dto Update parameters DTO.
+   * @returns Updated SealedProduct.
+   */
   async update(
     id: string,
     dto: UpdateSealedProductDto,
@@ -237,6 +273,11 @@ export class SealedProductService {
     });
   }
 
+  /**
+   * Deletes a sealed product by ID.
+   *
+   * @param id Product ID.
+   */
   async remove(id: string): Promise<void> {
     const result = await this.sealedProductRepository.delete({ id });
     if (!result.affected) {
@@ -245,8 +286,7 @@ export class SealedProductService {
   }
 
   /**
-   * Construit la query filtrée. Jointure conditionnelle sur listing
-   * dès qu'un filtre de prix ou un tri par popularity/price est appliqué.
+   * Builds filtered QueryBuilder query. Conditionally joins listings when price filter or sorting applies.
    */
   private async buildFilteredQuery(filter: SealedProductFilterDto) {
     const qb = this.sealedProductRepository
@@ -336,7 +376,7 @@ export class SealedProductService {
   }
 
   /**
-   * Traduit un SealedSortBy en paramètres pour PaginationHelper.
+   * Resolves a SealedSortBy enum value to sort field and direction parameters.
    */
   private resolveSort(sortBy?: SealedSortBy): {
     sort: string;
@@ -358,7 +398,10 @@ export class SealedProductService {
   }
 
   /**
-   * Produits scellés triés par score de popularité agrégé depuis les events.
+   * Returns top sealed products ordered by aggregated event popularity scores.
+   *
+   * @param limit Maximum products to return.
+   * @returns Array of popular sealed products.
    */
   async findPopular(limit = 8): Promise<SealedProduct[]> {
     const safeLimit = Math.max(1, Math.min(limit, 50));
@@ -395,7 +438,7 @@ export class SealedProductService {
       .map(([id]) => id);
 
     if (topIds.length === 0) {
-      // Pas d'événements : fallback sur les plus récents
+      // Fallback to most recent products if no event data exists
       return this.findRecent(safeLimit);
     }
 
@@ -424,16 +467,12 @@ export class SealedProductService {
   }
 
   /**
-   * Lit `apps/data/sealed_products.json` (généré par `apps/fetch/update-sealed.ts`)
-   * et upsert les produits scellés en base.
+   * Seeds sealed products from `sealed_products.json` file.
    *
-   * Pour chaque enregistrement, on tente d'associer un PokemonSet par
-   * matching de nom normalisé (lowercase, sans accents). Les sealed sans
-   * match restent rattachés à `pokemonSet = null` et leur série pokecardex
-   * est listée dans le rapport pour review manuelle.
+   * @returns Report summarizing seed results.
    */
   async seedFromJson(): Promise<SealedSeedReport> {
-    // Essayer plusieurs chemins possibles (dist/ vs src/, cwd différent)
+    // Try multiple candidate paths for data file
     const candidates = [
       path.resolve(__dirname, "../../../../data/sealed_products.json"),
       path.resolve(process.cwd(), "../../data/sealed_products.json"),
@@ -453,7 +492,7 @@ export class SealedProductService {
       fs.readFileSync(dataPath, "utf-8"),
     );
 
-    // Index des PokemonSet par nom normalisé pour le matching
+    // Index PokemonSets by normalized name for matching
     const allSets = await this.pokemonSetRepository.find();
     const setByNormalizedName = new Map<string, PokemonSet>();
     for (const set of allSets) {
@@ -507,7 +546,7 @@ export class SealedProductService {
           report.inserted++;
         }
 
-        // Upsert la locale FR : c'est la langue native pokecardex
+        // Upsert FR locale from raw record
         const existingLocale = await localeRepo.findOne({
           where: {
             sealedProduct: { id: record.id },

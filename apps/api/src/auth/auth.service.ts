@@ -34,20 +34,35 @@ export class AuthService {
     private collectionService: CollectionService,
   ) {}
 
-  /** Durée de vie du access token, exposée pour permettre au controller d'aligner la maxAge des cookies. */
+  /**
+   * Retrieves the access token TTL in milliseconds, used by controllers to align cookie maxAge.
+   *
+   * @returns Access token lifetime in milliseconds.
+   */
   getAccessTokenTtlMs(): number {
     return parseDurationToMs(
       this.configService.get<string>("JWT_EXPIRES_IN") || "15m",
     );
   }
 
-  /** Durée de vie du refresh token, idem. */
+  /**
+   * Retrieves the refresh token TTL in milliseconds.
+   *
+   * @returns Refresh token lifetime in milliseconds.
+   */
   getRefreshTokenTtlMs(): number {
     return parseDurationToMs(
       this.configService.get<string>("JWT_REFRESH_EXPIRES_IN") || "30d",
     );
   }
 
+  /**
+   * Validates user credentials against the stored password hash.
+   *
+   * @param email User email address.
+   * @param password Plaintext password.
+   * @returns User entity if credentials match, or null.
+   */
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userService.findByEmail(email);
 
@@ -65,6 +80,12 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Authenticates a user and issues access and refresh tokens.
+   *
+   * @param loginDto User login payload.
+   * @returns Authentication payload containing user info and tokens.
+   */
   async login(loginDto: LoginDto): Promise<AuthResponse> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
 
@@ -92,6 +113,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Registers a new user and creates default collections.
+   *
+   * @param registerDto Registration payload.
+   * @returns Authentication response for the new user.
+   */
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     if (registerDto.password !== registerDto.confirmPassword) {
       throw new BadRequestException("Passwords do not match");
@@ -141,6 +168,13 @@ export class AuthService {
     }
   }
 
+  /**
+   * Refreshes JWT access and refresh tokens for a user.
+   *
+   * @param userId User identifier.
+   * @param refreshToken Current refresh token.
+   * @returns Newly generated tokens.
+   */
   async refreshTokens(
     userId: number,
     refreshToken: string,
@@ -176,10 +210,8 @@ export class AuthService {
     }
 
     if (!matchesCurrent && !matchesPrevious) {
-      // Soit le user n'a aucun token stocké (déconnecté), soit le token fourni
-      // ne correspond ni au token actif ni au token précédent encore en grâce.
-      // Dans le second cas on suspecte un replay/vol : on invalide totalement
-      // la session pour forcer une réauthentification propre.
+      // Either user has no stored token or provided token matches neither active nor grace token.
+      // Potential replay/theft suspected: invalidate all sessions to force re-authentication.
       if (user.refreshToken) {
         this.logger.warn(
           `Refresh token mismatch for user ${user.id} — invalidating all sessions (possible replay).`,
@@ -195,6 +227,11 @@ export class AuthService {
     return tokens;
   }
 
+  /**
+   * Logs out a user by clearing their stored refresh token.
+   *
+   * @param userId User identifier.
+   */
   async logout(userId: number): Promise<void> {
     await this.userService.updateRefreshToken(userId, null);
   }

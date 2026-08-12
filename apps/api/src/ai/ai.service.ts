@@ -20,12 +20,18 @@ export class AiService {
     private readonly pokemonCardRepo: Repository<Card>,
   ) {}
 
+  /**
+   * Analyzes deck composition (type breakdown, energy curve, duplicates, and synergies).
+   *
+   * @param dto Deck analysis payload containing deckId or cardIds.
+   * @returns Detailed analysis response DTO.
+   */
   async analyzeDeck(dto: AnalyzeDeckDto): Promise<DeckAnalysisResponseDto> {
     let cards: { card: Card; qty: number }[] = [];
     let deckId: number | undefined;
 
     if (dto.deckId) {
-      // Analyser un deck existant
+      // Analyze an existing deck
       const deck = await this.deckRepo.findOne({
         where: { id: dto.deckId },
         relations: ["cards", "cards.card", "cards.card.pokemonDetails"],
@@ -38,7 +44,7 @@ export class AiService {
       deckId = deck.id;
       cards = deck.cards?.map((dc) => ({ card: dc.card, qty: dc.qty })) || [];
     } else if (dto.cardIds && dto.cardIds.length > 0) {
-      // Analyser une liste de cartes
+      // Analyze a list of card IDs
       const pokemonCards = await this.pokemonCardRepo.find({
         where: { id: In(dto.cardIds) },
         relations: ["pokemonDetails"],
@@ -48,7 +54,7 @@ export class AiService {
         throw new BadRequestException("No cards found");
       }
 
-      // Compter les cartes
+      // Count card occurrences
       const cardCount = new Map<string, number>();
       dto.cardIds.forEach((id) => {
         cardCount.set(id, (cardCount.get(id) || 0) + 1);
@@ -73,7 +79,7 @@ export class AiService {
   ): DeckAnalysisResponseDto {
     const totalCards = cards.reduce((sum, c) => sum + c.qty, 0);
 
-    // Distribution des types
+    // Type distribution
     const typeMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
       const types = card.pokemonDetails?.types;
@@ -92,7 +98,7 @@ export class AiService {
       }),
     );
 
-    // Distribution des catégories (Pokémon, Trainer, Energy)
+    // Category distribution (Pokémon, Trainer, Energy)
     const categoryMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
       const category =
@@ -108,7 +114,7 @@ export class AiService {
       }),
     );
 
-    // Distribution des coûts d'énergie (pour les attaques)
+    // Energy cost distribution for attacks
     const costMap = new Map<number, number>();
     cards.forEach(({ card, qty }) => {
       const attacks = card.pokemonDetails?.attacks;
@@ -128,7 +134,7 @@ export class AiService {
       }))
       .sort((a, b) => a.cost - b.cost);
 
-    // Détection des doublons
+    // Duplicate detection
     const duplicates = cards
       .filter((c) => c.qty > 1)
       .map((c) => ({
@@ -137,10 +143,10 @@ export class AiService {
         count: c.qty,
       }));
 
-    // Détection de synergies simples
+    // Simple synergy detection
     const synergies = this.detectSynergies(cards);
 
-    // Warnings et recommandations
+    // Warnings and recommendations
     const warnings: string[] = [];
     const recommendations: string[] = [];
 
@@ -188,7 +194,7 @@ export class AiService {
   ): DeckAnalysisResponseDto["synergies"] {
     const synergies: DeckAnalysisResponseDto["synergies"] = [];
 
-    // Synergie de type d'énergie
+    // Energy type synergy
     const typeGroups = new Map<string, string[]>();
     cards.forEach(({ card }) => {
       const types = card.pokemonDetails?.types;
@@ -212,7 +218,7 @@ export class AiService {
       }
     });
 
-    // Synergie d'évolution
+    // Evolution synergy
     const evolutionChains = new Map<string, string[]>();
     cards.forEach(({ card }) => {
       const evolveFrom = card.pokemonDetails?.evolveFrom;
@@ -238,7 +244,7 @@ export class AiService {
       }
     });
 
-    // Synergie de support Trainer
+    // Trainer support synergy
     const trainerCards = cards.filter(
       (c) => c.card.pokemonDetails?.category === PokemonCardsType.Trainer,
     );

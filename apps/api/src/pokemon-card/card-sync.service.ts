@@ -36,7 +36,7 @@ export class CardSyncService {
     return str.normalize("NFC").trim();
   }
 
-  // Normalise une chaîne pour la comparaison à une valeur connue (par exemple, une valeur stockée)
+  // Normalizes string for comparative mapping against canonical enum values
   private normalizeForMapping(value?: string): string {
     if (!value) return "";
     return value
@@ -102,24 +102,30 @@ export class CardSyncService {
     }
   }
 
-  // Cron job pour la synchronisation automatique des cartes Pokémon
+  /**
+   * Cron task triggering daily automatic synchronization of Pokémon cards from TCGdex.
+   */
   @Cron("0 4 * * *")
   async handleCron() {
-    this.logger.log("Déclenchement de la synchronisation automatique des cartes Pokémon...");
+    this.logger.log("Triggering automatic Pokémon card synchronization...");
     try {
       const stats = await this.syncAll();
       this.logger.log(
-        `Fin de la synchronisation automatique. Séries insérées: ${stats.seriesInserted}, Sets insérés: ${stats.setsInserted}, Cartes synchronisées: ${stats.cardsSynced}`,
+        `Automatic synchronization completed. Series inserted: ${stats.seriesInserted}, Sets inserted: ${stats.setsInserted}, Cards synced: ${stats.cardsSynced}`,
       );
     } catch (err) {
       this.logger.error(
-        `Échec de la synchronisation automatique : ${(err as Error).message}`,
+        `Automatic synchronization failed: ${(err as Error).message}`,
         (err as Error).stack,
       );
     }
   }
 
-  // Méthode principale de synchronisation
+  /**
+   * Main synchronization procedure fetching remote series, sets, and cards from TCGdex.
+   *
+   * @returns Summary object containing counts of series inserted, sets inserted, and cards synchronized.
+   */
   async syncAll(): Promise<{
     seriesInserted: number;
     setsInserted: number;
@@ -138,15 +144,15 @@ export class CardSyncService {
     let cardsSynced = 0;
 
     try {
-      this.logger.log("Récupération des séries et sets distants depuis TCGdex...");
+      this.logger.log("Fetching remote series and sets from TCGdex...");
       const remoteSeries = await this.tcgdex.fetch("series");
       const remoteSets = await this.tcgdex.fetch("sets");
 
       if (!remoteSeries || !remoteSets) {
-        throw new Error("Impossible de récupérer les listes distantes de TCGdex.");
+        throw new Error("Unable to fetch remote series or sets from TCGdex.");
       }
 
-      // 1. Ingestion ou mise à jour des séries (suppression des séries Pokémon "pocket")
+      // 1. Ingest series (excluding "pocket" series)
       const pocketSeriesIds = new Set(
         remoteSeries
           .filter((s: any) => s.name.toLowerCase().includes("pocket"))
@@ -161,7 +167,7 @@ export class CardSyncService {
         });
 
         if (!dbSerie) {
-          this.logger.log("Nouvelle série détectée : " + serie.name + " (" + serie.id + ")");
+          this.logger.log(`New series detected: ${serie.name} (${serie.id})`);
           const details: any = await this.tcgdex.fetch("series", serie.id);
           if (details) {
             dbSerie = this.pokemonSerieRepository.create({
@@ -176,7 +182,7 @@ export class CardSyncService {
         }
       }
 
-      // 2. Ingestion ou mise à jour des Sets et Cartes associées
+      // 2. Ingest sets and associated cards
       const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
 
       for (const setRef of remoteSets) {
@@ -198,7 +204,7 @@ export class CardSyncService {
         if (isPocketSerie) continue;
 
         if (!dbSet) {
-          this.logger.log("Nouveau set détecté : " + setRef.name + " (" + setRef.id + ")");
+          this.logger.log(`New set detected: ${setRef.name} (${setRef.id})`);
 
           const serie = await this.pokemonSerieRepository.findOne({
             where: { id: String(actualSerieId) },
@@ -206,7 +212,7 @@ export class CardSyncService {
 
           if (!serie) {
             this.logger.warn(
-              `Série ${actualSerieId} introuvable pour le set ${setRef.name}. Set ignoré pour le moment.`,
+              `Series ${actualSerieId} not found for set ${setRef.name}. Skipping set for now.`,
             );
             continue;
           }
@@ -235,14 +241,14 @@ export class CardSyncService {
           setsInserted++;
         }
 
-        // 3. Synchronisation des cartes pour ce set
+        // 3. Synchronize cards for this set
         const dbCardsCount = await this.pokemonCardRepository.count({
           where: { set: { id: dbSet.id } },
         });
 
         if (setDetails.cards && dbCardsCount < (setDetails.cardCount?.total ?? 0)) {
           this.logger.log(
-            `Synchronisation des cartes pour le set : ${dbSet.name} (${dbCardsCount}/${setDetails.cardCount?.total} cartes en base)`,
+            `Synchronizing cards for set: ${dbSet.name} (${dbCardsCount}/${setDetails.cardCount?.total} cards in DB)`,
           );
 
           for (const cardRef of setDetails.cards) {
@@ -308,7 +314,7 @@ export class CardSyncService {
                 }
               } catch (cardErr) {
                 this.logger.error(
-                  `Erreur lors de la récupération de la carte ${cardRef.id} : ${(cardErr as Error).message}`,
+                  `Error fetching card ${cardRef.id}: ${(cardErr as Error).message}`,
                 );
               }
               await new Promise((resolve) => setTimeout(resolve, 100));

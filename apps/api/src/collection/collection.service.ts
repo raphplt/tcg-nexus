@@ -55,6 +55,11 @@ export class CollectionService {
     return collection;
   }
 
+  /**
+   * Retrieves all public collections.
+   *
+   * @returns Array of public Collection entities.
+   */
   async findAll(): Promise<Collection[]> {
     return this.collectionRepository.find({
       select: [
@@ -71,6 +76,12 @@ export class CollectionService {
     });
   }
 
+  /**
+   * Finds all collections owned by a specific user.
+   *
+   * @param userId Target user ID.
+   * @returns User's collections.
+   */
   async findByUserId(userId: string): Promise<Collection[]> {
     return await this.collectionRepository.find({
       where: { user: { id: Number(userId) } },
@@ -78,6 +89,12 @@ export class CollectionService {
     });
   }
 
+  /**
+   * Finds a collection by ID.
+   *
+   * @param id Collection UUID.
+   * @returns Collection entity.
+   */
   async findOneById(id: string): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
@@ -89,6 +106,12 @@ export class CollectionService {
     return collection;
   }
 
+  /**
+   * Creates a new user collection or Master Set collection.
+   *
+   * @param createCollectionDto Collection creation parameters.
+   * @returns Created Collection entity.
+   */
   async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
     let masterSet: PokemonSet | undefined;
 
@@ -102,7 +125,7 @@ export class CollectionService {
         );
       }
 
-      // Empêcher la création de doublons pour le même user + set
+      // Prevent duplicate collection creation for the same user and master set
       const existing = await this.collectionRepository.findOne({
         where: {
           user: { id: Number(createCollectionDto.userId) },
@@ -138,6 +161,14 @@ export class CollectionService {
     return await this.collectionRepository.save(collection);
   }
 
+  /**
+   * Adds a Pokémon card to an owned collection or increments item quantity.
+   *
+   * @param collectionId Target collection ID.
+   * @param pokemonCardId Card ID to add.
+   * @param userId Requesting user ID.
+   * @returns Created or updated CollectionItem.
+   */
   async addCardToCollection(
     collectionId: string,
     pokemonCardId: string,
@@ -183,6 +214,14 @@ export class CollectionService {
     return this.collectionItemRepository.save(newItem);
   }
 
+  /**
+   * Decrements or removes a card from an owned collection.
+   *
+   * @param collectionId Target collection ID.
+   * @param pokemonCardId Card ID to remove.
+   * @param userId Requesting user ID.
+   * @returns Updated item or null if completely removed.
+   */
   async removeCardFromCollection(
     collectionId: string,
     pokemonCardId: string,
@@ -207,6 +246,13 @@ export class CollectionService {
     return null;
   }
 
+  /**
+   * Removes a specific collection item by ID.
+   *
+   * @param collectionId Parent collection ID.
+   * @param itemId Item ID.
+   * @param userId Requesting user ID.
+   */
   async removeCollectionItem(
     collectionId: string,
     itemId: number,
@@ -229,6 +275,14 @@ export class CollectionService {
     await this.collectionItemRepository.delete(itemId);
   }
 
+  /**
+   * Updates collection metadata.
+   *
+   * @param id Collection ID.
+   * @param updateCollectionDto Update DTO.
+   * @param userId Requesting user ID.
+   * @returns Updated Collection.
+   */
   async update(
     id: string,
     updateCollectionDto: UpdateCollectionDto,
@@ -254,6 +308,12 @@ export class CollectionService {
     return await this.collectionRepository.save(collection);
   }
 
+  /**
+   * Deletes a collection owned by the user.
+   *
+   * @param id Collection ID.
+   * @param userId Requesting user ID.
+   */
   async delete(id: string, userId: number): Promise<void> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
@@ -273,6 +333,13 @@ export class CollectionService {
     await this.collectionRepository.remove(collection);
   }
 
+  /**
+   * Retrieves a paginated list of public collections.
+   *
+   * @param page 1-based page index.
+   * @param limit Items per page.
+   * @returns Object with collections array and page metadata.
+   */
   async findAllPaginated(
     page: number,
     limit: number,
@@ -300,6 +367,21 @@ export class CollectionService {
     };
   }
 
+  /**
+   * Retrieves paginated items within a specific collection with filtering and sorting support.
+   *
+   * @param collectionId Target collection ID.
+   * @param page Page index.
+   * @param limit Items per page.
+   * @param search Optional search query.
+   * @param sortBy Field to sort by.
+   * @param sortOrder ASC or DESC.
+   * @param setId Optional set filter.
+   * @param serieId Optional series filter.
+   * @param rarity Optional card rarity filter.
+   * @param cardState Optional card state condition filter.
+   * @returns Paginated items and metadata.
+   */
   async findCollectionItemsPaginated(
     collectionId: string,
     page: number = 1,
@@ -323,7 +405,7 @@ export class CollectionService {
       hasPreviousPage: boolean;
     };
   }> {
-    // Vérifier que la collection existe et charger la relation masterSet
+    // Ensure collection exists and load masterSet relation
     const collection = await this.collectionRepository.findOne({
       where: { id: collectionId },
       relations: ["masterSet"],
@@ -413,7 +495,7 @@ export class CollectionService {
       };
     }
 
-    // Construire la query avec recherche
+    // Build query with filters
     const queryBuilder = this.collectionItemRepository
       .createQueryBuilder("item")
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
@@ -422,7 +504,6 @@ export class CollectionService {
       .leftJoinAndSelect("set.serie", "serie")
       .where("item.collection.id = :collectionId", { collectionId });
 
-    // Ajouter la recherche si fournie
     if (search) {
       queryBuilder.andWhere(
         "(pokemonCard.name ILIKE :search OR pokemonCard.rarity ILIKE :search OR set.name ILIKE :search)",
@@ -430,7 +511,6 @@ export class CollectionService {
       );
     }
 
-    // Appliquer les filtres avancés
     if (setId) {
       queryBuilder.andWhere("set.id = :setId", { setId });
     }
@@ -447,7 +527,6 @@ export class CollectionService {
       queryBuilder.andWhere("cardState.code = :cardState", { cardState });
     }
 
-    // Trier
     const validSortBy = [
       "added_at",
       "quantity",
@@ -465,12 +544,8 @@ export class CollectionService {
       queryBuilder.orderBy(`item.${sortField}`, sortOrder);
     }
 
-    // Compter le total
     const totalItems = await queryBuilder.getCount();
-
-    // Appliquer pagination
     const items = await queryBuilder.skip(skip).take(limit).getMany();
-
     const totalPages = Math.ceil(totalItems / limit);
 
     return {

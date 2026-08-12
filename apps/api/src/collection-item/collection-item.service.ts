@@ -38,21 +38,27 @@ export class CollectionItemService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  // Ajouter une carte Pokémon dans la wishlist d'un user
+  /**
+   * Adds a Pokémon card to a user's wishlist collection.
+   *
+   * @param userId Target user ID.
+   * @param pokemonCardId Target card ID.
+   * @returns Created or updated CollectionItem entity.
+   */
   async addToWishlist(
     userId: number | string,
     pokemonCardId: string,
   ): Promise<CollectionItem> {
     const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
-    // Vérifier que l'utilisateur existe
+    // Ensure user exists
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
     if (!user) throw new NotFoundException({
         code: "USER_NOT_FOUND",
         message: "Utilisateur non trouvé",
       });
 
-    // Vérifier que la carte existe
+    // Ensure card exists
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
@@ -61,7 +67,7 @@ export class CollectionItemService {
         message: "Carte Pokémon non trouvée",
       });
 
-    // Récupérer la wishlist existante (insensible à la casse)
+    // Retrieve existing Wishlist collection
     let wishlist = await this.collectionRepo.findOne({
       where: {
         user: { id: userIdNum },
@@ -72,7 +78,7 @@ export class CollectionItemService {
 
     if (!wishlist) {
       console.warn(
-        `Aucune wishlist trouvée pour l'utilisateur ${userIdNum}. Création en cours`,
+        `No wishlist found for user ${userIdNum}. Creating new default wishlist.`,
       );
       wishlist = this.collectionRepo.create({
         name: "Wishlist",
@@ -83,7 +89,7 @@ export class CollectionItemService {
       wishlist = await this.collectionRepo.save(wishlist);
     }
 
-    // Vérifier si la carte est déjà dans la wishlist
+    // Check if card already exists in wishlist
     let item = wishlist.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
@@ -91,7 +97,7 @@ export class CollectionItemService {
       return this.collectionItemRepo.save(item);
     }
 
-    // Récupérer le CardState NM par défaut
+    // Retrieve default Near Mint (NM) card state
     const defaultCardState = await this.cardStateRepo.findOne({
       where: { code: CardStateCode.NM },
     });
@@ -118,7 +124,11 @@ export class CollectionItemService {
   }
 
   /**
-   * Ajouter une carte Pokémon aux Favorites d'un user
+   * Adds a Pokémon card to a user's Favorites collection.
+   *
+   * @param userId Target user ID.
+   * @param pokemonCardId Target card ID.
+   * @returns Created or updated CollectionItem entity.
    */
   async addToFavorites(
     userId: number | string,
@@ -126,14 +136,14 @@ export class CollectionItemService {
   ): Promise<CollectionItem> {
     const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
-    // Vérifier que l'utilisateur existe
+    // Ensure user exists
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
     if (!user) throw new NotFoundException({
         code: "USER_NOT_FOUND",
         message: "Utilisateur non trouvé",
       });
 
-    // Vérifier que la carte existe
+    // Ensure card exists
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
@@ -142,7 +152,7 @@ export class CollectionItemService {
         message: "Carte Pokémon non trouvée",
       });
 
-    // Récupérer les Favorites
+    // Retrieve Favorites collection
     const favorites = await this.collectionRepo.findOne({
       where: {
         user: { id: userIdNum },
@@ -157,7 +167,7 @@ export class CollectionItemService {
       );
     }
 
-    // Vérifier si la carte est déjà dans les Favorites
+    // Check if card already exists in favorites
     let item = favorites.items?.find((i) => i.pokemonCard?.id === card.id);
 
     if (item) {
@@ -165,7 +175,7 @@ export class CollectionItemService {
       return this.collectionItemRepo.save(item);
     }
 
-    // Récupérer le CardState NM par défaut
+    // Retrieve default NM card state
     const defaultCardState = await this.cardStateRepo.findOne({
       where: { code: CardStateCode.NM },
     });
@@ -192,7 +202,11 @@ export class CollectionItemService {
   }
 
   /**
-   * Ajouter une carte Pokémon dans une collection spécifique (par id).
+   * Adds a Pokémon card to a specific collection by collection ID.
+   *
+   * @param collectionId Target collection ID.
+   * @param pokemonCardId Target card ID.
+   * @returns Created or updated CollectionItem entity.
    */
   async addToCollection(
     collectionId: number | string,
@@ -251,7 +265,12 @@ export class CollectionItemService {
   }
 
   /**
-   * Ajouter un produit scellé à une collection spécifique (par id).
+   * Adds a sealed product to a specific collection.
+   *
+   * @param collectionId Target collection ID.
+   * @param sealedProductId Target sealed product ID.
+   * @param sealedCondition Optional item condition (defaults to SEALED).
+   * @returns Created or updated CollectionItem entity.
    */
   async addSealedToCollection(
     collectionId: number | string,
@@ -308,7 +327,11 @@ export class CollectionItemService {
   }
 
   /**
-   * Ajouter un produit scellé à la wishlist d'un user.
+   * Adds a sealed product to a user's wishlist collection.
+   *
+   * @param userId Target user ID.
+   * @param sealedProductId Target sealed product ID.
+   * @returns Created or updated CollectionItem entity.
    */
   async addSealedToWishlist(
     userId: number | string,

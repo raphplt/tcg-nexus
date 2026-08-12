@@ -8,6 +8,9 @@ import {
 import { Request, Response } from "express";
 import { DomainException, STATUS_CODES } from "./domain.exception";
 
+/**
+ * Global exception filter catching all unhandled exceptions and formatting standard HTTP error responses.
+ */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -39,7 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           error?: string;
           code?: string;
         };
-        // class-validator renvoie un tableau de messages
+        // class-validator returns an array of validation messages
         if (Array.isArray(responseObj.message)) {
           code = "VALIDATION_ERROR";
           fields = { messages: responseObj.message };
@@ -74,7 +77,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = message || "Une erreur interne est survenue.";
     }
 
-    // une erreur interne ne doit jamais exposer son message technique
+    // Internal server errors must never expose raw technical details in production
     if (
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
       process.env.NODE_ENV === "production"

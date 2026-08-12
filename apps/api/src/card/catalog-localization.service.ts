@@ -9,13 +9,13 @@ import {
 import { In, Repository } from "typeorm";
 import { CardTranslation } from "./entities/card-translation.entity";
 
-/** Objet de réponse porteur d'un identifiant : carte, set ou série. */
+/** Response payload object bearing an identifier: card, set, or series. */
 interface Localizable {
   id: string;
   [key: string]: unknown;
 }
 
-/** Profondeur maximale de parcours d'un payload, garde-fou contre les cycles. */
+/** Maximum payload traversal depth guard against circular references. */
 const MAX_DEPTH = 8;
 
 function isObject(value: unknown): value is Localizable {
@@ -26,12 +26,12 @@ function isObject(value: unknown): value is Localizable {
   );
 }
 
-/** Une carte porte un `tcgDexId` — aucune autre entité du catalogue n'en a. */
+/** Card entities uniquely feature a tcgDexId property. */
 function isCardLike(value: Localizable): boolean {
   return typeof value.tcgDexId === "string";
 }
 
-/** Un set porte un décompte de cartes, une date de sortie ou un symbole. */
+/** Set entities feature releaseDate, symbol, or cardCount. */
 function isSetLike(value: Localizable, parentKey?: string): boolean {
   return (
     parentKey === "set" ||
@@ -41,25 +41,16 @@ function isSetLike(value: Localizable, parentKey?: string): boolean {
   );
 }
 
-/** Une série se reconnaît à sa position, ou à la liste de sets qu'elle porte. */
+/** Series entities feature a position or nested sets array. */
 function isSerieLike(value: Localizable, parentKey?: string): boolean {
   return parentKey === "serie" || Array.isArray(value.sets);
 }
 
 /**
- * Traduit les entités du catalogue présentes dans une réponse de l'API.
+ * Localizes catalog entities (cards, sets, series) present in API response payloads.
  *
- * Le web n'a pas à connaître l'existence des tables de traduction : il reçoit
- * une carte, un set ou une série dont `name`, `image`, `logo`… sont déjà
- * résolus. La résolution suit l'ordre : langue demandée → langue de repli →
- * valeurs portées par l'entité (héritage, donc jamais vide).
- *
- * Un seul point de passage plutôt qu'une résolution service par service : la
- * carte apparaît dans beaucoup de payloads — listings, collections, decks,
- * résultats de recherche — et chacun aurait dû penser à traduire.
- *
- * Les identifiants collectés sont confrontés à la base : un objet pris à tort
- * pour un set ne trouve aucune traduction et reste intact.
+ * Resolves localized fields (`name`, `image`, `logo`, etc.) using order:
+ * Requested Locale -> Default Fallback Locale -> Base Entity Values.
  */
 @Injectable()
 export class CatalogLocalizationService {
@@ -73,12 +64,13 @@ export class CatalogLocalizationService {
   ) {}
 
   /**
-   * Parcourt un payload et y traduit sur place cartes, sets et séries.
-   * Au plus trois requêtes, quel que soit le nombre d'entités imbriquées.
+   * Traverses a payload and localizes cards, sets, and series in place.
+   * Uses at most three database queries regardless of payload nesting.
    *
-   * En mode `withTranslations`, les entités reçoivent en plus un champ
-   * `translations` contenant toutes les langues — vue d'administration, pour
-   * comparer ou corriger les libellés.
+   * @param payload Target object or array payload.
+   * @param locale Requested target locale.
+   * @param options Localization options including `withTranslations`.
+   * @returns Localized payload.
    */
   async localize<T>(
     payload: T,
@@ -124,8 +116,7 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Traductions à appliquer, une par entité : celle de la langue demandée, ou
-   * celle de la langue de repli quand l'entité n'existe pas dans cette langue.
+   * Loads translations to apply per entity: requested locale or fallback locale.
    */
   private async load<T extends { locale: string }>(
     repository: Repository<T>,
@@ -146,7 +137,7 @@ export class CatalogLocalizationService {
     for (const row of rows) {
       const id = (row as unknown as Record<string, string>)[idColumn] as string;
       const current = byId.get(id);
-      // La langue demandée l'emporte toujours sur la langue de repli.
+      // Requested locale always takes priority over fallback locale
       if (!current || row.locale === locale) byId.set(id, row);
     }
 
@@ -154,9 +145,7 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Attache toutes les langues sous `translations`, indexées par locale.
-   * Les champs résolus restent en place : la vue d'administration montre à la
-   * fois ce que voit l'utilisateur et ce qui existe dans chaque langue.
+   * Attaches all available translations under `translations`, indexed by locale.
    */
   private async attachAllTranslations(collected: {
     cards: Map<string, Localizable>;
@@ -195,8 +184,7 @@ export class CatalogLocalizationService {
   }
 
   /**
-   * Écrase les champs linguistiques de la carte. Un champ absent de la
-   * traduction est laissé tel quel plutôt que vidé.
+   * Overwrites localized card fields. Missing translation fields are left unchanged.
    */
   private applyCard(card: Localizable, translation: CardTranslation) {
     assign(card, "name", translation.name);
@@ -217,7 +205,7 @@ export class CatalogLocalizationService {
     assign(details, "attacks", translation.attacks);
   }
 
-  /** Entités du catalogue présentes dans le payload, dédoublonnées par id. */
+  /** Collects catalog entities from payload deduplicated by ID. */
   private collect(payload: unknown) {
     const cards = new Map<string, Localizable>();
     const sets = new Map<string, Localizable>();
@@ -232,8 +220,6 @@ export class CatalogLocalizationService {
       seen.add(value);
 
       if (Array.isArray(value)) {
-        // Un tableau ne change pas la clé parente : `set.cards[0]` reste
-        // rattaché à la clé `cards`.
         for (const item of value) walk(item, depth + 1, parentKey);
         return;
       }

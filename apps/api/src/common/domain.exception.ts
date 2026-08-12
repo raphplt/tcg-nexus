@@ -1,9 +1,8 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 
 /**
- * Erreur métier portant un code stable, indépendant de la langue.
- * Le client traduit le code ; `message` ne sert que de repli pendant la
- * migration et pour les logs.
+ * Domain exception carrying a language-agnostic stable error code.
+ * Clients localize the code; `message` serves as a fallback or for logging.
  */
 export class DomainException extends HttpException {
   readonly code: string;
@@ -28,7 +27,7 @@ export class DomainException extends HttpException {
   }
 }
 
-/** Codes renvoyés par défaut quand aucune erreur métier n'est déclarée. */
+/** Default error codes returned when no specific domain exception is declared. */
 export const STATUS_CODES: Partial<Record<HttpStatus, string>> = {
   [HttpStatus.BAD_REQUEST]: "BAD_REQUEST",
   [HttpStatus.UNAUTHORIZED]: "UNAUTHORIZED",

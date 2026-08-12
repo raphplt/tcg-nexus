@@ -329,7 +329,13 @@ export class MarketplaceService {
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
   }
 
-  // agrégats dans une seule devise : sans param, celle qui a le plus d'annonces
+  /**
+   * Calculates card marketplace statistics (active listings, price range, average price) for a target currency.
+   *
+   * @param cardId Target card ID.
+   * @param currency Preferred currency.
+   * @param cardState Filter by card state.
+   */
   async getCardStatistics(
     cardId: string,
     currency?: string,
@@ -443,9 +449,11 @@ export class MarketplaceService {
   }
 
   /**
-   * Prix conseillé au vendeur qui met une carte en vente. On privilégie les
-   * annonces actives du même état, puis tous états confondus, et à défaut le
-   * prix de référence du marché externe.
+   * Calculates suggested listing price for sellers based on active marketplace listings and external market data.
+   *
+   * @param cardId Target card ID.
+   * @param cardState Card condition state code.
+   * @param currency Desired currency.
    */
   async getPriceSuggestion(
     cardId: string,
@@ -488,7 +496,7 @@ export class MarketplaceService {
     };
   }
 
-  /** Agrégats de prix sur les annonces actives d'une carte. */
+  /** Calculates aggregated price stats for active listings of a card. */
   private async aggregateActiveListingPrices(
     cardId: string,
     currency: string,

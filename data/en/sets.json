@@ -1,0 +1,795 @@
+[
+  {
+    "cardCount": {
+      "firstEd": 104,
+      "holo": 64,
+      "normal": 346,
+      "official": 102,
+      "reverse": 0,
+      "total": 102
+    },
+    "id": "base1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/base-set/logo.webp",
+    "name": "Base Set",
+    "releaseDate": "1999-01-09",
+    "tcgOnline": "BS",
+    "abbreviation": {
+      "official": "BS"
+    },
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 64,
+      "holo": 50,
+      "normal": 100,
+      "official": 64,
+      "reverse": 0,
+      "total": 64
+    },
+    "id": "base2",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/jungle/logo.webp",
+    "name": "Jungle",
+    "releaseDate": "1999-06-16",
+    "symbol": "https://cdn.tcg-nexus.org/sets/jungle/symbol.png",
+    "tcgOnline": "JU",
+    "abbreviation": {
+      "official": "JU"
+    },
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 62,
+      "holo": 35,
+      "normal": 142,
+      "official": 62,
+      "reverse": 0,
+      "total": 62
+    },
+    "id": "base3",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/fossil/logo.webp",
+    "name": "Fossil",
+    "releaseDate": "1999-10-10",
+    "symbol": "https://cdn.tcg-nexus.org/sets/fossil/symbol.png",
+    "tcgOnline": "FO",
+    "abbreviation": {
+      "official": "FO"
+    },
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 20,
+      "normal": 111,
+      "official": 130,
+      "reverse": 0,
+      "total": 130
+    },
+    "id": "base4",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/base-set-2/logo.webp",
+    "name": "Base Set 2",
+    "releaseDate": "2000-02-24",
+    "symbol": "https://cdn.tcg-nexus.org/sets/base-set-2/symbol.png",
+    "tcgOnline": "B2",
+    "abbreviation": {
+      "official": "B2"
+    },
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 84,
+      "holo": 39,
+      "normal": 133,
+      "official": 82,
+      "reverse": 0,
+      "total": 83
+    },
+    "id": "base5",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/team-rocket/logo.webp",
+    "name": "Team Rocket",
+    "releaseDate": "2000-04-24",
+    "symbol": "https://cdn.tcg-nexus.org/sets/team-rocket/symbol.png",
+    "tcgOnline": "TR",
+    "abbreviation": {
+      "official": "RO"
+    },
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 8,
+      "normal": 63,
+      "official": 53,
+      "reverse": 3,
+      "total": 53
+    },
+    "id": "basep",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/wizards-black-star-promos/logo.webp",
+    "name": "Wizards Black Star Promos",
+    "releaseDate": "1999-07-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/wizards-black-star-promos/symbol.png",
+    "tcgOnline": "PR",
+    "serieId": "base"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 12,
+      "official": 9,
+      "reverse": 11,
+      "total": 9
+    },
+    "id": "bog",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "Best of game",
+    "releaseDate": "2002-12-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/best-of-game/symbol.png",
+    "serieId": "ecard"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 32,
+      "normal": 143,
+      "official": 165,
+      "reverse": 165,
+      "total": 165
+    },
+    "id": "ecard1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/expedition-base-set/logo.webp",
+    "name": "Expedition Base Set",
+    "releaseDate": "2002-09-15",
+    "symbol": "https://cdn.tcg-nexus.org/sets/expedition-base-set/symbol.png",
+    "tcgOnline": "EX",
+    "abbreviation": {
+      "official": "EX"
+    },
+    "serieId": "ecard"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 35,
+      "normal": 156,
+      "official": 147,
+      "reverse": 150,
+      "total": 185
+    },
+    "id": "ecard2",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/aquapolis/logo.webp",
+    "name": "Aquapolis",
+    "releaseDate": "2003-01-15",
+    "symbol": "https://cdn.tcg-nexus.org/sets/aquapolis/symbol.png",
+    "tcgOnline": "AQ",
+    "abbreviation": {
+      "official": "AQ"
+    },
+    "serieId": "ecard"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 38,
+      "normal": 151,
+      "official": 144,
+      "reverse": 150,
+      "total": 182
+    },
+    "id": "ecard3",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/skyridge/logo.webp",
+    "name": "Skyridge",
+    "releaseDate": "2003-05-12",
+    "symbol": "https://cdn.tcg-nexus.org/sets/skyridge/symbol.png",
+    "tcgOnline": "SK",
+    "abbreviation": {
+      "official": "SK"
+    },
+    "serieId": "ecard"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 28,
+      "normal": 141,
+      "official": 109,
+      "reverse": 103,
+      "total": 109
+    },
+    "id": "ex1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/ruby-sapphire/logo.webp",
+    "name": "Ruby & Sapphire",
+    "releaseDate": "2003-07-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/ruby-sapphire/symbol.png",
+    "tcgOnline": "RS",
+    "abbreviation": {
+      "official": "RS"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 24,
+      "normal": 109,
+      "official": 100,
+      "reverse": 93,
+      "total": 100
+    },
+    "id": "ex2",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/sandstorm/logo.webp",
+    "name": "Sandstorm",
+    "releaseDate": "2003-09-18",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sandstorm/symbol.png",
+    "tcgOnline": "SS",
+    "abbreviation": {
+      "official": "SS"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 27,
+      "normal": 1,
+      "official": 97,
+      "reverse": 12,
+      "total": 100
+    },
+    "id": "ex3",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/dragon/logo.webp",
+    "name": "Dragon",
+    "releaseDate": "2003-11-24",
+    "symbol": "https://cdn.tcg-nexus.org/sets/dragon/symbol.png",
+    "tcgOnline": "DR",
+    "abbreviation": {
+      "official": "DR"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 27,
+      "normal": 90,
+      "official": 95,
+      "reverse": 88,
+      "total": 97
+    },
+    "id": "ex4",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/team-magma-vs-team-aqua/logo.webp",
+    "name": "Team Magma vs Team Aqua",
+    "releaseDate": "2004-03-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/team-magma-vs-team-aqua/symbol.png",
+    "tcgOnline": "MA",
+    "abbreviation": {
+      "official": "MA"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 122,
+      "normal": 108,
+      "official": 101,
+      "reverse": 1,
+      "total": 102
+    },
+    "id": "ex5",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/hidden-legends/logo.webp",
+    "name": "Hidden Legends",
+    "releaseDate": "2004-06-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/hidden-legends/symbol.png",
+    "tcgOnline": "HL",
+    "abbreviation": {
+      "official": "HL"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 5,
+      "official": 5,
+      "reverse": 0,
+      "total": 5
+    },
+    "id": "ex5.5",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "Poké Card Creator Pack",
+    "releaseDate": "2004-07-01",
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 138,
+      "normal": 113,
+      "official": 112,
+      "reverse": 0,
+      "total": 116
+    },
+    "id": "ex6",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/firered-leafgreen/logo.webp",
+    "name": "FireRed & LeafGreen",
+    "releaseDate": "2004-09-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/firered-leafgreen/symbol.png",
+    "tcgOnline": "RG",
+    "abbreviation": {
+      "official": "RG"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 127,
+      "normal": 111,
+      "official": 109,
+      "reverse": 0,
+      "total": 111
+    },
+    "id": "ex7",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/team-rocket-returns/logo.webp",
+    "name": "Team Rocket Returns",
+    "releaseDate": "2004-11-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/team-rocket-returns/symbol.png",
+    "tcgOnline": "RR",
+    "abbreviation": {
+      "official": "TR"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 128,
+      "normal": 108,
+      "official": 107,
+      "reverse": 0,
+      "total": 108
+    },
+    "id": "ex8",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/deoxys/logo.webp",
+    "name": "Deoxys",
+    "releaseDate": "2005-02-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/deoxys/symbol.png",
+    "tcgOnline": "DX",
+    "abbreviation": {
+      "official": "DX"
+    },
+    "serieId": "ex"
+  },
+  {
+    "cardCount": {
+      "firstEd": 132,
+      "holo": 40,
+      "normal": 227,
+      "official": 132,
+      "reverse": 0,
+      "total": 132
+    },
+    "id": "gym1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/gym-heroes/logo.webp",
+    "name": "Gym Heroes",
+    "releaseDate": "2000-08-14",
+    "symbol": "https://cdn.tcg-nexus.org/sets/gym-heroes/symbol.png",
+    "tcgOnline": "G1",
+    "abbreviation": {
+      "official": "G1"
+    },
+    "serieId": "gym"
+  },
+  {
+    "cardCount": {
+      "firstEd": 132,
+      "holo": 42,
+      "normal": 226,
+      "official": 132,
+      "reverse": 0,
+      "total": 132
+    },
+    "id": "gym2",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/gym-challenge/logo.webp",
+    "name": "Gym Challenge",
+    "releaseDate": "2000-10-16",
+    "symbol": "https://cdn.tcg-nexus.org/sets/gym-challenge/symbol.png",
+    "tcgOnline": "G2",
+    "abbreviation": {
+      "official": "G2"
+    },
+    "serieId": "gym"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 160,
+      "reverse": 0,
+      "total": 160
+    },
+    "id": "jumbo",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "Jumbo cards",
+    "releaseDate": "2000-02-01",
+    "serieId": "misc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 19,
+      "normal": 94,
+      "official": 110,
+      "reverse": 111,
+      "total": 110
+    },
+    "id": "lc",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/legendary-collection/logo.webp",
+    "name": "Legendary Collection",
+    "releaseDate": "2002-05-24",
+    "symbol": "https://cdn.tcg-nexus.org/sets/legendary-collection/symbol.png",
+    "tcgOnline": "LC",
+    "abbreviation": {
+      "official": "LC"
+    },
+    "serieId": "lc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 1,
+      "normal": 0,
+      "official": 1,
+      "reverse": 0,
+      "total": 1
+    },
+    "id": "miscp",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "Miscellaneous Promos",
+    "releaseDate": "1996-01-01",
+    "serieId": "misc"
+  },
+  {
+    "cardCount": {
+      "firstEd": 111,
+      "holo": 38,
+      "normal": 187,
+      "official": 111,
+      "reverse": 0,
+      "total": 111
+    },
+    "id": "neo1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/neo-genesis/logo.webp",
+    "name": "Neo Genesis",
+    "releaseDate": "2000-12-16",
+    "symbol": "https://cdn.tcg-nexus.org/sets/neo-genesis/symbol.png",
+    "tcgOnline": "N1",
+    "abbreviation": {
+      "official": "N1"
+    },
+    "serieId": "neo"
+  },
+  {
+    "cardCount": {
+      "firstEd": 75,
+      "holo": 34,
+      "normal": 116,
+      "official": 75,
+      "reverse": 0,
+      "total": 75
+    },
+    "id": "neo2",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/neo-discovery/logo.webp",
+    "name": "Neo Discovery",
+    "releaseDate": "2001-06-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/neo-discovery/symbol.png",
+    "tcgOnline": "N2",
+    "abbreviation": {
+      "official": "N2"
+    },
+    "serieId": "neo"
+  },
+  {
+    "cardCount": {
+      "firstEd": 66,
+      "holo": 32,
+      "normal": 100,
+      "official": 64,
+      "reverse": 0,
+      "total": 66
+    },
+    "id": "neo3",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/neo-revelation/logo.webp",
+    "name": "Neo Revelation",
+    "releaseDate": "2001-09-21",
+    "symbol": "https://cdn.tcg-nexus.org/sets/neo-revelation/symbol.png",
+    "tcgOnline": "N3",
+    "abbreviation": {
+      "official": "N3"
+    },
+    "serieId": "neo"
+  },
+  {
+    "cardCount": {
+      "firstEd": 113,
+      "holo": 48,
+      "normal": 178,
+      "official": 105,
+      "reverse": 0,
+      "total": 113
+    },
+    "id": "neo4",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/neo-destiny/logo.webp",
+    "name": "Neo Destiny",
+    "releaseDate": "2002-02-28",
+    "symbol": "https://cdn.tcg-nexus.org/sets/neo-destiny/symbol.png",
+    "tcgOnline": "N4",
+    "abbreviation": {
+      "official": "N4"
+    },
+    "serieId": "neo"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 40,
+      "reverse": 0,
+      "total": 40
+    },
+    "id": "np",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/nintendo-black-star-promos/logo.webp",
+    "name": "Nintendo Black Star Promos",
+    "releaseDate": "2003-10-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/nintendo-black-star-promos/symbol.png",
+    "tcgOnline": "PR-NP",
+    "serieId": "pop"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 17,
+      "reverse": 0,
+      "total": 17
+    },
+    "id": "pop1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/pop-series-1/logo.webp",
+    "name": "POP Series 1",
+    "releaseDate": "2004-09-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/pop-series-1/symbol.png",
+    "abbreviation": {
+      "official": "P1"
+    },
+    "serieId": "pop"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 12,
+      "official": 18,
+      "reverse": 6,
+      "total": 18
+    },
+    "id": "si1",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "logo": "https://cdn.tcg-nexus.org/sets/southern-islands/logo.webp",
+    "name": "Southern Islands",
+    "releaseDate": "2001-07-31",
+    "symbol": "https://cdn.tcg-nexus.org/sets/southern-islands/symbol.png",
+    "abbreviation": {
+      "official": "SI"
+    },
+    "serieId": "neo"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 10,
+      "reverse": 0,
+      "total": 10
+    },
+    "id": "sp",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "Sample",
+    "releaseDate": "2002-08-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/sample/symbol.png",
+    "serieId": "ecard"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 10,
+      "reverse": 0,
+      "total": 10
+    },
+    "id": "tk-ex-latia",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "EX trainer Kit (Latias)",
+    "releaseDate": "2004-07-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/ex-trainer-kit-latias/symbol.png",
+    "abbreviation": {
+      "official": "TK1A"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 10,
+      "reverse": 0,
+      "total": 10
+    },
+    "id": "tk-ex-latio",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "EX trainer Kit (Latios)",
+    "releaseDate": "2004-07-01",
+    "symbol": "https://cdn.tcg-nexus.org/sets/ex-trainer-kit-latios/symbol.png",
+    "abbreviation": {
+      "official": "TK1O"
+    },
+    "serieId": "tk"
+  },
+  {
+    "cardCount": {
+      "firstEd": 0,
+      "holo": 0,
+      "normal": 0,
+      "official": 7,
+      "reverse": 0,
+      "total": 7
+    },
+    "id": "wp",
+    "legal": {
+      "expanded": false,
+      "standard": false
+    },
+    "name": "W Promotional",
+    "releaseDate": "1999-09-01",
+    "serieId": "base"
+  }
+]

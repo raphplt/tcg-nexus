@@ -21,9 +21,9 @@ export class CardService implements OnModuleInit {
     private readonly cardRepository: Repository<Card>,
   ) {}
 
-  // cr\u00e9e pgvector + la table d'embeddings si absentes (portable : aucune \u00e9tape
-  // manuelle sur une nouvelle base). Si pgvector n'est pas dispo, on log et la
-  // recherche visuelle reste simplement inactive.
+  /**
+   * Initializes pgvector extension and card embedding table if not present.
+   */
   async onModuleInit(): Promise<void> {
     try {
       await this.cardRepository.query("CREATE EXTENSION IF NOT EXISTS vector");
@@ -41,13 +41,18 @@ export class CardService implements OnModuleInit {
       this.embeddingReady = true;
     } catch (error) {
       this.logger.warn(
-        `Recherche visuelle indisponible (pgvector non initialis\u00e9): ${(error as Error).message}`,
+        `Visual search unavailable (pgvector not initialized): ${(error as Error).message}`,
       );
     }
   }
 
-  // recherche fuzzy par nom (trigrammes pg_trgm) tolérant fautes d'OCR et accents.
-  // les noms en base sont sans accents, on retire donc les accents du terme.
+  /**
+   * Performs fuzzy search by card name using pg_trgm trigram similarity, ignoring accents.
+   *
+   * @param term Name search term.
+   * @param game Optional game filter.
+   * @returns Array of matching cards.
+   */
   async findByNameFuzzy(term: string, game?: CardGame): Promise<Card[]> {
     const t = stripAccents(term).trim();
     if (t.length < 3) return [];
@@ -67,6 +72,12 @@ export class CardService implements OnModuleInit {
     return qb.getMany();
   }
 
+  /**
+   * Retrieves all cards, optionally filtered by card game.
+   *
+   * @param game Optional game filter.
+   * @returns Array of cards.
+   */
   async findAll(game?: CardGame): Promise<Card[]> {
     return this.cardRepository.find({
       where: game ? { game } : {},
@@ -74,6 +85,12 @@ export class CardService implements OnModuleInit {
     });
   }
 
+  /**
+   * Finds a card by its unique identifier.
+   *
+   * @param id Card UUID.
+   * @returns Card entity.
+   */
   async findOne(id: string): Promise<Card> {
     const card = await this.cardRepository.findOne({
       where: { id },
@@ -85,6 +102,14 @@ export class CardService implements OnModuleInit {
     return card;
   }
 
+  /**
+   * Finds cards matching a set-relative local identifier.
+   *
+   * @param localId Local card number or identifier.
+   * @param total Optional total set card count.
+   * @param game Optional game filter.
+   * @returns Array of matching cards.
+   */
   async findByLocalId(
     localId: string,
     total?: string,
@@ -123,6 +148,14 @@ export class CardService implements OnModuleInit {
     return base().take(80).getMany();
   }
 
+  /**
+   * Finds cards visually similar to a given embedding vector using pgvector cosine distance.
+   *
+   * @param embedding Visual feature embedding vector.
+   * @param game Optional game filter.
+   * @param limit Maximum results to return.
+   * @returns Array of cards with similarity scores.
+   */
   async findByEmbedding(
     embedding: number[],
     game?: CardGame,
@@ -150,8 +183,8 @@ export class CardService implements OnModuleInit {
         params,
       );
     } catch (error) {
-      // base visuelle absente/incohérente -> on ignore le visuel sans planter
-      this.logger.warn(`Recherche visuelle KO: ${(error as Error).message}`);
+      // Visual search feature unavailable: log warning without crashing
+      this.logger.warn(`Visual search error: ${(error as Error).message}`);
       return [];
     }
     if (rows.length === 0) return [];
@@ -166,6 +199,13 @@ export class CardService implements OnModuleInit {
       .filter((x): x is { card: Card; similarity: number } => Boolean(x.card));
   }
 
+  /**
+   * Calculates embedding similarity scores for a specific list of card IDs.
+   *
+   * @param embedding Target embedding vector.
+   * @param cardIds Array of card IDs to score.
+   * @returns Map of card ID to similarity score.
+   */
   async embeddingSimilarities(
     embedding: number[],
     cardIds: string[],
@@ -184,11 +224,18 @@ export class CardService implements OnModuleInit {
         );
       return new Map(rows.map((r) => [r.id, Number(r.similarity)]));
     } catch (error) {
-      this.logger.warn(`Similarités visuelles KO: ${(error as Error).message}`);
+      this.logger.warn(`Visual similarity calculation failed: ${(error as Error).message}`);
       return new Map();
     }
   }
 
+  /**
+   * Searches cards by a general query string.
+   *
+   * @param search Query string.
+   * @param game Optional game filter.
+   * @returns Matching cards.
+   */
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
     if (!search) return [];
     const qb = this.cardRepository
@@ -205,6 +252,14 @@ export class CardService implements OnModuleInit {
     return qb.getMany();
   }
 
+  /**
+   * Retrieves a paginated list of cards.
+   *
+   * @param page Page index (1-based).
+   * @param limit Items per page.
+   * @param game Optional game filter.
+   * @returns Paginated card results.
+   */
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
@@ -234,6 +289,12 @@ export class CardService implements OnModuleInit {
     );
   }
 
+  /**
+   * Returns a random card entity.
+   *
+   * @param game Optional game filter.
+   * @returns Random card or null if dataset is empty.
+   */
   async findRandom(game?: CardGame): Promise<Card | null> {
     const qb = this.cardRepository
       .createQueryBuilder("card")
@@ -248,6 +309,12 @@ export class CardService implements OnModuleInit {
     return card ?? null;
   }
 
+  /**
+   * Retrieves distinct rarity values for cards in a set.
+   *
+   * @param setId Set identifier.
+   * @returns Array of unique rarity strings.
+   */
   async getSetRarities(setId: string): Promise<string[]> {
     const rows = await this.cardRepository
       .createQueryBuilder("card")

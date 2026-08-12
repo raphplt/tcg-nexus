@@ -47,7 +47,13 @@ export class CardPopularityService {
   ) {}
 
   /**
-   * Enregistre un événement de carte
+   * Records a user interaction event for a card.
+   *
+   * @param dto Card event creation DTO.
+   * @param userId Optional user ID.
+   * @param ipAddress Client IP address.
+   * @param userAgent User agent header string.
+   * @param sessionId Session identifier.
    */
   async recordEvent(
     dto: CreateCardEventDto,
@@ -61,7 +67,7 @@ export class CardPopularityService {
     });
 
     if (!card) {
-      throw new BadRequestException("Carte introuvable");
+      throw new BadRequestException("Card not found");
     }
 
     // Hash IP address for GDPR compliance
@@ -83,7 +89,9 @@ export class CardPopularityService {
   }
 
   /**
-   * Agrège les événements du jour précédent et calcule les métriques
+   * Aggregates daily card events into summary metrics records.
+   *
+   * @param targetDate Target date for metric aggregation.
    */
   async aggregateDailyMetrics(targetDate?: Date): Promise<void> {
     const date = targetDate || new Date();
@@ -96,7 +104,7 @@ export class CardPopularityService {
       `Aggregating metrics for ${date.toISOString().split("T")[0]}`,
     );
 
-    // Récupérer toutes les cartes qui ont eu des événements ce jour-là
+    // Retrieve all cards with recorded events for the target day
     const cardsWithEvents = await this.cardEventRepository
       .createQueryBuilder("event")
       .select("DISTINCT event.card.id", "cardId")
@@ -117,7 +125,7 @@ export class CardPopularityService {
   }
 
   /**
-   * Agrège les métriques pour une carte donnée sur une période
+   * Aggregates metrics for a single card over a specified time interval.
    */
   private async aggregateMetricsForCard(
     cardId: string,
@@ -130,7 +138,7 @@ export class CardPopularityService {
 
     if (!card) return;
 
-    // Compter les événements par type
+    // Count events grouped by type
     const events = await this.cardEventRepository
       .createQueryBuilder("event")
       .select("event.eventType", "type")
@@ -193,11 +201,11 @@ export class CardPopularityService {
       ? parseFloat(listingStats.avgPrice)
       : null;
 
-    // Calculer les scores
+    // Calculate popularity and trend scores
     const popularityScore = await this.calculatePopularityScore(cardId);
     const trendScore = await this.calculateTrendScore(cardId);
 
-    // Sauvegarder ou mettre à jour les métriques
+    // Upsert daily metrics record
     const dateOnly = new Date(startDate);
     dateOnly.setHours(0, 0, 0, 0);
 
@@ -229,7 +237,7 @@ export class CardPopularityService {
   }
 
   /**
-   * Calcule le popularity_score via SQL aggregation (pas de chargement en mémoire)
+   * Calculates overall popularity score using SQL event aggregation.
    */
   private async calculatePopularityScore(cardId: string): Promise<number> {
     const cutoffDate = new Date();
@@ -254,7 +262,7 @@ export class CardPopularityService {
   }
 
   /**
-   * Calcule le trend_score via SQL aggregation
+   * Calculates trend growth score using SQL event aggregation.
    */
   private async calculateTrendScore(cardId: string): Promise<number> {
     const now = new Date();
@@ -321,7 +329,10 @@ export class CardPopularityService {
   }
 
   /**
-   * Récupère les cartes populaires
+   * Retrieves popular cards ordered by popularity score.
+   *
+   * @param limit Number of popular cards to retrieve.
+   * @returns Array of popular cards with market summary stats.
    */
   async getPopularCards(limit: number = 10) {
     const metrics = await this.metricsRepository.find({
@@ -335,7 +346,7 @@ export class CardPopularityService {
       take: limit * 2,
     });
 
-    // Grouper par carte et prendre le score le plus récent
+    // Group by card retaining latest date metric
     const cardMap = new Map<string, CardPopularityMetrics>();
 
     metrics.forEach((metric) => {
@@ -377,7 +388,11 @@ export class CardPopularityService {
   }
 
   /**
-   * Récupère les cartes en tendance
+   * Retrieves trending cards ordered by trend growth score.
+   *
+   * @param limit Number of trending cards to return.
+   * @param excludePopular Whether to filter out top popular cards to avoid duplicates.
+   * @returns Array of trending cards.
    */
   async getTrendingCards(limit: number = 10, excludePopular: boolean = false) {
     const query = this.metricsRepository
@@ -391,7 +406,7 @@ export class CardPopularityService {
 
     const metrics = await query.getMany();
 
-    // Grouper par carte et prendre le score le plus récent
+    // Group by card retaining latest date metric
     const cardMap = new Map<string, CardPopularityMetrics>();
 
     metrics.forEach((metric) => {
@@ -407,7 +422,7 @@ export class CardPopularityService {
       (a, b) => b.trendScore - a.trendScore,
     );
 
-    // Exclure les top populaires (pour ne pas avoir de doublons dans les résultats)
+    // Exclude top popular cards to prevent duplication across widgets
     if (excludePopular) {
       const popularCards = await this.getPopularCards(limit);
       const popularCardIds = new Set(popularCards.map((c) => c.card.id));

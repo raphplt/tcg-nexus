@@ -29,8 +29,12 @@ type NumberFields = Pick<
   "setCode" | "setNumber" | "setTotal"
 >;
 
-// numéro "NN/MMM" : dénominateur sur 2-3 chiffres (aucun set < 10 cartes) pour
-// éviter de prendre un fragment de texte ("20/", "0/8") pour un numéro
+/**
+ * Parses set card numbers formatted as "NN/MMM" from OCR text.
+ *
+ * @param text Raw input OCR text.
+ * @returns Object containing setCode, setNumber, and setTotal.
+ */
 export const parseNumber = (text: string): NumberFields => {
   const match = text.match(/(\d{1,3})\s*\/\s*(\d{2,3})/);
   if (!match) return {};
@@ -41,7 +45,12 @@ export const parseNumber = (text: string): NumberFields => {
   };
 };
 
-// retire le bruit OCR autour du nom sans toucher aux accents
+/**
+ * Cleans OCR noise around card names while preserving letter accents and hyphens.
+ *
+ * @param raw Raw input string.
+ * @returns Cleaned card name.
+ */
 export const cleanName = (raw: string): string =>
   raw
     .replace(/[\r\n]+/g, " ")
@@ -75,8 +84,13 @@ const pickCardName = (lines: string[]): string | undefined => {
   return candidate?.trim();
 };
 
-// le nom figure souvent en clair dans le texte plein même quand la ROI échoue :
-// on garde plusieurs candidats, le scoring prendra le meilleur
+/**
+ * Extracts candidate card names from ROI crops and surrounding text lines.
+ *
+ * @param roiName Name extracted from Region of Interest.
+ * @param lines Full text lines array.
+ * @returns Array of clean candidate strings.
+ */
 export const extractNameCandidates = (
   roiName: string,
   lines: string[],
@@ -108,6 +122,12 @@ export interface ParsedOcr {
   fields: ScanParsedFields;
 }
 
+/**
+ * Parses raw OCR text into structured card fields and sanitized line items.
+ *
+ * @param rawText Unstructured text output from OCR engine.
+ * @returns Structured ParsedOcr payload.
+ */
 export const parseOcrText = (rawText: string): ParsedOcr => {
   const lines = rawText
     .split(/\r?\n/)
