@@ -98,7 +98,7 @@ export class NotificationService {
         order: { createdAt: "DESC" },
         skip,
         take: limit,
-    });
+      });
 
     const unreadCount = await this.notificationRepository.count({
       where: { user: { id: userId }, isRead: false },

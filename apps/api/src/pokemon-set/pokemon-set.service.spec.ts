@@ -34,7 +34,11 @@ describe("PokemonSetService", () => {
         },
         {
           provide: getRepositoryToken(PokemonSetTranslation),
-          useValue: { findOne: jest.fn(), findOneOrFail: jest.fn(), upsert: jest.fn() },
+          useValue: {
+            findOne: jest.fn(),
+            findOneOrFail: jest.fn(),
+            upsert: jest.fn(),
+          },
         },
       ],
     }).compile();

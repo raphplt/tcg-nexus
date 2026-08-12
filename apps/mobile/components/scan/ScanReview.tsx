@@ -209,7 +209,8 @@ export function ScanReview({ scan }: { scan: ScanFlow }) {
                 <Text
                   style={[
                     styles.targetChipText,
-                    scan.targetType === "wishlist" && styles.targetChipTextActive,
+                    scan.targetType === "wishlist" &&
+                      styles.targetChipTextActive,
                   ]}
                 >
                   Wishlist

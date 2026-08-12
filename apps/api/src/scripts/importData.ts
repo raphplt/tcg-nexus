@@ -98,7 +98,9 @@ async function bootstrap() {
     await seedService.seedArticles();
     logSuccess("Articles importés !");
 
-    logStep("Import du catalogue Pokémon (séries, sets, cartes, traductions)...");
+    logStep(
+      "Import du catalogue Pokémon (séries, sets, cartes, traductions)...",
+    );
     const catalogReport = await seedService.importPokemon();
     logSuccess(
       `Catalogue importé — langues : ${catalogReport.locales.join(", ")}, ` +

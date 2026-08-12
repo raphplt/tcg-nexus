@@ -138,19 +138,31 @@ export default function TournamentsScreen() {
 
         <View style={styles.cardDetails}>
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={14} color={colors.mutedForeground} />
+            <Ionicons
+              name="calendar-outline"
+              size={14}
+              color={colors.mutedForeground}
+            />
             <Text style={styles.detailText}>{formatDate(item.startDate)}</Text>
           </View>
           {item.location && (
             <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={14} color={colors.mutedForeground} />
+              <Ionicons
+                name="location-outline"
+                size={14}
+                color={colors.mutedForeground}
+              />
               <Text style={styles.detailText} numberOfLines={1}>
                 {item.location}
               </Text>
             </View>
           )}
           <View style={styles.detailRow}>
-            <Ionicons name="people-outline" size={14} color={colors.mutedForeground} />
+            <Ionicons
+              name="people-outline"
+              size={14}
+              color={colors.mutedForeground}
+            />
             <Text style={styles.detailText}>
               {item.players?.length || 0}
               {item.maxPlayers ? ` / ${item.maxPlayers}` : ""} joueurs

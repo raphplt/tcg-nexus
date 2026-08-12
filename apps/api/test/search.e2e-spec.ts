@@ -19,7 +19,9 @@ describe("SearchController (e2e)", () => {
   });
 
   it("GET /search returns an empty result for short queries", async () => {
-    const response = await request(httpServer).get("/search").query({ query: "a" });
+    const response = await request(httpServer)
+      .get("/search")
+      .query({ query: "a" });
 
     expect(response.status).toBe(200);
     expect(response.body.results).toEqual([]);

@@ -112,9 +112,9 @@ export class TournamentParticipantGuard implements CanActivate {
 
       if (!registration) {
         throw new ForbiddenException({
-        code: "NOT_REGISTERED_TO_TOURNAMENT",
-        message: "Vous n'êtes pas inscrit à ce tournoi",
-      });
+          code: "NOT_REGISTERED_TO_TOURNAMENT",
+          message: "Vous n'êtes pas inscrit à ce tournoi",
+        });
       }
 
       request.tournamentPlayer = player;

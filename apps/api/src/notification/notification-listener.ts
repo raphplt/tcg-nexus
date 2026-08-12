@@ -151,11 +151,10 @@ export class NotificationListener {
         { link, tournamentId: payload.tournamentId },
         { name: payload.name },
       );
-      await this.sendEmailToUser(
-        userId,
-        "tournament-started",
-        { name: payload.name, link },
-      );
+      await this.sendEmailToUser(userId, "tournament-started", {
+        name: payload.name,
+        link,
+      });
     }
   }
 
@@ -171,11 +170,11 @@ export class NotificationListener {
         { link, tournamentId: payload.tournamentId, rank: entry.rank },
         { name: payload.name },
       );
-      await this.sendEmailToUser(
-        entry.userId,
-        "tournament-finished",
-        { name: payload.name, link, rank: entry.rank },
-      );
+      await this.sendEmailToUser(entry.userId, "tournament-finished", {
+        name: payload.name,
+        link,
+        rank: entry.rank,
+      });
     }
   }
 
@@ -184,16 +183,12 @@ export class NotificationListener {
     payload: TournamentMatchReminderPayload,
   ): Promise<void> {
     const link = `/tournaments/${payload.tournamentId}/matches/${payload.matchId}`;
-    await this.safeCreate(
-      payload.userId,
-      "tournament.match_reminder",
-      { link, tournamentId: payload.tournamentId, matchId: payload.matchId },
-    );
-    await this.sendEmailToUser(
-      payload.userId,
-      "match-reminder",
-      { link },
-    );
+    await this.safeCreate(payload.userId, "tournament.match_reminder", {
+      link,
+      tournamentId: payload.tournamentId,
+      matchId: payload.matchId,
+    });
+    await this.sendEmailToUser(payload.userId, "match-reminder", { link });
   }
 
   @OnEvent("match.ready")
@@ -205,18 +200,10 @@ export class NotificationListener {
       matchId: payload.matchId,
     };
     if (payload.playerAUserId) {
-      await this.safeCreate(
-        payload.playerAUserId,
-        "match.ready",
-        data,
-      );
+      await this.safeCreate(payload.playerAUserId, "match.ready", data);
     }
     if (payload.playerBUserId) {
-      await this.safeCreate(
-        payload.playerBUserId,
-        "match.ready",
-        data,
-      );
+      await this.safeCreate(payload.playerBUserId, "match.ready", data);
     }
   }
 
@@ -260,33 +247,25 @@ export class NotificationListener {
       { link, orderId: payload.orderId, total: payload.total },
       { amount },
     );
-    await this.sendEmailToUser(
-      payload.sellerUserId,
-      "marketplace-sale",
-      { orderId: payload.orderId, total: payload.total, link },
-    );
+    await this.sendEmailToUser(payload.sellerUserId, "marketplace-sale", {
+      orderId: payload.orderId,
+      total: payload.total,
+      link,
+    });
   }
 
   @OnEvent("order.shipped")
   async onOrderShipped(payload: OrderShippedPayload): Promise<void> {
     const link = `/orders/${payload.orderId}`;
-    await this.safeCreate(
-      payload.buyerUserId,
-      "order.shipped",
-      {
-        link,
-        orderId: payload.orderId,
-        trackingNumber: payload.trackingNumber,
-      },
-    );
-    await this.sendEmailToUser(
-      payload.buyerUserId,
-      "order-shipped",
-      {
-        orderId: payload.orderId,
-        trackingNumber: payload.trackingNumber,
-        link,
-      },
-    );
+    await this.safeCreate(payload.buyerUserId, "order.shipped", {
+      link,
+      orderId: payload.orderId,
+      trackingNumber: payload.trackingNumber,
+    });
+    await this.sendEmailToUser(payload.buyerUserId, "order-shipped", {
+      orderId: payload.orderId,
+      trackingNumber: payload.trackingNumber,
+      link,
+    });
   }
 }

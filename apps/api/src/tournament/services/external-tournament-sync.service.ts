@@ -107,10 +107,8 @@ export class ExternalTournamentSyncService implements OnModuleInit {
               typeof et.externalRegistrationUrl === "string"
                 ? et.externalRegistrationUrl
                 : undefined,
-            maxPlayers:
-              typeof et.maxPlayers === "number" ? et.maxPlayers : 128,
-            minPlayers:
-              typeof et.minPlayers === "number" ? et.minPlayers : 8,
+            maxPlayers: typeof et.maxPlayers === "number" ? et.maxPlayers : 128,
+            minPlayers: typeof et.minPlayers === "number" ? et.minPlayers : 8,
           });
           await this.tournamentRepository.save(newTournament);
           createdCount++;

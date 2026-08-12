@@ -147,10 +147,7 @@ export class CatalogImportService {
         logo?: string;
       };
 
-      await this.serieRepository.upsert(
-        { id, game: CardGame.Pokemon },
-        ["id"],
-      );
+      await this.serieRepository.upsert({ id, game: CardGame.Pokemon }, ["id"]);
 
       for (const locale of locales) {
         const serie = perLocale[locale] as

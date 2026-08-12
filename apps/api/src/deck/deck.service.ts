@@ -1,5 +1,11 @@
 import { CatalogLocalizationService } from "src/card/catalog-localization.service";
-import { BadRequestException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
 import { Repository } from "typeorm";
@@ -261,8 +267,7 @@ export class DeckService {
         typeMap.set(type, (typeMap.get(type) || 0) + quantity),
       );
 
-      const categoryLabel =
-        card.pokemonDetails?.category || "Unknown";
+      const categoryLabel = card.pokemonDetails?.category || "Unknown";
       const normalizedCategory = categoryLabel.toLowerCase().replace("é", "e");
 
       let mappedCategory = categoryLabel;

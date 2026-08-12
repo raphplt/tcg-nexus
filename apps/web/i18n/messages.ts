@@ -35,7 +35,6 @@ async function fetchOverrides(): Promise<Overrides> {
     cache = { overrides, expiresAt: Date.now() + CACHE_TTL_MS };
     return overrides;
   } catch {
-
     return cache?.overrides ?? {};
   }
 }

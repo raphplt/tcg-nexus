@@ -331,7 +331,9 @@ async function main() {
     ? JSON.parse(readFileSync(labelsPath, "utf8"))
     : {};
   if (!existsSync(labelsPath))
-    console.log(`⚠️  No labels found (${labelsPath}) : everything will be marked "unlabeled".`);
+    console.log(
+      `⚠️  No labels found (${labelsPath}) : everything will be marked "unlabeled".`,
+    );
 
   let cases = buildCases(dir, labels);
   if (args.only) cases = cases.filter((c) => c.key === args.only);

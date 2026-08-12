@@ -29,12 +29,18 @@ describe("MailI18nService", () => {
   });
 
   it("interpole les variables du sujet", () => {
-    expect(service.subject("ticket-created", "fr", { ticketId: 12, subject: "Paiement" })).toBe(
-      "[TCG Nexus] Ticket #12 créé : Paiement",
-    );
-    expect(service.subject("ticket-created", "en", { ticketId: 12, subject: "Payment" })).toBe(
-      "[TCG Nexus] Ticket #12 created: Payment",
-    );
+    expect(
+      service.subject("ticket-created", "fr", {
+        ticketId: 12,
+        subject: "Paiement",
+      }),
+    ).toBe("[TCG Nexus] Ticket #12 créé : Paiement");
+    expect(
+      service.subject("ticket-created", "en", {
+        ticketId: 12,
+        subject: "Payment",
+      }),
+    ).toBe("[TCG Nexus] Ticket #12 created: Payment");
   });
 
   it("laisse la variable en place si elle est absente", () => {

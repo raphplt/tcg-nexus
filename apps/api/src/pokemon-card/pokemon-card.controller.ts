@@ -32,7 +32,9 @@ export class PokemonCardController {
   @Post("sync")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: "Déclencher manuellement la synchronisation des cartes Pokémon" })
+  @ApiOperation({
+    summary: "Déclencher manuellement la synchronisation des cartes Pokémon",
+  })
   sync() {
     return this.cardSyncService.syncAll();
   }

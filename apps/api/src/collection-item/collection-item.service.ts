@@ -53,7 +53,8 @@ export class CollectionItemService {
 
     // Ensure user exists
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException({
+    if (!user)
+      throw new NotFoundException({
         code: "USER_NOT_FOUND",
         message: "Utilisateur non trouvé",
       });
@@ -62,7 +63,8 @@ export class CollectionItemService {
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException({
+    if (!card)
+      throw new NotFoundException({
         code: "CARD_NOT_FOUND",
         message: "Carte Pokémon non trouvée",
       });
@@ -138,7 +140,8 @@ export class CollectionItemService {
 
     // Ensure user exists
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException({
+    if (!user)
+      throw new NotFoundException({
         code: "USER_NOT_FOUND",
         message: "Utilisateur non trouvé",
       });
@@ -147,7 +150,8 @@ export class CollectionItemService {
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException({
+    if (!card)
+      throw new NotFoundException({
         code: "CARD_NOT_FOUND",
         message: "Carte Pokémon non trouvée",
       });
@@ -216,7 +220,8 @@ export class CollectionItemService {
       where: { id: collectionId as string },
       relations: ["items", "items.pokemonCard", "user"],
     });
-    if (!collection) throw new NotFoundException({
+    if (!collection)
+      throw new NotFoundException({
         code: "COLLECTION_NOT_FOUND",
         message: "Collection non trouvée",
       });
@@ -224,7 +229,8 @@ export class CollectionItemService {
     const card = await this.pokemonCardRepo.findOne({
       where: { id: pokemonCardId },
     });
-    if (!card) throw new NotFoundException({
+    if (!card)
+      throw new NotFoundException({
         code: "CARD_NOT_FOUND",
         message: "Carte Pokémon non trouvée",
       });
@@ -281,7 +287,8 @@ export class CollectionItemService {
       where: { id: collectionId as string },
       relations: ["items", "items.sealedProduct", "user"],
     });
-    if (!collection) throw new NotFoundException({
+    if (!collection)
+      throw new NotFoundException({
         code: "COLLECTION_NOT_FOUND",
         message: "Collection non trouvée",
       });
@@ -340,7 +347,8 @@ export class CollectionItemService {
     const userIdNum = typeof userId === "string" ? Number(userId) : userId;
 
     const user = await this.userRepo.findOne({ where: { id: userIdNum } });
-    if (!user) throw new NotFoundException({
+    if (!user)
+      throw new NotFoundException({
         code: "USER_NOT_FOUND",
         message: "Utilisateur non trouvé",
       });

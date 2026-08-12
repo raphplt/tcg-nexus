@@ -77,7 +77,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("sales")
-  @ApiOperation({ summary: "Retrieves order sales requiring fulfillment for the authenticated seller" })
+  @ApiOperation({
+    summary:
+      "Retrieves order sales requiring fulfillment for the authenticated seller",
+  })
   getMySales(@Query() query: SellerSalesQueryDto, @CurrentUser() user: User) {
     return this.orderService.findSalesBySellerId(user.id, query);
   }
@@ -98,7 +101,10 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Patch("sales/:id/fulfillment")
-  @ApiOperation({ summary: "Updates fulfillment status and tracking information for a sold order item" })
+  @ApiOperation({
+    summary:
+      "Updates fulfillment status and tracking information for a sold order item",
+  })
   updateFulfillment(
     @Param("id", ParseIntPipe) id: number,
     @Body() dto: UpdateFulfillmentDto,

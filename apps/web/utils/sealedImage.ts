@@ -1,7 +1,6 @@
 import { SealedProduct } from "@/types/sealed-product";
 import { NEXT_PUBLIC_SEALED_CDN_URL } from "./variables";
 
-
 export const SEALED_PLACEHOLDER = "/images/carte-pokemon-dos.jpg";
 
 /**

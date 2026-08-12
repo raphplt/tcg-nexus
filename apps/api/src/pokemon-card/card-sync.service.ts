@@ -183,7 +183,21 @@ export class CardSyncService {
       }
 
       // 2. Ingest sets and associated cards
-      const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
+      const knownPocketSetIds = [
+        "A1",
+        "A1a",
+        "A2",
+        "A2a",
+        "A2b",
+        "P-A",
+        "A3",
+        "A3a",
+        "A3b",
+        "A4",
+        "A4a",
+        "B1a",
+        "B2",
+      ];
 
       for (const setRef of remoteSets) {
         const isPocketName = setRef.name.toLowerCase().includes("pocket");
@@ -246,7 +260,10 @@ export class CardSyncService {
           where: { set: { id: dbSet.id } },
         });
 
-        if (setDetails.cards && dbCardsCount < (setDetails.cardCount?.total ?? 0)) {
+        if (
+          setDetails.cards &&
+          dbCardsCount < (setDetails.cardCount?.total ?? 0)
+        ) {
           this.logger.log(
             `Synchronizing cards for set: ${dbSet.name} (${dbCardsCount}/${setDetails.cardCount?.total} cards in DB)`,
           );
@@ -259,7 +276,10 @@ export class CardSyncService {
 
             if (!card) {
               try {
-                const cardDetails: any = await this.tcgdex.fetch("cards", cardRef.id);
+                const cardDetails: any = await this.tcgdex.fetch(
+                  "cards",
+                  cardRef.id,
+                );
                 if (cardDetails) {
                   const name = this.cleanString(cardDetails.name);
                   const illustrator = this.cleanString(cardDetails.illustrator);
@@ -277,7 +297,8 @@ export class CardSyncService {
                     illustrator,
                     rarity: cardDetails.rarity,
                     variants: cardDetails.variants as any,
-                    variantsDetailed: (cardDetails.variants_detailed || cardDetails.variantsDetailed) as any,
+                    variantsDetailed: (cardDetails.variants_detailed ||
+                      cardDetails.variantsDetailed) as any,
                     legal: cardDetails.legal,
                     updated: cardDetails.updated,
                     pricing: cardDetails.pricing,
@@ -292,7 +313,9 @@ export class CardSyncService {
                     evolveFrom,
                     description,
                     effect,
-                    level: cardDetails.level ? String(cardDetails.level) : undefined,
+                    level: cardDetails.level
+                      ? String(cardDetails.level)
+                      : undefined,
                     stage: cardDetails.stage,
                     suffix: cardDetails.suffix,
                     item: cardDetails.item,
@@ -300,7 +323,9 @@ export class CardSyncService {
                     attacks: cardDetails.attacks,
                     weaknesses: cardDetails.weaknesses,
                     resistances: cardDetails.resistances,
-                    retreat: cardDetails.retreat ? Number(cardDetails.retreat) : undefined,
+                    retreat: cardDetails.retreat
+                      ? Number(cardDetails.retreat)
+                      : undefined,
                     regulationMark: cardDetails.regulationMark,
                     trainerType: this.mapTrainerType(cardDetails.trainerType),
                     energyType: this.mapEnergyType(cardDetails.energyType),

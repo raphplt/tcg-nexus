@@ -179,7 +179,8 @@ export async function loadSystemContent(): Promise<SystemContentItem[]> {
 }
 
 export type SaveResult =
-  { ok: true; saved: number } | { ok: false; error: string };
+  | { ok: true; saved: number }
+  | { ok: false; error: string };
 
 export async function saveTranslations(
   changes: Array<{ path: string; locale: string; value: string }>,

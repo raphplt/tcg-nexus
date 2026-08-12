@@ -8,12 +8,14 @@ import { PokemonSetController } from "./pokemon-set.controller";
 import { PokemonSetService } from "./pokemon-set.service";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([
+  imports: [
+    TypeOrmModule.forFeature([
       PokemonSerie,
       Card,
       PokemonSet,
       PokemonSetTranslation,
-    ])],
+    ]),
+  ],
   controllers: [PokemonSetController],
   providers: [PokemonSetService],
 })

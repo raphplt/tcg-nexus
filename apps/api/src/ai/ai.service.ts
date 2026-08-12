@@ -101,8 +101,7 @@ export class AiService {
     // Category distribution (Pokémon, Trainer, Energy)
     const categoryMap = new Map<string, number>();
     cards.forEach(({ card, qty }) => {
-      const category =
-        card.pokemonDetails?.category || "Unknown";
+      const category = card.pokemonDetails?.category || "Unknown";
       categoryMap.set(category, (categoryMap.get(category) || 0) + qty);
     });
 

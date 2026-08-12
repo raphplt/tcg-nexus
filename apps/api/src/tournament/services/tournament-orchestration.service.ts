@@ -1,4 +1,9 @@
-import { BadRequestException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, In, Repository } from "typeorm";
@@ -69,9 +74,9 @@ export class TournamentOrchestrationService {
 
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
 
       this.validateTournamentStart(tournament, options.checkInRequired);
@@ -136,16 +141,16 @@ export class TournamentOrchestrationService {
 
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
 
       if (tournament.status !== TournamentStatus.IN_PROGRESS) {
         throw new BadRequestException({
-        code: "TOURNAMENT_NOT_IN_PROGRESS",
-        message: "Le tournoi doit être en cours",
-      });
+          code: "TOURNAMENT_NOT_IN_PROGRESS",
+          message: "Le tournoi doit être en cours",
+        });
       }
 
       if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
@@ -237,16 +242,16 @@ export class TournamentOrchestrationService {
 
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
 
       if (tournament.status === TournamentStatus.FINISHED) {
         throw new BadRequestException({
-        code: "TOURNAMENT_ALREADY_FINISHED",
-        message: "Le tournoi est déjà terminé",
-      });
+          code: "TOURNAMENT_ALREADY_FINISHED",
+          message: "Le tournoi est déjà terminé",
+        });
       }
 
       let championId: number | undefined;
@@ -332,9 +337,9 @@ export class TournamentOrchestrationService {
 
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
 
       if (tournament.status === TournamentStatus.FINISHED) {
@@ -345,9 +350,9 @@ export class TournamentOrchestrationService {
 
       if (tournament.status === TournamentStatus.CANCELLED) {
         throw new BadRequestException({
-        code: "TOURNAMENT_ALREADY_CANCELLED",
-        message: "Ce tournoi est déjà annulé",
-      });
+          code: "TOURNAMENT_ALREADY_CANCELLED",
+          message: "Ce tournoi est déjà annulé",
+        });
       }
 
       // Annuler tous les matches en cours

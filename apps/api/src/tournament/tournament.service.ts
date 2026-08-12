@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, ForbiddenException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, LessThan, MoreThanOrEqual, Repository } from "typeorm";
@@ -339,9 +346,9 @@ export class TournamentService {
         });
         if (!lockedTournament) {
           throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+            code: "TOURNAMENT_NOT_FOUND",
+            message: "Tournoi non trouvé",
+          });
         }
 
         const tournament = await tournamentRepository.findOne({
@@ -350,9 +357,9 @@ export class TournamentService {
         });
         if (!tournament) {
           throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+            code: "TOURNAMENT_NOT_FOUND",
+            message: "Tournoi non trouvé",
+          });
         }
 
         const player = await playerRepository.findOne({
@@ -850,9 +857,9 @@ export class TournamentService {
         });
         if (!lockedTournament) {
           throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+            code: "TOURNAMENT_NOT_FOUND",
+            message: "Tournoi non trouvé",
+          });
         }
 
         const tournament = await tournamentRepository.findOne({
@@ -861,9 +868,9 @@ export class TournamentService {
         });
         if (!tournament) {
           throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+            code: "TOURNAMENT_NOT_FOUND",
+            message: "Tournoi non trouvé",
+          });
         }
         this.ensureRegistrationsCanBeManaged(tournament);
 
@@ -1121,9 +1128,9 @@ export class TournamentService {
       });
       if (!lockedTournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
 
       const tournament = await tournamentRepository.findOne({
@@ -1132,9 +1139,9 @@ export class TournamentService {
       });
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
       if (tournament.status !== TournamentStatus.REGISTRATION_OPEN) {
         throw new BadRequestException(
@@ -1227,9 +1234,9 @@ export class TournamentService {
       });
       if (!tournament) {
         throw new NotFoundException({
-        code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
-      });
+          code: "TOURNAMENT_NOT_FOUND",
+          message: "Tournoi non trouvé",
+        });
       }
       this.ensureRegistrationsCanBeManaged(tournament);
 

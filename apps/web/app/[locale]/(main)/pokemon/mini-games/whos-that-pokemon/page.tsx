@@ -557,7 +557,6 @@ export default function WhosThatPokemonPage() {
                               : "scale-95 select-none pointer-events-none"
                           }`}
                           style={{
-
                             filter: revealed
                               ? "none"
                               : `blur(${blurNow.toFixed(1)}px) brightness(${cfg?.brightness ?? 0.5}) saturate(1.15)`,
