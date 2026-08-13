@@ -36,6 +36,7 @@ import {
   getShippingCost,
   SHIPPING_POLICY,
 } from "src/marketplace/shipping-policy";
+import { calculateStabilizedTrendScore } from "src/marketplace/trend-score";
 import {
   Match,
   MatchPhase,
@@ -79,11 +80,15 @@ import {
 } from "src/tournament/services/seeding.service";
 import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { User } from "src/user/entities/user.entity";
-import { DeepPartial, Repository } from "typeorm";
+import { DeepPartial, In, Repository } from "typeorm";
 import {
   type CatalogImportReport,
   CatalogImportService,
 } from "./catalog-import.service";
+import {
+  calculateRecentEventShare,
+  sampleRecentCards,
+} from "./trending-seed.utils";
 
 const SEED_AVATARS = [
   "/images/avatars/pikachu.png",
@@ -1346,10 +1351,11 @@ export class SeedService {
   }
 
   /**
-   * Seed card events to simulate user interactions (dev only)
-   * Génère des événements réalistes (view, search, favorite, add_to_cart) pour certaines cartes
+   * Seeds randomized card interactions with a strong bias toward recent sets.
+   *
+   * @returns Promise that resolves after all generated events are persisted.
    */
-  async seedCardEvents() {
+  async seedCardEvents(): Promise<void> {
     const isProduction =
       this.configService.get("NODE_ENV") === "production" &&
       this.configService.get("ALLOW_DEMO_SEED") !== "true";
@@ -1361,7 +1367,10 @@ export class SeedService {
     }
     console.log("🌱 Starting card events seed...");
     const users = await this.userRepository.find();
-    const cards = await this.pokemonCardRepository.find({ take: 200 }); // Limit to 200 cards
+    const catalogCards = await this.pokemonCardRepository.find({
+      relations: { set: true },
+    });
+    const cards = sampleRecentCards(catalogCards, 200);
 
     console.log(`Found ${users.length} users and ${cards.length} cards`);
 
@@ -1372,48 +1381,56 @@ export class SeedService {
       return;
     }
 
+    await this.cardPopularityMetricsRepository.clear();
+    await this.cardEventRepository.clear();
+
     const eventsToCreate: CardEvent[] = [];
     const now = new Date();
+    const releaseTimestamps = cards
+      .map((card) => Date.parse(card.set?.releaseDate ?? ""))
+      .filter(Number.isFinite);
+    const newestReleaseTimestamp =
+      releaseTimestamps.length > 0
+        ? Math.max(...releaseTimestamps)
+        : now.getTime();
 
-    // Generate event history for each card spanning the past 90 days
+    // Recent cards receive more interactions in the latest week, producing
+    // realistic momentum while every selected card retains historical data.
     for (const card of cards) {
-      // Nombre d'événements pour cette carte (entre 10 et 500)
-      const eventCount = Math.floor(Math.random() * 491) + 10;
+      const eventCount = Math.floor(Math.random() * 221) + 40;
+      const recentEventShare = calculateRecentEventShare(
+        card,
+        newestReleaseTimestamp,
+      );
 
       for (let i = 0; i < eventCount; i++) {
-        // Date aléatoire dans les 90 derniers jours
-        const daysAgo = Math.random() * 90;
+        const daysAgo =
+          Math.random() < recentEventShare
+            ? Math.random() * 7
+            : 7 + Math.random() * 83;
         const createdAt = new Date(
           now.getTime() - daysAgo * 24 * 60 * 60 * 1000,
         );
 
-        // Probabilité différente pour chaque type d'événement
         const rand = Math.random();
         let eventType: CardEventType;
         if (rand < 0.6) {
-          // 60% de views
           eventType = CardEventType.VIEW;
         } else if (rand < 0.8) {
-          // 20% de searches
           eventType = CardEventType.SEARCH;
         } else if (rand < 0.95) {
-          // 15% de favorites
           eventType = CardEventType.FAVORITE;
         } else {
-          // 5% de add_to_cart
           eventType = CardEventType.ADD_TO_CART;
         }
 
-        // Sélectionner un utilisateur aléatoire (ou null pour les événements anonymes)
         const randomUser =
           Math.random() > 0.3
             ? users[Math.floor(Math.random() * users.length)]
             : null;
 
-        // Générer un sessionId réaliste
         const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        // Générer un contexte pour les recherches
         const context =
           eventType === CardEventType.SEARCH
             ? {
@@ -1444,7 +1461,6 @@ export class SeedService {
       }
     }
 
-    // Sauvegarder en batch (par lots de 1000)
     const batchSize = 1000;
     let savedCount = 0;
 
@@ -1475,11 +1491,13 @@ export class SeedService {
   }
 
   /**
-   * Seed card popularity metrics by aggregating events (dev only)
-   * Agrège les événements existants pour créer des métriques de popularité
-   * Note: Cette méthode nécessite que seedCardEvents() ait été appelé avant
+   * Seeds daily popularity metrics from the generated card events.
+   *
+   * This method must run after {@link seedCardEvents}.
+   *
+   * @returns Promise that resolves after all generated metrics are persisted.
    */
-  async seedCardPopularityMetrics() {
+  async seedCardPopularityMetrics(): Promise<void> {
     const isProduction =
       this.configService.get("NODE_ENV") === "production" &&
       this.configService.get("ALLOW_DEMO_SEED") !== "true";
@@ -1491,21 +1509,36 @@ export class SeedService {
     }
     console.log("🌱 Starting card popularity metrics seed...");
 
-    // Réduire le nombre de cartes traitées pour éviter la surcharge mémoire
     const totalCardsToProcess = 100;
     const cardBatchSize = 10;
+    const eventCardRows = await this.cardEventRepository
+      .createQueryBuilder("event")
+      .innerJoin("event.card", "card")
+      .select("card.id", "cardId")
+      .groupBy("card.id")
+      .getRawMany<{ cardId: string }>();
+    const eventCardIds = eventCardRows.map(({ cardId }) => cardId);
 
-    const cards = await this.pokemonCardRepository.find({
-      take: totalCardsToProcess,
-    });
-    console.log(`Found ${cards.length} cards to process for metrics`);
+    await this.cardPopularityMetricsRepository.clear();
+
+    const candidateCards =
+      eventCardIds.length > 0
+        ? await this.pokemonCardRepository.find({
+            where: { id: In(eventCardIds) },
+            relations: { set: true },
+          })
+        : [];
+    const cards = sampleRecentCards(candidateCards, totalCardsToProcess);
+
+    console.log(
+      `Found ${cards.length} event-backed cards to process for metrics`,
+    );
 
     if (cards.length === 0) {
-      console.log("Pas de cartes trouvées.");
+      console.log("No cards with seeded events were found.");
       return;
     }
 
-    // Récupérer tous les listings une seule fois (c'est généralement gérable)
     const allListings = await this.listingRepository.find({
       relations: ["pokemonCard"],
     });
@@ -1521,7 +1554,6 @@ export class SeedService {
 
     let totalMetricsCreated = 0;
 
-    // Traiter les cartes par lots
     for (let i = 0; i < cards.length; i += cardBatchSize) {
       const cardBatch = cards.slice(i, i + cardBatchSize);
       const cardIds = cardBatch.map((c) => c.id);
@@ -1530,7 +1562,6 @@ export class SeedService {
         `Processing card batch ${Math.floor(i / cardBatchSize) + 1}/${Math.ceil(cards.length / cardBatchSize)}...`,
       );
 
-      // Charger les événements UNIQUEMENT pour ce lot de cartes
       const events = await this.cardEventRepository
         .createQueryBuilder("event")
         .leftJoinAndSelect("event.card", "card")
@@ -1539,7 +1570,6 @@ export class SeedService {
 
       if (events.length === 0) continue;
 
-      // Grouper les événements par carte et par jour
       const eventsByCardAndDate = new Map<string, Map<string, CardEvent[]>>();
 
       events.forEach((event) => {
@@ -1566,7 +1596,6 @@ export class SeedService {
         if (!dateEventsMap) continue;
 
         const cardListings = listingsByCardId.get(cardId) || [];
-        // Récupérer tous les événements de la carte pour le calcul des scores globaux
         const allCardEvents = events.filter((e) => e.card.id === cardId);
 
         for (const [dateKey, dayEvents] of dateEventsMap) {
@@ -1652,49 +1681,46 @@ export class SeedService {
             (e) => e.createdAt >= cutoff30Days && e.createdAt < cutoff7Days,
           );
 
-          const recentScore =
-            recentEvents.reduce((sum, e) => {
-              /* ... same logic ... */
-              switch (e.eventType) {
-                case CardEventType.VIEW:
-                  return sum + 1;
-                case CardEventType.SEARCH:
-                  return sum + 2;
-                case CardEventType.FAVORITE:
-                  return sum + 5;
-                case CardEventType.ADD_TO_CART:
-                  return sum + 10;
-                case CardEventType.SALE:
-                  return sum + 50;
-                default:
-                  return sum;
-              }
-            }, 0) / 7;
+          const recentScore = recentEvents.reduce((sum, e) => {
+            switch (e.eventType) {
+              case CardEventType.VIEW:
+                return sum + 1;
+              case CardEventType.SEARCH:
+                return sum + 2;
+              case CardEventType.FAVORITE:
+                return sum + 5;
+              case CardEventType.ADD_TO_CART:
+                return sum + 10;
+              case CardEventType.SALE:
+                return sum + 50;
+              default:
+                return sum;
+            }
+          }, 0);
 
-          const baseScore =
-            baseEvents.reduce((sum, e) => {
-              switch (e.eventType) {
-                case CardEventType.VIEW:
-                  return sum + 1;
-                case CardEventType.SEARCH:
-                  return sum + 2;
-                case CardEventType.FAVORITE:
-                  return sum + 5;
-                case CardEventType.ADD_TO_CART:
-                  return sum + 10;
-                case CardEventType.SALE:
-                  return sum + 50;
-                default:
-                  return sum;
-              }
-            }, 0) / 23;
+          const baseScore = baseEvents.reduce((sum, e) => {
+            switch (e.eventType) {
+              case CardEventType.VIEW:
+                return sum + 1;
+              case CardEventType.SEARCH:
+                return sum + 2;
+              case CardEventType.FAVORITE:
+                return sum + 5;
+              case CardEventType.ADD_TO_CART:
+                return sum + 10;
+              case CardEventType.SALE:
+                return sum + 50;
+              default:
+                return sum;
+            }
+          }, 0);
 
-          const trendScore =
-            baseScore === 0
-              ? recentScore > 0
-                ? 100
-                : 0
-              : ((recentScore - baseScore) / baseScore) * 100;
+          const trendScore = calculateStabilizedTrendScore(
+            recentScore,
+            baseScore,
+            7,
+            23,
+          );
 
           metricsToCreate.push(
             this.cardPopularityMetricsRepository.create({
@@ -1716,14 +1742,12 @@ export class SeedService {
         }
       }
 
-      // Sauvegarder le lot de métriques
       if (metricsToCreate.length > 0) {
         await this.cardPopularityMetricsRepository.save(metricsToCreate);
         totalMetricsCreated += metricsToCreate.length;
         console.log(`Saved ${metricsToCreate.length} metrics for this batch.`);
       }
 
-      // Libérer la mémoire explicitement
       events.length = 0;
       metricsToCreate.length = 0;
       eventsByCardAndDate.clear();

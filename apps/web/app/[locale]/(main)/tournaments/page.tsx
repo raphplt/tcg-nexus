@@ -15,7 +15,7 @@ import {
   Users2,
 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { H1, H2 } from "@/components/Shared/Titles";
@@ -47,20 +47,28 @@ const resolveBadgeVariant = (
   fallback: "default" | "secondary" | "destructive" | "outline" = "outline",
 ) =>
   (palette[value] as
-    | "default"
-    | "secondary"
-    | "destructive"
-    | "outline"
-    | undefined) || fallback;
+    "default" | "secondary" | "destructive" | "outline" | undefined) ||
+  fallback;
 
-const formatDate = (date: string | undefined, locale: string) => {
+/**
+ * Provides a date formatter bound to the active locale, with a translated
+ * fallback when no date is available.
+ */
+const useFormatDate = () => {
   const t = useTranslations("Tournaments");
-  if (!date) return t("dateToBeConfirmed");
-  return new Date(date).toLocaleDateString(locale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const locale = useLocale();
+
+  return useCallback(
+    (date: string | undefined) => {
+      if (!date) return t("dateToBeConfirmed");
+      return new Date(date).toLocaleDateString(locale, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    },
+    [locale, t],
+  );
 };
 
 const getTournamentStatusLabel = (status: string) =>
@@ -74,7 +82,7 @@ const getTournamentTypeLabel = (type: string) =>
 
 export default function TournamentsPage() {
   const t = useTranslations("Tournaments");
-  const locale = useLocale();
+  const formatDate = useFormatDate();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -298,7 +306,7 @@ export default function TournamentsPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">
-                        {formatDate(spotlightTournament.startDate, locale)}
+                        {formatDate(spotlightTournament.startDate)}
                       </p>
                       <h2 className="text-2xl font-bold leading-tight">
                         {spotlightTournament.name}
@@ -355,7 +363,7 @@ export default function TournamentsPage() {
                   label="Prochaine date"
                   value={
                     spotlightTournament
-                      ? formatDate(spotlightTournament.startDate, locale)
+                      ? formatDate(spotlightTournament.startDate)
                       : t("toBeConfirmed")
                   }
                   icon={CalendarClock}
@@ -621,7 +629,7 @@ function SectionHeading({
 
 function UpcomingRow({ tournament }: { tournament: Tournament }) {
   const t = useTranslations("Tournaments");
-  const locale = useLocale();
+  const formatDate = useFormatDate();
   return (
     <Link
       href={`/tournaments/${tournament.id}`}
@@ -633,7 +641,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
             {t("date")}
           </p>
           <p className="mt-1 text-sm font-semibold">
-            {formatDate(tournament.startDate, locale)}
+            {formatDate(tournament.startDate)}
           </p>
         </div>
 
@@ -671,7 +679,7 @@ function UpcomingRow({ tournament }: { tournament: Tournament }) {
 }
 
 function ResultRow({ tournament }: { tournament: Tournament }) {
-  const locale = useLocale();
+  const formatDate = useFormatDate();
   return (
     <Link
       href={`/tournaments/${tournament.id}`}
@@ -679,7 +687,7 @@ function ResultRow({ tournament }: { tournament: Tournament }) {
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {formatDate(tournament.endDate || tournament.startDate, locale)}
+          {formatDate(tournament.endDate || tournament.startDate)}
         </p>
         <p className="mt-1 font-semibold text-foreground">{tournament.name}</p>
       </div>
@@ -712,14 +720,14 @@ function TournamentBrowseCard({
   canRegister: boolean;
 }) {
   const t = useTranslations("Tournaments");
-  const locale = useLocale();
+  const formatDate = useFormatDate();
   return (
     <Card className="tcg-surface tcg-surface--hover">
       <CardContent className="space-y-5 p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {formatDate(tournament.startDate, locale)}
+              {formatDate(tournament.startDate)}
             </p>
             <h3 className="mt-2 text-xl font-bold leading-tight text-foreground">
               {tournament.name}

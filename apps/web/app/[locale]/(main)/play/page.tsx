@@ -194,8 +194,6 @@ const getNeutralErrorMessage = (
 const getMatchBucket = (
   status: PlayHubMatchSummary["status"],
 ): PlayerMatchRecord["bucket"] => {
-  const t = useTranslations("Play");
-  const tError = useTranslations("ApiErrors");
   if (status === "in_progress") return "live";
   if (status === "scheduled") return "ready";
   return "done";
@@ -829,7 +827,7 @@ function ResumeCard({ item }: { item: ResumeItem }) {
 
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-border pt-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {getResumeContextLabel(item.kind)}
+            {getResumeContextLabel(item.kind, t)}
           </p>
           <Button asChild size="sm" className="">
             <Link href={item.href}>
@@ -2046,19 +2044,16 @@ function getResumeCardClass(kind: ResumeKind) {
   }
 }
 
-function getResumeContextLabel(kind: ResumeKind) {
-  const t = useTranslations("Play");
+function getResumeContextLabel(kind: ResumeKind, t: Translate) {
   switch (kind) {
     case "tournament_live":
     case "tournament_ready":
-      return "Tournoi";
+      return t("tabTournaments");
     case "training_awaiting":
     case "training_active":
       return t("training");
     case "duel_awaiting":
     case "duel_active":
       return t("tabDuel");
-    default:
-      return "Partie";
   }
 }

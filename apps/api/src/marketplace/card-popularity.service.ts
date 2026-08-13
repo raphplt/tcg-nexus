@@ -2,11 +2,12 @@ import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { createHash } from "crypto";
 import { Card } from "src/card/entities/card.entity";
-import { LessThanOrEqual, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { CreateCardEventDto } from "./dto/card-popularity.dto";
 import { CardEvent, CardEventType } from "./entities/card-event.entity";
 import { CardPopularityMetrics } from "./entities/card-popularity-metrics.entity";
 import { Listing } from "./entities/listing.entity";
+import { calculateStabilizedTrendScore } from "./trend-score";
 
 @Injectable()
 export class CardPopularityService {
@@ -308,15 +309,12 @@ export class CardPopularityService {
       else baseScore += total;
     });
 
-    const recentDailyAvg = recentScore / this.TREND_SHORT_WINDOW_DAYS;
-    const baseDailyAvg =
-      baseScore / (this.TREND_BASE_WINDOW_DAYS - this.TREND_SHORT_WINDOW_DAYS);
-
-    if (baseDailyAvg === 0) {
-      return recentDailyAvg > 0 ? 100 : 0;
-    }
-
-    const growthRatio = ((recentDailyAvg - baseDailyAvg) / baseDailyAvg) * 100;
+    const growthRatio = calculateStabilizedTrendScore(
+      recentScore,
+      baseScore,
+      this.TREND_SHORT_WINDOW_DAYS,
+      this.TREND_BASE_WINDOW_DAYS - this.TREND_SHORT_WINDOW_DAYS,
+    );
 
     const listingCount = await this.listingRepository.count({
       where: { pokemonCard: { id: cardId } },
@@ -329,38 +327,39 @@ export class CardPopularityService {
   }
 
   /**
+   * Builds a query restricted to the latest available metric for each card.
+   */
+  private createLatestMetricsQuery(now: Date) {
+    return this.metricsRepository
+      .createQueryBuilder("metric")
+      .leftJoinAndSelect("metric.card", "card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("set.serie", "serie")
+      .innerJoin(
+        (subQuery) =>
+          subQuery
+            .select("latest.card_id", "card_id")
+            .addSelect("MAX(latest.date)", "latest_date")
+            .from(CardPopularityMetrics, "latest")
+            .where("latest.date <= :latestMetricsNow")
+            .groupBy("latest.card_id"),
+        "latest_metric",
+        "latest_metric.card_id = card.id AND latest_metric.latest_date = metric.date",
+      )
+      .where("metric.date <= :latestMetricsNow", { latestMetricsNow: now });
+  }
+
+  /**
    * Retrieves popular cards ordered by popularity score.
    *
    * @param limit Number of popular cards to retrieve.
    * @returns Array of popular cards with market summary stats.
    */
   async getPopularCards(limit: number = 10) {
-    const metrics = await this.metricsRepository.find({
-      where: {
-        date: LessThanOrEqual(new Date()),
-      },
-      relations: ["card", "card.set", "card.set.serie"],
-      order: {
-        popularityScore: "DESC",
-      },
-      take: limit * 2,
-    });
-
-    // Group by card retaining latest date metric
-    const cardMap = new Map<string, CardPopularityMetrics>();
-
-    metrics.forEach((metric) => {
-      const cardId = metric.card.id;
-      const existing = cardMap.get(cardId);
-
-      if (!existing || metric.date > existing.date) {
-        cardMap.set(cardId, metric);
-      }
-    });
-
-    const sortedCards = Array.from(cardMap.values())
-      .sort((a, b) => b.popularityScore - a.popularityScore)
-      .slice(0, limit);
+    const sortedCards = await this.createLatestMetricsQuery(new Date())
+      .orderBy("metric.popularityScore", "DESC")
+      .take(limit)
+      .getMany();
 
     return sortedCards.map((metric) => ({
       // Name, image, rarity, and set labels are attached by `CatalogLocalizationInterceptor` from IDs.
@@ -392,41 +391,24 @@ export class CardPopularityService {
    * @returns Array of trending cards.
    */
   async getTrendingCards(limit: number = 10, excludePopular: boolean = false) {
-    const query = this.metricsRepository
-      .createQueryBuilder("metric")
-      .leftJoinAndSelect("metric.card", "card")
-      .leftJoinAndSelect("card.set", "set")
-      .leftJoinAndSelect("set.serie", "serie")
-      .where("metric.date <= :now", { now: new Date() })
-      .orderBy("metric.trendScore", "DESC")
-      .take(limit * 2);
+    const query = this.createLatestMetricsQuery(new Date());
 
-    const metrics = await query.getMany();
-
-    // Group by card retaining latest date metric
-    const cardMap = new Map<string, CardPopularityMetrics>();
-
-    metrics.forEach((metric) => {
-      const cardId = metric.card.id;
-      const existing = cardMap.get(cardId);
-
-      if (!existing || metric.date > existing.date) {
-        cardMap.set(cardId, metric);
-      }
-    });
-
-    let sortedCards = Array.from(cardMap.values()).sort(
-      (a, b) => b.trendScore - a.trendScore,
-    );
-
-    // Exclude top popular cards to prevent duplication across widgets
     if (excludePopular) {
       const popularCards = await this.getPopularCards(limit);
       const popularCardIds = new Set(popularCards.map((c) => c.card.id));
-      sortedCards = sortedCards.filter((m) => !popularCardIds.has(m.card.id));
+      if (popularCardIds.size > 0) {
+        query.andWhere("card.id NOT IN (:...popularCardIds)", {
+          popularCardIds: [...popularCardIds],
+        });
+      }
     }
 
-    return sortedCards.slice(0, limit).map((metric) => ({
+    const sortedCards = await query
+      .orderBy("metric.trendScore", "DESC")
+      .take(limit)
+      .getMany();
+
+    return sortedCards.map((metric) => ({
       // Name, image, rarity, and set labels are attached by `CatalogLocalizationInterceptor` from IDs.
       card: {
         id: metric.card.id,

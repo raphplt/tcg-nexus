@@ -16,6 +16,7 @@ const mockRepo = () => ({
   createQueryBuilder: jest.fn(() => ({
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
+    innerJoin: jest.fn().mockReturnThis(),
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
@@ -111,9 +112,14 @@ describe("CardPopularityService", () => {
       avgPrice: 7,
       date: new Date(),
     };
-    metricsRepo.find.mockResolvedValue([{ ...metric, popularityScore: 0 }]);
+    const qb = metricsRepo.createQueryBuilder();
+    qb.getMany.mockResolvedValue([{ ...metric, popularityScore: 0 }]);
+    metricsRepo.createQueryBuilder.mockReturnValue(qb);
+
     const result = await service.getPopularCards(1);
     expect(result[0].card.id).toBe("c1");
+    expect(qb.innerJoin).toHaveBeenCalled();
+    expect(qb.orderBy).toHaveBeenCalledWith("metric.popularityScore", "DESC");
   });
 
   it("should get trending cards and exclude popular", async () => {
@@ -185,29 +191,28 @@ describe("CardPopularityService", () => {
     );
   });
 
-  it("should compute trend score with zero base", async () => {
+  it("should cap a strong trend with zero base", async () => {
     const qb = cardEventRepo.createQueryBuilder();
     qb.getRawMany.mockResolvedValue([
-      { eventType: CardEventType.VIEW, window: "recent", count: "1" },
+      { eventType: CardEventType.VIEW, window: "recent", count: "25" },
     ]);
     cardEventRepo.createQueryBuilder.mockReturnValue(qb);
     listingRepo.count.mockResolvedValue(10);
 
     const score = await (service as any).calculateTrendScore("card1");
-    expect(score).toBe(100);
+    expect(score).toBe(300);
   });
 
   it("should compute trend score with listing penalty", async () => {
     const qb = cardEventRepo.createQueryBuilder();
     qb.getRawMany.mockResolvedValue([
-      { eventType: CardEventType.VIEW, window: "recent", count: "1" },
-      { eventType: CardEventType.VIEW, window: "base", count: "1" },
+      { eventType: CardEventType.VIEW, window: "recent", count: "25" },
+      { eventType: CardEventType.VIEW, window: "base", count: "23" },
     ]);
     cardEventRepo.createQueryBuilder.mockReturnValue(qb);
     listingRepo.count.mockResolvedValue(200);
 
     const score = await (service as any).calculateTrendScore("card1");
-    const unpenalizedGrowthRatio = ((1 / 7 - 1 / 23) / (1 / 23)) * 100;
-    expect(score).toBeCloseTo(unpenalizedGrowthRatio * 0.5, 5);
+    expect(score).toBeCloseTo(64.2857, 4);
   });
 });

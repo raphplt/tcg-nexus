@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
@@ -11,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCardDetails } from "@/hooks/useCardDetails";
+import { useRouter } from "@/i18n/navigation";
 import { cardEventTracker } from "@/services/card-event-tracker.service";
 import { useCartStore } from "@/store/cart.store";
 import { BuyBox } from "./_components/BuyBox";
@@ -23,7 +23,7 @@ export default function CardDetailPage() {
   const t = useTranslations("CardPage");
   const { id } = useParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [currencyFilter, setCurrencyFilter] = useState<string>("all");
   const [cardStateFilter, setCardStateFilter] = useState<string>("all");
   const [addingToListingId, setAddingToListingId] = useState<number | null>(
@@ -111,6 +111,8 @@ export default function CardDetailPage() {
           <div className="space-y-6 lg:col-span-7">
             <CardHeading card={card} />
             <BuyBox
+              cardId={card.id}
+              currentUserId={user?.id}
               totalListings={stats?.totalListings ?? 0}
               minPrice={stats?.minPrice ?? null}
               maxPrice={stats?.maxPrice ?? null}
@@ -133,6 +135,8 @@ export default function CardDetailPage() {
 
         {!hasNoOfferAtAll && (
           <ListingsTable
+            cardId={card.id}
+            currentUserId={user?.id}
             listings={listings}
             loading={loadingListings}
             currencyFilter={currencyFilter}

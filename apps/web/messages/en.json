@@ -955,6 +955,7 @@
     "sellIt": "Sell it",
     "freeShipping": "Free shipping",
     "addToCart": "Add to cart",
+    "ownListing": "Your listing",
     "averagePrice": "Average price",
     "highestPrice": "Highest price"
   },
@@ -972,6 +973,7 @@
     "total": "Total",
     "condition": "Condition",
     "add": "Add",
+    "ownListing": "Your listing",
     "sellThisCard": "Sell this card"
   },
   "Pokedex": {

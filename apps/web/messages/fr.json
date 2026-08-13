@@ -955,6 +955,7 @@
     "sellIt": "Mettez-la en vente",
     "freeShipping": "Frais de port offerts",
     "addToCart": "Ajouter au panier",
+    "ownListing": "Votre offre",
     "averagePrice": "Prix moyen",
     "highestPrice": "Prix le plus haut"
   },
@@ -972,6 +973,7 @@
     "total": "Total",
     "condition": "État",
     "add": "Ajouter",
+    "ownListing": "Votre offre",
     "sellThisCard": "Mettre cette carte en vente"
   },
   "Pokedex": {

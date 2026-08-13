@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Badge } from "@components/ui/badge";
 import { Button } from "@components/ui/button";
 import {
@@ -36,7 +35,8 @@ import {
   Tag,
 } from "lucide-react";
 import Image from "next/image";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -53,6 +53,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { FilterState, useMarketplaceCards } from "@/hooks/useMarketplace";
+import { Link, useRouter } from "@/i18n/navigation";
+import { pokemonCardService } from "@/services/pokemonCard.service";
 import {
   PokemonCardType,
   PokemonSerieType,
@@ -69,6 +71,8 @@ const CardForm = () => {
   const [loading, setLoading] = useState(false);
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialCardId = searchParams.get("cardId");
 
   const [selectedCard, setSelectedCard] = useState<PokemonCardType | null>(
     null,
@@ -110,6 +114,33 @@ const CardForm = () => {
       currency: Currency.EUR,
     },
   });
+
+  useEffect(() => {
+    if (
+      !initialCardId ||
+      !FormSchema.shape.cardId.safeParse(initialCardId).success
+    ) {
+      return;
+    }
+
+    let isActive = true;
+
+    pokemonCardService
+      .getById(initialCardId)
+      .then((card) => {
+        if (!isActive) return;
+
+        setSelectedCard(card);
+        form.setValue("cardId", card.id, { shouldValidate: true });
+      })
+      .catch(() => {
+        // The regular selector remains available when a stale card link is used.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [form, initialCardId]);
 
   useEffect(() => {
     setFilters((prev) => ({ ...prev, search: debouncedSearch }));

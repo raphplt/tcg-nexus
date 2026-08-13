@@ -30,8 +30,6 @@ import {
 } from "./_components/VerticalTabs";
 
 function formatDate(date?: string | null) {
-  const t = useTranslations("TournamentDetail");
-  const tError = useTranslations("ApiErrors");
   if (!date) return "-";
   try {
     return new Date(date).toLocaleString(undefined, {

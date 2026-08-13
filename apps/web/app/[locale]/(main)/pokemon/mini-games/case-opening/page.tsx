@@ -85,12 +85,11 @@ function cardValue(card: any): number {
   return 0.5;
 }
 
-function mapCard(card: any): CardItem {
-  const t = useTranslations("CaseOpening");
+function mapCard(card: any, fallbackName: string): CardItem {
   return {
     uid: nextUid(),
     id: String(card?.id ?? "unknown"),
-    name: card?.name ?? t("pokemonCard"),
+    name: card?.name ?? fallbackName,
     rarity: card?.rarity,
     image: getCardImage(card),
     price: Number(cardValue(card).toFixed(2)),
@@ -388,7 +387,9 @@ export default function CaseOpeningPage() {
           selectedSetRef.current !== "all" ? selectedSetRef.current : undefined,
         limit: 80,
       });
-      const items = (res.data ?? []).map(mapCard);
+      const items = (res.data ?? []).map((card) =>
+        mapCard(card, t("pokemonCard")),
+      );
       poolRef.current =
         items.length > 0 ? items : fallbackPool(t("pokemonCard"));
     } catch {
@@ -579,7 +580,9 @@ export default function CaseOpeningPage() {
       if ((opp.openedPacks?.length ?? 0) > oppRevealedRef.current) {
         const fresh = opp.openedPacks
           .slice(oppRevealedRef.current)
-          .map((pk: any[]) => pk.map(mapCard));
+          .map((pk: any[]) =>
+            pk.map((card) => mapCard(card, t("pokemonCard"))),
+          );
         setP2Packs((prev) => [...prev, ...fresh]);
         oppRevealedRef.current = opp.openedPacks.length;
       }
@@ -589,7 +592,9 @@ export default function CaseOpeningPage() {
         !isSpinningRef.current &&
         (me.openedPacks?.length ?? 0) > myRevealedRef.current
       ) {
-        const pack = me.openedPacks[myRevealedRef.current].map(mapCard);
+        const pack = me.openedPacks[myRevealedRef.current].map((card: any) =>
+          mapCard(card, t("pokemonCard")),
+        );
         setStage("spinning");
         startBoosterReveal(pack, "p1");
       }

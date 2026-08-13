@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Loader2, ShoppingCart } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -23,12 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "@/i18n/navigation";
 import { useCurrencyStore } from "@/store/currency.store";
 import type { Listing } from "@/types/listing";
 import { cardStates, languages } from "@/utils/variables";
 import { getCardStateColor } from "../../../utils";
 
 interface ListingsTableProps {
+  cardId: string;
+  currentUserId?: number;
   listings: Listing[];
   loading: boolean;
   currencyFilter: string;
@@ -50,6 +52,8 @@ const languageLabel = (value?: string | null) =>
   languages.find((l) => l.value === value)?.label ?? value ?? "—";
 
 export function ListingsTable({
+  cardId,
+  currentUserId,
   listings,
   loading,
   currencyFilter,
@@ -144,6 +148,7 @@ export function ListingsTable({
                 const total =
                   toNumber(listing.price) + toNumber(listing.shippingCost);
                 const soldOut = listing.quantityAvailable === 0;
+                const isOwnListing = listing.seller.id === currentUserId;
 
                 return (
                   <TableRow key={listing.id}>
@@ -202,12 +207,15 @@ export function ListingsTable({
                       <Button
                         size="sm"
                         variant={
-                          index === 0 && !soldOut ? "default" : "outline"
+                          index === 0 && !soldOut && !isOwnListing
+                            ? "default"
+                            : "outline"
                         }
                         onClick={() => onAddToCart(listing.id)}
                         disabled={
                           isCartLoading ||
                           addingToListingId === listing.id ||
+                          isOwnListing ||
                           soldOut
                         }
                       >
@@ -215,6 +223,8 @@ export function ListingsTable({
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : soldOut ? (
                           t("soldOut")
+                        ) : isOwnListing ? (
+                          t("ownListing")
                         ) : (
                           <>
                             <ShoppingCart className="w-4 h-4" />
@@ -234,7 +244,11 @@ export function ListingsTable({
           <p className="font-medium">{t("noMatch")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("emptyHelp")}</p>
           <Button variant="outline" size="sm" className="mt-4" asChild>
-            <Link href="/marketplace/create">{t("sellThisCard")}</Link>
+            <Link
+              href={`/marketplace/create?cardId=${encodeURIComponent(cardId)}`}
+            >
+              {t("sellThisCard")}
+            </Link>
           </Button>
         </div>
       )}

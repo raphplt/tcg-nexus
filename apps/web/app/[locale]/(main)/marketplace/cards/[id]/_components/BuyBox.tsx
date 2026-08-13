@@ -1,12 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Loader2, ShieldCheck, ShoppingCart, Tag, Truck } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@/i18n/navigation";
 import { useCurrencyStore } from "@/store/currency.store";
 import type { CardPricing } from "@/types/cardPokemon";
 import type { Listing } from "@/types/listing";
@@ -15,6 +15,8 @@ import { getCardStateColor } from "../../../utils";
 import { hasReferencePrices, ReferencePrices } from "./ReferencePrices";
 
 interface BuyBoxProps {
+  cardId: string;
+  currentUserId?: number;
   totalListings: number;
   minPrice: number | null;
   avgPrice: number | null;
@@ -34,6 +36,8 @@ const stateLabel = (value?: string | null) =>
   cardStates.find((s) => s.value === value)?.label ?? value ?? "";
 
 export function BuyBox({
+  cardId,
+  currentUserId,
   totalListings,
   minPrice,
   avgPrice,
@@ -52,6 +56,7 @@ export function BuyBox({
   const { formatPrice } = useCurrencyStore();
   const displayCurrency = currency || bestListing?.currency || "EUR";
   const showReferences = hasReferencePrices(marketPricing);
+  const isOwnListing = bestListing?.seller.id === currentUserId;
 
   if (loading) {
     return (
@@ -108,8 +113,10 @@ export function BuyBox({
               <Button
                 size="lg"
                 className="w-full"
+                variant={isOwnListing ? "outline" : "default"}
                 onClick={() => onAddToCart(bestListing.id)}
                 disabled={
+                  isOwnListing ||
                   isAdding ||
                   isCartLoading ||
                   bestListing.quantityAvailable === 0
@@ -120,7 +127,7 @@ export function BuyBox({
                 ) : (
                   <ShoppingCart className="w-4 h-4" />
                 )}
-                {t("addToCart")}
+                {isOwnListing ? t("ownListing") : t("addToCart")}
               </Button>
               <Button variant="outline" size="lg" className="w-full" asChild>
                 <a href="#offres">
@@ -163,7 +170,11 @@ export function BuyBox({
               <p className="text-sm text-muted-foreground">{t("noListings")}</p>
             </div>
             <Button className="w-full" asChild>
-              <Link href="/marketplace/create">{t("sellThisCard")}</Link>
+              <Link
+                href={`/marketplace/create?cardId=${encodeURIComponent(cardId)}`}
+              >
+                {t("sellThisCard")}
+              </Link>
             </Button>
           </div>
         )}
@@ -185,7 +196,7 @@ export function BuyBox({
             Vous possédez cette carte ?{" "}
           </span>
           <Link
-            href="/marketplace/create"
+            href={`/marketplace/create?cardId=${encodeURIComponent(cardId)}`}
             className="font-medium text-primary hover:underline"
           >
             {t("sellIt")}

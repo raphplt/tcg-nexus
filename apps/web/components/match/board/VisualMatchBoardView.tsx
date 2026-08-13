@@ -203,7 +203,7 @@ export function VisualMatchBoardView({
               })()}
             </HudBadge>
             <HudBadge>{`Tour ${gameState.turnNumber}`}</HudBadge>
-            <HudBadge>{formatPhaseLabel(gameState.gamePhase)}</HudBadge>
+            <HudBadge>{formatPhaseLabel(gameState.gamePhase, t)}</HudBadge>
             <HudBadge tone={isMyTurn ? "emerald" : "rose"}>
               <span className="flex items-center gap-1.5">
                 {isMyTurn ? (
@@ -553,7 +553,7 @@ export function VisualMatchBoardView({
                   transition={{ delay: 0.5 }}
                   className="text-white/60 text-sm"
                 >
-                  {formatWinReason(gameState.winnerReason)}
+                  {formatWinReason(gameState.winnerReason, t)}
                 </motion.p>
               )}
 
@@ -704,8 +704,10 @@ function formatLogEntry(entry: OnlineMatchLogEntry) {
   return JSON.stringify(entry.payload).slice(0, 50);
 }
 
-function formatPhaseLabel(phase?: string | null) {
-  const t = useTranslations("MatchBoard");
+function formatPhaseLabel(
+  phase: string | null | undefined,
+  t: (key: string) => string,
+) {
   if (!phase) return "Phase";
 
   const labels: Record<string, string> = {
@@ -720,8 +722,7 @@ function formatPhaseLabel(phase?: string | null) {
   return labels[phase] ?? phase;
 }
 
-function formatWinReason(reason: string): string {
-  const t = useTranslations("MatchBoard");
+function formatWinReason(reason: string, t: (key: string) => string): string {
   const reasons: Record<string, string> = {
     PrizeOut: t("allPrizesTaken"),
     DeckOut: t("opponentDeckEmpty"),
