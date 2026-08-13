@@ -1,3 +1,4 @@
+import { NotificationI18nService } from "./notification-i18n.service";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -30,6 +31,7 @@ import { NotificationService } from "./notification.service";
     EmailNotificationService,
     NotificationListener,
     NotificationReminderScheduler,
+    NotificationI18nService,
   ],
   exports: [NotificationService, NotificationGateway],
 })

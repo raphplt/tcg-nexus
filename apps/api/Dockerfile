@@ -14,10 +14,14 @@ ENV OCR_LANG_PATH=/app/tessdata
 COPY package*.json /app/
 COPY apps/api/package*.json /app/apps/api/
 COPY packages/scan-contract /app/packages/scan-contract
+COPY packages/pokemon-dataset /app/packages/pokemon-dataset
 RUN npm ci --workspace=api
 
 COPY apps/api /app/apps/api
-RUN mkdir -p /app/data
+
+COPY data /app/data
+
+ENV TCG_DATA_DIR=/app/data
 
 WORKDIR /app/apps/api
 RUN npm run build

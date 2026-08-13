@@ -11,23 +11,6 @@ const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   [OrderStatus.REFUNDED]: "bg-gray-500 hover:bg-gray-600",
 };
 
-const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  [OrderStatus.PENDING]: "En attente de paiement",
-  [OrderStatus.PAID]: "Payée",
-  [OrderStatus.SHIPPED]: "Expédiée",
-  [OrderStatus.DELIVERED]: "Livrée",
-  [OrderStatus.CANCELLED]: "Annulée",
-  [OrderStatus.REFUNDED]: "Remboursée",
-};
-
-const FULFILLMENT_LABELS: Record<FulfillmentStatus, string> = {
-  [FulfillmentStatus.TO_SHIP]: "À expédier",
-  [FulfillmentStatus.PREPARING]: "En préparation",
-  [FulfillmentStatus.SHIPPED]: "Expédiée",
-  [FulfillmentStatus.DELIVERED]: "Livrée",
-  [FulfillmentStatus.CANCELLED]: "Annulée",
-};
-
 const FULFILLMENT_STYLES: Record<FulfillmentStatus, string> = {
   [FulfillmentStatus.TO_SHIP]: "bg-amber-500 hover:bg-amber-600",
   [FulfillmentStatus.PREPARING]: "bg-blue-500 hover:bg-blue-600",
@@ -39,11 +22,11 @@ const FULFILLMENT_STYLES: Record<FulfillmentStatus, string> = {
 export const getOrderStatusColor = (status: OrderStatus): string =>
   ORDER_STATUS_STYLES[status] ?? "bg-gray-500";
 
-export const getOrderStatusLabel = (status: OrderStatus): string =>
-  ORDER_STATUS_LABELS[status] ?? status;
+export const getOrderStatusKey = (status: OrderStatus): string =>
+  `orderStatus.${status}`;
 
-export const getFulfillmentLabel = (status: FulfillmentStatus): string =>
-  FULFILLMENT_LABELS[status] ?? status;
+export const getFulfillmentKey = (status: FulfillmentStatus): string =>
+  `fulfillment.${status}`;
 
 export const getFulfillmentColor = (status: FulfillmentStatus): string =>
   FULFILLMENT_STYLES[status] ?? "bg-gray-500";

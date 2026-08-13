@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -90,7 +91,9 @@ export class UserCartService {
 
     // Vérifier que le panier appartient à l'utilisateur si userId est fourni
     if (userId !== undefined && cart.user.id !== userId) {
-      throw new BadRequestException("Vous ne pouvez consulter que votre propre panier");
+      throw new BadRequestException(
+        "Vous ne pouvez consulter que votre propre panier",
+      );
     }
 
     return cart;
@@ -117,11 +120,16 @@ export class UserCartService {
 
     // Vérifier que l'utilisateur n'achète pas sa propre annonce
     if (listing.seller.id === userId) {
-      throw new BadRequestException("Vous ne pouvez pas ajouter votre propre annonce au panier");
+      throw new BadRequestException(
+        "Vous ne pouvez pas ajouter votre propre annonce au panier",
+      );
     }
 
     if (listing.expiresAt && new Date(listing.expiresAt) <= new Date()) {
-      throw new BadRequestException("Cette annonce a expiré");
+      throw new BadRequestException({
+        code: "LISTING_EXPIRED",
+        message: "Cette annonce a expiré",
+      });
     }
 
     // Vérifier la disponibilité
@@ -198,7 +206,9 @@ export class UserCartService {
     });
 
     if (!cartItem) {
-      throw new NotFoundException(`Article ${itemId} introuvable dans le panier`);
+      throw new NotFoundException(
+        `Article ${itemId} introuvable dans le panier`,
+      );
     }
 
     // Vérifier que le panier appartient à l'utilisateur
@@ -233,7 +243,9 @@ export class UserCartService {
     });
 
     if (!cartItem) {
-      throw new NotFoundException(`Article ${itemId} introuvable dans le panier`);
+      throw new NotFoundException(
+        `Article ${itemId} introuvable dans le panier`,
+      );
     }
 
     // Vérifier que le panier appartient à l'utilisateur

@@ -30,7 +30,13 @@ const sameNumber = (a?: string, b?: string): boolean => {
   return !Number.isNaN(ia) && ia === ib;
 };
 
-// meilleur match de nom de la carte parmi les lectures OCR possibles (0..1).
+/**
+ * Calculates highest name similarity score (0..1) across OCR candidates.
+ *
+ * @param card Database card entity.
+ * @param nameCandidates Candidate strings extracted via OCR.
+ * @returns Similarity score between 0 and 1.
+ */
 export const nameScore = (card: Card, nameCandidates?: string[]): number => {
   const cands = (nameCandidates ?? []).filter((c) => c.length >= 4);
   if (!cands.length) return 0;
@@ -38,11 +44,19 @@ export const nameScore = (card: Card, nameCandidates?: string[]): number => {
   return Math.max(...cands.map((c) => jaroWinkler(normalize(c), cardNameNorm)));
 };
 
+/**
+ * Scores a candidate card against parsed scan fields using name, set number, and set name metrics.
+ *
+ * @param card Database card entity.
+ * @param fields Parsed OCR fields.
+ * @param nameCandidates OCR name candidate list.
+ * @param bestName Highest name match score across all cards for guardrail comparison.
+ * @returns Composite match score.
+ */
 export const scoreCard = (
   card: Card,
   fields: ScanParsedFields,
   nameCandidates?: string[],
-  // meilleur score de nom parmi toutes les cartes, pour le garde-fou relatif
   bestName = 0,
 ): number => {
   const name = nameCandidates?.length
@@ -52,7 +66,7 @@ export const scoreCard = (
       : 0;
 
   const numberExact = sameNumber(card.localId, fields.setNumber);
-  // le dénominateur imprimé (ex. /182) = cardCountOfficial, pas le total réel
+  // Printed total count (e.g. /182) equals cardCountOfficial, not the total set size
   const totalKnown = Boolean(fields.setTotal);
   const cardCount = card.set?.cardCount;
   const totalExact =
@@ -64,8 +78,7 @@ export const scoreCard = (
   if (numberExact && totalExact) numberSignal = 1;
   else if (numberExact && !totalKnown) numberSignal = 0.5;
 
-  // si une autre carte matche bien mieux sur le nom, ce numéro est sans doute une
-  // coïncidence (numéro mal lu) : on l'ignore
+  // Discard accidental number coincidence if another card matches the name far better
   const nameInformative = bestName >= NAME_INFORMATIVE;
   if (numberSignal > 0 && nameInformative && bestName - name > NAME_MARGIN) {
     numberSignal = 0;
@@ -79,6 +92,13 @@ export const scoreCard = (
   return NAME_W * name + NUMBER_W * numberSignal + SET_W * setSignal;
 };
 
+/**
+ * Maps a card entity and match score to a ScanCardCandidate structure.
+ *
+ * @param card Card entity.
+ * @param score Match score.
+ * @returns Candidate object.
+ */
 export const toCandidate = (card: Card, score: number): ScanCardCandidate => ({
   id: card.id,
   name: card.name,
@@ -89,6 +109,12 @@ export const toCandidate = (card: Card, score: number): ScanCardCandidate => ({
   score: Number(score.toFixed(3)),
 });
 
+/**
+ * Computes overall confidence score and confidence level ("high", "medium", "low") from candidate rankings.
+ *
+ * @param candidates Ranked list of card candidates.
+ * @returns Object containing confidence score and level.
+ */
 export const computeConfidence = (
   candidates: ScanCardCandidate[],
 ): { confidence: number; confidenceLevel: ScanConfidenceLevel } => {
@@ -98,7 +124,7 @@ export const computeConfidence = (
   let confidenceLevel: ScanConfidenceLevel =
     best >= 0.75 ? "high" : best >= 0.45 ? "medium" : "low";
 
-  // nom quasi-exact et nettement unique -> high même sans numéro (titres holo/ex)
+  // High confidence boost when name match is near-exact and distinctly unique
   if (
     confidenceLevel === "medium" &&
     best >= 0.5 &&
@@ -107,12 +133,12 @@ export const computeConfidence = (
     confidenceLevel = "high";
   }
 
-  // deux candidats au coude-à-coude (homonyme, set multiple) -> on fait confirmer
+  // Demote confidence level when top two candidates have near identical scores
   if (confidenceLevel === "high" && best - second < 0.08) {
     confidenceLevel = "medium";
   }
 
-  // le score brut peut monter à 1.2 -> on borne l'affichage à 1
+  // Cap output confidence value to 1.0
   return {
     confidence: Number(Math.min(1, best).toFixed(3)),
     confidenceLevel,

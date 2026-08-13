@@ -3,7 +3,13 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
 import { CardGame } from "../common/enums/cardGame";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import {
+  DEFAULT_LOCALE,
+  type SupportedLocale,
+} from "../translation/supported-locales";
+import { applyCardSearch } from "./card-search";
 import { Card } from "./entities/card.entity";
+import { CardTranslation } from "./entities/card-translation.entity";
 
 const stripAccents = (value: string): string =>
   value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -18,11 +24,13 @@ export class CardService implements OnModuleInit {
   constructor(
     @InjectRepository(Card)
     private readonly cardRepository: Repository<Card>,
+    @InjectRepository(CardTranslation)
+    private readonly cardTranslationRepository: Repository<CardTranslation>,
   ) {}
 
-  // cr\u00e9e pgvector + la table d'embeddings si absentes (portable : aucune \u00e9tape
-  // manuelle sur une nouvelle base). Si pgvector n'est pas dispo, on log et la
-  // recherche visuelle reste simplement inactive.
+  /**
+   * Initializes pgvector extension and card embedding table if not present.
+   */
   async onModuleInit(): Promise<void> {
     try {
       await this.cardRepository.query("CREATE EXTENSION IF NOT EXISTS vector");
@@ -40,32 +48,59 @@ export class CardService implements OnModuleInit {
       this.embeddingReady = true;
     } catch (error) {
       this.logger.warn(
-        `Recherche visuelle indisponible (pgvector non initialis\u00e9): ${(error as Error).message}`,
+        `Visual search unavailable (pgvector not initialized): ${(error as Error).message}`,
       );
     }
   }
 
-  // recherche fuzzy par nom (trigrammes pg_trgm) tolérant fautes d'OCR et accents.
-  // les noms en base sont sans accents, on retire donc les accents du terme.
+  /**
+   * Performs fuzzy search by card name using pg_trgm trigram similarity, ignoring accents.
+   *
+   * @param term Name search term.
+   * @param game Optional game filter.
+   * @returns Array of matching cards.
+   */
   async findByNameFuzzy(term: string, game?: CardGame): Promise<Card[]> {
     const t = stripAccents(term).trim();
     if (t.length < 3) return [];
 
-    const qb = this.cardRepository
-      .createQueryBuilder("card")
-      .leftJoinAndSelect("card.set", "set")
-      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
-      .where("card.name % :t", { t })
-      .orderBy("similarity(card.name, :t)", "DESC")
+    // Names live in localized translations: find best similarity across all languages
+    // (e.g. scanned cards may be in English), then load matching cards preserving rank score order.
+    const scored = await this.cardTranslationRepository
+      .createQueryBuilder("ct")
+      .select("ct.card_id", "cardId")
+      .addSelect("MAX(similarity(immutable_unaccent(ct.name), :t))", "score")
+      .innerJoin("card", "card", "card.id = ct.card_id")
+      .where("immutable_unaccent(ct.name) % :t", { t })
+      .groupBy("ct.card_id")
+      .orderBy("score", "DESC")
       .limit(20);
 
     if (game) {
-      qb.andWhere("card.game = :game", { game });
+      scored.andWhere("card.game = :game", { game });
     }
 
-    return qb.getMany();
+    const rows = await scored.getRawMany<{ cardId: string }>();
+    const ids = rows.map((row) => row.cardId);
+    if (ids.length === 0) return [];
+
+    const cards = await this.cardRepository.find({
+      where: { id: In(ids) },
+      relations: ["set", "pokemonDetails"],
+    });
+
+    const byId = new Map(cards.map((card) => [card.id, card]));
+    return ids
+      .map((id) => byId.get(id))
+      .filter((card): card is Card => card !== undefined);
   }
 
+  /**
+   * Retrieves all cards, optionally filtered by card game.
+   *
+   * @param game Optional game filter.
+   * @returns Array of cards.
+   */
   async findAll(game?: CardGame): Promise<Card[]> {
     return this.cardRepository.find({
       where: game ? { game } : {},
@@ -73,6 +108,12 @@ export class CardService implements OnModuleInit {
     });
   }
 
+  /**
+   * Finds a card by its unique identifier.
+   *
+   * @param id Card UUID.
+   * @returns Card entity.
+   */
   async findOne(id: string): Promise<Card> {
     const card = await this.cardRepository.findOne({
       where: { id },
@@ -84,6 +125,14 @@ export class CardService implements OnModuleInit {
     return card;
   }
 
+  /**
+   * Finds cards matching a set-relative local identifier.
+   *
+   * @param localId Local card number or identifier.
+   * @param total Optional total set card count.
+   * @param game Optional game filter.
+   * @returns Array of matching cards.
+   */
   async findByLocalId(
     localId: string,
     total?: string,
@@ -122,6 +171,14 @@ export class CardService implements OnModuleInit {
     return base().take(80).getMany();
   }
 
+  /**
+   * Finds cards visually similar to a given embedding vector using pgvector cosine distance.
+   *
+   * @param embedding Visual feature embedding vector.
+   * @param game Optional game filter.
+   * @param limit Maximum results to return.
+   * @returns Array of cards with similarity scores.
+   */
   async findByEmbedding(
     embedding: number[],
     game?: CardGame,
@@ -149,8 +206,8 @@ export class CardService implements OnModuleInit {
         params,
       );
     } catch (error) {
-      // base visuelle absente/incohérente -> on ignore le visuel sans planter
-      this.logger.warn(`Recherche visuelle KO: ${(error as Error).message}`);
+      // Visual search feature unavailable: log warning without crashing
+      this.logger.warn(`Visual search error: ${(error as Error).message}`);
       return [];
     }
     if (rows.length === 0) return [];
@@ -165,6 +222,13 @@ export class CardService implements OnModuleInit {
       .filter((x): x is { card: Card; similarity: number } => Boolean(x.card));
   }
 
+  /**
+   * Calculates embedding similarity scores for a specific list of card IDs.
+   *
+   * @param embedding Target embedding vector.
+   * @param cardIds Array of card IDs to score.
+   * @returns Map of card ID to similarity score.
+   */
   async embeddingSimilarities(
     embedding: number[],
     cardIds: string[],
@@ -183,11 +247,20 @@ export class CardService implements OnModuleInit {
         );
       return new Map(rows.map((r) => [r.id, Number(r.similarity)]));
     } catch (error) {
-      this.logger.warn(`Similarités visuelles KO: ${(error as Error).message}`);
+      this.logger.warn(
+        `Visual similarity calculation failed: ${(error as Error).message}`,
+      );
       return new Map();
     }
   }
 
+  /**
+   * Searches cards by a general query string.
+   *
+   * @param search Query string.
+   * @param game Optional game filter.
+   * @returns Matching cards.
+   */
   async findBySearch(search: string, game?: CardGame): Promise<Card[]> {
     if (!search) return [];
     const qb = this.cardRepository
@@ -199,14 +272,19 @@ export class CardService implements OnModuleInit {
       qb.where("card.game = :game", { game });
     }
 
-    qb.andWhere(
-      "(card.name ILIKE :search OR card.rarity ILIKE :search OR set.name ILIKE :search OR pokemonDetails.description ILIKE :search OR card.localId ILIKE :search)",
-      { search: `%${search}%` },
-    );
+    applyCardSearch(qb, search);
 
     return qb.getMany();
   }
 
+  /**
+   * Retrieves a paginated list of cards.
+   *
+   * @param page Page index (1-based).
+   * @param limit Items per page.
+   * @param game Optional game filter.
+   * @returns Paginated card results.
+   */
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
@@ -220,13 +298,31 @@ export class CardService implements OnModuleInit {
 
     const offset = PaginationHelper.calculateOffset(validPage, validLimit);
 
-    const [data, totalItems] = await this.cardRepository.findAndCount({
-      where: game ? { game } : {},
-      relations: ["set", "pokemonDetails"],
-      skip: offset,
-      take: validLimit,
-      order: { name: "ASC" },
-    });
+    // Card names live in translations. The join is filtered on a single locale,
+    // so it stays one-to-one and does not inflate the paginated row count.
+    // A subquery in `orderBy` would be parsed as an alias by TypeORM.
+    const qb = this.cardRepository
+      .createQueryBuilder("card")
+      .leftJoinAndSelect("card.set", "set")
+      .leftJoinAndSelect("card.pokemonDetails", "pokemonDetails")
+      .leftJoin(
+        "card.translations",
+        "sortTranslation",
+        "sortTranslation.locale = :sortLocale",
+        { sortLocale: DEFAULT_LOCALE },
+      )
+      .orderBy("sortTranslation.name", "ASC")
+      // `offset`/`limit` rather than `skip`/`take`: the latter wraps the query
+      // in a DISTINCT subquery that cannot see the joined sort column. Safe
+      // here since every join is one-to-one.
+      .offset(offset)
+      .limit(validLimit);
+
+    if (game) {
+      qb.where("card.game = :game", { game });
+    }
+
+    const [data, totalItems] = await qb.getManyAndCount();
 
     return PaginationHelper.createPaginatedResult(
       data,
@@ -236,6 +332,12 @@ export class CardService implements OnModuleInit {
     );
   }
 
+  /**
+   * Returns a random card entity.
+   *
+   * @param game Optional game filter.
+   * @returns Random card or null if dataset is empty.
+   */
   async findRandom(game?: CardGame): Promise<Card | null> {
     const qb = this.cardRepository
       .createQueryBuilder("card")
@@ -250,14 +352,31 @@ export class CardService implements OnModuleInit {
     return card ?? null;
   }
 
-  async getSetRarities(setId: string): Promise<string[]> {
-    const rows = await this.cardRepository
-      .createQueryBuilder("card")
-      .select("DISTINCT(card.rarity)", "rarity")
+  /**
+   * Retrieves unique card rarities contained within a specific expansion set.
+   *
+   * @param setId Expansion set ID.
+   * @param locale Desired locale for translated rarity labels.
+   * @returns Array of unique rarity strings.
+   */
+  async getSetRarities(
+    setId: string,
+    locale: SupportedLocale = DEFAULT_LOCALE,
+  ): Promise<string[]> {
+    // Rarities are localized labels: return in requested locale with fallback to default locale if missing.
+    const rows = await this.cardTranslationRepository
+      .createQueryBuilder("ct")
+      .select("DISTINCT(ct.rarity)", "rarity")
+      .innerJoin("card", "card", "card.id = ct.card_id")
       .where("card.setId = :setId", { setId })
-      .andWhere("card.rarity IS NOT NULL")
-      .getRawMany();
+      .andWhere("ct.locale = :locale", { locale })
+      .andWhere("ct.rarity IS NOT NULL")
+      .getRawMany<{ rarity: string }>();
 
-    return rows.map((r) => r.rarity).filter(Boolean);
+    if (rows.length === 0 && locale !== DEFAULT_LOCALE) {
+      return this.getSetRarities(setId, DEFAULT_LOCALE);
+    }
+
+    return rows.map((row) => row.rarity).filter(Boolean);
   }
 }

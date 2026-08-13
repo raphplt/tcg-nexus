@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ export function SealedProductCard({
   condition,
   listingId,
 }: SealedProductCardProps) {
+  const t = useTranslations("SealedDetail");
   const imageUrl = getSealedImageUrl(product);
   const typeLabel = sealedProductTypeLabels[product.productType];
   const { formatPrice } = useCurrencyStore();
@@ -56,20 +58,20 @@ export function SealedProductCard({
             {imageUrl ? (
               <Image
                 src={imageUrl}
-                alt={product.nameEn}
+                alt={product.name}
                 fill
                 className="object-contain group-hover:scale-105 transition-transform duration-200"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                Pas d'image
+                {t("noImageShort")}
               </div>
             )}
           </div>
           <div className="space-y-1">
             <h3 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors">
-              {product.nameEn}
+              {product.name}
             </h3>
             {product.pokemonSet && (
               <p className="text-sm text-muted-foreground line-clamp-1">

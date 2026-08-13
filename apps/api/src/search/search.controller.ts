@@ -25,6 +25,7 @@ export class SearchController {
     @Query("q") query: string,
     @Query("limit") limit?: number,
   ): Promise<string[]> {
+    //TODO : use of legacy method
     return this.searchService.getSearchSuggestions(query, limit);
   }
 

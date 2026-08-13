@@ -1,9 +1,9 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Bot, Loader2, Sparkles, Swords } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,14 +21,16 @@ import {
   TrainingLobbyView,
   TrainingSessionSummary,
 } from "@/types/training-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 
-const difficultyLabels: Record<TrainingDifficulty, string> = {
-  easy: "Facile",
-  standard: "Standard",
+const difficultyKeys: Record<TrainingDifficulty, string> = {
+  easy: "difficultyEasy",
+  standard: "difficultyStandard",
 };
 
 export function TrainingLobbyPanel() {
+  const t = useTranslations("TrainingLobby");
+  const tError = useTranslations("ApiErrors");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
@@ -82,7 +84,7 @@ export function TrainingLobbyPanel() {
   const createSessionMutation = useMutation({
     mutationFn: () => {
       if (!selectedDeckId || !selectedPresetId) {
-        throw new Error("Sélection incomplète");
+        throw new Error(t("incompleteSelection"));
       }
 
       return trainingMatchService.createSession({
@@ -103,12 +105,7 @@ export function TrainingLobbyPanel() {
       router.push(`/play/training/${session.sessionId}`);
     },
     onError: (error: unknown) => {
-      setLastError(
-        extractApiErrorMessage(
-          error,
-          "Impossible de lancer ce match d’entraînement.",
-        ),
-      );
+      setLastError(translateApiError(error, tError, t("startError")));
     },
   });
 
@@ -117,7 +114,7 @@ export function TrainingLobbyPanel() {
       <Card id="training-ai" className="tcg-surface tcg-surface--highlight">
         <CardContent className="flex items-center gap-3 p-6 text-sm text-slate-600">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement de l’entraînement IA...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -128,17 +125,14 @@ export function TrainingLobbyPanel() {
       <Card id="training-ai" className="border-destructive/40">
         <CardContent className="space-y-3 p-6">
           <p className="text-sm text-destructive">
-            {extractApiErrorMessage(
-              lobbyQuery.error,
-              "Impossible de charger le mode entraînement.",
-            )}
+            {translateApiError(lobbyQuery.error, tError, t("loadError"))}
           </p>
           <Button
             variant="outline"
             className="rounded-full"
             onClick={() => void lobbyQuery.refetch()}
           >
-            Réessayer
+            {t("retry")}
           </Button>
         </CardContent>
       </Card>
@@ -151,19 +145,16 @@ export function TrainingLobbyPanel() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="w-fit rounded-full border-0 bg-primary/10 text-primary hover:bg-primary/10">
-              Entraînement vs IA
+              {t("title")}
             </Badge>
             <Badge variant="secondary">BO1</Badge>
-            <Badge variant="outline">Reprise incluse</Badge>
+            <Badge variant="outline">{t("resumeIncluded")}</Badge>
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold leading-tight">
-              Lancez une partie d’entraînement à la demande.
+              {t("subtitle")}
             </h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Choisissez un deck compatible, un preset IA et une difficulté. La
-              partie démarre immédiatement, sans tournoi ni classement.
-            </p>
+            <p className="text-sm leading-6 text-slate-600">{t("help")}</p>
           </div>
         </div>
 
@@ -185,7 +176,7 @@ export function TrainingLobbyPanel() {
                   onValueChange={(value) => setSelectedDeckId(Number(value))}
                 >
                   <SelectTrigger className="w-full rounded-2xl bg-white">
-                    <SelectValue placeholder="Choisir un deck" />
+                    <SelectValue placeholder={t("chooseDeck")} />
                   </SelectTrigger>
                   <SelectContent>
                     {eligibleDecks.map((deck) => (
@@ -206,7 +197,7 @@ export function TrainingLobbyPanel() {
                   onValueChange={setSelectedPresetId}
                 >
                   <SelectTrigger className="w-full rounded-2xl bg-white">
-                    <SelectValue placeholder="Choisir un preset" />
+                    <SelectValue placeholder={t("choosePreset")} />
                   </SelectTrigger>
                   <SelectContent>
                     {lobbyQuery.data.aiDeckPresets.map((preset) => (
@@ -220,7 +211,7 @@ export function TrainingLobbyPanel() {
 
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Difficulté
+                  {t("difficulty")}
                 </p>
                 <Select
                   value={selectedDifficulty}
@@ -229,12 +220,12 @@ export function TrainingLobbyPanel() {
                   }
                 >
                   <SelectTrigger className="w-full rounded-2xl bg-white">
-                    <SelectValue placeholder="Choisir un niveau" />
+                    <SelectValue placeholder={t("chooseLevel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {lobbyQuery.data.difficulties.map((difficulty) => (
                       <SelectItem key={difficulty} value={difficulty}>
-                        {difficultyLabels[difficulty]}
+                        {t(difficultyKeys[difficulty])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -254,11 +245,11 @@ export function TrainingLobbyPanel() {
               {createSessionMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Création du match...
+                  {t("creating")}
                 </>
               ) : (
                 <>
-                  Lancer un match d’entraînement
+                  {t("start")}
                   <Swords className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -268,16 +259,15 @@ export function TrainingLobbyPanel() {
           <div className="tcg-empty-state space-y-4 px-5 py-6">
             <div className="space-y-2">
               <p className="text-base font-semibold text-slate-950">
-                Aucun deck compatible trouvé.
+                {t("noCompatibleDeck")}
               </p>
               <p className="text-sm leading-6 text-slate-600">
-                Le mode entraînement utilise la même whitelist que le jeu en
-                ligne. Il vous faut donc un deck entièrement supporté.
+                {t("noCompatibleDeckHelp")}
               </p>
             </div>
             <Button asChild className="rounded-full">
               <Link href="/decks/me">
-                Ouvrir mes decks
+                {t("openMyDecks")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -306,7 +296,7 @@ export function TrainingLobbyPanel() {
             <div className="flex items-center gap-2">
               <Bot className="h-4 w-4 text-slate-500" />
               <p className="text-sm font-semibold text-slate-900">
-                Decks bloqués pour l’instant
+                {t("blockedDecks")}
               </p>
             </div>
             <div className="space-y-3">
@@ -316,7 +306,7 @@ export function TrainingLobbyPanel() {
                     {deck.deckName}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {deck.reasons[0]?.message || "Deck non supporté."}
+                    {deck.reasons[0]?.message || t("unsupportedDeck")}
                   </p>
                 </div>
               ))}
@@ -330,7 +320,7 @@ export function TrainingLobbyPanel() {
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Sessions actives
               </p>
-              <h3 className="mt-1 text-xl font-bold">Reprendre une partie</h3>
+              <h3 className="mt-1 text-xl font-bold">{t("resumeGame")}</h3>
             </div>
             <Badge variant="outline">
               {lobbyQuery.data.activeSessions.length} ouverte
@@ -349,8 +339,7 @@ export function TrainingLobbyPanel() {
             </div>
           ) : (
             <div className="tcg-empty-state px-5 py-6 text-sm text-slate-500">
-              Aucune session en cours. Lancez un nouveau match pour vous
-              entraîner.
+              {t("noSession")}
             </div>
           )}
         </div>
@@ -360,6 +349,9 @@ export function TrainingLobbyPanel() {
 }
 
 function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
+  const t = useTranslations("TrainingLobby");
+  const locale = useLocale();
+
   return (
     <div className="tcg-note-card space-y-4 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -368,17 +360,19 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
             {session.aiDeckPresetName}
           </p>
           <p className="text-sm text-slate-500">
-            Difficulté {difficultyLabels[session.aiDifficulty]} • Tour{" "}
-            {session.turnNumber}
+            {t("sessionInfo", {
+              difficulty: t(difficultyKeys[session.aiDifficulty]),
+              turn: session.turnNumber,
+            })}
           </p>
         </div>
         <Badge variant={session.awaitingPlayerAction ? "default" : "secondary"}>
-          {session.awaitingPlayerAction ? "À vous de jouer" : "Tour de l’IA"}
+          {session.awaitingPlayerAction ? t("yourTurn") : t("aiTurn")}
         </Badge>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
-        <span>Mise à jour {formatTrainingDate(session.updatedAt)}</span>
+        <span>Mise à jour {formatTrainingDate(session.updatedAt, locale)}</span>
         <Button asChild variant="outline" className="rounded-full">
           <Link href={`/play/training/${session.sessionId}`}>
             Reprendre
@@ -390,8 +384,8 @@ function TrainingSessionCard({ session }: { session: TrainingSessionSummary }) {
   );
 }
 
-function formatTrainingDate(date: string) {
-  return new Date(date).toLocaleString("fr-FR", {
+function formatTrainingDate(date: string, locale: string) {
+  return new Date(date).toLocaleString(locale, {
     day: "2-digit",
     month: "short",
     hour: "2-digit",

@@ -19,18 +19,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Safe guard for repeated calls during fast refresh.
-});
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AppNavigator() {
   const isHydrated = useAuthStore((state) => state.isHydrated);
 
   useEffect(() => {
     if (isHydrated) {
-      SplashScreen.hideAsync().catch(() => {
-        // Ignore splash screen race conditions.
-      });
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [isHydrated]);
 

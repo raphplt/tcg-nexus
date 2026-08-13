@@ -105,7 +105,10 @@ describe("NotificationService", () => {
         body: "B",
       };
       notificationRepo.findOne.mockResolvedValue(mockNotification);
-      notificationRepo.save.mockResolvedValue({ ...mockNotification, isRead: true });
+      notificationRepo.save.mockResolvedValue({
+        ...mockNotification,
+        isRead: true,
+      });
 
       const result = await service.markAsRead(1, 1);
       expect(result).not.toHaveProperty("user");
@@ -113,7 +116,9 @@ describe("NotificationService", () => {
 
     it("throws NotFoundException when notification not found", async () => {
       notificationRepo.findOne.mockResolvedValue(null);
-      await expect(service.markAsRead(1, 999)).rejects.toThrow(NotFoundException);
+      await expect(service.markAsRead(1, 999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

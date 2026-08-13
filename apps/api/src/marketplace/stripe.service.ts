@@ -7,9 +7,15 @@ import {
 import { ConfigService } from "@nestjs/config";
 import Stripe from "stripe";
 
+/**
+ * Provides Stripe payment operations when the service is configured.
+ *
+ * The API can still start without Stripe credentials so non-payment features
+ * remain available in development and end-to-end test environments.
+ */
 @Injectable()
 export class StripeService implements OnModuleInit {
-  private stripe: Stripe;
+  private stripe?: Stripe;
   private readonly logger = new Logger(StripeService.name);
   private initialized = false;
 
@@ -20,10 +26,15 @@ export class StripeService implements OnModuleInit {
         "STRIPE_SECRET_KEY is not defined — Stripe payments will not work",
       );
     }
-    this.stripe = new Stripe(secretKey || "");
-    this.initialized = !!secretKey;
+    if (secretKey) {
+      this.stripe = new Stripe(secretKey);
+      this.initialized = true;
+    }
   }
 
+  /**
+   * Reports a missing Stripe configuration without preventing application startup.
+   */
   async onModuleInit() {
     if (!this.initialized) {
       this.logger.error(
@@ -40,14 +51,23 @@ export class StripeService implements OnModuleInit {
     }
   }
 
+  /**
+   * Creates a Stripe payment intent for an order.
+   *
+   * @param amount - Payment amount in the provided currency's major unit.
+   * @param currency - ISO currency code.
+   * @param metadata - Metadata persisted alongside the payment intent.
+   * @returns The created Stripe payment intent.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
   async createPaymentIntent(
     amount: number,
     currency: string,
     metadata: Record<string, string> = {},
   ) {
     this.ensureInitialized();
-    return this.stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // centimes
+    return this.stripe!.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert major units to cents.
       currency,
       metadata,
       automatic_payment_methods: {
@@ -56,13 +76,28 @@ export class StripeService implements OnModuleInit {
     });
   }
 
+  /**
+   * Retrieves a payment intent from Stripe.
+   *
+   * @param paymentIntentId - Stripe payment intent identifier.
+   * @returns The matching Stripe payment intent.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
   async retrievePaymentIntent(
     paymentIntentId: string,
   ): Promise<Stripe.PaymentIntent> {
     this.ensureInitialized();
-    return this.stripe.paymentIntents.retrieve(paymentIntentId);
+    return this.stripe!.paymentIntents.retrieve(paymentIntentId);
   }
 
+  /**
+   * Validates and parses a Stripe webhook event.
+   *
+   * @param signature - Stripe webhook signature header.
+   * @param payload - Raw webhook request payload.
+   * @returns The validated Stripe event.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
   async constructEventFromPayload(
     signature: string,
     payload: Buffer,
@@ -74,7 +109,7 @@ export class StripeService implements OnModuleInit {
     if (!webhookSecret) {
       throw new Error("STRIPE_WEBHOOK_SECRET is not configured");
     }
-    return this.stripe.webhooks.constructEvent(
+    return this.stripe!.webhooks.constructEvent(
       payload,
       signature,
       webhookSecret,

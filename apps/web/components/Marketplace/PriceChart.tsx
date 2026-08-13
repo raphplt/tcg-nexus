@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/utils/price";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 interface PriceChartProps {
   data: Array<{ price: number; currency: string; recordedAt: Date | string }>;
@@ -26,11 +27,13 @@ export function PriceChart({
   className,
   showTrend = true,
 }: PriceChartProps) {
+  const t = useTranslations("PriceChart");
+  const locale = useLocale();
   if (!data || data.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
-          <CardTitle>Historique des prix</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64 flex items-center justify-center text-muted-foreground">
@@ -41,10 +44,9 @@ export function PriceChart({
     );
   }
 
-  // Sur l'axe on arrondit à l'unité pour éviter les libellés tronqués
   const formatAxisPrice = (value: number) => {
     try {
-      return Number(value).toLocaleString("fr-FR", {
+      return Number(value).toLocaleString(locale, {
         style: "currency",
         currency,
         maximumFractionDigits: 0,
@@ -58,7 +60,7 @@ export function PriceChart({
     .map((item) => {
       const d = new Date(item.recordedAt);
       return {
-        date: d.toLocaleDateString("fr-FR", {
+        date: d.toLocaleDateString(locale, {
           day: "2-digit",
           month: "2-digit",
         }),
@@ -79,7 +81,7 @@ export function PriceChart({
       return (
         <div className="bg-popover border border-border rounded-lg shadow-lg p-3">
           <p className="text-sm font-semibold mb-1">
-            {p.payload.fullDate.toLocaleDateString("fr-FR", {
+            {p.payload.fullDate.toLocaleDateString(locale, {
               day: "2-digit",
               month: "long",
               year: "numeric",
@@ -98,7 +100,7 @@ export function PriceChart({
     <Card className={className}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Historique des prix</CardTitle>
+          <CardTitle>{t("title")}</CardTitle>
           {showTrend && (
             <div className="flex items-center gap-2">
               {trend > 0 ? (

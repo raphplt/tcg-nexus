@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { InteractionMode } from "./useGameBoardInteraction";
@@ -21,6 +22,7 @@ export function ActionBar({
   onEndTurn,
   onCancel,
 }: ActionBarProps) {
+  const t = useTranslations("MatchBoard");
   return (
     <div className="flex flex-col gap-3 border-t border-white/5 bg-black/40 px-3 py-3 backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-4">
       <div className="min-w-0 flex-1">
@@ -36,14 +38,11 @@ export function ActionBar({
               {hintText}
             </motion.p>
           ) : canAct ? (
-            <p className="text-sm text-white/60">
-              Votre tour. Jouez une carte ou ouvrez les attaques de votre
-              Pokémon actif.
-            </p>
+            <p className="text-sm text-white/60">{t("yourTurnHelp")}</p>
           ) : (
             <p className="flex items-center gap-2 text-sm text-white/35">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-400/60 animate-pulse" />
-              Tour de l&apos;adversaire...
+              {t("opponentTurn")}
             </p>
           )}
         </div>
@@ -79,7 +78,7 @@ export function ActionBar({
               : "bg-white/5 text-white/30 cursor-not-allowed",
           )}
         >
-          Fin du tour
+          {t("endTurn")}
         </button>
       </div>
     </div>

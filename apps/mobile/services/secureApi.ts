@@ -165,7 +165,6 @@ secureApi.interceptors.response.use(
       await finalizeUnauthorizedState();
     }
 
-    // coupure réseau aléatoire (socket fermée, blip) : un seul réessai
     if (
       originalRequest &&
       !originalRequest._netRetry &&

@@ -8,15 +8,23 @@ import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CardGame } from "../common/enums/cardGame";
 
 async function bootstrap() {
-  console.log("🌱 Starting Database Metadata Synchronization (Series & Sets)...");
+  console.log(
+    "🌱 Starting Database Metadata Synchronization (Series & Sets)...",
+  );
 
   const app = await NestFactory.createApplicationContext(AppModule);
   const dataSource = app.get(DataSource);
   const pokemonSerieRepository = dataSource.getRepository(PokemonSerie);
   const pokemonSetRepository = dataSource.getRepository(PokemonSet);
 
-  const seriesJsonPath = path.resolve(__dirname, "../../../../data/pokemon_series.json");
-  const setsJsonPath = path.resolve(__dirname, "../../../../data/pokemon_sets.json");
+  const seriesJsonPath = path.resolve(
+    __dirname,
+    "../../../../data/pokemon_series.json",
+  );
+  const setsJsonPath = path.resolve(
+    __dirname,
+    "../../../../data/pokemon_sets.json",
+  );
 
   // 1. Sync Series
   if (fs.existsSync(seriesJsonPath)) {
@@ -49,7 +57,9 @@ async function bootstrap() {
             seriesUpdated++;
           }
         } else {
-          console.log(`  [NEW] Creating series: ${serieData.name} (${serieData.id})`);
+          console.log(
+            `  [NEW] Creating series: ${serieData.name} (${serieData.id})`,
+          );
           dbSerie = pokemonSerieRepository.create({
             id: serieData.id,
             name: serieData.name,
@@ -59,7 +69,9 @@ async function bootstrap() {
           seriesCreated++;
         }
       }
-      console.log(`✅ Series sync complete: ${seriesCreated} created, ${seriesUpdated} updated.`);
+      console.log(
+        `✅ Series sync complete: ${seriesCreated} created, ${seriesUpdated} updated.`,
+      );
     } catch (error) {
       console.error("❌ Failed to synchronize series:", error);
     }
@@ -118,7 +130,14 @@ async function bootstrap() {
 
           // Check embedded cardCount and legal
           if (setData.cardCount) {
-            if (!dbSet.cardCount) dbSet.cardCount = { total: 0, official: 0, reverse: 0, holo: 0, firstEd: 0 };
+            if (!dbSet.cardCount)
+              dbSet.cardCount = {
+                total: 0,
+                official: 0,
+                reverse: 0,
+                holo: 0,
+                firstEd: 0,
+              };
             if (
               dbSet.cardCount.total !== setData.cardCount.total ||
               dbSet.cardCount.official !== setData.cardCount.official ||
@@ -138,7 +157,8 @@ async function bootstrap() {
           }
 
           if (setData.legal) {
-            if (!dbSet.legal) dbSet.legal = { standard: false, expanded: false };
+            if (!dbSet.legal)
+              dbSet.legal = { standard: false, expanded: false };
             if (
               dbSet.legal.standard !== setData.legal.standard ||
               dbSet.legal.expanded !== setData.legal.expanded
@@ -153,7 +173,9 @@ async function bootstrap() {
 
           // Check relation
           if (dbSerie && (!dbSet.serie || dbSet.serie.id !== dbSerie.id)) {
-            console.log(`  Updating series relation for set ${dbSet.name} (${dbSet.id}): ${dbSet.serie?.id || "None"} -> ${dbSerie.id}`);
+            console.log(
+              `  Updating series relation for set ${dbSet.name} (${dbSet.id}): ${dbSet.serie?.id || "None"} -> ${dbSerie.id}`,
+            );
             dbSet.serie = dbSerie;
             hasChanges = true;
           }
@@ -172,17 +194,21 @@ async function bootstrap() {
             symbol: setData.symbol,
             releaseDate: setData.releaseDate,
             tcgOnline: setData.tcgOnline,
-            cardCount: setData.cardCount ? {
-              total: setData.cardCount.total || 0,
-              official: setData.cardCount.official || 0,
-              reverse: setData.cardCount.reverse || 0,
-              holo: setData.cardCount.holo || 0,
-              firstEd: setData.cardCount.firstEd || 0,
-            } : { total: 0, official: 0, reverse: 0, holo: 0, firstEd: 0 },
-            legal: setData.legal ? {
-              standard: !!setData.legal.standard,
-              expanded: !!setData.legal.expanded,
-            } : { standard: false, expanded: false },
+            cardCount: setData.cardCount
+              ? {
+                  total: setData.cardCount.total || 0,
+                  official: setData.cardCount.official || 0,
+                  reverse: setData.cardCount.reverse || 0,
+                  holo: setData.cardCount.holo || 0,
+                  firstEd: setData.cardCount.firstEd || 0,
+                }
+              : { total: 0, official: 0, reverse: 0, holo: 0, firstEd: 0 },
+            legal: setData.legal
+              ? {
+                  standard: !!setData.legal.standard,
+                  expanded: !!setData.legal.expanded,
+                }
+              : { standard: false, expanded: false },
             serie: dbSerie || undefined,
           });
 
@@ -190,7 +216,9 @@ async function bootstrap() {
           setsCreated++;
         }
       }
-      console.log(`✅ Sets sync complete: ${setsCreated} created, ${setsUpdated} updated.`);
+      console.log(
+        `✅ Sets sync complete: ${setsCreated} created, ${setsUpdated} updated.`,
+      );
     } catch (error) {
       console.error("❌ Failed to synchronize sets:", error);
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect, ReactNode } from "react";
 
 interface ProtectedRouteProps {
@@ -22,13 +22,11 @@ export const ProtectedRoute = ({
 
   useEffect(() => {
     if (!isLoading) {
-      // Si l'authentification est requise mais l'utilisateur n'est pas connecté
       if (requireAuth && !isAuthenticated) {
         router.push(fallbackPath);
         return;
       }
 
-      // Si des rôles spécifiques sont requis
       if (allowedRoles && user && !allowedRoles.includes(user.role)) {
         router.push("/unauthorized");
         return;
@@ -44,7 +42,6 @@ export const ProtectedRoute = ({
     fallbackPath,
   ]);
 
-  // Afficher un loader pendant la vérification
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -53,14 +50,12 @@ export const ProtectedRoute = ({
     );
   }
 
-  // Si l'authentification est requise mais l'utilisateur n'est pas connecté
   if (requireAuth && !isAuthenticated) {
-    return null; // Le redirect se fera via useEffect
+    return null;
   }
 
-  // Si des rôles spécifiques sont requis et l'utilisateur n'a pas le bon rôle
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return null; // Le redirect se fera via useEffect
+    return null;
   }
 
   return <>{children}</>;

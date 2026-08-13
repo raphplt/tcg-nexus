@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogOut, Play, Settings, Flag, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ interface PauseMenuProps {
 }
 
 export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
+  const t = useTranslations("MatchBoard");
   const [isOpen, setIsOpen] = useState(false);
   const [confirmForfeit, setConfirmForfeit] = useState(false);
   const router = useRouter();
@@ -36,7 +38,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
 
   return (
     <>
-      {/* Gear button */}
       <button
         onClick={toggle}
         className={cn(
@@ -48,7 +49,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
         <Settings className="w-4 h-4" />
       </button>
 
-      {/* Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -69,7 +69,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
               className="w-full max-w-sm mx-4"
             >
               <div className="bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
-                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
                   <h2 className="text-lg font-bold text-white tracking-wide">
                     Pause
@@ -82,7 +81,6 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                   </button>
                 </div>
 
-                {/* Menu items */}
                 <div className="p-4 space-y-2">
                   <MenuButton
                     icon={<Play className="w-5 h-5" />}
@@ -94,8 +92,8 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
 
                   <MenuButton
                     icon={<LogOut className="w-5 h-5" />}
-                    label="Quitter la partie"
-                    sublabel="Retour au lobby"
+                    label={t("leaveGame")}
+                    sublabel={t("backToLobby")}
                     onClick={() => router.push("/play")}
                   />
 
@@ -105,7 +103,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                         <MenuButton
                           icon={<Flag className="w-5 h-5" />}
                           label="Abandonner"
-                          sublabel="Déclarer forfait"
+                          sublabel={t("forfeit")}
                           onClick={() => setConfirmForfeit(true)}
                           variant="danger"
                         />
@@ -116,7 +114,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                           className="bg-red-950/50 border border-red-500/30 rounded-xl p-4 space-y-3"
                         >
                           <p className="text-sm text-red-200">
-                            Êtes-vous sûr ? Vous perdrez cette partie.
+                            {t("forfeitConfirm")}
                           </p>
                           <div className="flex gap-2">
                             <button

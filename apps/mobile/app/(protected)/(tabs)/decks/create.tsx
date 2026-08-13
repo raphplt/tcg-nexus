@@ -39,13 +39,11 @@ export default function CreateDeckScreen() {
   const [deckLoading, setDeckLoading] = useState(false);
   const [initialDeck, setInitialDeck] = useState<Deck | null>(null);
 
-  // Form Fields
   const [deckName, setDeckName] = useState("");
   const [selectedFormat, setSelectedFormat] = useState<DeckFormat | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [addedCards, setAddedCards] = useState<AddedCard[]>([]);
 
-  // Search Cards State
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchResults, setSearchResults] = useState<CardSearchResult[]>([]);
@@ -53,17 +51,15 @@ export default function CreateDeckScreen() {
   const [searchPage, setSearchPage] = useState(1);
   const [searchHasNext, setSearchHasNext] = useState(false);
 
-  // Modals visibility
   const [formats, setFormats] = useState<DeckFormat[]>([]);
   const [isFormatModalVisible, setIsFormatModalVisible] = useState(false);
 
-  // Add Card Modal
-  const [selectedCardToAdd, setSelectedCardToAdd] = useState<CardSearchResult | null>(null);
+  const [selectedCardToAdd, setSelectedCardToAdd] =
+    useState<CardSearchResult | null>(null);
   const [addCardQty, setAddCardQty] = useState(1);
   const [addCardRole, setAddCardRole] = useState<"main" | "side">("main");
   const [isAddCardModalVisible, setIsAddCardModalVisible] = useState(false);
 
-  // Load formats
   useEffect(() => {
     const loadFormats = async () => {
       try {
@@ -79,7 +75,6 @@ export default function CreateDeckScreen() {
     void loadFormats();
   }, [isEditMode]);
 
-  // Load deck for edit mode
   useEffect(() => {
     const loadDeck = async () => {
       if (!deckId) return;
@@ -111,7 +106,6 @@ export default function CreateDeckScreen() {
     void loadDeck();
   }, [deckId]);
 
-  // Search card debouncing
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim());
@@ -119,7 +113,6 @@ export default function CreateDeckScreen() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch cards
   const fetchCards = useCallback(
     async (options?: { loadMore?: boolean }) => {
       const loadMore = options?.loadMore === true;
@@ -169,7 +162,6 @@ export default function CreateDeckScreen() {
     if (!selectedCardToAdd) return;
 
     setAddedCards((prev) => {
-      // Check if already in deck with the same role
       const existing = prev.find(
         (c) => c.cardId === selectedCardToAdd.id && c.role === addCardRole,
       );
@@ -198,7 +190,11 @@ export default function CreateDeckScreen() {
     toast.showSuccess("Carte ajoutée !");
   };
 
-  const handleUpdateQty = (cardId: string, role: "main" | "side", amount: number) => {
+  const handleUpdateQty = (
+    cardId: string,
+    role: "main" | "side",
+    amount: number,
+  ) => {
     setAddedCards((prev) =>
       prev
         .map((c) => {
@@ -214,7 +210,9 @@ export default function CreateDeckScreen() {
   };
 
   const handleRemoveCard = (cardId: string, role: "main" | "side") => {
-    setAddedCards((prev) => prev.filter((c) => !(c.cardId === cardId && c.role === role)));
+    setAddedCards((prev) =>
+      prev.filter((c) => !(c.cardId === cardId && c.role === role)),
+    );
   };
 
   const handleSubmit = async () => {
@@ -230,11 +228,12 @@ export default function CreateDeckScreen() {
     setLoading(true);
     try {
       if (isEditMode && initialDeck) {
-        // Compute changes for update
         const initialCards = initialDeck.cards || [];
 
         const cardsToRemove = initialCards
-          .filter((initial) => !addedCards.some((curr) => curr.id === initial.id))
+          .filter(
+            (initial) => !addedCards.some((curr) => curr.id === initial.id),
+          )
           .filter((c) => c.id !== undefined)
           .map((c) => ({ id: c.id as number }));
 
@@ -251,7 +250,9 @@ export default function CreateDeckScreen() {
             }
             return null;
           })
-          .filter((c): c is { id: number; qty: number; role: string } => c !== null);
+          .filter(
+            (c): c is { id: number; qty: number; role: string } => c !== null,
+          );
 
         const cardsToAdd = addedCards
           .filter((c) => c.id === undefined)
@@ -274,7 +275,6 @@ export default function CreateDeckScreen() {
         toast.showSuccess("Deck modifié avec succès !");
         router.replace(`/decks/${updated.id}`);
       } else {
-        // Create new deck
         const cardsPayload = addedCards.map((c) => ({
           cardId: c.cardId,
           qty: c.qty,
@@ -299,9 +299,20 @@ export default function CreateDeckScreen() {
     }
   };
 
-  // Card counts
-  const mainCount = useMemo(() => addedCards.filter((c) => c.role === "main").reduce((acc, c) => acc + c.qty, 0), [addedCards]);
-  const sideCount = useMemo(() => addedCards.filter((c) => c.role === "side").reduce((acc, c) => acc + c.qty, 0), [addedCards]);
+  const mainCount = useMemo(
+    () =>
+      addedCards
+        .filter((c) => c.role === "main")
+        .reduce((acc, c) => acc + c.qty, 0),
+    [addedCards],
+  );
+  const sideCount = useMemo(
+    () =>
+      addedCards
+        .filter((c) => c.role === "side")
+        .reduce((acc, c) => acc + c.qty, 0),
+    [addedCards],
+  );
 
   if (deckLoading) {
     return (
@@ -314,20 +325,26 @@ export default function CreateDeckScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Navigation back */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.navHeader}>
           <Pressable
             onPress={() => router.back()}
-            style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed && styles.backBtnPressed,
+            ]}
           >
             <Ionicons name="close" size={24} color={colors.foreground} />
             <Text style={styles.backBtnText}>Annuler</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>{isEditMode ? "Modifier le Deck" : "Nouveau Deck"}</Text>
+          <Text style={styles.headerTitle}>
+            {isEditMode ? "Modifier le Deck" : "Nouveau Deck"}
+          </Text>
         </View>
 
-        {/* Deck metadata card */}
         <View style={styles.formCard}>
           <Text style={styles.inputLabel}>Nom du Deck</Text>
           <TextInput
@@ -348,7 +365,11 @@ export default function CreateDeckScreen() {
                 <Text style={styles.dropdownButtonText}>
                   {selectedFormat ? selectedFormat.type : "Choisir le format"}
                 </Text>
-                <Ionicons name="chevron-down" size={16} color={colors.mutedForeground} />
+                <Ionicons
+                  name="chevron-down"
+                  size={16}
+                  color={colors.mutedForeground}
+                />
               </Pressable>
             </View>
           </View>
@@ -357,45 +378,68 @@ export default function CreateDeckScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.switchLabel}>Rendre ce deck public</Text>
               <Text style={styles.switchDescription}>
-                Permet aux autres joueurs de voir, copier et sauvegarder votre deck.
+                Permet aux autres joueurs de voir, copier et sauvegarder votre
+                deck.
               </Text>
             </View>
             <Pressable
               onPress={() => setIsPublic(!isPublic)}
               style={[styles.toggleBtn, isPublic && styles.toggleBtnActive]}
             >
-              <View style={[styles.toggleCircle, isPublic && styles.toggleCircleActive]} />
+              <View
+                style={[
+                  styles.toggleCircle,
+                  isPublic && styles.toggleCircleActive,
+                ]}
+              />
             </Pressable>
           </View>
         </View>
 
-        {/* Stats card */}
         <View style={styles.statsCard}>
           <Text style={styles.statsTitle}>Statistiques en temps réel</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statBox}>
               <Text style={styles.statNumber}>{mainCount}</Text>
-              <Text style={[styles.statLabel, mainCount > 60 && { color: colors.destructive }]}>
+              <Text
+                style={[
+                  styles.statLabel,
+                  mainCount > 60 && { color: colors.destructive },
+                ]}
+              >
                 Principal (Max 60)
               </Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statNumber}>{sideCount}</Text>
-              <Text style={[styles.statLabel, sideCount > 15 && { color: colors.destructive }]}>
+              <Text
+                style={[
+                  styles.statLabel,
+                  sideCount > 15 && { color: colors.destructive },
+                ]}
+              >
                 Side (Max 15)
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Selected cards list */}
         <View style={styles.selectedCardsPanel}>
-          <Text style={styles.panelTitle}>Cartes sélectionnées ({addedCards.length})</Text>
+          <Text style={styles.panelTitle}>
+            Cartes sélectionnées ({addedCards.length})
+          </Text>
 
           {addedCards.length > 0 ? (
             <View style={styles.addedList}>
               {addedCards.map((item) => (
-                <View key={item.id ? `db-${item.id}` : `new-${item.cardId}-${item.role}`} style={styles.addedCardRow}>
+                <View
+                  key={
+                    item.id
+                      ? `db-${item.id}`
+                      : `new-${item.cardId}-${item.role}`
+                  }
+                  style={styles.addedCardRow}
+                >
                   <View style={styles.addedCardImageContainer}>
                     {item.card?.image ? (
                       <Image
@@ -404,7 +448,11 @@ export default function CreateDeckScreen() {
                         resizeMode="contain"
                       />
                     ) : (
-                      <Ionicons name="image-outline" size={16} color="#cccccc" />
+                      <Ionicons
+                        name="image-outline"
+                        size={16}
+                        color="#cccccc"
+                      />
                     )}
                   </View>
                   <View style={styles.addedCardInfo}>
@@ -413,45 +461,66 @@ export default function CreateDeckScreen() {
                     </Text>
                     <Text style={styles.addedCardMeta}>
                       {item.card?.set?.name} •{" "}
-                      <Text style={{ fontWeight: "700", color: colors.primary }}>
+                      <Text
+                        style={{ fontWeight: "700", color: colors.primary }}
+                      >
                         {item.role === "main" ? "Main" : "Side"}
                       </Text>
                     </Text>
                   </View>
                   <View style={styles.addedCardActions}>
                     <Pressable
-                      onPress={() => handleUpdateQty(item.cardId, item.role, -1)}
+                      onPress={() =>
+                        handleUpdateQty(item.cardId, item.role, -1)
+                      }
                       style={styles.qtyActionBtn}
                     >
-                      <Ionicons name="remove" size={14} color={colors.foreground} />
+                      <Ionicons
+                        name="remove"
+                        size={14}
+                        color={colors.foreground}
+                      />
                     </Pressable>
                     <Text style={styles.qtyActionVal}>{item.qty}</Text>
                     <Pressable
                       onPress={() => handleUpdateQty(item.cardId, item.role, 1)}
                       style={styles.qtyActionBtn}
                     >
-                      <Ionicons name="add" size={14} color={colors.foreground} />
+                      <Ionicons
+                        name="add"
+                        size={14}
+                        color={colors.foreground}
+                      />
                     </Pressable>
                     <Pressable
                       onPress={() => handleRemoveCard(item.cardId, item.role)}
                       style={styles.removeActionBtn}
                     >
-                      <Ionicons name="trash-outline" size={16} color={colors.destructive} />
+                      <Ionicons
+                        name="trash-outline"
+                        size={16}
+                        color={colors.destructive}
+                      />
                     </Pressable>
                   </View>
                 </View>
               ))}
             </View>
           ) : (
-            <Text style={styles.emptySelectedText}>Recherchez et ajoutez des cartes ci-dessous.</Text>
+            <Text style={styles.emptySelectedText}>
+              Recherchez et ajoutez des cartes ci-dessous.
+            </Text>
           )}
         </View>
 
-        {/* Card Search & Add */}
         <View style={styles.cardSearchPanel}>
           <Text style={styles.panelTitle}>Ajouter des Cartes</Text>
           <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={16} color={colors.mutedForeground} />
+            <Ionicons
+              name="search-outline"
+              size={16}
+              color={colors.mutedForeground}
+            />
             <TextInput
               placeholder="Rechercher par nom..."
               placeholderTextColor="#888888"
@@ -461,13 +530,21 @@ export default function CreateDeckScreen() {
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={16} color={colors.mutedForeground} />
+                <Ionicons
+                  name="close-circle"
+                  size={16}
+                  color={colors.mutedForeground}
+                />
               </Pressable>
             )}
           </View>
 
           {searchLoading && searchResults.length === 0 ? (
-            <ActivityIndicator color={colors.primary} size="small" style={{ marginVertical: 12 }} />
+            <ActivityIndicator
+              color={colors.primary}
+              size="small"
+              style={{ marginVertical: 12 }}
+            />
           ) : (
             <View style={styles.searchResultsGrid}>
               {searchResults.map((card) => {
@@ -475,7 +552,10 @@ export default function CreateDeckScreen() {
                   <Pressable
                     key={card.id}
                     onPress={() => handleOpenAddCardModal(card)}
-                    style={({ pressed }) => [styles.searchResultItem, pressed && styles.cardPressed]}
+                    style={({ pressed }) => [
+                      styles.searchResultItem,
+                      pressed && styles.cardPressed,
+                    ]}
                   >
                     <View style={styles.searchResultImageContainer}>
                       {card.image ? (
@@ -485,7 +565,11 @@ export default function CreateDeckScreen() {
                           resizeMode="contain"
                         />
                       ) : (
-                        <Ionicons name="image-outline" size={24} color="#cccccc" />
+                        <Ionicons
+                          name="image-outline"
+                          size={24}
+                          color="#cccccc"
+                        />
                       )}
                     </View>
                     <Text numberOfLines={1} style={styles.searchResultName}>
@@ -500,24 +584,33 @@ export default function CreateDeckScreen() {
           {searchHasNext && !searchLoading && (
             <Pressable
               onPress={() => void fetchCards({ loadMore: true })}
-              style={({ pressed }) => [styles.loadMoreBtn, pressed && styles.backBtnPressed]}
+              style={({ pressed }) => [
+                styles.loadMoreBtn,
+                pressed && styles.backBtnPressed,
+              ]}
             >
               <Text style={styles.loadMoreBtnText}>Charger plus de cartes</Text>
             </Pressable>
           )}
         </View>
 
-        {/* Form Submit */}
         <Pressable
           disabled={loading}
           onPress={() => void handleSubmit()}
-          style={({ pressed }) => [styles.submitBtn, pressed && styles.backBtnPressed]}
+          style={({ pressed }) => [
+            styles.submitBtn,
+            pressed && styles.backBtnPressed,
+          ]}
         >
           {loading ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
             <>
-              <Ionicons name="checkmark-circle-outline" size={20} color="#ffffff" />
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={20}
+                color="#ffffff"
+              />
               <Text style={styles.submitBtnText}>
                 {isEditMode ? "Modifier le Deck" : "Créer le Deck"}
               </Text>
@@ -526,7 +619,6 @@ export default function CreateDeckScreen() {
         </Pressable>
       </ScrollView>
 
-      {/* Format Select Dropdown Modal */}
       <Modal
         animationType="slide"
         transparent
@@ -554,13 +646,18 @@ export default function CreateDeckScreen() {
                   <Text
                     style={[
                       styles.bottomSheetItemText,
-                      selectedFormat?.id === f.id && styles.bottomSheetItemTextActive,
+                      selectedFormat?.id === f.id &&
+                        styles.bottomSheetItemTextActive,
                     ]}
                   >
                     {f.type}
                   </Text>
                   {selectedFormat?.id === f.id && (
-                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={colors.primary}
+                    />
                   )}
                 </Pressable>
               ))}
@@ -569,7 +666,6 @@ export default function CreateDeckScreen() {
         </View>
       </Modal>
 
-      {/* Add Card Quantities Modal */}
       <Modal
         animationType="fade"
         transparent
@@ -586,17 +682,22 @@ export default function CreateDeckScreen() {
               <Text style={styles.modalCardName}>{selectedCardToAdd.name}</Text>
             )}
 
-            {/* Qty selectors */}
             <Text style={styles.modalLabel}>Quantité</Text>
             <View style={styles.qtySelectRow}>
               {[1, 2, 3, 4].map((q) => (
                 <Pressable
                   key={`qty-${q}`}
                   onPress={() => setAddCardQty(q)}
-                  style={[styles.qtySelectBox, addCardQty === q && styles.qtySelectBoxActive]}
+                  style={[
+                    styles.qtySelectBox,
+                    addCardQty === q && styles.qtySelectBoxActive,
+                  ]}
                 >
                   <Text
-                    style={[styles.qtySelectBoxText, addCardQty === q && styles.qtySelectBoxTextActive]}
+                    style={[
+                      styles.qtySelectBoxText,
+                      addCardQty === q && styles.qtySelectBoxTextActive,
+                    ]}
                   >
                     {q}
                   </Text>
@@ -604,25 +705,36 @@ export default function CreateDeckScreen() {
               ))}
             </View>
 
-            {/* Role Selectors */}
             <Text style={styles.modalLabel}>Rôle dans le deck</Text>
             <View style={styles.roleSelectRow}>
               <Pressable
                 onPress={() => setAddCardRole("main")}
-                style={[styles.roleSelectBox, addCardRole === "main" && styles.roleSelectBoxActive]}
+                style={[
+                  styles.roleSelectBox,
+                  addCardRole === "main" && styles.roleSelectBoxActive,
+                ]}
               >
                 <Text
-                  style={[styles.roleSelectBoxText, addCardRole === "main" && styles.roleSelectBoxTextActive]}
+                  style={[
+                    styles.roleSelectBoxText,
+                    addCardRole === "main" && styles.roleSelectBoxTextActive,
+                  ]}
                 >
                   Principal (Main)
                 </Text>
               </Pressable>
               <Pressable
                 onPress={() => setAddCardRole("side")}
-                style={[styles.roleSelectBox, addCardRole === "side" && styles.roleSelectBoxActive]}
+                style={[
+                  styles.roleSelectBox,
+                  addCardRole === "side" && styles.roleSelectBoxActive,
+                ]}
               >
                 <Text
-                  style={[styles.roleSelectBoxText, addCardRole === "side" && styles.roleSelectBoxTextActive]}
+                  style={[
+                    styles.roleSelectBoxText,
+                    addCardRole === "side" && styles.roleSelectBoxTextActive,
+                  ]}
                 >
                   Side deck
                 </Text>

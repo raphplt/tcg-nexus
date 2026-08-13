@@ -1,256 +1,248 @@
-import TCGdex from "@tcgdex/sdk";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+/**
+ * Fetches the Pokémon catalog from TCGdex, locale by locale, and writes it to
+ * the local dataset (`data/<locale>/`).
+ *
+ *   npm run update-data                        # locales from LOCALES, else all
+ *   npm run update-data -- --locale=en         # one specific locale
+ *   npm run update-data -- --refresh           # re-fetches already known sets
+ *
+ * Each locale keeps its own state: a set already fetched in `fr` is still
+ * downloaded in `en`. Sets are persisted as they complete, so an interrupted
+ * run resumes where it stopped.
+ */
+import {
+  type DatasetCard,
+  type DatasetLocale,
+  type DatasetSerie,
+  type DatasetSet,
+  hasSetCards,
+  listSetIds,
+  localesFromEnv,
+  readSeries,
+  readSets,
+  resolveDataDir,
+  writeSeries,
+  writeSetCards,
+  writeSets,
+} from "@repo/pokemon-dataset";
+import { mapWithConcurrency } from "./dataset-remote.js";
 import { assertR2Config, migrateCardImageToR2, uploadToR2 } from "./r2.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const tcgdex = new TCGdex("fr");
-
-const DATA_DIR = path.resolve(__dirname, "../../data");
-const SERIES_FILE = path.join(DATA_DIR, "pokemon_series.json");
-const SETS_FILE = path.join(DATA_DIR, "pokemon_sets.json");
-
-// Vérifie la présence des credentials R2 (lève une erreur explicite sinon).
-assertR2Config();
+import {
+  fetchFrom,
+  isPocketSet,
+  pocketSerieIds,
+  slugify,
+} from "./tcgdex-client.js";
 
 /**
- * Par défaut, les images de cartes restent servies par TCGdex (déjà un CDN
- * performant) : on ne les ré-héberge PAS sur R2. Passer
- * `MIGRATE_CARD_IMAGES_TO_R2=true` pour activer l'upload des images de cartes
- * lors du fetch des nouveaux sets. Les logos/symboles de sets, eux, vont
- * toujours sur R2.
+ * Card images are re-hosted on R2 (`cards/<locale>/…`). They are
+ * locale-dependent: the card text is printed on the artwork itself.
+ * Set `MIGRATE_CARD_IMAGES_TO_R2=false` to leave them on the TCGdex CDN.
  */
 const MIGRATE_CARD_IMAGES_TO_R2 =
   process.env.MIGRATE_CARD_IMAGES_TO_R2 !== "false";
 
-function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+/** Concurrent card requests. TCGdex tolerates wide bursts poorly. */
+const FETCH_CONCURRENCY = Number(process.env.FETCH_CONCURRENCY ?? 5);
+
+const dataDir = resolveDataDir();
+const refresh = process.argv.includes("--refresh");
+
+function localesFromArgs(): DatasetLocale[] {
+  const flag = process.argv.find((arg) => arg.startsWith("--locale="));
+  return localesFromEnv(flag ? flag.slice("--locale=".length) : undefined);
 }
 
-async function updateData() {
-  console.log("Starting data update...");
+/** Merges known and incoming entries, keeping a stable order. */
+function mergeById<T extends { id: string }>(
+  existing: T[],
+  incoming: T[],
+): T[] {
+  const byId = new Map(existing.map((item) => [item.id, item]));
+  for (const item of incoming) byId.set(item.id, item);
+  return [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
+}
 
-  // Ensure data directory exists
-  console.log(`Using Data Directory: ${DATA_DIR}`);
-  if (!fs.existsSync(DATA_DIR)) {
-    console.log(`Creating directory: ${DATA_DIR}`);
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  // 1. Load local data (create empty files if not exist)
-  console.log("Loading local data...");
-  if (!fs.existsSync(SERIES_FILE)) fs.writeFileSync(SERIES_FILE, "[]");
-  if (!fs.existsSync(SETS_FILE)) fs.writeFileSync(SETS_FILE, "[]");
-
-  const localSeries = JSON.parse(fs.readFileSync(SERIES_FILE, "utf-8"));
-  const localSets = JSON.parse(fs.readFileSync(SETS_FILE, "utf-8"));
-  const localSeriesIds = new Set(localSeries.map((s: any) => s.id));
-  const localSetsIds = new Set(localSets.map((s: any) => s.id));
-
-  // 2. Fetch remote lists
-  console.log("Fetching remote lists...");
-  const remoteSeries = await tcgdex.fetch("series");
-  const remoteSets = await tcgdex.fetch("sets");
-
-  if (!remoteSeries || !remoteSets) {
-    console.error("Failed to fetch remote data.");
-    return;
-  }
-
-  // 3. Identify new items
-  const pocketSeriesIds = new Set(
-    remoteSeries
-      .filter((s: any) => s.name.toLowerCase().includes("pocket"))
-      .map((s: any) => s.id),
+async function importSeries(locale: DatasetLocale, pocketSeries: Set<string>) {
+  const known = new Map(
+    readSeries(locale, dataDir).map((serie) => [serie.id, serie]),
+  );
+  const remote = await fetchFrom<{ id: string; name: string }[]>(
+    locale,
+    "series",
   );
 
-  const newSeries = remoteSeries.filter(
-    (s: any) => !localSeriesIds.has(s.id) && !pocketSeriesIds.has(s.id),
+  if (!remote) throw new Error(`Séries indisponibles en ${locale}.`);
+
+  const fresh: DatasetSerie[] = [];
+  for (const serie of remote) {
+    if (pocketSeries.has(serie.id) || known.has(serie.id)) continue;
+
+    const details = await fetchFrom<
+      DatasetSerie & { logo?: string; sets?: unknown }
+    >(locale, "series", serie.id);
+    if (!details) continue;
+
+    const { sets: _sets, ...serieData } = details;
+    if (details.logo) {
+      const logoUrl = await uploadToR2(
+        `${details.logo}.webp`,
+        `series/${locale}/${serie.id}/logo.webp`,
+      );
+      if (logoUrl) serieData.logo = logoUrl;
+    }
+
+    fresh.push(serieData);
+    console.log(`  + série ${serie.name} (${serie.id})`);
+  }
+
+  const merged = mergeById([...known.values()], fresh);
+  writeSeries(locale, merged, dataDir);
+  return merged;
+}
+
+/** Fetches a set's cards through a pool of parallel requests. */
+async function fetchSetCards(
+  locale: DatasetLocale,
+  setId: string,
+  cardRefs: { id: string }[],
+): Promise<DatasetCard[]> {
+  let done = 0;
+
+  const cards = await mapWithConcurrency(
+    cardRefs,
+    FETCH_CONCURRENCY,
+    async (cardRef) => {
+      let card: DatasetCard | null = null;
+      try {
+        card = await fetchFrom<DatasetCard>(locale, "cards", cardRef.id);
+
+        if (
+          card &&
+          MIGRATE_CARD_IMAGES_TO_R2 &&
+          typeof card.image === "string"
+        ) {
+          const migrated = await migrateCardImageToR2(card.image);
+          if (migrated?.uploaded) card.image = migrated.newBase;
+        }
+      } catch (error) {
+        console.error(`\n  carte ${cardRef.id} (${locale}) : ${String(error)}`);
+      }
+
+      done++;
+      process.stdout.write(
+        `\r  ${setId} [${locale}] ${done}/${cardRefs.length}`,
+      );
+      return card;
+    },
+  );
+  process.stdout.write("\n");
+
+  return cards.filter((card): card is DatasetCard => card !== null);
+}
+
+async function importSets(locale: DatasetLocale, pocketSeries: Set<string>) {
+  const knownSets = readSets(locale, dataDir);
+  const remote = await fetchFrom<{ id: string; name: string }[]>(
+    locale,
+    "sets",
   );
 
-  const newSets = remoteSets.filter((s: any) => {
-    const isNew = !localSetsIds.has(s.id);
-    const isPocketName = s.name.toLowerCase().includes("pocket");
+  if (!remote) throw new Error(`Sets indisponibles en ${locale}.`);
 
-    // Check if set belongs to a Pocket series
-    const serieId = s.serie?.id || s.serie;
-    const isPocketSerie = pocketSeriesIds.has(serieId);
-
-    // Also filter by specific Pocket set IDs
-    const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A"];
-    const isKnownPocketId = knownPocketSetIds.includes(s.id);
-
-    return isNew && !isPocketName && !isPocketSerie && !isKnownPocketId;
-  });
+  const candidates = remote.filter((set) => !isPocketSet(set, pocketSeries));
+  const pending = refresh
+    ? candidates
+    : candidates.filter((set) => !hasSetCards(locale, set.id, dataDir));
 
   console.log(
-    `Found ${newSeries.length} new series and ${newSets.length} new sets.`,
+    `${locale} : ${candidates.length} sets exposés, ${pending.length} à récupérer.`,
   );
 
-  if (newSeries.length === 0 && newSets.length === 0) {
-    console.log("No new data to update.");
-    return;
-  }
+  let sets = knownSets;
 
-  // 4. Fetch details for new series
-  console.log("Fetching details for new series...");
-  for (const serie of newSeries) {
-    const details = await tcgdex.fetch("series", serie.id);
-    if (details) {
-      // Strip 'sets' to avoid bloating the file
-      const { sets, ...seriesData } = details;
+  for (const setRef of pending) {
+    const details = await fetchFrom<
+      DatasetSet & { cards?: { id: string }[]; serie?: { id: string } }
+    >(locale, "sets", setRef.id);
 
-      // Upload Series Logo to R2
-      if (details.logo) {
-        const logoKey = `series/${serie.id}/logo.webp`;
-        const logoUrl = await uploadToR2(details.logo + ".webp", logoKey);
-        if (logoUrl) {
-          seriesData.logo = logoUrl;
-        }
-      }
-
-      localSeries.push(seriesData);
-      console.log(`Added series: ${serie.name}`);
-    }
-  }
-  fs.writeFileSync(SERIES_FILE, JSON.stringify(localSeries, null, 4));
-  console.log("Updated pokemon_series.json");
-
-  // 5. Fetch details for new sets and their cards
-  console.log("Fetching details for new sets...");
-
-  for (const set of newSets) {
-    console.log(`Processing set: ${set.name} (${set.id})...`);
-    const setDetails = await tcgdex.fetch("sets", set.id);
-
-    if (!setDetails) continue;
-
-    // Filter out pocket sets using setDetails
-    const serieId = setDetails.serie?.id || setDetails.serie;
-    const isPocketSerie = pocketSeriesIds.has(serieId);
-    const isPocketName = setDetails.name.toLowerCase().includes("pocket");
-    const knownPocketSetIds = ["A1", "A1a", "A2", "A2a", "A2b", "P-A", "A3", "A3a", "A3b", "A4", "A4a", "B1a", "B2"];
-    const isKnownPocketId = knownPocketSetIds.includes(set.id);
-
-    if (isPocketSerie || isPocketName || isKnownPocketId) {
-      console.log(`  Skipping pocket set: ${setDetails.name} (${set.id})`);
+    if (!details) {
+      console.warn(`  set ${setRef.id} indisponible en ${locale} — ignoré.`);
       continue;
     }
+    if (isPocketSet(details, pocketSeries)) continue;
 
-    // Prepare set metadata
-    const { cards, serie, ...setMetadata } = setDetails;
+    const { cards: cardRefs, serie, ...setMetadata } = details;
+    const serieId = typeof serie === "object" ? serie?.id : serie;
 
-    // Upload Set Images to R2
-    const slug = slugify(set.name);
-    if (setDetails.logo) {
-      const logoKey = `sets/${slug}/logo.webp`;
-      const logoUrl = await uploadToR2(setDetails.logo + ".webp", logoKey);
-      if (logoUrl) setMetadata.logo = logoUrl;
+    const slug = slugify(String(details.name ?? setRef.id));
+    if (typeof details.logo === "string") {
+      const logo = await uploadToR2(
+        `${details.logo}.webp`,
+        `sets/${slug}/logo.webp`,
+      );
+      if (logo) setMetadata.logo = logo;
     }
-    if (setDetails.symbol) {
-      const symbolKey = `sets/${slug}/symbol.png`;
-      const symbolUrl = await uploadToR2(setDetails.symbol + ".png", symbolKey);
-      if (symbolUrl) setMetadata.symbol = symbolUrl;
+    if (typeof details.symbol === "string") {
+      const symbol = await uploadToR2(
+        `${details.symbol}.png`,
+        `sets/${slug}/symbol.png`,
+      );
+      if (symbol) setMetadata.symbol = symbol;
     }
 
-    const setToSave = {
-      ...setMetadata,
-      serieId: serieId,
-    };
-
-    // Fetch and Save cards for this set
-    if (cards) {
-      console.log(`  Fetching ${cards.length} cards for set ${set.name}...`);
-
-      // Create directory structure: apps/data/[serieId]/[setId]
-      // We use serieId from the set details
-      const serieDir = path.join(DATA_DIR, String(serieId));
-      const setDir = path.join(serieDir, set.id);
-
-      if (!fs.existsSync(serieDir)) fs.mkdirSync(serieDir, { recursive: true });
-      if (!fs.existsSync(setDir)) fs.mkdirSync(setDir, { recursive: true });
-
-      let currentCard = 0;
-      for (const cardRef of cards) {
-        currentCard++;
-        try {
-          const cardDetails = await tcgdex.fetch("cards", cardRef.id);
-          if (cardDetails) {
-            // Migration optionnelle des images de la carte (high + low) vers
-            // R2. Désactivée par défaut : les images restent sur TCGdex. Si
-            // l'upload échoue, on conserve l'URL TCGdex (le front gère les deux).
-            if (MIGRATE_CARD_IMAGES_TO_R2 && cardDetails.image) {
-              try {
-                const migrated = await migrateCardImageToR2(cardDetails.image);
-                if (migrated?.uploaded) {
-                  cardDetails.image = migrated.newBase;
-                }
-              } catch (imgErr) {
-                console.error(
-                  `\nImage upload échoué pour ${cardRef.id}:`,
-                  imgErr,
-                );
-              }
-            }
-
-            // Save card to JSON file
-            const cardFilePath = path.join(setDir, `${cardRef.id}.json`);
-            fs.writeFileSync(
-              cardFilePath,
-              JSON.stringify(cardDetails, null, 4),
-            );
-          }
-        } catch (err) {
-          console.error(`\nError fetching card ${cardRef.id}:`, err);
-        }
-
-        // Progress bar
-        const total = cards.length;
-        const percentage = Math.round((currentCard / total) * 100);
-        const width = 40;
-        const filled = Math.round((width * currentCard) / total);
-        const empty = width - filled;
-        const bar = "█".repeat(filled) + "░".repeat(empty);
-        process.stdout.write(
-          `\r  [${bar}] ${percentage}% (${currentCard}/${total})`,
+    if (cardRefs && cardRefs.length > 0) {
+      const cards = await fetchSetCards(locale, setRef.id, cardRefs);
+      if (cards.length < cardRefs.length) {
+        console.warn(
+          `  ${setRef.id} : ${cards.length}/${cardRefs.length} cartes récupérées.`,
         );
-
-        // Add a small delay to avoid rate limiting
-        await new Promise((r) => setTimeout(r, 100));
       }
-      process.stdout.write("\n"); // New line after progress bar completes
+      writeSetCards(locale, setRef.id, cards, dataDir);
     }
 
-    // Save set to local list ONLY after successfully processing all cards
-    // This ensures that if the script crashes, we retry this set next time
-    localSets.push(setToSave);
-    fs.writeFileSync(SETS_FILE, JSON.stringify(localSets, null, 4));
+    sets = mergeById(sets, [{ ...setMetadata, id: setRef.id, serieId }]);
+    writeSets(locale, sets, dataDir);
   }
-  console.log("Updated pokemon_sets.json");
 
-  console.log("Update complete!");
+  return sets;
+}
+
+async function updateLocale(locale: DatasetLocale) {
+  console.log(`\n=== ${locale} ===`);
+
+  const remoteSeries = await fetchFrom<{ id: string; name: string }[]>(
+    locale,
+    "series",
+  );
+  const pocketSeries = pocketSerieIds(remoteSeries ?? []);
+
+  const series = await importSeries(locale, pocketSeries);
+  const sets = await importSets(locale, pocketSeries);
+
+  const setsWithCards = listSetIds(locale, dataDir).length;
+  console.log(
+    `${locale} : ${series.length} séries, ${sets.length} sets ` +
+      `(${setsWithCards} avec cartes).`,
+  );
 }
 
 async function main() {
-  try {
-    await updateData();
-  } catch (error) {
-    console.error("An error occurred:");
-    console.error(error);
-    if (typeof error === "object" && error !== null) {
-      console.error(JSON.stringify(error, null, 2));
-    }
+  assertR2Config();
+  const locales = localesFromArgs();
+  console.log(`Langues : ${locales.join(", ")} — dataset : ${dataDir}`);
+
+  for (const locale of locales) {
+    await updateLocale(locale);
   }
+
+  console.log(
+    "\nTerminé. `npm run coverage-report` compare les langues, " +
+      "`npm run data:push` publie le dataset.",
+  );
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

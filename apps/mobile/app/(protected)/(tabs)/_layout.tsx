@@ -27,7 +27,6 @@ function TabIcon({
   return <Ionicons color={color} name={name} size={size} />;
 }
 
-// Bouton central proéminent pour l'onglet Scan
 function ScanTabButton({
   onPress,
 }: {
@@ -101,7 +100,9 @@ export default function TabLayout() {
         options={{
           headerShown: false,
           title: "Scan",
-          tabBarButton: (props) => <ScanTabButton onPress={props.onPress ?? undefined} />,
+          tabBarButton: (props) => (
+            <ScanTabButton onPress={props.onPress ?? undefined} />
+          ),
           tabBarStyle: { display: "none" },
         }}
       />

@@ -92,12 +92,10 @@ describe("useGlobalSearch", () => {
 
     await waitFor(() => expect(result.current.suggestions).toHaveLength(1));
 
-    // 1 caractère : on reste en mode suggestions, pas de requête de recherche.
     rerender({ query: "p" });
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(mockedGlobalSearch).not.toHaveBeenCalled();
 
-    // À partir de 2 caractères, la recherche se déclenche.
     rerender({ query: "pi" });
     await waitFor(() =>
       expect(result.current.results[0]?.title).toBe("Dracaufeu"),

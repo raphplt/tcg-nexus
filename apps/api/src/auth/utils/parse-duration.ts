@@ -1,11 +1,9 @@
 /**
- * Convertit une durée au format JWT (`15m`, `1h`, `30d`, `45s`) en millisecondes.
+ * Converts a duration string formatted for JWT (`15m`, `1h`, `30d`, `45s`) or numeric seconds into milliseconds.
  *
- * Si `value` est un nombre brut, il est interprété comme un nombre de secondes
- * (comportement par défaut de la librairie `jsonwebtoken`).
- *
- * Lance une erreur si le format n'est pas reconnu : on préfère échouer fort
- * plutôt que de calculer des expirations silencieusement fausses.
+ * @param value Duration string or numeric value in seconds.
+ * @returns Equivalent duration in milliseconds.
+ * @throws Error if the duration format cannot be parsed.
  */
 export function parseDurationToMs(value: string | number): number {
   if (typeof value === "number") {
@@ -21,7 +19,7 @@ export function parseDurationToMs(value: string | number): number {
   const match = trimmed.match(/^(\d+)\s*(ms|s|m|h|d|w|y)$/i);
   if (!match) {
     throw new Error(
-      `parseDurationToMs: format de durée invalide "${value}" (attendu: 15m, 1h, 30d, etc.)`,
+      `parseDurationToMs: invalid duration format "${value}" (expected: 15m, 1h, 30d, etc.)`,
     );
   }
 

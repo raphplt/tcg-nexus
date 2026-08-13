@@ -90,14 +90,6 @@ async function bootstrap() {
     await seedService.seedTournaments();
     logSuccess("Tournois créés !");
 
-    logStep("Import des séries Pokémon...");
-    await seedService.importPokemonSeries();
-    logSuccess("Séries Pokémon importées !");
-
-    logStep("Import des sets Pokémon...");
-    await seedService.importPokemonSets();
-    logSuccess("Sets Pokémon importés !");
-
     logStep("Création de la FAQ...");
     await seedService.seedFaq();
     logSuccess("FAQ créée !");
@@ -106,9 +98,15 @@ async function bootstrap() {
     await seedService.seedArticles();
     logSuccess("Articles importés !");
 
-    logStep("Import des cartes Pokémon...");
-    await seedService.importPokemon();
-    logSuccess("Cartes Pokémon importées !");
+    logStep(
+      "Import du catalogue Pokémon (séries, sets, cartes, traductions)...",
+    );
+    const catalogReport = await seedService.importPokemon();
+    logSuccess(
+      `Catalogue importé — langues : ${catalogReport.locales.join(", ")}, ` +
+        `${catalogReport.sets} sets, ` +
+        `${catalogReport.cardsCreated + catalogReport.cardsUpdated} cartes.`,
+    );
 
     logStep("Synchronisation des effets parsés (card-effects-registry)...");
     try {
@@ -145,6 +143,10 @@ async function bootstrap() {
       logSuccess(
         `Produits scellés importés : ${sealedReport.inserted} insérés, ${sealedReport.updated} mis à jour, ${sealedReport.matchedSets} sets matchés`,
       );
+      const perLocale = Object.entries(sealedReport.translations)
+        .map(([locale, count]) => `${locale} : ${count}`)
+        .join(", ");
+      logSuccess(`Noms par langue — ${perLocale}`);
       if (sealedReport.unmatchedSetNames.length > 0) {
         logWarn(
           `${sealedReport.unmatchedSetNames.length} sets non matchés : ${sealedReport.unmatchedSetNames.slice(0, 5).join(", ")}...`,

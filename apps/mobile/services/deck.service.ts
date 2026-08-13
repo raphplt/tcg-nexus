@@ -36,14 +36,18 @@ export const deckService = {
   async getPaginated(
     params: DecksQueryParams = {},
   ): Promise<PaginatedResult<Deck>> {
-    const response = await secureApi.get<PaginatedResult<Deck>>("/deck", { params });
+    const response = await secureApi.get<PaginatedResult<Deck>>("/deck", {
+      params,
+    });
     return response.data;
   },
 
   async getUserDecksPaginated(
     params: DecksQueryParams = {},
   ): Promise<PaginatedResult<Deck>> {
-    const response = await secureApi.get<PaginatedResult<Deck>>("/deck/me", { params });
+    const response = await secureApi.get<PaginatedResult<Deck>>("/deck/me", {
+      params,
+    });
     return response.data;
   },
 
@@ -76,7 +80,9 @@ export const deckService = {
   },
 
   async shareDeck(id: number): Promise<{ code: string }> {
-    const response = await secureApi.post<{ code: string }>(`/deck/${id}/share`);
+    const response = await secureApi.post<{ code: string }>(
+      `/deck/${id}/share`,
+    );
     return response.data;
   },
 
@@ -98,14 +104,19 @@ export const deckService = {
   async importDeckFromJson(
     data: DeckExportJson,
   ): Promise<{ deck: Deck; warnings?: string[] }> {
-    const response = await secureApi.post<{ deck: Deck; warnings?: string[] }>("/deck/import-json", data);
+    const response = await secureApi.post<{ deck: Deck; warnings?: string[] }>(
+      "/deck/import-json",
+      data,
+    );
     return response.data;
   },
 
   async getSavedDecksPaginated(
     params: DecksQueryParams = {},
   ): Promise<PaginatedResult<Deck>> {
-    const response = await secureApi.get<PaginatedResult<Deck>>("/deck/saved", { params });
+    const response = await secureApi.get<PaginatedResult<Deck>>("/deck/saved", {
+      params,
+    });
     return response.data;
   },
 
@@ -117,12 +128,17 @@ export const deckService = {
   async saveDeckToLibrary(
     deckId: number,
   ): Promise<{ saved: boolean; alreadySaved?: boolean }> {
-    const response = await secureApi.post<{ saved: boolean; alreadySaved?: boolean }>(`/deck/${deckId}/save`);
+    const response = await secureApi.post<{
+      saved: boolean;
+      alreadySaved?: boolean;
+    }>(`/deck/${deckId}/save`);
     return response.data;
   },
 
   async removeDeckFromLibrary(deckId: number): Promise<{ saved: boolean }> {
-    const response = await secureApi.delete<{ saved: boolean }>(`/deck/${deckId}/save`);
+    const response = await secureApi.delete<{ saved: boolean }>(
+      `/deck/${deckId}/save`,
+    );
     return response.data;
   },
 
@@ -130,10 +146,12 @@ export const deckService = {
     userId: number,
     params: { page?: number; limit?: number } = {},
   ): Promise<{ items: Deck[]; total: number; page: number; limit: number }> {
-    const response = await secureApi.get<{ items: Deck[]; total: number; page: number; limit: number }>(
-      `/deck/user/${userId}/public`,
-      { params },
-    );
+    const response = await secureApi.get<{
+      items: Deck[];
+      total: number;
+      page: number;
+      limit: number;
+    }>(`/deck/user/${userId}/public`, { params });
     return response.data;
   },
 

@@ -13,8 +13,6 @@ type Recorded = {
   config: AxiosRequestConfig;
 };
 
-// Remplace l'adapter axios natif par un mock contrôlable pour tester
-// l'intercepteur de refresh sans toucher au réseau.
 const withMockedAdapter = async (
   plan: (url: string) => MockedResponse,
 ): Promise<{ calls: Recorded[] }> => {
@@ -52,7 +50,6 @@ const withMockedAdapter = async (
   try {
     return { calls };
   } finally {
-    // Réinitialiser après le test — fait dans afterEach plus bas.
     void original;
   }
 };

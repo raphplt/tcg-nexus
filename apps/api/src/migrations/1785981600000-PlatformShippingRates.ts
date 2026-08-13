@@ -15,6 +15,6 @@ export class PlatformShippingRates1785981600000 implements MigrationInterface {
   }
 
   public async down(): Promise<void> {
-    // Les tarifs choisis par les vendeurs ne sont pas récupérables.
+    // Original seller-selected shipping rates cannot be restored.
   }
 }

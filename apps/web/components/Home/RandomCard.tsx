@@ -13,11 +13,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { FavoriteButton } from "./FavoritesButton";
 import { getCardImage } from "@/utils/images";
+import { useTranslations } from "next-intl";
 
 const RandomCard = () => {
+  const t = useTranslations("Home");
   const [isFlippingOut, setIsFlippingOut] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
   const [shouldStartFromLeft, setShouldStartFromLeft] = useState(false);
@@ -102,13 +104,9 @@ const RandomCard = () => {
 
   return (
     <Card className="p-6 flex flex-col items-center">
-      <H2 className="mb-4">Carte au hasard</H2>
-      {isLoading && <div>Chargement...</div>}
-      {error && (
-        <div className="text-red-500">
-          Erreur lors du chargement de la carte
-        </div>
-      )}
+      <H2 className="mb-4">{t("randomCard.title")}</H2>
+      {isLoading && <div>{t("common.loading")}</div>}
+      {error && <div className="text-red-500">{t("randomCard.error")}</div>}
       {card && (
         <>
           <div className="w-full flex flex-col items-center">
@@ -138,7 +136,7 @@ const RandomCard = () => {
                 )}
                 <Image
                   src={getCardImage(card, "low")}
-                  alt={card.name || "Carte Pokémon"}
+                  alt={card.name || t("common.pokemonCard")}
                   fill
                   className="object-contain rounded-lg"
                   style={{
@@ -155,7 +153,7 @@ const RandomCard = () => {
             <div className="text-center mb-2">
               <div className="font-bold text-lg">{card.name}</div>
               <div className="text-xs text-muted-foreground">
-                Rareté : {card.rarity || "?"}
+                {t("randomCard.rarity", { rarity: card.rarity || "?" })}
               </div>
             </div>
             <div className="flex gap-2 mt-2">
@@ -163,7 +161,7 @@ const RandomCard = () => {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Carte précédente"
+                aria-label={t("randomCard.previous")}
                 onClick={handlePreviousCard}
                 disabled={historyIndex <= 0 || isAnimating}
               >
@@ -172,7 +170,7 @@ const RandomCard = () => {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="Nouvelle carte"
+                aria-label={t("randomCard.next")}
                 onClick={handleNextCard}
                 disabled={isAnimating}
               >
@@ -185,7 +183,7 @@ const RandomCard = () => {
               <Button
                 variant="secondary"
                 size="icon"
-                aria-label="Voir les détails"
+                aria-label={t("randomCard.details")}
                 asChild
               >
                 <Link href={`/marketplace/cards/${card.id}`}>

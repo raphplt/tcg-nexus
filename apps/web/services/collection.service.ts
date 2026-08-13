@@ -18,7 +18,7 @@ export interface CollectionItemsQueryParams extends PaginationParams {
 
 export const collectionService = {
   /**
-   * Récupère les collections paginées avec filtres et tri
+   * Retrieves paginated collections with filters and sorting.
    * @param params Query params (page, limit, search, category, isPublic, sortBy, sortOrder)
    */
   async getAll(

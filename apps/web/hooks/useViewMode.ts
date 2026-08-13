@@ -16,18 +16,14 @@ export function useViewMode(
       if (stored === "grid" || stored === "list") {
         setViewMode(stored);
       }
-    } catch {
-      // localStorage unavailable
-    }
+    } catch {}
   }, []);
 
   const setAndPersist = (mode: ViewMode) => {
     setViewMode(mode);
     try {
       localStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // localStorage unavailable
-    }
+    } catch {}
   };
 
   return [viewMode, setAndPersist];

@@ -3,6 +3,8 @@ import { UserService } from "../user/user.service";
 import { EmailNotificationService } from "./email-notification.service";
 import { NotificationService } from "./notification.service";
 import { NotificationListener } from "./notification-listener";
+import { NotificationI18nService } from "./notification-i18n.service";
+import { MailI18nService } from "../mail/mail-i18n.service";
 
 jest.mock("bcrypt", () => ({
   hash: jest.fn().mockResolvedValue("hashed"),
@@ -32,6 +34,8 @@ describe("NotificationListener", () => {
         { provide: NotificationService, useValue: notificationService },
         { provide: EmailNotificationService, useValue: emailService },
         { provide: UserService, useValue: userService },
+        MailI18nService,
+        NotificationI18nService,
       ],
     }).compile();
     listener = module.get<NotificationListener>(NotificationListener);
@@ -50,6 +54,7 @@ describe("NotificationListener", () => {
       'Le tournoi "Cup" a démarré.',
       "tournament.started",
       { link: "/tournaments/5", tournamentId: 5 },
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(2);
   });
@@ -69,6 +74,7 @@ describe("NotificationListener", () => {
       expect.stringContaining("Cup"),
       "tournament.finished",
       expect.objectContaining({ link: "/tournaments/5", rank: 1 }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(2);
   });
@@ -88,6 +94,7 @@ describe("NotificationListener", () => {
         link: "/tournaments/5/matches/11",
         matchId: 11,
       }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
   });
@@ -118,6 +125,7 @@ describe("NotificationListener", () => {
         link: "/profile",
         badgeCode: "first_deck",
       }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).not.toHaveBeenCalled();
   });
@@ -134,6 +142,7 @@ describe("NotificationListener", () => {
       expect.stringContaining("Alice"),
       "follow.created",
       expect.objectContaining({ link: "/users/1" }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).not.toHaveBeenCalled();
   });
@@ -152,6 +161,7 @@ describe("NotificationListener", () => {
       expect.any(String),
       "marketplace.sale",
       expect.objectContaining({ link: "/marketplace/sales", orderId: 42 }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
   });
@@ -183,6 +193,7 @@ describe("NotificationListener", () => {
         link: "/orders/42",
         trackingNumber: "TRK123",
       }),
+      expect.objectContaining({ key: expect.any(String) }),
     );
     expect(emailService.sendCritical).toHaveBeenCalledTimes(1);
   });

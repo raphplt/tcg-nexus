@@ -7,6 +7,13 @@ const isCompiled = __filename.endsWith(".js");
 const root = isCompiled ? "dist" : "src";
 const ext = isCompiled ? "js" : "ts";
 
+/**
+ * Data source used by the TypeORM CLI (migrations only) — the application
+ * itself is configured in `app.module.ts`.
+ *
+ * NOTE: exactly one `DataSource` export is allowed here, the CLI refuses the
+ * file otherwise.
+ */
 export const AppDataSource = new DataSource({
   type: "postgres",
   host: process.env.DATABASE_HOST,
@@ -23,5 +30,3 @@ export const AppDataSource = new DataSource({
       ? { rejectUnauthorized: false }
       : false,
 });
-
-export default AppDataSource;

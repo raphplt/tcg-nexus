@@ -34,7 +34,6 @@ export default function CreateTournamentScreen() {
       return;
     }
 
-    // Validation basique des dates
     const startDate = new Date(formData.startDateStr);
     const endDate = new Date(formData.endDateStr);
 

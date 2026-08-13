@@ -31,7 +31,7 @@ export interface ScanRecognizeResponse {
   rois: ScanRoi[];
   candidates: ScanCardCandidate[];
   bestCard: ScanCardCandidate | null;
-  confidence: number; // 0 à 1
+  confidence: number; // 0 to 1
   confidenceLevel: ScanConfidenceLevel;
   engine: string; // tesseract ou mock
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -14,8 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, LogOut, Settings, Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export const AuthHeader = () => {
+  const t = useTranslations("AuthHeader");
   const { user, isAuthenticated, logout } = useAuth();
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -52,6 +54,7 @@ export const AuthHeader = () => {
                 <Button
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
+                  aria-label={t("openUserMenu")}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-sm">
@@ -74,7 +77,7 @@ export const AuthHeader = () => {
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(user.role)}`}
                       >
                         <Shield className="w-3 h-3 mr-1" />
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        {t(`roles.${user.role}`)}
                       </span>
                     </div>
                   </div>
@@ -83,13 +86,13 @@ export const AuthHeader = () => {
                 <DropdownMenuItem asChild>
                   <Link href="/profile" className="w-full cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    <span>Profil</span>
+                    <span>{t("profile")}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="w-full cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>Paramètres</span>
+                    <span>{t("settings")}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -98,17 +101,17 @@ export const AuthHeader = () => {
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Déconnexion</span>
+                  <span>{t("logout")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="flex items-center space-x-2">
               <Button variant="ghost" asChild>
-                <Link href="/auth/login">Connexion</Link>
+                <Link href="/auth/login">{t("login")}</Link>
               </Button>
               <Button asChild>
-                <Link href="/auth/register">Inscription</Link>
+                <Link href="/auth/register">{t("register")}</Link>
               </Button>
             </div>
           )}

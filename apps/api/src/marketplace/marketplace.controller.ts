@@ -133,14 +133,16 @@ export class MarketplaceController {
     return this.marketplaceService.getPriceSuggestion(id, cardState, currency);
   }
 
-  /** Barème d'expédition appliqué par la plateforme (frais + délai). */
+  /** Shipping policy applied platform-wide (fees and handling times). */
   @Get("shipping-policy")
   @Public()
   getShippingPolicy() {
     return getShippingPolicy();
   }
 
-  // Meilleurs vendeurs
+  /**
+   * Retrieves top sellers ranked by completed sales volume and revenue.
+   */
   @Get("best-sellers")
   @Public()
   @ApiQuery({ name: "limit", required: false, type: Number })
@@ -148,13 +150,18 @@ export class MarketplaceController {
     return this.marketplaceService.getBestSellers(limit ? +limit : 10);
   }
 
-  // Vendeurs
+  /**
+   * Retrieves public seller stats and profile information.
+   */
   @Get("sellers/:id")
   @Public()
   getSellerStatistics(@Param("id", ParseIntPipe) id: number) {
     return this.marketplaceService.getSellerStatistics(id);
   }
 
+  /**
+   * Retrieves active listings posted by a specific seller.
+   */
   @Get("sellers/:id/listings")
   @Public()
   getSellerListings(

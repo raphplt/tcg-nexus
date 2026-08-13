@@ -77,12 +77,10 @@ export function PromptOverlay({
           hasImages ? "w-full max-w-2xl" : "w-full max-w-lg",
         )}
       >
-        {/* Title */}
         <div className="px-6 py-4 bg-gradient-to-r from-blue-600/30 to-purple-600/30 border-b border-white/10">
           <h3 className="text-lg font-bold text-white">{prompt.title}</h3>
         </div>
 
-        {/* Options */}
         <div className="p-6">
           {hasImages ? (
             <div className="flex flex-wrap justify-center gap-4 mb-6">
@@ -162,7 +160,6 @@ export function PromptOverlay({
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-3">
             <button
               onClick={() => submit()}

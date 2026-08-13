@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/utils/price";
 import { ShoppingBag, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";

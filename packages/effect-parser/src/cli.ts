@@ -16,8 +16,6 @@ import { loadCardsFromCSV, exportCardInputsToJSON } from "./pipeline.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ─── CLI ─────────────────────────────────────────────────────
-
 const USAGE = `
 Usage: tsx src/cli.ts <command> [options]
 
@@ -59,7 +57,7 @@ function createProvider(providerName: string, model?: string): LLMProvider {
   }
 }
 
-/** Retourne le parser approprié selon le provider choisi */
+/** Returns the parser for the selected provider. */
 function createParser(providerName: string, model?: string): ParserLike {
   if (providerName === "rule-based") {
     console.log(
@@ -166,7 +164,6 @@ async function main() {
 
     case "parse-file": {
       const inputFile = args[1];
-      // args[2] is the output file only if it doesn't start with "--"
       const outputFile =
         (args[2] && !args[2].startsWith("--") ? args[2] : null) ??
         inputFile?.replace(".json", "-effects.json");
@@ -208,7 +205,6 @@ async function main() {
         JSON.stringify(report.registry, null, 2),
       );
 
-      // Clean up checkpoint on successful completion
       if (existsSync(resolve(checkpointFile!)) && report.failureCount === 0) {
         const { unlinkSync } = await import("node:fs");
         unlinkSync(resolve(checkpointFile!));
@@ -245,7 +241,6 @@ async function main() {
       );
 
       const parserForCard = createParser(providerName, model);
-      // parseCard peut ne pas exister sur ParserLike (batch only), on vérifie
       const result =
         "parseCard" in parserForCard
           ? await (parserForCard as any).parseCard(card)

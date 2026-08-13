@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
   SetMetadata,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
@@ -48,7 +50,7 @@ export class TournamentOrganizerGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    // Si aucun rôle d'organisateur n'est requis, l'accès est autorisé
+    // If no organizer role is required, allow access
     if (!requiredRoles) {
       return true;
     }
@@ -65,16 +67,19 @@ export class TournamentOrganizerGuard implements CanActivate {
       return true;
     }
 
-    // Vérifier que le tournoi existe
+    // Verify tournament existence
     const tournament = await this.tournamentRepository.findOne({
       where: { id: parseInt(tournamentId) },
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
-    // Vérifier si l'utilisateur est organisateur du tournoi
+    // Verify whether user is an active tournament organizer
     const organizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: parseInt(tournamentId) },
@@ -89,7 +94,7 @@ export class TournamentOrganizerGuard implements CanActivate {
       );
     }
 
-    // Vérifier si l'utilisateur a l'un des rôles requis
+    // Check whether user holds required organizer role
     const hasRequiredRole = requiredRoles.some(
       (role) => organizer.role === role,
     );
@@ -100,7 +105,7 @@ export class TournamentOrganizerGuard implements CanActivate {
       );
     }
 
-    // Ajouter les informations d'organisateur à la requête pour utilisation ultérieure
+    // Attach organizer context to request object
     request.tournamentOrganizer = organizer;
     request.tournament = tournament;
 

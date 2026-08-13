@@ -316,7 +316,10 @@ export const adminService = {
     return authedFetch<void>("DELETE", `/pokemon-card/${id}`);
   },
 
-  async uploadPokemonSerieLogo(id: string, file: File): Promise<PokemonSerieType> {
+  async uploadPokemonSerieLogo(
+    id: string,
+    file: File,
+  ): Promise<PokemonSerieType> {
     const formData = new FormData();
     formData.append("file", file);
     return authedFetch<PokemonSerieType>("POST", `/pokemon-series/${id}/logo`, {
@@ -338,7 +341,10 @@ export const adminService = {
     });
   },
 
-  async uploadPokemonSetSymbol(id: string, file: File): Promise<PokemonSetType> {
+  async uploadPokemonSetSymbol(
+    id: string,
+    file: File,
+  ): Promise<PokemonSetType> {
     const formData = new FormData();
     formData.append("file", file);
     return authedFetch<PokemonSetType>("POST", `/pokemon-set/${id}/symbol`, {

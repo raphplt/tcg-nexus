@@ -34,6 +34,7 @@
     "packages/typescript-config",
     "packages/ui",
     "packages/effect-parser",
-    "packages/scan-contract"
+    "packages/scan-contract",
+    "packages/pokemon-dataset"
   ]
 }

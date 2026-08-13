@@ -5,7 +5,6 @@ import { BracketStructure } from "@/types/tournament";
 export function useBracket(tournamentId: string) {
   const id = parseInt(tournamentId);
 
-  // Bracket data
   const {
     data: bracket,
     isLoading: bracketLoading,
@@ -17,11 +16,9 @@ export function useBracket(tournamentId: string) {
     enabled: !!id,
   });
 
-  // Helper functions
   const getCurrentRound = () => {
     if (!bracket) return 1;
 
-    // Trouver le round avec des matches en cours ou non terminés
     for (const round of bracket.rounds) {
       const hasActiveMatches = round.matches.some((match) =>
         ["scheduled", "in_progress"].includes(match.status ?? "scheduled"),
@@ -64,32 +61,26 @@ export function useBracket(tournamentId: string) {
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
 
-  // Navigation helpers
   const goToRound = (roundIndex: number) => {
-    // Peut être utilisé pour naviguer vers un round spécifique
     return getMatchByRound(roundIndex);
   };
 
   return {
-    // Données
     bracket,
     isLoading: bracketLoading,
     error: bracketError,
 
-    // Computed values
     currentRound: getCurrentRound(),
     totalMatches: getTotalMatches(),
     completedMatches: getCompletedMatches(),
     progressPercentage: getProgressPercentage(),
 
-    // Helpers
     getMatchByRound,
     goToRound,
     refetch: async () => {
       await refetchBracket();
     },
 
-    // Swiss specific
     isSwiss: bracket?.type === "swiss_system",
     isRoundRobin: bracket?.type === "round_robin",
     isElimination:

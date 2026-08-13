@@ -19,7 +19,6 @@ export enum TournamentFormat {
   EXPANDED = "expanded",
 }
 
-// Traductions
 export const tournamentTypeTranslation = {
   [TournamentType.SINGLE_ELIMINATION]: "Élimination directe",
   [TournamentType.DOUBLE_ELIMINATION]: "Double élimination",

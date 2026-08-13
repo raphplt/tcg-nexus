@@ -22,7 +22,7 @@ services:
 
   vision:
     build:
-      context: ./vision
+      context: ./apps/vision
       dockerfile: Dockerfile
     container_name: tcg-nexus-vision
     restart: unless-stopped

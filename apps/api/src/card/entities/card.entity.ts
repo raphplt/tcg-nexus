@@ -5,11 +5,13 @@ import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import {
   Column,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { CardTranslation } from "./card-translation.entity";
 import { PokemonCardDetails } from "./pokemon-card-details.entity";
 
 export type CardVariants = {
@@ -72,6 +74,10 @@ export type CardPricingData = {
 };
 
 @Entity("card")
+@Index(["game", "tcgDexId"], {
+  unique: true,
+  where: '"tcgDexId" IS NOT NULL',
+})
 export class Card {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -85,20 +91,12 @@ export class Card {
   @Column({ nullable: true })
   localId?: string;
 
-  @Column({ nullable: true })
-  name?: string;
-
-  @Column({ nullable: true })
-  image?: string;
-
-  @Column({ nullable: true })
-  category?: string;
-
+  /**
+   * Illustrator name: proper noun, does not get translated and is therefore
+   * carried by the card entity itself.
+   */
   @Column({ nullable: true })
   illustrator?: string;
-
-  @Column({ nullable: true })
-  rarity?: string;
 
   @Column({ type: "jsonb", nullable: true })
   variants?: CardVariants;
@@ -144,4 +142,26 @@ export class Card {
     (collectionItem) => collectionItem.pokemonCard,
   )
   collectionItems: CollectionItem[];
+
+  /**
+   * Linguistic fields for the card — name, image, category, rarity — one row
+   * per enabled language. No language is prioritized: the card entity itself
+   * no longer carries any labels.
+   */
+  @OneToMany(
+    () => CardTranslation,
+    (translation) => translation.card,
+    { cascade: true },
+  )
+  translations?: CardTranslation[];
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  name?: string;
+  image?: string;
+  category?: string;
+  rarity?: string;
 }

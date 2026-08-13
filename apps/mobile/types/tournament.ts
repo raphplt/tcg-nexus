@@ -1,4 +1,3 @@
-// export * from "./index"; // Player is not exported from index
 export enum TournamentType {
   SINGLE_ELIMINATION = "single_elimination",
   DOUBLE_ELIMINATION = "double_elimination",
@@ -40,7 +39,6 @@ export interface Tournament {
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
-  // Relations that might be included
   players?: any[]; // Replace any with Player if available
   registrations?: any[];
   matches?: any[];

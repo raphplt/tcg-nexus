@@ -7,19 +7,19 @@ import { Card } from "./entities/card.entity";
 import { PokemonCardDetails } from "./entities/pokemon-card-details.entity";
 
 /**
- * Synchronise les effets parsés depuis card-effects-registry.json vers la base
- * de données (colonne parsedEffects JSONB sur PokemonCardDetails).
+ * Synchronizes parsed card effects from card-effects-registry.json to the database
+ * (populating the parsedEffects JSONB column on PokemonCardDetails).
  *
- * Workflow :
- *   1. `npm run parse` dans packages/effect-parser → card-effects-registry.json
- *   2. `npm run sync:effects` dans apps/api (ou automatiquement via npm run seed)
- *   3. L'API lit les effets depuis card.pokemonDetails.parsedEffects
+ * Workflow:
+ *   1. `npm run parse` in packages/effect-parser -> card-effects-registry.json
+ *   2. `npm run sync:effects` in apps/api (or automatically via seed script)
+ *   3. API reads effects from card.pokemonDetails.parsedEffects
  */
 @Injectable()
 export class CardEffectsSyncService {
   private readonly logger = new Logger(CardEffectsSyncService.name);
 
-  // Taille des batches pour les requêtes IN et les bulk updates
+  // Batch sizes for IN lookup queries and bulk updates
   private readonly LOOKUP_BATCH = 1000;
   private readonly UPDATE_BATCH = 200;
 
@@ -31,6 +31,12 @@ export class CardEffectsSyncService {
     private readonly detailsRepository: Repository<PokemonCardDetails>,
   ) {}
 
+  /**
+   * Reads card effects registry and bulk updates PokemonCardDetails entities in the database.
+   *
+   * @param registryPath Optional custom path to card-effects-registry.json.
+   * @returns Summary of sync operation including total, updated count, and unmapped IDs.
+   */
   async syncEffectsFromRegistry(registryPath?: string): Promise<{
     total: number;
     updated: number;
@@ -56,12 +62,12 @@ export class CardEffectsSyncService {
     const allTcgDexIds = Object.keys(registry);
     this.logger.log(`Registry loaded: ${allTcgDexIds.length} entries`);
 
-    // Garantir que la colonne existe (TypeORM synchronize peut ne pas avoir tourné)
+    // Ensure column exists if TypeORM synchronize has not run
     await this.dataSource.query(
       `ALTER TABLE pokemon_card_details ADD COLUMN IF NOT EXISTS parsed_effects jsonb`,
     );
 
-    // ── 1. Résoudre tcgDexId → card_id par batches (IN, pas OR) ──────────
+    // ── 1. Resolve tcgDexId -> card_id in batches ──────────────────────────
     const cardIdByTcgDexId = new Map<string, string>();
     const notFound: string[] = [];
 
@@ -76,7 +82,7 @@ export class CardEffectsSyncService {
       }
     }
 
-    // Identifier les introuvables
+    // Identify unmapped IDs
     for (const id of allTcgDexIds) {
       if (!cardIdByTcgDexId.has(id)) notFound.push(id);
     }
@@ -85,7 +91,7 @@ export class CardEffectsSyncService {
       `Resolved ${cardIdByTcgDexId.size} cards (${notFound.length} not in DB)`,
     );
 
-    // ── 2. Bulk UPDATE par batches via raw SQL ────────────────────────────
+    // ── 2. Bulk UPDATE in batches using raw SQL ────────────────────────────
     const rows: Array<{ cardId: string; effects: Record<string, unknown> }> =
       [];
     for (const [tcgDexId, effects] of Object.entries(registry)) {
@@ -99,9 +105,9 @@ export class CardEffectsSyncService {
     for (let i = 0; i < rows.length; i += this.UPDATE_BATCH) {
       const batch = rows.slice(i, i + this.UPDATE_BATCH);
 
-      // Construire: UPDATE pokemon_card_details SET parsed_effects = vals.effects
-      //             FROM (VALUES ($1::uuid, $2::jsonb), ...) AS vals(card_id, effects)
-      //             WHERE pokemon_card_details.card_id = vals.card_id
+      // Build: UPDATE pokemon_card_details SET parsed_effects = vals.effects
+      //        FROM (VALUES ($1::uuid, $2::jsonb), ...) AS vals(card_id, effects)
+      //        WHERE pokemon_card_details.card_id = vals.card_id
       const placeholders = batch
         .map((_, j) => `($${j * 2 + 1}::uuid, $${j * 2 + 2}::jsonb)`)
         .join(", ");

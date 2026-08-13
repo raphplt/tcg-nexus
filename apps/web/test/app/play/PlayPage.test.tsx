@@ -1,7 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import PlayPage from "@/app/(main)/play/page";
+import PlayPage from "@/app/[locale]/(main)/play/page";
 import { useAuth } from "@/contexts/AuthContext";
 import { casualMatchService } from "@/services/casual-match.service";
 import { matchService } from "@/services/match.service";
@@ -436,7 +436,7 @@ describe("PlayPage", () => {
     renderPage();
 
     expect(
-      await screen.findByText(/Votre compte n’est pas encore prêt/i),
+      await screen.findByText(/Votre compte n['’]est pas encore prêt/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /Ouvrir mon profil/i }),

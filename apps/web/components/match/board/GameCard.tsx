@@ -84,7 +84,6 @@ export function GameCard({
           : undefined
       }
     >
-      {/* Hover glow effect */}
       {onClick && !disabled && (
         <div className="absolute -inset-1 rounded-xl bg-white/0 group-hover:bg-white/5 transition-colors pointer-events-none" />
       )}

@@ -1,4 +1,4 @@
-// Similarité de chaînes pour le matching tolérant des noms (fautes d'OCR).
+// String similarity metrics for fault-tolerant OCR card name matching.
 
 function jaro(s1: string, s2: string): number {
   if (s1 === s2) return 1;
@@ -39,7 +39,14 @@ function jaro(s1: string, s2: string): number {
   );
 }
 
-// Jaro pondéré par le préfixe commun (les noms partagent souvent le début).
+/**
+ * Calculates Jaro-Winkler similarity weighted by common prefix length.
+ *
+ * @param s1 First string.
+ * @param s2 Second string.
+ * @param p Prefix scaling factor (default 0.1).
+ * @returns Similarity score between 0 and 1.
+ */
 export function jaroWinkler(s1: string, s2: string, p = 0.1): number {
   const j = jaro(s1, s2);
   if (j < 0.7) return j;

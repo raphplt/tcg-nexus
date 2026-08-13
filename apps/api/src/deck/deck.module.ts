@@ -1,3 +1,4 @@
+import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
@@ -21,6 +22,7 @@ import { SavedDeck } from "./entities/saved-deck.entity";
       DeckShare,
       SavedDeck,
     ]),
+    CatalogLocalizationModule,
   ],
   controllers: [DeckController],
   providers: [DeckService],

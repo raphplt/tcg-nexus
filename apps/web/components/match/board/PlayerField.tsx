@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { SanitizedPlayerView } from "@/types/match-online";
@@ -35,6 +36,7 @@ export function PlayerField({
   highlightedEmptyBench = false,
   disabled = false,
 }: PlayerFieldProps) {
+  const t = useTranslations("MatchBoard");
   const benchSlots = Array.from(
     { length: MAX_BENCH },
     (_, i) => player.bench[i] ?? null,
@@ -47,7 +49,6 @@ export function PlayerField({
         isOpponent && "flex-col-reverse",
       )}
     >
-      {/* Player name and turn indicator */}
       <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 backdrop-blur-sm">
         <span
           className={cn(
@@ -55,7 +56,7 @@ export function PlayerField({
             isOpponent ? "text-rose-200/80" : "text-cyan-200/80",
           )}
         >
-          {isOpponent ? player.name : "Vous"}
+          {isOpponent ? player.name : t("you")}
         </span>
         <span className="text-[10px] text-white/35">
           Main {player.handCount}
@@ -71,7 +72,6 @@ export function PlayerField({
         )}
       </div>
 
-      {/* Bench row */}
       <div className="flex items-center gap-1.5">
         <AnimatePresence initial={false} mode="popLayout">
           {benchSlots.map((pokemon, i) => (
@@ -108,7 +108,6 @@ export function PlayerField({
         </AnimatePresence>
       </div>
 
-      {/* Active Pokemon */}
       <motion.div
         layout
         transition={{ type: "spring", damping: 20, stiffness: 200 }}
@@ -123,14 +122,12 @@ export function PlayerField({
         />
       </motion.div>
 
-      {/* Side info: deck, prizes, discard */}
       <div
         className={cn(
           "absolute flex flex-col items-center gap-2",
           isOpponent ? "right-4 top-2" : "left-4 bottom-2",
         )}
       >
-        {/* Deck pile */}
         <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
           <div className="relative group">
             <GameCard name="Deck" faceDown size="sm" disabled />
@@ -145,7 +142,6 @@ export function PlayerField({
           </div>
         </div>
 
-        {/* Prize cards */}
         <div className="rounded-2xl border border-white/10 bg-black/35 p-2 backdrop-blur-sm">
           <div className="relative">
             <div className="flex flex-col gap-0.5">
@@ -172,13 +168,12 @@ export function PlayerField({
           </div>
         </div>
 
-        {/* Discard pile */}
         {player.discard.length > 0 && (
           <div className="rounded-2xl border border-white/10 bg-black/35 p-1.5 backdrop-blur-sm">
             <div className="relative">
               <GameCard
                 image={player.discard[player.discard.length - 1]?.image}
-                name="Défausse"
+                name={t("discard")}
                 size="sm"
                 disabled
                 className="opacity-70"
@@ -190,7 +185,7 @@ export function PlayerField({
               </div>
             </div>
             <div className="mt-1 text-center text-[8px] uppercase tracking-[0.18em] text-white/30">
-              Défausse
+              {t("discard")}
             </div>
           </div>
         )}

@@ -7,14 +7,10 @@ import {
 import { ScanReview } from "@/components/scan/ScanReview";
 import { useScanFlow } from "@/hooks/useScanFlow";
 
-// ─── Composant principal ──────────────────────────────────────────────────────
 export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const scan = useScanFlow();
 
-
-
-  // ── Permission caméra ─────────────────────────────────────────────────────
   if (!permission) {
     return <PermissionLoading />;
   }

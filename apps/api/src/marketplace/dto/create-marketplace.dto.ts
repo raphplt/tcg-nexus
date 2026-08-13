@@ -14,6 +14,9 @@ import { ProductKind } from "src/common/enums/product-kind";
 import { SealedCondition } from "src/common/enums/sealed-condition";
 import { Currency } from "../../common/enums/currency";
 
+/**
+ * DTO for creating a new marketplace listing.
+ */
 export class CreateListingDto {
   @IsOptional()
   @IsInt()
@@ -56,12 +59,12 @@ export class CreateListingDto {
   @IsEnum(ListingStatus)
   status?: ListingStatus;
 
-  /** Requis si productKind = card */
+  /** Required if productKind = card */
   @IsOptional()
   @IsEnum(CardState)
   cardState?: CardState;
 
-  /** Requis si productKind = sealed */
+  /** Required if productKind = sealed */
   @IsOptional()
   @IsEnum(SealedCondition)
   sealedCondition?: SealedCondition;
@@ -70,6 +73,9 @@ export class CreateListingDto {
   expiresAt?: Date;
 }
 
+/**
+ * DTO for creating a new marketplace order.
+ */
 export class CreateOrderDto {
   buyerId: number;
   totalAmount: number;
@@ -78,12 +84,18 @@ export class CreateOrderDto {
   orderItems: any[];
 }
 
+/**
+ * DTO for creating an order item line.
+ */
 export class CreateOrderItemDto {
   listingId: number;
   unitPrice: number;
   quantity: number;
 }
 
+/**
+ * DTO for creating a payment transaction record.
+ */
 export class CreatePaymentTransactionDto {
   orderId: number;
   method: any;

@@ -2,26 +2,91 @@
 
 Ce microservice est une application Express.js qui interagit avec l’API TCGdex pour récupérer des données sur les jeux de cartes à jouer. Il fournit divers endpoints pour récupérer des informations sur les cartes, séries, ensembles et plus.
 
-## Pipeline de données & images (R2)
+## Dataset du catalogue
 
-Les données (séries, sets, cartes) sont stockées dans `data/` et les images sont
-ré-hébergées sur Cloudflare R2, exposé via `R2_PUBLIC_URL` (= `https://cdn.tcg-nexus.org`).
+Le catalogue Pokémon (séries, sets, cartes) vit dans `data/` et **est versionné
+dans le dépôt**. Un `git clone` suffit donc à disposer des cartes : ni
+re-scrape d'une heure, ni fichiers à copier d'un poste à l'autre, ni volume à
+alimenter sur le serveur — l'image Docker de l'API les embarque.
 
-Variables d'environnement requises (`.env`) :
-`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`.
+```
+data/
+├── fr/
+│   ├── series.json
+│   ├── sets.json
+│   └── cards/<setId>.ndjson.br       une ligne par carte, compressé Brotli
+├── en/                               même structure
+└── sealed_products.json
+```
+
+Le format NDJSON compressé remplace les ~20 000 fichiers JSON indentés :
+**80 Mo → 2,7 Mo par langue**, 172 fichiers au lieu de 20 222, et un set entier
+se lit d'un coup. Le catalogue complet se charge en moins d'une seconde.
+
+C'est ce qui rend le versionnement raisonnable. Deux réflexes à garder :
+
+- le scraper ne réécrit que les **nouveaux** sets — quelques dizaines de Ko
+  par mois dans l'historique ;
+- `update-data -- --refresh` réécrit tout (les prix bougent chaque jour) et
+  ajoute ~3 Mo à l'historique. À faire rarement, et volontairement.
+
+### Démarrer sur un nouveau poste
+
+```sh
+cd apps/api
+npm run import:catalog   # importe séries, sets, cartes et traductions en base
+```
+
+### Rafraîchir le catalogue sans redéployer
+
+`data:push` et `data:pull` publient le dataset sur R2 et l'en récupèrent. Le
+dépôt reste la source de vérité : ces commandes ne servent qu'à mettre à jour
+un environnement déjà déployé sans reconstruire l'image.
+
+```sh
+npm run data:push        # mainteneur, credentials R2 requises
+npm run data:pull        # sur la cible ; écrase les fichiers locaux
+```
+
+### Variables d'environnement
+
+`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`,
+`R2_PUBLIC_URL` — nécessaires pour **écrire** (scraper, `data:push`).
+La lecture (`data:pull`) passe par le domaine public et n'en a pas besoin.
+
+`LOCALES=fr,en` restreint les langues traitées par tous les scripts.
+`TCG_DATA_DIR` pointe un autre emplacement que `<racine>/data` (conteneurs).
 
 ### Scripts
 
 | Script | Rôle |
 | --- | --- |
-| `npm run update-data` | Détecte les **nouvelles** séries/sets TCGdex, télécharge leurs cartes, **uploade logos/symboles de sets sur R2**, et met à jour `data/`. Idempotent : ne traite que le nouveau. Les images de **cartes** restent sur TCGdex par défaut ; passer `MIGRATE_CARD_IMAGES_TO_R2=true` pour aussi les ré-héberger sur R2. |
+| `npm run data:pull` | Récupère le dataset publié sur R2. Ne télécharge que les fichiers dont l'empreinte diffère. `--force` pour tout retélécharger. Inutile en développement : le dépôt fait foi. |
+| `npm run data:push` | Publie le dataset local sur R2, pour rafraîchir un environnement déployé. Réservé au mainteneur (credentials requises). N'envoie que le delta. |
+| `npm run update-data` | Scrape TCGdex langue par langue. `--locale=en` pour une langue, `--refresh` pour re-récupérer les sets déjà connus. Uploade logos/symboles de sets sur R2. |
+| `npm run coverage-report` | Compare la couverture entre langues, sans rien écrire. `--remote` confronte au catalogue TCGdex. C'est la métrique qui décide de l'activation d'une langue. |
+| `npm run data:migrate-layout` | Conversion unique de l'ancienne arborescence `data/<serie>/<set>/<carte>.json`. `--prune` supprime l'ancienne. |
 | `npm run migrate-card-images` | Backfill : migre vers R2 les images des cartes **déjà** présentes en local. Reprenable. Options : `--serie=sv`, `--limit=500`, `--quality=high`, `--dry-run`. |
 | `npm run update-sealed` | Met à jour les produits scellés (Pokecardex). |
+
+### Ajouter une langue
+
+```sh
+cd apps/fetch
+npm run update-data -- --locale=en   # long : ~20 000 cartes
+npm run coverage-report              # vérifier la couverture avant d'activer
+npm run data:push                    # publier pour les autres postes et la prod
+cd ../api && npm run import:catalog
+```
+
+Les images de cartes dépendent de la langue (le texte est imprimé sur
+l'illustration) : chaque langue a ses propres clés `cards/<locale>/…` sur R2.
 
 Côté API (`apps/api`) :
 
 | Script | Rôle |
 | --- | --- |
+| `npm run import:catalog` | Importe le dataset en base (cartes + traductions), sans rejouer le seed de démo. Idempotent. |
 | `npm run migrate:fix-image-cdn` | Réécrit en base les URLs d'images de sets de l'ancien hôte `*.r2.dev` vers `cdn.tcg-nexus.org`. |
 | `npm run migrate:card-images-cdn` | Bascule en base `card.image` de TCGdex vers le CDN. **À lancer après un backfill complet** (`migrate-card-images` doit reporter « échecs 0 »). |
 

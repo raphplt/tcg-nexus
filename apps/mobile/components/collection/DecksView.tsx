@@ -26,7 +26,9 @@ export function DecksView() {
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
 
   const [formats, setFormats] = useState<DeckFormat[]>([]);
-  const [selectedFormatId, setSelectedFormatId] = useState<number | undefined>(undefined);
+  const [selectedFormatId, setSelectedFormatId] = useState<number | undefined>(
+    undefined,
+  );
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -40,12 +42,10 @@ export function DecksView() {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
 
-  // Import Modal State
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [importCode, setImportCode] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  // Filter Modals State
   const [isFormatModalVisible, setIsFormatModalVisible] = useState(false);
   const [isSortModalVisible, setIsSortModalVisible] = useState(false);
 
@@ -60,7 +60,6 @@ export function DecksView() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Load formats
   useEffect(() => {
     const loadFormats = async () => {
       try {
@@ -76,7 +75,12 @@ export function DecksView() {
   const fetchHorizontalDecks = async () => {
     try {
       const [trendingRes, myRes, savedRes] = await Promise.all([
-        deckService.getPaginated({ page: 1, limit: 5, sortBy: "views", sortOrder: "DESC" }),
+        deckService.getPaginated({
+          page: 1,
+          limit: 5,
+          sortBy: "views",
+          sortOrder: "DESC",
+        }),
         deckService.getUserDecksPaginated({ page: 1, limit: 5 }),
         deckService.getSavedDecksPaginated({ page: 1, limit: 5 }),
       ]);
@@ -129,12 +133,23 @@ export function DecksView() {
         setIsLoading(false);
       }
     },
-    [currentPage, debouncedSearch, hasNextPage, isLoadingMore, selectedFormatId, sortBy, sortOrder],
+    [
+      currentPage,
+      debouncedSearch,
+      hasNextPage,
+      isLoadingMore,
+      selectedFormatId,
+      sortBy,
+      sortOrder,
+    ],
   );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([fetchHorizontalDecks(), loadAllDecks({ refresh: true })]);
+    await Promise.all([
+      fetchHorizontalDecks(),
+      loadAllDecks({ refresh: true }),
+    ]);
     setIsRefreshing(false);
   };
 
@@ -175,12 +190,17 @@ export function DecksView() {
           void deckService.incrementView(deck.id);
           router.push(`/decks/${deck.id}`);
         }}
-        style={({ pressed }) => [styles.horizontalCard, pressed && styles.cardPressed]}
+        style={({ pressed }) => [
+          styles.horizontalCard,
+          pressed && styles.cardPressed,
+        ]}
       >
         <View style={styles.cardHeaderBg}>
           <Ionicons name="copy-outline" size={24} color={colors.primary} />
           <View style={styles.formatBadge}>
-            <Text style={styles.formatText}>{deck.format?.type || "Standard"}</Text>
+            <Text style={styles.formatText}>
+              {deck.format?.type || "Standard"}
+            </Text>
           </View>
         </View>
         <View style={styles.cardBody}>
@@ -191,7 +211,11 @@ export function DecksView() {
             Par {deck.user?.firstName || "Anonyme"}
           </Text>
           <View style={styles.cardViewsRow}>
-            <Ionicons name="eye-outline" size={12} color={colors.mutedForeground} />
+            <Ionicons
+              name="eye-outline"
+              size={12}
+              color={colors.mutedForeground}
+            />
             <Text style={styles.viewsCountText}>{deck.views || 0} vues</Text>
           </View>
         </View>
@@ -206,7 +230,10 @@ export function DecksView() {
           void deckService.incrementView(item.id);
           router.push(`/decks/${item.id}`);
         }}
-        style={({ pressed }) => [styles.verticalCard, pressed && styles.cardPressed]}
+        style={({ pressed }) => [
+          styles.verticalCard,
+          pressed && styles.cardPressed,
+        ]}
       >
         <View style={styles.verticalCardIcon}>
           <Ionicons name="layers" size={24} color={colors.primary} />
@@ -216,17 +243,26 @@ export function DecksView() {
             {item.name}
           </Text>
           <Text numberOfLines={1} style={styles.verticalCardSubtitle}>
-            Par {item.user?.firstName || "Anonyme"} • {item.format?.type || "Standard"}
+            Par {item.user?.firstName || "Anonyme"} •{" "}
+            {item.format?.type || "Standard"}
           </Text>
         </View>
         <View style={styles.verticalCardMeta}>
           <View style={styles.metaStat}>
-            <Ionicons name="eye-outline" size={12} color={colors.mutedForeground} />
+            <Ionicons
+              name="eye-outline"
+              size={12}
+              color={colors.mutedForeground}
+            />
             <Text style={styles.metaStatText}>{item.views || 0}</Text>
           </View>
           {item.cards && item.cards.length > 0 && (
             <View style={styles.metaStat}>
-              <Ionicons name="albums-outline" size={12} color={colors.mutedForeground} />
+              <Ionicons
+                name="albums-outline"
+                size={12}
+                color={colors.mutedForeground}
+              />
               <Text style={styles.metaStatText}>
                 {item.cards.reduce((sum, c) => sum + c.qty, 0)}
               </Text>
@@ -240,26 +276,38 @@ export function DecksView() {
   const renderHeader = () => {
     return (
       <View style={styles.headerContainer}>
-        {/* Actions bar */}
         <View style={styles.actionsBar}>
           <Pressable
             onPress={() => router.push("/decks/create")}
-            style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionButtonPressed,
+            ]}
           >
-            <Ionicons name="add-circle" size={18} color={colors.primaryForeground} />
+            <Ionicons
+              name="add-circle"
+              size={18}
+              color={colors.primaryForeground}
+            />
             <Text style={styles.actionButtonText}>Créer un Deck</Text>
           </Pressable>
 
           <Pressable
             onPress={() => setImportModalVisible(true)}
-            style={({ pressed }) => [styles.actionSecondaryButton, pressed && styles.actionSecondaryButtonPressed]}
+            style={({ pressed }) => [
+              styles.actionSecondaryButton,
+              pressed && styles.actionSecondaryButtonPressed,
+            ]}
           >
-            <Ionicons name="download-outline" size={18} color={colors.foreground} />
+            <Ionicons
+              name="download-outline"
+              size={18}
+              color={colors.foreground}
+            />
             <Text style={styles.actionSecondaryButtonText}>Importer</Text>
           </Pressable>
         </View>
 
-        {/* Horizontal Sections */}
         {myDecks.length > 0 && (
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionHeader}>Mes Decks</Text>
@@ -299,14 +347,18 @@ export function DecksView() {
           </View>
         )}
 
-        {/* All Decks list title & Filters */}
         <View style={styles.allDecksHeaderRow}>
           <Text style={styles.sectionHeader}>Tous les Decks</Text>
         </View>
 
         <View style={styles.searchRow}>
           <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={16} color="#777777" style={styles.searchIcon} />
+            <Ionicons
+              name="search-outline"
+              size={16}
+              color="#777777"
+              style={styles.searchIcon}
+            />
             <TextInput
               autoCapitalize="none"
               onChangeText={setSearch}
@@ -316,28 +368,43 @@ export function DecksView() {
               value={search}
             />
             {search.length > 0 && (
-              <Pressable onPress={() => setSearch("")} style={styles.clearButton}>
+              <Pressable
+                onPress={() => setSearch("")}
+                style={styles.clearButton}
+              >
                 <Ionicons name="close-circle" size={16} color="#777777" />
               </Pressable>
             )}
           </View>
         </View>
 
-        {/* Filters pills */}
         <View style={styles.filterPillsRow}>
           <Pressable
             onPress={() => setIsFormatModalVisible(true)}
-            style={[styles.filterPill, selectedFormatId !== undefined && styles.filterPillActive]}
+            style={[
+              styles.filterPill,
+              selectedFormatId !== undefined && styles.filterPillActive,
+            ]}
           >
-            <Text style={[styles.filterPillText, selectedFormatId !== undefined && styles.filterPillTextActive]}>
+            <Text
+              style={[
+                styles.filterPillText,
+                selectedFormatId !== undefined && styles.filterPillTextActive,
+              ]}
+            >
               {selectedFormatId !== undefined
-                ? formats.find((f) => f.id === selectedFormatId)?.type || "Format"
+                ? formats.find((f) => f.id === selectedFormatId)?.type ||
+                  "Format"
                 : "Format"}
             </Text>
             <Ionicons
               name="chevron-down"
               size={12}
-              color={selectedFormatId !== undefined ? colors.primary : colors.mutedForeground}
+              color={
+                selectedFormatId !== undefined
+                  ? colors.primary
+                  : colors.mutedForeground
+              }
             />
           </Pressable>
 
@@ -346,12 +413,19 @@ export function DecksView() {
             style={styles.filterPill}
           >
             <Text style={styles.filterPillText}>
-              Tri: {sortOptions.find((o) => o.value === sortBy)?.label || "Date"}
+              Tri:{" "}
+              {sortOptions.find((o) => o.value === sortBy)?.label || "Date"}
             </Text>
-            <Ionicons name="chevron-down" size={12} color={colors.mutedForeground} />
+            <Ionicons
+              name="chevron-down"
+              size={12}
+              color={colors.mutedForeground}
+            />
           </Pressable>
 
-          {(selectedFormatId !== undefined || search.trim().length > 0 || sortBy !== "createdAt") && (
+          {(selectedFormatId !== undefined ||
+            search.trim().length > 0 ||
+            sortBy !== "createdAt") && (
             <Pressable
               onPress={() => {
                 setSearch("");
@@ -384,7 +458,8 @@ export function DecksView() {
               <Ionicons name="layers-outline" size={48} color="#cccccc" />
               <Text style={styles.emptyTitle}>Aucun deck trouvé</Text>
               <Text style={styles.emptySubtitle}>
-                Créez le premier deck ou importez-en un avec un code de partage !
+                Créez le premier deck ou importez-en un avec un code de partage
+                !
               </Text>
             </View>
           ) : null
@@ -411,7 +486,6 @@ export function DecksView() {
         }
       />
 
-      {/* Import Modal */}
       <Modal
         animationType="fade"
         transparent
@@ -422,7 +496,8 @@ export function DecksView() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Importer un Deck</Text>
             <Text style={styles.modalDescription}>
-              Saisissez le code de partage du deck que vous souhaitez importer dans votre bibliothèque.
+              Saisissez le code de partage du deck que vous souhaitez importer
+              dans votre bibliothèque.
             </Text>
             <TextInput
               autoCapitalize="characters"
@@ -459,7 +534,6 @@ export function DecksView() {
         </View>
       </Modal>
 
-      {/* Format Selection Modal */}
       <Modal
         animationType="slide"
         transparent
@@ -485,7 +559,8 @@ export function DecksView() {
                 <Text
                   style={[
                     styles.bottomSheetItemText,
-                    selectedFormatId === undefined && styles.bottomSheetItemTextActive,
+                    selectedFormatId === undefined &&
+                      styles.bottomSheetItemTextActive,
                   ]}
                 >
                   Tous les formats
@@ -506,13 +581,18 @@ export function DecksView() {
                   <Text
                     style={[
                       styles.bottomSheetItemText,
-                      selectedFormatId === f.id && styles.bottomSheetItemTextActive,
+                      selectedFormatId === f.id &&
+                        styles.bottomSheetItemTextActive,
                     ]}
                   >
                     {f.type}
                   </Text>
                   {selectedFormatId === f.id && (
-                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={colors.primary}
+                    />
                   )}
                 </Pressable>
               ))}
@@ -521,7 +601,6 @@ export function DecksView() {
         </View>
       </Modal>
 
-      {/* Sort Selection Modal */}
       <Modal
         animationType="slide"
         transparent
@@ -556,7 +635,11 @@ export function DecksView() {
                     {o.label}
                   </Text>
                   {sortBy === o.value && (
-                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={colors.primary}
+                    />
                   )}
                 </Pressable>
               ))}

@@ -1,7 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrencyStore } from "@/store/currency.store";
@@ -26,6 +27,7 @@ export function CardListItem({
   currency = "EUR",
   className,
 }: CardListItemProps) {
+  const t = useTranslations("CardCard");
   const { formatPrice, currency: userCurrency } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
   const marketRef = !hasListings
@@ -109,7 +111,9 @@ export function CardListItem({
               ~{formatPrice(marketRef.price, marketRef.currency)}
             </span>
           ) : (
-            <span className="text-xs text-muted-foreground">Aucune offre</span>
+            <span className="text-xs text-muted-foreground">
+              {t("noOffer")}
+            </span>
           )}
         </div>
       </div>

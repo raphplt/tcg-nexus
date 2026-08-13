@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
@@ -52,6 +53,13 @@ describe("SearchService", () => {
         { provide: getRepositoryToken(Player), useValue: playerMock.repo },
         { provide: getRepositoryToken(Listing), useValue: listingMock.repo },
         { provide: getRepositoryToken(User), useValue: userMock.repo },
+        {
+          provide: CatalogLocalizationService,
+          useValue: {
+            localize: jest.fn(async (payload) => payload),
+            resolveLabels: jest.fn(async (payload) => payload),
+          },
+        },
       ],
     }).compile();
 

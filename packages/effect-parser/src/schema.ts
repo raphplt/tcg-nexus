@@ -1,33 +1,24 @@
 import { z } from "zod";
 
-// ─── Enums ───────────────────────────────────────────────────
-
 export const EffectTypeSchema = z.enum([
-  // Damage
   "DAMAGE",
   "PLACE_DAMAGE_COUNTERS",
   "DYNAMIC_DAMAGE",
-  // Healing
   "HEAL",
-  // Special Conditions
   "APPLY_SPECIAL_CONDITION",
   "REMOVE_SPECIAL_CONDITION",
-  // Draw / Search
   "DRAW_CARD",
   "DRAW_UNTIL_HAND_SIZE",
   "SEARCH_DECK",
   "LOOK_AT_TOP_DECK",
   "SEARCH_DISCARD",
-  // Hand Disruption
   "DISCARD_FROM_HAND",
   "SHUFFLE_HAND_DRAW",
   "MILL",
-  // Energy
   "DISCARD_ENERGY",
   "MOVE_ENERGY",
   "ATTACH_ENERGY_FROM_DECK",
   "ATTACH_ENERGY_FROM_DISCARD",
-  // Board Manipulation
   "SWITCH_OPPONENT_ACTIVE",
   "SWITCH_OWN_ACTIVE",
   "RETURN_TO_HAND",
@@ -35,30 +26,21 @@ export const EffectTypeSchema = z.enum([
   "SHUFFLE_DECK",
   "DEVOLVE",
   "REVIVE",
-  // Protection / Defense
   "PREVENT_DAMAGE",
   "REDUCE_DAMAGE",
-  // Restrictions / Locks
   "CANT_ATTACK_NEXT_TURN",
   "CANT_USE_SAME_ATTACK",
   "OPPONENT_CANT_RETREAT",
   "TRAINER_LOCK",
   "ABILITY_LOCK",
-  // Damage Boost
   "BOOST_NEXT_TURN_DAMAGE",
-  // Coin Flip
   "COIN_FLIP",
   "MULTI_COIN_FLIP",
   "FLIP_UNTIL_TAILS",
-  // Copy / Transform
   "COPY_ATTACK",
-  // Lost Zone
   "SEND_TO_LOST_ZONE",
-  // Prizes
   "EXTRA_PRIZE",
-  // Conditional
   "CONDITIONAL",
-  // Stadium Passive
   "STADIUM_PASSIVE_DAMAGE_BOOST",
   "STADIUM_PASSIVE_DAMAGE_REDUCE",
 ]);
@@ -136,9 +118,6 @@ export const SearchFilterSchema = z
   })
   .optional();
 
-// ─── Effect Schemas ──────────────────────────────────────────
-
-// Forward-declare for recursive types (coin flip contains effects)
 export type ParsedEffect = z.infer<typeof AnyEffectSchema>;
 
 const DamageEffectSchema = z.object({
@@ -338,7 +317,6 @@ const BoostNextTurnDamageSchema = z.object({
   amount: z.number(),
 });
 
-// Recursive schemas for coin flip effects
 const CoinFlipSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     type: z.literal("COIN_FLIP"),
@@ -383,8 +361,6 @@ const ExtraPrizeSchema = z.object({
   amount: z.number(),
 });
 
-// ── Conditional Effects ─────────────────────────────────────
-
 const ConditionSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("IF_COIN_HEADS") }),
   z.object({ type: z.literal("IF_COIN_TAILS") }),
@@ -409,8 +385,6 @@ const ConditionalEffectSchema: z.ZodType<any> = z.lazy(() =>
     elseEffects: z.array(AnyEffectSchema).optional(),
   }),
 );
-
-// ─── Union Schema ────────────────────────────────────────────
 
 export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
   z.union([
@@ -454,7 +428,6 @@ export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
     SendToLostZoneSchema,
     ExtraPrizeSchema,
     ConditionalEffectSchema,
-    // Stadium Passive
     z.object({
       type: z.literal("STADIUM_PASSIVE_DAMAGE_BOOST"),
       amount: z.number(),
@@ -469,8 +442,6 @@ export const AnyEffectSchema: z.ZodType<any> = z.lazy(() =>
     }),
   ]),
 );
-
-// ─── Card-level schemas ──────────────────────────────────────
 
 export const AttackEffectsSchema = z.object({
   effects: z.array(AnyEffectSchema),
@@ -503,8 +474,6 @@ export const CardEffectsSchema = z.discriminatedUnion("kind", [
 export type CardEffects = z.infer<typeof CardEffectsSchema>;
 export type PokemonCardEffects = z.infer<typeof PokemonCardEffectsSchema>;
 export type TrainerCardEffects = z.infer<typeof TrainerCardEffectsSchema>;
-
-// ─── Registry schema ─────────────────────────────────────────
 
 export const CardEffectsRegistrySchema = z.record(
   z.string(),

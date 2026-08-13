@@ -9,8 +9,7 @@ export interface OcrResult {
   engine: string;
 }
 
-// réglages Tesseract par zone : SINGLE_BLOCK lit mieux une carte chargée que
-// AUTO, SPARSE_TEXT retrouve le numéro dans le bruit de la bande basse
+// Tesseract profile settings per card region (SINGLE_BLOCK for card body, SPARSE_TEXT for set numbers)
 const PROFILES: Record<OcrProfile, { psm: PSM; whitelist: string }> = {
   full: { psm: PSM.SINGLE_BLOCK, whitelist: "" },
   name: { psm: PSM.SINGLE_LINE, whitelist: "" },
@@ -26,7 +25,13 @@ export class OcrService {
 
   constructor(private readonly config: ConfigService) {}
 
-  // moteur choisi par OCR_ENGINE (tesseract par défaut), repli mock en cas d'échec
+  /**
+   * Performs optical character recognition on an image buffer using configured OCR engine.
+   *
+   * @param image Raw image buffer.
+   * @param profile OCR profile type ("full", "name", or "number").
+   * @returns OCR result containing extracted text and engine name.
+   */
   async recognize(
     image: Buffer,
     profile: OcrProfile = "full",
@@ -42,7 +47,7 @@ export class OcrService {
       };
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      this.logger.error(`OCR ${engine} KO, repli mock: ${reason}`);
+      this.logger.error(`OCR ${engine} error, fallback to mock: ${reason}`);
       return { text: "", engine: "mock" };
     }
   }
@@ -64,7 +69,7 @@ export class OcrService {
   private getWorker(): Promise<Worker> {
     if (!this.workerPromise) {
       const langs = this.config.get<string>("OCR_LANGS") ?? "eng+fra";
-      // langPath local = traineddata embarquées (docker offline), sinon CDN
+      // Local langPath uses bundled traineddata (offline docker container); otherwise CDN
       const langPath = this.config.get<string>("OCR_LANG_PATH");
       const options = langPath ? { langPath, cachePath: langPath } : undefined;
 

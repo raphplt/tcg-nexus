@@ -31,10 +31,9 @@ export interface FilterState {
 }
 
 /**
- * Hook pour récupérer les données de la page d'accueil du marketplace
+ * Provides the marketplace home page data.
  */
 export function useMarketplaceHome() {
-  // Récupère les cartes populaires
   const { data: popularCards, isLoading: loadingPopular } = useQuery<
     PopularCard[]
   >({
@@ -42,7 +41,6 @@ export function useMarketplaceHome() {
     queryFn: () => marketplaceService.getPopularCards(8),
   });
 
-  // Récupère les cartes en tendance
   const { data: trendingCards, isLoading: loadingTrending } = useQuery<
     TrendingCard[]
   >({
@@ -50,7 +48,6 @@ export function useMarketplaceHome() {
     queryFn: () => marketplaceService.getTrendingCards(8, true),
   });
 
-  // Récupère les meilleurs vendeurs
   const { data: bestSellers, isLoading: loadingSellers } = useQuery<
     BestSeller[]
   >({
@@ -58,13 +55,11 @@ export function useMarketplaceHome() {
     queryFn: () => marketplaceService.getBestSellers(6),
   });
 
-  // Récupère les sets (limité aux 50 plus récents)
   const { data: sets, isLoading: loadingSets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets", 50],
     queryFn: () => pokemonCardService.getAllSets(50),
   });
 
-  // Récupère les produits scellés récents (par createdAt desc)
   const { data: recentSealed, isLoading: loadingRecentSealed } = useQuery<
     SealedProduct[]
   >({
@@ -72,7 +67,6 @@ export function useMarketplaceHome() {
     queryFn: () => sealedProductService.getRecent(8),
   });
 
-  // Récupère les produits scellés populaires (par score d'événements)
   const { data: popularSealed, isLoading: loadingPopularSealed } = useQuery<
     SealedProduct[]
   >({
@@ -80,7 +74,6 @@ export function useMarketplaceHome() {
     queryFn: () => sealedProductService.getPopular(8),
   });
 
-  // Récupère les dernières annonces créées
   const { data: recentListings, isLoading: loadingRecentListings } = useQuery<
     PaginatedResult<Listing>
   >({
@@ -113,26 +106,23 @@ export function useMarketplaceHome() {
 }
 
 /**
- * Hook pour récupérer les données de la page de catalogue de cartes du marketplace
+ * Provides marketplace card catalog data.
  */
 export function useMarketplaceCards(
   filters: FilterState,
   page: number,
   limit: number = 24,
 ) {
-  // Récupère les sets pour les filtres
   const { data: sets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets"],
     queryFn: () => pokemonCardService.getAllSets(),
   });
 
-  // Récupère les séries pour les filtres
   const { data: series } = useQuery<PokemonSerieType[]>({
     queryKey: ["pokemon-series"],
     queryFn: () => pokemonCardService.getAllSeries(),
   });
 
-  // Récupère les cartes avec données marketplace
   const { data, isLoading, error, refetch } = usePaginatedQuery<
     PaginatedResult<any>
   >(
@@ -172,8 +162,7 @@ export function useMarketplaceCards(
 }
 
 /**
- * Prix conseillé pour mettre une carte en vente (moyenne des annonces
- * actives, à défaut prix de référence du marché).
+ * Suggested listing price based on active listings, or the market reference price when none exist.
  */
 export function usePriceSuggestion(
   cardId?: string,
@@ -192,7 +181,7 @@ export function usePriceSuggestion(
   });
 }
 
-/** Barème d'expédition imposé par la plateforme */
+/** Platform-defined shipping policy. */
 export function useShippingPolicy() {
   return useQuery<ShippingPolicy>({
     queryKey: ["marketplace", "shipping-policy"],

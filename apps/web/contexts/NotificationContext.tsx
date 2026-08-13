@@ -70,7 +70,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     async (id: number) => {
       try {
         await notificationService.markAsRead(id);
-        // On ne décrémente le compteur que si la notif était réellement non lue
+
         const wasUnread = notifications.some((n) => n.id === id && !n.isRead);
         setNotifications((prev) =>
           prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
@@ -100,7 +100,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     async (id: number) => {
       try {
         await notificationService.deleteNotification(id);
-        // On capture l'état lu/non lu avant de filtrer la liste
+
         const wasUnread = notifications.some((n) => n.id === id && !n.isRead);
         setNotifications((prev) => prev.filter((n) => n.id !== id));
         if (wasUnread) {
@@ -113,7 +113,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     [notifications],
   );
 
-  // Chargement initial des notifications
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
@@ -123,7 +122,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, fetchNotifications]);
 
-  // Connexion WebSocket
   useEffect(() => {
     if (!isAuthenticated || !socketBaseUrl) {
       if (socketRef.current) {
@@ -149,7 +147,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     socket.on("connect", () => {
       setIsConnected(true);
       console.log("Connected to notification gateway");
-      // Resynchronisation : on récupère les notifs manquées pendant une coupure
+
       fetchNotifications();
     });
 
@@ -159,7 +157,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
 
     socket.on("new_notification", (newNotification: UserNotification) => {
-      // Déduplication : on ignore une notif déjà présente (reconnexion, double émission)
       let isDuplicate = false;
       setNotifications((prev) => {
         if (prev.some((n) => n.id === newNotification.id)) {

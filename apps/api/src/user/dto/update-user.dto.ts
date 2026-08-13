@@ -1,7 +1,8 @@
 import { PartialType } from "@nestjs/mapped-types";
-import { IsBoolean, IsEnum, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsIn, IsOptional, IsString } from "class-validator";
 import { Currency } from "src/common/enums/currency";
 import { UserRole } from "src/common/enums/user";
+import { SUPPORTED_LOCALES } from "src/translation/supported-locales";
 import { CreateUserDto } from "./create-user.dto";
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
@@ -12,6 +13,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsEnum(Currency)
   preferredCurrency?: Currency;
+
+  @IsOptional()
+  @IsIn(SUPPORTED_LOCALES)
+  preferredLocale?: string;
 
   @IsOptional()
   @IsBoolean()

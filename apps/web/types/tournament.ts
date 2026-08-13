@@ -185,8 +185,6 @@ export interface StateTransition {
   transitionDescriptions: Record<string, string>;
 }
 
-// DTOs
-
 export interface CreateTournamentDto {
   name: string;
   description?: string;

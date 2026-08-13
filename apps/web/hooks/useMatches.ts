@@ -16,7 +16,6 @@ export function useMatches(tournamentId: string) {
   const refreshMatchQueries = () =>
     queryClient.invalidateQueries({ queryKey: ["tournament", tournamentId] });
 
-  // Tous les matches du tournoi
   const {
     data: matchesData,
     isLoading,
@@ -27,7 +26,6 @@ export function useMatches(tournamentId: string) {
     enabled: !!id,
   });
 
-  // Mutations pour les actions sur les matches
   const startMatchMutation = useMutation({
     mutationFn: ({
       matchId,
@@ -128,7 +126,6 @@ export function useMatches(tournamentId: string) {
   };
 
   return {
-    // Données
     matches: matchesData || [],
     total: matchesData?.length || 0,
     isLoading,
@@ -143,7 +140,6 @@ export function useMatches(tournamentId: string) {
     resetMatch: (matchId: number, data: ResetMatchDto) =>
       resetMatchMutation.mutate({ matchId, data }),
 
-    // États des mutations
     isStarting: startMatchMutation.isPending || startMatchesMutation.isPending,
     isReporting: reportScoreMutation.isPending,
     isResetting: resetMatchMutation.isPending,

@@ -1,3 +1,4 @@
+import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
@@ -11,6 +12,7 @@ import { SearchService } from "./search.service";
 @Module({
   imports: [
     TypeOrmModule.forFeature([Card, Tournament, Player, Listing, User]),
+    CatalogLocalizationModule,
   ],
   controllers: [SearchController],
   providers: [SearchService],

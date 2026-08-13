@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Flame, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SmartImage } from "@/components/ui/SmartImage";
@@ -37,6 +38,7 @@ export function CardCard({
   isPopular = false,
   isTrending = false,
 }: CardCardProps) {
+  const t = useTranslations("CardCard");
   const { formatPrice, currency: userCurrency } = useCurrencyStore();
   const hasListings = listingCount !== undefined && listingCount > 0;
   const marketRef = !hasListings
@@ -65,7 +67,7 @@ export function CardCard({
                   <Badge
                     variant="default"
                     className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-1"
-                    title="Popularité calculée sur 90 jours"
+                    title={t("popularityTooltip")}
                   >
                     <Star className="w-3 h-3 fill-current" />
                   </Badge>
@@ -74,7 +76,7 @@ export function CardCard({
                   <Badge
                     variant="default"
                     className="bg-orange-500 hover:bg-orange-600 text-white flex items-center gap-1"
-                    title="Momentum récent (7 jours vs 30 jours)"
+                    title={t("momentumTooltip")}
                   >
                     <Flame className="w-3 h-3 fill-current" />
                   </Badge>
@@ -161,11 +163,11 @@ export function CardCard({
                     ~{formatPrice(marketRef.price, marketRef.currency)}
                   </span>
                   <p className="text-xs text-muted-foreground">
-                    Prix de référence
+                    {t("marketPrice")}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Aucune offre</p>
+                <p className="text-sm text-muted-foreground">{t("noOffer")}</p>
               )}
             </div>
           </div>

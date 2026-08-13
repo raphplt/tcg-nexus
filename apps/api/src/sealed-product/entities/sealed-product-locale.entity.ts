@@ -5,16 +5,28 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
+  PrimaryColumn,
 } from "typeorm";
 import { SealedProduct } from "./sealed-product.entity";
 
+/**
+ * Localized name of a sealed product, one row per language.
+ *
+ * Keyed by (product, locale) like `card_translation`: the product identifier
+ * is enough to reach a name, so no generated id is needed.
+ */
 @Entity()
-@Unique(["sealedProduct", "locale"])
+@Index(["locale", "name"])
 export class SealedProductLocale {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ name: "sealed_product_id" })
+  sealedProductId: string;
+
+  /** Language code, e.g. "fr", "en". */
+  @PrimaryColumn({ type: "varchar", length: 10 })
+  locale: string;
+
+  @Column()
+  name: string;
 
   @ManyToOne(
     () => SealedProduct,
@@ -24,16 +36,8 @@ export class SealedProductLocale {
       onDelete: "CASCADE",
     },
   )
-  @JoinColumn({ name: "sealed_product_id" })
+  @JoinColumn({ name: "sealed_product_id", referencedColumnName: "id" })
   sealedProduct: SealedProduct;
-
-  /** Code de langue ex : "fr", "en", "ja", "de" */
-  @Column()
-  @Index()
-  locale: string;
-
-  @Column()
-  name: string;
 
   @CreateDateColumn()
   createdAt: Date;

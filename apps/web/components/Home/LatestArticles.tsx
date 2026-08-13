@@ -3,6 +3,7 @@ import { H2 } from "../Shared/Titles";
 import { Card } from "../ui/card";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 interface Article {
   id: number;
@@ -20,11 +21,12 @@ const fetchArticles = async (): Promise<Article[]> => {
       (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001")
     }/articles`,
   );
-  if (!res.ok) throw new Error("Erreur lors du chargement des articles");
+  if (!res.ok) throw new Error("ARTICLE_FETCH_FAILED");
   return res.json();
 };
 
 const LatestArticles = () => {
+  const t = useTranslations("Home");
   const {
     data: articles,
     isLoading,
@@ -36,13 +38,9 @@ const LatestArticles = () => {
 
   return (
     <Card className="p-6 mt-8">
-      <H2 className="mb-4">Derniers articles</H2>
-      {isLoading && <div>Chargement...</div>}
-      {error && (
-        <div className="text-red-500">
-          Erreur lors du chargement des articles.
-        </div>
-      )}
+      <H2 className="mb-4">{t("articles.title")}</H2>
+      {isLoading && <div>{t("common.loading")}</div>}
+      {error && <div className="text-red-500">{t("articles.error")}</div>}
       <div className="flex flex-col gap-4">
         {articles?.map((article) => (
           <a
@@ -63,7 +61,7 @@ const LatestArticles = () => {
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-500">
-                  Pas d'image
+                  {t("common.noImage")}
                 </div>
               )}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">

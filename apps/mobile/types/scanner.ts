@@ -1,10 +1,4 @@
-// ─── Types du pipeline scanner ────────────────────────────────────────────────
-// Interfaces entre chaque module du pipeline.
-// Aucune dépendance vers l'ancien OCR.
-
-// ── Module 1 : CardDetector ───────────────────────────────────────────────────
-
-/** Les 4 coins du quadrilatère détecté dans le frame caméra */
+/** Four corners of the quadrilateral detected in a camera frame. */
 export interface CardCorners {
   topLeft: { x: number; y: number };
   topRight: { x: number; y: number };
@@ -12,19 +6,17 @@ export interface CardCorners {
   bottomRight: { x: number; y: number };
 }
 
-/** Résultat de la détection de carte dans un frame */
+/** Card-detection result for a frame. */
 export interface DetectedCard {
   found: boolean;
   corners?: CardCorners;
-  /** 0–1 : confiance sur la détection du rectangle */
+  /** Rectangle-detection confidence from 0 to 1. */
   confidence: number;
-  /** Ratio largeur/hauteur du rectangle détecté */
+  /** Width-to-height ratio of the detected rectangle. */
   aspectRatio: number;
 }
 
-// ── Module 2 : PerspectiveCorrector ──────────────────────────────────────────
-
-/** Image normalisée après correction de perspective */
+/** Normalized image after perspective correction. */
 export interface RectifiedCard {
   uri: string;
   base64: string;
@@ -32,16 +24,14 @@ export interface RectifiedCard {
   height: number; // toujours NORMALIZED_HEIGHT
 }
 
-// ── Module 3 : ZoneOCR ───────────────────────────────────────────────────────
-
-/** Résultat OCR de la zone nom (haut de la carte) */
+/** OCR result for the card-name zone. */
 export interface NameZoneResult {
   rawText: string;
-  candidateName?: string; // première ligne valide, nettoyée
+  candidateName?: string;
   confidence: number; // 0–1
 }
 
-/** Résultat OCR de la zone numéro (bas de la carte) */
+/** OCR result for the card-number zone. */
 export interface NumberZoneResult {
   rawText: string;
   localId?: string; // ex: "063"
@@ -50,15 +40,13 @@ export interface NumberZoneResult {
   confidence: number;
 }
 
-/** Résultat global du ZoneOCR */
+/** Aggregate ZoneOCR result. */
 export interface ZoneOcrResult {
   nameZone: NameZoneResult;
   numberZone: NumberZoneResult;
   language: "fr" | "en" | "ja" | "unknown";
   durationMs: number;
 }
-
-// ── Module 4 : VisualMatcher ─────────────────────────────────────────────────
 
 export type VisualMatchMethod = "phash" | "none";
 
@@ -73,9 +61,7 @@ export interface VisualMatchResult {
   durationMs: number;
 }
 
-// ── Module 5 : CandidateRanker ────────────────────────────────────────────────
-
-/** Signal agrégé passé au ranker */
+/** Aggregated signal passed to the ranker. */
 export interface ScanSignal {
   ocrName?: string;
   ocrLocalId?: string;
@@ -86,7 +72,7 @@ export interface ScanSignal {
   visualMatches: VisualMatch[];
 }
 
-/** Décomposition du score pour debug */
+/** Score breakdown for debugging. */
 export interface ScoreBreakdown {
   nameScore: number; // max 40
   numberScore: number; // max 40
@@ -95,7 +81,7 @@ export interface ScoreBreakdown {
   total: number;
 }
 
-/** Candidat après ranking */
+/** Candidate after ranking. */
 export interface RankedCandidate {
   cardId: string;
   cardName: string;
@@ -107,9 +93,7 @@ export interface RankedCandidate {
   confidence: "HIGH" | "MEDIUM" | "LOW";
 }
 
-// ── Module 6 : CardResolver ──────────────────────────────────────────────────
-
-/** Log d'une étape du pipeline */
+/** Pipeline step log. */
 export interface ScanStepLog {
   step: "detect" | "rectify" | "ocr" | "visual" | "rank" | "resolve";
   durationMs: number;
@@ -119,9 +103,9 @@ export interface ScanStepLog {
 
 export type ScanConfidence = "HIGH" | "MEDIUM" | "LOW";
 
-/** Résultat final complet du pipeline de scan */
+/** Complete scan-pipeline result. */
 export interface ScanResolution {
-  /** Meilleure carte trouvée (ou null si rien de fiable) */
+  /** Best card found, or null when no result is reliable. */
   bestCardId: string | null;
   bestCardName: string | null;
   bestCardImage: string | null;
@@ -130,15 +114,13 @@ export interface ScanResolution {
   /** Score du meilleur candidat (0–125) */
   topScore: number;
   confidence: ScanConfidence;
-  /** Tous les candidats classés par score décroissant */
+  /** All candidates ranked by descending score. */
   rankedCandidates: RankedCandidate[];
   /** Signal OCR brut (pour debug UI) */
   signal: ScanSignal;
-  /** Logs de chaque étape (durées, succès) */
+  /** Logs for every step, including duration and success. */
   logs: ScanStepLog[];
 }
-
-// ── FrameCrop (passé depuis l'UI) ─────────────────────────────────────────────
 
 export interface FrameCrop {
   frameX: number;

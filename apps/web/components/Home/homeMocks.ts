@@ -1,5 +1,3 @@
-// Mocks pour la page d'accueil
-
 export interface Deck {
   name: string;
   percent: string;

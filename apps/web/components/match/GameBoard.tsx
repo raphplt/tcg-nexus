@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Wifi, WifiOff } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
@@ -18,7 +19,7 @@ import {
   OnlineMatchSessionView,
   SanitizedGameState,
 } from "@/types/match-online";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
 
 interface GameBoardProps {
@@ -26,6 +27,8 @@ interface GameBoardProps {
 }
 
 export default function GameBoard({ matchId }: GameBoardProps) {
+  const t = useTranslations("GameBoard");
+  const tError = useTranslations("ApiErrors");
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
   const {
@@ -68,9 +71,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       });
     },
     onError: (error: unknown) => {
-      setError(
-        extractApiErrorMessage(error, "Impossible de sélectionner ce deck."),
-      );
+      setError(translateApiError(error, tError, t("deckSelectError")));
     },
   });
 
@@ -186,7 +187,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       <Card className="tcg-surface">
         <CardContent className="flex items-center justify-center gap-3 py-10 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement de la session online...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -197,7 +198,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
       <Card className="border-destructive/40">
         <CardContent className="flex items-center gap-3 py-8 text-sm text-destructive">
           <AlertTriangle className="h-4 w-4" />
-          Impossible de charger la session online.
+          {t("loadError")}
         </CardContent>
       </Card>
     );
@@ -205,7 +206,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
 
   const emitAction = (action: MatchBoardActionInput) => {
     if (!socketRef.current || !enginePlayerId) {
-      setError("La connexion temps réel n'est pas encore prête.");
+      setError(t("realtimeNotReady"));
       return;
     }
 
@@ -221,7 +222,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
 
   const emitPromptResponse = (response: MatchPromptResponseInput) => {
     if (!socketRef.current) {
-      setError("La connexion temps réel n'est pas encore prête.");
+      setError(t("realtimeNotReady"));
       return;
     }
 
@@ -235,7 +236,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
   const renderDeckSelection = () => (
     <Card className="tcg-surface">
       <CardHeader>
-        <CardTitle>Choix du deck online</CardTitle>
+        <CardTitle>{t("deckChoice")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {(eligibilityQuery.data?.eligibleDecks || []).map((deck) => (
@@ -249,7 +250,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={deck.eligible ? "default" : "destructive"}>
-                  {deck.eligible ? "Éligible" : "Bloqué"}
+                  {deck.eligible ? t("eligible") : t("blocked")}
                 </Badge>
                 <Button
                   size="sm"
@@ -284,21 +285,18 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     return (
       <Card className="tcg-surface">
         <CardHeader>
-          <CardTitle>Session online en attente</CardTitle>
+          <CardTitle>{t("sessionPending")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <p>
-            Votre deck est sélectionné. La partie commencera dès que
-            l’adversaire aura choisi le sien.
-          </p>
+          <p>{t("deckSelected")}</p>
           <div className="flex items-center gap-2">
             <Badge variant="outline">Deck #{liveSession.selectedDeckId}</Badge>
             <Badge
               variant={liveSession.opponentDeckReady ? "default" : "secondary"}
             >
               {liveSession.opponentDeckReady
-                ? "Deck adverse prêt"
-                : "En attente du deck adverse"}
+                ? t("opponentDeckReady")
+                : t("waitingOpponentDeck")}
             </Badge>
           </div>
           {renderDeckSelection()}
@@ -321,13 +319,13 @@ export default function GameBoard({ matchId }: GameBoardProps) {
           ) : (
             <WifiOff className="h-4 w-4 text-amber-500" />
           )}
-          {isConnected ? "Temps réel connecté" : "Reconnexion..."}
+          {isConnected ? t("realtimeConnected") : "Reconnexion..."}
           {opponentDisconnected ? (
             <Badge
               variant="outline"
               className="border-amber-500 text-amber-500"
             >
-              Adversaire déconnecté
+              {t("opponentDisconnected")}
             </Badge>
           ) : null}
         </div>

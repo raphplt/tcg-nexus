@@ -9,8 +9,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { EloBadge } from "@/components/match/EloBadge";
@@ -31,12 +30,15 @@ import type {
   CasualLobbyView,
   CasualSessionSummary,
 } from "@/types/casual-match";
-import { extractApiErrorMessage } from "@/utils/api-error";
+import { translateApiError } from "@/utils/api-error";
 import { API_BASE_URL } from "@/utils/fetch";
+import { useLocale, useTranslations } from "next-intl";
 
 type MatchmakingStatus = "idle" | "queued" | "matched";
 
 export function MatchmakingPanel() {
+  const t = useTranslations("Matchmaking");
+  const tError = useTranslations("ApiErrors");
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
@@ -160,7 +162,7 @@ export function MatchmakingPanel() {
       <Card className="tcg-surface tcg-surface--dark">
         <CardContent className="flex items-center gap-3 p-6 text-sm text-slate-400">
           <Loader2 className="h-4 w-4 animate-spin" />
-          Chargement du matchmaking...
+          {t("loading")}
         </CardContent>
       </Card>
     );
@@ -171,17 +173,14 @@ export function MatchmakingPanel() {
       <Card className="tcg-surface tcg-surface--dark">
         <CardContent className="space-y-3 p-6">
           <p className="text-sm text-destructive">
-            {extractApiErrorMessage(
-              lobbyQuery.error,
-              "Impossible de charger le matchmaking.",
-            )}
+            {translateApiError(lobbyQuery.error, tError, t("loadError"))}
           </p>
           <Button
             variant="outline"
             className="rounded-full"
             onClick={() => void lobbyQuery.refetch()}
           >
-            Réessayer
+            {t("retry")}
           </Button>
         </CardContent>
       </Card>
@@ -208,19 +207,16 @@ export function MatchmakingPanel() {
               ) : (
                 <WifiOff className="h-3 w-3 text-amber-400" />
               )}
-              {isConnected ? "Connecté" : "Connexion..."}
+              {isConnected ? t("connected") : "Connexion..."}
             </div>
           )}
         </div>
 
         <div className="space-y-2">
           <h2 className="text-2xl font-bold leading-tight text-white">
-            Affrontez un joueur.
+            {t("title")}
           </h2>
-          <p className="text-sm leading-6 text-slate-300">
-            Choisissez un deck, rejoignez la file d'attente et vous serez
-            automatiquement associé à un adversaire.
-          </p>
+          <p className="text-sm leading-6 text-slate-300">{t("help")}</p>
         </div>
 
         {lastError && (
@@ -233,11 +229,9 @@ export function MatchmakingPanel() {
           <div className="space-y-3 text-center">
             <div className="flex items-center justify-center gap-3 text-emerald-400">
               <Users className="h-5 w-5" />
-              <span className="text-lg font-bold">Adversaire trouvé !</span>
+              <span className="text-lg font-bold">{t("opponentFound")}</span>
             </div>
-            <p className="text-sm text-slate-300">
-              Redirection vers la partie...
-            </p>
+            <p className="text-sm text-slate-300">{t("redirecting")}</p>
             <Loader2 className="mx-auto h-5 w-5 animate-spin text-emerald-400" />
           </div>
         ) : mmStatus === "queued" ? (
@@ -245,13 +239,11 @@ export function MatchmakingPanel() {
             <div className="flex items-center justify-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-5 text-amber-300">
               <Loader2 className="h-5 w-5 animate-spin" />
               <div className="space-y-1">
-                <p className="text-sm font-semibold">
-                  Recherche d'un adversaire...
-                </p>
+                <p className="text-sm font-semibold">{t("searching")}</p>
                 <p className="text-xs text-amber-400/70">
                   {queueSize > 1
                     ? `${queueSize} joueur${queueSize > 1 ? "s" : ""} en file`
-                    : "En attente d'un autre joueur"}
+                    : t("waitingForPlayer")}
                 </p>
               </div>
             </div>
@@ -260,7 +252,7 @@ export function MatchmakingPanel() {
               className="w-full rounded-full border-slate-600 text-slate-300 hover:text-white"
               onClick={handleLeaveQueue}
             >
-              Quitter la file
+              {t("leaveQueue")}
             </Button>
           </div>
         ) : (
@@ -269,14 +261,14 @@ export function MatchmakingPanel() {
               <>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Votre deck
+                    {t("yourDeck")}
                   </p>
                   <Select
                     value={selectedDeckId?.toString()}
                     onValueChange={(value) => setSelectedDeckId(Number(value))}
                   >
                     <SelectTrigger className="w-full rounded-2xl border-slate-600 bg-slate-800 text-white">
-                      <SelectValue placeholder="Choisir un deck" />
+                      <SelectValue placeholder={t("chooseDeck")} />
                     </SelectTrigger>
                     <SelectContent>
                       {eligibleDecks.map((deck) => (
@@ -296,10 +288,10 @@ export function MatchmakingPanel() {
                       htmlFor="ranked-toggle"
                       className="text-sm font-semibold text-white"
                     >
-                      Match classé
+                      {t("rankedMatch")}
                     </Label>
                     <p className="text-xs text-slate-400">
-                      Affecte votre ELO. Adversaires de niveau similaire.
+                      {t("rankedMatchHelp")}
                     </p>
                   </div>
                   <Switch
@@ -313,16 +305,14 @@ export function MatchmakingPanel() {
                   disabled={!selectedDeckId}
                   onClick={handleJoinQueue}
                 >
-                  {isRanked
-                    ? "Chercher un match classé"
-                    : "Chercher un adversaire"}
+                  {isRanked ? t("searchRanked") : t("searchOpponent")}
                   <Swords className="ml-2 h-4 w-4" />
                 </Button>
               </>
             ) : (
               <div className="space-y-3 text-center">
                 <p className="text-sm text-slate-400">
-                  Aucun deck compatible pour le jeu en ligne.
+                  {t("noCompatibleDeck")}
                 </p>
                 <Button
                   asChild
@@ -330,7 +320,7 @@ export function MatchmakingPanel() {
                   className="rounded-full border-slate-600 text-slate-300"
                 >
                   <Link href="/decks/me">
-                    Gérer mes decks
+                    {t("manageDecks")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
@@ -352,7 +342,7 @@ export function MatchmakingPanel() {
 
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">BO1</Badge>
-          <Badge variant="secondary">Standard</Badge>
+          <Badge variant="secondary">{t("standard")}</Badge>
           <Badge variant="secondary">60 cartes</Badge>
         </div>
       </CardContent>
@@ -361,6 +351,8 @@ export function MatchmakingPanel() {
 }
 
 function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
+  const t = useTranslations("Matchmaking");
+  const locale = useLocale();
   return (
     <div className="rounded-2xl border border-slate-600/50 bg-slate-800/50 p-4 space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -368,7 +360,7 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
           <p className="font-semibold text-white">vs {session.opponentName}</p>
           <p className="text-xs text-slate-400">
             Tour {session.turnNumber} •{" "}
-            {new Date(session.updatedAt).toLocaleString("fr-FR", {
+            {new Date(session.updatedAt).toLocaleString(locale, {
               day: "2-digit",
               month: "short",
               hour: "2-digit",
@@ -377,7 +369,7 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
           </p>
         </div>
         <Badge variant={session.awaitingPlayerAction ? "default" : "secondary"}>
-          {session.awaitingPlayerAction ? "À vous" : "Tour adverse"}
+          {session.awaitingPlayerAction ? t("yourTurn") : "Tour adverse"}
         </Badge>
       </div>
       <Button

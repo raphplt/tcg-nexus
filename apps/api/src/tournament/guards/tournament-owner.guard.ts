@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/common/enums/user";
@@ -48,16 +50,19 @@ export class TournamentOwnerGuard implements CanActivate {
       return true;
     }
 
-    // Vérifier que le tournoi existe
+    // Verify tournament existence
     const tournament = await this.tournamentRepository.findOne({
       where: { id: parseInt(tournamentId) },
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
-    // Vérifier si l'utilisateur est propriétaire du tournoi
+    // Verify whether user is the tournament owner
     const organizer = await this.organizerRepository.findOne({
       where: {
         tournament: { id: parseInt(tournamentId) },
@@ -73,7 +78,7 @@ export class TournamentOwnerGuard implements CanActivate {
       );
     }
 
-    // Ajouter les informations à la requête pour utilisation ultérieure
+    // Attach organizer context to request object
     request.tournamentOrganizer = organizer;
     request.tournament = tournament;
 

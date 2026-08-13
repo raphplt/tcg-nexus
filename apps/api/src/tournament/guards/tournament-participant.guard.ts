@@ -2,7 +2,9 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
+  NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Not, Repository } from "typeorm";
@@ -49,16 +51,19 @@ export class TournamentParticipantGuard implements CanActivate {
       throw new ForbiddenException("Utilisateur ou ID de tournoi manquant");
     }
 
-    // Vérifier que le tournoi existe
+    // Verify tournament existence
     const tournament = await this.tournamentRepository.findOne({
       where: { id: parseInt(tournamentId) },
     });
 
     if (!tournament) {
-      throw new ForbiddenException("Tournoi non trouvé");
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
     }
 
-    // Si un playerId est spécifié, vérifier que c'est le joueur de l'utilisateur
+    // If explicit playerId specified, verify ownership by current user
     if (playerId) {
       const player = await this.playerRepository.findOne({
         where: { id: parseInt(playerId), user: { id: user.id } },
@@ -68,7 +73,7 @@ export class TournamentParticipantGuard implements CanActivate {
         throw new ForbiddenException("Ce joueur ne vous appartient pas");
       }
 
-      // Vérifier que le joueur est inscrit au tournoi
+      // Verify player registration status for tournament
       const registration = await this.registrationRepository.findOne({
         where: {
           tournament: { id: parseInt(tournamentId) },
@@ -86,7 +91,7 @@ export class TournamentParticipantGuard implements CanActivate {
       request.tournamentPlayer = player;
       request.tournamentRegistration = registration;
     } else {
-      // Si pas de playerId spécifié, vérifier que l'utilisateur a au moins un joueur inscrit
+      // If no explicit playerId provided, check user's registered player profile
       const player = await this.playerRepository.findOne({
         where: { user: { id: user.id } },
       });
@@ -106,7 +111,10 @@ export class TournamentParticipantGuard implements CanActivate {
       });
 
       if (!registration) {
-        throw new ForbiddenException("Vous n'êtes pas inscrit à ce tournoi");
+        throw new ForbiddenException({
+          code: "NOT_REGISTERED_TO_TOURNAMENT",
+          message: "Vous n'êtes pas inscrit à ce tournoi",
+        });
       }
 
       request.tournamentPlayer = player;

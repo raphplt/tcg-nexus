@@ -29,9 +29,7 @@ async function setupAndroidChannel(): Promise<void> {
   });
 }
 
-function handlePushTap(
-  data: Record<string, unknown> | null | undefined,
-): void {
+function handlePushTap(data: Record<string, unknown> | null | undefined): void {
   const link = (data as { link?: string } | null)?.link;
   const target = resolveDeepLink(link ?? null);
   router.push((target ?? FALLBACK_ROUTE) as any);

@@ -46,6 +46,12 @@ export class DashboardService {
     private readonly badgeService: BadgeService,
   ) {}
 
+  /**
+   * Compiles aggregated user dashboard metrics (collections, tournaments, decks, marketplace, badges, activity).
+   *
+   * @param user User entity.
+   * @returns Dashboard response payload.
+   */
   async getDashboard(user: User): Promise<DashboardResponseDto> {
     const [collection, tournaments, decks, marketplace, activity] =
       await Promise.all([

@@ -6,10 +6,12 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { tournamentService } from "@/services/tournament.service";
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const TournamentPreview = () => {
+  const t = useTranslations("Home");
   const { data, isLoading, error } = useQuery({
     queryKey: ["tournaments", "upcoming"],
     queryFn: () => tournamentService.getUpcomingTournaments({ limit: 5 }),
@@ -17,15 +19,15 @@ const TournamentPreview = () => {
 
   return (
     <Card className="p-6">
-      <H2 className="mb-4">Prochains tournois</H2>
+      <H2 className="mb-4">{t("tournaments.title")}</H2>
       {isLoading && (
         <div className="flex items-center justify-center py-8 text-muted-foreground">
-          Chargement...
+          {t("common.loading")}
         </div>
       )}
       {error && (
         <div className="flex items-center justify-center py-8 text-destructive">
-          Erreur lors du chargement des tournois
+          {t("tournaments.error")}
         </div>
       )}
       <div className="flex flex-col gap-3">
@@ -41,10 +43,15 @@ const TournamentPreview = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <div className="font-semibold truncate">{tournament.name}</div>
+                  <div className="font-semibold truncate">
+                    {tournament.name}
+                  </div>
                   {tournament.isExternal && (
-                    <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 select-none">
-                      Externe
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] py-0 px-1.5 h-4 select-none"
+                    >
+                      {t("tournaments.external")}
                     </Badge>
                   )}
                 </div>
@@ -55,13 +62,13 @@ const TournamentPreview = () => {
           ))
         ) : !isLoading && !error ? (
           <div className="text-muted-foreground text-center">
-            Aucun tournoi à venir
+            {t("tournaments.empty")}
           </div>
         ) : null}
       </div>
       <Button variant="outline" asChild size="sm" className="w-full mt-4">
         <Link href="/tournaments" className="flex items-center gap-2">
-          Voir tous les tournois
+          {t("tournaments.viewAll")}
           <ArrowRight className="mr-2 w-4 h-4" />
         </Link>
       </Button>

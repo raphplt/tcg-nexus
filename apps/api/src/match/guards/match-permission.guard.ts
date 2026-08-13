@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -27,7 +28,10 @@ export class MatchPermissionGuard implements CanActivate {
     const user: User = request.user as User;
 
     if (!user) {
-      throw new ForbiddenException("Accès non autorisé");
+      throw new ForbiddenException({
+        code: "UNAUTHORIZED_ACCESS",
+        message: "Accès non autorisé",
+      });
     }
 
     if (user.role === UserRole.ADMIN) {
@@ -64,7 +68,10 @@ export class MatchPermissionGuard implements CanActivate {
 
     const matchId = Number(request.params?.id);
     if (!Number.isInteger(matchId) || matchId <= 0) {
-      throw new ForbiddenException("Accès non autorisé");
+      throw new ForbiddenException({
+        code: "UNAUTHORIZED_ACCESS",
+        message: "Accès non autorisé",
+      });
     }
 
     const match = await this.matchRepository.findOne({
@@ -79,7 +86,10 @@ export class MatchPermissionGuard implements CanActivate {
     });
 
     if (!match) {
-      throw new NotFoundException("Match non trouvé");
+      throw new NotFoundException({
+        code: "MATCH_NOT_FOUND",
+        message: "Match non trouvé",
+      });
     }
 
     const organizer = await this.organizerRepository.findOne({

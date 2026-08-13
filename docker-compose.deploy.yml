@@ -20,7 +20,7 @@ services:
 
   vision:
     build:
-      context: ./vision
+      context: ./apps/vision
       dockerfile: Dockerfile
     container_name: tcg-nexus-vision
     restart: unless-stopped
@@ -51,8 +51,11 @@ services:
       - "3001:3001"
     networks:
       - tcg-nexus-network
-    volumes:
-      - /srv/tcg-nexus/data:/app/data
+    # Le catalogue est embarqué dans l'image (data/ est versionné). Monter un
+    # volume sur /app/data n'est utile que pour servir un dataset plus récent
+    # que le déploiement — il masquerait sinon les cartes livrées avec l'image.
+    # volumes:
+    #   - /srv/tcg-nexus/data:/app/data
 
   web:
     build:

@@ -172,7 +172,6 @@ export default function TournamentDetailsScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Header Card */}
       <View style={styles.headerCard}>
         <View style={styles.headerTopRow}>
           <View
@@ -223,7 +222,6 @@ export default function TournamentDetailsScreen() {
         </View>
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabsContainer}>
         <Pressable
           style={[
@@ -275,10 +273,8 @@ export default function TournamentDetailsScreen() {
         </Pressable>
       </View>
 
-      {/* Détails Tab */}
       {activeTab === "details" && (
         <View>
-          {/* Stats Quick View */}
           {stats && (
             <View style={styles.statsRow}>
               <View style={styles.statBox}>
@@ -300,7 +296,6 @@ export default function TournamentDetailsScreen() {
             </View>
           )}
 
-          {/* Description */}
           {tournament.description && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Description</Text>
@@ -308,7 +303,6 @@ export default function TournamentDetailsScreen() {
             </View>
           )}
 
-          {/* Règles */}
           {tournament.rules && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Règles du tournoi</Text>
@@ -316,7 +310,6 @@ export default function TournamentDetailsScreen() {
             </View>
           )}
 
-          {/* Additional Info */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               Informations complémentaires
@@ -345,7 +338,6 @@ export default function TournamentDetailsScreen() {
             </View>
           </View>
 
-          {/* Bouton d'inscription pour les joueurs */}
           {tournament.status === "registration_open" && !isAdminOrModerator && (
             <View style={styles.actionContainer}>
               <Pressable
@@ -367,7 +359,6 @@ export default function TournamentDetailsScreen() {
             </View>
           )}
 
-          {/* Boutons d'administration */}
           {isAdminOrModerator && (
             <View style={styles.adminContainer}>
               <Text style={styles.adminTitle}>Administration</Text>
@@ -421,7 +412,6 @@ export default function TournamentDetailsScreen() {
         </View>
       )}
 
-      {/* Matchs Tab */}
       {activeTab === "matches" && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Matchs</Text>
@@ -477,7 +467,6 @@ export default function TournamentDetailsScreen() {
         </View>
       )}
 
-      {/* Classement Tab */}
       {activeTab === "standings" && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Classement actuel</Text>

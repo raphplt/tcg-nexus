@@ -9,9 +9,8 @@ import type {
 
 export type ScanMode = "camera" | "review";
 
-export const CARD_RATIO = 63 / 88; // largeur / hauteur d'une carte Pokémon
+export const CARD_RATIO = 63 / 88;
 
-// frames capturées par scan, le backend garde la meilleure
 export const BURST_FRAMES = 5;
 
 export const HISTORY_LIMIT = 8;

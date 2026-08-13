@@ -1,3 +1,4 @@
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -107,6 +108,13 @@ describe("DeckService", () => {
         {
           provide: getRepositoryToken(SavedDeck),
           useValue: savedDeckRepo,
+        },
+        {
+          provide: CatalogLocalizationService,
+          useValue: {
+            localize: jest.fn(async (payload) => payload),
+            resolveLabels: jest.fn(async (payload) => payload),
+          },
         },
       ],
     }).compile();

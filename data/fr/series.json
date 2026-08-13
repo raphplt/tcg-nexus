@@ -1,0 +1,2169 @@
+[
+  {
+    "id": "base",
+    "logo": "https://cdn.tcg-nexus.org/series/base/logo.webp",
+    "name": "Base",
+    "firstSet": {
+      "cardCount": {
+        "official": 102,
+        "total": 102
+      },
+      "id": "base1",
+      "name": "Set de Base"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 82,
+        "total": 83
+      },
+      "id": "base5",
+      "logo": "https://assets.tcgdex.net/fr/base/base5/logo",
+      "name": "Team Rocket",
+      "symbol": "https://assets.tcgdex.net/univ/base/base5/symbol"
+    },
+    "releaseDate": "1999-01-09",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 102,
+          "total": 102
+        },
+        "id": "base1",
+        "name": "Set de Base"
+      },
+      {
+        "cardCount": {
+          "official": 64,
+          "total": 64
+        },
+        "id": "base2",
+        "logo": "https://assets.tcgdex.net/fr/base/base2/logo",
+        "name": "Jungle",
+        "symbol": "https://assets.tcgdex.net/univ/base/base2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 53,
+          "total": 53
+        },
+        "id": "basep",
+        "name": "Wizards Black Star Promos",
+        "symbol": "https://assets.tcgdex.net/univ/base/basep/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 7,
+          "total": 7
+        },
+        "id": "wp",
+        "name": "W Promotional"
+      },
+      {
+        "cardCount": {
+          "official": 62,
+          "total": 62
+        },
+        "id": "base3",
+        "logo": "https://assets.tcgdex.net/fr/base/base3/logo",
+        "name": "Fossile",
+        "symbol": "https://assets.tcgdex.net/univ/base/base3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 82,
+          "total": 83
+        },
+        "id": "base5",
+        "logo": "https://assets.tcgdex.net/fr/base/base5/logo",
+        "name": "Team Rocket",
+        "symbol": "https://assets.tcgdex.net/univ/base/base5/symbol"
+      }
+    ]
+  },
+  {
+    "id": "misc",
+    "name": "Autre",
+    "firstSet": {
+      "cardCount": {
+        "official": 160,
+        "total": 160
+      },
+      "id": "jumbo",
+      "name": "Cartes Jumbo"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 160,
+        "total": 160
+      },
+      "id": "jumbo",
+      "name": "Cartes Jumbo"
+    },
+    "releaseDate": "2000-02-01",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 160,
+          "total": 160
+        },
+        "id": "jumbo",
+        "name": "Cartes Jumbo"
+      }
+    ],
+    "logo": null
+  },
+  {
+    "id": "neo",
+    "logo": "https://cdn.tcg-nexus.org/series/neo/logo.webp",
+    "name": "Neo",
+    "firstSet": {
+      "cardCount": {
+        "official": 111,
+        "total": 111
+      },
+      "id": "neo1",
+      "logo": "https://assets.tcgdex.net/fr/neo/neo1/logo",
+      "name": "Neo Genesis",
+      "symbol": "https://assets.tcgdex.net/univ/neo/neo1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 105,
+        "total": 113
+      },
+      "id": "neo4",
+      "logo": "https://assets.tcgdex.net/fr/neo/neo4/logo",
+      "name": "Neo Destiny",
+      "symbol": "https://assets.tcgdex.net/univ/neo/neo4/symbol"
+    },
+    "releaseDate": "2000-12-16",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 111,
+          "total": 111
+        },
+        "id": "neo1",
+        "logo": "https://assets.tcgdex.net/fr/neo/neo1/logo",
+        "name": "Neo Genesis",
+        "symbol": "https://assets.tcgdex.net/univ/neo/neo1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 75,
+          "total": 75
+        },
+        "id": "neo2",
+        "logo": "https://assets.tcgdex.net/fr/neo/neo2/logo",
+        "name": "Neo Discovery",
+        "symbol": "https://assets.tcgdex.net/univ/neo/neo2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 64,
+          "total": 66
+        },
+        "id": "neo3",
+        "logo": "https://assets.tcgdex.net/fr/neo/neo3/logo",
+        "name": "Neo Revelation",
+        "symbol": "https://assets.tcgdex.net/univ/neo/neo3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 105,
+          "total": 113
+        },
+        "id": "neo4",
+        "logo": "https://assets.tcgdex.net/fr/neo/neo4/logo",
+        "name": "Neo Destiny",
+        "symbol": "https://assets.tcgdex.net/univ/neo/neo4/symbol"
+      }
+    ]
+  },
+  {
+    "id": "ecard",
+    "logo": "https://cdn.tcg-nexus.org/series/ecard/logo.webp",
+    "name": "e-cards",
+    "firstSet": {
+      "cardCount": {
+        "official": 165,
+        "total": 165
+      },
+      "id": "ecard1",
+      "logo": "https://assets.tcgdex.net/fr/ecard/ecard1/logo",
+      "name": "Expedition",
+      "symbol": "https://assets.tcgdex.net/univ/ecard/ecard1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 147,
+        "total": 186
+      },
+      "id": "ecard2",
+      "logo": "https://assets.tcgdex.net/fr/ecard/ecard2/logo",
+      "name": "Aquapolis",
+      "symbol": "https://assets.tcgdex.net/univ/ecard/ecard2/symbol"
+    },
+    "releaseDate": "2002-09-15",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 165,
+          "total": 165
+        },
+        "id": "ecard1",
+        "logo": "https://assets.tcgdex.net/fr/ecard/ecard1/logo",
+        "name": "Expedition",
+        "symbol": "https://assets.tcgdex.net/univ/ecard/ecard1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 147,
+          "total": 186
+        },
+        "id": "ecard2",
+        "logo": "https://assets.tcgdex.net/fr/ecard/ecard2/logo",
+        "name": "Aquapolis",
+        "symbol": "https://assets.tcgdex.net/univ/ecard/ecard2/symbol"
+      }
+    ]
+  },
+  {
+    "id": "ex",
+    "logo": "https://cdn.tcg-nexus.org/series/ex/logo.webp",
+    "name": "EX",
+    "firstSet": {
+      "cardCount": {
+        "official": 109,
+        "total": 109
+      },
+      "id": "ex1",
+      "logo": "https://assets.tcgdex.net/fr/ex/ex1/logo",
+      "name": "EX Rubis & Saphir",
+      "symbol": "https://assets.tcgdex.net/univ/ex/ex1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 108,
+        "total": 108
+      },
+      "id": "ex16",
+      "logo": "https://assets.tcgdex.net/fr/ex/ex16/logo",
+      "name": "EX Gardiens du Pouvoir",
+      "symbol": "https://assets.tcgdex.net/univ/ex/ex16/symbol"
+    },
+    "releaseDate": "2003-07-01",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 109,
+          "total": 109
+        },
+        "id": "ex1",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex1/logo",
+        "name": "EX Rubis & Saphir",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 100,
+          "total": 100
+        },
+        "id": "ex2",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex2/logo",
+        "name": "EX Tempête de sable",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 97,
+          "total": 100
+        },
+        "id": "ex3",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex3/logo",
+        "name": "EX Dragon",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 95,
+          "total": 97
+        },
+        "id": "ex4",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex4/logo",
+        "name": "EX Team Magma vs Team Aqua",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 101,
+          "total": 102
+        },
+        "id": "ex5",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex5/logo",
+        "name": "EX Légendes Oubliées",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 112,
+          "total": 116
+        },
+        "id": "ex6",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex6/logo",
+        "name": "EX Rouge Feu & Vert Feuille",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 107,
+          "total": 108
+        },
+        "id": "ex8",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex8/logo",
+        "name": "EX Deoxys",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex8/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 106,
+          "total": 107
+        },
+        "id": "ex9",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex9/logo",
+        "name": "EX Émeraude",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex9/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 115,
+          "total": 117
+        },
+        "id": "ex10",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex10/logo",
+        "name": "EX Forces Cachées",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 28,
+          "total": 28
+        },
+        "id": "exu",
+        "name": "EX Forces Cachées Collection Zarbi"
+      },
+      {
+        "cardCount": {
+          "official": 113,
+          "total": 114
+        },
+        "id": "ex11",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex11/logo",
+        "name": "EX Espèces Delta",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex11/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 92,
+          "total": 93
+        },
+        "id": "ex12",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex12/logo",
+        "name": "EX Créateurs de légendes",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex12/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 110,
+          "total": 111
+        },
+        "id": "ex13",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex13/logo",
+        "name": "EX Fantômes Holon",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex13/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 100,
+          "total": 100
+        },
+        "id": "ex14",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex14/logo",
+        "name": "EX Gardiens de Cristal",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex14/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 101,
+          "total": 101
+        },
+        "id": "ex15",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex15/logo",
+        "name": "EX Île des Dragons",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex15/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 108,
+          "total": 108
+        },
+        "id": "ex16",
+        "logo": "https://assets.tcgdex.net/fr/ex/ex16/logo",
+        "name": "EX Gardiens du Pouvoir",
+        "symbol": "https://assets.tcgdex.net/univ/ex/ex16/symbol"
+      }
+    ]
+  },
+  {
+    "id": "pop",
+    "name": "POP",
+    "firstSet": {
+      "cardCount": {
+        "official": 40,
+        "total": 40
+      },
+      "id": "np",
+      "name": "Promo Nintendo",
+      "symbol": "https://assets.tcgdex.net/univ/pop/np/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 17,
+        "total": 17
+      },
+      "id": "pop9",
+      "name": "POP Série 9",
+      "symbol": "https://assets.tcgdex.net/univ/pop/pop9/symbol"
+    },
+    "releaseDate": "2003-10-01",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 40,
+          "total": 40
+        },
+        "id": "np",
+        "name": "Promo Nintendo",
+        "symbol": "https://assets.tcgdex.net/univ/pop/np/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop1",
+        "name": "POP Série 1",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop2",
+        "name": "POP Série 2",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop3",
+        "name": "POP Série 3",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop4",
+        "name": "POP Série 4",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop7",
+        "name": "POP Série 7",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop7/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 17,
+          "total": 17
+        },
+        "id": "pop9",
+        "name": "POP Série 9",
+        "symbol": "https://assets.tcgdex.net/univ/pop/pop9/symbol"
+      }
+    ],
+    "logo": null
+  },
+  {
+    "id": "tk",
+    "name": "Kits du dresseur",
+    "firstSet": {
+      "cardCount": {
+        "official": 10,
+        "total": 10
+      },
+      "id": "tk-ex-latia",
+      "name": "EX Kit dresseur (Latias)",
+      "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latia/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 30,
+        "total": 30
+      },
+      "id": "tk-sm-l",
+      "name": "SM Kit du dresseur (Lougarox)",
+      "symbol": "https://assets.tcgdex.net/univ/tk/tk-sm-l/symbol"
+    },
+    "releaseDate": "2004-07-01",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 10,
+          "total": 10
+        },
+        "id": "tk-ex-latia",
+        "name": "EX Kit dresseur (Latias)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latia/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 10,
+          "total": 10
+        },
+        "id": "tk-ex-latio",
+        "name": "EX Kit dresseur (Latios)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-latio/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "tk-ex-m",
+        "name": "EX Kit dresseur (Négapi)"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "tk-ex-p",
+        "name": "EX Kit dresseur (Positi)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-ex-p/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "tk-dp-m",
+        "name": "DP Kit dresseur (Manaphy)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-dp-m/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 11,
+          "total": 11
+        },
+        "id": "tk-dp-l",
+        "name": "DP Kit dresseur (Lucario)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-dp-l/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-hs-r",
+        "name": "HS Kit du dresseur (Raichu)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-hs-r/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-hs-g",
+        "name": "HS Kit du dresseur (Léviator)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-hs-g/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-bw-e",
+        "name": "BW Kit du dresseur (Minitaupe)"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-bw-z",
+        "name": "BW Kit du dresseur (Zoroark)"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-n",
+        "name": "XY Kit du dresseur (Bruyverne)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-n/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-sy",
+        "name": "XY Kit du dresseur (Nymphali)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-sy/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-w",
+        "name": "XY Kit du dresseur (Grodoudou)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-w/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-b",
+        "name": "XY Kit du dresseur (Scalproie)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-b/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-latio",
+        "name": "XY Kit du dresseur (Latios)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-latio/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-latia",
+        "name": "XY Kit du dresseur (Latias)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-latia/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-su",
+        "name": "XY Kit du dresseur (Suicune)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-su/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-xy-p",
+        "name": "XY Kit du dresseur (Pikachu Libre)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-xy-p/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-sm-r",
+        "name": "SM Kit du dresseur (Raichu d'Alola)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-sm-r/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 30,
+          "total": 30
+        },
+        "id": "tk-sm-l",
+        "name": "SM Kit du dresseur (Lougarox)",
+        "symbol": "https://assets.tcgdex.net/univ/tk/tk-sm-l/symbol"
+      }
+    ],
+    "logo": null
+  },
+  {
+    "id": "dp",
+    "logo": "https://cdn.tcg-nexus.org/series/dp/logo.webp",
+    "name": "Diamant & Perle",
+    "firstSet": {
+      "cardCount": {
+        "official": 56,
+        "total": 56
+      },
+      "id": "dpp",
+      "name": "Promo DP",
+      "symbol": "https://assets.tcgdex.net/univ/dp/dpp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 100,
+        "total": 106
+      },
+      "id": "dp7",
+      "logo": "https://assets.tcgdex.net/fr/dp/dp7/logo",
+      "name": "Tempête",
+      "symbol": "https://assets.tcgdex.net/univ/dp/dp7/symbol"
+    },
+    "releaseDate": "2007-05-01",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 56,
+          "total": 56
+        },
+        "id": "dpp",
+        "name": "Promo DP",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dpp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 130,
+          "total": 130
+        },
+        "id": "dp1",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp1/logo",
+        "name": "Diamant & Perle",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 122,
+          "total": 124
+        },
+        "id": "dp2",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp2/logo",
+        "name": "Trésors Mystérieux",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 132,
+          "total": 132
+        },
+        "id": "dp3",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp3/logo",
+        "name": "Merveilles Secrètes",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 106,
+          "total": 106
+        },
+        "id": "dp4",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp4/logo",
+        "name": "Duels au Sommets",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 100,
+          "total": 100
+        },
+        "id": "dp5",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp5/logo",
+        "name": "Aube Majestueuse",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 146,
+          "total": 146
+        },
+        "id": "dp6",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp6/logo",
+        "name": "Éveil des Légendes",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 100,
+          "total": 106
+        },
+        "id": "dp7",
+        "logo": "https://assets.tcgdex.net/fr/dp/dp7/logo",
+        "name": "Tempête",
+        "symbol": "https://assets.tcgdex.net/univ/dp/dp7/symbol"
+      }
+    ]
+  },
+  {
+    "id": "pl",
+    "logo": "https://cdn.tcg-nexus.org/series/pl/logo.webp",
+    "name": "Platine",
+    "firstSet": {
+      "cardCount": {
+        "official": 127,
+        "total": 133
+      },
+      "id": "pl1",
+      "logo": "https://assets.tcgdex.net/fr/pl/pl1/logo",
+      "name": "Platine",
+      "symbol": "https://assets.tcgdex.net/univ/pl/pl1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 147,
+        "total": 153
+      },
+      "id": "pl3",
+      "logo": "https://assets.tcgdex.net/fr/pl/pl3/logo",
+      "name": "Vainqueurs Suprêmes",
+      "symbol": "https://assets.tcgdex.net/univ/pl/pl3/symbol"
+    },
+    "releaseDate": "2009-02-11",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 127,
+          "total": 133
+        },
+        "id": "pl1",
+        "logo": "https://assets.tcgdex.net/fr/pl/pl1/logo",
+        "name": "Platine",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 111,
+          "total": 120
+        },
+        "id": "pl2",
+        "logo": "https://assets.tcgdex.net/fr/pl/pl2/logo",
+        "name": "Rivaux Émergeants",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 147,
+          "total": 153
+        },
+        "id": "pl3",
+        "logo": "https://assets.tcgdex.net/fr/pl/pl3/logo",
+        "name": "Vainqueurs Suprêmes",
+        "symbol": "https://assets.tcgdex.net/univ/pl/pl3/symbol"
+      }
+    ]
+  },
+  {
+    "id": "hgss",
+    "logo": "https://cdn.tcg-nexus.org/series/hgss/logo.webp",
+    "name": "HeartGold SoulSilver",
+    "firstSet": {
+      "cardCount": {
+        "official": 123,
+        "total": 124
+      },
+      "id": "hgss1",
+      "logo": "https://assets.tcgdex.net/fr/hgss/hgss1/logo",
+      "name": "HeartGold SoulSilver",
+      "symbol": "https://assets.tcgdex.net/univ/hgss/hgss1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 102,
+        "total": 103
+      },
+      "id": "hgss4",
+      "logo": "https://assets.tcgdex.net/fr/hgss/hgss4/logo",
+      "name": "Triomphant",
+      "symbol": "https://assets.tcgdex.net/univ/hgss/hgss4/symbol"
+    },
+    "releaseDate": "2010-02-10",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 123,
+          "total": 124
+        },
+        "id": "hgss1",
+        "logo": "https://assets.tcgdex.net/fr/hgss/hgss1/logo",
+        "name": "HeartGold SoulSilver",
+        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 25,
+          "total": 25
+        },
+        "id": "hgssp",
+        "name": "Promo HGSS",
+        "symbol": "https://assets.tcgdex.net/univ/hgss/hgssp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 95,
+          "total": 96
+        },
+        "id": "hgss2",
+        "logo": "https://assets.tcgdex.net/fr/hgss/hgss2/logo",
+        "name": "Déchaînement",
+        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 90,
+          "total": 91
+        },
+        "id": "hgss3",
+        "logo": "https://assets.tcgdex.net/fr/hgss/hgss3/logo",
+        "name": "Indomptable",
+        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 102,
+          "total": 103
+        },
+        "id": "hgss4",
+        "logo": "https://assets.tcgdex.net/fr/hgss/hgss4/logo",
+        "name": "Triomphant",
+        "symbol": "https://assets.tcgdex.net/univ/hgss/hgss4/symbol"
+      }
+    ]
+  },
+  {
+    "id": "col",
+    "logo": "https://cdn.tcg-nexus.org/series/col/logo.webp",
+    "name": "L'appel des Légendes",
+    "firstSet": {
+      "cardCount": {
+        "official": 95,
+        "total": 106
+      },
+      "id": "col1",
+      "logo": "https://assets.tcgdex.net/fr/col/col1/logo",
+      "name": "L'appel des Légendes",
+      "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 95,
+        "total": 106
+      },
+      "id": "col1",
+      "logo": "https://assets.tcgdex.net/fr/col/col1/logo",
+      "name": "L'appel des Légendes",
+      "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol"
+    },
+    "releaseDate": "2011-02-09",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 95,
+          "total": 106
+        },
+        "id": "col1",
+        "logo": "https://assets.tcgdex.net/fr/col/col1/logo",
+        "name": "L'appel des Légendes",
+        "symbol": "https://assets.tcgdex.net/univ/col/col1/symbol"
+      }
+    ]
+  },
+  {
+    "id": "bw",
+    "logo": "https://cdn.tcg-nexus.org/series/bw/logo.webp",
+    "name": "Noir & Blanc",
+    "firstSet": {
+      "cardCount": {
+        "official": 114,
+        "total": 115
+      },
+      "id": "bw1",
+      "logo": "https://assets.tcgdex.net/fr/bw/bw1/logo",
+      "name": "Noir & Blanc",
+      "symbol": "https://assets.tcgdex.net/univ/bw/bw1/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 25,
+        "total": 25
+      },
+      "id": "rc",
+      "name": "Radiant Collection"
+    },
+    "releaseDate": "2011-04-25",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 114,
+          "total": 115
+        },
+        "id": "bw1",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw1/logo",
+        "name": "Noir & Blanc",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 101,
+          "total": 101
+        },
+        "id": "bwp",
+        "name": "Promo BW",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bwp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 98,
+          "total": 98
+        },
+        "id": "bw2",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw2/logo",
+        "name": "Pouvoirs Émergents",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 101,
+          "total": 102
+        },
+        "id": "bw3",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw3/logo",
+        "name": "Nobles Victoires",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 99,
+          "total": 103
+        },
+        "id": "bw4",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw4/logo",
+        "name": "Destinées Futures",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 108,
+          "total": 111
+        },
+        "id": "bw5",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw5/logo",
+        "name": "Explorateurs Obscurs",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 124,
+          "total": 128
+        },
+        "id": "bw6",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw6/logo",
+        "name": "Dragons Éxaltés",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 20,
+          "total": 21
+        },
+        "id": "dv1",
+        "logo": "https://assets.tcgdex.net/fr/bw/dv1/logo",
+        "name": "Coffre des Dragons",
+        "symbol": "https://assets.tcgdex.net/univ/bw/dv1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 149,
+          "total": 153
+        },
+        "id": "bw7",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw7/logo",
+        "name": "Frontières Franchies",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw7/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 135,
+          "total": 138
+        },
+        "id": "bw8",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw8/logo",
+        "name": "Tempète Plasma",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw8/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 116,
+          "total": 122
+        },
+        "id": "bw9",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw9/logo",
+        "name": "Glaciation Plasma",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw9/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 101,
+          "total": 105
+        },
+        "id": "bw10",
+        "logo": "https://assets.tcgdex.net/fr/bw/bw10/logo",
+        "name": "Explosion Plasma",
+        "symbol": "https://assets.tcgdex.net/univ/bw/bw10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 25,
+          "total": 25
+        },
+        "id": "rc",
+        "name": "Radiant Collection"
+      }
+    ]
+  },
+  {
+    "id": "mc",
+    "name": "Promo McDonald's",
+    "firstSet": {
+      "cardCount": {
+        "official": 12,
+        "total": 12
+      },
+      "id": "2011bw",
+      "name": "Promo McDonald's 2012"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 25,
+        "total": 25
+      },
+      "id": "2021swsh",
+      "name": "Promo McDonald's 2021",
+      "symbol": "https://assets.tcgdex.net/univ/mc/2021swsh/symbol"
+    },
+    "releaseDate": "2011-06-17",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2011bw",
+        "name": "Promo McDonald's 2012"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2013bw",
+        "name": "Promo McDonald's 2013"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2014xy",
+        "name": "Promo McDonald's 2014"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2015xy",
+        "name": "Promo McDonald's 2015"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2016xy",
+        "name": "Promo McDonald's 2016"
+      },
+      {
+        "cardCount": {
+          "official": 12,
+          "total": 12
+        },
+        "id": "2017sm",
+        "name": "Promo McDonald's 2017"
+      },
+      {
+        "cardCount": {
+          "official": 40,
+          "total": 40
+        },
+        "id": "2018sm-fr",
+        "name": "Promo McDonald's 2018"
+      },
+      {
+        "cardCount": {
+          "official": 40,
+          "total": 40
+        },
+        "id": "2019sm-fr",
+        "name": "Promo McDonald's 2019"
+      },
+      {
+        "cardCount": {
+          "official": 25,
+          "total": 25
+        },
+        "id": "2021swsh",
+        "name": "Promo McDonald's 2021",
+        "symbol": "https://assets.tcgdex.net/univ/mc/2021swsh/symbol"
+      }
+    ],
+    "logo": null
+  },
+  {
+    "id": "xy",
+    "logo": "https://cdn.tcg-nexus.org/series/xy/logo.webp",
+    "name": "XY",
+    "firstSet": {
+      "cardCount": {
+        "official": 211,
+        "total": 216
+      },
+      "id": "xyp",
+      "name": "Promo XY",
+      "symbol": "https://assets.tcgdex.net/univ/xy/xyp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 108,
+        "total": 113
+      },
+      "id": "xy12",
+      "logo": "https://assets.tcgdex.net/fr/xy/xy12/logo",
+      "name": "Évolutions",
+      "symbol": "https://assets.tcgdex.net/univ/xy/xy12/symbol"
+    },
+    "releaseDate": "2013-10-12",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 211,
+          "total": 216
+        },
+        "id": "xyp",
+        "name": "Promo XY",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xyp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 39,
+          "total": 39
+        },
+        "id": "xy0",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy0/logo",
+        "name": "Bienvenue à Kalos",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy0/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 6,
+          "total": 6
+        },
+        "id": "xya",
+        "name": "carte alternative A Jaune"
+      },
+      {
+        "cardCount": {
+          "official": 146,
+          "total": 146
+        },
+        "id": "xy1",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy1/logo",
+        "name": "XY",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 106,
+          "total": 110
+        },
+        "id": "xy2",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy2/logo",
+        "name": "Étincelles",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 111,
+          "total": 114
+        },
+        "id": "xy3",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy3/logo",
+        "name": "Poings Furieux",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 119,
+          "total": 124
+        },
+        "id": "xy4",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy4/logo",
+        "name": "Vigueur Spectrale",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 160,
+          "total": 164
+        },
+        "id": "xy5",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy5/logo",
+        "name": "Primo-Choc",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 34,
+          "total": 34
+        },
+        "id": "dc1",
+        "logo": "https://assets.tcgdex.net/fr/xy/dc1/logo",
+        "name": "Double Danger",
+        "symbol": "https://assets.tcgdex.net/univ/xy/dc1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 108,
+          "total": 112
+        },
+        "id": "xy6",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy6/logo",
+        "name": "Ciel Rugissant",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 98,
+          "total": 101
+        },
+        "id": "xy7",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy7/logo",
+        "name": "Origines Antiques",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy7/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 162,
+          "total": 165
+        },
+        "id": "xy8",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy8/logo",
+        "name": "Impulsion Turbo",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy8/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 122,
+          "total": 126
+        },
+        "id": "xy9",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy9/logo",
+        "name": "Rupture Turbo",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy9/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 83,
+          "total": 117
+        },
+        "id": "g1",
+        "logo": "https://assets.tcgdex.net/fr/xy/g1/logo",
+        "name": "Générations",
+        "symbol": "https://assets.tcgdex.net/univ/xy/g1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 124,
+          "total": 129
+        },
+        "id": "xy10",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy10/logo",
+        "name": "Impact des Destins",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 114,
+          "total": 116
+        },
+        "id": "xy11",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy11/logo",
+        "name": "Offensive Vapeur",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy11/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 108,
+          "total": 113
+        },
+        "id": "xy12",
+        "logo": "https://assets.tcgdex.net/fr/xy/xy12/logo",
+        "name": "Évolutions",
+        "symbol": "https://assets.tcgdex.net/univ/xy/xy12/symbol"
+      }
+    ]
+  },
+  {
+    "id": "sm",
+    "logo": "https://cdn.tcg-nexus.org/series/sm/logo.webp",
+    "name": "Soleil et Lune",
+    "firstSet": {
+      "cardCount": {
+        "official": 236,
+        "total": 244
+      },
+      "id": "smp",
+      "name": "Promo SM",
+      "symbol": "https://assets.tcgdex.net/univ/sm/smp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 236,
+        "total": 271
+      },
+      "id": "sm12",
+      "logo": "https://assets.tcgdex.net/fr/sm/sm12/logo",
+      "name": "Éclipse Cosmique",
+      "symbol": "https://assets.tcgdex.net/univ/sm/sm12/symbol"
+    },
+    "releaseDate": "2017-02-03",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 236,
+          "total": 244
+        },
+        "id": "smp",
+        "name": "Promo SM",
+        "symbol": "https://assets.tcgdex.net/univ/sm/smp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 149,
+          "total": 163
+        },
+        "id": "sm1",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm1/logo",
+        "name": "Soleil et Lune",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 145,
+          "total": 169
+        },
+        "id": "sm2",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm2/logo",
+        "name": "Gardiens Ascendants",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 147,
+          "total": 169
+        },
+        "id": "sm3",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm3/logo",
+        "name": "Ombres Ardentes",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 73,
+          "total": 78
+        },
+        "id": "sm3.5",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm3.5/logo",
+        "name": "Légendes Brillantes"
+      },
+      {
+        "cardCount": {
+          "official": 111,
+          "total": 125
+        },
+        "id": "sm4",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm4/logo",
+        "name": "Invasion Carmin",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 156,
+          "total": 173
+        },
+        "id": "sm5",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm5/logo",
+        "name": "Ultra-Prisme",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 131,
+          "total": 146
+        },
+        "id": "sm6",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm6/logo",
+        "name": "Lumière Interdite",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 168,
+          "total": 183
+        },
+        "id": "sm7",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm7/logo",
+        "name": "Tempête Céleste",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm7/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 70,
+          "total": 78
+        },
+        "id": "sm7.5",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm7.5/logo",
+        "name": "Majesté Des Dragons"
+      },
+      {
+        "cardCount": {
+          "official": 214,
+          "total": 236
+        },
+        "id": "sm8",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm8/logo",
+        "name": "Tonnerre Perdu",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm8/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 181,
+          "total": 196
+        },
+        "id": "sm9",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm9/logo",
+        "name": "Duo de Choc",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm9/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 18,
+          "total": 18
+        },
+        "id": "det1",
+        "logo": "https://assets.tcgdex.net/fr/sm/det1/logo",
+        "name": "Détective Pikachu",
+        "symbol": "https://assets.tcgdex.net/univ/sm/det1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 214,
+          "total": 234
+        },
+        "id": "sm10",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm10/logo",
+        "name": "Alliance Infaillible",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 236,
+          "total": 258
+        },
+        "id": "sm11",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm11/logo",
+        "name": "Harmonie des Esprits",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm11/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 94,
+          "total": 94
+        },
+        "id": "sma",
+        "name": "Carte Alternative A Jaune",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sma/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 68,
+          "total": 69
+        },
+        "id": "sm115",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm115/logo",
+        "name": "Destinées Occultes",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm115/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 236,
+          "total": 271
+        },
+        "id": "sm12",
+        "logo": "https://assets.tcgdex.net/fr/sm/sm12/logo",
+        "name": "Éclipse Cosmique",
+        "symbol": "https://assets.tcgdex.net/univ/sm/sm12/symbol"
+      }
+    ]
+  },
+  {
+    "id": "swsh",
+    "logo": "https://cdn.tcg-nexus.org/series/swsh/logo.webp",
+    "name": "Épée et Bouclier",
+    "firstSet": {
+      "cardCount": {
+        "official": 107,
+        "total": 285
+      },
+      "id": "swshp",
+      "logo": "https://assets.tcgdex.net/fr/swsh/swshp/logo",
+      "name": "Promo SWSH",
+      "symbol": "https://assets.tcgdex.net/univ/swsh/swshp/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 159,
+        "total": 230
+      },
+      "id": "swsh12.5",
+      "logo": "https://assets.tcgdex.net/fr/swsh/swsh12.5/logo",
+      "name": "Zénith Suprême",
+      "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12.5/symbol"
+    },
+    "releaseDate": "2019-11-15",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 107,
+          "total": 285
+        },
+        "id": "swshp",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swshp/logo",
+        "name": "Promo SWSH",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swshp/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 202,
+          "total": 216
+        },
+        "id": "swsh1",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh1/logo",
+        "name": "Épée et Bouclier",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh1/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 192,
+          "total": 209
+        },
+        "id": "swsh2",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh2/logo",
+        "name": "Clash des Rebelles",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh2/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 189,
+          "total": 201
+        },
+        "id": "swsh3",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh3/logo",
+        "name": "Ténèbres Embrasées",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh3/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 73,
+          "total": 80
+        },
+        "id": "swsh3.5",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh3.5/logo",
+        "name": "La Voie du Maître",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh3.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 185,
+          "total": 203
+        },
+        "id": "swsh4",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh4/logo",
+        "name": "Voltage Éclatant",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 72,
+          "total": 195
+        },
+        "id": "swsh4.5",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh4.5/logo",
+        "name": "Destinées Radieuses",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh4.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 163,
+          "total": 183
+        },
+        "id": "swsh5",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh5/logo",
+        "name": "Styles de combat",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 198,
+          "total": 233
+        },
+        "id": "swsh6",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh6/logo",
+        "name": "Règne de Glace",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh6/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 203,
+          "total": 237
+        },
+        "id": "swsh7",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh7/logo",
+        "name": "Évolution Céleste",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh7/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 25,
+          "total": 39
+        },
+        "id": "cel25",
+        "logo": "https://assets.tcgdex.net/fr/swsh/cel25/logo",
+        "name": "Célébrations",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/cel25/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 264,
+          "total": 284
+        },
+        "id": "swsh8",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh8/logo",
+        "name": "Poing de Fusion",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh8/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 172,
+          "total": 216
+        },
+        "id": "swsh9",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh9/logo",
+        "name": "Stars Étincelantes",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh9/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 189,
+          "total": 246
+        },
+        "id": "swsh10",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh10/logo",
+        "name": "Astres Radieux",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 78,
+          "total": 88
+        },
+        "id": "swsh10.5",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh10.5/logo",
+        "name": "Pokémon GO",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh10.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 196,
+          "total": 247
+        },
+        "id": "swsh11",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh11/logo",
+        "name": "Origine Perdue",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh11/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 195,
+          "total": 245
+        },
+        "id": "swsh12",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh12/logo",
+        "name": "Tempête Argentée",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 159,
+          "total": 230
+        },
+        "id": "swsh12.5",
+        "logo": "https://assets.tcgdex.net/fr/swsh/swsh12.5/logo",
+        "name": "Zénith Suprême",
+        "symbol": "https://assets.tcgdex.net/univ/swsh/swsh12.5/symbol"
+      }
+    ]
+  },
+  {
+    "id": "sv",
+    "logo": "https://cdn.tcg-nexus.org/series/sv/logo.webp",
+    "name": "Écarlate et Violet",
+    "firstSet": {
+      "cardCount": {
+        "official": 198,
+        "total": 258
+      },
+      "id": "sv01",
+      "logo": "https://assets.tcgdex.net/fr/sv/sv01/logo",
+      "name": "Écarlate et Violet",
+      "symbol": "https://assets.tcgdex.net/univ/sv/sv01/symbol"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 86,
+        "total": 172
+      },
+      "id": "sv10.5b",
+      "logo": "https://assets.tcgdex.net/fr/sv/sv10.5b/logo",
+      "name": "Foudre Noire",
+      "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5b/symbol"
+    },
+    "releaseDate": "2023-03-31",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 198,
+          "total": 258
+        },
+        "id": "sv01",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv01/logo",
+        "name": "Écarlate et Violet",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv01/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 0,
+          "total": 213
+        },
+        "id": "svp",
+        "name": "SVP Black Star Promos"
+      },
+      {
+        "cardCount": {
+          "official": 193,
+          "total": 279
+        },
+        "id": "sv02",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv02/logo",
+        "name": "Évolutions à Paldea",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv02/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 197,
+          "total": 230
+        },
+        "id": "sv03",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv03/logo",
+        "name": "Flammes Obsidiennes",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv03/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 165,
+          "total": 207
+        },
+        "id": "sv03.5",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv03.5/logo",
+        "name": "151",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv03.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 182,
+          "total": 266
+        },
+        "id": "sv04",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv04/logo",
+        "name": "Faille Paradoxe",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv04/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 91,
+          "total": 245
+        },
+        "id": "sv04.5",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv04.5/logo",
+        "name": "Destinées de Paldea",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv04.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 162,
+          "total": 218
+        },
+        "id": "sv05",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv05/logo",
+        "name": "Forces Temporelles",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv05/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 167,
+          "total": 226
+        },
+        "id": "sv06",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv06/logo",
+        "name": "Mascarade Crépusculaire",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv06/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 64,
+          "total": 99
+        },
+        "id": "sv06.5",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv06.5/logo",
+        "name": "Fable Nébuleuse",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv06.5/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 142,
+          "total": 175
+        },
+        "id": "sv07",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv07/logo",
+        "name": "Couronne Stellaire"
+      },
+      {
+        "cardCount": {
+          "official": 191,
+          "total": 252
+        },
+        "id": "sv08",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv08/logo",
+        "name": "Étincelles Déferlantes"
+      },
+      {
+        "cardCount": {
+          "official": 131,
+          "total": 180
+        },
+        "id": "sv08.5",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv08.5/logo",
+        "name": "Évolutions Prismatiques"
+      },
+      {
+        "cardCount": {
+          "official": 159,
+          "total": 190
+        },
+        "id": "sv09",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv09/logo",
+        "name": "Aventures Ensemble",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv09/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 182,
+          "total": 244
+        },
+        "id": "sv10",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10/logo",
+        "name": "Rivalités Destinées",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 86,
+          "total": 173
+        },
+        "id": "sv10.5w",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5w/logo",
+        "name": "Flamme Blanche",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5w/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 86,
+          "total": 172
+        },
+        "id": "sv10.5b",
+        "logo": "https://assets.tcgdex.net/fr/sv/sv10.5b/logo",
+        "name": "Foudre Noire",
+        "symbol": "https://assets.tcgdex.net/univ/sv/sv10.5b/symbol"
+      }
+    ]
+  },
+  {
+    "id": "tcgp",
+    "name": "Pokémon TCG Pocket",
+    "firstSet": {
+      "cardCount": {
+        "official": 155,
+        "total": 239
+      },
+      "id": "A3",
+      "name": "Gardiens Astraux"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 155,
+        "total": 155
+      },
+      "id": "B2",
+      "name": "Parade Onirique"
+    },
+    "releaseDate": "2025-04-30",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 155,
+          "total": 239
+        },
+        "id": "A3",
+        "name": "Gardiens Astraux"
+      },
+      {
+        "cardCount": {
+          "official": 69,
+          "total": 103
+        },
+        "id": "A3a",
+        "name": "Crise Interdimensionnelle"
+      },
+      {
+        "cardCount": {
+          "official": 69,
+          "total": 107
+        },
+        "id": "A3b",
+        "name": "La Clairière d'Évoli"
+      },
+      {
+        "cardCount": {
+          "official": 161,
+          "total": 241
+        },
+        "id": "A4",
+        "name": "Sagesse Entre Ciel et Mer"
+      },
+      {
+        "cardCount": {
+          "official": 71,
+          "total": 105
+        },
+        "id": "A4a",
+        "name": "Source Secrète"
+      },
+      {
+        "cardCount": {
+          "official": 69,
+          "total": 69
+        },
+        "id": "B1a",
+        "name": "Embrasement Écarlate"
+      },
+      {
+        "cardCount": {
+          "official": 155,
+          "total": 155
+        },
+        "id": "B2",
+        "name": "Parade Onirique"
+      }
+    ],
+    "logo": null
+  },
+  {
+    "id": "me",
+    "logo": "https://cdn.tcg-nexus.org/series/me/logo.webp",
+    "name": "Méga-Évolution",
+    "firstSet": {
+      "cardCount": {
+        "official": 0,
+        "total": 10
+      },
+      "id": "mep",
+      "name": "MEP Black Star Promos"
+    },
+    "lastSet": {
+      "cardCount": {
+        "official": 94,
+        "total": 130
+      },
+      "id": "me02",
+      "logo": "https://assets.tcgdex.net/fr/me/me02/logo",
+      "name": "Flammes Fantasmagoriques"
+    },
+    "releaseDate": "2025-09-26",
+    "sets": [
+      {
+        "cardCount": {
+          "official": 0,
+          "total": 10
+        },
+        "id": "mep",
+        "name": "MEP Black Star Promos"
+      },
+      {
+        "cardCount": {
+          "official": 132,
+          "total": 188
+        },
+        "id": "me01",
+        "logo": "https://assets.tcgdex.net/fr/me/me01/logo",
+        "name": "Méga-Évolution",
+        "symbol": "https://assets.tcgdex.net/univ/me/me01/symbol"
+      },
+      {
+        "cardCount": {
+          "official": 94,
+          "total": 130
+        },
+        "id": "me02",
+        "logo": "https://assets.tcgdex.net/fr/me/me02/logo",
+        "name": "Flammes Fantasmagoriques"
+      }
+    ]
+  }
+]

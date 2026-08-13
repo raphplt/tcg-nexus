@@ -49,7 +49,7 @@ export interface PriceSuggestion {
   cardId: string;
   cardState: string | null;
   currency: string;
-  /** Origine du prix conseillé, null si aucune donnée disponible */
+  /** Suggested-price source, or null when no data is available. */
   basis: "same-state" | "all-states" | "market" | null;
   suggestedPrice: number | null;
   listings: {
@@ -110,7 +110,7 @@ export interface SellerStatistics {
 
 export const marketplaceService = {
   /**
-   * Récupère les listings paginés avec filtres et tri
+   * Retrieves paginated listings with filters and sorting.
    * @param params Query params (page, limit, search, cardState, currency, sortBy, sortOrder)
    */
   async getPaginated(
@@ -122,8 +122,8 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère un listing par son ID
-   * @param id ID du listing
+   * Retrieves a listing by its identifier.
+   * @param id Listing identifier.
    */
   async getListingById(id: string): Promise<Listing> {
     return fetcher<Listing>(`/marketplace/listings/${id}`);
@@ -134,7 +134,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les listings de l'utilisateur connecté
+   * Retrieves the current user's listings.
    */
   async getMyListings(
     params: MarketplaceQueryParams = {},
@@ -149,7 +149,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Met à jour un listing
+   * Updates a listing.
    */
   async updateListing(id: string, data: Partial<Listing>): Promise<Listing> {
     return authedFetch<Listing>("PATCH", `/marketplace/listings/${id}`, {
@@ -158,14 +158,14 @@ export const marketplaceService = {
   },
 
   /**
-   * Supprime un listing
+   * Deletes a listing.
    */
   async deleteListing(id: string): Promise<void> {
     return authedFetch<void>("DELETE", `/marketplace/listings/${id}`);
   },
 
   /**
-   * Récupère les cartes avec données marketplace
+   * Retrieves cards with marketplace data.
    */
   async getCardsWithMarketplaceData(
     params: CardMarketplaceQueryParams = {},
@@ -174,7 +174,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les statistiques d'une carte
+   * Retrieves a card's statistics.
    */
   async getCardStatistics(
     cardId: string,
@@ -190,7 +190,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère le prix conseillé pour mettre une carte en vente
+   * Retrieves the suggested listing price for a card.
    */
   async getPriceSuggestion(
     cardId: string,
@@ -207,14 +207,14 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère le barème d'expédition de la plateforme
+   * Retrieves the platform shipping policy.
    */
   async getShippingPolicy(): Promise<ShippingPolicy> {
     return fetcher<ShippingPolicy>("/marketplace/shipping-policy");
   },
 
   /**
-   * Récupère les cartes populaires
+   * Retrieves popular cards.
    */
   async getPopularCards(limit: number = 10): Promise<PopularCard[]> {
     return fetcher<PopularCard[]>("/marketplace/popular", {
@@ -223,7 +223,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les cartes en tendance
+   * Retrieves trending cards.
    */
   async getTrendingCards(
     limit: number = 10,
@@ -235,7 +235,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les meilleurs vendeurs
+   * Retrieves top sellers.
    */
   async getBestSellers(limit: number = 10): Promise<BestSeller[]> {
     return fetcher<BestSeller[]>("/marketplace/best-sellers", {
@@ -244,14 +244,14 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les statistiques d'un vendeur
+   * Retrieves seller statistics.
    */
   async getSellerStatistics(sellerId: number): Promise<SellerStatistics> {
     return fetcher<SellerStatistics>(`/marketplace/sellers/${sellerId}`);
   },
 
   /**
-   * Récupère les listings d'un vendeur
+   * Retrieves a seller's listings.
    */
   async getSellerListings(
     sellerId: number,
@@ -271,7 +271,7 @@ export const marketplaceService = {
   },
 
   /**
-   * Récupère les listings pour une carte spécifique avec filtres
+   * Retrieves filtered listings for a specific card.
    */
   async getCardListings(
     cardId: string,

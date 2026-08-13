@@ -225,7 +225,7 @@ describe("OrderService", () => {
       await service.startCheckout(dto, buyer);
 
       const savedOrder = manager.save.mock.calls[0][1];
-      // 4.50 pour Bob (le plus cher de ses deux annonces) + 2 pour Carol
+      // 4.50 for Bob (highest rate of his two listings) + 2 for Carol
       expect(savedOrder.shippingAmount).toBe(6.5);
       expect(savedOrder.totalAmount).toBe(66.5);
       expect(savedOrder.orderItems.map((i: any) => i.shippingCost)).toEqual([

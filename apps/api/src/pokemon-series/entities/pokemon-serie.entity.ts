@@ -1,6 +1,7 @@
 import { CardGame } from "src/common/enums/cardGame";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { PokemonSerieTranslation } from "./pokemon-serie-translation.entity";
 
 @Entity()
 export class PokemonSerie {
@@ -10,16 +11,26 @@ export class PokemonSerie {
   @Column({ type: "enum", enum: CardGame, default: CardGame.Pokemon })
   game: CardGame;
 
-  @Column()
-  name: string; // Serie Name
-
-  @Column({ nullable: true })
-  logo?: string; // Serie logo (asset, nullable)
-
-  // Relation vers les sets de cette série
+  // Relation to sets belonging to this expansion series
   @OneToMany(
     () => PokemonSet,
     (pokemonSet) => pokemonSet.serie,
   )
   sets: PokemonSet[];
+
+  /** Series name and logo translations, one row per enabled locale. */
+  @OneToMany(
+    () => PokemonSerieTranslation,
+    (translation) => translation.serie,
+    { cascade: true },
+  )
+  translations?: PokemonSerieTranslation[];
+
+  // --- Resolved localized properties ----------------------------------------
+  // Virtual runtime properties populated dynamically from `translations` by
+  // `CatalogLocalizationInterceptor` (request locale) or `CatalogLocalizationService.resolveLabels` (internal).
+  // Reading these properties before calling resolution returns `undefined`.
+
+  name?: string;
+  logo?: string;
 }

@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -32,7 +33,10 @@ export class SupportTicketService {
 
   private assertOwnerOrStaff(ticket: SupportTicket, user: User) {
     if (!this.isStaff(user) && ticket.user.id !== user.id) {
-      throw new ForbiddenException("Vous n'avez pas accès à ce ticket");
+      throw new ForbiddenException({
+        code: "TICKET_ACCESS_DENIED",
+        message: "Vous n'avez pas accès à ce ticket",
+      });
     }
   }
 
@@ -54,11 +58,12 @@ export class SupportTicketService {
     });
     await this.messageRepo.save(initialMessage);
 
-    // Notification email à l'utilisateur
+    // Send confirmation email to ticket owner
     this.mailService.sendTicketCreated(
       user.email,
       savedTicket.id,
       savedTicket.subject,
+      user.preferredLocale,
     );
 
     return savedTicket;
@@ -74,7 +79,10 @@ export class SupportTicketService {
     this.assertOwnerOrStaff(ticket, user);
 
     if (ticket.status === SupportTicketStatusType.closed) {
-      throw new ForbiddenException("Ce ticket est fermé");
+      throw new ForbiddenException({
+        code: "TICKET_CLOSED",
+        message: "Ce ticket est fermé",
+      });
     }
 
     const message = this.messageRepo.create({
@@ -86,7 +94,7 @@ export class SupportTicketService {
 
     const savedMessage = await this.messageRepo.save(message);
 
-    // Notification email : notifier l'autre partie
+    // Email notification: notify counter-party
     const senderName = `${user.firstName} ${user.lastName}`;
     const preview =
       dto.message.length > 200
@@ -94,16 +102,17 @@ export class SupportTicketService {
         : dto.message;
 
     if (this.isStaff(user)) {
-      // Staff répond -> notifier l'utilisateur propriétaire du ticket
+      // Staff reply -> notify ticket owner user
       this.mailService.sendTicketReply(
         ticket.user.email,
         ticketId,
         ticket.subject,
         senderName,
         preview,
+        ticket.user.preferredLocale,
       );
     }
-    // Utilisateur répond -> pas de notification auto (le staff consulte le dashboard)
+    // User reply -> staff monitors dashboard directly, no auto email
 
     return savedMessage;
   }

@@ -1,32 +1,34 @@
 /**
- * Met à jour la liste des produits scellés Pokémon via Puppeteer (pokecardex.com).
+ * Updates the Pokémon sealed-product list through Puppeteer and writes one
+ * `data/<locale>/sealed-products.json` per catalog language for the API seed.
+ * Images retain their absolute Pokécardex URLs.
  *
- * Sortie : `data/sealed_products.json` — consommé par le seed côté API.
- *
- * Les images sont référencées directement depuis pokecardex.com
- * (URL absolue stockée dans le champ `image`).
+ * Pokécardex is French-only: English names are composed rather than scraped
+ * (see `sealed-names.ts`). Pass `--from-legacy` to rebuild both locales from
+ * the previously scraped `data/sealed_products.json` without hitting the site.
  */
+import {
+  type DatasetSealedProduct,
+  writeSealedProducts,
+} from "@repo/pokemon-dataset";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { PokecardexService } from "./pokecardex.service.js";
+import {
+  composeSealedName,
+  loadSealedNameSources,
+  type RawSealedProduct,
+  resolveSealedSetId,
+} from "./sealed-names.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.resolve(__dirname, "../../data");
-const OUTPUT_FILE = path.join(DATA_DIR, "sealed_products.json");
+const LEGACY_FILE = path.join(DATA_DIR, "sealed_products.json");
 
-interface SealedProductRecord {
-  id: string;
-  pokecardexSeriesId: string;
-  setName: string;
-  name: string;
-  productType: string;
-  /** URL absolue de l'image (pokecardex CDN) */
-  image: string;
-  imageFilename: string;
-}
+type SealedProductRecord = RawSealedProduct;
 
 function slugify(str: string): string {
   return str
@@ -41,8 +43,10 @@ function slugify(str: string): string {
 }
 
 /**
- * Mapping exact (clé = filename sans extension ni chiffres finaux, en lowercase)
- * → nom lisible. Toujours préfixé par le set ensuite.
+ * Exact mapping from a normalized filename to a display name. The set name is added afterward.
+ *
+ * NOTE: the French labels produced here must exist in `SEALED_TERMS`
+ * (`sealed-vocabulary.ts`), otherwise the product gets no English name.
  */
 const TERM_MAP: Record<string, string> = {
   booster: "Booster",
@@ -97,7 +101,7 @@ const TERM_MAP: Record<string, string> = {
 };
 
 /**
- * Si le nom nettoyé commence par l'un de ces termes, on préfixe par le set.
+ * Names starting with one of these terms receive the set-name prefix.
  */
 const ALWAYS_PREFIX = [
   "booster",
@@ -133,15 +137,13 @@ function cleanProductName(
 ): string {
   let base = filename.replace(/\.\w+$/, "");
 
-  // Retirer préfixes parasites
-  base = base.replace(/^\d+px-/, ""); // "315px-BW1_Booster..."
-  base = base.replace(/^[A-Z]{2,4}\d*_3D_/, ""); // "BW8_3D_Booster..."
-  base = base.replace(/^PO[A-Z]{2,4}\d+_[A-Z]+\d*_/, ""); // "POBW1001_BOX3D_1_"
-  base = base.replace(/^POLL\d+_[A-Z]+_/, ""); // "POLL01_BOX3D_1_"
-  base = base.replace(/[_-](FR|EN|JP|medium)$/i, ""); // suffixes langue
+  base = base.replace(/^\d+px-/, "");
+  base = base.replace(/^[A-Z]{2,4}\d*_3D_/, "");
+  base = base.replace(/^PO[A-Z]{2,4}\d+_[A-Z]+\d*_/, "");
+  base = base.replace(/^POLL\d+_[A-Z]+_/, "");
+  base = base.replace(/[_-](FR|EN|JP|medium)$/i, "");
   base = base.replace(/_/g, " ").trim();
 
-  // Lookup dans le mapping exact — essayer d'abord le nom complet, puis sans chiffres finaux
   const keyFull = base.toLowerCase().replace(/\s+/g, "");
   const keyNoTrailingNum = keyFull.replace(/\d+$/, "");
   const mapped =
@@ -150,15 +152,12 @@ function cleanProductName(
     TERM_MAP[base.toLowerCase()];
 
   if (mapped) {
-    // Si la clé avec chiffres a matché directement, pas de suffixe
-    // Si c'est la clé sans chiffres qui a matché, ajouter le numéro
     const exactMatch = !!TERM_MAP[keyFull];
     const numMatch = !exactMatch ? base.match(/(\d+)$/) : null;
     const suffix = numMatch ? ` ${numMatch[1]}` : "";
     return `${setName} - ${mapped}${suffix}`;
   }
 
-  // Nettoyage standard
   let cleaned = base
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/([a-zA-Z])(\d)/g, "$1 $2")
@@ -167,7 +166,6 @@ function cleanProductName(
 
   cleaned = cleaned.replace(/\s*Recto$/i, "");
 
-  // Si purement numérique ou très court → nom générique basé sur le type
   if (/^\d+$/.test(cleaned) || cleaned.length <= 3) {
     const typeLabel =
       {
@@ -186,7 +184,6 @@ function cleanProductName(
     return `${setName} - ${typeLabel}${suffix}`;
   }
 
-  // Si le nom commence par un terme générique → préfixer
   const cleanedLower = cleaned.toLowerCase();
   const needsPrefix =
     ALWAYS_PREFIX.some((g) => cleanedLower.startsWith(g)) ||
@@ -206,11 +203,82 @@ function buildId(seriesId: string, filename: string): string {
   return `${seriesId.toLowerCase()}-${slugify(ext)}`;
 }
 
+/**
+ * Writes one dataset file per locale and reports the English coverage.
+ *
+ * A product whose English name cannot be composed is left out of the English
+ * file: the API then serves the French name rather than an approximation.
+ */
+function writeLocalizedDatasets(records: SealedProductRecord[]) {
+  const sources = loadSealedNameSources();
+
+  const french: DatasetSealedProduct[] = [];
+  const english: DatasetSealedProduct[] = [];
+  const skipped = { set: 0, label: 0 };
+  const samples: string[] = [];
+
+  for (const record of records) {
+    const setId = resolveSealedSetId(record);
+    const composed = composeSealedName(record, sources);
+    const shared = {
+      id: record.id,
+      pokecardexSeriesId: record.pokecardexSeriesId,
+      setId,
+      productType: record.productType,
+      image: record.image,
+      imageFilename: record.imageFilename,
+    };
+
+    french.push({
+      ...shared,
+      setName: record.setName ?? null,
+      name: composed.fr,
+    });
+
+    if (composed.en) {
+      english.push({
+        ...shared,
+        setName: setId ? (sources.setNames.get(setId)?.en ?? null) : null,
+        name: composed.en,
+      });
+    } else if (composed.skipped) {
+      skipped[composed.skipped]++;
+      if (samples.length < 15) samples.push(composed.fr);
+    }
+  }
+
+  writeSealedProducts("fr", french);
+  writeSealedProducts("en", english);
+
+  const coverage = ((english.length / french.length) * 100).toFixed(1);
+  console.log(`\nfr: ${french.length} products`);
+  console.log(`en: ${english.length} products (${coverage}% coverage)`);
+  console.log(
+    `Not composed — unknown set: ${skipped.set}, ` +
+      `untranslatable label: ${skipped.label}`,
+  );
+  if (samples.length) {
+    console.log(`Sample of untranslated names:\n  ${samples.join("\n  ")}`);
+  }
+}
+
 async function main() {
   console.log("=== Pokecardex sealed products updater ===");
   if (!fs.existsSync(DATA_DIR)) {
     console.log(`Creating data directory: ${DATA_DIR}`);
     fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  if (process.argv.includes("--from-legacy")) {
+    if (!fs.existsSync(LEGACY_FILE)) {
+      throw new Error(`${LEGACY_FILE} not found — run without --from-legacy.`);
+    }
+    console.log(`Rebuilding locales from ${LEGACY_FILE} (no scraping).`);
+    const records = JSON.parse(
+      fs.readFileSync(LEGACY_FILE, "utf-8"),
+    ) as SealedProductRecord[];
+    writeLocalizedDatasets(records);
+    return;
   }
 
   const service = new PokecardexService();
@@ -262,16 +330,17 @@ async function main() {
       console.log(`FAILED (${error.message})`);
     }
 
-    // Soyons polis avec pokecardex
     await new Promise((r) => setTimeout(r, 500));
   }
 
   await service.close();
 
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(records, null, 2));
-  console.log(
-    `\nWrote ${records.length} sealed product records to ${OUTPUT_FILE}`,
-  );
+  // Kept as the scraper's raw output: it is the only French source, and
+  // `--from-legacy` rebuilds the locale files from it without scraping again.
+  fs.writeFileSync(LEGACY_FILE, JSON.stringify(records, null, 2));
+  console.log(`\nWrote ${records.length} scraped records to ${LEGACY_FILE}`);
+
+  writeLocalizedDatasets(records);
 }
 
 main().catch(async (err) => {

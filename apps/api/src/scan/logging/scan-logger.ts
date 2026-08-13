@@ -24,7 +24,7 @@ const csvCell = (value: unknown): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-// journalise chaque scan dans un dossier dédié pour le debug (SCAN_LOG=false pour couper)
+// Logs every card scan operation in dedicated folders for debugging (SCAN_LOG=false to disable)
 @Injectable()
 export class ScanLogger {
   private readonly logger = new Logger(ScanLogger.name);
@@ -43,7 +43,7 @@ export class ScanLogger {
       const dir = join(process.cwd(), LOG_ROOT, scanId);
       await mkdir(dir, { recursive: true });
 
-      // image d'entrée + (si dispo) image normalisée et crops des ROI
+      // Input image + (if available) normalized image and ROI crops
       const files: Record<string, unknown> = { input: "input.jpg" };
       await writeFile(join(dir, "input.jpg"), input.inputImage);
 
@@ -102,7 +102,7 @@ export class ScanLogger {
     }
   }
 
-  // ligne récap par scan dans un index.csv commun
+  // Appends summary line per scan in shared index.csv log file
   private async appendIndex(
     scanId: string,
     timestamp: string,
