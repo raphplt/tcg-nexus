@@ -87,6 +87,7 @@ describe("MarketplaceService", () => {
       delete: jest.fn(),
       find: jest.fn(),
       count: jest.fn(),
+      increment: jest.fn().mockResolvedValue(undefined),
       createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
@@ -112,6 +113,7 @@ describe("MarketplaceService", () => {
     mockPaymentTransactionRepo = {
       create: jest.fn(),
       save: jest.fn(),
+      findOne: jest.fn().mockResolvedValue(null),
     };
 
     mockOrderItemRepo = {

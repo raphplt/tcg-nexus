@@ -38,6 +38,10 @@ describe("PokemonSeriesController", () => {
           provide: getRepositoryToken(PokemonSerie),
           useValue: {},
         },
+        {
+          provide: R2StorageService,
+          useValue: mockR2StorageService,
+        },
       ],
     }).compile();
 

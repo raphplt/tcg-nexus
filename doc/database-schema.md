@@ -144,6 +144,10 @@ erDiagram
 
   CARD ||--o{ PRICE_HISTORY : "tracked"
   CARD ||--o| CARD_POPULARITY_METRICS : "scored"
+  CARD ||--o{ CARD_EVENT : "logs"
+  SEALED_PRODUCT ||--o{ SEALED_EVENT : "logs"
+  USER ||--o{ CARD_EVENT : "triggers"
+  USER ||--o{ SEALED_EVENT : "triggers"
 
   LISTING {
     int id PK
@@ -219,7 +223,33 @@ erDiagram
     int listingsCount
     timestamp lastComputedAt
   }
+
+  CARD_EVENT {
+    int id PK
+    uuid card_id FK
+    int user_id FK "nullable, SET NULL on delete"
+    enum eventType "view|search|favorite|add_to_cart|sale"
+    string sessionId
+    string ipAddress
+    string userAgent
+    jsonb context "searchQuery, referrer, listingId..."
+    timestamp createdAt
+  }
+
+  SEALED_EVENT {
+    int id PK
+    uuid sealed_product_id FK
+    int user_id FK "nullable, SET NULL on delete"
+    enum eventType "view|search|favorite|add_to_cart|sale"
+    string sessionId
+    string ipAddress
+    string userAgent
+    jsonb context
+    timestamp createdAt
+  }
 ```
+
+`CardEvent` et `SealedEvent` alimentent `CardPopularityService` (tendances, best-sellers) ; ils sont volontairement dénormalisés (pas de relation vers `Listing`) pour rester rapides à écrire sur le hot path des pages de consultation.
 
 Indices importants sur `LISTING` (définis via `@Index` dans l'entité) :
 
@@ -313,8 +343,10 @@ erDiagram
   PLAYER ||--o{ TOURNAMENT_REGISTRATION : "registers"
   PLAYER ||--o{ RANKING : "placed"
   PLAYER ||--o{ STATISTIC : "tracks"
-  MATCH }o--|| PLAYER : "player1"
-  MATCH }o--|| PLAYER : "player2"
+  TOURNAMENT_REGISTRATION ||--o{ REGISTRATION_PAYMENT : "paid via"
+  MATCH }o--o| PLAYER : "playerA"
+  MATCH }o--o| PLAYER : "playerB"
+  MATCH }o--o| PLAYER : "winner"
 
   TOURNAMENT {
     int id PK
@@ -335,6 +367,18 @@ erDiagram
     bool isPublic
   }
 
+  TOURNAMENT_ORGANIZER {
+    int id PK
+    int tournament_id FK
+    int user_id FK
+    string name
+    string email
+    enum role "owner|admin|moderator|judge"
+    bool isActive
+    string phone
+    string responsibilities
+  }
+
   TOURNAMENT_REGISTRATION {
     int id PK
     int tournament_id FK
@@ -343,15 +387,34 @@ erDiagram
     timestamp registeredAt
   }
 
+  REGISTRATION_PAYMENT {
+    int id PK
+    int registration_id FK
+    decimal amount
+    enum method "cash|card|bank_transfer|paypal|stripe|other"
+    enum status "pending|processing|completed|failed|cancelled|refunded|partially_refunded"
+    string transactionId
+    string paymentIntentId
+    timestamp paidAt
+    decimal refundedAmount
+    timestamp refundedAt
+  }
+
   MATCH {
     int id PK
     int tournament_id FK
-    int player1_id FK
-    int player2_id FK
+    int playerA_id FK "nullable"
+    int playerB_id FK "nullable"
+    int winner_id FK "nullable"
     int round
-    int score1
-    int score2
-    enum status "scheduled|in_progress|completed|cancelled"
+    enum phase "qualification|round_of_64|round_of_32|round_of_16|quarter_final|semi_final|third_place|final"
+    enum status "scheduled|in_progress|finished|cancelled|forfeit"
+    int playerAScore
+    int playerBScore
+    timestamp scheduledDate
+    timestamp startedAt
+    timestamp finishedAt
+    string notes
   }
 
   RANKING {
@@ -372,7 +435,133 @@ erDiagram
   }
 ```
 
-## 7. Contenus et gamification
+`Match` porte aussi une relation `OneToOne` vers `OnlineMatchSession` (état temps réel de la partie, cf. section suivante) et une relation `OneToMany` vers `Statistics`.
+
+## 7. Sessions de match temps réel et historique classé
+
+Le moteur de jeu temps réel (casual, en ligne, entraînement) stocke son état dans des tables dédiées, séparées de `Match` (qui reste le modèle "tournoi"). `serializedState` et `eventLog` portent l'état du moteur de jeu (cf. `match.gateway.ts`) et ne sont pas normalisés en base.
+
+```mermaid
+erDiagram
+  USER ||--o{ CASUAL_MATCH_SESSION : "plays (A/B)"
+  USER ||--o{ TRAINING_MATCH_SESSION : "trains"
+  MATCH ||--o| ONLINE_MATCH_SESSION : "realtime state"
+  USER ||--o{ RANKED_MATCH_HISTORY : "wins/loses"
+
+  CASUAL_MATCH_SESSION {
+    int id PK
+    int playerA_id FK
+    int playerB_id FK
+    enum status "WAITING_FOR_DECKS|ACTIVE|FINISHED|CANCELLED"
+    bigint seed
+    bool isRanked
+    int playerADeckId "not a FK, deck snapshot ref"
+    int playerBDeckId
+    int winnerUserId "not a FK"
+    string endedReason
+    jsonb serializedState
+    jsonb eventLog
+  }
+
+  ONLINE_MATCH_SESSION {
+    int id PK
+    int match_id FK "OneToOne"
+    enum status "WAITING_FOR_DECKS|ACTIVE|FINISHED"
+    bigint seed
+    int playerADeckId
+    int playerBDeckId
+    int winnerPlayerId "not a FK"
+    string endedReason
+    jsonb serializedState
+    jsonb eventLog
+  }
+
+  TRAINING_MATCH_SESSION {
+    int id PK
+    int user_id FK
+    enum status "ACTIVE|FINISHED"
+    bigint seed
+    int playerDeckId "not a FK"
+    string aiDeckPresetId
+    enum aiDifficulty "easy|standard"
+    enum winnerSide "PLAYER|AI, nullable"
+    string endedReason
+    jsonb serializedState
+    jsonb eventLog
+  }
+
+  RANKED_MATCH_HISTORY {
+    int id PK
+    int casualSessionId "not a FK, loose ref"
+    int matchId "not a FK, loose ref"
+    int winner_id FK "nullable, SET NULL"
+    int loser_id FK "nullable, SET NULL"
+    int winnerEloBefore
+    int winnerEloAfter
+    int loserEloBefore
+    int loserEloAfter
+    int delta
+    bool isDraw
+  }
+```
+
+`RankedMatchHistory.casualSessionId` / `matchId` sont des références "molles" (pas de `@ManyToOne`) vers la partie source, gardées même si la session/partie est purgée, pour préserver l'historique ELO.
+
+## 8. Notifications, support et social
+
+```mermaid
+erDiagram
+  USER ||--o{ NOTIFICATION : "receives"
+  USER ||--o{ DEVICE_TOKEN : "registers"
+  USER ||--o{ SUPPORT_TICKET : "opens"
+  SUPPORT_TICKET ||--o{ SUPPORT_MESSAGE : "has"
+  USER ||--o{ SUPPORT_MESSAGE : "writes"
+  USER ||--o{ USER_FOLLOW : "follows (as follower)"
+  USER ||--o{ USER_FOLLOW : "followed by (as followed)"
+
+  NOTIFICATION {
+    int id PK
+    int user_id FK
+    string title
+    text body
+    bool isRead
+    string type "free-form, default info"
+    jsonb data
+  }
+
+  DEVICE_TOKEN {
+    int id PK
+    int user_id FK
+    string token UK
+    string platform "default expo"
+  }
+
+  SUPPORT_TICKET {
+    int id PK
+    int user_id FK
+    string subject
+    text message
+    enum status "opened|closed"
+  }
+
+  SUPPORT_MESSAGE {
+    int id PK
+    int supportTicket_id FK
+    int user_id FK
+    text message
+    bool isStaff
+  }
+
+  USER_FOLLOW {
+    int id PK
+    int follower_id FK "@JoinColumn follower_id"
+    int followed_id FK "@JoinColumn followed_id"
+  }
+```
+
+Index unique composite `(follower, followed)` sur `UserFollow` pour empêcher les doublons de suivi.
+
+## 9. Contenus et gamification
 
 - **`Article`** : actualités TCG, modèle simple (`title`, `content`, `author`, `publishedAt`).
 - **`Faq`** : questions / réponses (`question`, `answer`, `category`).
@@ -381,7 +570,7 @@ erDiagram
 
 Ces domaines sont peu couplés au reste du schéma et leurs entités sont lisibles directement dans `apps/api/src/*/entities/`.
 
-## 8. Conventions
+## 10. Conventions
 
 - Les clés primaires internes sont des entiers auto-incrémentés (`@PrimaryGeneratedColumn`), sauf pour les entités importées de TCGdex (sets, séries, cartes) qui gardent leur identifiant d'origine (`PrimaryColumn` string ou uuid).
 - Les timestamps `createdAt` / `updatedAt` sont présents sur la plupart des entités via `@CreateDateColumn` / `@UpdateDateColumn`.
@@ -389,7 +578,7 @@ Ces domaines sont peu couplés au reste du schéma et leurs entités sont lisibl
 - Les enums sont stockés en type `enum` PostgreSQL, pas en `varchar`, pour contraindre les valeurs en base.
 - Les relations multi-valuées sans attribut propre utilisent `@JoinTable` (ex : `tournament_players` entre `Tournament` et `Player`).
 
-## 9. Comment régénérer ce diagramme
+## 11. Comment régénérer ce diagramme
 
 Les diagrammes sont maintenus à la main. À chaque évolution notable d'une entité :
 

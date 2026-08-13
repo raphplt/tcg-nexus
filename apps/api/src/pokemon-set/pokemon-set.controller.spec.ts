@@ -37,6 +37,10 @@ describe("PokemonSetController", () => {
           provide: getRepositoryToken(PokemonSet),
           useValue: {},
         },
+        {
+          provide: R2StorageService,
+          useValue: mockR2StorageService,
+        },
       ],
     }).compile();
 
