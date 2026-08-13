@@ -80,11 +80,6 @@ export class PokemonCardController {
     return this.pokemonCardService.findRandom(serieId, rarity, set);
   }
 
-  /**
-   * Endpoint dédié au scan OCR mobile.
-   * Reçoit les données parsées depuis la photo et retourne les meilleures cartes candidates scorées.
-   * Public pour éviter les problèmes d'auth pendant le scan.
-   */
   @Public()
   @Post("scan-match")
   @ApiOperation({

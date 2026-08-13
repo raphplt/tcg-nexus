@@ -129,6 +129,13 @@ export function AppSidebar() {
     items.filter((item) => {
       if (item.requireAuth && !isAuthenticated) return false;
       if (item.requireRole && user?.role !== item.requireRole) return false;
+      if (
+        item.requireRoles &&
+        (!user ||
+          !item.requireRoles.includes(user.role as "admin" | "moderator"))
+      ) {
+        return false;
+      }
       return true;
     });
 
@@ -185,7 +192,7 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        {user?.role === "admin" && (
+        {(user?.role === "admin" || user?.role === "moderator") && (
           <SidebarGroup>
             <SidebarGroupLabel>{t("groupAdmin")}</SidebarGroupLabel>
             <SidebarMenu>

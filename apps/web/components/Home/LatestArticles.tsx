@@ -1,80 +1,55 @@
-import React from "react";
-import { H2 } from "../Shared/Titles";
-import { Card } from "../ui/card";
-import Image from "next/image";
+"use client";
+
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { ArrowRight } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { ArticleCard } from "@/components/Blog/ArticleCard";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Link } from "@/i18n/navigation";
+import { articleService } from "@/services/article.service";
+import { H2 } from "../Shared/Titles";
 
-interface Article {
-  id: number;
-  title: string;
-  image?: string | null;
-  link?: string | null;
-  content?: string | null;
-  publishedAt?: string | null;
-}
-
-const fetchArticles = async (): Promise<Article[]> => {
-  const res = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3001")
-    }/articles`,
-  );
-  if (!res.ok) throw new Error("ARTICLE_FETCH_FAILED");
-  return res.json();
-};
-
-const LatestArticles = () => {
+/** Displays the latest localized blog publications on the home page. */
+export default function LatestArticles() {
   const t = useTranslations("Home");
+  const blogT = useTranslations("Blog");
+  const locale = useLocale();
   const {
     data: articles,
     isLoading,
     error,
-  } = useQuery<Article[]>({
-    queryKey: ["articles", "latest"],
-    queryFn: fetchArticles,
+  } = useQuery({
+    queryKey: ["articles", "latest", locale],
+    queryFn: () => articleService.getPublished({ locale, limit: 4 }),
+    staleTime: 60_000,
   });
 
   return (
-    <Card className="p-6 mt-8">
-      <H2 className="mb-4">{t("articles.title")}</H2>
+    <Card className="mt-8 p-6">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <H2>{t("articles.title")}</H2>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/blog" className="gap-2">
+            {blogT("viewAll")} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
       {isLoading && <div>{t("common.loading")}</div>}
-      {error && <div className="text-red-500">{t("articles.error")}</div>}
-      <div className="flex flex-col gap-4">
+      {error && <div className="text-destructive">{t("articles.error")}</div>}
+      {articles && articles.length === 0 && (
+        <div className="text-sm text-muted-foreground">{blogT("empty")}</div>
+      )}
+      <div className="grid gap-5 sm:grid-cols-2">
         {articles?.map((article) => (
-          <a
+          <ArticleCard
             key={article.id}
-            href={article.link || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card-hover block rounded-md overflow-hidden border bg-background group"
-          >
-            <div className="relative h-32 w-full">
-              {article.image ? (
-                <Image
-                  src={article.image}
-                  alt={article.title}
-                  fill
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform"
-                  style={{ objectFit: "cover" }}
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-500">
-                  {t("common.noImage")}
-                </div>
-              )}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                <span className="text-white font-semibold text-sm drop-shadow">
-                  {article.title.slice(0, 50)}...
-                </span>
-              </div>
-            </div>
-          </a>
+            article={article}
+            locale={locale}
+            readLabel={blogT("readArticle")}
+          />
         ))}
       </div>
     </Card>
   );
-};
-
-export default LatestArticles;
+}

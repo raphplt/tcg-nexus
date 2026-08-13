@@ -11,6 +11,7 @@ import {
   Package,
   PackageCheck,
   PenLine,
+  Newspaper,
   Plus,
   Search,
   Settings,
@@ -34,6 +35,7 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   requireAuth?: boolean;
   requireRole?: "admin";
+  requireRoles?: Array<"admin" | "moderator">;
   subItems?: SubItem[];
 }
 
@@ -91,6 +93,7 @@ const mainNavItems: NavItem[] = [
 ];
 
 const discoverNavItems: NavItem[] = [
+  { labelKey: "blog", href: "/blog", icon: Newspaper },
   { labelKey: "pokedex", href: "/pokemon", icon: Store },
   {
     labelKey: "miniGames",
@@ -158,6 +161,12 @@ const secondaryNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { labelKey: "admin", href: "/admin", icon: Shield, requireRole: "admin" },
+  {
+    labelKey: "manageBlog",
+    href: "/blog/manage",
+    icon: PenLine,
+    requireRoles: ["admin", "moderator"],
+  },
 ];
 
 export const navItems = {

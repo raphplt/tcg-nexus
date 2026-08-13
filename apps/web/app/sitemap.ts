@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@/i18n/config";
+import { getPublishedArticles } from "@/services/article.service";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://tcg-nexus.org";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: Array<{
@@ -20,25 +21,45 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/tournaments", changeFrequency: "daily", priority: 0.8 },
     { path: "/decks", changeFrequency: "daily", priority: 0.7 },
     { path: "/challenges", changeFrequency: "weekly", priority: 0.6 },
+    { path: "/blog", changeFrequency: "daily", priority: 0.7 },
     { path: "/faq", changeFrequency: "monthly", priority: 0.4 },
     { path: "/auth/login", changeFrequency: "yearly", priority: 0.3 },
     { path: "/auth/register", changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  return staticRoutes.flatMap(({ path, changeFrequency, priority }) =>
-    SUPPORTED_LOCALES.map((locale) => ({
-      url: `${SITE_URL}/${locale}${path}`,
-      lastModified: now,
-      changeFrequency,
-      priority,
-      alternates: {
-        languages: {
-          ...Object.fromEntries(
-            SUPPORTED_LOCALES.map((l) => [l, `${SITE_URL}/${l}${path}`]),
-          ),
-          "x-default": `${SITE_URL}/${DEFAULT_LOCALE}${path}`,
+  const staticEntries = staticRoutes.flatMap(
+    ({ path, changeFrequency, priority }) =>
+      SUPPORTED_LOCALES.map((locale) => ({
+        url: `${SITE_URL}/${locale}${path}`,
+        lastModified: now,
+        changeFrequency,
+        priority,
+        alternates: {
+          languages: {
+            ...Object.fromEntries(
+              SUPPORTED_LOCALES.map((l) => [l, `${SITE_URL}/${l}${path}`]),
+            ),
+            "x-default": `${SITE_URL}/${DEFAULT_LOCALE}${path}`,
+          },
         },
-      },
+      })),
+  );
+
+  const localizedArticles = await Promise.all(
+    SUPPORTED_LOCALES.map(async (locale) => ({
+      locale,
+      articles: await getPublishedArticles({ locale, limit: 50 }),
     })),
   );
+  const articleEntries: MetadataRoute.Sitemap = localizedArticles.flatMap(
+    ({ locale, articles }) =>
+      articles.map((article) => ({
+        url: `${SITE_URL}/${locale}/blog/${article.slug}`,
+        lastModified: new Date(article.updatedAt),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
+  );
+
+  return [...staticEntries, ...articleEntries];
 }
