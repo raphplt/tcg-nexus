@@ -6,7 +6,7 @@ import type {
   SanitizedPokemonCardView,
   SanitizedPlayerView,
 } from "@/types/match-online";
-import type { MatchBoardActionInput } from "@/components/match/MatchBoardView";
+import type { MatchBoardActionInput } from "@/components/match/board/types";
 
 export type InteractionMode =
   | "idle"
@@ -29,10 +29,19 @@ const INITIAL_STATE: InteractionState = {
   hintText: null,
 };
 
+/**
+ * Drives board interactions (select a card, then pick its target).
+ *
+ * @param viewer - Sanitized state of the player using the board.
+ * @param canAct - Whether the player is currently allowed to act.
+ * @param onDispatchAction - Callback used to send the resulting action.
+ * @param t - Translator used for the contextual hints.
+ */
 export function useGameBoardInteraction(
   viewer: SanitizedPlayerView | null,
   canAct: boolean,
   onDispatchAction: (action: MatchBoardActionInput) => void,
+  t: (key: string) => string,
 ) {
   const [state, setState] = useState<InteractionState>(INITIAL_STATE);
 
@@ -53,19 +62,19 @@ export function useGameBoardInteraction(
         setState({
           mode: "placing_pokemon",
           selectedHandCard: card,
-          hintText: "Cliquez sur un emplacement du banc pour jouer ce Pokémon.",
+          hintText: t("hintPlacePokemon"),
         });
       } else if (card.category === "Énergie") {
         setState({
           mode: "attaching_energy",
           selectedHandCard: card,
-          hintText: "Cliquez sur un Pokémon pour attacher cette énergie.",
+          hintText: t("hintAttachEnergy"),
         });
       } else if (card.category === "Pokémon" && card.stage !== "De base") {
         setState({
           mode: "evolving",
           selectedHandCard: card,
-          hintText: "Cliquez sur le Pokémon à faire évoluer.",
+          hintText: t("hintEvolve"),
         });
       } else if (card.category === "Dresseur") {
         onDispatchAction({
@@ -75,7 +84,7 @@ export function useGameBoardInteraction(
         cancel();
       }
     },
-    [canAct, state.selectedHandCard, cancel, onDispatchAction],
+    [canAct, state.selectedHandCard, cancel, onDispatchAction, t],
   );
 
   const selectTarget = useCallback(
@@ -118,9 +127,9 @@ export function useGameBoardInteraction(
     setState({
       mode: "choosing_attack",
       selectedHandCard: null,
-      hintText: "Choisissez une attaque.",
+      hintText: t("hintChooseAttack"),
     });
-  }, [canAct]);
+  }, [canAct, t]);
 
   const closeAttackPanel = useCallback(() => {
     cancel();

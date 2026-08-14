@@ -720,6 +720,16 @@ export class GameEngine {
       type: "SETUP_COMPLETED",
       activePlayerId: this.state.firstPlayerId,
     });
+
+    // Current Pokemon TCG rules: the player going first draws a card on their
+    // opening turn, they are only forbidden from attacking (see `attack`).
+    this.state.turnStep = TurnStep.Draw;
+    this.drawCard(this.state.firstPlayerId, events, true);
+    if (this.state.gamePhase === GamePhase.Finished) {
+      return;
+    }
+
+    this.state.turnStep = TurnStep.Main;
   }
 
   private endTurn(events: any[]) {
@@ -820,24 +830,29 @@ export class GameEngine {
       }
     }
 
-    // Sleep flip: only the active player's active Pokemon
-    const activePlayer = this.state.activePlayerId;
-    const activePlayerPokemon = this.state.players[activePlayer].active;
-    if (
-      activePlayerPokemon?.specialConditions.includes(SpecialCondition.Asleep)
-    ) {
+    // Sleep flip: during the Pokemon Checkup every Asleep Active Pokemon flips,
+    // for both players, not only the one whose turn just ended.
+    for (const playerId of this.state.playerIds) {
+      const activePokemon = this.state.players[playerId].active;
+      if (!activePokemon?.specialConditions.includes(SpecialCondition.Asleep)) {
+        continue;
+      }
+
       if (this.nextRandom() >= 0.5) {
-        activePlayerPokemon.specialConditions =
-          activePlayerPokemon.specialConditions.filter(
+        activePokemon.specialConditions =
+          activePokemon.specialConditions.filter(
             (c) => c !== SpecialCondition.Asleep,
           );
         events.push({
           type: "ASLEEP_REMOVED",
-          playerId: activePlayer,
-          targetInstanceId: activePlayerPokemon.instanceId,
+          playerId,
+          targetInstanceId: activePokemon.instanceId,
         });
       }
     }
+
+    const activePlayer = this.state.activePlayerId;
+    const activePlayerPokemon = this.state.players[activePlayer].active;
 
     // Paralysis: removed at end of the active player's turn
     if (

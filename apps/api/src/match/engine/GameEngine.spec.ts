@@ -413,4 +413,49 @@ describe("GameEngine Basics", () => {
     expect(engine.getState().pendingPrompt?.playerId).toBe("Player2");
     expect(engine.getState().winnerId).toBeNull();
   });
+
+  it("wakes up the Asleep Active Pokemon of both players during checkup", () => {
+    const engine = new GameEngine(initialState);
+    const asleepPokemon = (owner: string) => ({
+      instanceId: `${owner}-active`,
+      ownerId: owner,
+      baseCard: {
+        id: "sleepy",
+        name: "Sleepy",
+        category: "Pokémon",
+        hp: 100,
+        attacks: [],
+      } as any,
+      damageCounters: 0,
+      attachedEnergies: [],
+      specialConditions: ["Asleep"],
+      turnsInPlay: 1,
+      playedThisTurn: false,
+      temporaryEffects: [],
+    });
+
+    initialState.players["Player1"].active = asleepPokemon("Player1") as any;
+    initialState.players["Player2"].active = asleepPokemon("Player2") as any;
+    initialState.players["Player2"].deck = [
+      {
+        instanceId: "card-1",
+        ownerId: "Player2",
+        baseCard: { id: "test", name: "Test", category: "Pokémon" } as any,
+      },
+    ];
+    // Deterministic RNG: this seed yields two "heads" in a row.
+    initialState.rngState = 3;
+
+    const events = engine.dispatch({
+      playerId: "Player1",
+      type: "END_TURN" as any,
+    });
+
+    const wokenUp = events
+      .filter((event) => event.type === "ASLEEP_REMOVED")
+      .map((event) => event.playerId);
+
+    // The non-active player used to be skipped entirely.
+    expect(wokenUp).toContain("Player2");
+  });
 });

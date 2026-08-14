@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
 import {
   BadRequestException,
   ForbiddenException,
@@ -57,6 +58,25 @@ describe("MatchOnlineService", () => {
     reportScore: jest.fn(),
   };
 
+  // The session lock is a no-op here: the callback runs directly, as it would
+  // inside the real transaction. Re-applied in `beforeEach` because
+  // `jest.resetAllMocks()` drops mock implementations.
+  const mockDataSource = { transaction: jest.fn() };
+
+  const applyDataSourceMock = () =>
+    mockDataSource.transaction.mockImplementation(
+      (work: (manager: unknown) => unknown) =>
+        Promise.resolve(
+          work({
+            createQueryBuilder: () => ({
+              setLock: () => ({
+                where: () => ({ getOne: () => Promise.resolve(null) }),
+              }),
+            }),
+          }),
+        ),
+    );
+
   const mockOnlinePlaySupportService = {
     evaluateDeckEligibility: jest.fn(),
     createInitialGameState: jest.fn(),
@@ -89,6 +109,8 @@ describe("MatchOnlineService", () => {
   let mockSessionEntity: OnlineMatchSession;
 
   beforeEach(async () => {
+    applyDataSourceMock();
+
     mockMatchEntity = {
       id: 1,
       status: MatchStatus.SCHEDULED,
@@ -132,6 +154,7 @@ describe("MatchOnlineService", () => {
           provide: OnlinePlaySupportService,
           useValue: mockOnlinePlaySupportService,
         },
+        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 

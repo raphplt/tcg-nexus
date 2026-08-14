@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import type { MatchPromptResponseInput } from "@/components/match/MatchBoardView";
+import type { MatchPromptResponseInput } from "@/components/match/board/types";
 import { cn } from "@/lib/utils";
 import type { PendingPromptView } from "@/types/match-online";
 

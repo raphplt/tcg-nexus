@@ -5,12 +5,12 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { randomUUID } from "crypto";
-import { In, Repository } from "typeorm";
+import { randomInt, randomUUID } from "crypto";
+import { DataSource, In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { User } from "../../user/entities/user.entity";
-import { PlayerAction } from "../engine/actions/Action";
+import { ActionType, PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
@@ -23,6 +23,7 @@ import {
 import { MatchService } from "../match.service";
 import {
   DeckEligibilityResult,
+  GameEvent,
   MatchParticipantSlot,
   OnlineMatchLogEntry,
   OnlineMatchSessionView,
@@ -42,6 +43,7 @@ export class MatchOnlineService {
     private readonly savedDeckRepository: Repository<SavedDeck>,
     private readonly matchService: MatchService,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getDeckEligibility(
@@ -90,6 +92,65 @@ export class MatchOnlineService {
     }
   }
 
+  /**
+   * Builds both participants' views from a single database read, for broadcast.
+   *
+   * @param matchId - Match to render.
+   * @returns Views keyed by user id; empty when the match has no session yet.
+   */
+  async getSessionViewsByUser(
+    matchId: number,
+  ): Promise<Map<number, OnlineMatchSessionView>> {
+    const match = await this.matchRepository.findOne({
+      where: { id: matchId },
+      relations: [
+        "playerA",
+        "playerA.user",
+        "playerB",
+        "playerB.user",
+        "onlineSession",
+      ],
+    });
+
+    const views = new Map<number, OnlineMatchSessionView>();
+    if (!match?.onlineSession) {
+      return views;
+    }
+
+    const playerAUserId = match.playerA?.user?.id;
+    const playerBUserId = match.playerB?.user?.id;
+
+    if (playerAUserId) {
+      views.set(
+        playerAUserId,
+        await this.buildSessionView(match, match.onlineSession, "playerA"),
+      );
+    }
+    if (playerBUserId) {
+      views.set(
+        playerBUserId,
+        await this.buildSessionView(match, match.onlineSession, "playerB"),
+      );
+    }
+
+    return views;
+  }
+
+  /**
+   * Read-only view used for spectators, hiding every hand and pending prompt.
+   *
+   * @returns The spectator view, or null when the match has no session.
+   */
+  async getSpectatorView(
+    matchId: number,
+  ): Promise<OnlineMatchSessionView | null> {
+    try {
+      return await this.buildSpectatorView(matchId);
+    } catch {
+      return null;
+    }
+  }
+
   private async buildSpectatorView(
     matchId: number,
   ): Promise<OnlineMatchSessionView> {
@@ -113,29 +174,32 @@ export class MatchOnlineService {
       throw new NotFoundException("No online session for this match");
     }
 
-    // Use playerA's ID as viewer to get a neutral state (no hands revealed)
-    const spectatorViewerId = this.getEnginePlayerId(match, "playerA");
     let gameState: OnlineMatchSessionView["gameState"] = null;
     if (session.serializedState) {
       const engine = new GameEngine(
         session.serializedState as unknown as GameState,
       );
-      const sanitized = engine.getSanitizedState(spectatorViewerId);
-      // Remove the hand for spectator view (they should not see any player's hand)
+      // Sanitizing against an empty viewer id already hides every hand; the
+      // pending prompt is dropped too because its options can list the cards of
+      // the player being prompted (deck searches, hand discards...).
+      const sanitized = engine.getSanitizedState("");
       if (sanitized.players) {
         for (const pid of Object.keys(sanitized.players)) {
           (sanitized.players as any)[pid].hand = undefined;
         }
       }
-      gameState = sanitized as OnlineMatchSessionView["gameState"];
+      gameState = {
+        ...sanitized,
+        pendingPrompt: null,
+      } as OnlineMatchSessionView["gameState"];
     }
 
     return {
       matchId: match.id,
       sessionId: session.id ?? null,
       status: session.status,
-      slot: "spectator" as any,
-      enginePlayerId: null as any,
+      slot: "spectator",
+      enginePlayerId: null,
       selectedDeckId: null,
       opponentDeckReady: true,
       gameState,
@@ -195,46 +259,76 @@ export class MatchOnlineService {
     return this.buildSessionView(match, session, slot);
   }
 
+  /**
+   * Serializes concurrent writes on a match session.
+   *
+   * The engine reads the whole state, mutates it and writes it back, so two
+   * simultaneous actions would make the last write erase the first move.
+   * A pessimistic lock on the session row makes them queue instead.
+   *
+   * @param matchId - Match owning the session.
+   * @param work - Callback executed while the row is locked.
+   */
+  private async withLockedSession<T>(
+    matchId: number,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    return this.dataSource.transaction(async (manager) => {
+      // Query builder rather than `findOne`: TypeORM would join the match
+      // relation, and PostgreSQL refuses `FOR UPDATE` on an outer join.
+      await manager
+        .createQueryBuilder(OnlineMatchSession, "session")
+        .setLock("pessimistic_write")
+        .where("session.match_id = :matchId", { matchId })
+        .getOne();
+
+      return work();
+    });
+  }
+
   async dispatchAction(
     matchId: number,
     user: User,
     action: PlayerAction,
   ): Promise<{
-    events: any[];
+    events: GameEvent[];
     roomState: Record<string, ReturnType<GameEngine["getSanitizedState"]>>;
     sessionView: OnlineMatchSessionView;
   }> {
-    const { match, slot } = await this.loadMatchForUser(matchId, user.id);
-    const session = await this.requireActiveSession(match);
-    const enginePlayerId = this.getEnginePlayerId(match, slot);
+    return this.withLockedSession(matchId, async () => {
+      const { match, slot } = await this.loadMatchForUser(matchId, user.id);
+      const session = await this.requireActiveSession(match);
+      const enginePlayerId = this.getEnginePlayerId(match, slot);
 
-    if (action.playerId !== enginePlayerId) {
-      throw new ForbiddenException(
-        "You cannot dispatch actions for another player",
+      // The client-provided playerId is always replaced by the authenticated
+      // slot, mirroring the casual flow: one single rule for both modes.
+      const resolvedAction: PlayerAction = {
+        ...action,
+        playerId: enginePlayerId,
+      };
+
+      const engine = new GameEngine(
+        session.serializedState as unknown as GameState,
       );
-    }
+      const events = engine.dispatch(resolvedAction);
+      await this.persistEngineResult(
+        match,
+        session,
+        engine,
+        events,
+        enginePlayerId,
+        {
+          type: "PLAYER_ACTION",
+          action: resolvedAction,
+        },
+      );
 
-    const engine = new GameEngine(
-      session.serializedState as unknown as GameState,
-    );
-    const events = engine.dispatch(action);
-    await this.persistEngineResult(
-      match,
-      session,
-      engine,
-      events,
-      enginePlayerId,
-      {
-        type: "PLAYER_ACTION",
-        action,
-      },
-    );
-
-    return {
-      events,
-      roomState: this.buildRoomState(match, session),
-      sessionView: await this.buildSessionView(match, session, slot),
-    };
+      return {
+        events,
+        roomState: this.buildRoomState(match, session),
+        sessionView: await this.buildSessionView(match, session, slot),
+      };
+    });
   }
 
   async respondPrompt(
@@ -242,86 +336,98 @@ export class MatchOnlineService {
     user: User,
     response: PromptResponse,
   ): Promise<{
-    events: any[];
+    events: GameEvent[];
     roomState: Record<string, ReturnType<GameEngine["getSanitizedState"]>>;
     sessionView: OnlineMatchSessionView;
   }> {
-    const { match, slot } = await this.loadMatchForUser(matchId, user.id);
-    const session = await this.requireActiveSession(match);
-    const enginePlayerId = this.getEnginePlayerId(match, slot);
-    const engine = new GameEngine(
-      session.serializedState as unknown as GameState,
-    );
-    const events = engine.respondToPrompt(enginePlayerId, response);
+    return this.withLockedSession(matchId, async () => {
+      const { match, slot } = await this.loadMatchForUser(matchId, user.id);
+      const session = await this.requireActiveSession(match);
+      const enginePlayerId = this.getEnginePlayerId(match, slot);
+      const engine = new GameEngine(
+        session.serializedState as unknown as GameState,
+      );
+      const events = engine.respondToPrompt(enginePlayerId, response);
 
-    await this.persistEngineResult(
-      match,
-      session,
-      engine,
-      events,
-      enginePlayerId,
-      {
-        type: "PROMPT_RESPONSE",
-        response,
-      },
-    );
+      await this.persistEngineResult(
+        match,
+        session,
+        engine,
+        events,
+        enginePlayerId,
+        {
+          type: "PROMPT_RESPONSE",
+          response,
+        },
+      );
 
-    return {
-      events,
-      roomState: this.buildRoomState(match, session),
-      sessionView: await this.buildSessionView(match, session, slot),
-    };
+      return {
+        events,
+        roomState: this.buildRoomState(match, session),
+        sessionView: await this.buildSessionView(match, session, slot),
+      };
+    });
   }
 
-  async autoForfeit(matchId: number): Promise<{
-    events: any[];
+  /**
+   * Forfeits the match on behalf of the player who stayed disconnected.
+   *
+   * @param matchId - Match to close.
+   * @param userId - User who left; they are the one who forfeits, regardless of
+   *                 whose turn it currently is.
+   * @returns The engine events, or null when the match is already over.
+   * @throws NotFoundException If the match does not exist.
+   * @throws ForbiddenException If the user is not a participant of the match.
+   */
+  async autoForfeit(
+    matchId: number,
+    userId: number,
+  ): Promise<{
+    events: GameEvent[];
     roomState: Record<string, ReturnType<GameEngine["getSanitizedState"]>>;
-  }> {
-    const match = await this.matchRepository.findOne({
-      where: { id: matchId },
-      relations: ["playerA", "playerB", "onlineSession"],
+  } | null> {
+    return this.withLockedSession(matchId, async () => {
+      const { match, slot } = await this.loadMatchForUser(matchId, userId);
+      const session = await this.requireActiveSession(match);
+
+      if (session.status === OnlineMatchSessionStatus.FINISHED) {
+        return null;
+      }
+
+      const engine = new GameEngine(
+        session.serializedState as unknown as GameState,
+      );
+
+      if (engine.getState().gamePhase === GamePhase.Finished) {
+        return null;
+      }
+
+      const enginePlayerId = this.getEnginePlayerId(match, slot);
+      const action: PlayerAction = {
+        playerId: enginePlayerId,
+        type: ActionType.SURRENDER,
+      };
+
+      const events = engine.dispatch(action);
+
+      await this.persistEngineResult(
+        match,
+        session,
+        engine,
+        events,
+        enginePlayerId,
+        {
+          type: "PLAYER_ACTION",
+          action,
+          reason: "AUTO_FORFEIT_TIMEOUT",
+        },
+      );
+
+      return {
+        events,
+        roomState: this.buildRoomState(match, session),
+      };
     });
-
-    if (!match) {
-      throw new NotFoundException("Match not found");
-    }
-
-    const session = await this.requireActiveSession(match);
-    const engine = new GameEngine(
-      session.serializedState as unknown as GameState,
-    );
-
-    const state = engine.getState();
-    const activePlayerId = state.activePlayerId;
-
-    if (!activePlayerId) {
-      return { events: [], roomState: this.buildRoomState(match, session) };
-    }
-
-    const action: PlayerAction = {
-      playerId: activePlayerId,
-      type: "SURRENDER" as any,
-    };
-
-    const events = engine.dispatch(action);
-
-    await this.persistEngineResult(
-      match,
-      session,
-      engine,
-      events,
-      activePlayerId,
-      {
-        type: "PLAYER_ACTION",
-        action,
-        reason: "AUTO_FORFEIT_TIMEOUT",
-      },
-    );
-
-    return {
-      events,
-      roomState: this.buildRoomState(match, session),
-    };
   }
 
   private async loadMatchForUser(matchId: number, userId: number) {
@@ -364,7 +470,9 @@ export class MatchOnlineService {
 
     const session = this.onlineSessionRepository.create({
       match,
-      seed: Date.now().toString(),
+      // Cryptographic seed so the coin flip and shuffles cannot be predicted
+      // from the session creation time.
+      seed: String(randomInt(1, 4294967295)),
       status: OnlineMatchSessionStatus.WAITING_FOR_DECKS,
       playerADeckId: null,
       playerBDeckId: null,
@@ -457,7 +565,7 @@ export class MatchOnlineService {
     match: Match,
     session: OnlineMatchSession,
     engine: GameEngine,
-    events: any[],
+    events: GameEvent[],
     actorPlayerId: string,
     actionPayload: Record<string, unknown>,
   ) {

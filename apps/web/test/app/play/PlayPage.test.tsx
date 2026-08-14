@@ -304,6 +304,7 @@ describe("PlayPage", () => {
             ownDeckSelected: true,
             turnNumber: 7,
             awaitingPlayerAction: true,
+            isRanked: false,
             updatedAt: "2026-03-20T11:10:00.000Z",
             createdAt: "2026-03-20T10:10:00.000Z",
           },

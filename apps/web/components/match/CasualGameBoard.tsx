@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MatchBoardActionInput,
   MatchPromptResponseInput,
-} from "@/components/match/MatchBoardView";
+} from "@/components/match/board/types";
 import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { casualMatchService } from "@/services/casual-match.service";
 import type { CasualSessionView } from "@/types/casual-match";
@@ -21,7 +21,7 @@ import type {
   SanitizedGameState,
 } from "@/types/match-online";
 import { translateApiError } from "@/utils/api-error";
-import { API_BASE_URL } from "@/utils/fetch";
+import { getSocketBaseUrl } from "@/utils/socket";
 
 interface CasualGameBoardProps {
   sessionId: number;
@@ -44,8 +44,14 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
   const sessionQuery = useQuery({
     queryKey: ["casual-matches", sessionId],
     queryFn: () => casualMatchService.getSession(sessionId),
-    refetchInterval: (query) =>
-      query.state.data?.status === "WAITING_FOR_DECKS" ? 5000 : false,
+    // Polling covers the two cases where no live event can arrive: waiting for
+    // the opponent's deck, and a dropped socket during the game.
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (status === "WAITING_FOR_DECKS") return 5000;
+      if (status === "ACTIVE" && !isConnected) return 5000;
+      return false;
+    },
   });
 
   useEffect(() => {
@@ -57,11 +63,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
     }
   }, [sessionQuery.data]);
 
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) return API_BASE_URL;
-    if (typeof window === "undefined") return "";
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   useEffect(() => {
     const activeSession =
@@ -228,7 +230,7 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
           ) : (
             <WifiOff className="h-4 w-4 text-amber-500" />
           )}
-          {isConnected ? t("realtimeConnected") : "Reconnexion..."}
+          {isConnected ? t("realtimeConnected") : t("reconnecting")}
           {opponentDisconnected ? (
             <Badge
               variant="outline"
@@ -244,12 +246,17 @@ export default function CasualGameBoard({ sessionId }: CasualGameBoardProps) {
           <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
-              Match casual 1v1
+              {t("casualMatchTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <Badge>vs {liveSession.opponentName}</Badge>
-            <Badge variant="outline">Session #{liveSession.sessionId}</Badge>
+            <Badge variant="outline">
+              {t("sessionLabel", { id: liveSession.sessionId })}
+            </Badge>
+            <Badge variant={liveSession.isRanked ? "default" : "secondary"}>
+              {liveSession.isRanked ? t("rankedBadge") : t("casualBadge")}
+            </Badge>
           </CardContent>
         </Card>
       }

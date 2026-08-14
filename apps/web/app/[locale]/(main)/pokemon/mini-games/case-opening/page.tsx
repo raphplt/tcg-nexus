@@ -39,8 +39,8 @@ import {
 } from "@/components/ui/select";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import type { PokemonSetType } from "@/types/cardPokemon";
-import { API_BASE_URL } from "@/utils/fetch";
 import { getCardImage } from "@/utils/images";
+import { getSocketBaseUrl } from "@/utils/socket";
 
 const CARD_W = 112;
 const CARD_GAP = 16;
@@ -363,11 +363,7 @@ export default function CaseOpeningPage() {
     onlineSessionRef.current = onlineSession;
   }, [onlineSession]);
 
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) return API_BASE_URL;
-    if (typeof window === "undefined") return "";
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   useEffect(() => {
     pokemonCardService

@@ -29,9 +29,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { pokemonCardService } from "@/services/pokemonCard.service";
 import { sealedProductService } from "@/services/sealed-product.service";
-import { API_BASE_URL } from "@/utils/fetch";
 import { getCardImage } from "@/utils/images";
 import { SEALED_PLACEHOLDER, getSealedImageUrl } from "@/utils/sealedImage";
+import { getSocketBaseUrl } from "@/utils/socket";
 
 interface GuessItem {
   type: "card" | "sealed";
@@ -93,11 +93,7 @@ export default function JustePrixPage() {
   const [onlineTimeLeft, setOnlineTimeLeft] = useState(15);
   const [onlineIsConnected, setOnlineIsConnected] = useState(false);
 
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) return API_BASE_URL;
-    if (typeof window === "undefined") return "";
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   useEffect(() => {
     if (mode !== "online" || !socketBaseUrl) {

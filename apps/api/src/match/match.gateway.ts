@@ -1,7 +1,11 @@
 import {
+  BadRequestException,
   Injectable,
+  Logger,
   OnModuleInit,
   UnauthorizedException,
+  UsePipes,
+  ValidationPipe,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -17,11 +21,22 @@ import {
 import { Server, Socket } from "socket.io";
 import { JwtPayload } from "../auth/interfaces/auth.interface";
 import { UserRole } from "../common/enums/user";
+import { buildWebSocketCorsOptions } from "../common/websocket-cors";
 import { User } from "../user/entities/user.entity";
 import { CasualMatchService } from "./casual/casual-match.service";
 import { MatchmakingService } from "./casual/matchmaking.service";
 import { PlayerAction } from "./engine/actions/Action";
 import { PromptResponse } from "./engine/models/Prompt";
+import {
+  CasualActionSocketDto,
+  CasualPromptSocketDto,
+  JoinCasualSocketDto,
+  JoinMatchmakingSocketDto,
+  JoinMatchSocketDto,
+  MatchActionSocketDto,
+  MatchPromptSocketDto,
+} from "./dto/match-socket.dto";
+import { GameEvent } from "./online/online-match.types";
 import { MatchOnlineService } from "./online/match-online.service";
 
 type AuthenticatedSocket = Socket & {
@@ -34,12 +49,16 @@ type AuthenticatedSocket = Socket & {
 };
 
 @WebSocketGateway({
-  cors: {
-    origin: true,
-    credentials: true,
-  },
+  cors: buildWebSocketCorsOptions(),
   namespace: "/match",
 })
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    transform: true,
+    transformOptions: { enableImplicitConversion: true },
+  }),
+)
 @Injectable()
 export class MatchGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
@@ -47,10 +66,22 @@ export class MatchGateway
   @WebSocketServer()
   server: Server;
 
+  private readonly logger = new Logger(MatchGateway.name);
+
   private static readonly DISCONNECT_GRACE_MS = 30_000;
   private static readonly INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+  // Each game action costs a locked read plus a write, so a spamming client
+  // could saturate the database on its own.
+  private static readonly RATE_LIMIT_WINDOW_MS = 10_000;
+  private static readonly RATE_LIMIT_MAX_MESSAGES = 40;
+
+  private rateLimitBuckets = new Map<
+    string,
+    { count: number; windowStartedAt: number }
+  >();
 
   private inactivityTimers = new Map<number, NodeJS.Timeout>();
+  private casualInactivityTimers = new Map<string, NodeJS.Timeout>();
   // Per-match per-user set of live socket ids. Lets us distinguish "user has
   // another tab still open" from "user is truly gone" before notifying opponent.
   private matchSockets = new Map<number, Map<number, Set<string>>>();
@@ -75,6 +106,13 @@ export class MatchGateway
         result.session.id,
       ),
     );
+    this.matchmakingService.registerMatchFailedHandler((failure) => {
+      for (const userId of failure.userIds) {
+        this.server
+          .to(`matchmaking:${userId}`)
+          .emit("matchmaking_error", { message: failure.message });
+      }
+    });
   }
 
   async handleConnection(client: AuthenticatedSocket) {
@@ -85,9 +123,11 @@ export class MatchGateway
     }
   }
 
-  handleDisconnect(client: AuthenticatedSocket) {
+  async handleDisconnect(client: AuthenticatedSocket) {
     const user = client.data.user;
-    if (user) {
+    // Only leave the queue when the user has no other socket left: closing one
+    // tab should not remove a player who is still queuing from another one.
+    if (user && !(await this.hasOtherLiveSocket(client, user.id))) {
       this.matchmakingService.leaveQueue(user.id);
     }
 
@@ -117,9 +157,50 @@ export class MatchGateway
       }
     }
 
+    this.rateLimitBuckets.delete(client.id);
     client.data.currentMatchId = undefined;
     client.data.currentCasualSessionId = undefined;
     client.data.enginePlayerId = undefined;
+  }
+
+  /**
+   * Enforces a per-socket quota on gameplay messages.
+   *
+   * @param client - Socket sending the message.
+   * @throws BadRequestException If the socket exceeded its quota for the window.
+   */
+  private requireMessageQuota(client: AuthenticatedSocket): void {
+    const now = Date.now();
+    const bucket = this.rateLimitBuckets.get(client.id);
+
+    if (
+      !bucket ||
+      now - bucket.windowStartedAt > MatchGateway.RATE_LIMIT_WINDOW_MS
+    ) {
+      this.rateLimitBuckets.set(client.id, { count: 1, windowStartedAt: now });
+      return;
+    }
+
+    bucket.count += 1;
+    if (bucket.count > MatchGateway.RATE_LIMIT_MAX_MESSAGES) {
+      throw new BadRequestException("Too many actions sent, please slow down");
+    }
+  }
+
+  /**
+   * Checks whether the user still has another connected socket, ignoring the
+   * one currently disconnecting.
+   */
+  private async hasOtherLiveSocket(
+    client: AuthenticatedSocket,
+    userId: number,
+  ): Promise<boolean> {
+    const sockets = await this.server.fetchSockets();
+    return sockets.some(
+      (socket) =>
+        socket.id !== client.id &&
+        (socket as unknown as AuthenticatedSocket).data.user?.id === userId,
+    );
   }
 
   private addUserSocket(
@@ -178,7 +259,7 @@ export class MatchGateway
       this.server
         .to(this.getRoomId(matchId))
         .emit("opponent_disconnected", { userId });
-      this.startInactivityTimer(matchId);
+      this.startInactivityTimer(matchId, userId);
     }, MatchGateway.DISCONNECT_GRACE_MS);
     this.graceTimers.set(key, timer);
   }
@@ -194,6 +275,7 @@ export class MatchGateway
       this.server
         .to(this.getCasualRoomId(sessionId))
         .emit("opponent_disconnected", { userId });
+      this.startCasualInactivityTimer(sessionId, userId);
     }, MatchGateway.DISCONNECT_GRACE_MS);
     this.graceTimers.set(key, timer);
   }
@@ -211,20 +293,30 @@ export class MatchGateway
     return true;
   }
 
-  private startInactivityTimer(matchId: number) {
-    if (this.inactivityTimers.has(matchId)) {
-      clearTimeout(this.inactivityTimers.get(matchId));
-    }
+  /**
+   * Forfeits a tournament match on behalf of the player who left, once the
+   * inactivity delay expired.
+   *
+   * @param matchId - Match to close.
+   * @param userId - User who disconnected; they are the one who forfeits.
+   */
+  private startInactivityTimer(matchId: number, userId: number) {
+    this.clearInactivityTimer(matchId);
 
     const timer = setTimeout(async () => {
       this.inactivityTimers.delete(matchId);
       try {
-        const result = await this.matchOnlineService.autoForfeit(matchId);
-        if (result.events.length > 0) {
+        const result = await this.matchOnlineService.autoForfeit(
+          matchId,
+          userId,
+        );
+        if (result && result.events.length > 0) {
           await this.broadcastMatchState(matchId, result.events);
         }
-      } catch (e) {
-        // match might already be finished or no longer valid
+      } catch (error) {
+        this.logger.warn(
+          `Auto-forfeit failed for match ${matchId}: ${(error as Error).message}`,
+        );
       }
     }, MatchGateway.INACTIVITY_TIMEOUT_MS);
 
@@ -238,66 +330,113 @@ export class MatchGateway
     }
   }
 
+  /**
+   * Casual counterpart of {@link startInactivityTimer}: without it a player who
+   * closes their tab would freeze the session forever for the opponent.
+   */
+  private startCasualInactivityTimer(sessionId: number, userId: number) {
+    const key = this.graceKey("casual", sessionId, userId);
+    this.clearCasualInactivityTimer(sessionId, userId);
+
+    const timer = setTimeout(async () => {
+      this.casualInactivityTimers.delete(key);
+      const stillGone =
+        (this.casualSockets.get(sessionId)?.get(userId)?.size ?? 0) === 0;
+      if (!stillGone) return;
+
+      try {
+        const result = await this.casualMatchService.autoForfeit(
+          sessionId,
+          userId,
+        );
+        if (result && result.events.length > 0) {
+          await this.broadcastCasualState(sessionId, result.events);
+        }
+      } catch (error) {
+        this.logger.warn(
+          `Casual auto-forfeit failed for session ${sessionId}: ${(error as Error).message}`,
+        );
+      }
+    }, MatchGateway.INACTIVITY_TIMEOUT_MS);
+
+    this.casualInactivityTimers.set(key, timer);
+  }
+
+  private clearCasualInactivityTimer(sessionId: number, userId: number) {
+    const key = this.graceKey("casual", sessionId, userId);
+    const timer = this.casualInactivityTimers.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.casualInactivityTimers.delete(key);
+    }
+  }
+
   // ── Tournament match events ──
 
   @SubscribeMessage("join_match")
   async handleJoinMatch(
-    @MessageBody() data: { matchId: number },
+    @MessageBody() data: JoinMatchSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
-    const user = this.requireSocketUser(client);
-    const matchId = Number(data.matchId);
-    const sessionView = await this.matchOnlineService.getSessionView(
-      matchId,
-      user as User,
-    );
-    const roomId = this.getRoomId(matchId);
-    const isSpectator = sessionView.slot === ("spectator" as any);
-
-    client.join(roomId);
-    client.data.currentMatchId = matchId;
-    client.data.enginePlayerId = isSpectator
-      ? null
-      : sessionView.enginePlayerId;
-
-    client.emit("session_view", sessionView);
-    client.emit("state_update", sessionView.gameState);
-
-    if (!isSpectator) {
-      const { wasEmpty } = this.addUserSocket(
-        this.matchSockets,
+    try {
+      const user = this.requireSocketUser(client);
+      const matchId = data.matchId;
+      const sessionView = await this.matchOnlineService.getSessionView(
         matchId,
-        user.id,
-        client.id,
+        user as User,
       );
-      // Reconnection path: cancel any pending grace + auto-forfeit, notify room.
-      const graceCancelled = this.cancelDisconnectGrace(
-        "match",
-        matchId,
-        user.id,
-      );
-      this.clearInactivityTimer(matchId);
-      if (wasEmpty && graceCancelled) {
-        this.server
-          .to(roomId)
-          .emit("opponent_reconnected", { userId: user.id });
+      const roomId = this.getRoomId(matchId);
+      const isSpectator = sessionView.slot === "spectator";
+
+      client.join(roomId);
+      client.data.currentMatchId = matchId;
+      client.data.enginePlayerId = isSpectator
+        ? null
+        : sessionView.enginePlayerId;
+
+      client.emit("session_view", sessionView);
+      client.emit("state_update", sessionView.gameState);
+
+      if (!isSpectator) {
+        const { wasEmpty } = this.addUserSocket(
+          this.matchSockets,
+          matchId,
+          user.id,
+          client.id,
+        );
+        // Reconnection path: cancel any pending grace + auto-forfeit, notify room.
+        const graceCancelled = this.cancelDisconnectGrace(
+          "match",
+          matchId,
+          user.id,
+        );
+        this.clearInactivityTimer(matchId);
+        if (wasEmpty && graceCancelled) {
+          this.server
+            .to(roomId)
+            .emit("opponent_reconnected", { userId: user.id });
+        }
       }
-    }
 
-    return {
-      status: isSpectator ? "spectating" : "joined",
-      matchId,
-      enginePlayerId: isSpectator ? null : sessionView.enginePlayerId,
-    };
+      return {
+        status: isSpectator ? "spectating" : "joined",
+        matchId,
+        enginePlayerId: isSpectator ? null : sessionView.enginePlayerId,
+      };
+    } catch (error: any) {
+      const message = error?.message || "Unable to join this match";
+      client.emit("action_rejected", { message });
+      return { error: message };
+    }
   }
 
   @SubscribeMessage("leave_match")
   async handleLeaveMatch(
-    @MessageBody() data: { matchId: number },
+    @MessageBody() data: JoinMatchSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
-    const matchId = Number(data.matchId);
+    const matchId = data.matchId;
     const roomId = this.getRoomId(matchId);
     client.leave(roomId);
     if (client.data.currentMatchId === matchId) {
@@ -318,18 +457,19 @@ export class MatchGateway
 
   @SubscribeMessage("dispatch_action")
   async handleDispatchAction(
-    @MessageBody() data: { matchId: number; action: PlayerAction },
+    @MessageBody() data: MatchActionSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
+      this.requireMessageQuota(client);
       const user = this.requireSocketUser(client);
       const result = await this.matchOnlineService.dispatchAction(
-        Number(data.matchId),
+        data.matchId,
         user as User,
-        data.action,
+        data.action as unknown as PlayerAction,
       );
 
-      await this.broadcastMatchState(Number(data.matchId), result.events);
+      await this.broadcastMatchState(data.matchId, result.events);
       return { status: "success" };
     } catch (error: any) {
       client.emit("action_rejected", {
@@ -341,18 +481,19 @@ export class MatchGateway
 
   @SubscribeMessage("respond_prompt")
   async handleRespondPrompt(
-    @MessageBody() data: { matchId: number; response: PromptResponse },
+    @MessageBody() data: MatchPromptSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
+      this.requireMessageQuota(client);
       const user = this.requireSocketUser(client);
       const result = await this.matchOnlineService.respondPrompt(
-        Number(data.matchId),
+        data.matchId,
         user as User,
-        data.response,
+        data.response as PromptResponse,
       );
 
-      await this.broadcastMatchState(Number(data.matchId), result.events);
+      await this.broadcastMatchState(data.matchId, result.events);
       return { status: "success" };
     } catch (error: any) {
       client.emit("action_rejected", {
@@ -366,23 +507,27 @@ export class MatchGateway
 
   @SubscribeMessage("matchmaking_join")
   async handleMatchmakingJoin(
-    @MessageBody() data: { deckId: number; isRanked?: boolean },
+    @MessageBody() data: JoinMatchmakingSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
       const user = this.requireSocketUser(client);
       client.join(`matchmaking:${user.id}`);
 
-      client.emit("matchmaking_status", {
-        status: "queued",
-        queueSize: this.matchmakingService.getQueueSize() + 1,
-      });
-
       const result = await this.matchmakingService.joinQueue(
         user.id,
-        Number(data.deckId),
+        data.deckId,
         Boolean(data.isRanked),
       );
+
+      // Confirm the queued state only once the queue actually accepted the
+      // player, otherwise a rejected join would still show "searching".
+      if (!result) {
+        client.emit("matchmaking_status", {
+          status: "queued",
+          queueSize: this.matchmakingService.getQueueSize(),
+        });
+      }
 
       if (result) {
         await this.notifyMatchFound(
@@ -418,53 +563,62 @@ export class MatchGateway
 
   @SubscribeMessage("casual_join")
   async handleCasualJoin(
-    @MessageBody() data: { sessionId: number },
+    @MessageBody() data: JoinCasualSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
-    const user = this.requireSocketUser(client);
-    const sessionId = Number(data.sessionId);
-    const sessionView = await this.casualMatchService.getSessionView(
-      sessionId,
-      user as User,
-    );
-    const roomId = this.getCasualRoomId(sessionId);
+    try {
+      const user = this.requireSocketUser(client);
+      const sessionId = data.sessionId;
+      const sessionView = await this.casualMatchService.getSessionView(
+        sessionId,
+        user as User,
+      );
+      const roomId = this.getCasualRoomId(sessionId);
 
-    client.join(roomId);
-    client.data.currentCasualSessionId = sessionId;
-    client.data.enginePlayerId = sessionView.enginePlayerId;
+      client.join(roomId);
+      client.data.currentCasualSessionId = sessionId;
+      client.data.enginePlayerId = sessionView.enginePlayerId;
 
-    client.emit("casual_session_view", sessionView);
-    client.emit("casual_state_update", sessionView.gameState);
+      client.emit("casual_session_view", sessionView);
+      client.emit("casual_state_update", sessionView.gameState);
 
-    const { wasEmpty } = this.addUserSocket(
-      this.casualSockets,
-      sessionId,
-      user.id,
-      client.id,
-    );
-    const graceCancelled = this.cancelDisconnectGrace(
-      "casual",
-      sessionId,
-      user.id,
-    );
-    if (wasEmpty && graceCancelled) {
-      this.server.to(roomId).emit("opponent_reconnected", { userId: user.id });
+      const { wasEmpty } = this.addUserSocket(
+        this.casualSockets,
+        sessionId,
+        user.id,
+        client.id,
+      );
+      const graceCancelled = this.cancelDisconnectGrace(
+        "casual",
+        sessionId,
+        user.id,
+      );
+      this.clearCasualInactivityTimer(sessionId, user.id);
+      if (wasEmpty && graceCancelled) {
+        this.server
+          .to(roomId)
+          .emit("opponent_reconnected", { userId: user.id });
+      }
+
+      return {
+        status: "joined",
+        sessionId,
+        enginePlayerId: sessionView.enginePlayerId,
+      };
+    } catch (error: any) {
+      const message = error?.message || "Unable to join this session";
+      client.emit("casual_action_rejected", { message });
+      return { error: message };
     }
-
-    return {
-      status: "joined",
-      sessionId,
-      enginePlayerId: sessionView.enginePlayerId,
-    };
   }
 
   @SubscribeMessage("casual_leave")
   async handleCasualLeave(
-    @MessageBody() data: { sessionId: number },
+    @MessageBody() data: JoinCasualSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
-    const sessionId = Number(data.sessionId);
+    const sessionId = data.sessionId;
     const roomId = this.getCasualRoomId(sessionId);
     client.leave(roomId);
     if (client.data.currentCasualSessionId === sessionId) {
@@ -485,18 +639,19 @@ export class MatchGateway
 
   @SubscribeMessage("casual_dispatch_action")
   async handleCasualDispatchAction(
-    @MessageBody() data: { sessionId: number; action: PlayerAction },
+    @MessageBody() data: CasualActionSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
+      this.requireMessageQuota(client);
       const user = this.requireSocketUser(client);
       const result = await this.casualMatchService.dispatchAction(
-        Number(data.sessionId),
+        data.sessionId,
         user as User,
-        data.action,
+        data.action as unknown as PlayerAction,
       );
 
-      await this.broadcastCasualState(Number(data.sessionId), result.events);
+      await this.broadcastCasualState(data.sessionId, result.events);
       return { status: "success" };
     } catch (error: any) {
       client.emit("casual_action_rejected", {
@@ -508,18 +663,19 @@ export class MatchGateway
 
   @SubscribeMessage("casual_respond_prompt")
   async handleCasualRespondPrompt(
-    @MessageBody() data: { sessionId: number; response: PromptResponse },
+    @MessageBody() data: CasualPromptSocketDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     try {
+      this.requireMessageQuota(client);
       const user = this.requireSocketUser(client);
       const result = await this.casualMatchService.respondPrompt(
-        Number(data.sessionId),
+        data.sessionId,
         user as User,
-        data.response,
+        data.response as PromptResponse,
       );
 
-      await this.broadcastCasualState(Number(data.sessionId), result.events);
+      await this.broadcastCasualState(data.sessionId, result.events);
       return { status: "success" };
     } catch (error: any) {
       client.emit("casual_action_rejected", {
@@ -544,48 +700,58 @@ export class MatchGateway
       .emit("matchmaking_matched", { sessionId });
   }
 
-  private async broadcastMatchState(matchId: number, events: any[]) {
+  /**
+   * Pushes the new state to every socket watching a tournament match.
+   *
+   * The per-viewer views are built from a single database read: sanitizing is
+   * per player, not per socket, so extra tabs cost nothing.
+   */
+  private async broadcastMatchState(matchId: number, events: GameEvent[]) {
     const roomId = this.getRoomId(matchId);
     this.server.to(roomId).emit("game_events", events);
 
-    const sockets = await this.server.in(roomId).fetchSockets();
-    await Promise.all(
-      sockets.map(async (socket) => {
-        const user = (socket as unknown as AuthenticatedSocket).data.user;
-        if (!user) {
-          return;
-        }
+    const [sockets, viewsByUser, spectatorView] = await Promise.all([
+      this.server.in(roomId).fetchSockets(),
+      this.matchOnlineService.getSessionViewsByUser(matchId),
+      this.matchOnlineService.getSpectatorView(matchId),
+    ]);
 
-        const sessionView = await this.matchOnlineService.getSessionView(
-          matchId,
-          user as User,
-        );
-        socket.emit("session_view", sessionView);
-        socket.emit("state_update", sessionView.gameState);
-      }),
-    );
+    for (const socket of sockets) {
+      const user = (socket as unknown as AuthenticatedSocket).data.user;
+      if (!user) {
+        continue;
+      }
+
+      const sessionView = viewsByUser.get(user.id) ?? spectatorView;
+      if (!sessionView) {
+        continue;
+      }
+
+      socket.emit("session_view", sessionView);
+      socket.emit("state_update", sessionView.gameState);
+    }
   }
 
-  private async broadcastCasualState(sessionId: number, events: any[]) {
+  /** Casual counterpart of {@link broadcastMatchState}. */
+  private async broadcastCasualState(sessionId: number, events: GameEvent[]) {
     const roomId = this.getCasualRoomId(sessionId);
     this.server.to(roomId).emit("casual_game_events", events);
 
-    const sockets = await this.server.in(roomId).fetchSockets();
-    await Promise.all(
-      sockets.map(async (socket) => {
-        const user = (socket as unknown as AuthenticatedSocket).data.user;
-        if (!user) {
-          return;
-        }
+    const [sockets, viewsByUser] = await Promise.all([
+      this.server.in(roomId).fetchSockets(),
+      this.casualMatchService.getSessionViewsByUser(sessionId),
+    ]);
 
-        const sessionView = await this.casualMatchService.getSessionView(
-          sessionId,
-          user as User,
-        );
-        socket.emit("casual_session_view", sessionView);
-        socket.emit("casual_state_update", sessionView.gameState);
-      }),
-    );
+    for (const socket of sockets) {
+      const user = (socket as unknown as AuthenticatedSocket).data.user;
+      const sessionView = user ? viewsByUser.get(user.id) : null;
+      if (!sessionView) {
+        continue;
+      }
+
+      socket.emit("casual_session_view", sessionView);
+      socket.emit("casual_state_update", sessionView.gameState);
+    }
   }
 
   private async authenticateClient(

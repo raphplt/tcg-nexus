@@ -1,6 +1,7 @@
 import { CasualMatchSessionStatus } from "../entities/casual-match-session.entity";
 import {
   EligibleDeckSummary,
+  GameEvent,
   OnlineMatchLogEntry,
   SanitizedGameState,
 } from "../online/online-match.types";
@@ -42,7 +43,7 @@ export interface CasualSessionView {
 
 export interface CasualActionResult {
   session: CasualSessionView;
-  events: Record<string, unknown>[];
+  events: GameEvent[];
 }
 
 export interface QueueEntry {

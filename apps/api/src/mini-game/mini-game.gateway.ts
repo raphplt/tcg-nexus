@@ -13,6 +13,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Card } from "../card/entities/card.entity";
+import { buildWebSocketCorsOptions } from "../common/websocket-cors";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
 import { UnauthorizedException, Injectable } from "@nestjs/common";
@@ -62,10 +63,7 @@ interface GameSession {
 }
 
 @WebSocketGateway({
-  cors: {
-    origin: true,
-    credentials: true,
-  },
+  cors: buildWebSocketCorsOptions(),
   namespace: "/mini-game",
 })
 @Injectable()

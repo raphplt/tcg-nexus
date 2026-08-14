@@ -1363,7 +1363,17 @@
     "unranked": "Unranked",
     "online": "Online",
     "signIn": "Sign in",
-    "createAccount": "Create an account"
+    "createAccount": "Create an account",
+    "sessionsLabel": "Sessions",
+    "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+    "duelSummary": "1v1 duel • Turn {turn}",
+    "updatedAt": "Updated {date}",
+    "searching": "Searching...",
+    "playersInQueue": "{count, plural, one {# player} other {# players}} in queue",
+    "cancel": "Cancel",
+    "connecting": "Connecting...",
+    "rankedBadge": "Ranked",
+    "casualBadge": "Casual"
   },
   "TrainingLobby": {
     "loading": "Loading AI training...",
@@ -1451,7 +1461,29 @@
     "noPokemon": "No Pokémon",
     "currentTurn": "Current turn",
     "noEvent": "No event",
-    "yourHand": "Your hand"
+    "yourHand": "Your hand",
+    "opponentTurnShort": "Opponent's turn",
+    "turnLabel": "Turn {number}",
+    "arena": "Arena",
+    "victoryUpper": "VICTORY!",
+    "pause": "Pause",
+    "resume": "Resume",
+    "escapeKey": "Esc",
+    "menuTitle": "Menu (Esc)",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "forfeitShort": "Forfeit",
+    "reconnecting": "Reconnecting...",
+    "hintPlacePokemon": "Click a bench slot to play this Pokemon.",
+    "hintAttachEnergy": "Click a Pokemon to attach this energy.",
+    "hintEvolve": "Click the Pokemon you want to evolve.",
+    "hintChooseAttack": "Choose an attack.",
+    "phaseSetup": "Setup",
+    "phaseMulligan": "Mulligan",
+    "phasePlay": "Main",
+    "phaseAttack": "Attack",
+    "phaseFinished": "Finished",
+    "phaseFallback": "Phase"
   },
   "GameBoard": {
     "loading": "Loading the online session...",
@@ -2358,7 +2390,12 @@
     "gameOver": "Game over",
     "gameCancelled": "Game cancelled",
     "newGame": "New game",
-    "back": "Back"
+    "back": "Back",
+    "casualMatchTitle": "Casual 1v1 match",
+    "sessionLabel": "Session #{id}",
+    "rankedBadge": "Ranked",
+    "casualBadge": "Casual",
+    "reconnecting": "Reconnecting..."
   },
   "TrainingBoard": {
     "loading": "Loading the training match...",

@@ -7,7 +7,7 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type {
   MatchBoardActionInput,
   MatchPromptResponseInput,
-} from "@/components/match/MatchBoardView";
+} from "@/components/match/board/types";
 import { cn } from "@/lib/utils";
 
 const sessionStatusKeys: Record<string, string> = {
@@ -88,6 +88,7 @@ export function VisualMatchBoardView({
     viewerPlayer,
     canAct,
     onDispatchAction,
+    t,
   );
 
   const winnerLabel =
@@ -103,6 +104,8 @@ export function VisualMatchBoardView({
   const prevLogLenRef = useRef(recentLog.length);
 
   useEffect(() => {
+    let flashTimeout: ReturnType<typeof setTimeout> | null = null;
+
     if (recentLog.length > prevLogLenRef.current) {
       const newEvents = recentLog.slice(prevLogLenRef.current);
       for (const evt of newEvents) {
@@ -110,12 +113,16 @@ export function VisualMatchBoardView({
         if (type === "ATTACK" || type === "attack") {
           const attackerId = evt.payload.playerId;
           setAttackFlash(attackerId === enginePlayerId ? "player" : "opponent");
-          setTimeout(() => setAttackFlash(null), 600);
+          flashTimeout = setTimeout(() => setAttackFlash(null), 600);
           break;
         }
       }
     }
     prevLogLenRef.current = recentLog.length;
+
+    return () => {
+      if (flashTimeout) clearTimeout(flashTimeout);
+    };
   }, [recentLog, enginePlayerId]);
 
   const confettiParticles = useMemo(() => {
@@ -202,7 +209,9 @@ export function VisualMatchBoardView({
                 return key ? t(key) : sessionStatus;
               })()}
             </HudBadge>
-            <HudBadge>{`Tour ${gameState.turnNumber}`}</HudBadge>
+            <HudBadge>
+              {t("turnLabel", { number: gameState.turnNumber })}
+            </HudBadge>
             <HudBadge>{formatPhaseLabel(gameState.gamePhase, t)}</HudBadge>
             <HudBadge tone={isMyTurn ? "emerald" : "rose"}>
               <span className="flex items-center gap-1.5">
@@ -211,7 +220,7 @@ export function VisualMatchBoardView({
                 ) : (
                   <Zap className="h-3 w-3" />
                 )}
-                {isMyTurn ? t("yourTurn") : "Tour adverse"}
+                {isMyTurn ? t("yourTurn") : t("opponentTurnShort")}
               </span>
             </HudBadge>
             {winnerLabel ? (
@@ -318,7 +327,7 @@ export function VisualMatchBoardView({
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                   <div className="relative">
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-100/25">
-                      Arena
+                      {t("arena")}
                     </span>
 
                     <div
@@ -543,7 +552,9 @@ export function VisualMatchBoardView({
                     : "text-red-400 drop-shadow-[0_0_40px_rgba(248,113,113,0.5)]",
                 )}
               >
-                {winnerLabel === t("victory") ? "VICTOIRE !" : t("defeatUpper")}
+                {winnerLabel === t("victory")
+                  ? t("victoryUpper")
+                  : t("defeatUpper")}
               </motion.h2>
 
               {gameState.winnerReason && (
@@ -708,26 +719,32 @@ function formatPhaseLabel(
   phase: string | null | undefined,
   t: (key: string) => string,
 ) {
-  if (!phase) return "Phase";
+  if (!phase) return t("phaseFallback");
 
   const labels: Record<string, string> = {
-    Setup: "Setup",
-    Mulligan: "Mulligan",
-    Play: "Action",
-    Attack: "Attaque",
+    Setup: t("phaseSetup"),
+    Mulligan: t("phaseMulligan"),
+    Play: t("phasePlay"),
+    Attack: t("phaseAttack"),
     BetweenTurns: t("betweenTurns"),
-    Finished: "Fin",
+    Finished: t("phaseFinished"),
   };
 
   return labels[phase] ?? phase;
 }
 
+/**
+ * Maps an engine end-of-game reason to a readable label.
+ *
+ * Keys mirror the `GameFinishedReason` enum values sent by the API
+ * (`PRIZE_OUT`, `DECK_OUT`, ...), not the enum member names.
+ */
 function formatWinReason(reason: string, t: (key: string) => string): string {
   const reasons: Record<string, string> = {
-    PrizeOut: t("allPrizesTaken"),
-    DeckOut: t("opponentDeckEmpty"),
-    NoPokemon: t("opponentNoPokemon"),
-    Forfeit: t("opponentForfeited"),
+    PRIZE_OUT: t("allPrizesTaken"),
+    DECK_OUT: t("opponentDeckEmpty"),
+    NO_POKEMON: t("opponentNoPokemon"),
+    FORFEIT: t("opponentForfeited"),
   };
   return reasons[reason] ?? reason;
 }

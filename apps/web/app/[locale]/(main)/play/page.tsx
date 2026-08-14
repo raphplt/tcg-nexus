@@ -26,6 +26,7 @@ import {
   type ReactNode,
   Suspense,
   startTransition,
+  useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -65,7 +66,7 @@ import type {
   TrainingSessionSummary,
 } from "@/types/training-match";
 import { translateApiError } from "@/utils/api-error";
-import { API_BASE_URL } from "@/utils/fetch";
+import { getSocketBaseUrl } from "@/utils/socket";
 
 type MatchBucket = "all" | "live" | "ready" | "done";
 type PlayTab = "tournois" | "ia" | "duel";
@@ -1371,7 +1372,7 @@ function PlayTrainingTab({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Sessions
+                  {t("sessionsLabel")}
                 </p>
                 <h3 className="mt-1 text-xl font-bold text-foreground">
                   {t("training")}
@@ -1475,6 +1476,12 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
   const router = useRouter();
   const socketRef = useRef<Socket | null>(null);
   const socketPromiseRef = useRef<Promise<Socket | null> | null>(null);
+  // Queue parameters kept in a ref so the socket "connect" handler can re-join
+  // after a network drop without being re-created on every state change.
+  const queuedRequestRef = useRef<{ deckId: number; isRanked: boolean } | null>(
+    null,
+  );
+  const hasConnectedOnceRef = useRef(false);
   const [selectedDeckId, setSelectedDeckId] = useState<number | null>(null);
   const [isRanked, setIsRanked] = useState(false);
   const [mmStatus, setMmStatus] = useState<MatchmakingStatus>("idle");
@@ -1498,17 +1505,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
       }),
     [query.data?.activeSessions],
   );
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) {
-      return API_BASE_URL;
-    }
-
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   useEffect(() => {
     if (!selectedDeckId && eligibleDecks.length > 0 && eligibleDecks[0]) {
@@ -1532,14 +1529,14 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
     router.push(`/play/casual/${matchedSessionId}`);
   }, [matchedSessionId, router]);
 
-  const disconnectSocket = () => {
+  const disconnectSocket = useCallback(() => {
     socketRef.current?.disconnect();
     socketRef.current = null;
     socketPromiseRef.current = null;
     setIsConnected(false);
-  };
+  }, []);
 
-  const connectSocket = async (): Promise<Socket | null> => {
+  const connectSocket = useCallback(async (): Promise<Socket | null> => {
     if (socketRef.current || !socketBaseUrl) {
       return socketRef.current;
     }
@@ -1558,7 +1555,17 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
         });
 
         socketRef.current = socket;
-        socket.on("connect", () => setIsConnected(true));
+        socket.on("connect", () => {
+          setIsConnected(true);
+          // The server drops queue entries on disconnect, so a reconnection has
+          // to re-announce the player. The very first connect is skipped: the
+          // initial join was already emitted (and buffered) by handleJoinQueue.
+          const queuedRequest = queuedRequestRef.current;
+          if (queuedRequest && hasConnectedOnceRef.current) {
+            socket.emit("matchmaking_join", queuedRequest);
+          }
+          hasConnectedOnceRef.current = true;
+        });
         socket.on("disconnect", () => setIsConnected(false));
         socket.on(
           "matchmaking_status",
@@ -1578,10 +1585,12 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
           },
         );
         socket.on("matchmaking_matched", (data: { sessionId: number }) => {
+          queuedRequestRef.current = null;
           setMmStatus("matched");
           setMatchedSessionId(data.sessionId);
         });
         socket.on("matchmaking_error", (data: { message: string }) => {
+          queuedRequestRef.current = null;
           setLastError(data.message);
           setMmStatus("idle");
           setQueueSize(0);
@@ -1594,31 +1603,36 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
     }
 
     return socketPromiseRef.current;
-  };
+  }, [socketBaseUrl]);
 
-  useEffect(() => {
-    if (mmStatus === "queued") {
-      void connectSocket();
-    }
-
-    return () => {
-      disconnectSocket();
-    };
-  }, [mmStatus, socketBaseUrl]);
+  // Only tear the socket down when the tab unmounts. Reacting to `mmStatus`
+  // here would disconnect the socket right after `matchmaking_join` was
+  // emitted, silently dropping the player from the queue.
+  useEffect(() => disconnectSocket, [disconnectSocket]);
 
   const handleJoinQueue = async () => {
     if (!selectedDeckId) return;
 
     setLastError(null);
+    const request = { deckId: selectedDeckId, isRanked };
+    queuedRequestRef.current = request;
+    setMmStatus("queued");
+
     const socket = socketRef.current || (await connectSocket());
 
-    if (socket) {
-      socket.emit("matchmaking_join", { deckId: selectedDeckId, isRanked });
-      setMmStatus("queued");
+    if (!socket) {
+      queuedRequestRef.current = null;
+      setMmStatus("idle");
+      setLastError(t("duelLoadError"));
+      return;
     }
+
+    // socket.io buffers emits issued before the handshake completes.
+    socket.emit("matchmaking_join", request);
   };
 
   const handleLeaveQueue = () => {
+    queuedRequestRef.current = null;
     socketRef.current?.emit("matchmaking_leave");
     setMmStatus("idle");
     setQueueSize(0);
@@ -1657,8 +1671,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 </h2>
               </div>
               <Badge variant="outline">
-                {activeSessions.length} session
-                {activeSessions.length > 1 ? "s" : ""}
+                {t("sessionCount", { count: activeSessions.length })}
               </Badge>
             </div>
 
@@ -1691,7 +1704,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
 
             {mmStatus === "queued" ? (
               <div className="rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-muted-foreground">
-                {isConnected ? t("connected") : "Connexion..."}
+                {isConnected ? t("connected") : t("connecting")}
               </div>
             ) : null}
           </div>
@@ -1716,11 +1729,11 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <div className="space-y-1">
                     <p className="text-sm font-semibold">
-                      Recherche en cours...
+                      {t("searching")}
                     </p>
                     <p className="text-xs text-amber-700/80">
                       {queueSize > 1
-                        ? `${queueSize} joueurs actuellement dans la file`
+                        ? t("playersInQueue", { count: queueSize })
                         : t("waitingForPlayer")}
                     </p>
                   </div>
@@ -1732,7 +1745,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 className="w-full"
                 onClick={handleLeaveQueue}
               >
-                Annuler
+                {t("cancel")}
               </Button>
             </div>
           ) : eligibleDecks.length ? (
@@ -1827,18 +1840,27 @@ function CasualSessionCard({ session }: { session: CasualSessionSummary }) {
             vs {session.opponentName}
           </p>
           <p className="text-sm text-muted-foreground">
-            Duel 1v1 • Tour {session.turnNumber}
+            {t("duelSummary", { turn: session.turnNumber })}
           </p>
         </div>
-        <Badge variant={session.awaitingPlayerAction ? "default" : "secondary"}>
-          {session.awaitingPlayerAction
-            ? t("yourTurnShort")
-            : t("opponentTurn")}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline">
+            {session.isRanked ? t("rankedBadge") : t("casualBadge")}
+          </Badge>
+          <Badge
+            variant={session.awaitingPlayerAction ? "default" : "secondary"}
+          >
+            {session.awaitingPlayerAction
+              ? t("yourTurnShort")
+              : t("opponentTurn")}
+          </Badge>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>Mise à jour {formatPlayDate(locale, session.updatedAt)}</span>
+        <span>
+          {t("updatedAt", { date: formatPlayDate(locale, session.updatedAt) })}
+        </span>
         <Button asChild variant="outline" className="">
           <Link href={`/play/casual/${session.sessionId}`}>
             {t("continue")}
