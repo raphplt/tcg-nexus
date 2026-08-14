@@ -13,7 +13,7 @@ import { io, Socket } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import { notificationService } from "@/services/notification.service";
 import { UserNotification } from "@/types/notification";
-import { API_BASE_URL } from "@/utils/fetch";
+import { getSocketBaseUrl } from "@/utils/socket";
 import toast from "react-hot-toast";
 
 interface NotificationContextType {
@@ -39,15 +39,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = React.useRef<Socket | null>(null);
 
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) {
-      return API_BASE_URL;
-    }
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   const fetchNotifications = useCallback(
     async (page = 1, limit = 20) => {

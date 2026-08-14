@@ -7,6 +7,9 @@ export type OnlineMatchSessionStatus =
 
 export type MatchParticipantSlot = "playerA" | "playerB";
 
+/** Slot exposed in a session view: participants, or a read-only spectator. */
+export type MatchViewerSlot = MatchParticipantSlot | "spectator";
+
 export interface DeckEligibilityReason {
   code:
     | "NOT_OWNER"
@@ -131,10 +134,21 @@ export interface OnlineMatchSessionView {
   matchId: number;
   sessionId: number | null;
   status: OnlineMatchSessionStatus;
-  slot: MatchParticipantSlot | null;
+  slot: MatchViewerSlot | null;
   enginePlayerId: string | null;
   selectedDeckId: number | null;
   opponentDeckReady: boolean;
   gameState: SanitizedGameState | null;
   recentLog: OnlineMatchLogEntry[];
+}
+
+/**
+ * Event emitted by the game engine and relayed to the clients.
+ *
+ * The engine produces heterogeneous payloads (damage, draws, knockouts...),
+ * all sharing a discriminating `type`.
+ */
+export interface GameEvent {
+  type: string;
+  [key: string]: unknown;
 }

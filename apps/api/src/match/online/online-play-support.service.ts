@@ -125,6 +125,7 @@ export class OnlinePlaySupportService {
       });
     }
 
+    // Any card carrying enough data is accepted; only unmappable ones block play.
     for (const deckCard of mainboardCards) {
       const card = deckCard.card;
       if (!card || !card.name) {
@@ -144,10 +145,7 @@ export class OnlinePlaySupportService {
           tcgDexId: card.tcgDexId,
           cardName: card.name,
         });
-        continue;
       }
-
-      // All cards with valid data are accepted for online play
     }
 
     return {

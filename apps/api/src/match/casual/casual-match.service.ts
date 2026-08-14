@@ -2,17 +2,18 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { randomUUID } from "crypto";
-import { In, Repository } from "typeorm";
+import { randomInt, randomUUID } from "crypto";
+import { DataSource, EntityManager, In, Repository } from "typeorm";
 import { Deck } from "../../deck/entities/deck.entity";
 import { SavedDeck } from "../../deck/entities/saved-deck.entity";
 import { Player } from "../../player/entities/player.entity";
 import { RankingService } from "../../ranking/ranking.service";
 import { User } from "../../user/entities/user.entity";
-import { PlayerAction } from "../engine/actions/Action";
+import { ActionType, PlayerAction } from "../engine/actions/Action";
 import { GameEngine } from "../engine/GameEngine";
 import { GameFinishedReason, GamePhase } from "../engine/models/enums";
 import { GameState } from "../engine/models/GameState";
@@ -21,7 +22,7 @@ import {
   CasualMatchSession,
   CasualMatchSessionStatus,
 } from "../entities/casual-match-session.entity";
-import { OnlineMatchLogEntry } from "../online/online-match.types";
+import { GameEvent, OnlineMatchLogEntry } from "../online/online-match.types";
 import { OnlinePlaySupportService } from "../online/online-play-support.service";
 import {
   CasualActionResult,
@@ -33,6 +34,8 @@ import {
 
 @Injectable()
 export class CasualMatchService {
+  private readonly logger = new Logger(CasualMatchService.name);
+
   constructor(
     @InjectRepository(CasualMatchSession)
     private readonly sessionRepository: Repository<CasualMatchSession>,
@@ -44,7 +47,138 @@ export class CasualMatchService {
     private readonly playerRepository: Repository<Player>,
     private readonly onlinePlaySupportService: OnlinePlaySupportService,
     private readonly rankingService: RankingService,
+    private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * Loads a session inside a transaction holding a pessimistic write lock.
+   *
+   * Every mutation goes through this helper: two concurrent actions on the same
+   * session (double click, second tab, auto-forfeit racing a player move) would
+   * otherwise both read the same state and the last write would silently
+   * discard the other move.
+   *
+   * @param sessionId - Session to lock.
+   * @param userId - User requesting the mutation, used to resolve their slot.
+   * @param work - Callback executed while the row is locked.
+   * @returns Whatever the callback returns.
+   * @throws NotFoundException If the session does not exist.
+   * @throws ForbiddenException If the user is not a participant.
+   */
+  private async withLockedSession<T>(
+    sessionId: number,
+    userId: number,
+    work: (context: {
+      manager: EntityManager;
+      session: CasualMatchSession;
+      slot: CasualMatchSlot;
+    }) => Promise<T>,
+  ): Promise<T> {
+    return this.dataSource.transaction(async (manager) => {
+      // Lock first without relations: PostgreSQL rejects `FOR UPDATE` on the
+      // nullable side of the outer joins TypeORM generates for relations.
+      const locked = await manager.findOne(CasualMatchSession, {
+        where: { id: sessionId },
+        lock: { mode: "pessimistic_write" },
+      });
+
+      if (!locked) {
+        throw new NotFoundException("Casual match session not found");
+      }
+
+      const session = await manager.findOne(CasualMatchSession, {
+        where: { id: sessionId },
+        relations: ["playerA", "playerB"],
+      });
+
+      if (!session) {
+        throw new NotFoundException("Casual match session not found");
+      }
+
+      return work({
+        manager,
+        session,
+        slot: this.resolveSlot(session, userId),
+      });
+    });
+  }
+
+  /**
+   * Resolves which side of the session a user plays on.
+   *
+   * @throws ForbiddenException If the user is not a participant.
+   */
+  private resolveSlot(
+    session: CasualMatchSession,
+    userId: number,
+  ): CasualMatchSlot {
+    if (session.playerA.id === userId) {
+      return "playerA";
+    }
+
+    if (session.playerB.id === userId) {
+      return "playerB";
+    }
+
+    throw new ForbiddenException("You are not a participant in this session");
+  }
+
+  /**
+   * Tells whether a user already has a session waiting or in progress.
+   * Used by the matchmaking queue to refuse a second concurrent game.
+   */
+  async hasOngoingSession(userId: number): Promise<boolean> {
+    const ongoingStatuses = In([
+      CasualMatchSessionStatus.WAITING_FOR_DECKS,
+      CasualMatchSessionStatus.ACTIVE,
+    ]);
+
+    const count = await this.sessionRepository.count({
+      where: [
+        { playerA: { id: userId }, status: ongoingStatuses },
+        { playerB: { id: userId }, status: ongoingStatuses },
+      ],
+    });
+
+    return count > 0;
+  }
+
+  /**
+   * Validates upfront everything a pairing will need: a player profile and a
+   * deck that the engine can actually load.
+   *
+   * @throws BadRequestException If the player profile or the deck is unusable.
+   * @throws NotFoundException If the deck does not exist for this user.
+   */
+  async assertCanQueue(userId: number, deckId: number): Promise<void> {
+    await this.loadPlayerForUser(userId);
+    await this.requireEligibleDeck(deckId, userId);
+  }
+
+  /**
+   * Loads a session with both participants, without any access control.
+   * Reserved for internal callers such as the matchmaking service.
+   */
+  async findSessionById(sessionId: number): Promise<CasualMatchSession | null> {
+    return this.sessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["playerA", "playerB"],
+    });
+  }
+
+  /**
+   * Cancels a session that was created but never became playable, so it stops
+   * showing up as an ongoing game in both lobbies.
+   */
+  async cancelOrphanSession(sessionId: number): Promise<void> {
+    await this.sessionRepository.update(
+      { id: sessionId, status: CasualMatchSessionStatus.WAITING_FOR_DECKS },
+      {
+        status: CasualMatchSessionStatus.CANCELLED,
+        endedReason: "Pairing failed",
+      },
+    );
+  }
 
   async getLobby(user: User): Promise<CasualLobbyView> {
     const [decks, sessions, savedIds] = await Promise.all([
@@ -94,7 +228,10 @@ export class CasualMatchService {
     playerBUser: User,
     isRanked: boolean = false,
   ): Promise<CasualMatchSession> {
-    const seed = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
+    // Cryptographic seed: a timestamp-based one is guessable, which would let a
+    // player predict the coin flip and their opening draw. Kept under 2^32 so
+    // it survives the `Number()` conversion done by the engine RNG.
+    const seed = String(randomInt(1, 4294967295));
 
     const session = this.sessionRepository.create({
       playerA: playerAUser,
@@ -117,49 +254,76 @@ export class CasualMatchService {
     return this.sessionRepository.save(session);
   }
 
+  /**
+   * Assigns a deck to the requesting player and starts the game once both
+   * players are ready.
+   *
+   * @throws BadRequestException If the session no longer accepts decks or the deck is ineligible.
+   */
   async selectDeck(
     sessionId: number,
     user: User,
     deckId: number,
   ): Promise<CasualSessionView> {
-    const { session, slot } = await this.loadSessionForUser(sessionId, user.id);
+    const deck = await this.requireEligibleDeck(deckId, user.id);
 
-    if (
-      session.status !== CasualMatchSessionStatus.WAITING_FOR_DECKS &&
-      session.status !== CasualMatchSessionStatus.ACTIVE
-    ) {
-      throw new BadRequestException(
-        "This session no longer accepts deck changes",
-      );
-    }
+    return this.withLockedSession(
+      sessionId,
+      user.id,
+      async ({ manager, session, slot }) => {
+        if (
+          session.status !== CasualMatchSessionStatus.WAITING_FOR_DECKS &&
+          session.status !== CasualMatchSessionStatus.ACTIVE
+        ) {
+          throw new BadRequestException(
+            "This session no longer accepts deck changes",
+          );
+        }
 
-    const deck = await this.loadOwnedDeck(deckId, user.id);
-    const savedIds = await this.loadSavedDeckIds(user.id);
+        if (slot === "playerA") {
+          session.playerADeckId = deck.id;
+        } else {
+          session.playerBDeckId = deck.id;
+        }
+
+        this.appendLog(session, "ACTION", String(user.id), {
+          type: "DECK_SELECTED",
+          deckId: deck.id,
+        });
+
+        await this.tryStartSession(session);
+        await manager.save(session);
+        return this.buildSessionView(session, slot);
+      },
+    );
+  }
+
+  /**
+   * Loads a deck the user is allowed to play and validates it against the
+   * online engine requirements.
+   *
+   * @throws NotFoundException If the deck is neither owned nor saved by the user.
+   * @throws BadRequestException If the deck is not eligible for online play.
+   */
+  private async requireEligibleDeck(
+    deckId: number,
+    userId: number,
+  ): Promise<Deck> {
+    const deck = await this.loadOwnedDeck(deckId, userId);
+    const savedIds = await this.loadSavedDeckIds(userId);
     const eligibility = this.onlinePlaySupportService.evaluateDeckEligibility(
       deck,
-      user.id,
+      userId,
       new Set(savedIds),
     );
+
     if (!eligibility.eligible) {
       throw new BadRequestException(
         "Selected deck is not eligible for online play",
       );
     }
 
-    if (slot === "playerA") {
-      session.playerADeckId = deck.id;
-    } else {
-      session.playerBDeckId = deck.id;
-    }
-
-    this.appendLog(session, "ACTION", String(user.id), {
-      type: "DECK_SELECTED",
-      deckId: deck.id,
-    });
-
-    await this.tryStartSession(session);
-    await this.sessionRepository.save(session);
-    return this.buildSessionView(session, slot);
+    return deck;
   }
 
   async getSessionView(
@@ -170,80 +334,188 @@ export class CasualMatchService {
     return this.buildSessionView(session, slot);
   }
 
+  /**
+   * Builds both players' views from a single database read.
+   *
+   * Broadcasting used to reload the session once per connected socket; a game
+   * with two players and a couple of tabs open meant four identical queries and
+   * four engine instantiations per action.
+   *
+   * @param sessionId - Session to render.
+   * @returns Views keyed by user id.
+   */
+  async getSessionViewsByUser(
+    sessionId: number,
+  ): Promise<Map<number, CasualSessionView>> {
+    const session = await this.sessionRepository.findOne({
+      where: { id: sessionId },
+      relations: ["playerA", "playerB"],
+    });
+
+    if (!session) {
+      throw new NotFoundException("Casual match session not found");
+    }
+
+    return new Map<number, CasualSessionView>([
+      [session.playerA.id, this.buildSessionView(session, "playerA")],
+      [session.playerB.id, this.buildSessionView(session, "playerB")],
+    ]);
+  }
+
+  /**
+   * Applies a player action to the engine and persists the resulting state.
+   *
+   * The `playerId` carried by the payload is always overwritten with the slot
+   * of the authenticated user, so a client cannot act for its opponent.
+   *
+   * @throws BadRequestException If the session is not active.
+   */
   async dispatchAction(
     sessionId: number,
     user: User,
     action: PlayerAction,
   ): Promise<CasualActionResult> {
-    const { session, slot } = await this.loadSessionForUser(sessionId, user.id);
-    this.requireActive(session);
-    const enginePlayerId = this.getEnginePlayerId(session, slot);
+    return this.withLockedSession(
+      sessionId,
+      user.id,
+      async ({ manager, session, slot }) => {
+        this.requireActive(session);
+        const enginePlayerId = this.getEnginePlayerId(session, slot);
+        const resolvedAction: PlayerAction = {
+          ...action,
+          playerId: enginePlayerId,
+        };
 
-    // Auto-set playerId from the authenticated user's slot
-    const resolvedAction: PlayerAction = {
-      ...action,
-      playerId: enginePlayerId,
-    };
+        const engine = new GameEngine(
+          session.serializedState as unknown as GameState,
+        );
+        const events = engine.dispatch(resolvedAction);
 
-    const engine = new GameEngine(
-      session.serializedState as unknown as GameState,
+        this.appendLog(session, "ACTION", enginePlayerId, {
+          type: "PLAYER_ACTION",
+          action: resolvedAction,
+        });
+        this.appendEvents(session, enginePlayerId, events);
+        await this.syncSessionFromEngine(session, engine.getState());
+        await manager.save(session);
+
+        return {
+          session: this.buildSessionView(session, slot),
+          events,
+        };
+      },
     );
-    const events = engine.dispatch(resolvedAction);
-
-    this.appendLog(session, "ACTION", enginePlayerId, {
-      type: "PLAYER_ACTION",
-      action: resolvedAction,
-    });
-    this.appendEvents(session, enginePlayerId, events);
-    this.syncSessionFromEngine(session, engine.getState());
-    await this.sessionRepository.save(session);
-
-    return {
-      session: this.buildSessionView(session, slot),
-      events,
-    };
   }
 
+  /**
+   * Answers the prompt currently assigned to the requesting player.
+   *
+   * @throws BadRequestException If the session is not active.
+   */
   async respondPrompt(
     sessionId: number,
     user: User,
     response: PromptResponse,
   ): Promise<CasualActionResult> {
-    const { session, slot } = await this.loadSessionForUser(sessionId, user.id);
-    this.requireActive(session);
-    const enginePlayerId = this.getEnginePlayerId(session, slot);
+    return this.withLockedSession(
+      sessionId,
+      user.id,
+      async ({ manager, session, slot }) => {
+        this.requireActive(session);
+        const enginePlayerId = this.getEnginePlayerId(session, slot);
 
-    const engine = new GameEngine(
-      session.serializedState as unknown as GameState,
+        const engine = new GameEngine(
+          session.serializedState as unknown as GameState,
+        );
+        const events = engine.respondToPrompt(enginePlayerId, response);
+
+        this.appendLog(session, "ACTION", enginePlayerId, {
+          type: "PROMPT_RESPONSE",
+          response,
+        });
+        this.appendEvents(session, enginePlayerId, events);
+        await this.syncSessionFromEngine(session, engine.getState());
+        await manager.save(session);
+
+        return {
+          session: this.buildSessionView(session, slot),
+          events,
+        };
+      },
     );
-    const events = engine.respondToPrompt(enginePlayerId, response);
-
-    this.appendLog(session, "ACTION", enginePlayerId, {
-      type: "PROMPT_RESPONSE",
-      response,
-    });
-    this.appendEvents(session, enginePlayerId, events);
-    this.syncSessionFromEngine(session, engine.getState());
-    await this.sessionRepository.save(session);
-
-    return {
-      session: this.buildSessionView(session, slot),
-      events,
-    };
   }
 
   async cancelSession(sessionId: number, userId: number): Promise<void> {
-    const { session } = await this.loadSessionForUser(sessionId, userId);
-    if (session.status === CasualMatchSessionStatus.FINISHED) {
-      return;
-    }
+    await this.withLockedSession(
+      sessionId,
+      userId,
+      async ({ manager, session }) => {
+        if (session.status === CasualMatchSessionStatus.FINISHED) {
+          return;
+        }
 
-    session.status = CasualMatchSessionStatus.CANCELLED;
-    session.endedReason = "Cancelled";
-    this.appendLog(session, "EVENT", String(userId), {
-      type: "SESSION_CANCELLED",
-    });
-    await this.sessionRepository.save(session);
+        session.status = CasualMatchSessionStatus.CANCELLED;
+        session.endedReason = "Cancelled";
+        this.appendLog(session, "EVENT", String(userId), {
+          type: "SESSION_CANCELLED",
+        });
+        await manager.save(session);
+      },
+    );
+  }
+
+  /**
+   * Forfeits the game on behalf of a player who stayed disconnected past the
+   * grace period, so the remaining player is not stuck in a frozen session.
+   *
+   * Unlike a regular action this targets the *absent* player, never the one
+   * whose turn it happens to be.
+   *
+   * @param sessionId - Session to close.
+   * @param userId - User who left the game.
+   * @returns The events produced by the engine, empty if the session already ended.
+   */
+  async autoForfeit(
+    sessionId: number,
+    userId: number,
+  ): Promise<CasualActionResult | null> {
+    return this.withLockedSession(
+      sessionId,
+      userId,
+      async ({ manager, session, slot }) => {
+        if (
+          session.status !== CasualMatchSessionStatus.ACTIVE ||
+          !session.serializedState
+        ) {
+          return null;
+        }
+
+        const enginePlayerId = this.getEnginePlayerId(session, slot);
+        const action: PlayerAction = {
+          playerId: enginePlayerId,
+          type: ActionType.SURRENDER,
+        };
+
+        const engine = new GameEngine(
+          session.serializedState as unknown as GameState,
+        );
+        const events = engine.dispatch(action);
+
+        this.appendLog(session, "ACTION", enginePlayerId, {
+          type: "PLAYER_ACTION",
+          action,
+          reason: "AUTO_FORFEIT_DISCONNECTED",
+        });
+        this.appendEvents(session, enginePlayerId, events);
+        await this.syncSessionFromEngine(session, engine.getState());
+        await manager.save(session);
+
+        return {
+          session: this.buildSessionView(session, slot),
+          events,
+        };
+      },
+    );
   }
 
   private async tryStartSession(session: CasualMatchSession): Promise<void> {
@@ -373,7 +645,10 @@ export class CasualMatchService {
     };
   }
 
-  private syncSessionFromEngine(session: CasualMatchSession, state: GameState) {
+  private async syncSessionFromEngine(
+    session: CasualMatchSession,
+    state: GameState,
+  ) {
     session.serializedState = state as unknown as Record<string, unknown>;
 
     if (state.gamePhase === GamePhase.Finished && state.winnerId) {
@@ -391,13 +666,25 @@ export class CasualMatchService {
       session.endedReason = state.winnerReason;
 
       if (session.isRanked) {
-        this.rankingService
-          .updateEloWithHistory(winnerUserId, loserUserId, {
-            casualSessionId: session.id,
-          })
-          .catch((err) =>
-            console.error("Failed to update ELO after ranked match", err),
+        try {
+          await this.rankingService.updateEloWithHistory(
+            winnerUserId,
+            loserUserId,
+            { casualSessionId: session.id },
           );
+        } catch (error) {
+          // The game result itself stays valid: only the rating update failed,
+          // so the log keeps a trace instead of rolling back the whole match.
+          this.appendLog(session, "EVENT", undefined, {
+            type: "ELO_UPDATE_FAILED",
+            winnerUserId,
+            loserUserId,
+          });
+          this.logger.error(
+            `Failed to update ELO after ranked session ${session.id}`,
+            error as Error,
+          );
+        }
       }
       return;
     }
@@ -405,23 +692,25 @@ export class CasualMatchService {
     session.status = CasualMatchSessionStatus.ACTIVE;
   }
 
+  /**
+   * Maps a session slot to its engine player id.
+   *
+   * Engine ids are assigned in `playerIds` order when the game starts:
+   * index 0 is always playerA, index 1 always playerB.
+   *
+   * @throws BadRequestException If the game has not started yet.
+   */
   private getEnginePlayerId(
     session: CasualMatchSession,
     slot: CasualMatchSlot,
   ): string {
-    if (!session.serializedState) {
+    const enginePlayerId = this.getEnginePlayerIdSafe(session, slot);
+
+    if (!enginePlayerId) {
       throw new BadRequestException("Session has not started yet");
     }
 
-    const state = session.serializedState as unknown as GameState;
-    const userId = slot === "playerA" ? session.playerA.id : session.playerB.id;
-
-    const playerId = state.playerIds.find((pid) => {
-      const player = state.players[pid];
-      return player && player.playerId === pid;
-    });
-
-    return slot === "playerA" ? state.playerIds[0] : state.playerIds[1];
+    return enginePlayerId;
   }
 
   private getEnginePlayerIdSafe(
@@ -458,21 +747,13 @@ export class CasualMatchService {
       throw new NotFoundException("Casual match session not found");
     }
 
-    if (session.playerA.id === userId) {
-      return { session, slot: "playerA" };
-    }
-
-    if (session.playerB.id === userId) {
-      return { session, slot: "playerB" };
-    }
-
-    throw new ForbiddenException("You are not a participant in this session");
+    return { session, slot: this.resolveSlot(session, userId) };
   }
 
   private appendEvents(
     session: CasualMatchSession,
     actorPlayerId: string,
-    events: Record<string, unknown>[],
+    events: GameEvent[],
   ) {
     for (const event of events) {
       this.appendLog(session, "EVENT", actorPlayerId, event);

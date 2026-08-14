@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   MatchBoardActionInput,
   MatchPromptResponseInput,
-} from "@/components/match/MatchBoardView";
+} from "@/components/match/board/types";
 import { VisualMatchBoardView } from "@/components/match/board/VisualMatchBoardView";
 import { matchOnlineService } from "@/services/match-online.service";
 import { useMatchStore } from "@/store/useMatchStore";
@@ -20,7 +20,7 @@ import {
   SanitizedGameState,
 } from "@/types/match-online";
 import { translateApiError } from "@/utils/api-error";
-import { API_BASE_URL } from "@/utils/fetch";
+import { getSocketBaseUrl } from "@/utils/socket";
 
 interface GameBoardProps {
   matchId: number;
@@ -86,17 +86,7 @@ export default function GameBoard({ matchId }: GameBoardProps) {
     }
   }, [sessionQuery.data, setError, setSessionView]);
 
-  const socketBaseUrl = useMemo(() => {
-    if (API_BASE_URL.startsWith("http")) {
-      return API_BASE_URL;
-    }
-
-    if (typeof window === "undefined") {
-      return "";
-    }
-
-    return new URL(API_BASE_URL, window.location.origin).toString();
-  }, []);
+  const socketBaseUrl = useMemo(() => getSocketBaseUrl(), []);
 
   useEffect(() => {
     const activeSession =

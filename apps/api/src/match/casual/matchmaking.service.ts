@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
   OnModuleInit,
 } from "@nestjs/common";
@@ -17,6 +19,12 @@ export interface MatchmakingResult {
   session: CasualMatchSession;
   playerAUserId: number;
   playerBUserId: number;
+}
+
+/** Emitted when a pairing could not be turned into a playable session. */
+export interface MatchmakingFailure {
+  userIds: number[];
+  message: string;
 }
 
 @Injectable()
@@ -36,6 +44,9 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
   // a circular dependency on the gateway itself.
   private onMatchFound:
     | ((result: MatchmakingResult) => void | Promise<void>)
+    | null = null;
+  private onMatchFailed:
+    | ((failure: MatchmakingFailure) => void | Promise<void>)
     | null = null;
 
   constructor(
@@ -66,6 +77,16 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
     this.onMatchFound = handler;
   }
 
+  /**
+   * Registers the callback used to warn both players when a pairing failed,
+   * so nobody silently drops out of the queue without feedback.
+   */
+  registerMatchFailedHandler(
+    handler: (failure: MatchmakingFailure) => void | Promise<void>,
+  ) {
+    this.onMatchFailed = handler;
+  }
+
   isQueued(userId: number): boolean {
     return this.queue.has(userId);
   }
@@ -74,6 +95,18 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
     return this.queue.size;
   }
 
+  /**
+   * Adds a player to the matchmaking queue and immediately tries to pair them.
+   *
+   * Everything that could make the pairing fail later (missing player profile,
+   * ineligible deck, game already in progress) is validated here: once two
+   * players are paired they are removed from the queue, so a late failure would
+   * leave both of them stranded.
+   *
+   * @throws NotFoundException If the user does not exist.
+   * @throws BadRequestException If the player cannot queue with this deck.
+   * @returns The pairing result when an opponent was available, null otherwise.
+   */
   async joinQueue(
     userId: number,
     deckId: number,
@@ -85,8 +118,16 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new Error("User not found");
+      throw new NotFoundException("User not found");
     }
+
+    if (await this.casualMatchService.hasOngoingSession(userId)) {
+      throw new BadRequestException(
+        "Finish or leave your current game before queuing again",
+      );
+    }
+
+    await this.casualMatchService.assertCanQueue(userId, deckId);
 
     const userName =
       `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email;
@@ -153,16 +194,9 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
       if (!this.queue.has(entry.userId)) continue; // already paired in this loop
       const opponent = this.findBestOpponent(entry);
       if (!opponent) continue;
-      try {
-        const result = await this.pair(entry, opponent);
-        if (result && this.onMatchFound) {
-          await this.onMatchFound(result);
-        }
-      } catch (err) {
-        this.logger.error(
-          `Pairing failed for users ${entry.userId} and ${opponent.userId}`,
-          err as Error,
-        );
+      const result = await this.pair(entry, opponent);
+      if (result && this.onMatchFound) {
+        await this.onMatchFound(result);
       }
     }
   }
@@ -212,6 +246,15 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  /**
+   * Turns two queue entries into a started session.
+   *
+   * If anything fails while building the session both players are put back in
+   * the queue and notified, instead of being silently dropped with a session
+   * stuck in `WAITING_FOR_DECKS`.
+   *
+   * @returns The pairing result, or null when the pairing could not complete.
+   */
   private async pair(
     requester: QueueEntry,
     opponent: QueueEntry,
@@ -236,35 +279,85 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
       })`,
     );
 
-    const [playerAUser, playerBUser] = await Promise.all([
-      this.userRepository.findOneOrFail({ where: { id: requester.userId } }),
-      this.userRepository.findOneOrFail({ where: { id: opponent.userId } }),
-    ]);
+    let createdSessionId: number | null = null;
 
-    const isRanked = requester.isRanked && opponent.isRanked;
-    const session = await this.casualMatchService.createSession(
-      playerAUser,
-      playerBUser,
-      isRanked,
-    );
+    try {
+      const [playerAUser, playerBUser] = await Promise.all([
+        this.userRepository.findOneOrFail({ where: { id: requester.userId } }),
+        this.userRepository.findOneOrFail({ where: { id: opponent.userId } }),
+      ]);
 
-    await this.casualMatchService.selectDeck(
-      session.id,
-      playerAUser,
-      requester.deckId,
-    );
-    await this.casualMatchService.selectDeck(
-      session.id,
-      playerBUser,
-      opponent.deckId,
-    );
+      const isRanked = requester.isRanked && opponent.isRanked;
+      const session = await this.casualMatchService.createSession(
+        playerAUser,
+        playerBUser,
+        isRanked,
+      );
+      createdSessionId = session.id;
 
-    return {
-      matched: true,
-      session: await this.reloadSession(session.id),
-      playerAUserId: requester.userId,
-      playerBUserId: opponent.userId,
-    };
+      await this.casualMatchService.selectDeck(
+        session.id,
+        playerAUser,
+        requester.deckId,
+      );
+      await this.casualMatchService.selectDeck(
+        session.id,
+        playerBUser,
+        opponent.deckId,
+      );
+
+      return {
+        matched: true,
+        session: await this.reloadSession(session.id),
+        playerAUserId: requester.userId,
+        playerBUserId: opponent.userId,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Pairing failed for users ${requester.userId} and ${opponent.userId}`,
+        error as Error,
+      );
+      await this.handlePairingFailure(
+        [requester.userId, opponent.userId],
+        createdSessionId,
+        error,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Cleans up after a failed pairing: the half-built session is cancelled and
+   * both players are told why they left the queue.
+   *
+   * They are deliberately *not* re-queued: the usual causes (missing player
+   * profile, deck edited into an invalid state) are permanent, and retrying
+   * every rebalance tick would loop forever.
+   */
+  private async handlePairingFailure(
+    userIds: number[],
+    sessionId: number | null,
+    error: unknown,
+  ): Promise<void> {
+    if (sessionId !== null) {
+      try {
+        await this.casualMatchService.cancelOrphanSession(sessionId);
+      } catch (cleanupError) {
+        this.logger.error(
+          `Unable to cancel orphan session ${sessionId}`,
+          cleanupError as Error,
+        );
+      }
+    }
+
+    if (!this.onMatchFailed) {
+      return;
+    }
+
+    const message =
+      error instanceof Error ? error.message : "Unable to start the match";
+
+    await this.onMatchFailed({ userIds, message });
   }
 
   private async loadUserElo(userId: number): Promise<number> {
@@ -275,13 +368,10 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async reloadSession(sessionId: number): Promise<CasualMatchSession> {
-    const session = await this.casualMatchService["sessionRepository"].findOne({
-      where: { id: sessionId },
-      relations: ["playerA", "playerB"],
-    });
+    const session = await this.casualMatchService.findSessionById(sessionId);
 
     if (!session) {
-      throw new Error("Session not found after creation");
+      throw new NotFoundException("Session not found after creation");
     }
 
     return session;

@@ -19,6 +19,7 @@ export interface CasualSessionSummary {
   ownDeckSelected: boolean;
   turnNumber: number;
   awaitingPlayerAction: boolean;
+  isRanked: boolean;
   updatedAt: string;
   createdAt: string;
 }
@@ -39,6 +40,7 @@ export interface CasualSessionView {
   opponentName: string;
   winnerUserId: number | null;
   endedReason: string | null;
+  isRanked: boolean;
   gameState: SanitizedGameState | null;
   recentLog: OnlineMatchLogEntry[];
 }

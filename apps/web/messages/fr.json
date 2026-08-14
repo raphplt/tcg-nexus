@@ -1363,7 +1363,17 @@
     "unranked": "Non classé",
     "online": "En ligne",
     "signIn": "Se connecter",
-    "createAccount": "Créer un compte"
+    "createAccount": "Créer un compte",
+    "sessionsLabel": "Sessions",
+    "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+    "duelSummary": "Duel 1v1 • Tour {turn}",
+    "updatedAt": "Mise à jour {date}",
+    "searching": "Recherche en cours...",
+    "playersInQueue": "{count, plural, one {# joueur} other {# joueurs}} dans la file",
+    "cancel": "Annuler",
+    "connecting": "Connexion...",
+    "rankedBadge": "Classé",
+    "casualBadge": "Amical"
   },
   "TrainingLobby": {
     "loading": "Chargement de l'entraînement IA...",
@@ -1451,7 +1461,29 @@
     "noPokemon": "Aucun Pokémon",
     "currentTurn": "Tour en cours",
     "noEvent": "Aucun événement",
-    "yourHand": "Votre main"
+    "yourHand": "Votre main",
+    "opponentTurnShort": "Tour adverse",
+    "turnLabel": "Tour {number}",
+    "arena": "Arène",
+    "victoryUpper": "VICTOIRE !",
+    "pause": "Pause",
+    "resume": "Reprendre",
+    "escapeKey": "Échap",
+    "menuTitle": "Menu (Échap)",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "forfeitShort": "Abandonner",
+    "reconnecting": "Reconnexion...",
+    "hintPlacePokemon": "Cliquez sur un emplacement du banc pour jouer ce Pokémon.",
+    "hintAttachEnergy": "Cliquez sur un Pokémon pour attacher cette énergie.",
+    "hintEvolve": "Cliquez sur le Pokémon à faire évoluer.",
+    "hintChooseAttack": "Choisissez une attaque.",
+    "phaseSetup": "Préparation",
+    "phaseMulligan": "Mulligan",
+    "phasePlay": "Action",
+    "phaseAttack": "Attaque",
+    "phaseFinished": "Fin",
+    "phaseFallback": "Phase"
   },
   "GameBoard": {
     "loading": "Chargement de la session online...",
@@ -2358,7 +2390,12 @@
     "gameOver": "Partie terminée",
     "gameCancelled": "Partie annulée",
     "newGame": "Nouvelle partie",
-    "back": "Retour"
+    "back": "Retour",
+    "casualMatchTitle": "Match casual 1v1",
+    "sessionLabel": "Session #{id}",
+    "rankedBadge": "Classé",
+    "casualBadge": "Amical",
+    "reconnecting": "Reconnexion..."
   },
   "TrainingBoard": {
     "loading": "Chargement du match d'entraînement...",

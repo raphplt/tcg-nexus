@@ -10,6 +10,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { JwtPayload } from "../auth/interfaces/auth.interface";
 import { UserRole } from "../common/enums/user";
+import { buildWebSocketCorsOptions } from "../common/websocket-cors";
 import { User } from "../user/entities/user.entity";
 
 type AuthenticatedSocket = Socket & {
@@ -19,10 +20,7 @@ type AuthenticatedSocket = Socket & {
 };
 
 @WebSocketGateway({
-  cors: {
-    origin: true,
-    credentials: true,
-  },
+  cors: buildWebSocketCorsOptions(),
   namespace: "/notification",
 })
 @Injectable()

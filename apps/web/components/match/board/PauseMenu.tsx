@@ -44,7 +44,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
           "inline-flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg transition-all",
           "text-white/50 hover:text-white hover:bg-white/10",
         )}
-        title="Menu (Échap)"
+        title={t("menuTitle")}
       >
         <Settings className="w-4 h-4" />
       </button>
@@ -71,7 +71,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
               <div className="bg-slate-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
                   <h2 className="text-lg font-bold text-white tracking-wide">
-                    Pause
+                    {t("pause")}
                   </h2>
                   <button
                     onClick={toggle}
@@ -84,8 +84,8 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                 <div className="p-4 space-y-2">
                   <MenuButton
                     icon={<Play className="w-5 h-5" />}
-                    label="Reprendre"
-                    sublabel="Échap"
+                    label={t("resume")}
+                    sublabel={t("escapeKey")}
                     onClick={toggle}
                     variant="primary"
                   />
@@ -102,7 +102,7 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                       {!confirmForfeit ? (
                         <MenuButton
                           icon={<Flag className="w-5 h-5" />}
-                          label="Abandonner"
+                          label={t("forfeitShort")}
                           sublabel={t("forfeit")}
                           onClick={() => setConfirmForfeit(true)}
                           variant="danger"
@@ -124,13 +124,13 @@ export function PauseMenu({ onForfeit, sessionStatus }: PauseMenuProps) {
                               }}
                               className="flex-1 px-4 py-2 rounded-lg text-sm font-bold bg-red-600 hover:bg-red-500 text-white transition-colors"
                             >
-                              Confirmer
+                              {t("confirm")}
                             </button>
                             <button
                               onClick={() => setConfirmForfeit(false)}
                               className="flex-1 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
                             >
-                              Annuler
+                              {t("cancel")}
                             </button>
                           </div>
                         </motion.div>
