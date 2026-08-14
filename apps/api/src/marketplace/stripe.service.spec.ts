@@ -49,6 +49,7 @@ describe("StripeService", () => {
         currency: "usd",
         metadata: { order: "1" },
       }),
+      undefined,
     );
     expect(result).toEqual({ id: "pi" });
   });

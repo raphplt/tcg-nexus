@@ -127,6 +127,30 @@ export class UserService {
   }
 
   /**
+   * Loads only the fields required to authenticate an access token.
+   *
+   * @param id User ID stored in the token subject.
+   * @returns Minimal user entity or null.
+   */
+  async findForAccessToken(id: number): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { id },
+      // colonnes scalaires uniquement (pas de relation) : plusieurs services
+      // lisent le nom et la locale sur l'utilisateur courant
+      select: [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "isActive",
+        "isPro",
+        "preferredLocale",
+      ],
+    });
+  }
+
+  /**
    * Finds a user entity by email.
    *
    * @param email User email.

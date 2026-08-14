@@ -1,13 +1,20 @@
-import { Body, Controller, Post, Query } from "@nestjs/common";
-import { ApiBody, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Post, Query, UseGuards } from "@nestjs/common";
+import { ApiBearerAuth, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { Roles } from "src/auth/decorators/roles.decorator";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
+import { RolesGuard } from "src/auth/guards/roles.guard";
 import { UserRole } from "src/common/enums/user";
 import { SealedProductService } from "src/sealed-product/sealed-product.service";
 import { TournamentType } from "src/tournament/entities/tournament.entity";
 import { SeedingMethod } from "src/tournament/services/seeding.service";
+import { SeedUserDto } from "./dto/seed-user.dto";
 import { SeedService } from "./seed.service";
 
 @ApiTags("seed")
+@ApiBearerAuth()
 @Controller("seed")
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class SeedController {
   constructor(
     private readonly seedService: SeedService,
@@ -37,28 +44,7 @@ export class SeedController {
   }
 
   @Post("create-user")
-  @ApiBody({
-    schema: {
-      type: "object",
-      required: ["email", "password", "firstName", "lastName"],
-      properties: {
-        email: { type: "string" },
-        password: { type: "string" },
-        firstName: { type: "string" },
-        lastName: { type: "string" },
-        role: { type: "string", enum: ["admin", "user", "moderator"] },
-      },
-    },
-  })
-  async createUser(
-    @Body() body: {
-      email: string;
-      password: string;
-      firstName: string;
-      lastName: string;
-      role?: UserRole;
-    },
-  ) {
+  async createUser(@Body() body: SeedUserDto) {
     const user = await this.seedService.createUser(
       body.email,
       body.password,

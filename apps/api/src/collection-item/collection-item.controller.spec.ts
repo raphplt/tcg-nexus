@@ -11,7 +11,10 @@ import { CollectionItem } from "./entities/collection-item.entity";
 describe("CollectionItemController", () => {
   let controller: CollectionItemController;
 
+  const currentUser = { id: 1 } as User;
+
   const mockCollectionItemService = {
+    assertSelf: jest.fn(),
     addToWishlist: jest.fn(),
     addToFavorites: jest.fn(),
     addToCollection: jest.fn(),
@@ -55,28 +58,44 @@ describe("CollectionItemController", () => {
     expect(controller).toBeDefined();
   });
 
-  it("should add to wishlist", async () => {
+  it("should add to wishlist for the authenticated user", async () => {
     mockCollectionItemService.addToWishlist.mockResolvedValue({ id: 1 });
-    await expect(controller.addToWishlist("1", "card")).resolves.toEqual({
-      id: 1,
-    });
+
+    await expect(
+      controller.addToWishlist(1, currentUser, { pokemonCardId: "card" }),
+    ).resolves.toEqual({ id: 1 });
+
+    expect(mockCollectionItemService.assertSelf).toHaveBeenCalledWith(
+      1,
+      currentUser,
+    );
     expect(mockCollectionItemService.addToWishlist).toHaveBeenCalledWith(
-      "1",
+      currentUser.id,
       "card",
     );
   });
 
-  it("should add to favorites", async () => {
+  it("should add to favorites for the authenticated user", async () => {
     mockCollectionItemService.addToFavorites.mockResolvedValue({ id: 2 });
-    await expect(controller.addToFavorites("2", "card2")).resolves.toEqual({
-      id: 2,
-    });
+
+    await expect(
+      controller.addToFavorites(1, currentUser, { pokemonCardId: "card2" }),
+    ).resolves.toEqual({ id: 2 });
   });
 
-  it("should add to collection", async () => {
+  it("should pass the authenticated user to the collection service", async () => {
     mockCollectionItemService.addToCollection.mockResolvedValue({ id: 3 });
-    await expect(controller.addToCollection("col", "card3")).resolves.toEqual({
-      id: 3,
-    });
+
+    await expect(
+      controller.addToCollection("col", currentUser, {
+        pokemonCardId: "card3",
+      }),
+    ).resolves.toEqual({ id: 3 });
+
+    expect(mockCollectionItemService.addToCollection).toHaveBeenCalledWith(
+      "col",
+      "card3",
+      currentUser,
+    );
   });
 });

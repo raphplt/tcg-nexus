@@ -83,7 +83,7 @@ describe("DeckController", () => {
 
     const result = await controller.findOne("1");
 
-    expect(service.findOneWithCards).toHaveBeenCalledWith(1);
+    expect(service.findOneWithCards).toHaveBeenCalledWith(1, undefined);
     expect(result).toEqual({ id: 1 });
   });
 
@@ -92,7 +92,7 @@ describe("DeckController", () => {
 
     const result = await controller.analyze("2");
 
-    expect(service.analyzeDeck).toHaveBeenCalledWith(2);
+    expect(service.analyzeDeck).toHaveBeenCalledWith(2, undefined);
     expect(result).toEqual({ deckId: 2 });
   });
 
@@ -107,12 +107,13 @@ describe("DeckController", () => {
     expect(result).toEqual({ id: 3 });
   });
 
-  it("removes a deck", async () => {
+  it("removes a deck on behalf of the authenticated user", async () => {
+    const user = { id: 1 } as any;
     service.remove.mockResolvedValue({ message: "ok" } as any);
 
-    const result = await controller.remove("4");
+    const result = await controller.remove("4", user);
 
-    expect(service.remove).toHaveBeenCalledWith(4);
+    expect(service.remove).toHaveBeenCalledWith(4, user);
     expect(result).toEqual({ message: "ok" });
   });
 

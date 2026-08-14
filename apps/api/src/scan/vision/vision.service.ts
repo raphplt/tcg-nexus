@@ -57,6 +57,15 @@ export class VisionService {
     );
   }
 
+  // secret partagé optionnel : le microservice ne l'exige que s'il est configuré
+  private get headers(): Record<string, string> {
+    const apiKey = this.config.get<string>("VISION_API_KEY")?.trim();
+    return {
+      "Content-Type": "application/json",
+      ...(apiKey ? { "x-vision-key": apiKey } : {}),
+    };
+  }
+
   async match(
     image: Buffer,
     candidates: VisionMatchCandidate[],
@@ -69,7 +78,7 @@ export class VisionService {
     try {
       const response = await fetch(`${this.baseUrl}/match`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: this.headers,
         body: JSON.stringify({ image: image.toString("base64"), candidates }),
         signal: controller.signal,
       });
@@ -95,7 +104,7 @@ export class VisionService {
     try {
       const response = await fetch(`${this.baseUrl}/preprocess`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: this.headers,
         body: JSON.stringify({ image: image.toString("base64") }),
         signal: controller.signal,
       });
@@ -125,7 +134,7 @@ export class VisionService {
     try {
       const response = await fetch(`${this.baseUrl}/preprocess-batch`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: this.headers,
         body: JSON.stringify({
           images: images.map((img) => img.toString("base64")),
         }),

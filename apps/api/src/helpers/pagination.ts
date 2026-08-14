@@ -1,6 +1,19 @@
 import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 
 /**
+ * Contraint un sens de tri à `ASC`/`DESC`.
+ *
+ * TypeORM concatène le sens directement dans le SQL généré : toute valeur qui
+ * atteint `orderBy` doit passer par ici.
+ *
+ * @param sortOrder Sens brut issu de la requête.
+ * @returns `ASC` ou `DESC`, `DESC` par défaut.
+ */
+export function normalizeSortOrder(sortOrder?: string): "ASC" | "DESC" {
+  return String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
+}
+
+/**
  * Paginated result container including items payload and pagination metadata.
  */
 export interface PaginatedResult<T> {
@@ -111,7 +124,7 @@ export class PaginationHelper {
   ): Promise<PaginatedResult<T>> {
     const { page, limit } = this.validateParams(params);
     if (sortBy) {
-      queryBuilder.orderBy(sortBy, sortOrder);
+      queryBuilder.orderBy(sortBy, normalizeSortOrder(sortOrder));
     }
     const skip = this.calculateOffset(page, limit);
     queryBuilder.skip(skip).take(limit);

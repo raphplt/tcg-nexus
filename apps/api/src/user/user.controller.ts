@@ -7,10 +7,12 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  SerializeOptions,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { UserRole } from "src/common/enums/user";
+import { SELF_SERIALIZATION_GROUP } from "src/common/serialization-groups";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { Roles } from "../auth/decorators/roles.decorator";
@@ -30,17 +32,20 @@ export class UserController {
 
   @Post()
   @Roles(UserRole.ADMIN)
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   findAll() {
     return this.userService.findAll();
   }
 
   @Get("me")
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }
@@ -56,11 +61,13 @@ export class UserController {
 
   @Get(":id")
   @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
 
   @Patch("me")
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   updateProfile(
     @CurrentUser() user: User,
     @Body() updateUserDto: UpdateUserDto,
@@ -70,6 +77,7 @@ export class UserController {
 
   @Patch(":id")
   @Roles(UserRole.ADMIN)
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   update(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,

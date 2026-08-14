@@ -7,6 +7,7 @@ import {
   Post,
   Request,
   Res,
+  SerializeOptions,
   UnauthorizedException,
   UseGuards,
   UseGuards as UseGuardsDecorator,
@@ -15,6 +16,7 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Throttle, ThrottlerGuard } from "@nestjs/throttler";
 import type { CookieOptions } from "express";
 import { Request as ExpressRequest, Response } from "express";
+import { SELF_SERIALIZATION_GROUP } from "../common/serialization-groups";
 import { User } from "../user/entities/user.entity";
 import { UserService } from "../user/user.service";
 import { AuthService } from "./auth.service";
@@ -27,6 +29,16 @@ import { JwtRefreshGuard } from "./guards/jwt-refresh.guard";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
 
 const isProduction = process.env.NODE_ENV === "production";
+
+// `none` n'est nécessaire que si le web et l'API sont sur des domaines
+// distincts ; COOKIE_SAMESITE=lax supprime la surface CSRF quand ils sont same-site
+const resolveSameSite = (): "none" | "lax" | "strict" => {
+  const configured = process.env.COOKIE_SAMESITE?.trim().toLowerCase();
+  if (configured === "lax" || configured === "strict" || configured === "none") {
+    return configured;
+  }
+  return isProduction ? "none" : "lax";
+};
 
 const buildCookieOptions = (
   req: ExpressRequest,
@@ -53,7 +65,7 @@ const buildCookieOptions = (
   const baseCookie: CookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    sameSite: resolveSameSite(),
     domain: explicitDomain || derivedDomain,
   };
 
@@ -95,17 +107,17 @@ export class AuthController {
    */
   @UseGuards(LocalAuthGuard)
   @UseGuardsDecorator(ThrottlerGuard)
-  @Throttle({ default: { limit: 5, ttl: 60 } })
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post("login")
   @Public()
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
     @Res() res: Response,
-    @Request() req: ExpressRequest,
+    @Request() req: ExpressRequest & { user: User },
   ) {
     const rememberMe = req.headers["x-remember-me"] === "true";
-    const result = await this.authService.login(loginDto);
+    const result = await this.authService.login(loginDto, req.user);
     const { accessTokenMaxAge, refreshTokenMaxAge } =
       this.getCookieMaxAges(rememberMe);
 
@@ -135,7 +147,7 @@ export class AuthController {
    * @param req Express request.
    */
   @UseGuardsDecorator(ThrottlerGuard)
-  @Throttle({ default: { limit: 3, ttl: 300 } })
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
   @Post("register")
   @Public()
   @HttpCode(HttpStatus.CREATED)
@@ -176,7 +188,7 @@ export class AuthController {
    */
   @UseGuards(JwtRefreshGuard)
   @UseGuardsDecorator(ThrottlerGuard)
-  @Throttle({ default: { limit: 10, ttl: 300 } })
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
   @ApiBearerAuth()
   @Post("refresh")
   @Public()
@@ -250,6 +262,7 @@ export class AuthController {
   @ApiBearerAuth()
   @Post("profile")
   @HttpCode(HttpStatus.OK)
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   getProfilePost(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }
@@ -263,6 +276,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get("profile")
+  @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
   }

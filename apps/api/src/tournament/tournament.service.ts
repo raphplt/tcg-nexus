@@ -326,6 +326,23 @@ export class TournamentService {
   /**
    * Registers a player for a tournament.
    */
+  /**
+   * Resolves the player profile attached to a user account.
+   *
+   * L'utilisateur porté par le token n'embarque plus la relation `player` :
+   * elle est résolue ici, au moment où on en a besoin.
+   *
+   * @param userId Identifiant de l'utilisateur authentifié.
+   * @returns Identifiant du joueur, ou null si le profil n'existe pas.
+   */
+  async findPlayerIdByUserId(userId: number): Promise<number | null> {
+    const player = await this.playerRepository.findOne({
+      where: { user: { id: userId } },
+      select: { id: true },
+    });
+    return player?.id ?? null;
+  }
+
   async registerPlayer(
     registrationDto: TournamentRegistrationDto,
   ): Promise<TournamentRegistration> {

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import Script from "next/script";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -134,12 +133,6 @@ export default async function LocaleLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}
       >
-        {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
-          <Script
-            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`}
-            strategy="beforeInteractive"
-          />
-        )}
         <NextIntlClientProvider>
           <ThemeProvider>
             <ClientProviders>{children}</ClientProviders>

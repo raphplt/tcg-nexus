@@ -161,6 +161,17 @@ describe("AuthService", () => {
       expect(userService.updateRefreshToken).toHaveBeenCalled();
     });
 
+    it("reuses credentials already validated by the local strategy", async () => {
+      const loginDto = { email: "test@example.com", password: "password" };
+      const validateSpy = jest.spyOn(service, "validateUser");
+      mockJwtService.signAsync.mockResolvedValue("token");
+
+      await service.login(loginDto, mockUser);
+
+      expect(validateSpy).not.toHaveBeenCalled();
+      expect(userService.updateRefreshToken).toHaveBeenCalled();
+    });
+
     it("should throw UnauthorizedException if invalid credentials", async () => {
       const loginDto = { email: "test@example.com", password: "wrongpassword" };
       jest.spyOn(service, "validateUser").mockResolvedValue(null);

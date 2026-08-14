@@ -84,10 +84,13 @@ export class AuthService {
    * Authenticates a user and issues access and refresh tokens.
    *
    * @param loginDto User login payload.
+   * @param validatedUser User already authenticated by the local strategy.
    * @returns Authentication payload containing user info and tokens.
    */
-  async login(loginDto: LoginDto): Promise<AuthResponse> {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+  async login(loginDto: LoginDto, validatedUser?: User): Promise<AuthResponse> {
+    const user =
+      validatedUser ??
+      (await this.validateUser(loginDto.email, loginDto.password));
 
     if (!user) {
       throw new UnauthorizedException("Invalid credentials");
@@ -99,7 +102,6 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
     await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
-    const hydratedUser = await this.userService.findOne(user.id);
 
     return {
       user: {
@@ -132,23 +134,23 @@ export class AuthService {
         password: registerDto.password,
       });
 
-      await this.collectionService.create({
-        name: "Wishlist",
-        description: "Default Wishlist",
-        isPublic: false,
-        userId: user.id,
-      });
-
-      await this.collectionService.create({
-        name: "Favorites",
-        description: "Default Favorites",
-        isPublic: false,
-        userId: user.id,
-      });
+      await Promise.all([
+        this.collectionService.create({
+          name: "Wishlist",
+          description: "Default Wishlist",
+          isPublic: false,
+          userId: user.id,
+        }),
+        this.collectionService.create({
+          name: "Favorites",
+          description: "Default Favorites",
+          isPublic: false,
+          userId: user.id,
+        }),
+      ]);
 
       const tokens = await this.generateTokens(user);
       await this.userService.updateRefreshToken(user.id, tokens.refreshToken);
-      const hydratedUser = await this.userService.findOne(user.id);
 
       return {
         user: {

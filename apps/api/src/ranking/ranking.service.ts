@@ -1,8 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { In, Repository } from "typeorm";
-import { Deck } from "../deck/entities/deck.entity";
-import { CasualMatchSession } from "../match/entities/casual-match-session.entity";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
@@ -38,6 +36,18 @@ export interface RankingCalculationResult {
   };
 }
 
+interface RankingRow {
+  rank: string | number | null;
+  oldRank: string | number | null;
+  userId: string | number | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
+  avatarUrl: string | null;
+  score: string | number;
+  total: string | number;
+}
+
 @Injectable()
 export class RankingService {
   constructor(
@@ -54,8 +64,9 @@ export class RankingService {
   ) {}
 
   /**
-   * Date de début de la période pour la tendance (week/month/all-time).
-   * "all-time" utilise une fenêtre de 30 jours comme proxy de "période précédente".
+   * Computes the beginning of the comparison window.
+   *
+   * All-time rankings retain the existing 30-day trend window.
    */
   private getPeriodStartDate(period: string): Date {
     const date = new Date();
@@ -69,129 +80,84 @@ export class RankingService {
     return date;
   }
 
-  /**
-   * Récupère les lignes de RankedMatchHistory dans la période, optionnellement filtrées par format de deck.
-   * Un row "matche" le format si :
-   *   - row.casualSessionId set ET au moins un des decks (A ou B) de la session est dans ce format
-   *   - row.matchId set ET le tournoi du match a `format` dans ses allowedFormats
-   */
-  private async getInPeriodHistory(
-    periodStart: Date,
-    format?: string,
-  ): Promise<
-    Array<{ winnerId: number | null; loserId: number | null; delta: number }>
-  > {
-    const qb = this.rankedHistoryRepository
-      .createQueryBuilder("h")
-      .select("h.winnerId", "winnerId")
-      .addSelect("h.loserId", "loserId")
-      .addSelect("h.delta", "delta")
-      .where("h.createdAt >= :date", { date: periodStart });
+  private buildRankingSql(format?: string): string {
+    const formatJoins = format
+      ? `
+        LEFT JOIN "casual_match_session" cs ON cs.id = h."casualSessionId"
+        LEFT JOIN deck deck_a ON deck_a.id = cs."playerADeckId"
+        LEFT JOIN deck_format format_a ON format_a.id = deck_a."formatId"
+        LEFT JOIN deck deck_b ON deck_b.id = cs."playerBDeckId"
+        LEFT JOIN deck_format format_b ON format_b.id = deck_b."formatId"
+        LEFT JOIN "match" m ON m.id = h."matchId"
+        LEFT JOIN tournament t ON t.id = m."tournamentId"`
+      : "";
+    const formatPredicate = format
+      ? `AND (
+          (h."casualSessionId" IS NOT NULL AND (format_a.type = $2 OR format_b.type = $2))
+          OR (h."matchId" IS NOT NULL AND $2 = ANY(string_to_array(t."allowedFormats", ',')))
+        )`
+      : "";
+    const activePlayerPredicate = format
+      ? `WHERE aggregated_deltas.user_id IS NOT NULL`
+      : "";
 
-    if (format) {
-      qb.leftJoin(CasualMatchSession, "cs", "cs.id = h.casualSessionId")
-        .leftJoin(Deck, "deckA", "deckA.id = cs.playerADeckId")
-        .leftJoin("deckA.format", "fA")
-        .leftJoin(Deck, "deckB", "deckB.id = cs.playerBDeckId")
-        .leftJoin("deckB.format", "fB")
-        .leftJoin(Match, "m", "m.id = h.matchId")
-        .leftJoin("m.tournament", "t")
-        .andWhere(
-          `(
-            (h.casualSessionId IS NOT NULL AND (fA.type = :format OR fB.type = :format))
-            OR (h.matchId IS NOT NULL AND :format = ANY(string_to_array(t.allowedFormats, ',')))
-          )`,
-          { format },
-        );
-    }
-
-    const rows = await qb.getRawMany<{
-      winnerId: number | null;
-      loserId: number | null;
-      delta: number | string;
-    }>();
-
-    return rows.map((r) => ({
-      winnerId: r.winnerId ?? null,
-      loserId: r.loserId ?? null,
-      delta: Number(r.delta) || 0,
-    }));
+    return `
+      WITH filtered_history AS (
+        SELECT h."winnerId", h."loserId", h.delta
+        FROM ranked_match_history h
+        ${formatJoins}
+        WHERE h."createdAt" >= $1
+        ${formatPredicate}
+      ), history_deltas AS (
+        SELECT "winnerId" AS user_id, delta AS delta
+        FROM filtered_history
+        WHERE "winnerId" IS NOT NULL
+        UNION ALL
+        SELECT "loserId" AS user_id, -delta AS delta
+        FROM filtered_history
+        WHERE "loserId" IS NOT NULL
+      ), aggregated_deltas AS (
+        SELECT user_id, SUM(delta) AS delta
+        FROM history_deltas
+        GROUP BY user_id
+      ), eligible_players AS (
+        SELECT
+          player.id AS player_id,
+          player.elo AS score,
+          app_user.id AS user_id,
+          app_user."firstName" AS first_name,
+          app_user."lastName" AS last_name,
+          app_user.email AS email,
+          app_user."avatarUrl" AS avatar_url,
+          COALESCE(aggregated_deltas.delta, 0) AS period_delta
+        FROM player
+        INNER JOIN "user" app_user ON app_user.id = player."userId"
+        LEFT JOIN aggregated_deltas ON aggregated_deltas.user_id = app_user.id
+        ${activePlayerPredicate}
+      ), ranked_players AS (
+        SELECT
+          *,
+          ROW_NUMBER() OVER (ORDER BY score DESC, player_id ASC) AS rank,
+          ROW_NUMBER() OVER (
+            ORDER BY (score - period_delta) DESC, player_id ASC
+          ) AS old_rank,
+          COUNT(*) OVER () AS total
+        FROM eligible_players
+      )`;
   }
 
-  /**
-   * Construit un snapshot de classement avec rang actuel et rang au début de période.
-   * Si `format` est fourni, ne retient que les joueurs ayant joué ≥1 match dans ce format pendant la période.
-   */
-  private async buildRankingSnapshot(
-    period: string,
-    format?: string,
-  ): Promise<{
-    players: Player[];
-    currentRank: Map<number, number>;
-    oldRank: Map<number, number>;
-  }> {
-    const periodStart = this.getPeriodStartDate(period);
-    const history = await this.getInPeriodHistory(periodStart, format);
-
-    const deltaByUser = new Map<number, number>();
-    const activeUsers = new Set<number>();
-    for (const row of history) {
-      if (row.winnerId != null) {
-        deltaByUser.set(
-          row.winnerId,
-          (deltaByUser.get(row.winnerId) ?? 0) + row.delta,
-        );
-        activeUsers.add(row.winnerId);
-      }
-      if (row.loserId != null) {
-        deltaByUser.set(
-          row.loserId,
-          (deltaByUser.get(row.loserId) ?? 0) - row.delta,
-        );
-        activeUsers.add(row.loserId);
-      }
-    }
-
-    const playerWhere = format
-      ? { user: { id: In(Array.from(activeUsers)) } }
-      : {};
-    const players =
-      format && activeUsers.size === 0
-        ? []
-        : await this.playerRepository.find({
-            where: playerWhere,
-            relations: ["user"],
-          });
-
-    const byCurrent = [...players].sort((a, b) => b.elo - a.elo || a.id - b.id);
-    const currentRank = new Map<number, number>();
-    byCurrent.forEach((p, i) => currentRank.set(p.id, i + 1));
-
-    const byOld = [...players].sort((a, b) => {
-      const va = a.elo - (deltaByUser.get(a.user.id) ?? 0);
-      const vb = b.elo - (deltaByUser.get(b.user.id) ?? 0);
-      return vb - va || a.id - b.id;
-    });
-    const oldRank = new Map<number, number>();
-    byOld.forEach((p, i) => oldRank.set(p.id, i + 1));
-
-    return { players: byCurrent, currentRank, oldRank };
-  }
-
-  private toGlobalRankingPlayer(
-    player: Player,
-    rank: number,
-    tendency: "up" | "down" | "equal",
-  ): GlobalRankingPlayer {
+  private toGlobalRankingPlayer(row: RankingRow): GlobalRankingPlayer {
+    const rank = Number(row.rank);
+    const oldRank = Number(row.oldRank);
     return {
       rank,
-      userId: player.user.id,
-      pseudo: player.user.firstName
-        ? `${player.user.firstName} ${player.user.lastName}`.trim()
-        : player.user.email,
-      avatarUrl: player.user.avatarUrl || null,
-      score: player.elo,
-      tendency,
+      userId: Number(row.userId),
+      pseudo: row.firstName
+        ? `${row.firstName} ${row.lastName ?? ""}`.trim()
+        : row.email,
+      avatarUrl: row.avatarUrl || null,
+      score: Number(row.score),
+      tendency: this.computeTendency(rank, oldRank),
     };
   }
 
@@ -206,8 +172,7 @@ export class RankingService {
   }
 
   /**
-   * Récupère le classement global avec pagination et filtres (période, format de deck).
-   * Tendance = rang actuel comparé au rang au début de la période.
+   * Retrieves the paginated global ranking and its period trend.
    */
   async getGlobalRanking(
     page: number = 1,
@@ -220,28 +185,45 @@ export class RankingService {
     page: number;
     limit: number;
   }> {
-    const { players, currentRank, oldRank } = await this.buildRankingSnapshot(
-      period,
-      format,
+    const parameters: Array<Date | string | number> = [
+      this.getPeriodStartDate(period),
+    ];
+    if (format) parameters.push(format);
+    parameters.push(limit, (page - 1) * limit);
+    const limitParameter = format ? 3 : 2;
+    const offsetParameter = format ? 4 : 3;
+    const rows = await this.rankedHistoryRepository.query<RankingRow[]>(
+      `${this.buildRankingSql(format)}
+       SELECT
+         ranked_page.rank,
+         ranked_page.old_rank AS "oldRank",
+         ranked_page.user_id AS "userId",
+         ranked_page.first_name AS "firstName",
+         ranked_page.last_name AS "lastName",
+         ranked_page.email,
+         ranked_page.avatar_url AS "avatarUrl",
+         ranked_page.score,
+         ranked_total.total
+       FROM (SELECT COUNT(*) AS total FROM ranked_players) ranked_total
+       LEFT JOIN LATERAL (
+         SELECT *
+         FROM ranked_players
+         ORDER BY rank
+         LIMIT $${limitParameter} OFFSET $${offsetParameter}
+       ) ranked_page ON TRUE`,
+      parameters,
     );
 
-    const total = players.length;
-    const pageSlice = players.slice((page - 1) * limit, page * limit);
-
-    const data = pageSlice.map((p) =>
-      this.toGlobalRankingPlayer(
-        p,
-        currentRank.get(p.id)!,
-        this.computeTendency(currentRank.get(p.id), oldRank.get(p.id)),
-      ),
-    );
+    const data = rows
+      .filter((row) => row.rank != null)
+      .map((row) => this.toGlobalRankingPlayer(row));
+    const total = Number(rows[0]?.total ?? 0);
 
     return { data, total, page, limit };
   }
 
   /**
-   * Récupère la position de l'utilisateur dans le classement global.
-   * Le rang est calculé sur le sous-ensemble actif si `format` est fourni.
+   * Retrieves a user's position without materializing the complete ranking.
    */
   async getMyRankingPosition(
     userId: number,
@@ -260,22 +242,41 @@ export class RankingService {
       });
     }
 
-    const { currentRank, oldRank } = await this.buildRankingSnapshot(
-      period,
-      format,
+    const parameters: Array<Date | string | number> = [
+      this.getPeriodStartDate(period),
+    ];
+    if (format) parameters.push(format);
+    parameters.push(userId);
+    const userParameter = format ? 3 : 2;
+    const rows = await this.rankedHistoryRepository.query<RankingRow[]>(
+      `${this.buildRankingSql(format)}
+       SELECT
+         rank,
+         old_rank AS "oldRank",
+         user_id AS "userId",
+         first_name AS "firstName",
+         last_name AS "lastName",
+         email,
+         avatar_url AS "avatarUrl",
+         score,
+         total
+       FROM ranked_players
+       WHERE user_id = $${userParameter}`,
+      parameters,
     );
 
-    const rank = currentRank.get(player.id);
-    if (rank == null) {
-      // Player did not participate in the target format within timeframe
-      return this.toGlobalRankingPlayer(player, 0, "equal");
-    }
+    if (rows.length > 0) return this.toGlobalRankingPlayer(rows[0]);
 
-    return this.toGlobalRankingPlayer(
-      player,
-      rank,
-      this.computeTendency(currentRank.get(player.id), oldRank.get(player.id)),
-    );
+    return {
+      rank: 0,
+      userId: player.user.id,
+      pseudo: player.user.firstName
+        ? `${player.user.firstName} ${player.user.lastName}`.trim()
+        : player.user.email,
+      avatarUrl: player.user.avatarUrl || null,
+      score: player.elo,
+      tendency: "equal",
+    };
   }
 
   /**
@@ -403,14 +404,23 @@ export class RankingService {
     }
 
     const playerStats = this.calculatePlayerStatistics(tournament);
-
+    const playerIds = Array.from(playerStats.keys());
+    const existingRankings = playerIds.length
+      ? await this.rankingRepository.find({
+          where: {
+            tournament: { id: tournamentId },
+            player: { id: In(playerIds) },
+          },
+          relations: ["player"],
+        })
+      : [];
+    const rankingByPlayerId = new Map(
+      existingRankings.map((ranking) => [ranking.player.id, ranking]),
+    );
     const rankings: Ranking[] = [];
 
     for (const [playerId, stats] of playerStats.entries()) {
-      let ranking = await this.rankingRepository.findOne({
-        where: { tournament: { id: tournamentId }, player: { id: playerId } },
-        relations: ["player"],
-      });
+      let ranking = rankingByPlayerId.get(playerId);
 
       if (!ranking) {
         ranking = this.rankingRepository.create({
@@ -425,7 +435,6 @@ export class RankingService {
         });
       }
 
-      // Update ranking stats
       ranking.points = stats.points;
       ranking.wins = stats.wins;
       ranking.losses = stats.losses;
@@ -435,7 +444,6 @@ export class RankingService {
       rankings.push(ranking);
     }
 
-    // Sort rankings and assign sequential ranks
     rankings.sort((a, b) => {
       if (a.points !== b.points) return b.points - a.points;
       if (a.winRate !== b.winRate) return b.winRate - a.winRate;
@@ -446,10 +454,8 @@ export class RankingService {
       ranking.rank = index + 1;
     });
 
-    // Save rankings
     await this.rankingRepository.save(rankings);
 
-    // Process ELO rating updates if tournament is finished
     if (
       tournament.status === TournamentStatus.FINISHED ||
       tournament.isFinished
@@ -486,12 +492,23 @@ export class RankingService {
         return a.id - b.id;
       });
 
-    for (const match of sortedMatches) {
-      const existingHistory = await this.rankedHistoryRepository.findOne({
-        where: { matchId: match.id },
-      });
+    const matchIds = sortedMatches.map((match) => match.id);
+    const existingHistory = matchIds.length
+      ? await this.rankedHistoryRepository.find({
+          where: { matchId: In(matchIds) },
+          select: { matchId: true },
+        })
+      : [];
+    const processedMatchIds = new Set(
+      existingHistory.map((history) => history.matchId),
+    );
 
-      if (!existingHistory && match.playerA?.user && match.playerB?.user) {
+    for (const match of sortedMatches) {
+      if (
+        !processedMatchIds.has(match.id) &&
+        match.playerA?.user &&
+        match.playerB?.user
+      ) {
         let winnerUserId: number | undefined;
         let loserUserId: number | undefined;
         let isDraw = false;
@@ -517,6 +534,7 @@ export class RankingService {
               { matchId: match.id },
               isDraw,
             );
+            processedMatchIds.add(match.id);
           } catch (error) {
             console.error(
               `Failed to update ELO for tournament match ${match.id}`,
@@ -666,13 +684,32 @@ export class RankingService {
       relations: ["playerA", "playerB", "winner"],
     });
 
-    const tieBreakers = new Map();
+    const finishedMatches = matches.filter((match) => match.finishedAt);
+    const matchesByPlayer = new Map<number, Match[]>();
+    const winsByPlayer = new Map<number, number>();
+
+    for (const match of finishedMatches) {
+      for (const player of [match.playerA, match.playerB]) {
+        if (!player) continue;
+        const playerMatches = matchesByPlayer.get(player.id) ?? [];
+        playerMatches.push(match);
+        matchesByPlayer.set(player.id, playerMatches);
+      }
+      if (match.winner) {
+        winsByPlayer.set(
+          match.winner.id,
+          (winsByPlayer.get(match.winner.id) ?? 0) + 1,
+        );
+      }
+    }
+
+    const tieBreakers = new Map<
+      number,
+      { opponentWinRate: number; gameWinRate: number }
+    >();
 
     for (const playerId of playerIds) {
-      const playerMatches = matches.filter(
-        (match) =>
-          match.playerA?.id === playerId || match.playerB?.id === playerId,
-      );
+      const playerMatches = matchesByPlayer.get(playerId) ?? [];
 
       let opponentWinRateSum = 0;
       let gameWins = 0;
@@ -680,30 +717,18 @@ export class RankingService {
       let opponentCount = 0;
 
       for (const match of playerMatches) {
-        if (!match.finishedAt) continue;
-
         const opponent =
           match.playerA?.id === playerId ? match.playerB : match.playerA;
         if (!opponent) continue;
 
-        // Calculer le winRate de l'adversaire
-        const opponentMatches = matches.filter(
-          (m) =>
-            m.finishedAt &&
-            (m.playerA?.id === opponent.id || m.playerB?.id === opponent.id),
-        );
-
-        const opponentWins = opponentMatches.filter(
-          (m) => m.winner?.id === opponent.id,
-        ).length;
-        const opponentTotal = opponentMatches.length;
+        const opponentWins = winsByPlayer.get(opponent.id) ?? 0;
+        const opponentTotal = matchesByPlayer.get(opponent.id)?.length ?? 0;
         const opponentWinRate =
           opponentTotal > 0 ? opponentWins / opponentTotal : 0;
 
         opponentWinRateSum += opponentWinRate;
         opponentCount++;
 
-        // Game win rate (computed from match scores)
         const isPlayerA = match.playerA?.id === playerId;
         const playerScore = isPlayerA ? match.playerAScore : match.playerBScore;
         const opponentScore = isPlayerA

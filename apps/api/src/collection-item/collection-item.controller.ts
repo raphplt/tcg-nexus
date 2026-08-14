@@ -1,65 +1,79 @@
-import { Body, Controller, Param, Post } from "@nestjs/common";
-import { Public } from "src/auth/decorators/public.decorator";
-import { SealedCondition } from "src/common/enums/sealed-condition";
+import { Body, Controller, Param, ParseIntPipe, Post } from "@nestjs/common";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { CurrentUser } from "src/auth/decorators/current-user.decorator";
+import { User } from "src/user/entities/user.entity";
 import { CollectionItemService } from "./collection-item.service";
+import {
+  AddCardItemDto,
+  AddSealedItemDto,
+} from "./dto/add-collection-item.dto";
 
+@ApiTags("collection-item")
+@ApiBearerAuth()
 @Controller("collection-item")
 export class CollectionItemController {
   constructor(private readonly collectionItemService: CollectionItemService) {}
 
   @Post("wishlist/:userId")
-  @Public()
   async addToWishlist(
-    @Param("userId") userId: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Param("userId", ParseIntPipe) userId: number,
+    @CurrentUser() user: User,
+    @Body() dto: AddCardItemDto,
   ) {
-    return this.collectionItemService.addToWishlist(userId, pokemonCardId);
+    this.collectionItemService.assertSelf(userId, user);
+    return this.collectionItemService.addToWishlist(user.id, dto.pokemonCardId);
   }
 
   @Post("favorites/:userId")
-  @Public()
   async addToFavorites(
-    @Param("userId") userId: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Param("userId", ParseIntPipe) userId: number,
+    @CurrentUser() user: User,
+    @Body() dto: AddCardItemDto,
   ) {
-    return this.collectionItemService.addToFavorites(userId, pokemonCardId);
+    this.collectionItemService.assertSelf(userId, user);
+    return this.collectionItemService.addToFavorites(
+      user.id,
+      dto.pokemonCardId,
+    );
   }
 
   @Post("collection/:collectionId")
-  @Public()
   async addToCollection(
     @Param("collectionId") collectionId: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @CurrentUser() user: User,
+    @Body() dto: AddCardItemDto,
   ) {
     return this.collectionItemService.addToCollection(
       collectionId,
-      pokemonCardId,
+      dto.pokemonCardId,
+      user,
     );
   }
 
   @Post("collection/:collectionId/sealed")
-  @Public()
   async addSealedToCollection(
     @Param("collectionId") collectionId: string,
-    @Body("sealedProductId") sealedProductId: string,
-    @Body("sealedCondition") sealedCondition?: SealedCondition,
+    @CurrentUser() user: User,
+    @Body() dto: AddSealedItemDto,
   ) {
     return this.collectionItemService.addSealedToCollection(
       collectionId,
-      sealedProductId,
-      sealedCondition,
+      dto.sealedProductId,
+      user,
+      dto.sealedCondition,
     );
   }
 
   @Post("wishlist/:userId/sealed")
-  @Public()
   async addSealedToWishlist(
-    @Param("userId") userId: string,
-    @Body("sealedProductId") sealedProductId: string,
+    @Param("userId", ParseIntPipe) userId: number,
+    @CurrentUser() user: User,
+    @Body() dto: AddSealedItemDto,
   ) {
+    this.collectionItemService.assertSelf(userId, user);
     return this.collectionItemService.addSealedToWishlist(
-      userId,
-      sealedProductId,
+      user.id,
+      dto.sealedProductId,
     );
   }
 }

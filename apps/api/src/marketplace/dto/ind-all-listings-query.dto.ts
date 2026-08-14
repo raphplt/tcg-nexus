@@ -11,6 +11,20 @@ import { Languages } from "src/common/enums/languages";
 import { ListingStatus } from "src/common/enums/listing-status";
 import { ProductKind } from "src/common/enums/product-kind";
 
+// clés d'une map fermée côté service, jamais interpolées dans le SQL
+export enum ListingSortBy {
+  CREATED_AT = "createdAt",
+  PRICE = "price",
+  EXPIRES_AT = "expiresAt",
+  QUANTITY_AVAILABLE = "quantityAvailable",
+  NAME = "name",
+}
+
+export enum ListingSortOrder {
+  ASC = "ASC",
+  DESC = "DESC",
+}
+
 export class FindAllListingsQuery {
   @IsOptional()
   @IsString()
@@ -73,10 +87,10 @@ export class FindAllListingsQuery {
   limit?: number = 20;
 
   @IsOptional()
-  @IsString()
-  sortBy?: string = "createdAt";
+  @IsEnum(ListingSortBy)
+  sortBy?: ListingSortBy = ListingSortBy.CREATED_AT;
 
   @IsOptional()
-  @IsString()
-  sortOrder?: "ASC" | "DESC" = "DESC";
+  @IsEnum(ListingSortOrder)
+  sortOrder?: ListingSortOrder = ListingSortOrder.DESC;
 }

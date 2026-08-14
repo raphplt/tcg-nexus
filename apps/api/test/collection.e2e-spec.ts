@@ -69,8 +69,18 @@ describe("CollectionController (e2e)", () => {
     expect(updateResponse.body.name).toBe(`${collectionName} updated`);
     expect(updateResponse.body.isPublic).toBe(false);
 
+    // Once private, the collection must disappear for anonymous callers.
+    await request(httpServer)
+      .get(`/collection/${collectionId}/items`)
+      .query({ page: 1, limit: 5 })
+      .expect(404);
+
+    await request(httpServer).get(`/collection/${collectionId}`).expect(404);
+
+    // The owner still reads their own private collection.
     const itemsResponse = await request(httpServer)
       .get(`/collection/${collectionId}/items`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
       .query({ page: 1, limit: 5 });
     expect(itemsResponse.status).toBe(200);
     expect(itemsResponse.body.data).toEqual([]);
@@ -118,10 +128,82 @@ describe("CollectionController (e2e)", () => {
       .expect(403);
   });
 
+  it("hides a private collection from anonymous and third-party readers", async () => {
+    const owner = await createUser(httpServer);
+    const other = await createUser(httpServer);
+
+    const createResponse = await request(httpServer)
+      .post("/collection")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({
+        name: `Hidden E2E Collection ${Date.now()}`,
+        isPublic: false,
+      })
+      .expect(201);
+
+    const collectionId = createResponse.body.id;
+
+    await request(httpServer).get(`/collection/${collectionId}`).expect(404);
+
+    await request(httpServer)
+      .get(`/collection/${collectionId}`)
+      .set("Authorization", `Bearer ${other.accessToken}`)
+      .expect(404);
+
+    await request(httpServer)
+      .get(`/collection/${collectionId}/items`)
+      .set("Authorization", `Bearer ${other.accessToken}`)
+      .expect(404);
+
+    const ownerListing = await request(httpServer)
+      .get(`/collection/user/${owner.id}`)
+      .expect(200);
+    expect(
+      (ownerListing.body as { id: number }[]).some(
+        (collection) => collection.id === collectionId,
+      ),
+    ).toBe(false);
+
+    await request(httpServer)
+      .get(`/collection/${collectionId}`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+  });
+
   it("rejects collection creation without authentication", async () => {
     await request(httpServer)
       .post("/collection")
       .send({ name: "Anonymous collection" })
       .expect(401);
+  });
+
+  it("rejects anonymous writes into someone else's collection", async () => {
+    const owner = await createUser(httpServer);
+    const other = await createUser(httpServer);
+
+    const createResponse = await request(httpServer)
+      .post("/collection")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({ name: `Target Collection ${Date.now()}`, isPublic: true })
+      .expect(201);
+
+    const collectionId = createResponse.body.id;
+
+    await request(httpServer)
+      .post(`/collection-item/collection/${collectionId}`)
+      .send({ pokemonCardId: "any-card" })
+      .expect(401);
+
+    await request(httpServer)
+      .post(`/collection-item/collection/${collectionId}`)
+      .set("Authorization", `Bearer ${other.accessToken}`)
+      .send({ pokemonCardId: "any-card" })
+      .expect(403);
+
+    await request(httpServer)
+      .post(`/collection-item/wishlist/${owner.id}`)
+      .set("Authorization", `Bearer ${other.accessToken}`)
+      .send({ pokemonCardId: "any-card" })
+      .expect(403);
   });
 });

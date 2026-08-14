@@ -64,6 +64,7 @@ describe("DeckService analyzeDeck", () => {
   it("returns analysis with distributions and suggestions", async () => {
     deckRepo.findOne.mockResolvedValue({
       id: 1,
+      isPublic: true,
       cards: [
         {
           qty: 4,

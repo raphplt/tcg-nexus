@@ -1,8 +1,9 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Optional } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Cron } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
+import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 
 @Injectable()
@@ -13,10 +14,19 @@ export class NotificationReminderScheduler {
     @InjectRepository(Match)
     private readonly matchRepository: Repository<Match>,
     private readonly eventEmitter: EventEmitter2,
+    @Optional() private readonly dataSource?: DataSource,
   ) {}
 
   @Cron("0 9 * * *")
   async handleDailyReminders(): Promise<void> {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:tournament-reminders-daily",
+      () => this.dispatchDailyReminders(),
+    );
+  }
+
+  private async dispatchDailyReminders(): Promise<void> {
     const now = new Date();
     const startMin = new Date(now.getTime() + 23 * 60 * 60 * 1000);
     const startMax = new Date(now.getTime() + 25 * 60 * 60 * 1000);

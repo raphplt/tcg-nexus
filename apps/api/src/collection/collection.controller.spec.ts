@@ -90,6 +90,7 @@ describe("CollectionController", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
     );
   });
 

@@ -30,7 +30,7 @@ describe("RankingService", () => {
   const mockRankingRepo = {
     create: jest.fn(),
     save: jest.fn(),
-    find: jest.fn(),
+    find: jest.fn().mockResolvedValue([]),
     findOne: jest.fn(),
     remove: jest.fn(),
     createQueryBuilder: jest.fn(() => mockQueryBuilder),
@@ -51,6 +51,7 @@ describe("RankingService", () => {
   const mockRankedHistoryRepo = {
     create: jest.fn((dto) => dto),
     save: jest.fn((dto) => Promise.resolve(dto)),
+    query: jest.fn(),
     createQueryBuilder: jest.fn(() => ({
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -89,6 +90,67 @@ describe("RankingService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  describe("global ranking", () => {
+    it("paginates ranking rows in PostgreSQL", async () => {
+      mockRankedHistoryRepo.query.mockResolvedValue([
+        {
+          rank: "2",
+          oldRank: "4",
+          userId: "12",
+          firstName: "Ada",
+          lastName: "Lovelace",
+          email: "ada@example.com",
+          avatarUrl: null,
+          score: "1240",
+          total: "42",
+        },
+      ]);
+
+      const result = await service.getGlobalRanking(2, 20, "week");
+
+      expect(result).toEqual({
+        data: [
+          {
+            rank: 2,
+            userId: 12,
+            pseudo: "Ada Lovelace",
+            avatarUrl: null,
+            score: 1240,
+            tendency: "up",
+          },
+        ],
+        total: 42,
+        page: 2,
+        limit: 20,
+      });
+      expect(mockRankedHistoryRepo.query).toHaveBeenCalledWith(
+        expect.stringContaining("LEFT JOIN LATERAL"),
+        expect.arrayContaining([20, 20]),
+      );
+    });
+
+    it("retains the total for an empty page", async () => {
+      mockRankedHistoryRepo.query.mockResolvedValue([
+        {
+          rank: null,
+          oldRank: null,
+          userId: null,
+          firstName: null,
+          lastName: null,
+          email: null,
+          avatarUrl: null,
+          score: null,
+          total: "8",
+        },
+      ]);
+
+      const result = await service.getGlobalRanking(10, 20);
+
+      expect(result.data).toEqual([]);
+      expect(result.total).toBe(8);
+    });
   });
 
   describe("create", () => {
@@ -264,6 +326,7 @@ describe("RankingService", () => {
         matches,
       });
 
+      rankingRepo.find.mockResolvedValue([]);
       rankingRepo.findOne.mockResolvedValue(null);
       rankingRepo.create.mockImplementation((dto: any) => dto);
       rankingRepo.save.mockImplementation((arr: any[]) => arr);
@@ -299,6 +362,7 @@ describe("RankingService", () => {
         matches,
       });
 
+      rankingRepo.find.mockResolvedValue([]);
       rankingRepo.findOne.mockResolvedValue(null);
       rankingRepo.create.mockImplementation((dto: any) => dto);
       rankingRepo.save.mockImplementation((arr: any[]) => arr);

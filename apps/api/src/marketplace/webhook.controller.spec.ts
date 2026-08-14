@@ -68,6 +68,23 @@ describe("WebhookController", () => {
     });
   });
 
+  it("propagates a processing failure so Stripe retries the event", async () => {
+    (stripeService.constructEventFromPayload as jest.Mock).mockResolvedValue({
+      id: "evt_1",
+      type: "payment_intent.succeeded",
+      data: { object: { id: "pi", amount: 1000, currency: "eur" } },
+    });
+    (orderService.handlePaymentSucceeded as jest.Mock).mockRejectedValue(
+      new Error("database unavailable"),
+    );
+
+    await expect(
+      controller.handleWebhook("sig", {
+        rawBody: Buffer.from("payload"),
+      } as any),
+    ).rejects.toThrow("database unavailable");
+  });
+
   it("should propagate error from stripe construction", async () => {
     (stripeService.constructEventFromPayload as jest.Mock).mockRejectedValue(
       new Error("fail"),

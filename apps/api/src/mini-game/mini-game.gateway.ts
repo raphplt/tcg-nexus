@@ -16,7 +16,19 @@ import { Card } from "../card/entities/card.entity";
 import { buildWebSocketCorsOptions } from "../common/websocket-cors";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
-import { UnauthorizedException, Injectable } from "@nestjs/common";
+import {
+  UnauthorizedException,
+  Injectable,
+  UsePipes,
+  ValidationPipe,
+} from "@nestjs/common";
+import {
+  JoinQueueDto,
+  MAX_ROUND_COUNT,
+  MIN_ROUND_COUNT,
+  SessionDto,
+  SubmitGuessDto,
+} from "./dto/mini-game-events.dto";
 
 type AuthenticatedSocket = Socket & {
   data: Socket["data"] & {
@@ -60,6 +72,8 @@ interface GameSession {
   round: number;
   maxRounds: number;
   items: any[]; // The card or sealed product items generated for this session
+  /** Server-side start of the current round, used to time the guesses. */
+  roundStartedAt: number;
 }
 
 @WebSocketGateway({
@@ -67,6 +81,14 @@ interface GameSession {
   namespace: "/mini-game",
 })
 @Injectable()
+// Socket payloads bypass the HTTP global pipe: validate them explicitly.
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }),
+)
 export class MiniGameGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
@@ -131,10 +153,7 @@ export class MiniGameGateway
   @SubscribeMessage("minigame_join_queue")
   async handleJoinQueue(
     @MessageBody()
-    data: {
-      gameType: "case_opening" | "juste_prix";
-      params?: { setId?: string; roundCount?: number };
-    },
+    data: JoinQueueDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -176,7 +195,10 @@ export class MiniGameGateway
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       // Generate items depending on game type
-      const roundCount = data.params?.roundCount || 5;
+      const roundCount = Math.min(
+        MAX_ROUND_COUNT,
+        Math.max(MIN_ROUND_COUNT, data.params?.roundCount ?? 5),
+      );
       const items = await this.generateGameItems(
         data.gameType,
         roundCount,
@@ -211,6 +233,7 @@ export class MiniGameGateway
         round: 0,
         maxRounds: roundCount,
         items,
+        roundStartedAt: Date.now(),
       };
 
       this.activeSessions.set(sessionId, session);
@@ -261,7 +284,7 @@ export class MiniGameGateway
 
   @SubscribeMessage("minigame_join_room")
   handleJoinRoom(
-    @MessageBody() data: { sessionId: string },
+    @MessageBody() data: SessionDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -288,7 +311,7 @@ export class MiniGameGateway
 
   @SubscribeMessage("minigame_ready")
   handleReady(
-    @MessageBody() data: { sessionId: string },
+    @MessageBody() data: SessionDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -311,9 +334,11 @@ export class MiniGameGateway
       if (session.state === "waiting") {
         session.state = "playing";
         session.round = 1;
+        session.roundStartedAt = Date.now();
       } else if (session.state === "playing") {
         if (session.round < session.maxRounds) {
           session.round += 1;
+          session.roundStartedAt = Date.now();
         } else {
           session.state = "finished";
         }
@@ -334,7 +359,7 @@ export class MiniGameGateway
 
   @SubscribeMessage("minigame_open_pack")
   async handleOpenPack(
-    @MessageBody() data: { sessionId: string },
+    @MessageBody() data: SessionDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -377,11 +402,8 @@ export class MiniGameGateway
 
   @SubscribeMessage("minigame_submit_guess")
   handleSubmitGuess(
-    @MessageBody() data: {
-      sessionId: string;
-      guess: number;
-      timeTaken: number;
-    },
+    @MessageBody()
+    data: SubmitGuessDto,
     @ConnectedSocket() client: AuthenticatedSocket,
   ) {
     const user = this.requireSocketUser(client);
@@ -407,20 +429,27 @@ export class MiniGameGateway
     const diff = Math.abs(correctPrice - data.guess);
     const diffPercent = correctPrice > 0 ? diff / correctPrice : 0;
 
+    // Elapsed time is measured server-side from the round start: a
+    // client-provided duration could be negative and inflate the bonus.
+    const timeTaken = Math.max(
+      0,
+      (Date.now() - session.roundStartedAt) / 1000,
+    );
+
     // Points system:
     // Max points per round = 1000
     // Penalize based on deviation percent (e.g., -100 points for each 10% deviation)
     let points = Math.max(0, 1000 - Math.round(diffPercent * 10000));
     // If they got it very close (within 5%), add speed bonus
     if (diffPercent <= 0.05) {
-      const speedBonus = Math.max(0, Math.round((15 - data.timeTaken) * 20)); // up to 300 points speed bonus
+      const speedBonus = Math.max(0, Math.round((15 - timeTaken) * 20)); // up to 300 points speed bonus
       points += speedBonus;
     }
 
     player.guesses.push({
       round: currentRound,
       guess: data.guess,
-      timeTaken: data.timeTaken,
+      timeTaken,
       diff,
       points,
     });
@@ -469,12 +498,19 @@ export class MiniGameGateway
     setId?: string,
   ): Promise<any[]> {
     if (gameType === "case_opening") {
-      // Duel case opening: for each round, we need 2 packs (one for player A, one for player B).
-      // A pack contains 6 random cards of the selected set (or general cards if no set selected).
+      const cardsPerPack = 6;
+      const cards = await this.drawRandomCards(
+        roundCount * cardsPerPack * 2,
+        setId,
+      );
       const packs: any[] = [];
       for (let r = 0; r < roundCount; r++) {
-        const packA = await this.drawRandomCards(6, setId);
-        const packB = await this.drawRandomCards(6, setId);
+        const roundOffset = r * cardsPerPack * 2;
+        const packA = cards.slice(roundOffset, roundOffset + cardsPerPack);
+        const packB = cards.slice(
+          roundOffset + cardsPerPack,
+          roundOffset + cardsPerPack * 2,
+        );
         packs.push([packA, packB]);
       }
       return packs;
@@ -491,18 +527,15 @@ export class MiniGameGateway
       if (setId) {
         cardQb.andWhere("set.id = :setId", { setId });
       }
-      const dbCards = await cardQb
-        .orderBy("RANDOM()")
-        .limit(roundCount)
-        .getMany();
-
-      // Query sealed products
-      const dbSealed = await this.sealedProductRepository
-        .createQueryBuilder("sealed")
-        .leftJoinAndSelect("sealed.pokemonSet", "set")
-        .orderBy("RANDOM()")
-        .limit(roundCount)
-        .getMany();
+      const [dbCards, dbSealed] = await Promise.all([
+        cardQb.orderBy("RANDOM()").limit(roundCount).getMany(),
+        this.sealedProductRepository
+          .createQueryBuilder("sealed")
+          .leftJoinAndSelect("sealed.pokemonSet", "set")
+          .orderBy("RANDOM()")
+          .limit(roundCount)
+          .getMany(),
+      ]);
 
       // Mix items
       let cardIdx = 0;
@@ -714,10 +747,21 @@ export class MiniGameGateway
       secret: jwtSecret,
     });
 
+    // A valid token is not enough: the account may have been deactivated or
+    // deleted since it was issued, and the token stays valid until it expires.
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+
+    if (!user?.isActive) {
+      throw new UnauthorizedException("Account is not active");
+    }
+
     return {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 

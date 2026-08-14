@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 
 from .pipeline import _decode, _find_card_box, _warp_card
+from .url_guard import MAX_DOWNLOAD_BYTES, assert_safe_url
 
 
 _REF_SIZE = (245, 337)
@@ -38,8 +39,15 @@ def _good_matches(d1, d2) -> int:
 
 
 def _download_gray(url: str):
+    assert_safe_url(url)
     req = urllib.request.Request(url, headers={"User-Agent": "tcg-nexus"})
-    data = urllib.request.urlopen(req, timeout=15).read()
+    with urllib.request.urlopen(req, timeout=15) as response:
+        # revalidé après redirection : urllib suit les 3xx sans repasser par le garde
+        assert_safe_url(response.geturl())
+        # +1 octet pour détecter un dépassement au lieu de tronquer silencieusement
+        data = response.read(MAX_DOWNLOAD_BYTES + 1)
+    if len(data) > MAX_DOWNLOAD_BYTES:
+        return None
     img = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
     return None if img is None else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 

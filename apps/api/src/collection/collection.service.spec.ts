@@ -112,8 +112,9 @@ describe("CollectionService", () => {
   });
 
   it("should find one collection or throw", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "10" });
-    await expect(service.findOneById("10")).resolves.toEqual({ id: "10" });
+    const publicCollection = { id: "10", isPublic: true };
+    mockCollectionRepo.findOne.mockResolvedValue(publicCollection);
+    await expect(service.findOneById("10")).resolves.toEqual(publicCollection);
 
     mockCollectionRepo.findOne.mockResolvedValue(null);
     await expect(service.findOneById("missing")).rejects.toThrow(
@@ -198,7 +199,7 @@ describe("CollectionService", () => {
   });
 
   it("should paginate collection items with search", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "c" });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "c", isPublic: true });
     const qb = createQueryBuilder();
     mockCollectionItemRepo.createQueryBuilder.mockReturnValue(qb);
 
@@ -217,7 +218,7 @@ describe("CollectionService", () => {
   });
 
   it("should order by pokemonCard name when requested", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "c" });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "c", isPublic: true });
     const qb = createQueryBuilder();
     mockCollectionItemRepo.createQueryBuilder.mockReturnValue(qb);
 

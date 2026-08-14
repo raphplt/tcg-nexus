@@ -64,8 +64,11 @@ export class CollectionController {
     description: "Collections de l'utilisateur",
     type: [Collection],
   })
-  async findByUserId(@Param("userId") userId: string) {
-    return this.collectionService.findByUserId(userId);
+  async findByUserId(
+    @Param("userId") userId: string,
+    @CurrentUser() user?: User,
+  ) {
+    return this.collectionService.findByUserId(userId, user);
   }
 
   @Get(":id/items")
@@ -90,6 +93,7 @@ export class CollectionController {
     @Query("serieId") serieId?: string,
     @Query("rarity") rarity?: string,
     @Query("cardState") cardState?: string,
+    @CurrentUser() user?: User,
   ) {
     const pageNumber = page ? parseInt(page, 10) : 1;
     const limitNumber = limit ? parseInt(limit, 10) : 10;
@@ -104,6 +108,7 @@ export class CollectionController {
       serieId,
       rarity,
       cardState,
+      user,
     );
   }
 
@@ -120,8 +125,9 @@ export class CollectionController {
   async getSetRarities(
     @Param("id") id: string,
     @RequestLocale() locale: SupportedLocale,
+    @CurrentUser() user?: User,
   ): Promise<string[]> {
-    return this.collectionService.getSetRarities(id, locale);
+    return this.collectionService.getSetRarities(id, locale, user);
   }
 
   @Get("my/collections")
@@ -134,7 +140,7 @@ export class CollectionController {
     type: [Collection],
   })
   async getMyCollections(@CurrentUser() user: User): Promise<Collection[]> {
-    return this.collectionService.findByUserId(user.id.toString());
+    return this.collectionService.findByUserId(user.id.toString(), user);
   }
 
   @Get(":id")
@@ -146,8 +152,11 @@ export class CollectionController {
     type: Collection,
   })
   @ApiResponse({ status: 404, description: "Collection non trouvée" })
-  async findOneById(@Param("id") id: string): Promise<Collection> {
-    return this.collectionService.findOneById(id);
+  async findOneById(
+    @Param("id") id: string,
+    @CurrentUser() user?: User,
+  ): Promise<Collection> {
+    return this.collectionService.findOneById(id, user);
   }
 
   @Post()

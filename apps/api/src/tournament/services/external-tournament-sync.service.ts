@@ -1,7 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, Optional } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
+import { runWithPostgresAdvisoryLock } from "../../common/postgres-advisory-lock";
 import { Tournament, TournamentStatus, TournamentType } from "../entities";
 
 @Injectable()
@@ -11,10 +12,19 @@ export class ExternalTournamentSyncService implements OnModuleInit {
   constructor(
     @InjectRepository(Tournament)
     private readonly tournamentRepository: Repository<Tournament>,
+    @Optional() private readonly dataSource?: DataSource,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async syncExternalTournaments() {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:external-tournament-sync",
+      () => this.runExternalTournamentSync(),
+    );
+  }
+
+  private async runExternalTournamentSync(): Promise<void> {
     const syncUrl = process.env.EXTERNAL_TOURNAMENT_API_URL;
     if (!syncUrl) {
       this.logger.debug(
