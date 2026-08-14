@@ -1,60 +1,88 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PokemonCardsTable } from "@/components/PokemonCardsTable";
 import { pokemonCardService } from "@/services/pokemonCard.service";
-import type { PokemonCardType } from "@/types/cardPokemon";
-import type { PaginatedResult } from "@/types/pagination";
+import type {
+  PokemonCardType,
+  PokemonSerieType,
+  PokemonSetType,
+} from "@/types/cardPokemon";
 import { Rarity } from "@/types/listing";
+import type { PaginatedResult } from "@/types/pagination";
 
 vi.mock("@/services/pokemonCard.service", () => ({
   pokemonCardService: {
     getPaginated: vi.fn(),
-    search: vi.fn(),
-    getAllSeries: vi.fn().mockResolvedValue([]),
-    getAllSets: vi.fn().mockResolvedValue([]),
+    getAllSeries: vi.fn(),
+    getAllSets: vi.fn(),
+    getSetRarities: vi.fn(),
   },
 }));
+
+const sampleSeries: PokemonSerieType = {
+  id: "scarlet-violet",
+  name: "Écarlate et Violet",
+};
+
+const sampleSet: PokemonSetType = {
+  id: "base",
+  name: "Foudre Noire",
+  serie: sampleSeries,
+  cardCount: { total: 172, official: 172, reverse: 0, holo: 0, firstEd: 0 },
+};
 
 const sampleCards: PokemonCardType[] = [
   {
     id: "card-1",
+    localId: "001",
     name: "Pikachu",
     image: "/pikachu",
     rarity: Rarity.RARE,
-    set: { id: "base", name: "Base" },
+    set: sampleSet,
     hp: 60,
-    types: ["Electric"],
+    types: ["Lightning"],
   },
   {
     id: "card-2",
+    localId: "002",
     name: "Bulbasaur",
     image: "/bulbasaur",
     rarity: Rarity.COMMUNE,
-    set: { id: "jungle", name: "Jungle" },
+    set: sampleSet,
     hp: 50,
     types: ["Grass"],
   },
 ];
 
 const createPaginated = (
-  overrides?: Partial<PaginatedResult<PokemonCardType>["meta"]>,
+  cards = sampleCards,
 ): PaginatedResult<PokemonCardType> => ({
-  data: sampleCards,
+  data: cards,
   meta: {
-    totalItems: 20,
-    itemCount: sampleCards.length,
-    itemsPerPage: 10,
-    totalPages: 2,
+    totalItems: cards.length,
+    itemCount: cards.length,
+    itemsPerPage: 12,
+    totalPages: 1,
     currentPage: 1,
-    hasNextPage: true,
+    hasNextPage: false,
     hasPreviousPage: false,
-    ...overrides,
   },
 });
 
 const mockGetPaginated = vi.mocked(pokemonCardService.getPaginated);
-const mockSearch = vi.mocked(pokemonCardService.search);
+const mockGetAllSeries = vi.mocked(pokemonCardService.getAllSeries);
+const mockGetAllSets = vi.mocked(pokemonCardService.getAllSets);
+const mockGetSetRarities = vi.mocked(pokemonCardService.getSetRarities);
+
+async function selectSampleSet() {
+  await userEvent.click(
+    await screen.findByRole("button", { name: /Écarlate et Violet/ }),
+  );
+  await userEvent.click(
+    await screen.findByRole("button", { name: /Foudre Noire/ }),
+  );
+}
 
 describe("PokemonCardsTable", () => {
   beforeEach(() => {
@@ -66,66 +94,63 @@ describe("PokemonCardsTable", () => {
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
 
     vi.clearAllMocks();
+    mockGetAllSeries.mockResolvedValue([sampleSeries]);
+    mockGetAllSets.mockResolvedValue([sampleSet]);
+    mockGetSetRarities.mockResolvedValue(["Rare", "Commune", "Double rare"]);
     mockGetPaginated.mockResolvedValue(createPaginated());
-    mockSearch.mockResolvedValue([]);
   });
 
-  it("affiche la pagination initiale et les cartes chargées", async () => {
-    render(<PokemonCardsTable initialPage={1} itemsPerPage={10} />);
+  it("loads cards after an expansion is selected", async () => {
+    render(<PokemonCardsTable itemsPerPage={12} />);
 
-    expect(screen.getByText(/Chargement/)).toBeInTheDocument();
+    await selectSampleSet();
 
-    await waitFor(() =>
-      expect(
-        screen.getByText(/Cartes Pokemon \(20 cartes\)/i),
-      ).toBeInTheDocument(),
-    );
-
-    expect(screen.getByText("Pikachu")).toBeInTheDocument();
+    expect(await screen.findByText("Pikachu")).toBeInTheDocument();
     expect(screen.getByText("Bulbasaur")).toBeInTheDocument();
-    expect(screen.getByText(/Page 1 sur 2/)).toBeInTheDocument();
-    expect(mockGetPaginated).toHaveBeenCalledWith({ page: 1, limit: 10 });
+    expect(mockGetPaginated).toHaveBeenCalledWith({
+      page: 1,
+      limit: 12,
+      setId: sampleSet.id,
+    });
   });
 
-  it("charge la page suivante et déclenche un nouvel appel API", async () => {
-    mockGetPaginated
-      .mockResolvedValueOnce(createPaginated())
-      .mockResolvedValueOnce(
-        createPaginated({
-          currentPage: 2,
-          hasNextPage: false,
-          hasPreviousPage: true,
-        }),
-      );
+  it("builds the rarity filter from the selected expansion", async () => {
+    render(<PokemonCardsTable />);
 
-    render(<PokemonCardsTable itemsPerPage={10} />);
+    await selectSampleSet();
 
-    await screen.findByText("Pikachu");
+    expect(mockGetSetRarities).toHaveBeenCalledWith(sampleSet.id);
+    const doubleRareFilter = await screen.findByRole("button", {
+      name: "Double rare",
+    });
+    expect(doubleRareFilter.querySelector("img")).toHaveAttribute(
+      "src",
+      "/images/rareties/JCC-Double-Rare.png",
+    );
+    expect(screen.getByRole("button", { name: "Commune" })).toBeInTheDocument();
 
-    const nextPage = screen.getByLabelText("Go to next page");
-    await userEvent.click(nextPage);
+    await userEvent.click(doubleRareFilter);
 
     await waitFor(() =>
       expect(mockGetPaginated).toHaveBeenLastCalledWith({
-        page: 2,
-        limit: 10,
+        page: 1,
+        limit: 12,
+        setId: sampleSet.id,
+        rarity: "Double rare",
       }),
     );
-    expect(screen.getByText(/Page 2 sur 2/)).toBeInTheDocument();
+    expect(doubleRareFilter).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("permet de rechercher puis de réinitialiser les résultats", async () => {
+  it("searches through the paginated endpoint and clears the query", async () => {
     const mewCard: PokemonCardType = {
       ...sampleCards[0]!,
       id: "card-3",
       name: "Mew",
-      set: sampleCards[0]!.set,
     };
-
-    mockSearch.mockResolvedValue([mewCard]);
+    mockGetPaginated.mockResolvedValue(createPaginated([mewCard]));
 
     render(<PokemonCardsTable itemsPerPage={5} />);
-    await screen.findByText("Pikachu");
 
     await userEvent.type(
       screen.getByPlaceholderText(/Rechercher une carte/),
@@ -133,24 +158,28 @@ describe("PokemonCardsTable", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "Rechercher" }));
 
-    await screen.findByText(/Résultats pour "Mew"/i);
-    expect(mockSearch).toHaveBeenCalledWith("Mew");
-    expect(screen.getByText("Mew")).toBeInTheDocument();
+    expect(await screen.findByText("Mew")).toBeInTheDocument();
+    expect(mockGetPaginated).toHaveBeenCalledWith({
+      page: 1,
+      limit: 5,
+      search: "Mew",
+    });
 
-    const callsBeforeClear = mockGetPaginated.mock.calls.length;
     await userEvent.click(screen.getByRole("button", { name: "Effacer" }));
     await waitFor(() =>
-      expect(mockGetPaginated.mock.calls.length).toBeGreaterThan(
-        callsBeforeClear,
-      ),
+      expect(screen.queryByText(/Résultats pour/)).not.toBeInTheDocument(),
     );
-    expect(screen.getByText("Pikachu")).toBeInTheDocument();
   });
 
-  it("affiche un état d'erreur lorsque le chargement échoue", async () => {
+  it("shows a card loading error after a failed search", async () => {
     mockGetPaginated.mockRejectedValueOnce(new Error("network down"));
-
     render(<PokemonCardsTable />);
+
+    await userEvent.type(
+      screen.getByPlaceholderText(/Rechercher une carte/),
+      "Mew",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Rechercher" }));
 
     await screen.findByText("Erreur lors du chargement des cartes Pokémon");
   });

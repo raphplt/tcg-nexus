@@ -4,12 +4,13 @@ import {
   ArrowLeft,
   Bookmark,
   Calendar,
+  Check,
   ChevronRight,
   Grid as GridIcon,
   Layers,
   List as ListIcon,
   Search,
-  Sparkles,
+  SlidersHorizontal,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -50,6 +51,7 @@ import type {
 import { useLocale, useTranslations } from "next-intl";
 import {
   getCardImage,
+  getRarityImage,
   getSeriesLogo,
   getSetLogo,
   getSetSymbol,
@@ -58,6 +60,30 @@ import {
 interface PokemonCardsTableProps {
   initialPage?: number;
   itemsPerPage?: number;
+}
+
+type PokemonCardQueryParams = {
+  page: number;
+  limit: number;
+  setId?: string;
+  serieId?: string;
+  rarity?: string;
+  type?: string;
+  search?: string;
+};
+
+function RarityIcon({ rarity }: { rarity: string }) {
+  const icon = getRarityImage(rarity);
+  if (!icon) return null;
+
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-6 w-7 shrink-0 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5"
+    >
+      <img alt="" className="max-h-4 max-w-5 object-contain" src={icon} />
+    </span>
+  );
 }
 
 const POKEMON_TYPES = [
@@ -74,23 +100,12 @@ const POKEMON_TYPES = [
   { value: "Colorless", labelKey: "typeColorless" },
 ];
 
-const POKEMON_RARITIES = [
-  { value: "Commune", labelKey: "rarityCommon" },
-  { value: "Peu Commune", labelKey: "rarityUncommon" },
-  { value: "Rare", labelKey: "rarityRare" },
-  { value: "Rare Holo", labelKey: "rarityRareHolo" },
-  { value: "Double rare", labelKey: "rarityDoubleRare" },
-  { value: "Ultra Rare", labelKey: "rarityUltraRare" },
-  { value: "Illustration rare", labelKey: "rarityIllustrationRare" },
-  {
-    value: "Illustration spéciale rare",
-    labelKey: "raritySpecialIllustrationRare",
-  },
-  { value: "Hyper rare", labelKey: "rarityHyperRare" },
-  { value: "Secret Rare", labelKey: "raritySecretRare" },
-  { value: "Promo", labelKey: "rarityPromo" },
-];
-
+/**
+ * Displays the Pokémon catalog explorer with set-aware filters and card views.
+ *
+ * @param props - Pagination configuration for the catalog.
+ * @returns Interactive Pokémon card explorer.
+ */
 export function PokemonCardsTable({
   initialPage = 1,
   itemsPerPage = 12,
@@ -116,6 +131,8 @@ export function PokemonCardsTable({
 
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
+  const [availableRarities, setAvailableRarities] = useState<string[]>([]);
+  const [raritiesLoading, setRaritiesLoading] = useState(false);
   const [displayFormat, setDisplayFormat] = useState<"grid" | "table">("grid");
 
   const observerRef = React.useRef<HTMLDivElement | null>(null);
@@ -142,6 +159,42 @@ export function PokemonCardsTable({
     loadMetadata();
   }, []);
 
+  useEffect(() => {
+    setSelectedRarity("all");
+
+    if (!selectedSet) {
+      setAvailableRarities([]);
+      setRaritiesLoading(false);
+      return;
+    }
+
+    let isCurrentRequest = true;
+    setRaritiesLoading(true);
+
+    pokemonCardService
+      .getSetRarities(selectedSet.id)
+      .then((rarities) => {
+        if (!isCurrentRequest) return;
+
+        const uniqueRarities = [...new Set(rarities.filter(Boolean))].sort(
+          (left, right) => left.localeCompare(right, locale),
+        );
+        setAvailableRarities(uniqueRarities);
+      })
+      .catch((err) => {
+        if (!isCurrentRequest) return;
+        setAvailableRarities([]);
+        console.error("Error fetching Pokemon set rarities:", err);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setRaritiesLoading(false);
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [locale, selectedSet]);
+
   const fetchCards = useCallback(
     async (
       page: number,
@@ -158,7 +211,7 @@ export function PokemonCardsTable({
         setLoading(true);
         setError(null);
 
-        const params: any = {
+        const params: PokemonCardQueryParams = {
           page,
           limit: itemsPerPage,
         };
@@ -328,6 +381,7 @@ export function PokemonCardsTable({
 
   const handleSetSelect = (set: PokemonSetType) => {
     setSelectedSet(set);
+    setSelectedRarity("all");
 
     if (!selectedSerie && set.serie) {
       setSelectedSerie(set.serie);
@@ -336,16 +390,21 @@ export function PokemonCardsTable({
   };
 
   return (
-    <div className="space-y-8">
-      <Card className="border-border/40 bg-card/60 backdrop-blur-md overflow-hidden shadow-2xl">
-        <CardHeader className="border-b border-border/40 pb-4">
+    <div className="space-y-6">
+      <Card className="overflow-hidden border-border bg-card shadow-sm">
+        <CardHeader className="gap-0 border-b border-border px-5 py-5 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                {t("explorerTitle")}
-              </CardTitle>
-              <CardDescription>{t("explorerSubtitle")}</CardDescription>
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                {t("catalogLabel")}
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                {t("pokemonCards")}
+              </h1>
+              <CardDescription className="mt-1">
+                {t("explorerSubtitle")}
+              </CardDescription>
             </div>
 
             <div className="flex items-center gap-2">
@@ -353,82 +412,88 @@ export function PokemonCardsTable({
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="text-xs hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="text-xs"
               >
                 {t("reset")}
               </Button>
-              <div className="flex bg-muted rounded-lg p-0.5 border border-border/40">
+              <div className="flex rounded-md border border-border bg-muted/60 p-0.5">
                 <Button
                   variant={displayFormat === "grid" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => setDisplayFormat("grid")}
-                  className="px-2.5 py-1 h-7 text-xs rounded-md"
+                  className="h-8 rounded px-2.5 text-xs"
                 >
                   <GridIcon className="w-3.5 h-3.5 mr-1" />
-                  Grille
+                  {t("gridView")}
                 </Button>
                 <Button
                   variant={displayFormat === "table" ? "secondary" : "ghost"}
                   size="sm"
                   onClick={() => setDisplayFormat("table")}
-                  className="px-2.5 py-1 h-7 text-xs rounded-md"
+                  className="h-8 rounded px-2.5 text-xs"
                 >
                   <ListIcon className="w-3.5 h-3.5 mr-1" />
-                  Tableau
+                  {t("tableView")}
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center flex-wrap gap-2 text-sm text-muted-foreground mt-4 bg-muted/40 p-2 rounded-lg border border-border/20">
-            <span
+          <nav
+            aria-label={t("breadcrumbLabel")}
+            className="mt-5 flex flex-wrap items-center gap-1.5 border-t border-border pt-4 text-sm text-muted-foreground"
+          >
+            <button
+              type="button"
               onClick={() => {
                 setSelectedSerie(null);
                 setSelectedSet(null);
                 setCurrentPage(1);
               }}
-              className="cursor-pointer hover:text-primary transition-colors font-medium"
+              className="font-medium transition-colors hover:text-foreground"
             >
               {t("title")}
-            </span>
+            </button>
             {selectedSerie && (
               <>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
-                <span
+                <button
+                  type="button"
                   onClick={() => {
                     setSelectedSet(null);
                     setCurrentPage(1);
                   }}
-                  className="cursor-pointer hover:text-primary transition-colors font-medium text-foreground"
+                  className="font-medium text-foreground transition-colors hover:text-primary"
                 >
                   {selectedSerie.name}
-                </span>
+                </button>
               </>
             )}
             {selectedSet && (
               <>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
-                <span className="font-semibold text-primary">
+                <span className="font-semibold text-foreground">
                   {selectedSet.name}
                 </span>
               </>
             )}
-          </div>
+          </nav>
         </CardHeader>
 
-        <CardContent className="pt-6">
+        <CardContent className="p-5 sm:p-6">
           {!selectedSerie && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-primary" /> Séries Pokémon (
-                {series.length})
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Layers className="h-4 w-4 text-muted-foreground" />
+                {t("seriesHeading", { count: series.length })}
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {series.map((serie) => (
-                  <div
+                  <button
+                    type="button"
                     key={serie.id}
                     onClick={() => handleSerieSelect(serie)}
-                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-muted/30 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-muted/60 hover:shadow-lg"
+                    className="group relative overflow-hidden rounded-lg border border-border bg-background p-4 text-left transition-colors hover:border-foreground/20 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <div className="flex h-16 items-center justify-center mb-3">
                       {getSeriesLogo(serie) ? (
@@ -437,7 +502,7 @@ export function PokemonCardsTable({
                           alt={serie.name}
                           loading="lazy"
                           decoding="async"
-                          className="max-h-full max-w-full object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] group-hover:scale-105 transition-transform duration-300"
+                          className="max-h-full max-w-full object-contain transition-transform duration-200 group-hover:scale-[1.03]"
                         />
                       ) : (
                         <div className="text-2xl font-bold opacity-30 select-none">
@@ -445,10 +510,10 @@ export function PokemonCardsTable({
                         </div>
                       )}
                     </div>
-                    <div className="text-center font-semibold text-sm group-hover:text-primary transition-colors">
+                    <div className="text-center text-sm font-medium transition-colors group-hover:text-primary">
                       {serie.name}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -470,16 +535,20 @@ export function PokemonCardsTable({
                   {t("backToSeries")}
                 </Button>
               </div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-primary" /> Extensions de la
-                série {selectedSerie.name} ({filteredSets.length})
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Layers className="h-4 w-4 text-muted-foreground" />
+                {t("setsHeading", {
+                  series: selectedSerie.name,
+                  count: filteredSets.length,
+                })}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredSets.map((set) => (
-                  <div
+                  <button
+                    type="button"
                     key={set.id}
                     onClick={() => handleSetSelect(set)}
-                    className="group flex items-center gap-3 cursor-pointer overflow-hidden rounded-xl border border-border/40 bg-muted/30 p-3 transition-all duration-300 hover:border-primary/50 hover:bg-muted/60 hover:shadow-lg"
+                    className="group flex items-center gap-3 overflow-hidden rounded-lg border border-border bg-background p-3 text-left transition-colors hover:border-foreground/20 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 bg-background/50 rounded-lg p-1.5 border border-border/20">
                       {getSetSymbol(set) ? (
@@ -538,15 +607,15 @@ export function PokemonCardsTable({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
           {selectedSet && (
-            <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/20 rounded-xl p-4">
-              <div className="w-20 h-20 flex items-center justify-center bg-background/50 rounded-xl p-2 border border-border/20">
+            <section className="flex flex-col items-center gap-6 rounded-lg border border-border bg-muted/25 p-5 sm:flex-row sm:p-6">
+              <div className="flex h-28 w-40 flex-shrink-0 items-center justify-center rounded-lg bg-background p-4 shadow-sm ring-1 ring-border">
                 {getSetLogo(selectedSet) ? (
                   <img
                     src={getSetLogo(selectedSet)}
@@ -569,7 +638,9 @@ export function PokemonCardsTable({
               </div>
               <div className="flex-1 text-center sm:text-left min-w-0">
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                  <h2 className="text-xl font-bold">{selectedSet.name}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {selectedSet.name}
+                  </h2>
                   <div className="flex gap-1">
                     {selectedSet.legal?.standard && (
                       <Badge className="bg-green-500/15 text-green-500 border border-green-500/30 text-xs">
@@ -612,29 +683,29 @@ export function PokemonCardsTable({
               >
                 Changer d&apos;extension
               </Button>
-            </div>
+            </section>
           )}
         </CardContent>
       </Card>
 
-      <Card className="border-border/40 bg-card/60 backdrop-blur-md shadow-2xl">
-        <CardHeader className="border-b border-border/40 pb-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <Card className="border-border bg-card shadow-sm">
+        <CardHeader className="gap-4 border-b border-border px-5 py-5 sm:px-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <CardTitle className="flex items-baseline gap-2 text-xl font-semibold tracking-tight">
                 {currentData
-                  ? `Cartes Pokemon (${currentData.meta.totalItems} cartes)`
-                  : "Cartes Pokemon"}
+                  ? t("cardsHeading", { count: currentData.meta.totalItems })
+                  : t("pokemonCards")}
                 {activeSearch.trim() && (
                   <span className="text-sm font-normal text-muted-foreground">
-                    - Résultats pour &quot;{activeSearch}&quot;
+                    {t("resultsFor", { query: activeSearch })}
                   </span>
                 )}
               </CardTitle>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="w-[140px]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="w-full sm:w-[160px]">
                 <Select
                   value={selectedType}
                   onValueChange={(val) => {
@@ -642,7 +713,7 @@ export function PokemonCardsTable({
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="h-9 text-xs">
+                  <SelectTrigger className="h-10 bg-background text-sm">
                     <SelectValue placeholder={t("filterByType")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -656,53 +727,32 @@ export function PokemonCardsTable({
                 </Select>
               </div>
 
-              <div className="w-[160px]">
-                <Select
-                  value={selectedRarity}
-                  onValueChange={(val) => {
-                    setSelectedRarity(val);
-                    setCurrentPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder={t("filterByRarity")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t("allRarities")}</SelectItem>
-                    {POKEMON_RARITIES.map((rarity) => (
-                      <SelectItem key={rarity.value} value={rarity.value}>
-                        {t(rarity.labelKey)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <form
                 onSubmit={handleSearchSubmit}
-                className="flex items-center gap-2 flex-1 sm:flex-initial min-w-[240px]"
+                className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[320px]"
               >
                 <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
                     placeholder={t("searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9 text-xs"
+                    className="h-10 bg-background pl-9 text-sm"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={clearSearch}
-                      className="absolute right-2.5 top-2.5 hover:text-foreground text-muted-foreground"
+                      aria-label={t("clearSearch")}
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   )}
                 </div>
-                <Button type="submit" size="sm" className="h-9 text-xs">
-                  Rechercher
+                <Button type="submit" size="sm" className="h-10">
+                  {t("search")}
                 </Button>
                 {activeSearch.trim() !== "" && (
                   <Button
@@ -710,17 +760,79 @@ export function PokemonCardsTable({
                     variant="outline"
                     size="sm"
                     onClick={clearSearch}
-                    className="h-9 text-xs"
+                    className="h-10"
                   >
-                    Effacer
+                    {t("clear")}
                   </Button>
                 )}
               </form>
             </div>
           </div>
+
+          {selectedSet && (
+            <div className="border-t border-border pt-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-foreground">
+                <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+                {t("raritiesInSet")}
+              </div>
+              <div
+                aria-label={t("filterByRarity")}
+                className="flex flex-wrap gap-2"
+                role="group"
+              >
+                <Button
+                  aria-pressed={selectedRarity === "all"}
+                  className="h-9 rounded-full px-4 text-xs"
+                  onClick={() => {
+                    setSelectedRarity("all");
+                    setCurrentPage(1);
+                  }}
+                  size="sm"
+                  variant={selectedRarity === "all" ? "default" : "outline"}
+                >
+                  {selectedRarity === "all" && (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  {t("allRarities")}
+                </Button>
+
+                {raritiesLoading
+                  ? Array.from({ length: 4 }, (_, index) => (
+                      <div
+                        aria-hidden="true"
+                        className="h-9 w-24 animate-pulse rounded-full bg-muted"
+                        key={index}
+                      />
+                    ))
+                  : availableRarities.map((rarity) => (
+                      <Button
+                        aria-pressed={selectedRarity === rarity}
+                        className="h-9 rounded-full px-4 text-xs"
+                        key={rarity}
+                        onClick={() => {
+                          setSelectedRarity(rarity);
+                          setCurrentPage(1);
+                        }}
+                        size="sm"
+                        variant={
+                          selectedRarity === rarity ? "default" : "outline"
+                        }
+                      >
+                        <RarityIcon rarity={rarity} />
+                        {rarity}
+                      </Button>
+                    ))}
+              </div>
+              {!raritiesLoading && availableRarities.length === 0 && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("noRarities")}
+                </p>
+              )}
+            </div>
+          )}
         </CardHeader>
 
-        <CardContent className="pt-6">
+        <CardContent className="p-5 sm:p-6">
           {loading && cards.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-24 gap-4">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -737,7 +849,7 @@ export function PokemonCardsTable({
           ) : !selectedSet && !activeSearch.trim() ? (
             <div className="flex flex-col items-center justify-center p-20 text-center">
               <div className="rounded-full bg-primary/10 p-4 mb-4 text-primary">
-                <Sparkles className="w-8 h-8 animate-pulse" />
+                <Layers className="h-8 w-8" />
               </div>
               <h3 className="font-bold text-lg mb-1">{t("readyToExplore")}</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-4">
@@ -760,26 +872,24 @@ export function PokemonCardsTable({
               </Button>
             </div>
           ) : displayFormat === "grid" ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {currentData.data.map((card) => (
                 <Link
                   href={`/marketplace/cards/${card.id}`}
                   key={card.id}
-                  className="group flex flex-col h-full bg-card/40 backdrop-blur-sm border border-border/40 rounded-xl p-3 hover:border-primary/50 hover:bg-card/70 hover:-translate-y-1.5 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-primary/5"
+                  className="group flex h-full flex-col rounded-lg border border-transparent bg-background p-2 transition-colors hover:border-border hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-muted/40 shadow-inner mb-3">
+                  <div className="relative mb-3 aspect-[3/4] w-full overflow-hidden rounded-md bg-muted/40">
                     <SmartImage
                       src={getCardImage(card, "low")}
                       fallbackSrc="/images/carte-pokemon-dos.jpg"
                       alt={card.name || "Pokemon Card"}
-                      className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+                      className="h-full w-full object-contain transition-transform duration-200 ease-out group-hover:scale-[1.02]"
                     />
-
-                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out pointer-events-none" />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      <h4 className="font-bold text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                      <h4 className="truncate text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
                         {card.name}
                       </h4>
                       <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
@@ -804,11 +914,12 @@ export function PokemonCardsTable({
                     </div>
 
                     {card.rarity && (
-                      <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between">
+                      <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
                         <Badge
                           variant="outline"
-                          className="text-[9px] font-medium text-muted-foreground bg-muted/30 border-border/40 hover:bg-muted/50 transition-colors"
+                          className="gap-1.5 bg-muted/40 py-0.5 pl-1 pr-2 text-[10px] font-medium text-muted-foreground"
                         >
+                          <RarityIcon rarity={card.rarity} />
                           {card.rarity}
                         </Badge>
                       </div>
@@ -866,8 +977,9 @@ export function PokemonCardsTable({
                         {card.rarity ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] bg-muted/50 font-normal"
+                            className="gap-1.5 bg-muted/50 py-0.5 pl-1 pr-2 text-[10px] font-normal"
                           >
+                            <RarityIcon rarity={card.rarity} />
                             {card.rarity}
                           </Badge>
                         ) : (

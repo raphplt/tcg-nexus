@@ -331,9 +331,16 @@
       "title": "Pokémon tournaments",
       "subtitle": "Discover upcoming tournaments and join the right tables at the right time.",
       "description": "Find open registrations, ongoing events and match access through a more direct path.",
+      "compactTitle": "Find your next tournament.",
+      "compactDescription": "Search, filter and register without wasting time. Available events are right below.",
       "create": "Create a tournament",
       "browseCalendar": "Browse the calendar",
       "goToPlay": "Go to Play"
+    },
+    "overview": {
+      "available": "tournaments available",
+      "upcoming": "upcoming",
+      "live": "live"
     },
     "stats": {
       "listed": "Listed tournaments",
@@ -356,6 +363,7 @@
     "upcoming": {
       "title": "Right now",
       "subtitle": "A quick read of the most useful events to register for or follow live.",
+      "compactSubtitle": "The next events at a glance.",
       "error": "Could not load upcoming tournaments.",
       "empty": "No upcoming tournament at the moment."
     },
@@ -375,9 +383,15 @@
     "play": {
       "title": "Find your games in one place.",
       "description": "The `Play` page gathers the matches assigned to the player and direct access to the online board.",
+      "compactTitle": "A game waiting for you?",
+      "compactDescription": "Find your matches and jump straight onto the online board.",
       "open": "Open the play hub"
     },
     "list": {
+      "title": "Available tournaments",
+      "description": "Upcoming events and registrations, one click away.",
+      "filteredDescription": "Results matching your search.",
+      "count": "{count, plural, =0 {No tournament} one {# tournament} other {# tournaments}}",
       "error": "Could not load the tournaments.",
       "emptyTitle": "No tournament for this filter.",
       "emptyDescription": "Broaden your search or reset the filters to find available events.",
@@ -385,7 +399,12 @@
     },
     "card": {
       "description": "All the essential tournament information, from registration to online matches.",
-      "view": "View tournament"
+      "view": "View tournament",
+      "players": "{count}/{max} players",
+      "register": "Register",
+      "registering": "Registering...",
+      "loginToRegister": "Sign in",
+      "registerFor": "Register for {name}"
     },
     "toBeConfirmed": "To be confirmed",
     "dateToBeConfirmed": "Date to be confirmed",
@@ -1036,6 +1055,19 @@
     "title": "Pokédex",
     "explorerTitle": "Pokédex explorer",
     "explorerSubtitle": "Browse by official series and sets",
+    "catalogLabel": "Pokémon catalog",
+    "breadcrumbLabel": "Catalog navigation",
+    "gridView": "Grid",
+    "tableView": "Table",
+    "seriesHeading": "Pokémon series ({count})",
+    "setsHeading": "{series} sets ({count})",
+    "cardsHeading": "Pokémon cards ({count})",
+    "resultsFor": "— Results for “{query}”",
+    "raritiesInSet": "Rarities in this set",
+    "noRarities": "No rarity is defined for this set.",
+    "search": "Search",
+    "clear": "Clear",
+    "clearSearch": "Clear search",
     "reset": "Reset",
     "backToSeries": "Back to series",
     "selectSet": "Select a set in the explorer or use the search bar to display Pokémon cards.",
@@ -2277,6 +2309,13 @@
   "TournamentsFilters": {
     "reset": "Reset",
     "namePlaceholder": "Tournament name...",
+    "searchPlaceholder": "Search tournaments or cities...",
+    "clearSearch": "Clear search",
+    "locationPlaceholder": "City, store or venue",
+    "quickAll": "All",
+    "quickOpen": "Registration",
+    "quickLive": "Live",
+    "quickFinished": "Finished",
     "hideFilters": "Hide filters",
     "advancedFilters": "Advanced filters",
     "all": "All",

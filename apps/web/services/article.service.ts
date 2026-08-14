@@ -45,7 +45,13 @@ export const articleService = {
 
 function serverApiBaseUrl(): string {
   if (API_BASE_URL.startsWith("http")) return API_BASE_URL;
-  return process.env.API_URL ?? "http://localhost:3001";
+  return process.env.API_URL ?? "http://localhost:3001/api";
+}
+
+function buildServerApiUrl(path: string): URL {
+  const baseUrl = serverApiBaseUrl().replace(/\/+$/, "");
+  const normalizedPath = path.replace(/^\/+/, "");
+  return new URL(`${baseUrl}/${normalizedPath}`);
 }
 
 /** Fetches published articles from a Server Component. */
@@ -53,7 +59,7 @@ export async function getPublishedArticles(
   filters: ArticleFilters = {},
 ): Promise<Article[]> {
   try {
-    const url = new URL("/articles", serverApiBaseUrl());
+    const url = buildServerApiUrl("articles");
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined) url.searchParams.set(key, String(value));
     });
@@ -71,10 +77,7 @@ export async function getPublishedArticle(
   locale: string,
 ): Promise<Article | null> {
   try {
-    const url = new URL(
-      `/articles/slug/${encodeURIComponent(slug)}`,
-      serverApiBaseUrl(),
-    );
+    const url = buildServerApiUrl(`articles/slug/${encodeURIComponent(slug)}`);
     url.searchParams.set("locale", locale);
     const response = await fetch(url, { next: { revalidate: 60 } });
     if (!response.ok) return null;

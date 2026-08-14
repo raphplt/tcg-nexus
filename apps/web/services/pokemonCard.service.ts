@@ -85,6 +85,17 @@ export const pokemonCardService = {
     return response.data;
   },
 
+  /**
+   * Retrieves every localized rarity available in an expansion set.
+   *
+   * @param setId - Expansion set identifier.
+   * @returns Unique rarity labels available for the set.
+   */
+  async getSetRarities(setId: string): Promise<string[]> {
+    const response = await api.get<string[]>(`/cards/set/${setId}/rarities`);
+    return response.data;
+  },
+
   async addToWishlist(
     userId: number,
     pokemonCardId: string,

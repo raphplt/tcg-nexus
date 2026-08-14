@@ -1,313 +1,65 @@
-# Deploiement complet sur VM ETNA (Docker: Front + API + Docs + PostgreSQL + Cloudflare)
+# Déploiement production — Coolify sur VM ETNA
 
-Ce guide deploie toute la plateforme sur la VM:
-- Front Next.js (container `web`, port `3000`)
-- API NestJS (container `api`, port `3001`)
-- Docs Docusaurus servie par Nginx (container `docs`, port `3002`)
-- PostgreSQL (container `postgres`, port `5432`)
-- Cloudflare Tunnel pour exposer `tcg-nexus.org`, `api.tcg-nexus.org` et `docs.tcg-nexus.org` avec URL stable
+La plateforme est déployée sur la VM ETNA via **[Coolify](https://coolify.io)** (PaaS self-hosted), qui a remplacé l'ancien déploiement par script SSH + `docker compose` manuel (conservé dans l'historique git si besoin).
 
-Le tout est orchestre par `docker-compose.deploy.yml`.
+## Vue d'ensemble
 
----
+```
+push main ──► GitHub Actions (CI : lint → tests → build)
+                     │
+                     ▼
+              Coolify (VM ETNA) ──► containers Docker : web · api · vision · postgres · docs
+                     │
+                     ▼
+        Cloudflare Tunnel ──► https://tcg-nexus.org / api.tcg-nexus.org / docs.tcg-nexus.org
+```
 
-## 1. Prerequis
+Répartition des rôles :
 
-Sur la VM:
-- Docker + Docker Compose plugin
-- Git
-- Domaine sur Cloudflare (zone active)
-- `cloudflared` installe
+- **GitHub Actions** (`.github/workflows/ci.yml`) : intégration continue uniquement — lint, type-check, tests unitaires avec coverage, e2e tournois sur PostgreSQL éphémère, build. Aucun déploiement.
+- **Coolify** (installé sur la VM ETNA) : déploiement continu — build et redéploiement des services à chaque push sur `main`, gestion des variables d'environnement, des volumes, des logs, des health checks et des redémarrages via son dashboard web.
+- **Cloudflare Tunnel** : exposition HTTPS des domaines sans IP publique ni reverse proxy à gérer.
 
----
+## Services déployés
 
-## 2. Recuperer le repo
+La stack correspond à `docker-compose.deploy.yml` à la racine du repo :
+
+| Service    | Rôle                          | Port interne |
+| ---------- | ----------------------------- | ------------ |
+| `web`      | Front Next.js                 | 3000         |
+| `api`      | API NestJS                    | 3001         |
+| `vision`   | Microservice Python (scan IA) | 8000         |
+| `postgres` | Base de données PostgreSQL 15 | 5432         |
+| `docs`     | Documentation Docusaurus      | 3002         |
+
+## Opérations courantes (dashboard Coolify)
+
+- **Déployer manuellement** : bouton *Deploy* sur la ressource concernée.
+- **Variables d'environnement** : gérées par service dans Coolify (ne plus éditer les `.env` à la main sur la VM).
+- **Logs** : visibles en temps réel par service dans le dashboard.
+- **Rollback / redémarrage** : depuis le dashboard, sans passer par SSH.
+- **SSH sur la VM** : réservé à l'administration (Coolify lui-même, disque, debug bas niveau).
+
+## Points d'attention
+
+- ⚠️ `.github/workflows/deploy.yml` contient encore l'ancien job de déploiement SSH (`docker compose up` via `appleboy/ssh-action`). Il est **obsolète** depuis le passage à Coolify : à désactiver ou supprimer pour éviter un double déploiement.
+- Les sections « Déploiement VM Debian » historiques du README ont été remplacées ; ce document fait foi.
+
+## ⚠️ Hypothèses à valider par l'équipe
+
+Ce document a été rédigé sans accès au dashboard Coolify. Les éléments suivants décrivent le fonctionnement **standard** de Coolify et doivent être confirmés (et corrigés ici si besoin) :
+
+- Déclenchement du déploiement sur push `main` : webhook GitHub App ou polling ?
+- Stack déclarée comme ressource *Docker Compose* (`docker-compose.deploy.yml`) ou comme applications séparées ?
+- Variables d'environnement effectivement gérées dans Coolify, ou toujours via fichiers `.env` sur la VM ?
+- Cloudflare Tunnel : toujours actif devant Coolify, ou remplacé par le proxy intégré (Traefik/Caddy) de Coolify ?
+- Rollback : disponible selon le mode de déploiement choisi (images vs build local).
+
+## Dépannage rapide
 
 ```bash
-sudo mkdir -p /srv
-sudo chown -R $USER:$USER /srv
-cd /srv
-git clone https://github.com/raphplt/tcg-nexus /srv/tcg-nexus
-cd /srv/tcg-nexus
+# Sur la VM (via SSH), si le dashboard ne suffit pas :
+docker ps                        # état des containers
+docker logs -f <container>       # logs d'un service
+df -h                            # espace disque (les builds Coolify consomment)
 ```
-
----
-
-## 3. Variables d'environnement (sans renommer tes fichiers)
-
-Tu peux garder exactement:
-- `apps/api/.env`
-- `apps/web/.env`
-- `.env` racine
-
-### 3.1 `apps/api/.env`
-
-Garde tes variables API, avec ces points:
-- `DATABASE_HOST=127.0.0.1` peut rester tel quel: Compose l'ecrase en `postgres` dans le container API.
-- `FRONTEND_URL` doit pointer vers ton domaine VM (pas Vercel).
-
-Exemple:
-
-```env
-DATABASE_HOST=127.0.0.1
-DATABASE_PORT=5432
-DATABASE_NAME=tcg_nexus
-DATABASE_USER=postgres
-DATABASE_PASSWORD=postgres
-
-JWT_SECRET=...
-JWT_REFRESH_SECRET=...
-JWT_EXPIRES_IN=15m
-JWT_REFRESH_EXPIRES_IN=7d
-
-PORT=3001
-NODE_ENV=development
-FRONTEND_URL=https://tcg-nexus.org
-
-R2_PUBLIC_URL=...
-STRIPE_SECRET_KEY=...
-STRIPE_WEBHOOK_SECRET=...
-```
-
-### 3.2 `apps/web/.env`
-
-Pour la prod VM:
-
-```env
-NEXT_PUBLIC_API_URL=/api
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...
-```
-
-Important:
-- mets bien `NEXT_PUBLIC_API_URL=/api` (et pas `http://localhost:3001`).
-
-### 3.3 `.env` racine
-
-La racine sert a `postgres` dans Compose. Mets au minimum:
-
-```env
-DATABASE_NAME=tcg_nexus
-DATABASE_USER=postgres
-DATABASE_PASSWORD=postgres
-```
-
-Les variables JWT dans `.env` racine ne sont pas necessaires si elles sont deja dans `apps/api/.env`.
-
----
-
-## 4. Demarrer la stack Docker
-
-Depuis `/srv/tcg-nexus`:
-
-```bash
-docker compose -f docker-compose.deploy.yml up -d --build
-```
-
-Verifier:
-```bash
-docker compose -f docker-compose.deploy.yml ps
-docker compose -f docker-compose.deploy.yml logs -f postgres
-docker compose -f docker-compose.deploy.yml logs -f api
-docker compose -f docker-compose.deploy.yml logs -f web
-```
-
-Test local VM:
-```bash
-curl -I http://127.0.0.1:3000
-curl -i http://127.0.0.1:3001/
-curl -I http://127.0.0.1:3002
-```
-
----
-
-## 4 bis. Appliquer les migrations
-
-En production `synchronize` est désactivé (voir [ADR-004](./adr/004-typeorm-synchronize.md)) : le schéma évolue par migrations.
-
-```bash
-docker compose -f docker-compose.deploy.yml exec api npm run migration:show
-docker compose -f docker-compose.deploy.yml exec api npm run migration:run
-```
-
-Alternative : poser `DATABASE_MIGRATIONS_RUN=true` dans l'environnement de l'API, les migrations en attente sont alors jouées au démarrage.
-
-Sur une base entièrement neuve, il faut d'abord créer le schéma complet — la baseline n'est pas encore versionnée. La procédure est décrite dans [doc/migrations.md](./migrations.md).
-
----
-
-## 5. Seeder la base (dans le container API)
-
-Le script de seed interactif est plus simple avec `exec`:
-
-```bash
-docker compose -f docker-compose.deploy.yml exec api npm run seed
-```
-
-Si tu veux un seed non interactif:
-```bash
-docker compose -f docker-compose.deploy.yml exec -e SEED_AUTO_CONFIRM=true api npm run seed:prod
-```
-
----
-
-## 6. Cloudflare Tunnel (URL stable)
-
-Tu as deja cree le tunnel `tcg-nexus-main`.
-
-### 6.1 Config `/etc/cloudflared/config.yml`
-
-```yaml
-tunnel: 6159185a-d6c9-4d07-aa32-507dc003ed32
-credentials-file: /root/.cloudflared/6159185a-d6c9-4d07-aa32-507dc003ed32.json
-
-ingress:
-  - hostname: tcg-nexus.org
-    path: /api/*
-    service: http://localhost:3001
-  - hostname: www.tcg-nexus.org
-    path: /api/*
-    service: http://localhost:3001
-  - hostname: api.tcg-nexus.org
-    service: http://localhost:3001
-  - hostname: docs.tcg-nexus.org
-    service: http://localhost:3002
-  - hostname: tcg-nexus.org
-    service: http://localhost:3000
-  - hostname: www.tcg-nexus.org
-    service: http://localhost:3000
-  - service: http_status:404
-```
-
-### 6.2 DNS routes
-
-Si un record existe deja pour `@` ou `www`, supprime-le d'abord dans Cloudflare DNS, puis:
-
-```bash
-sudo cloudflared tunnel route dns tcg-nexus-main tcg-nexus.org
-sudo cloudflared tunnel route dns tcg-nexus-main www.tcg-nexus.org
-sudo cloudflared tunnel route dns tcg-nexus-main api.tcg-nexus.org
-sudo cloudflared tunnel route dns tcg-nexus-main docs.tcg-nexus.org
-```
-
-### 6.3 Service systemd cloudflared
-
-```bash
-sudo cloudflared service install
-sudo systemctl enable cloudflared
-sudo systemctl restart cloudflared
-sudo systemctl status cloudflared --no-pager
-```
-
-Logs:
-```bash
-journalctl -u cloudflared -f
-```
-
----
-
-## 7. Verifications finales
-
-Depuis la VM:
-```bash
-curl -I http://127.0.0.1:3000
-curl -i http://127.0.0.1:3001/
-```
-
-Depuis ton poste:
-```bash
-curl -I https://tcg-nexus.org
-curl -i https://tcg-nexus.org/api/
-curl -i https://api.tcg-nexus.org/
-curl -I https://docs.tcg-nexus.org
-```
-
-Checklist:
-- `https://tcg-nexus.org` charge le front
-- les appels `/api/*` passent
-- login/register fonctionne
-- pas d'erreurs CORS
-- `https://docs.tcg-nexus.org` charge la documentation Docusaurus
-
----
-
-## 8. CI/CD - Deploiement automatique
-
-Le deploiement est automatise via GitHub Actions. A chaque push sur `main`, le workflow :
-1. Lance la CI (lint, tests, build)
-2. Si tout passe, se connecte en SSH a la VM
-3. Pull le code et rebuild les containers Docker
-
-### 8.1 Secrets GitHub a configurer
-
-Dans le repo GitHub > Settings > Secrets and variables > Actions, ajouter :
-
-| Secret | Description | Exemple |
-|--------|-------------|---------|
-| `VM_HOST` | IP ou hostname de la VM | `192.168.1.100` |
-| `VM_USER` | Utilisateur SSH sur la VM | `debian` |
-| `VM_SSH_KEY` | Cle privee SSH (contenu complet) | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-
-### 8.2 Preparer la VM pour le deploiement SSH
-
-Generer une paire de cles dediee au deploiement (sur ton poste ou dans GitHub) :
-
-```bash
-ssh-keygen -t ed25519 -C "github-deploy" -f deploy_key -N ""
-```
-
-Ajouter la cle publique sur la VM :
-
-```bash
-cat deploy_key.pub >> ~/.ssh/authorized_keys
-```
-
-Copier le contenu de `deploy_key` (cle privee) dans le secret `VM_SSH_KEY` sur GitHub.
-
-### 8.3 Environment GitHub (optionnel)
-
-Le workflow utilise l'environment `production`. Tu peux le configurer dans GitHub > Settings > Environments pour ajouter des regles de protection (approbation manuelle, etc.).
-
-### 8.4 Mise a jour manuelle (fallback)
-
-```bash
-cd /srv/tcg-nexus
-git pull
-docker compose -f docker-compose.deploy.yml up -d --build
-```
-
-Si reseed necessaire :
-```bash
-docker compose -f docker-compose.deploy.yml exec api npm run seed
-```
-
----
-
-## 9. Commandes utiles
-
-Arreter:
-```bash
-docker compose -f docker-compose.deploy.yml down
-```
-
-Arreter + supprimer volumes DB (destructif):
-```bash
-docker compose -f docker-compose.deploy.yml down -v
-```
-
-Redemarrer un service:
-```bash
-docker compose -f docker-compose.deploy.yml restart api
-docker compose -f docker-compose.deploy.yml restart web
-```
-
----
-
-## 10. Fichiers ajoutes pour ce mode
-
-- `docker-compose.deploy.yml`
-- `docker/api.Dockerfile`
-- `docker/web.Dockerfile`
-- `docker/docs.Dockerfile`
-- `docker/docs.nginx.conf`
-- `.dockerignore`

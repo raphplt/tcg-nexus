@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { PokemonCardType } from "@/types/cardPokemon";
-import { getCardImage, getSetSymbol, rarityToImage } from "@/utils/images";
+import { getCardImage, getRarityImage, getSetSymbol } from "@/utils/images";
 
 interface CardGalleryProps {
   card: PokemonCardType;
@@ -11,7 +11,7 @@ interface CardGalleryProps {
 
 export function CardGallery({ card }: CardGalleryProps) {
   const setSymbol = card.set ? getSetSymbol(card.set) : null;
-  const rarityIcon = card.rarity ? rarityToImage[card.rarity] : null;
+  const rarityIcon = card.rarity ? getRarityImage(card.rarity) : null;
 
   return (
     <div className="lg:sticky lg:top-6 space-y-3">

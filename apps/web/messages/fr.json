@@ -331,9 +331,16 @@
       "title": "Tournois Pokémon",
       "subtitle": "Découvrez les tournois à venir et rejoignez les bonnes tables au bon moment.",
       "description": "Retrouvez les inscriptions ouvertes, les événements en cours et les accès aux matches depuis un parcours plus direct.",
+      "compactTitle": "Trouvez votre prochain tournoi.",
+      "compactDescription": "Recherchez, filtrez et inscrivez-vous sans perdre de temps. Les événements disponibles sont juste en dessous.",
       "create": "Créer un tournoi",
       "browseCalendar": "Explorer le calendrier",
       "goToPlay": "Aller à Jouer"
+    },
+    "overview": {
+      "available": "tournois disponibles",
+      "upcoming": "à venir",
+      "live": "en cours"
     },
     "stats": {
       "listed": "Tournois référencés",
@@ -356,6 +363,7 @@
     "upcoming": {
       "title": "En ce moment",
       "subtitle": "Une lecture rapide des événements les plus utiles pour s'inscrire ou suivre le live.",
+      "compactSubtitle": "Les prochains rendez-vous en un coup d'œil.",
       "error": "Impossible de charger les prochains tournois.",
       "empty": "Aucun tournoi à venir pour le moment."
     },
@@ -375,9 +383,15 @@
     "play": {
       "title": "Retrouvez vos parties au même endroit.",
       "description": "La page `Jouer` rassemble les matches attribués au joueur et l'accès direct au plateau en ligne.",
+      "compactTitle": "Une partie vous attend ?",
+      "compactDescription": "Retrouvez vos matches et accédez directement au plateau en ligne.",
       "open": "Ouvrir le hub de jeu"
     },
     "list": {
+      "title": "Tournois disponibles",
+      "description": "Les prochains événements et inscriptions à portée de clic.",
+      "filteredDescription": "Résultats correspondant à votre recherche.",
+      "count": "{count, plural, =0 {Aucun tournoi} one {# tournoi} other {# tournois}}",
       "error": "Erreur lors du chargement des tournois.",
       "emptyTitle": "Aucun tournoi sur ce filtre.",
       "emptyDescription": "Élargissez la recherche ou réinitialisez les filtres pour retrouver les événements disponibles.",
@@ -385,7 +399,12 @@
     },
     "card": {
       "description": "Toutes les informations essentielles du tournoi, de l'inscription jusqu'aux matches en ligne.",
-      "view": "Voir le tournoi"
+      "view": "Voir le tournoi",
+      "players": "{count}/{max} joueurs",
+      "register": "S'inscrire",
+      "registering": "Inscription...",
+      "loginToRegister": "Se connecter",
+      "registerFor": "S'inscrire à {name}"
     },
     "toBeConfirmed": "À confirmer",
     "dateToBeConfirmed": "Date à confirmer",
@@ -1036,6 +1055,19 @@
     "title": "Pokédex",
     "explorerTitle": "Explorateur Pokédex",
     "explorerSubtitle": "Naviguez par séries et extensions de cartes officielles",
+    "catalogLabel": "Catalogue Pokémon",
+    "breadcrumbLabel": "Navigation du catalogue",
+    "gridView": "Grille",
+    "tableView": "Tableau",
+    "seriesHeading": "Séries Pokémon ({count})",
+    "setsHeading": "Extensions de {series} ({count})",
+    "cardsHeading": "Cartes Pokémon ({count})",
+    "resultsFor": "— Résultats pour « {query} »",
+    "raritiesInSet": "Raretés de cette extension",
+    "noRarities": "Aucune rareté n'est renseignée pour cette extension.",
+    "search": "Rechercher",
+    "clear": "Effacer",
+    "clearSearch": "Effacer la recherche",
     "reset": "Réinitialiser",
     "backToSeries": "Retour aux séries",
     "selectSet": "Sélectionnez une extension dans l'explorateur ou utilisez la barre de recherche pour afficher les cartes Pokémon.",
@@ -2277,6 +2309,13 @@
   "TournamentsFilters": {
     "reset": "Réinitialiser",
     "namePlaceholder": "Nom du tournoi...",
+    "searchPlaceholder": "Rechercher un tournoi, une ville...",
+    "clearSearch": "Effacer la recherche",
+    "locationPlaceholder": "Ville, boutique ou salle",
+    "quickAll": "Tous",
+    "quickOpen": "Inscriptions",
+    "quickLive": "En cours",
+    "quickFinished": "Terminés",
     "hideFilters": "Masquer les filtres",
     "advancedFilters": "Filtres avancés",
     "all": "Tous",

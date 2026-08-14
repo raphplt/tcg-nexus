@@ -15,7 +15,7 @@ export const typeToImage: Record<string, string> = {
   combat: "/images/types/Type-Combat-JCC.png",
 };
 
-export const rarityToImage: Record<Rarity, string> = {
+export const rarityToImage: Record<string, string> = {
   [Rarity.COMMUNE]: "/images/rareties/JCC-commune.png",
   [Rarity.PEU_COMMUNE]: "/images/rareties/JCC-Peu-Commune.png",
   [Rarity.BRILLANT]: "/images/rareties/JCC-Brillant.png",
@@ -34,13 +34,46 @@ export const rarityToImage: Record<Rarity, string> = {
   [Rarity.CHROMATIQUE_ULTRA_RARE]:
     "/images/rareties/JCC-Chromatique-Ultra-Rare.png",
   [Rarity.HIGH_TECH_RARE]: "/images/rareties/JCC-High-Tech-Rare.png",
+  "Rare Noir Blanc": "/images/rareties/JCC-Noir-Blanc-Rare.png",
+};
+
+const rarityAliasToImage: Record<string, string> = {
+  common: "/images/rareties/JCC-commune.png",
+  uncommon: "/images/rareties/JCC-Peu-Commune.png",
+  "double rare": "/images/rareties/JCC-Double-Rare.png",
+  "illustration rare": "/images/rareties/JCC-illustration-rare.png",
+  "special illustration rare":
+    "/images/rareties/JCC-Illustration-Spéciale-Rare.png",
+  "illustration speciale rare":
+    "/images/rareties/JCC-Illustration-Spéciale-Rare.png",
+  "ultra rare": "/images/rareties/JCC-ultra-rare.png",
+  "hyper rare": "/images/rareties/JCC-hyper-rare.png",
+  "rare noir blanc": "/images/rareties/JCC-Noir-Blanc-Rare.png",
+  "black white rare": "/images/rareties/JCC-Noir-Blanc-Rare.png",
 };
 export function getTypeImage(type: string): string | undefined {
   return typeToImage[type] || undefined;
 }
 
-export function getRarityImage(rarity: Rarity): string | undefined {
-  return rarityToImage[rarity] || undefined;
+/**
+ * Resolves a rarity icon from localized API labels.
+ *
+ * @param rarity - Localized rarity label.
+ * @returns Local rarity icon path when the label is recognized.
+ */
+export function getRarityImage(rarity: string): string | undefined {
+  const directMatch = rarityToImage[rarity];
+  if (directMatch) return directMatch;
+
+  const normalizedRarity = rarity
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("fr")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return rarityAliasToImage[normalizedRarity];
 }
 
 import {

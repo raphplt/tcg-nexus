@@ -1,12 +1,9 @@
-import { useTranslations } from "next-intl";
 import React from "react";
 import { PokemonCardsTable } from "@/components/PokemonCardsTable";
 
 const PokemonPage = () => {
-  const t = useTranslations("Pokedex");
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">{t("pokemonCards")}</h1>
+    <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
       <PokemonCardsTable />
     </div>
   );
