@@ -2,19 +2,22 @@
 title: Utilisateurs & rôles
 ---
 
-Gestion des comptes et rôles (admin, moderator, pro, user). Endpoints protégés par `JwtAuthGuard` + `RolesGuard` selon les actions.
+Gestion des comptes. Endpoints protégés par `JwtAuthGuard` + `RolesGuard` selon les actions.
 
 - **Base path** : `/users`
-- **Auth requise** : oui (sauf certaines lectures publiques inexistantes ici)
+- **Auth requise** : oui, sauf `GET /users/:id/public`.
+
+Les rôles RBAC réels sont `admin`, `moderator`, `user` (`UserRole` dans `src/common/enums/user.ts`). Il n'existe pas de rôle « pro » : `isPro` est un simple booléen sur l'entité `User`, indépendant du système de rôles.
 
 ## Endpoints
 
 - `POST /users` (ADMIN) : créer un utilisateur (email, password, rôle...).
 - `GET /users` (ADMIN, MODERATOR) : lister tous les utilisateurs.
 - `GET /users/me` : récupérer son profil complet.
+- `GET /users/:id/public` (public) : profil public d'un utilisateur.
 - `GET /users/:id` (ADMIN, MODERATOR) : lire un utilisateur.
-- `PATCH /users/:id` (ADMIN) : mise à jour d’un utilisateur.
 - `PATCH /users/me` : mettre à jour son propre profil.
+- `PATCH /users/:id` (ADMIN) : mise à jour d’un utilisateur.
 - `DELETE /users/:id` (ADMIN) : suppression.
 
 ## Notes d’usage

@@ -13,7 +13,7 @@ Auth API basée sur JWT avec stockage des tokens en cookies httpOnly. Swagger di
 - `POST /auth/register` (public) : email, password, firstName, lastName. Retour : `user` + cookies.
 - `POST /auth/refresh` : nécessite cookie `refreshToken`, renvoie nouveaux tokens (cookies mis à jour).
 - `POST /auth/logout` : supprime les cookies et invalide le refresh token.
-- `POST /auth/profile` : renvoie le profil courant (id, email, nom, rôle, isPro).
+- `GET /auth/profile` / `POST /auth/profile` : renvoient toutes les deux le profil courant (id, email, nom, rôle, isPro) — deux verbes pour le même effet, gardés pour compatibilité client.
 
 ## Sécurité
 

@@ -36,7 +36,10 @@ Module complet pour créer, gérer et suivre les tournois (états, brackets, ins
 - `GET /tournaments/:id/bracket` : bracket courant.
 - `GET /tournaments/:id/pairings` : appariements d’un round (option `round`).
 - `GET /tournaments/:id/matches` : liste des matches (filtres round/status).
+- `GET /tournaments/:id/matches/me` : matches du joueur courant dans ce tournoi.
 - `GET /tournaments/:id/matches/:matchId` : détail d’un match.
+- `PATCH /tournaments/:id/matches/:matchId` (organisateur/admin) : mettre à jour un match (score, statut).
+- `POST /tournaments/:id/matches/bulk-start` (organisateur/admin) : démarrer plusieurs matches d’un coup.
 
 ## Rankings & progressions
 
@@ -46,9 +49,12 @@ Module complet pour créer, gérer et suivre les tournois (états, brackets, ins
 ## Inscriptions (admin/organizers)
 
 - `GET /tournaments/:id/registrations` : inscriptions (filtre `status`).
+- `POST /tournaments/:id/registrations/bulk-action` (organisateur/admin) : confirmer/annuler/check-in plusieurs inscriptions en une requête.
 - `PATCH /tournaments/:id/registrations/:registrationId/confirm` : confirmer.
 - `PATCH /tournaments/:id/registrations/:registrationId/cancel` : annuler (avec raison optionnelle).
 - `PATCH /tournaments/:id/registrations/:registrationId/check-in` : check-in joueur.
+- `POST /tournaments/:id/fill-with-players` (organisateur/admin) : compléter un tournoi avec des joueurs (tests/démo).
+- `POST /tournaments/:id/check-in-all` (organisateur/admin) : check-in de tous les inscrits d’un coup.
 
 ## Rôles & guards
 

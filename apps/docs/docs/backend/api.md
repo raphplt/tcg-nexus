@@ -41,12 +41,17 @@ Swagger : `http://localhost:3001/api`
 
 - `auth` : stratégies JWT/local, refresh tokens, guards.
 - `user`, `player` : gestion des comptes et profils joueurs.
-- `pokemon-card`, `pokemon-set`, `pokemon-series` : catalogue TCG (alimenté par TCGdex).
+- `pokemon-card`, `pokemon-set`, `pokemon-series`, `sealed-product` : catalogue TCG (alimenté par TCGdex) et produits scellés.
+- `translation` : dictionnaires d'i18n éditables + traductions du catalogue (cartes, sets, séries, produits scellés) et `preferredLocale` utilisateur. Voir [Traductions](./translations).
 - `collection`, `collection-item`, `card-state`, `user_cart` : gestion des collections utilisateur et états de cartes.
 - `deck`, `deck-card`, `deck-format` : construction et formatage de decks.
 - `marketplace` : annonces/transactions et intégration Stripe.
-- `tournament`, `match`, `ranking`, `statistics` : tournois, matchs et stats associées.
-- `article`, `search`, `ai` : contenu éditorial, recherche et assistants IA.
+- `tournament`, `match`, `ranking`, `statistics` : tournois, parties (y compris hors tournoi, temps réel via WebSocket) et stats associées. Voir [Parties en ligne](./matches).
+- `scan` : reconnaissance de cartes par photo (OCR), consommé par le mobile. Voir [Scan de cartes](./scan).
+- `notification` : notifications in-app, push (tokens d'appareil) et emails i18n. Voir [Notifications](./notifications).
+- `article`, `faq`, `feed`, `search`, `ai` : contenu éditorial, recherche transverse et assistants IA (analyse de deck).
+- `badge`, `challenge`, `dashboard`, `user-follow` : gamification, agrégation de tableau de bord, suivi social entre utilisateurs.
+- `support-ticket`, `mail`, `storage` : support client, envoi d'emails, stockage objet (Cloudflare R2).
 
 ## Seed & scripts
 

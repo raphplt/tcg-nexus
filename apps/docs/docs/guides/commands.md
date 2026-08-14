@@ -15,8 +15,8 @@ title: Commandes utiles
 - `npm run start:prod` : démarre la version compilée (`dist`).
 - `npm run build` : build TypeScript -> `dist/`.
 - `npm run seed` / `npm run seed:users` / `npm run seed:cardstates` : remplissage des données.
-- `npm run docker:db` / `docker:db-down` / `docker:db-logs` : cycle de vie Postgres via `docker-compose.yml`.
-- `npm run docker:up` / `docker:down` : stack API + DB via `docker-compose-with-api.yml`.
+- `npm run docker:db` / `docker:db-down` / `docker:db-logs` : cycle de vie Postgres (+ vision) via `docker-compose.yml` (racine).
+- `npm run docker:up` / `docker:down` / `docker:logs` : stack complète (postgres, vision, api, web, docs) via `docker-compose.deploy.yml` (racine), orientée déploiement.
 - `npm run test` / `test:watch` / `test:cov` / `test:e2e` : tests Jest.
 
 ### Front-end (`apps/web`)
@@ -37,3 +37,15 @@ title: Commandes utiles
 - `npm start` : serveur Docusaurus en dev (port 3000 par défaut).
 - `npm run build` : génération statique.
 - `npm run serve` : sert le build localement.
+
+### Mobile (`apps/mobile`)
+
+- `npm run dev` : lance Expo (Metro bundler).
+- `npm run android` / `npm run ios` : build + lancement natif via Expo.
+- `npm run web` : Expo en mode web.
+- `npm run build` : build de production via EAS Build (pas de build local).
+
+### Vision (`apps/vision`, Python/FastAPI)
+
+- `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` : lance le microservice OCR en local (nécessite `pip install -r requirements.txt` et `tesseract-ocr`).
+- `docker compose up -d vision` (depuis la racine) : lance le service via Docker.

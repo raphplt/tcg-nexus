@@ -99,6 +99,10 @@ Si la création du `PaymentIntent` échoue, la commande déjà créée est annul
 
 Le panier n'est vidé qu'une fois le `PaymentIntent` obtenu : un échec Stripe laisse l'acheteur avec son panier intact.
 
+## Frais de port
+
+Une grille de frais fixe (`SHIPPING_POLICY`, `marketplace/shipping-policy.ts`) s'applique par nature de produit : 3,50 € pour une carte (lettre suivie), 6,90 € pour un produit scellé (colis suivi), avec un délai de préparation par défaut de 3 jours. Ces valeurs sont recopiées au moment de l'annonce (`listing.shippingCost`, `listing.handlingTimeDays`) puis à nouveau au moment de la commande (`order_item.shippingCost`, `order_item.handlingTimeDays`, `order.shippingAmount` = somme des lignes) — même logique de snapshot que le reste de la commande. `GET /marketplace/shipping-policy` expose la grille courante côté client.
+
 ## Devises
 
 Un panier ne peut pas mélanger les devises : `UserCartService` refuse l'ajout d'un article dont la devise diffère de celle déjà présente. La commande, le `PaymentIntent` et la `PaymentTransaction` portent donc une devise unique et cohérente.
@@ -149,6 +153,8 @@ Filtres de `GET /marketplace/listings` (`FindAllListingsQuery`) : `search`, `car
 
 - `GET /marketplace/cards` — cartes enrichies, paginées (`page`, `limit`, `search`, `setId`, `serieId`, `rarity`, `currency`, `cardState`, `priceMin`, `priceMax`, `sortBy`, `sortOrder`).
 - `GET /marketplace/cards/:id/stats` — statistiques de prix (`currency`, `cardState`).
+- `GET /marketplace/cards/:id/price-suggestion` — prix de vente suggéré pour une carte (`currency`, `cardState`).
+- `GET /marketplace/shipping-policy` — grille de frais de port et délais appliqués par la plateforme.
 - `GET /marketplace/best-sellers` — meilleurs vendeurs (`limit`).
 - `GET /marketplace/sellers/:id` — statistiques d'un vendeur.
 - `GET /marketplace/sellers/:id/listings` — annonces d'un vendeur.

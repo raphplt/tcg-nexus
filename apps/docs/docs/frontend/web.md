@@ -9,13 +9,20 @@ title: Front-end Next.js
 - Données : **@tanstack/react-query**, **axios**, gestion d’état **zustand**
 - UI : composants Radix UI, icônes **lucide-react**, librairie interne `@repo/ui`
 - Paiement : **Stripe** (`@stripe/react-stripe-js`)
+- i18n : **next-intl** (dictionnaires `apps/web/messages/{en,fr}.json`, config `apps/web/i18n/`)
 
 ## Architecture & routing
 
-- App Router (`apps/web/app/*`), layouts par dossier, routes publiques vs protégées sous `app/(protected)/*`.
-- Espace admin : `app/(protected)/admin` (ex. tableau commandes : `app/(protected)/admin/_components/AdminOrdersTable.tsx`).
-- Pages clés : `app/auth`, `app/dashboard`, `app/collection`, `app/decks`, `app/pokemon`, `app/marketplace`, `app/tournaments`, `app/result`, `app/strategy`.
-- Thème global brutalist dans `app/globals.css` (variables OKLCH, boutons ombrés, grilles animées).
+Toutes les routes sont préfixées par la langue via `app/[locale]/*` (next-intl). Groupes de routes :
+
+- `app/[locale]/auth` : login/register.
+- `app/[locale]/(main)` : pages publiques localisées — `challenges`, `collection`, `dashboard`, `decks`, `faq`, `marketplace`, `pokemon`, `ranking`, `tournaments`, `users`.
+  - `(main)/(protected)` : sous-ensemble authentifié, dont l'espace admin : `app/[locale]/(main)/(protected)/admin` (ex. tableau commandes : `admin/_components/AdminOrdersTable.tsx`).
+- `app/[locale]/(match)/play` : layout dédié aux parties en cours (temps réel), séparé de `(main)` pour une UI plein écran sans navigation habituelle.
+- `app/[locale]/(protected)/profile` : profil utilisateur, protégé mais hors du groupe `(main)`.
+- `app/[locale]/[...rest]` : catch-all (404 localisé).
+
+Thème global brutalist dans `app/globals.css` (variables OKLCH, boutons ombrés, grilles animées).
 
 ## Accès API & data fetching
 
@@ -48,6 +55,8 @@ title: Front-end Next.js
 - **Decks** : création/édition, duplication, compteur de vues, formats (`/deck-format`) et cartes associées (`/deck-card`).
 - **Tournois** : liste/upcoming/past, détails, inscriptions, brackets/matches (consomme `/tournaments`).
 - **Pokémon** : catalogue cartes/sets/séries, recherche et sélection.
+- **Parties en ligne** (`(match)/play`) : file d'attente et déroulé de partie temps réel via WebSocket, voir [Parties en ligne](../backend/matches).
+- **i18n** : interface disponible en français/anglais, sélection de langue persistée (`preferredLocale`).
 
 ## Configuration
 
