@@ -32,6 +32,8 @@ La stack correspond à `docker-compose.deploy.yml` à la racine du repo :
 | `postgres` | Base de données PostgreSQL 15 | 5432         |
 | `docs`     | Documentation Docusaurus      | 3002         |
 
+Procédure pas à pas pour livrer une nouvelle version (variables d'env, migrations, re-seed) : [mise-a-jour-prod.md](./mise-a-jour-prod.md).
+
 ## Opérations courantes (dashboard Coolify)
 
 - **Déployer manuellement** : bouton *Deploy* sur la ressource concernée.
