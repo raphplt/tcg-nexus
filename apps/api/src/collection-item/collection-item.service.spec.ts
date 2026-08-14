@@ -1,3 +1,4 @@
+import { ForbiddenException } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -12,9 +13,14 @@ import { CollectionItem } from "./entities/collection-item.entity";
 describe("CollectionItemService", () => {
   let service: CollectionItemService;
 
+  const owner = { id: 1 } as User;
+  const attacker = { id: 2 } as User;
+
   const mockCollectionItemRepo = {
     find: jest.fn(),
     findOne: jest.fn(),
+    findOneOrFail: jest.fn(),
+    increment: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
   };
@@ -37,7 +43,13 @@ describe("CollectionItemService", () => {
     findOne: jest.fn(),
   };
 
+  const mockSealedProductRepo = {
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CollectionItemService,
@@ -63,7 +75,7 @@ describe("CollectionItemService", () => {
         },
         {
           provide: getRepositoryToken(SealedProduct),
-          useValue: { findOne: jest.fn() },
+          useValue: mockSealedProductRepo,
         },
         {
           provide: EventEmitter2,
@@ -79,55 +91,62 @@ describe("CollectionItemService", () => {
     expect(service).toBeDefined();
   });
 
+  describe("assertSelf", () => {
+    it("allows a user to act on their own collections", () => {
+      expect(() => service.assertSelf(owner.id, owner)).not.toThrow();
+    });
+
+    it("rejects a user targeting someone else", () => {
+      expect(() => service.assertSelf(owner.id, attacker)).toThrow(
+        ForbiddenException,
+      );
+    });
+  });
+
   it("should add card to wishlist with default card state", async () => {
-    const user = { id: 1 };
-    const card = { id: "card1" };
-    const wishlist = { id: "w", items: [] };
-    const defaultState = { id: 10, code: "NM" };
-    const createdItem = { id: 5 };
+    mockUserRepo.findOne.mockResolvedValue(owner);
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "w" });
+    mockCollectionItemRepo.findOne.mockResolvedValue(null);
+    mockCardStateRepo.findOne.mockResolvedValue({ id: 10, code: "NM" });
+    mockCollectionItemRepo.create.mockReturnValue({ id: 5 });
+    mockCollectionItemRepo.save.mockResolvedValue({ id: 5 });
 
-    mockUserRepo.findOne.mockResolvedValue(user);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionRepo.findOne.mockResolvedValue(wishlist);
-    mockCardStateRepo.findOne.mockResolvedValue(defaultState);
-    mockCollectionItemRepo.create.mockReturnValue(createdItem);
-    mockCollectionItemRepo.save.mockResolvedValue(createdItem);
-
-    await expect(service.addToWishlist(1, "card1")).resolves.toEqual(
-      createdItem,
-    );
+    await expect(service.addToWishlist(1, "card1")).resolves.toEqual({ id: 5 });
   });
 
   it("should create wishlist when missing", async () => {
-    const user = { id: 1 };
-    const card = { id: "card1" };
-    const createdWishlist = { id: "nw", items: [] };
-    const defaultState = { id: 10, code: "NM" };
-
-    mockUserRepo.findOne.mockResolvedValue(user);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionRepo.findOne.mockResolvedValueOnce(null);
-    mockCollectionRepo.create.mockReturnValue(createdWishlist);
-    mockCollectionRepo.save.mockResolvedValue(createdWishlist);
-    mockCardStateRepo.findOne.mockResolvedValue(defaultState);
+    mockUserRepo.findOne.mockResolvedValue(owner);
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
+    mockCollectionRepo.findOne.mockResolvedValue(null);
+    mockCollectionRepo.create.mockReturnValue({ id: "nw" });
+    mockCollectionRepo.save.mockResolvedValue({ id: "nw" });
+    mockCollectionItemRepo.findOne.mockResolvedValue(null);
+    mockCardStateRepo.findOne.mockResolvedValue({ id: 10, code: "NM" });
     mockCollectionItemRepo.create.mockReturnValue({ id: 6 });
     mockCollectionItemRepo.save.mockResolvedValue({ id: 6 });
 
     await expect(service.addToWishlist(1, "card1")).resolves.toEqual({ id: 6 });
   });
 
-  it("should increment quantity when item already in wishlist", async () => {
-    const user = { id: 1 };
-    const card = { id: "card1" };
-    const item = { id: 2, quantity: 1, pokemonCard: card };
-    const wishlist = { id: "w", items: [item] };
-
-    mockUserRepo.findOne.mockResolvedValue(user);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionRepo.findOne.mockResolvedValue(wishlist);
-    mockCollectionItemRepo.save.mockImplementation(async (i) => i);
+  it("should increment quantity atomically when item already in wishlist", async () => {
+    mockUserRepo.findOne.mockResolvedValue(owner);
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "w" });
+    mockCollectionItemRepo.findOne.mockResolvedValue({ id: 2, quantity: 1 });
+    mockCollectionItemRepo.increment.mockResolvedValue({ affected: 1 });
+    mockCollectionItemRepo.findOneOrFail.mockResolvedValue({
+      id: 2,
+      quantity: 2,
+    });
 
     const result = await service.addToWishlist(1, "card1");
+
+    expect(mockCollectionItemRepo.increment).toHaveBeenCalledWith(
+      { id: 2 },
+      "quantity",
+      1,
+    );
     expect(result.quantity).toBe(2);
   });
 
@@ -139,9 +158,10 @@ describe("CollectionItemService", () => {
   });
 
   it("should throw when default card state missing for wishlist", async () => {
-    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+    mockUserRepo.findOne.mockResolvedValue(owner);
     mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "w", items: [] });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "w" });
+    mockCollectionItemRepo.findOne.mockResolvedValue(null);
     mockCardStateRepo.findOne.mockResolvedValue(null);
 
     await expect(service.addToWishlist(1, "card1")).rejects.toThrow(
@@ -150,7 +170,7 @@ describe("CollectionItemService", () => {
   });
 
   it("should throw when card not found", async () => {
-    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+    mockUserRepo.findOne.mockResolvedValue(owner);
     mockPokemonCardRepo.findOne.mockResolvedValue(null);
 
     await expect(service.addToWishlist(1, "missing")).rejects.toThrow(
@@ -159,15 +179,11 @@ describe("CollectionItemService", () => {
   });
 
   it("should add to favorites", async () => {
-    const user = { id: 1 };
-    const card = { id: "card1" };
-    const favorites = { id: "f", items: [] };
-    const defaultState = { id: 3, code: "NM" };
-
-    mockUserRepo.findOne.mockResolvedValue(user);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionRepo.findOne.mockResolvedValue(favorites);
-    mockCardStateRepo.findOne.mockResolvedValue(defaultState);
+    mockUserRepo.findOne.mockResolvedValue(owner);
+    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "f" });
+    mockCollectionItemRepo.findOne.mockResolvedValue(null);
+    mockCardStateRepo.findOne.mockResolvedValue({ id: 3, code: "NM" });
     mockCollectionItemRepo.create.mockReturnValue({ id: 8 });
     mockCollectionItemRepo.save.mockResolvedValue({ id: 8 });
 
@@ -177,7 +193,7 @@ describe("CollectionItemService", () => {
   });
 
   it("should throw when favorites collection missing", async () => {
-    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
+    mockUserRepo.findOne.mockResolvedValue(owner);
     mockPokemonCardRepo.findOne.mockResolvedValue({ id: "c" });
     mockCollectionRepo.findOne.mockResolvedValue(null);
 
@@ -186,84 +202,55 @@ describe("CollectionItemService", () => {
     );
   });
 
-  it("should throw when default card state missing for favorites", async () => {
-    mockUserRepo.findOne.mockResolvedValue({ id: 1 });
-    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "c" });
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "f", items: [] });
-    mockCardStateRepo.findOne.mockResolvedValue(null);
+  describe("addToCollection", () => {
+    it("adds a card to a collection owned by the caller", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
+      mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
+      mockCollectionItemRepo.findOne.mockResolvedValue(null);
+      mockCardStateRepo.findOne.mockResolvedValue({ id: 4, code: "NM" });
+      mockCollectionItemRepo.create.mockReturnValue({ id: 9 });
+      mockCollectionItemRepo.save.mockResolvedValue({ id: 9 });
 
-    await expect(service.addToFavorites(1, "c")).rejects.toThrow(
-      "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
-    );
-  });
+      await expect(
+        service.addToCollection("c", "card1", owner),
+      ).resolves.toEqual({ id: 9 });
+    });
 
-  it("should increment favorites quantity when item exists", async () => {
-    const user = { id: 1 };
-    const card = { id: "card1" };
-    const item = { id: 12, quantity: 1, pokemonCard: card };
-    const favorites = { id: "f", items: [item] };
+    it("rejects writing into a collection owned by someone else", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
 
-    mockUserRepo.findOne.mockResolvedValue(user);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionRepo.findOne.mockResolvedValue(favorites);
-    mockCollectionItemRepo.save.mockImplementation(async (i) => i);
+      await expect(
+        service.addToCollection("c", "card1", attacker),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockCollectionItemRepo.save).not.toHaveBeenCalled();
+    });
 
-    const result = await service.addToFavorites(1, "card1");
-    expect(result.quantity).toBe(2);
-  });
+    it("throws when the collection is missing", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue(null);
 
-  it("should add to collection", async () => {
-    const collection = { id: "c", items: [] };
-    const card = { id: "card1" };
-    const defaultState = { id: 4, code: "NM" };
+      await expect(
+        service.addToCollection("missing", "card1", owner),
+      ).rejects.toThrow("Collection non trouvée");
+    });
 
-    mockCollectionRepo.findOne.mockResolvedValue(collection);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCardStateRepo.findOne.mockResolvedValue(defaultState);
-    mockCollectionItemRepo.create.mockReturnValue({ id: 9 });
-    mockCollectionItemRepo.save.mockResolvedValue({ id: 9 });
+    it("throws when the card is missing", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
+      mockPokemonCardRepo.findOne.mockResolvedValue(null);
 
-    await expect(service.addToCollection("c", "card1")).resolves.toEqual({
-      id: 9,
+      await expect(
+        service.addToCollection("c", "missing", owner),
+      ).rejects.toThrow("Carte Pokémon non trouvée");
     });
   });
 
-  it("should increment quantity when item already in collection", async () => {
-    const card = { id: "card1" };
-    const item = { id: 20, quantity: 1, pokemonCard: card };
-    const collection = { id: "c", items: [item] };
+  describe("addSealedToCollection", () => {
+    it("rejects writing into a collection owned by someone else", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
 
-    mockCollectionRepo.findOne.mockResolvedValue(collection);
-    mockPokemonCardRepo.findOne.mockResolvedValue(card);
-    mockCollectionItemRepo.save.mockImplementation(async (i) => i);
-
-    const result = await service.addToCollection("c", "card1");
-    expect(result.quantity).toBe(2);
-  });
-
-  it("should throw when collection missing", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue(null);
-    await expect(service.addToCollection("missing", "card1")).rejects.toThrow(
-      "Collection non trouvée",
-    );
-  });
-
-  it("should throw when default card state missing", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "c", items: [] });
-    mockPokemonCardRepo.findOne.mockResolvedValue({ id: "card1" });
-    mockCardStateRepo.findOne.mockResolvedValue(null);
-
-    await expect(service.addToCollection("c", "card1")).rejects.toThrow(
-      "CardState NM non trouvé. Veuillez d'abord seed les CardState.",
-    );
-  });
-
-  it("should throw when card not found for collection", async () => {
-    mockCollectionRepo.findOne.mockResolvedValue({ id: "c", items: [] });
-    mockPokemonCardRepo.findOne.mockResolvedValue(null);
-
-    await expect(service.addToCollection("c", "missing")).rejects.toThrow(
-      "Carte Pokémon non trouvée",
-    );
+      await expect(
+        service.addSealedToCollection("c", "sealed1", attacker),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockCollectionItemRepo.save).not.toHaveBeenCalled();
+    });
   });
 });

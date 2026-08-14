@@ -28,6 +28,7 @@ describe("DeckController (e2e)", () => {
   let other: TestUser;
   let formatId: number;
   let publicDeckId: number;
+  let privateDeckId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -99,6 +100,7 @@ describe("DeckController (e2e)", () => {
 
       expect(response.status).toBe(201);
       expect(response.body.isPublic).toBe(false);
+      privateDeckId = response.body.id;
     });
 
     it("rejects deck creation without authentication", async () => {
@@ -151,6 +153,36 @@ describe("DeckController (e2e)", () => {
     it("returns 404 for an unknown deck id", async () => {
       const response = await request(httpServer).get("/deck/999999");
       expect(response.status).toBe(404);
+    });
+
+    it("hides a private deck from anonymous and third-party readers", async () => {
+      await request(httpServer).get(`/deck/${privateDeckId}`).expect(404);
+
+      await request(httpServer)
+        .get(`/deck/${privateDeckId}`)
+        .set("Authorization", `Bearer ${other.accessToken}`)
+        .expect(404);
+
+      await request(httpServer)
+        .get(`/deck/export/${privateDeckId}`)
+        .set("Authorization", `Bearer ${other.accessToken}`)
+        .expect(404);
+
+      await request(httpServer)
+        .get(`/deck/${privateDeckId}`)
+        .set("Authorization", `Bearer ${creator.accessToken}`)
+        .expect(200);
+    });
+  });
+
+  describe("DELETE /deck/:id", () => {
+    it("refuses to delete a deck owned by someone else", async () => {
+      await request(httpServer)
+        .delete(`/deck/${publicDeckId}`)
+        .set("Authorization", `Bearer ${other.accessToken}`)
+        .expect(403);
+
+      await request(httpServer).get(`/deck/${publicDeckId}`).expect(200);
     });
   });
 

@@ -1,4 +1,5 @@
 import { Controller, Get, Query, ValidationPipe } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { Public } from "src/auth/decorators/public.decorator";
 import { GlobalSearchDto, GlobalSearchResult } from "./dto/global-search.dto";
 import {
@@ -8,6 +9,9 @@ import {
 import { SearchService } from "./search.service";
 
 @Controller("search")
+// Public and query-heavy (ILIKE scans across several tables): tighter quota
+// than the global default, per IP.
+@Throttle({ default: { limit: 60, ttl: 60_000 } })
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 

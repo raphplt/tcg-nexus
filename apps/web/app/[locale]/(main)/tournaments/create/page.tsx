@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { GoogleMapsScript } from "@/components/GoogleMapsScript";
 import {
   Command,
   CommandEmpty,
@@ -70,12 +71,14 @@ export default function CreateTournamentPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
+    init: initializePlaces,
     ready: placesReady,
     value: placesValue,
     setValue: setPlacesValue,
     suggestions: { status: placesStatus, data: placesData },
     clearSuggestions,
   } = usePlacesAutocomplete({
+    initOnMount: false,
     requestOptions: {},
     debounce: 300,
   });
@@ -202,6 +205,7 @@ export default function CreateTournamentPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-primary/10 to-secondary/10 py-16 px-4">
+      <GoogleMapsScript onReady={initializePlaces} />
       <div className="flex mb-6 max-w-xl">
         <Button variant="outline" onClick={() => window.history.back()}>
           <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,8 +1,10 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { AllExceptionsFilter } from "./common/http-exception.filter";
 
@@ -13,7 +15,38 @@ dotenv.config();
  */
 export async function bootstrap() {
   try {
-    const app = await NestFactory.create(AppModule, { rawBody: true });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      rawBody: true,
+    });
+
+    // Behind a reverse proxy (Docker, Railway, nginx), the throttler and the
+    // secure-cookie logic need the forwarded client IP and protocol.
+    if (process.env.TRUST_PROXY !== "false") {
+      app.set("trust proxy", 1);
+    }
+
+    app.use(
+      helmet({
+        // The API serves JSON only: a restrictive CSP avoids any inline
+        // execution should a response ever be rendered as a document.
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'none'"],
+            frameAncestors: ["'none'"],
+            baseUri: ["'none'"],
+            formAction: ["'none'"],
+          },
+        },
+        // Swagger UI loads its own assets: relax only the embedder policy.
+        crossOriginEmbedderPolicy: false,
+        hsts:
+          process.env.NODE_ENV === "production"
+            ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
+            : false,
+        referrerPolicy: { policy: "no-referrer" },
+      }),
+    );
+
     app.use(cookieParser());
     app.setGlobalPrefix("api");
 
@@ -75,9 +108,10 @@ export async function bootstrap() {
       console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
     });
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(error.message);
-    }
+    // A failed bootstrap must not leave a half-started process alive: rethrow
+    // so the supervisor restarts it instead of serving a broken API.
+    console.error("Fatal error during bootstrap", error);
+    throw error;
   }
 }
 
@@ -85,5 +119,6 @@ export async function bootstrap() {
 if (require.main === module) {
   bootstrap().catch((err) => {
     console.error(err);
+    process.exit(1);
   });
 }

@@ -57,6 +57,7 @@ export class StripeService implements OnModuleInit {
    * @param amount - Payment amount in the provided currency's major unit.
    * @param currency - ISO currency code.
    * @param metadata - Metadata persisted alongside the payment intent.
+   * @param idempotencyKey - Stable key so a retried checkout reuses the same intent instead of charging twice.
    * @returns The created Stripe payment intent.
    * @throws ServiceUnavailableException If Stripe is not configured.
    */
@@ -64,16 +65,20 @@ export class StripeService implements OnModuleInit {
     amount: number,
     currency: string,
     metadata: Record<string, string> = {},
+    idempotencyKey?: string,
   ) {
     this.ensureInitialized();
-    return this.stripe!.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert major units to cents.
-      currency,
-      metadata,
-      automatic_payment_methods: {
-        enabled: true,
+    return this.stripe!.paymentIntents.create(
+      {
+        amount: Math.round(amount * 100), // Convert major units to cents.
+        currency,
+        metadata,
+        automatic_payment_methods: {
+          enabled: true,
+        },
       },
-    });
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
   }
 
   /**

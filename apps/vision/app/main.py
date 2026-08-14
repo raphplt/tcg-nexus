@@ -1,4 +1,7 @@
-from fastapi import FastAPI, HTTPException
+import os
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from .embed import embed_artwork
@@ -6,6 +9,27 @@ from .match import match
 from .pipeline import _decode, preprocess, preprocess_many
 
 app = FastAPI(title="TCG Nexus Vision Service", version="1.0")
+
+# images base64 : une requête légitime dépasse rarement quelques Mo
+MAX_BODY_BYTES = int(os.getenv("VISION_MAX_BODY_BYTES", 32 * 1024 * 1024))
+
+# secret partagé optionnel : non défini = service ouvert (dev, réseau interne)
+_API_KEY = os.getenv("VISION_API_KEY", "").strip()
+
+_PUBLIC_PATHS = {"/health"}
+
+
+@app.middleware("http")
+async def guard_request(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > MAX_BODY_BYTES:
+        return JSONResponse({"detail": "Payload too large"}, status_code=413)
+
+    if _API_KEY and request.url.path not in _PUBLIC_PATHS:
+        if request.headers.get("x-vision-key") != _API_KEY:
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+
+    return await call_next(request)
 
 
 class PreprocessRequest(BaseModel):

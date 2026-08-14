@@ -17,11 +17,14 @@ import { AppService } from "./app.service";
 import { ArticleModule } from "./article/article.module";
 import { AuthModule } from "./auth/auth.module";
 import { JwtAuthGuard } from "./auth/guards/jwt-auth.guard";
+import { RolesGuard } from "./auth/guards/roles.guard";
+import { HttpThrottlerGuard } from "./common/guards/http-throttler.guard";
 import { BadgeModule } from "./badge/badge.module";
 import { CardModule } from "./card/card.module";
 import { CatalogLocalizationInterceptor } from "./card/catalog-localization.interceptor";
 import { CatalogLocalizationModule } from "./translation/catalog-localization.module";
 import { CardStateModule } from "./card-state/card-state.module";
+import { CsrfOriginMiddleware } from "./common/middleware/csrf-origin.middleware";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { CollectionModule } from "./collection/collection.module";
 import { CollectionItemModule } from "./collection-item/collection-item.module";
@@ -62,8 +65,9 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     ThrottlerModule.forRoot({
       throttlers: [
         {
+          name: "default",
           ttl: 60000,
-          limit: 10,
+          limit: Number(process.env.THROTTLE_LIMIT ?? 300),
         },
       ],
     }),
@@ -76,14 +80,28 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize:
-        process.env.DATABASE_SYNCHRONIZE === "true" ||
-        process.env.NODE_ENV !== "production",
+        process.env.NODE_ENV === "production"
+          ? false
+          : process.env.DATABASE_SYNCHRONIZE !== "false",
       migrations: [join(__dirname, "migrations", "*.{ts,js}")],
       migrationsRun: process.env.DATABASE_MIGRATIONS_RUN === "true",
+      extra: {
+        max: Number(process.env.DATABASE_POOL_MAX ?? 20),
+        idleTimeoutMillis: Number(
+          process.env.DATABASE_POOL_IDLE_TIMEOUT_MS ?? 30_000,
+        ),
+        connectionTimeoutMillis: Number(
+          process.env.DATABASE_POOL_CONNECTION_TIMEOUT_MS ?? 5_000,
+        ),
+      },
       ssl:
         process.env.NODE_ENV === "production" &&
         process.env.DATABASE_SSL !== "false"
-          ? { rejectUnauthorized: false }
+          ? {
+              rejectUnauthorized:
+                process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
+              ca: process.env.DATABASE_SSL_CA || undefined,
+            }
           : false,
     }),
     UserModule,
@@ -128,7 +146,15 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     AppService,
     {
       provide: APP_GUARD,
+      useClass: HttpThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_INTERCEPTOR,
@@ -143,5 +169,6 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes("*");
+    consumer.apply(CsrfOriginMiddleware).forRoutes("*");
   }
 }

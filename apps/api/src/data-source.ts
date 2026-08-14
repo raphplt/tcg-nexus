@@ -24,6 +24,15 @@ export const AppDataSource = new DataSource({
   entities: [`${root}/**/*.entity.${ext}`],
   migrations: [`${root}/migrations/*.${ext}`],
   synchronize: false,
+  extra: {
+    max: Number(process.env.DATABASE_POOL_MAX ?? 20),
+    idleTimeoutMillis: Number(
+      process.env.DATABASE_POOL_IDLE_TIMEOUT_MS ?? 30_000,
+    ),
+    connectionTimeoutMillis: Number(
+      process.env.DATABASE_POOL_CONNECTION_TIMEOUT_MS ?? 5_000,
+    ),
+  },
   ssl:
     process.env.NODE_ENV === "production" &&
     process.env.DATABASE_SSL !== "false"

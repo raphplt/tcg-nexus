@@ -9,6 +9,8 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import {
   ConnectedSocket,
   MessageBody,
@@ -86,11 +88,14 @@ export class MatchGateway
   // another tab still open" from "user is truly gone" before notifying opponent.
   private matchSockets = new Map<number, Map<number, Set<string>>>();
   private casualSockets = new Map<number, Map<number, Set<string>>>();
+  private userSockets = new Map<number, Set<string>>();
   // Short grace timers armed when a user goes to 0 sockets. Keyed
   // `match:<id>:<userId>` / `casual:<id>:<userId>`.
   private graceTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly matchOnlineService: MatchOnlineService,
@@ -118,6 +123,9 @@ export class MatchGateway
   async handleConnection(client: AuthenticatedSocket) {
     try {
       client.data.user = await this.authenticateClient(client);
+      const sockets = this.userSockets.get(client.data.user.id) ?? new Set();
+      sockets.add(client.id);
+      this.userSockets.set(client.data.user.id, sockets);
     } catch {
       client.disconnect(true);
     }
@@ -125,10 +133,13 @@ export class MatchGateway
 
   async handleDisconnect(client: AuthenticatedSocket) {
     const user = client.data.user;
-    // Only leave the queue when the user has no other socket left: closing one
-    // tab should not remove a player who is still queuing from another one.
-    if (user && !(await this.hasOtherLiveSocket(client, user.id))) {
-      this.matchmakingService.leaveQueue(user.id);
+    if (user) {
+      const sockets = this.userSockets.get(user.id);
+      sockets?.delete(client.id);
+      if (!sockets || sockets.size === 0) {
+        this.userSockets.delete(user.id);
+        this.matchmakingService.leaveQueue(user.id);
+      }
     }
 
     const matchId = client.data.currentMatchId;
@@ -185,22 +196,6 @@ export class MatchGateway
     if (bucket.count > MatchGateway.RATE_LIMIT_MAX_MESSAGES) {
       throw new BadRequestException("Too many actions sent, please slow down");
     }
-  }
-
-  /**
-   * Checks whether the user still has another connected socket, ignoring the
-   * one currently disconnecting.
-   */
-  private async hasOtherLiveSocket(
-    client: AuthenticatedSocket,
-    userId: number,
-  ): Promise<boolean> {
-    const sockets = await this.server.fetchSockets();
-    return sockets.some(
-      (socket) =>
-        socket.id !== client.id &&
-        (socket as unknown as AuthenticatedSocket).data.user?.id === userId,
-    );
   }
 
   private addUserSocket(
@@ -775,10 +770,21 @@ export class MatchGateway
       secret: jwtSecret,
     });
 
+    // A valid token is not enough: the account may have been deactivated or
+    // deleted since it was issued, and the token stays valid until it expires.
+    const user = await this.userRepository.findOne({
+      where: { id: payload.sub },
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+
+    if (!user?.isActive) {
+      throw new UnauthorizedException("Account is not active");
+    }
+
     return {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role as UserRole,
+      id: user.id,
+      email: user.email,
+      role: user.role as UserRole,
     };
   }
 

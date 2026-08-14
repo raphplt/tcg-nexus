@@ -1,7 +1,12 @@
-import { ConflictException, Injectable, Logger } from "@nestjs/common";
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  Optional,
+} from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import TCGdex from "@tcgdex/sdk";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
@@ -9,6 +14,7 @@ import { CardGame } from "src/common/enums/cardGame";
 import { EnergyType } from "src/common/enums/energyType";
 import { PokemonCardsType } from "src/common/enums/pokemonCardsType";
 import { TrainerType } from "src/common/enums/trainerType";
+import { runWithPostgresAdvisoryLock } from "src/common/postgres-advisory-lock";
 import { PokemonSerie } from "src/pokemon-series/entities/pokemon-serie.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 
@@ -27,6 +33,7 @@ export class CardSyncService {
     private readonly pokemonCardRepository: Repository<Card>,
     @InjectRepository(PokemonCardDetails)
     private readonly pokemonCardDetailsRepository: Repository<PokemonCardDetails>,
+    @Optional() private readonly dataSource?: DataSource,
   ) {
     this.tcgdex = new TCGdex("fr");
   }
@@ -107,6 +114,14 @@ export class CardSyncService {
    */
   @Cron("0 4 * * *")
   async handleCron() {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:card-catalog-sync",
+      () => this.runScheduledSync(),
+    );
+  }
+
+  private async runScheduledSync(): Promise<void> {
     this.logger.log("Triggering automatic Pokémon card synchronization...");
     try {
       const stats = await this.syncAll();

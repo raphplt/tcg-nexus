@@ -40,6 +40,16 @@ import { CatalogImportService } from "./catalog-import.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
+/**
+ * Seed endpoints mutate the catalog and create accounts, so they must never be
+ * reachable in production. They stay available outside production for local
+ * bootstrapping, and can be force-enabled with SEED_ENABLED=true.
+ */
+const isSeedApiEnabled =
+  process.env.SEED_ENABLED === "true" ||
+  (process.env.SEED_ENABLED !== "false" &&
+    process.env.NODE_ENV !== "production");
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -79,7 +89,7 @@ import { SeedService } from "./seed.service";
     SealedProductModule,
     TournamentModule,
   ],
-  controllers: [SeedController],
+  controllers: isSeedApiEnabled ? [SeedController] : [],
   providers: [SeedService, CatalogImportService],
   exports: [CatalogImportService],
 })

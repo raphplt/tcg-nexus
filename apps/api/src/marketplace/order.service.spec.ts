@@ -151,6 +151,7 @@ describe("OrderService", () => {
         20,
         Currency.EUR,
         { orderId: "100", userId: "1" },
+        "order-100",
       );
       expect(result.clientSecret).toBe("secret_123");
       expect(userCartService.clearCart).toHaveBeenCalledWith(buyer.id);
@@ -315,20 +316,19 @@ describe("OrderService", () => {
       userCartService.findCartByUserId.mockResolvedValue({
         cartItems: [buildCartItem()],
       });
-      manager.findOne
-        .mockResolvedValueOnce({
-          id: 10,
-          price: 10,
-          quantityAvailable: 5,
-          expiresAt: null,
-        })
-        .mockResolvedValueOnce({
-          id: 100,
-          status: OrderStatus.PENDING,
-          stockReleased: false,
-          orderItems: [{ listing: { id: 10 }, quantity: 2 }],
-          buyer,
-        });
+      const pendingOrder = {
+        id: 100,
+        status: OrderStatus.PENDING,
+        stockReleased: false,
+        orderItems: [{ listing: { id: 10 }, quantity: 2 }],
+        buyer,
+      };
+      // transitionOrder verrouille la ligne puis la recharge avec ses relations
+      manager.findOne.mockImplementation(async (entity: any) =>
+        entity === Listing
+          ? { id: 10, price: 10, quantityAvailable: 5, expiresAt: null }
+          : pendingOrder,
+      );
       stripeService.createPaymentIntent.mockRejectedValue(
         new Error("stripe down"),
       );
@@ -368,44 +368,59 @@ describe("OrderService", () => {
       ],
     });
 
+    /**
+     * markOrderPaid locks the payment row inside a transaction: it first reads
+     * the bare payment, then re-reads it with its order relation.
+     */
+    const mockLockedPayment = (
+      order: any,
+      status = PaymentStatus.INITIATED,
+    ) => {
+      const payment = { id: 1, transactionId: "pi_123", status };
+      manager.findOne.mockImplementation(async (_entity: any, options: any) =>
+        options?.relations ? { ...payment, order } : payment,
+      );
+      return payment;
+    };
+
     it("marks the order paid once the webhook confirms the intent", async () => {
       const order = pendingOrder();
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.INITIATED,
-        order,
-      });
+      mockLockedPayment(order);
 
       await service.handlePaymentSucceeded("pi_123", paidIntent);
 
       expect(order.status).toBe(OrderStatus.PAID);
-      expect(orderRepo.save).toHaveBeenCalledWith(order);
+      expect(manager.save).toHaveBeenCalledWith(order);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         "marketplace.sale",
         expect.objectContaining({ sellerUserId: 2, total: 20 }),
       );
     });
 
-    it("is idempotent when the webhook is replayed", async () => {
-      const order = { ...pendingOrder(), status: OrderStatus.PAID };
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.COMPLETED,
-        order,
-      });
+    it("locks the payment row before deciding whether the order is already paid", async () => {
+      mockLockedPayment(pendingOrder());
 
       await service.handlePaymentSucceeded("pi_123", paidIntent);
 
-      expect(orderRepo.save).not.toHaveBeenCalled();
+      expect(manager.findOne).toHaveBeenCalledWith(
+        PaymentTransaction,
+        expect.objectContaining({
+          lock: { mode: "pessimistic_write" },
+        }),
+      );
+    });
+
+    it("is idempotent when the webhook is replayed", async () => {
+      const order = { ...pendingOrder(), status: OrderStatus.PAID };
+      mockLockedPayment(order, PaymentStatus.COMPLETED);
+
+      await service.handlePaymentSucceeded("pi_123", paidIntent);
+
       expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it("refuses an intent whose amount differs from the order", async () => {
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.INITIATED,
-        order: pendingOrder(),
-      });
+      mockLockedPayment(pendingOrder());
 
       await expect(
         service.handlePaymentSucceeded("pi_123", {
@@ -416,11 +431,7 @@ describe("OrderService", () => {
     });
 
     it("refuses an intent in another currency", async () => {
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.INITIATED,
-        order: pendingOrder(),
-      });
+      mockLockedPayment(pendingOrder());
 
       await expect(
         service.handlePaymentSucceeded("pi_123", {
@@ -431,11 +442,7 @@ describe("OrderService", () => {
     });
 
     it("refuses an intent opened by another buyer", async () => {
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.INITIATED,
-        order: pendingOrder(),
-      });
+      mockLockedPayment(pendingOrder());
 
       await expect(
         service.handlePaymentSucceeded("pi_123", {
@@ -446,11 +453,7 @@ describe("OrderService", () => {
     });
 
     it("refuses an intent bound to another order", async () => {
-      paymentRepo.findOne.mockResolvedValue({
-        transactionId: "pi_123",
-        status: PaymentStatus.INITIATED,
-        order: pendingOrder(),
-      });
+      mockLockedPayment(pendingOrder());
 
       await expect(
         service.handlePaymentSucceeded("pi_123", {
@@ -463,13 +466,8 @@ describe("OrderService", () => {
     it("confirms from Stripe rather than trusting the client", async () => {
       const order = pendingOrder();
       orderRepo.findOne.mockResolvedValue(order);
-      paymentRepo.findOne
-        .mockResolvedValueOnce({ transactionId: "pi_123" })
-        .mockResolvedValueOnce({
-          transactionId: "pi_123",
-          status: PaymentStatus.INITIATED,
-          order,
-        });
+      paymentRepo.findOne.mockResolvedValue({ transactionId: "pi_123" });
+      mockLockedPayment(order);
       stripeService.retrievePaymentIntent.mockResolvedValue({
         status: "succeeded",
         ...paidIntent,

@@ -24,15 +24,17 @@ const csvCell = (value: unknown): string => {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
-// Logs every card scan operation in dedicated folders for debugging (SCAN_LOG=false to disable)
 @Injectable()
 export class ScanLogger {
   private readonly logger = new Logger(ScanLogger.name);
 
   constructor(private readonly config: ConfigService) {}
 
+  // NOTE: opt-in only. Enabling this persists every uploaded image and its
+  // crops to disk with no rotation, which is both a disk-exhaustion risk and a
+  // data-retention concern. Keep SCAN_LOG unset outside local debugging.
   private get enabled(): boolean {
-    return this.config.get<string>("SCAN_LOG") !== "false";
+    return this.config.get<string>("SCAN_LOG") === "true";
   }
 
   async log(input: ScanLogInput): Promise<string | null> {
@@ -43,25 +45,26 @@ export class ScanLogger {
       const dir = join(process.cwd(), LOG_ROOT, scanId);
       await mkdir(dir, { recursive: true });
 
-      // Input image + (if available) normalized image and ROI crops
       const files: Record<string, unknown> = { input: "input.jpg" };
-      await writeFile(join(dir, "input.jpg"), input.inputImage);
+      const imageWrites: Array<Promise<void>> = [
+        writeFile(join(dir, "input.jpg"), input.inputImage),
+      ];
 
       if (input.vision) {
-        await writeFile(
-          join(dir, "normalized.png"),
-          input.vision.normalizedImage,
+        imageWrites.push(
+          writeFile(join(dir, "normalized.png"), input.vision.normalizedImage),
         );
         files.normalized = "normalized.png";
 
         const roiFiles: Record<string, string> = {};
         for (const roi of input.vision.rois) {
           const name = `roi_${roi.key}.png`;
-          await writeFile(join(dir, name), roi.image);
+          imageWrites.push(writeFile(join(dir, name), roi.image));
           roiFiles[roi.key] = name;
         }
         files.rois = roiFiles;
       }
+      await Promise.all(imageWrites);
 
       const meta = {
         scanId,

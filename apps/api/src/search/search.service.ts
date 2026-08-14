@@ -185,9 +185,10 @@ export class SearchService {
       .createQueryBuilder("player")
       .leftJoinAndSelect("player.user", "user")
       .leftJoinAndSelect("player.tournaments", "tournaments")
+      // Never match on e-mail: public search must not let anyone confirm
+      // whether an address is registered.
       .where("user.firstName ILIKE :query", { query: `%${query}%` })
       .orWhere("user.lastName ILIKE :query", { query: `%${query}%` })
-      .orWhere("user.email ILIKE :query", { query: `%${query}%` })
       .limit(limit)
       .getMany();
 
@@ -196,11 +197,10 @@ export class SearchService {
       type: "player" as const,
       title:
         `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
-      description: `${player.user?.email || ""} • ${player.tournaments?.length || 0} tournaments`,
+      description: `${player.tournaments?.length || 0} tournaments`,
       url: `/players/${player.id}`,
       metadata: {
         userId: player.user?.id,
-        email: player.user?.email,
         tournamentCount: player.tournaments?.length || 0,
       },
     }));
@@ -456,7 +456,6 @@ export class SearchService {
         type: "player" as const,
         title:
           `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
-        subtitle: player.user?.email || "",
       })),
     );
 

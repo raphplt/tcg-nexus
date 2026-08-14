@@ -16,8 +16,10 @@ import {
   CardStateCode,
 } from "src/card-state/entities/card-state.entity";
 import { ProductKind } from "src/common/enums/product-kind";
+import { UserRole } from "src/common/enums/user";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { Repository } from "typeorm";
+import { normalizeSortOrder } from "../helpers/pagination";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { User } from "../user/entities/user.entity";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
@@ -62,6 +64,44 @@ export class CollectionService {
     return collection;
   }
 
+  private canViewCollection(collection: Collection, viewer?: User): boolean {
+    if (collection.isPublic) return true;
+    if (!viewer) return false;
+    return collection.user?.id === viewer.id || viewer.role === UserRole.ADMIN;
+  }
+
+  // 404 et pas 403 : un 403 confirmerait l'existence de la collection
+  private assertCanViewCollection(
+    collection: Collection,
+    viewer?: User,
+  ): void {
+    if (!this.canViewCollection(collection, viewer)) {
+      throw new NotFoundException(
+        `Collection with id ${collection.id} not found`,
+      );
+    }
+  }
+
+  private async getViewableCollection(
+    collectionId: string,
+    viewer: User | undefined,
+    relations: string[] = [],
+  ): Promise<Collection> {
+    const collection = await this.collectionRepository.findOne({
+      where: { id: collectionId },
+      relations: ["user", ...relations],
+    });
+
+    if (!collection) {
+      throw new NotFoundException(
+        `Collection with id ${collectionId} not found`,
+      );
+    }
+
+    this.assertCanViewCollection(collection, viewer);
+    return collection;
+  }
+
   /**
    * Retrieves all public collections.
    *
@@ -84,25 +124,34 @@ export class CollectionService {
   }
 
   /**
-   * Finds all collections owned by a specific user.
+   * Finds all collections owned by a specific user, restricted to the public
+   * ones unless the viewer is the owner or an admin.
    *
    * @param userId Target user ID.
-   * @returns User's collections.
+   * @param viewer Authenticated user, or undefined for anonymous callers.
+   * @returns Visible collections.
    */
-  async findByUserId(userId: string): Promise<Collection[]> {
+  async findByUserId(userId: string, viewer?: User): Promise<Collection[]> {
+    const ownerId = Number(userId);
+    const seesEverything =
+      viewer?.id === ownerId || viewer?.role === UserRole.ADMIN;
+
     return await this.collectionRepository.find({
-      where: { user: { id: Number(userId) } },
+      where: seesEverything
+        ? { user: { id: ownerId } }
+        : { user: { id: ownerId }, isPublic: true },
       relations: ["user", "items", "masterSet"],
     });
   }
 
   /**
-   * Finds a collection by ID.
+   * Finds a collection by ID, provided the viewer is allowed to read it.
    *
    * @param id Collection UUID.
+   * @param viewer Authenticated user, or undefined for anonymous callers.
    * @returns Collection entity.
    */
-  async findOneById(id: string): Promise<Collection> {
+  async findOneById(id: string, viewer?: User): Promise<Collection> {
     const collection = await this.collectionRepository.findOne({
       where: { id: id },
       relations: ["items", "user", "masterSet"],
@@ -110,6 +159,7 @@ export class CollectionService {
     if (!collection) {
       throw new NotFoundException(`Collection with id ${id} not found`);
     }
+    this.assertCanViewCollection(collection, viewer);
     return collection;
   }
 
@@ -400,6 +450,7 @@ export class CollectionService {
     serieId?: string,
     rarity?: string,
     cardState?: string,
+    viewer?: User,
   ): Promise<{
     data: CollectionItem[];
     meta: {
@@ -412,16 +463,9 @@ export class CollectionService {
       hasPreviousPage: boolean;
     };
   }> {
-    // Ensure collection exists and load masterSet relation
-    const collection = await this.collectionRepository.findOne({
-      where: { id: collectionId },
-      relations: ["masterSet"],
-    });
-    if (!collection) {
-      throw new NotFoundException(
-        `Collection with id ${collectionId} not found`,
-      );
-    }
+    const collection = await this.getViewableCollection(collectionId, viewer, [
+      "masterSet",
+    ]);
 
     const isMasterSet = collection.masterSet != null;
     const skip = (page - 1) * limit;
@@ -551,10 +595,13 @@ export class CollectionService {
         sortField === "pokemonCard.name"
           ? "sortTranslation.name"
           : "sortTranslation.rarity",
-        sortOrder,
+        normalizeSortOrder(sortOrder),
       );
     } else {
-      queryBuilder.orderBy(`item.${sortField}`, sortOrder);
+      queryBuilder.orderBy(
+        `item.${sortField}`,
+        normalizeSortOrder(sortOrder),
+      );
     }
 
     const totalItems = await queryBuilder.getCount();
@@ -581,16 +628,11 @@ export class CollectionService {
   async getSetRarities(
     collectionId: string,
     locale: SupportedLocale = DEFAULT_LOCALE,
+    viewer?: User,
   ): Promise<string[]> {
-    const collection = await this.collectionRepository.findOne({
-      where: { id: collectionId },
-      relations: ["masterSet"],
-    });
-    if (!collection) {
-      throw new NotFoundException(
-        `Collection with id ${collectionId} not found`,
-      );
-    }
+    const collection = await this.getViewableCollection(collectionId, viewer, [
+      "masterSet",
+    ]);
     if (!collection.masterSet) {
       return [];
     }

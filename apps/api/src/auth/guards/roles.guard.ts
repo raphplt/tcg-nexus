@@ -19,9 +19,14 @@ export class RolesGuard implements CanActivate {
 
     const request = context
       .switchToHttp()
-      .getRequest<{ user: { role: UserRole; isPro?: boolean } }>();
+      .getRequest<{ user?: { role: UserRole; isPro?: boolean } }>();
 
     const user = request.user;
+
+    // A role requirement can never be satisfied by an anonymous caller.
+    if (!user) {
+      return false;
+    }
 
     return requiredRoles.some((role) => {
       if (role === "pro") {

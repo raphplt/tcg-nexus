@@ -11,6 +11,13 @@ import {
 @Entity()
 @Index(["winner"])
 @Index(["loser"])
+@Index("IDX_ranked_history_created_at", ["createdAt"])
+@Index("IDX_ranked_history_match_id", ["matchId"], {
+  where: '"matchId" IS NOT NULL',
+})
+@Index("IDX_ranked_history_casual_session_id", ["casualSessionId"], {
+  where: '"casualSessionId" IS NOT NULL',
+})
 export class RankedMatchHistory {
   @PrimaryGeneratedColumn()
   id: number;

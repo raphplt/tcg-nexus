@@ -7,8 +7,10 @@ services:
       POSTGRES_DB: ${DATABASE_NAME:-tcg_nexus}
       POSTGRES_USER: ${DATABASE_USER:-postgres}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+    # bind localhost uniquement : la base ne doit pas être joignable depuis
+    # l'extérieur de la machine
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
@@ -28,8 +30,9 @@ services:
     restart: unless-stopped
     environment:
       OMP_THREAD_LIMIT: "1"
+    # bind localhost uniquement : le service n'est consommé que par l'API
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     networks:
       - tcg-nexus-network
     healthcheck:

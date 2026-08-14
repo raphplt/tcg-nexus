@@ -121,6 +121,9 @@ export class OrderService {
           orderId: String(order.id),
           userId: String(user.id),
         },
+        // Keyed on the order: a retried checkout reuses the same intent
+        // instead of creating a second chargeable one.
+        `order-${order.id}`,
       );
 
       await this.paymentTransactionRepository.save(
@@ -361,7 +364,17 @@ export class OrderService {
     return this.findOrderById(orderId, user.id);
   }
 
-  // Idempotent handler: Stripe webhooks and client callback events can arrive out-of-order
+  /**
+   * Marks an order as paid, exactly once.
+   *
+   * The Stripe webhook and the client-side confirmation both call this, and
+   * can race. The payment row is locked for the whole transaction so the
+   * "already processed" check and the status write are atomic; side effects
+   * are emitted only by the transaction that actually flipped the status.
+   *
+   * @param paymentIntentId Stripe PaymentIntent identifier.
+   * @param intent Amount, currency and metadata reported by Stripe.
+   */
   private async markOrderPaid(
     paymentIntentId: string,
     intent: {
@@ -370,36 +383,56 @@ export class OrderService {
       metadata?: Record<string, string> | null;
     },
   ): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order", "order.buyer", "order.orderItems"],
+    const paidOrder = await this.dataSource.transaction(async (manager) => {
+      // Pessimistic lock without relations: TypeORM refuses locks on joined queries.
+      const payment = await manager.findOne(PaymentTransaction, {
+        where: { transactionId: paymentIntentId },
+        lock: { mode: "pessimistic_write" },
+      });
+
+      if (!payment) {
+        this.logger.warn(
+          `No payment transaction for PaymentIntent ${paymentIntentId}; ignoring`,
+        );
+        return null;
+      }
+
+      const paymentWithOrder = await manager.findOne(PaymentTransaction, {
+        where: { id: payment.id },
+        relations: ["order", "order.buyer", "order.orderItems"],
+      });
+      const order = paymentWithOrder?.order;
+
+      if (!order) {
+        this.logger.warn(
+          `No order attached to PaymentIntent ${paymentIntentId}; ignoring`,
+        );
+        return null;
+      }
+
+      this.assertPaymentMatchesOrder(order, intent, paymentIntentId);
+
+      if (payment.status !== PaymentStatus.COMPLETED) {
+        payment.status = PaymentStatus.COMPLETED;
+        await manager.save(payment);
+      }
+
+      if (order.status !== OrderStatus.PENDING) {
+        return null; // Already processed by the concurrent caller
+      }
+
+      order.status = OrderStatus.PAID;
+      order.reservationExpiresAt = null;
+      await manager.save(order);
+
+      return order;
     });
 
-    if (!payment?.order) {
-      this.logger.warn(
-        `No order attached to PaymentIntent ${paymentIntentId}; ignoring`,
-      );
-      return;
+    // Side effects run outside the transaction, and only for the winner.
+    if (paidOrder) {
+      this.emitSaleEvents(paidOrder);
+      this.recordSaleSignals(paidOrder);
     }
-
-    const order = payment.order;
-    this.assertPaymentMatchesOrder(order, intent, paymentIntentId);
-
-    if (payment.status !== PaymentStatus.COMPLETED) {
-      payment.status = PaymentStatus.COMPLETED;
-      await this.paymentTransactionRepository.save(payment);
-    }
-
-    if (order.status !== OrderStatus.PENDING) {
-      return; // Already processed (webhook and client return events can arrive out of order)
-    }
-
-    order.status = OrderStatus.PAID;
-    order.reservationExpiresAt = null;
-    await this.orderRepository.save(order);
-
-    this.emitSaleEvents(order);
-    this.recordSaleSignals(order);
   }
 
   private assertPaymentMatchesOrder(
@@ -571,10 +604,20 @@ export class OrderService {
     options: { allowNoop?: boolean } = {},
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
+      // verrou sans relations : Postgres refuse FOR UPDATE sur le côté nullable
+      // d'un LEFT JOIN, les relations sont rechargées une fois la ligne verrouillée
+      const locked = await manager.findOne(Order, {
+        where: { id: orderId },
+        lock: { mode: "pessimistic_write" },
+      });
+
+      if (!locked) {
+        throw new NotFoundException(`Commande ${orderId} introuvable`);
+      }
+
       const order = await manager.findOne(Order, {
         where: { id: orderId },
         relations: ["buyer", "orderItems", "orderItems.listing"],
-        lock: { mode: "pessimistic_write" },
       });
 
       if (!order) {

@@ -21,9 +21,10 @@ import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { Public } from "../auth/decorators/public.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
-import { DeckService, FindAllDecksParams } from "./deck.service";
+import { DeckService } from "./deck.service";
 import { AnalyzeDeckResultDto } from "./dto/analyze-deck-result.dto";
 import { CreateDeckDto } from "./dto/create-deck.dto";
+import { FindAllDecksQueryDto } from "./dto/find-all-decks-query.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import { ShareDeckDto } from "./dto/share-deck.dto";
 import { UpdateDeckDto } from "./dto/update-deck.dto";
@@ -44,7 +45,7 @@ export class DeckController {
 
   @Public()
   @Get()
-  findAll(@Query() query: FindAllDecksParams) {
+  findAll(@Query() query: FindAllDecksQueryDto) {
     return this.deckService.findAll(query);
   }
 
@@ -52,7 +53,7 @@ export class DeckController {
   @Get("/me")
   findAllFromUSer(
     @CurrentUser() user: User,
-    @Query() query: FindAllDecksParams,
+    @Query() query: FindAllDecksQueryDto,
   ) {
     return this.deckService.findAllFromUser(user, query);
   }
@@ -65,7 +66,7 @@ export class DeckController {
   })
   findSavedDecks(
     @CurrentUser() user: User,
-    @Query() query: FindAllDecksParams,
+    @Query() query: FindAllDecksQueryDto,
   ) {
     return this.deckService.findSavedDecks(user, query);
   }
@@ -99,8 +100,8 @@ export class DeckController {
   @Public()
   @Get("export/:id")
   @ApiOperation({ summary: "Exporter un deck au format JSON" })
-  exportDeck(@Param("id") id: string) {
-    return this.deckService.exportDeck(+id);
+  exportDeck(@Param("id") id: string, @CurrentUser() user?: User) {
+    return this.deckService.exportDeck(+id, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -118,23 +119,26 @@ export class DeckController {
   @Get("user/:userId/public")
   findPublicDecksByUser(
     @Param("userId", ParseIntPipe) userId: number,
-    @Query() query: FindAllDecksParams,
+    @Query() query: FindAllDecksQueryDto,
   ) {
     return this.deckService.findPublicDecksByUser(userId, query);
   }
 
   @Public()
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.deckService.findOneWithCards(+id);
+  findOne(@Param("id") id: string, @CurrentUser() user?: User) {
+    return this.deckService.findOneWithCards(+id, user);
   }
 
   @Public()
   @Post(":id/analyze")
   @ApiOperation({ summary: "Analyser un deck et fournir des recommandations" })
   @ApiOkResponse({ type: AnalyzeDeckResultDto })
-  analyze(@Param("id") id: string): Promise<AnalyzeDeckResultDto> {
-    return this.deckService.analyzeDeck(+id);
+  analyze(
+    @Param("id") id: string,
+    @CurrentUser() user?: User,
+  ): Promise<AnalyzeDeckResultDto> {
+    return this.deckService.analyzeDeck(+id, user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -149,8 +153,8 @@ export class DeckController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.deckService.remove(+id);
+  remove(@Param("id") id: string, @CurrentUser() user: User) {
+    return this.deckService.remove(+id, user);
   }
 
   @Post(":id/clone")

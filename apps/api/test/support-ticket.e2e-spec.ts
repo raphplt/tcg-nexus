@@ -51,6 +51,7 @@ describe("SupportTicketController (e2e)", () => {
       owner.email,
       createResponse.body.id,
       "E2E ticket subject",
+      expect.any(String),
     );
 
     const ticketId = createResponse.body.id;

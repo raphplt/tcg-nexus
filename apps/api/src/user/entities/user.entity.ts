@@ -1,4 +1,5 @@
-import { Exclude } from "class-transformer";
+import { Exclude, Expose } from "class-transformer";
+import { SELF_SERIALIZATION_GROUP } from "src/common/serialization-groups";
 import { UserBadge } from "src/badge/entities/user-badge.entity";
 import { Collection } from "src/collection/entities/collection.entity";
 import { Currency } from "src/common/enums/currency";
@@ -29,6 +30,7 @@ export class User {
   id: number;
 
   @Column({ unique: true })
+  @Expose({ groups: [SELF_SERIALIZATION_GROUP] })
   email: string;
 
   @Column()
@@ -49,6 +51,7 @@ export class User {
     enum: UserRole,
     default: UserRole.USER,
   })
+  @Expose({ groups: [SELF_SERIALIZATION_GROUP] })
   role: UserRole;
 
   @Column({
@@ -65,9 +68,11 @@ export class User {
   isPro: boolean;
 
   @Column({ default: true })
+  @Expose({ groups: [SELF_SERIALIZATION_GROUP] })
   isActive: boolean;
 
   @Column({ default: false })
+  @Expose({ groups: [SELF_SERIALIZATION_GROUP] })
   emailVerified: boolean;
 
   @Column({ type: "varchar", nullable: true })

@@ -121,7 +121,8 @@ export class TournamentController {
     @Body() registrationDto: RegisterTournamentDto,
     @CurrentUser() user: User,
   ) {
-    if (!user.player?.id) {
+    const playerId = await this.tournamentService.findPlayerIdByUserId(user.id);
+    if (!playerId) {
       throw new BadRequestException(
         "Un profil joueur est requis pour s'inscrire à un tournoi",
       );
@@ -129,7 +130,7 @@ export class TournamentController {
 
     return this.tournamentService.registerPlayer({
       tournamentId: id,
-      playerId: user.player.id,
+      playerId,
       notes: registrationDto.notes,
     });
   }

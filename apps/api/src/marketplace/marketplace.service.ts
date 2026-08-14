@@ -23,7 +23,15 @@ import { Currency } from "../common/enums/currency";
 import { Languages } from "../common/enums/languages";
 import { ListingStatus } from "../common/enums/listing-status";
 import { ProductKind } from "../common/enums/product-kind";
-import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
+import {
+  normalizeSortOrder,
+  PaginatedResult,
+  PaginationHelper,
+} from "../helpers/pagination";
+import {
+  ListingSortBy,
+  ListingSortOrder,
+} from "./dto/ind-all-listings-query.dto";
 import { SealedProduct } from "../sealed-product/entities/sealed-product.entity";
 import { User } from "../user/entities/user.entity";
 import { CreateListingDto } from "./dto/create-marketplace.dto";
@@ -36,6 +44,23 @@ import { OrderService } from "./order.service";
 import { getMarketReferencePrice, round2 } from "./price.helper";
 import { getShippingCost, SHIPPING_POLICY } from "./shipping-policy";
 
+// TypeORM injecte l'expression orderBy telle quelle : jamais la construire à
+// partir de l'entrée utilisateur. `name` trie sur un alias localisé calculé.
+const LISTING_SORT_COLUMNS: Record<
+  Exclude<ListingSortBy, ListingSortBy.NAME>,
+  string
+> = {
+  [ListingSortBy.CREATED_AT]: "listing.createdAt",
+  [ListingSortBy.PRICE]: "listing.price",
+  [ListingSortBy.EXPIRES_AT]: "listing.expiresAt",
+  [ListingSortBy.QUANTITY_AVAILABLE]: "listing.quantityAvailable",
+};
+
+const resolveListingSortColumn = (sortBy?: ListingSortBy): string =>
+  LISTING_SORT_COLUMNS[
+    sortBy as Exclude<ListingSortBy, ListingSortBy.NAME>
+  ] ?? LISTING_SORT_COLUMNS[ListingSortBy.CREATED_AT];
+
 export interface FindAllListingsParams {
   sellerId?: number;
   pokemonCardId?: string;
@@ -43,8 +68,8 @@ export interface FindAllListingsParams {
   productKind?: ProductKind;
   page?: number;
   limit?: number;
-  sortBy?: string;
-  sortOrder?: "ASC" | "DESC";
+  sortBy?: ListingSortBy;
+  sortOrder?: ListingSortOrder;
   search?: string;
   cardState?: string;
   language?: Languages;
@@ -132,8 +157,8 @@ export class MarketplaceService {
       productKind,
       page = 1,
       limit = 20,
-      sortBy = "createdAt",
-      sortOrder = "DESC",
+      sortBy = ListingSortBy.CREATED_AT,
+      sortOrder = ListingSortOrder.DESC,
       search,
       cardState,
       language,
@@ -200,7 +225,7 @@ export class MarketplaceService {
     return PaginationHelper.paginateQueryBuilder(
       qb,
       { page, limit },
-      sortBy ? `listing.${sortBy}` : undefined,
+      resolveListingSortColumn(sortBy),
       sortOrder,
     );
   }
@@ -279,8 +304,8 @@ export class MarketplaceService {
     const {
       page = 1,
       limit = 20,
-      sortBy = "createdAt",
-      sortOrder = "DESC",
+      sortBy = ListingSortBy.CREATED_AT,
+      sortOrder = ListingSortOrder.DESC,
       search,
       cardState,
       language,
@@ -329,7 +354,9 @@ export class MarketplaceService {
       qb.andWhere("listing.productKind = :productKind", { productKind });
     }
 
-    if (sortBy === "name") {
+    const safeSortOrder = normalizeSortOrder(sortOrder);
+
+    if (sortBy === ListingSortBy.NAME) {
       // Name originates from localized translations: sorting defaults to default locale
       qb.addSelect(
         `COALESCE(
@@ -339,9 +366,9 @@ export class MarketplaceService {
         "product_name",
       );
       qb.setParameter("sortLocale", DEFAULT_LOCALE);
-      qb.orderBy("product_name", sortOrder);
+      qb.orderBy("product_name", safeSortOrder);
     } else {
-      qb.orderBy(`listing.${sortBy || "createdAt"}`, sortOrder);
+      qb.orderBy(resolveListingSortColumn(sortBy), safeSortOrder);
     }
 
     return PaginationHelper.paginateQueryBuilder(qb, { page, limit });
@@ -956,22 +983,24 @@ export class MarketplaceService {
     }
 
     // Sorting with safeguards
+    const safeSortOrder = normalizeSortOrder(sortOrder);
+
     if (sortBy === "price") {
-      qb.orderBy("min_price", sortOrder, "NULLS LAST");
+      qb.orderBy("min_price", safeSortOrder, "NULLS LAST");
     } else if (sortBy === "popularity") {
       qb.orderBy("listing_count", "DESC");
     } else if (sortBy === "localId") {
       // For localId, sort as text but it will work for numeric strings
       // Since we added it to GROUP BY, we can reference it directly
-      qb.orderBy("card.localId", sortOrder);
+      qb.orderBy("card.localId", safeSortOrder);
       // Add secondary sort by name for consistency
       qb.addOrderBy("sortTranslation.name", "ASC");
     } else if (sortBy === "name" || sortBy === "rarity") {
       // Localized fields, taken from the joined translation
-      qb.orderBy(`sortTranslation.${sortBy}`, sortOrder);
+      qb.orderBy(`sortTranslation.${sortBy}`, safeSortOrder);
     } else {
       // Fallback to name if sortBy is not recognized
-      qb.orderBy("sortTranslation.name", sortOrder);
+      qb.orderBy("sortTranslation.name", safeSortOrder);
     }
 
     const validated = PaginationHelper.validateParams({ page, limit });

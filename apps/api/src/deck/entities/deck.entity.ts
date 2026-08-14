@@ -6,6 +6,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -13,15 +14,13 @@ import {
 } from "typeorm";
 
 @Entity()
+@Index("IDX_deck_public_created_at", ["isPublic", "createdAt"])
+@Index("IDX_deck_user_created_at", ["user", "createdAt"])
 export class Deck {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(
-    () => User,
-    (user) => user.decks,
-    { onDelete: "CASCADE" },
-  )
+  @ManyToOne(() => User, (user) => user.decks, { onDelete: "CASCADE" })
   user: User;
 
   @Column({ length: 100 })
@@ -33,24 +32,16 @@ export class Deck {
   @Column({ default: 0 })
   views: number;
 
-  @ManyToOne(
-    () => DeckFormat,
-    (format) => format.decks,
-    {
-      eager: true,
-      onDelete: "SET NULL",
-    },
-  )
+  @ManyToOne(() => DeckFormat, (format) => format.decks, {
+    eager: true,
+    onDelete: "SET NULL",
+  })
   format: DeckFormat;
 
   @ManyToOne(() => Card, { nullable: true, eager: true })
   coverCard: Card;
 
-  @OneToMany(
-    () => DeckCard,
-    (deckCard) => deckCard.deck,
-    { cascade: true },
-  )
+  @OneToMany(() => DeckCard, (deckCard) => deckCard.deck, { cascade: true })
   cards?: DeckCard[];
 
   @CreateDateColumn()

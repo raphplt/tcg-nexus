@@ -1,12 +1,17 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, Optional } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
+import { DataSource } from "typeorm";
+import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
 import { CardPopularityService } from "./card-popularity.service";
 
 @Injectable()
 export class CardPopularityScheduler {
   private readonly logger = new Logger(CardPopularityScheduler.name);
 
-  constructor(private readonly cardPopularityService: CardPopularityService) {}
+  constructor(
+    private readonly cardPopularityService: CardPopularityService,
+    @Optional() private readonly dataSource?: DataSource,
+  ) {}
 
   /**
    * Executes daily card metrics aggregation cron job at 03:00 AM (off-peak hours).
@@ -16,6 +21,14 @@ export class CardPopularityScheduler {
     timeZone: "Europe/Paris",
   })
   async handleDailyAggregation() {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:card-popularity-daily",
+      () => this.aggregatePreviousDay(),
+    );
+  }
+
+  private async aggregatePreviousDay(): Promise<void> {
     this.logger.log("Starting daily metrics aggregation...");
     const startTime = Date.now();
 

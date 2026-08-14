@@ -56,7 +56,11 @@ describe("Order flow (e2e)", () => {
     await app.close();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // un checkout refusé laisse le panier rempli : sans ça l'article fuite sur
+    // les tests suivants, dont le checkout échoue alors en "stock insuffisant"
+    await request(httpServer).delete("/user-cart/me/clear").set(authAs(buyer));
+
     jest.clearAllMocks();
     let counter = 0;
     stripeServiceMock.createPaymentIntent.mockImplementation(

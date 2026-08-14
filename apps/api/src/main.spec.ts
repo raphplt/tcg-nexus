@@ -7,6 +7,7 @@ jest.mock("@nestjs/core", () => {
     ...actual,
     NestFactory: {
       create: jest.fn().mockResolvedValue({
+        set: jest.fn(),
         use: jest.fn(),
         setGlobalPrefix: jest.fn(),
         useGlobalPipes: jest.fn(),
@@ -102,13 +103,17 @@ describe("main bootstrap error", () => {
     process.env = originalEnv;
   });
 
-  it("should log error when bootstrap fails", async () => {
-    (NestFactory.create as jest.Mock).mockRejectedValueOnce(new Error("fail"));
+  it("rethrows a fatal bootstrap error instead of starting half-configured", async () => {
+    const failure = new Error("fail");
+    (NestFactory.create as jest.Mock).mockRejectedValueOnce(failure);
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
-    await bootstrap();
+    await expect(bootstrap()).rejects.toThrow(failure);
 
-    expect(errorSpy).toHaveBeenCalledWith("fail");
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Fatal error during bootstrap",
+      failure,
+    );
     errorSpy.mockRestore();
   });
 });

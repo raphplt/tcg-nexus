@@ -5,6 +5,7 @@ import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useState } from "react";
 import usePlacesAutocomplete from "use-places-autocomplete";
 import { Button } from "@/components/ui/button";
+import { GoogleMapsScript } from "@/components/GoogleMapsScript";
 import {
   Command,
   CommandEmpty,
@@ -39,12 +40,13 @@ export default function ShippingAddressForm({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const {
+    init: initializePlaces,
     ready,
     value,
     setValue,
     suggestions: { status, data },
     clearSuggestions,
-  } = usePlacesAutocomplete({ debounce: 300 });
+  } = usePlacesAutocomplete({ debounce: 300, initOnMount: false });
 
   const handleSelect = (selected: string) => {
     setValue(selected, false);
@@ -69,6 +71,7 @@ export default function ShippingAddressForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <GoogleMapsScript onReady={initializePlaces} />
       <div className="space-y-2">
         <Label htmlFor="shipping-address">{t("title")}</Label>
 

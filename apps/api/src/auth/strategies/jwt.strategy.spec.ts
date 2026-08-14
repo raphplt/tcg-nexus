@@ -8,7 +8,7 @@ describe("JwtStrategy", () => {
     get: jest.fn().mockReturnValue("secret"),
   } as unknown as ConfigService;
   const mockUserService = {
-    findById: jest.fn(),
+    findForAccessToken: jest.fn(),
   } as unknown as UserService;
 
   beforeEach(() => {
@@ -38,7 +38,7 @@ describe("JwtStrategy", () => {
 
   it("should validate active user", async () => {
     const strategy = new JwtStrategy(mockConfig, mockUserService);
-    mockUserService.findById = jest
+    mockUserService.findForAccessToken = jest
       .fn()
       .mockResolvedValue({ id: 1, isActive: true });
 
@@ -48,7 +48,7 @@ describe("JwtStrategy", () => {
 
   it("should throw on inactive user", async () => {
     const strategy = new JwtStrategy(mockConfig, mockUserService);
-    mockUserService.findById = jest
+    mockUserService.findForAccessToken = jest
       .fn()
       .mockResolvedValue({ id: 1, isActive: false });
 

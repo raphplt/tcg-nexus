@@ -23,7 +23,11 @@
   },
   "packageManager": "npm@10.9.0",
   "overrides": {
-    "webpack": "5.95.0"
+    "webpack": "5.95.0",
+    "nodemailer": "^9.0.5",
+    "tar": "^7.5.21",
+    "brace-expansion": "^2.1.4",
+    "js-yaml": "^4.1.0"
   },
   "dependencies": {
     "react": "19.2.3",

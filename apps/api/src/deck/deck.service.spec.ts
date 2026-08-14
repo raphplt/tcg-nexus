@@ -10,6 +10,7 @@ import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { PaginationHelper } from "../helpers/pagination";
 import { DeckService } from "./deck.service";
+import { DeckSortBy, SortOrder } from "./dto/find-all-decks-query.dto";
 import { Deck } from "./entities/deck.entity";
 import { DeckShare } from "./entities/deck-share.entity";
 import { SavedDeck } from "./entities/saved-deck.entity";
@@ -45,11 +46,14 @@ describe("DeckService", () => {
     deckCardRepo = {
       create: jest.fn((data) => data),
       save: jest.fn(async (data) => data),
+      find: jest.fn().mockResolvedValue([]),
+      findOne: jest.fn(),
       findOneBy: jest.fn(),
       delete: jest.fn(),
     };
 
     pokemonCardRepo = {
+      findBy: jest.fn(),
       findOneBy: jest.fn(),
     };
 
@@ -137,9 +141,7 @@ describe("DeckService", () => {
         c1: { id: "c1", name: "First" },
         c2: { id: "c2", name: "Second" },
       };
-      pokemonCardRepo.findOneBy.mockImplementation(
-        async ({ id }) => cardMap[id],
-      );
+      pokemonCardRepo.findBy.mockResolvedValue(Object.values(cardMap));
       const createdDeck = { id: 1, name: "Deck" };
       deckRepo.create.mockReturnValue(createdDeck);
       const expectedDeck = { ...createdDeck, cards: [] };
@@ -163,7 +165,7 @@ describe("DeckService", () => {
           coverCard: cardMap.c1,
         }),
       );
-      expect(pokemonCardRepo.findOneBy).toHaveBeenCalledTimes(3);
+      expect(pokemonCardRepo.findBy).toHaveBeenCalledTimes(1);
       expect(deckCardRepo.save).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ card: cardMap.c1, qty: 2 }),
@@ -188,7 +190,7 @@ describe("DeckService", () => {
 
     it("throws when a card is missing", async () => {
       deckFormatRepo.findOneBy.mockResolvedValue({ id: "fmt" });
-      pokemonCardRepo.findOneBy.mockResolvedValue(null);
+      pokemonCardRepo.findBy.mockResolvedValue([]);
 
       await expect(
         service.createDeck(
@@ -209,13 +211,13 @@ describe("DeckService", () => {
       deckRepo.createQueryBuilder.mockReturnValue(qb);
       jest
         .spyOn(PaginationHelper, "paginateQueryBuilder")
-        .mockResolvedValue("paginated" as any);
+        .mockResolvedValue({ data: [], meta: {} } as any);
 
       const result = await service.findAll({
         formatId: "3",
         search: "fire",
-        sortBy: "format.type",
-        sortOrder: "ASC",
+        sortBy: DeckSortBy.FORMAT_TYPE,
+        sortOrder: SortOrder.ASC,
         page: 2,
         limit: 5,
       });
@@ -233,7 +235,7 @@ describe("DeckService", () => {
         "format.type",
         "ASC",
       );
-      expect(result).toBe("paginated");
+      expect(result.data).toEqual([]);
     });
 
     it("filters by user and uses deck fields for ordering", async () => {
@@ -241,10 +243,12 @@ describe("DeckService", () => {
       deckRepo.createQueryBuilder.mockReturnValue(qb);
       jest
         .spyOn(PaginationHelper, "paginateQueryBuilder")
-        .mockResolvedValue("userDecks" as any);
+        .mockResolvedValue({ data: [], meta: {} } as any);
 
       const user = { id: 5 } as any;
-      const result = await service.findAllFromUser(user, { sortBy: "name" });
+      const result = await service.findAllFromUser(user, {
+        sortBy: DeckSortBy.NAME,
+      });
 
       expect(qb.andWhere).toHaveBeenCalledWith("user.id = :userId", {
         userId: 5,
@@ -255,7 +259,7 @@ describe("DeckService", () => {
         "deck.name",
         "DESC",
       );
-      expect(result).toBe("userDecks");
+      expect(result.data).toEqual([]);
     });
   });
 
@@ -268,12 +272,45 @@ describe("DeckService", () => {
     });
 
     it("returns the deck when found", async () => {
-      const deck = { id: 1 } as any;
+      const deck = { id: 1, isPublic: true } as any;
       deckRepo.findOne.mockResolvedValue(deck);
 
       const result = await service.findOneWithCards(1);
 
       expect(result).toBe(deck);
+    });
+
+    it("hides a private deck from anonymous viewers", async () => {
+      deckRepo.findOne.mockResolvedValue({
+        id: 1,
+        isPublic: false,
+        user: { id: 7 },
+      });
+
+      await expect(service.findOneWithCards(1)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
+    it("hides a private deck from another user", async () => {
+      deckRepo.findOne.mockResolvedValue({
+        id: 1,
+        isPublic: false,
+        user: { id: 7 },
+      });
+
+      await expect(
+        service.findOneWithCards(1, { id: 8, role: UserRole.USER } as any),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("returns a private deck to its owner", async () => {
+      const deck = { id: 1, isPublic: false, user: { id: 7 } } as any;
+      deckRepo.findOne.mockResolvedValue(deck);
+
+      await expect(
+        service.findOneWithCards(1, { id: 7, role: UserRole.USER } as any),
+      ).resolves.toBe(deck);
     });
   });
 
@@ -288,6 +325,7 @@ describe("DeckService", () => {
     it("returns analysis with distributions and suggestions", async () => {
       deckRepo.findOne.mockResolvedValue({
         id: 1,
+        isPublic: true,
         cards: [
           {
             qty: 4,
@@ -368,6 +406,7 @@ describe("DeckService", () => {
     it("flags decks that are too large and multi-type", async () => {
       deckRepo.findOne.mockResolvedValue({
         id: 2,
+        isPublic: true,
         cards: [
           {
             qty: 40,
@@ -464,7 +503,7 @@ describe("DeckService", () => {
     it("throws when a card to add is missing", async () => {
       deckRepo.findOne.mockResolvedValue({ id: 1, cards: [], user: { id: 1 } });
       deckFormatRepo.findOneBy.mockResolvedValue({ id: "fmt" });
-      pokemonCardRepo.findOneBy.mockResolvedValue(null);
+      pokemonCardRepo.findBy.mockResolvedValue([]);
 
       await expect(
         service.updateDeck(1, { id: 1 } as any, {
@@ -478,8 +517,8 @@ describe("DeckService", () => {
     it("throws when a card to update is missing", async () => {
       deckRepo.findOne.mockResolvedValue({ id: 1, cards: [], user: { id: 1 } });
       deckFormatRepo.findOneBy.mockResolvedValue({ id: "fmt" });
-      pokemonCardRepo.findOneBy.mockResolvedValue({ id: "c1" });
-      deckCardRepo.findOneBy.mockResolvedValue(null);
+      pokemonCardRepo.findBy.mockResolvedValue([{ id: "c1" }]);
+      deckCardRepo.find.mockResolvedValue([]);
 
       await expect(
         service.updateDeck(1, { id: 1 } as any, {
@@ -501,12 +540,16 @@ describe("DeckService", () => {
       };
       deckRepo.findOne.mockResolvedValue(deck);
       deckFormatRepo.findOneBy.mockResolvedValue({ id: "fmt2" });
-      pokemonCardRepo.findOneBy.mockResolvedValue({ id: "card-add" });
-      deckCardRepo.findOneBy.mockResolvedValue({
-        id: 5,
-        qty: 1,
-        role: DeckCardRole.main,
-      });
+      pokemonCardRepo.findBy.mockResolvedValue([{ id: "card-add" }]);
+      deckCardRepo.find
+        .mockResolvedValueOnce([{ id: 2 }])
+        .mockResolvedValueOnce([
+          {
+            id: 5,
+            qty: 1,
+            role: DeckCardRole.main,
+          },
+        ]);
       const updatedDeck = { ...deck, name: "New", isPublic: true };
       deckRepo.findOne
         .mockResolvedValueOnce(deck)
@@ -555,19 +598,33 @@ describe("DeckService", () => {
   });
 
   describe("remove", () => {
+    const owner = { id: 1, role: UserRole.USER } as any;
+
     it("throws when deck does not exist", async () => {
       deckRepo.findOne.mockResolvedValue(null);
-      await expect(service.remove(1)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.remove(1, owner)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
-    it("removes deck", async () => {
-      const deck = { id: 1, name: "Demo" };
+    it("removes deck owned by the user", async () => {
+      const deck = { id: 1, name: "Demo", user: { id: 1 } };
       deckRepo.findOne.mockResolvedValue(deck);
 
-      const result = await service.remove(1);
+      const result = await service.remove(1, owner);
 
       expect(deckRepo.remove).toHaveBeenCalledWith(deck);
       expect(result).toEqual({ message: "Deck Demo supprimé avec succès" });
+    });
+
+    it("refuses to delete a deck owned by someone else", async () => {
+      const deck = { id: 1, name: "Demo", user: { id: 42 } };
+      deckRepo.findOne.mockResolvedValue(deck);
+
+      await expect(service.remove(1, owner)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(deckRepo.remove).not.toHaveBeenCalled();
     });
   });
 

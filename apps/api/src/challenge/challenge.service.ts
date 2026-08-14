@@ -14,6 +14,7 @@ import { ActiveChallenge } from "./entities/active-challenge.entity";
 import { UserChallenge } from "./entities/user-challenge.entity";
 import { ChallengeType, ChallengeActionType } from "./enums/challenge.enum";
 import { Player } from "../player/entities/player.entity";
+import { runWithPostgresAdvisoryLock } from "../common/postgres-advisory-lock";
 
 @Injectable()
 export class ChallengeService {
@@ -78,6 +79,14 @@ export class ChallengeService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async rotateDailyChallenges() {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:daily-challenge-rotation",
+      () => this.runDailyChallengeRotation(),
+    );
+  }
+
+  private async runDailyChallengeRotation(): Promise<void> {
     this.logger.log("Rotating DAILY challenges...");
     await this.activeChallengeRepo.delete({
       challenge: { type: ChallengeType.DAILY },
@@ -112,6 +121,14 @@ export class ChallengeService {
    */
   @Cron("0 0 * * 1") // Every Monday at 00:00
   async rotateWeeklyChallenges() {
+    await runWithPostgresAdvisoryLock(
+      this.dataSource,
+      "tcg-nexus:weekly-challenge-rotation",
+      () => this.runWeeklyChallengeRotation(),
+    );
+  }
+
+  private async runWeeklyChallengeRotation(): Promise<void> {
     this.logger.log("Rotating WEEKLY challenges...");
     await this.activeChallengeRepo.delete({
       challenge: { type: ChallengeType.WEEKLY },

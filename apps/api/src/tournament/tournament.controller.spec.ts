@@ -29,6 +29,7 @@ describe("TournamentController", () => {
     getTournamentStats: jest.fn(),
     update: jest.fn(),
     updateStatus: jest.fn(),
+    findPlayerIdByUserId: jest.fn(),
     registerPlayer: jest.fn(),
     unregisterPlayer: jest.fn(),
     getPlayerTournaments: jest.fn(),
@@ -206,13 +207,15 @@ describe("TournamentController", () => {
   describe("registerPlayer", () => {
     it("should always register the authenticated player's profile", async () => {
       const dto = { playerId: 2, notes: "hello" };
-      const user = { id: 1, player: { id: 7 } } as User;
+      const user = { id: 1 } as User;
+      mockTournamentService.findPlayerIdByUserId.mockResolvedValue(7);
       mockTournamentService.registerPlayer.mockResolvedValue({
         status: "CONFIRMED",
       });
 
       const result = await controller.registerPlayer(1, dto, user);
 
+      expect(service.findPlayerIdByUserId).toHaveBeenCalledWith(1);
       expect(result).toEqual({ status: "CONFIRMED" });
       expect(service.registerPlayer).toHaveBeenCalledWith({
         tournamentId: 1,
@@ -223,7 +226,8 @@ describe("TournamentController", () => {
 
     it("should use user player id if not provided", async () => {
       const dto = {};
-      const user = { id: 1, player: { id: 2 } } as User;
+      const user = { id: 1 } as User;
+      mockTournamentService.findPlayerIdByUserId.mockResolvedValue(2);
       mockTournamentService.registerPlayer.mockResolvedValue({
         status: "CONFIRMED",
       });
@@ -239,6 +243,7 @@ describe("TournamentController", () => {
     it("should reject registration when the user has no player profile", async () => {
       const dto = {};
       const user = { id: 1 } as User;
+      mockTournamentService.findPlayerIdByUserId.mockResolvedValue(null);
       mockTournamentService.registerPlayer.mockResolvedValue({
         status: "CONFIRMED",
       });
