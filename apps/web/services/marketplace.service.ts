@@ -96,15 +96,19 @@ export interface SellerStatistics {
     id: number;
     firstName: string;
     lastName: string;
-    avatarUrl: string;
+    avatarUrl: string | null;
     isPro: boolean;
     createdAt: string;
   };
   totalListings: number;
   activeListings: number;
   totalSales: number;
-  totalRevenue: number;
-  avgOrderValue: number;
+  /** Null when the seller has no sale or sells in several currencies. */
+  totalRevenue: number | null;
+  /** Null when revenue cannot be expressed in a single currency. */
+  avgOrderValue: number | null;
+  currency: string | null;
+  revenueByCurrency?: Record<string, number>;
   listings: Listing[];
 }
 

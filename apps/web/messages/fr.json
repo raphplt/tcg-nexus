@@ -2083,7 +2083,17 @@
     "sortNameAsc": "Nom (A-Z)",
     "sortNameDesc": "Nom (Z-A)",
     "information": "Informations",
-    "conditionColumn": "État / Condition"
+    "conditionColumn": "État / Condition",
+    "activeListings": "Offres actives",
+    "totalListingsCount": "{count} au total",
+    "totalSales": "Ventes totales",
+    "revenue": "Chiffre d'affaires",
+    "avgOrderValue": "Panier moyen",
+    "listingsCount": "{count, plural, =0 {Aucune offre} one {# offre} other {# offres}}",
+    "unknownProduct": "Produit inconnu",
+    "view": "Voir",
+    "pageOf": "Page {current} sur {total}",
+    "next": "Suivant"
   },
   "Faq": {
     "badge": "Centre d'aide",

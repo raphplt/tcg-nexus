@@ -2083,7 +2083,17 @@
     "sortNameAsc": "Name (A-Z)",
     "sortNameDesc": "Name (Z-A)",
     "information": "Information",
-    "conditionColumn": "Condition"
+    "conditionColumn": "Condition",
+    "activeListings": "Active listings",
+    "totalListingsCount": "{count} in total",
+    "totalSales": "Total sales",
+    "revenue": "Revenue",
+    "avgOrderValue": "Average order value",
+    "listingsCount": "{count, plural, =0 {No listing} one {# listing} other {# listings}}",
+    "unknownProduct": "Unknown product",
+    "view": "View",
+    "pageOf": "Page {current} of {total}",
+    "next": "Next"
   },
   "Faq": {
     "badge": "Help centre",

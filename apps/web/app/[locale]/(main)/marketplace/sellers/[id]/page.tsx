@@ -134,6 +134,7 @@ export default function SellerPage() {
   }
 
   const sellerListings = listings?.data ?? [];
+  const statsCurrency = stats.currency ?? "EUR";
   const seller =
     stats.seller ?? stats.listings?.[0]?.seller ?? sellerListings?.[0]?.seller;
 
@@ -159,10 +160,10 @@ export default function SellerPage() {
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={seller.avatarUrl} />
+                <AvatarImage src={seller.avatarUrl ?? undefined} />
                 <AvatarFallback className="text-2xl">
-                  {seller.firstName[0]}
-                  {seller.lastName[0]}
+                  {seller.firstName?.[0] ?? "?"}
+                  {seller.lastName?.[0] ?? ""}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -207,13 +208,13 @@ export default function SellerPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                Offres actives
+                {t("activeListings")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stats.activeListings}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                {stats.totalListings} au total
+                {t("totalListingsCount", { count: stats.totalListings })}
               </div>
             </CardContent>
           </Card>
@@ -222,7 +223,7 @@ export default function SellerPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4" />
-                Ventes totales
+                {t("totalSales")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -237,12 +238,12 @@ export default function SellerPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                Chiffre d'affaires
+                {t("revenue")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {formatPrice(stats.totalRevenue, "EUR")}
+                {formatPrice(stats.totalRevenue ?? 0, statsCurrency)}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t("totalGenerated")}
@@ -254,12 +255,12 @@ export default function SellerPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Star className="w-4 h-4" />
-                Panier moyen
+                {t("avgOrderValue")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {formatPrice(stats.avgOrderValue, "EUR")}
+                {formatPrice(stats.avgOrderValue ?? 0, statsCurrency)}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t("perOrder")}
@@ -273,8 +274,7 @@ export default function SellerPage() {
             <H2>{t("sellerListings")}</H2>
             <div className="flex items-center gap-3">
               <Badge variant="secondary">
-                {listings?.meta?.totalItems ?? 0} offre
-                {(listings?.meta?.totalItems ?? 0) > 1 ? "s" : ""}
+                {t("listingsCount", { count: listings?.meta?.totalItems ?? 0 })}
               </Badge>
               <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
             </div>
@@ -428,7 +428,7 @@ export default function SellerPage() {
                                 </Link>
                               ) : (
                                 <span className="text-muted-foreground italic">
-                                  Produit inconnu
+                                  {t("unknownProduct")}
                                 </span>
                               )}
                               {productSetName && (
@@ -460,7 +460,7 @@ export default function SellerPage() {
                                   variant="outline"
                                   className="cursor-pointer hover:bg-accent"
                                 >
-                                  Voir
+                                  {t("view")}
                                 </Badge>
                               </Link>
                             </TableCell>
@@ -492,7 +492,10 @@ export default function SellerPage() {
                 {t("previous")}
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {listings.meta.currentPage} sur {listings.meta.totalPages}
+                {t("pageOf", {
+                  current: listings.meta.currentPage,
+                  total: listings.meta.totalPages,
+                })}
               </span>
               <Button
                 variant="outline"
@@ -502,7 +505,7 @@ export default function SellerPage() {
                 }
                 disabled={!listings.meta.hasNextPage}
               >
-                Suivant
+                {t("next")}
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>

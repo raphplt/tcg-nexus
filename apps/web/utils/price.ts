@@ -49,20 +49,29 @@ export function formatPricing(pricing?: Pricing | null): string {
   return parts.length ? parts.join(" • ") : "Non défini";
 }
 
-// Format price for marketplace
+/**
+ * Formats a marketplace price with its currency.
+ *
+ * @param price - Amount as a number or numeric string; null/undefined/NaN are tolerated.
+ * @param currency - ISO currency code, defaults to EUR.
+ * @param fallback - Value returned when the price is not a usable number.
+ */
 export const formatPrice = (
-  price: string | number,
-  currency: string,
+  price: string | number | null | undefined,
+  currency: string = "EUR",
+  fallback: string = "—",
 ): string => {
   const numericPrice = typeof price === "string" ? parseFloat(price) : price;
+
+  if (numericPrice == null || !Number.isFinite(numericPrice)) return fallback;
 
   try {
     return numericPrice.toLocaleString(undefined, {
       style: "currency",
-      currency: currency,
+      currency: currency || "EUR",
     });
   } catch {
-    return `${numericPrice.toFixed(2)} ${currency}`;
+    return `${numericPrice.toFixed(2)} ${currency || "EUR"}`;
   }
 };
 
