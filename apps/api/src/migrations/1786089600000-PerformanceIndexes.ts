@@ -13,6 +13,13 @@ export class PerformanceIndexes1786089600000 implements MigrationInterface {
    */
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
+      `ALTER TABLE "ranked_match_history" ADD COLUMN IF NOT EXISTS "matchId" integer`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "ranked_match_history" ADD COLUMN IF NOT EXISTS "casualSessionId" integer`,
+    );
+
+    await queryRunner.query(
       `CREATE INDEX IF NOT EXISTS "IDX_ranked_history_created_at" ON "ranked_match_history" ("createdAt")`,
     );
     await queryRunner.query(

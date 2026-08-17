@@ -17,6 +17,11 @@ services:
       retries: 5
     networks:
       - tcg-nexus-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   vision:
     build:
@@ -26,6 +31,11 @@ services:
     restart: unless-stopped
     networks:
       - tcg-nexus-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     build:
@@ -51,6 +61,25 @@ services:
       - "3001:3001"
     networks:
       - tcg-nexus-network
+    # L'image purge curl : la sonde passe par le runtime Node déjà présent.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3001/api',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      # Migrations et chargement du catalogue avant le premier succès.
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     # Le catalogue est embarqué dans l'image (data/ est versionné). Monter un
     # volume sur /app/data n'est utile que pour servir un dataset plus récent
     # que le déploiement — il masquerait sinon les cartes livrées avec l'image.
@@ -65,7 +94,7 @@ services:
     restart: unless-stopped
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     env_file:
       - .env
     environment:
@@ -77,6 +106,23 @@ services:
       - "3000:3000"
     networks:
       - tcg-nexus-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   docs:
     build:
@@ -88,6 +134,11 @@ services:
       - "3002:3002"
     networks:
       - tcg-nexus-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
