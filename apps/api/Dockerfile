@@ -17,6 +17,8 @@ COPY packages/scan-contract /app/packages/scan-contract
 COPY packages/pokemon-dataset /app/packages/pokemon-dataset
 RUN npm ci --workspace=api
 
+RUN npx tsc -p packages/pokemon-dataset/tsconfig.build.json
+
 COPY apps/api /app/apps/api
 
 COPY data /app/data
