@@ -6,6 +6,7 @@ import { Card } from "../card/entities/card.entity";
 import { PokemonCardDetails } from "../card/entities/pokemon-card-details.entity";
 import { CardState } from "../card-state/entities/card-state.entity";
 import { Collection } from "../collection/entities/collection.entity";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { Deck } from "../deck/entities/deck.entity";
 import { DeckCard } from "../deck-card/entities/deck-card.entity";
 import { DeckFormat } from "../deck-format/entities/deck-format.entity";
@@ -13,6 +14,8 @@ import { Faq } from "../faq/entities/faq.entity";
 import { CardEvent } from "../marketplace/entities/card-event.entity";
 import { CardPopularityMetrics } from "../marketplace/entities/card-popularity-metrics.entity";
 import { Listing } from "../marketplace/entities/listing.entity";
+import { Order } from "../marketplace/entities/order.entity";
+import { OrderItem } from "../marketplace/entities/order-item.entity";
 import { PriceHistory } from "../marketplace/entities/price-history.entity";
 import { Match } from "../match/entities/match.entity";
 import { MatchService } from "../match/match.service";
@@ -164,7 +167,19 @@ describe("SeedService", () => {
           useValue: createMockRepository(),
         },
         {
+          provide: getRepositoryToken(CollectionItem),
+          useValue: createMockRepository(),
+        },
+        {
           provide: getRepositoryToken(CardState),
+          useValue: createMockRepository(),
+        },
+        {
+          provide: getRepositoryToken(Order),
+          useValue: createMockRepository(),
+        },
+        {
+          provide: getRepositoryToken(OrderItem),
           useValue: createMockRepository(),
         },
         {

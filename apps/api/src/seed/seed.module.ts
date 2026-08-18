@@ -7,6 +7,7 @@ import { CardTranslation } from "src/card/entities/card-translation.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 import { CardState } from "src/card-state/entities/card-state.entity";
 import { Collection } from "src/collection/entities/collection.entity";
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Deck } from "src/deck/entities/deck.entity";
 import { DeckCard } from "src/deck-card/entities/deck-card.entity";
 import { DeckFormat } from "src/deck-format/entities/deck-format.entity";
@@ -15,6 +16,8 @@ import {
   CardEvent,
   CardPopularityMetrics,
   Listing,
+  Order,
+  OrderItem,
   PriceHistory,
 } from "src/marketplace/entities";
 import { Match } from "src/match/entities/match.entity";
@@ -80,9 +83,12 @@ const isSeedApiEnabled =
       DeckFormat,
       DeckCard,
       Collection,
+      CollectionItem,
       CardState,
       Statistics,
       Faq,
+      Order,
+      OrderItem,
     ]),
     ConfigModule,
     MatchModule,

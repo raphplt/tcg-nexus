@@ -33,6 +33,7 @@ describe("TournamentController", () => {
     registerPlayer: jest.fn(),
     unregisterPlayer: jest.fn(),
     getPlayerTournaments: jest.fn(),
+    getOrganizerTournaments: jest.fn(),
     remove: jest.fn(),
     startTournament: jest.fn(),
     finishTournament: jest.fn(),
@@ -274,6 +275,19 @@ describe("TournamentController", () => {
 
       expect(result).toEqual({ data: [] });
       expect(service.getPlayerTournaments).toHaveBeenCalledWith(10, query);
+    });
+  });
+
+  describe("getOrganizerTournaments", () => {
+    it("should delegate to service", async () => {
+      mockTournamentService.getOrganizerTournaments = jest
+        .fn()
+        .mockResolvedValue({
+          data: [],
+        });
+      const query = { page: 1, limit: 10 } as TournamentQueryDto;
+      await controller.getOrganizerTournaments(1, query);
+      expect(service.getOrganizerTournaments).toHaveBeenCalledWith(1, query);
     });
   });
 

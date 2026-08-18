@@ -61,6 +61,20 @@ export const tournamentService = {
   },
 
   /**
+   * Retrieves tournaments organized by a specific user.
+   */
+  async getOrganizerTournaments(
+    userId: number,
+    params: TournamentQueryParams = {},
+  ): Promise<PaginatedResult<Tournament>> {
+    return authedFetch<PaginatedResult<Tournament>>(
+      "GET",
+      `/tournaments/organizer/${userId}`,
+      { params: params as any },
+    );
+  },
+
+  /**
    * Retrieves a tournament match.
    */
   async getTournamentMatch(

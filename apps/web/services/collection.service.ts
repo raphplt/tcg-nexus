@@ -14,6 +14,15 @@ export interface CollectionItemsQueryParams extends PaginationParams {
   search?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
+  rarity?: string;
+}
+
+export interface CreateCollectionPayload {
+  name?: string;
+  description?: string;
+  isPublic?: boolean;
+  userId?: number;
+  masterSetId?: string;
 }
 
 export const collectionService = {
@@ -36,6 +45,10 @@ export const collectionService = {
     });
   },
 
+  async getMyCollections(): Promise<Collection[]> {
+    return authedFetch<Collection[]>("GET", "/collection/my/collections");
+  },
+
   async getById(id: string): Promise<Collection> {
     return fetcher<Collection>(`/collection/${id}`);
   },
@@ -50,9 +63,53 @@ export const collectionService = {
     );
   },
 
-  async createCollection(collection: Collection): Promise<Collection> {
+  async getSetRarities(id: string): Promise<string[]> {
+    return fetcher<string[]>(`/collection/${id}/rarities`);
+  },
+
+  async createCollection(payload: CreateCollectionPayload): Promise<Collection> {
     return authedFetch<Collection>("POST", "/collection", {
-      data: collection,
+      data: payload,
     });
+  },
+
+  async deleteCollection(id: string): Promise<void> {
+    return authedFetch<void>("DELETE", `/collection/${id}`);
+  },
+
+  async addCardToCollection(
+    collectionId: string,
+    pokemonCardId: string,
+  ): Promise<CollectionItemType> {
+    return authedFetch<CollectionItemType>(
+      "POST",
+      `/collection/${collectionId}/items`,
+      {
+        data: { pokemonCardId },
+      },
+    );
+  },
+
+  async removeCardFromCollection(
+    collectionId: string,
+    pokemonCardId: string,
+  ): Promise<CollectionItemType | null> {
+    return authedFetch<CollectionItemType | null>(
+      "POST",
+      `/collection/${collectionId}/items/remove`,
+      {
+        data: { pokemonCardId },
+      },
+    );
+  },
+
+  async deleteCollectionItem(
+    collectionId: string,
+    itemId: number,
+  ): Promise<void> {
+    return authedFetch<void>(
+      "DELETE",
+      `/collection/${collectionId}/items/${itemId}`,
+    );
   },
 };

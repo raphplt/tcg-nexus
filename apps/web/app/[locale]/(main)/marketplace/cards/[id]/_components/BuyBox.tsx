@@ -13,6 +13,7 @@ import type { Listing } from "@/types/listing";
 import { cardStates } from "@/utils/variables";
 import { getCardStateColor } from "../../../utils";
 import { hasReferencePrices, ReferencePrices } from "./ReferencePrices";
+import { AddToCollectionDialog } from "./AddToCollectionDialog";
 
 interface BuyBoxProps {
   cardId: string;
@@ -135,6 +136,13 @@ export function BuyBox({
                   {totalListings > 1 ? "s" : ""}
                 </a>
               </Button>
+              <AddToCollectionDialog
+                cardId={cardId}
+                cardName={cardName}
+                variant="secondary"
+                size="lg"
+                className="w-full"
+              />
             </div>
 
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -169,13 +177,22 @@ export function BuyBox({
               <p className="font-semibold">{t("noListingsTitle")}</p>
               <p className="text-sm text-muted-foreground">{t("noListings")}</p>
             </div>
-            <Button className="w-full" asChild>
-              <Link
-                href={`/marketplace/create?cardId=${encodeURIComponent(cardId)}`}
-              >
-                {t("sellThisCard")}
-              </Link>
-            </Button>
+            <div className="space-y-2">
+              <Button className="w-full" asChild>
+                <Link
+                  href={`/marketplace/create?cardId=${encodeURIComponent(cardId)}`}
+                >
+                  {t("sellThisCard")}
+                </Link>
+              </Button>
+              <AddToCollectionDialog
+                cardId={cardId}
+                cardName={cardName}
+                variant="outline"
+                size="lg"
+                className="w-full"
+              />
+            </div>
           </div>
         )}
 

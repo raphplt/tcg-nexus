@@ -528,6 +528,37 @@ export class TournamentService {
   }
 
   /**
+   * Retrieves all tournaments organized by a specific user.
+   *
+   * @param userId User identifier who organized tournaments.
+   * @param query Pagination and filtering parameters.
+   * @returns Paginated tournaments list with pricing, rewards, and organizers relations.
+   */
+  async getOrganizerTournaments(userId: number, query: TournamentQueryDto) {
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "startDate",
+      sortOrder = "DESC",
+    } = query;
+
+    const queryBuilder = this.tournamentRepository
+      .createQueryBuilder("tournament")
+      .innerJoin("tournament.organizers", "organizer")
+      .leftJoinAndSelect("tournament.pricing", "pricing")
+      .leftJoinAndSelect("tournament.rewards", "rewards")
+      .leftJoinAndSelect("tournament.organizers", "allOrganizers")
+      .where("organizer.user.id = :userId", { userId });
+
+    return PaginationHelper.paginateQueryBuilder(
+      queryBuilder,
+      { page, limit },
+      sortBy ? `tournament.${sortBy}` : undefined,
+      sortOrder,
+    );
+  }
+
+  /**
    * Retrieves upcoming public tournaments.
    */
   async getUpcomingTournaments(limit: number = 10): Promise<Tournament[]> {

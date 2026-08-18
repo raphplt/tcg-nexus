@@ -37,6 +37,7 @@ export default function ShippingAddressForm({
   const t = useTranslations("ShippingAddress");
   const [open, setOpen] = useState(false);
   const [address, setAddress] = useState("");
+  const [isManualMode, setIsManualMode] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const {
@@ -56,6 +57,12 @@ export default function ShippingAddressForm({
     setOpen(false);
   };
 
+  const handleUseTypedValue = () => {
+    if (value.trim()) {
+      handleSelect(value.trim());
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = address.trim();
@@ -69,13 +76,26 @@ export default function ShippingAddressForm({
     onSubmit(trimmed);
   };
 
+  const isComboboxActive = ready && !isManualMode;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <GoogleMapsScript onReady={initializePlaces} />
       <div className="space-y-2">
-        <Label htmlFor="shipping-address">{t("title")}</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="shipping-address">{t("title")}</Label>
+          {ready && (
+            <button
+              type="button"
+              onClick={() => setIsManualMode((prev) => !prev)}
+              className="text-xs text-primary hover:underline font-medium"
+            >
+              {isManualMode ? "Recherche automatique" : "Saisie manuelle"}
+            </button>
+          )}
+        </div>
 
-        {ready ? (
+        {isComboboxActive ? (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -99,10 +119,49 @@ export default function ShippingAddressForm({
                 <CommandInput
                   placeholder={t("searchPlaceholder")}
                   value={value}
-                  onValueChange={setValue}
+                  onValueChange={(val) => {
+                    setValue(val);
+                    if (val) {
+                      setAddress(val);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && value.trim()) {
+                      e.preventDefault();
+                      handleUseTypedValue();
+                    }
+                  }}
                 />
                 <CommandList>
-                  <CommandEmpty>{t("noAddressFound")}</CommandEmpty>
+                  {value.trim().length >= 3 && (
+                    <CommandGroup heading="Saisie directe">
+                      <CommandItem
+                        value={value.trim()}
+                        onSelect={handleUseTypedValue}
+                        className="font-medium text-primary cursor-pointer"
+                      >
+                        <Check className="mr-2 h-4 w-4 opacity-50" />
+                        Utiliser &quot;{value.trim()}&quot;
+                      </CommandItem>
+                    </CommandGroup>
+                  )}
+                  <CommandEmpty>
+                    <div className="p-2 text-center text-sm">
+                      <p className="text-muted-foreground mb-2">
+                        {t("noAddressFound")}
+                      </p>
+                      {value.trim().length > 0 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleUseTypedValue}
+                        >
+                          Utiliser &quot;{value.trim()}&quot;
+                        </Button>
+                      )}
+                    </div>
+                  </CommandEmpty>
                   <CommandGroup>
                     {status === "OK" &&
                       data.map(({ place_id, description }) => (

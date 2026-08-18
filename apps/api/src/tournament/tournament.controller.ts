@@ -153,6 +153,14 @@ export class TournamentController {
     return this.tournamentService.getPlayerTournaments(playerId, query);
   }
 
+  @Get("organizer/:userId")
+  async getOrganizerTournaments(
+    @Param("userId", ParseIntPipe) userId: number,
+    @Query() query: TournamentQueryDto,
+  ) {
+    return this.tournamentService.getOrganizerTournaments(userId, query);
+  }
+
   @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(TournamentOwnerGuard)

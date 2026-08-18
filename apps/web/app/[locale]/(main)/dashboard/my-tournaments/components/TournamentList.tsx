@@ -8,6 +8,8 @@ import {
   BarChart3,
   Eye,
   Target,
+  Shield,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +22,7 @@ interface TournamentListProps {
   isLoading: boolean;
   showRanking?: boolean;
   userId?: number;
+  isOrganizerView?: boolean;
 }
 
 export function TournamentList({
@@ -27,6 +30,7 @@ export function TournamentList({
   isLoading,
   showRanking = false,
   userId,
+  isOrganizerView = false,
 }: TournamentListProps) {
   const locale = useLocale();
   const t = useTranslations("Dashboard.myTournaments.list");
@@ -174,31 +178,56 @@ export function TournamentList({
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/tournaments/${tournament.id}`}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      {t("view")}
-                    </Link>
-                  </Button>
+                <div className="flex flex-col gap-2 shrink-0 min-w-[140px]">
+                  {isOrganizerView ? (
+                    <>
+                      <Button variant="default" size="sm" asChild>
+                        <Link href={`/tournaments/${tournament.id}/admin`}>
+                          <Settings className="w-4 h-4 mr-2" />
+                          Gérer le tournoi
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/tournaments/${tournament.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          {t("view")}
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={`/tournaments/${tournament.id}/bracket`}>
+                          <Trophy className="w-4 h-4 mr-2" />
+                          {t("bracket")}
+                        </Link>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/tournaments/${tournament.id}`}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          {t("view")}
+                        </Link>
+                      </Button>
 
-                  {tournament.status === "in_progress" && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/tournaments/${tournament.id}/player`}>
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        {t("dashboard")}
-                      </Link>
-                    </Button>
-                  )}
+                      {tournament.status === "in_progress" && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/tournaments/${tournament.id}/player`}>
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            {t("dashboard")}
+                          </Link>
+                        </Button>
+                      )}
 
-                  {(tournament.status === "in_progress" ||
-                    tournament.status === "finished") && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/tournaments/${tournament.id}/bracket`}>
-                        <Trophy className="w-4 h-4 mr-2" />
-                        {t("bracket")}
-                      </Link>
-                    </Button>
+                      {(tournament.status === "in_progress" ||
+                        tournament.status === "finished") && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/tournaments/${tournament.id}/bracket`}>
+                            <Trophy className="w-4 h-4 mr-2" />
+                            {t("bracket")}
+                          </Link>
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
