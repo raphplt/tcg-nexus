@@ -11,6 +11,12 @@
     "test": "npm --prefix apps/api test -- --no-watchman && npm --prefix apps/web test && npm --prefix apps/fetch test && npm --prefix packages/effect-parser test && npm --prefix apps/mobile test && python3 -m unittest discover apps/vision",
     "test:all": "npm run test",
     "test:cov": "tsx scripts/run-all-coverage.ts",
+    "test:cov:api": "npm --prefix apps/api test -- --coverage --no-watchman",
+    "test:cov:web": "npm --prefix apps/web run test:cov",
+    "test:cov:fetch": "npm --prefix apps/fetch run test:cov",
+    "test:cov:effect-parser": "npm --prefix packages/effect-parser run test:cov",
+    "test:cov:mobile": "npm --prefix apps/mobile run test:cov",
+    "test:cov:vision": "python3 apps/vision/test_cov.py",
     "test:e2e:tournament": "npm run test:e2e:tournament -w api",
     "bench:scan": "npm run bench:scan -w api",
     "scan:bench": "npm run bench:scan -w api"

@@ -131,7 +131,9 @@
     ],
     "rootDir": "src",
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/$1",
+      "^@repo/pokemon-dataset$": "<rootDir>/../../../packages/pokemon-dataset/src/index.ts",
+      "^@repo/scan-contract$": "<rootDir>/../../../packages/scan-contract/src/index.ts"
     },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
