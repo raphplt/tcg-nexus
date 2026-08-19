@@ -8,8 +8,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "parse": "tsx src/cli.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "tsx --test tests/**/*.test.ts",
+    "test:cov": "tsx --test --experimental-test-coverage tests/**/*.test.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

@@ -24,11 +24,16 @@ describe("CollectionService", () => {
 
   const mockCollectionItemRepo = {
     createQueryBuilder: jest.fn(),
+    create: jest.fn((dto) => dto),
+    save: jest.fn((entity) => Promise.resolve(entity)),
+    delete: jest.fn().mockResolvedValue({ affected: 1 }),
+    findOne: jest.fn(),
   };
 
   const mockCardRepo = {
     findOne: jest.fn(),
     find: jest.fn(),
+    createQueryBuilder: jest.fn(),
   };
 
   const mockCardStateRepo = {
@@ -239,5 +244,127 @@ describe("CollectionService", () => {
     await expect(
       service.findCollectionItemsPaginated("missing", 1, 10),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  describe("addCardToCollection & removeCardFromCollection & removeCollectionItem", () => {
+    it("should increment quantity if card already in collection", async () => {
+      const existingItem = { id: 10, quantity: 1, pokemonCard: { id: "card-1" } };
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c1",
+        user: { id: 1 },
+        items: [existingItem],
+      });
+      mockCardRepo.findOne.mockResolvedValue({ id: "card-1" });
+      mockCollectionItemRepo.save = jest.fn((item) => Promise.resolve(item));
+
+      const result = await service.addCardToCollection("c1", "card-1", 1);
+      expect(result.quantity).toBe(2);
+    });
+
+    it("should add new card item with default NM state if not in collection", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c1",
+        user: { id: 1 },
+        items: [],
+      });
+      mockCardRepo.findOne.mockResolvedValue({ id: "card-2" });
+      mockCardStateRepo.findOne.mockResolvedValue({ id: 1, code: "NM" });
+      mockCollectionItemRepo.create = jest.fn((dto) => dto);
+      mockCollectionItemRepo.save = jest.fn((item) => Promise.resolve({ id: 20, ...item }));
+
+      const result = await service.addCardToCollection("c1", "card-2", 1);
+      expect((result as any)?.pokemonCard?.id).toBe("card-2");
+      expect(result.quantity).toBe(1);
+    });
+
+    it("should decrement quantity if quantity > 1 on removeCardFromCollection", async () => {
+      const existingItem = { id: 10, quantity: 2, pokemonCard: { id: "card-1" } };
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c1",
+        user: { id: 1 },
+        items: [existingItem],
+      });
+      mockCollectionItemRepo.save = jest.fn((item) => Promise.resolve(item));
+
+      const result = await service.removeCardFromCollection("c1", "card-1", 1);
+      expect(result?.quantity).toBe(1);
+    });
+
+    it("should delete item if quantity == 1 on removeCardFromCollection", async () => {
+      const existingItem = { id: 10, quantity: 1, pokemonCard: { id: "card-1" } };
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c1",
+        user: { id: 1 },
+        items: [existingItem],
+      });
+      mockCollectionItemRepo.delete = jest.fn().mockResolvedValue({ affected: 1 });
+
+      const result = await service.removeCardFromCollection("c1", "card-1", 1);
+      expect(result).toBeNull();
+      expect(mockCollectionItemRepo.delete).toHaveBeenCalledWith(10);
+    });
+
+    it("should remove collection item by id", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c1",
+        user: { id: 1 },
+      });
+      mockCollectionItemRepo.findOne.mockResolvedValue({ id: 5 });
+      mockCollectionItemRepo.delete = jest.fn().mockResolvedValue({ affected: 1 });
+
+      await service.removeCollectionItem("c1", 5, 1);
+      expect(mockCollectionItemRepo.delete).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe("master set collection pagination & getSetRarities", () => {
+    it("should paginate master set items using cardRepository", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c-master",
+        isPublic: true,
+        masterSet: { id: "set-1" },
+      });
+
+      const cardQb: any = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          { id: "c1", tcgDexId: "p1", collectionItems: [{ id: 1, quantity: 1 }] },
+        ]),
+      };
+      mockCardRepo.createQueryBuilder = jest.fn(() => cardQb);
+
+      const result = await service.findCollectionItemsPaginated(
+        "c-master",
+        1,
+        10,
+        "Pikachu",
+        "added_at",
+        "DESC",
+        "set-1",
+        "serie-1",
+        "Rare",
+        "NM",
+      );
+
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.totalItems).toBe(1);
+    });
+
+    it("should delegate getSetRarities to CardService for master sets", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c-master",
+        isPublic: true,
+        masterSet: { id: "set-1" },
+      });
+
+      const result = await service.getSetRarities("c-master", "fr");
+      expect(result).toBeDefined();
+    });
   });
 });

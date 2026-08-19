@@ -338,5 +338,32 @@ describe("MatchOnlineService", () => {
         }),
       );
     });
+
+    it("should get spectator view for match", async () => {
+      mockMatchEntity.onlineSession = {
+        id: 100,
+        status: OnlineMatchSessionStatus.ACTIVE,
+        serializedState: { playerIds: ["10", "20"], players: {} },
+        eventLog: [],
+      } as any;
+      mockMatchRepository.findOne.mockResolvedValue(mockMatchEntity);
+
+      const view = await service.getSpectatorView(1);
+      expect(view?.slot).toBe("spectator");
+      expect(view?.enginePlayerId).toBeNull();
+    });
+
+    it("should get session views by user map", async () => {
+      mockMatchEntity.onlineSession = {
+        id: 100,
+        status: OnlineMatchSessionStatus.ACTIVE,
+        serializedState: { playerIds: ["10", "20"], players: {} },
+        eventLog: [],
+      } as any;
+      mockMatchRepository.findOne.mockResolvedValue(mockMatchEntity);
+
+      const views = await service.getSessionViewsByUser(1);
+      expect(views.get(mockUser.id)).toBeDefined();
+    });
   });
 });

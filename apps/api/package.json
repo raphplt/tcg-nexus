@@ -131,7 +131,9 @@
     ],
     "rootDir": "src",
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/$1",
+      "^@repo/pokemon-dataset$": "<rootDir>/../../../packages/pokemon-dataset/src/index.ts",
+      "^@repo/scan-contract$": "<rootDir>/../../../packages/scan-contract/src/index.ts"
     },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
@@ -141,13 +143,22 @@
       "node_modules/(?!@faker-js)"
     ],
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!scripts/**",
+      "!**/scripts/**",
+      "!seed/**",
+      "!**/seed/**",
+      "!migrations/**",
+      "!**/migrations/**",
+      "!main.ts",
+      "!data-source.ts"
     ],
     "coverageDirectory": "../coverage",
     "coverageReporters": [
       "text",
       "text-summary",
-      "lcov"
+      "lcov",
+      "json-summary"
     ],
     "coverageThreshold": {
       "**/marketplace/marketplace.service.ts": {

@@ -663,6 +663,76 @@ describe("EffectResolver", () => {
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
+
+  it("should DRAW_UNTIL_HAND_SIZE until handSize is reached", () => {
+    const events: any[] = [];
+    const effect = {
+      type: EffectType.DRAW_UNTIL_HAND_SIZE,
+      handSize: 2,
+    };
+
+    resolver.resolveEffects([effect as any], "Player2", events);
+
+    const state = engine.getState();
+    expect(state.players["Player2"].hand.length).toBe(2);
+  });
+
+  it("should delegate SEARCH_DECK, LOOK_AT_TOP_DECK, and SEARCH_DISCARD to GameEngine", () => {
+    const events: any[] = [];
+    const spySearchDeck = jest.spyOn(engine, "initiateSearchDeck").mockImplementation();
+    const spyLook = jest.spyOn(engine, "initiateLookAtTopDeck").mockImplementation();
+    const spySearchDiscard = jest.spyOn(engine, "initiateSearchDiscard").mockImplementation();
+
+    resolver.resolveEffects([
+      { type: EffectType.SEARCH_DECK, searchType: "POKEMON" } as any,
+      { type: EffectType.LOOK_AT_TOP_DECK, amount: 3 } as any,
+      { type: EffectType.SEARCH_DISCARD, filter: "ENERGY" } as any,
+    ], "Player1", events);
+
+    expect(spySearchDeck).toHaveBeenCalled();
+    expect(spyLook).toHaveBeenCalled();
+    expect(spySearchDiscard).toHaveBeenCalled();
+  });
+
+  it("should delegate energy manipulation effects to GameEngine", () => {
+    const events: any[] = [];
+    const spyDiscard = jest.spyOn(engine, "discardAttachedEnergy").mockImplementation();
+    const spyMove = jest.spyOn(engine, "initiateMoveEnergy").mockImplementation();
+    const spyAttachDeck = jest.spyOn(engine, "initiateAttachEnergyFromDeck").mockImplementation();
+    const spyAttachDiscard = jest.spyOn(engine, "initiateAttachEnergyFromDiscard").mockImplementation();
+
+    resolver.resolveEffects([
+      { type: EffectType.DISCARD_ENERGY, target: TargetType.SELF, amount: 1 } as any,
+      { type: EffectType.MOVE_ENERGY } as any,
+      { type: EffectType.ATTACH_ENERGY_FROM_DECK } as any,
+      { type: EffectType.ATTACH_ENERGY_FROM_DISCARD } as any,
+    ], "Player1", events);
+
+    expect(spyDiscard).toHaveBeenCalled();
+    expect(spyMove).toHaveBeenCalled();
+    expect(spyAttachDeck).toHaveBeenCalled();
+    expect(spyAttachDiscard).toHaveBeenCalled();
+  });
+
+  it("should delegate switch active, devolve, and revive effects to GameEngine", () => {
+    const events: any[] = [];
+    const spySwitchOpp = jest.spyOn(engine, "initiateSwitchOpponentActive").mockImplementation();
+    const spySwitchOwn = jest.spyOn(engine, "initiateSwitchOwnActive").mockImplementation();
+    const spyDevolve = jest.spyOn(engine, "devolvePokemon").mockImplementation();
+    const spyRevive = jest.spyOn(engine, "initiateRevive").mockImplementation();
+
+    resolver.resolveEffects([
+      { type: EffectType.SWITCH_OPPONENT_ACTIVE } as any,
+      { type: EffectType.SWITCH_OWN_ACTIVE } as any,
+      { type: EffectType.DEVOLVE, target: TargetType.OPPONENT_ACTIVE } as any,
+      { type: EffectType.REVIVE } as any,
+    ], "Player1", events);
+
+    expect(spySwitchOpp).toHaveBeenCalled();
+    expect(spySwitchOwn).toHaveBeenCalled();
+    expect(spyDevolve).toHaveBeenCalled();
+    expect(spyRevive).toHaveBeenCalled();
+  });
 });
 
 describe("Stadium passive effects (calculateAttackDamage)", () => {

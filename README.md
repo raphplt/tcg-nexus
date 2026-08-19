@@ -97,10 +97,16 @@ npm run dev
 turbo build
 ```
 
-### Tests unitaires
+### Tests & Couverture de code
+
+Voir le guide complet des tests et du code coverage : [TESTING.md](TESTING.md).
 
 ```bash
-turbo test
+# Lancer tous les tests du monorepo (1 408 tests)
+npm test
+
+# Lancer la couverture globale et afficher le récapitulatif
+npm run test:cov
 ```
 
 ### Déploiement

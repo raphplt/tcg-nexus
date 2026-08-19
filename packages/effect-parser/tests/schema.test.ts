@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import {
   AnyEffectSchema,
   CardEffectsSchema,
@@ -12,7 +13,7 @@ describe("AnyEffectSchema", () => {
       amount: 30,
       target: "OPPONENT_ACTIVE",
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate a COIN_FLIP with nested effects", () => {
@@ -26,7 +27,7 @@ describe("AnyEffectSchema", () => {
         },
       ],
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate a MULTI_COIN_FLIP", () => {
@@ -35,7 +36,7 @@ describe("AnyEffectSchema", () => {
       count: 4,
       perHeads: [{ type: "DAMAGE", amount: 20, target: "OPPONENT_ACTIVE" }],
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate DISCARD_ENERGY with ALL", () => {
@@ -45,7 +46,7 @@ describe("AnyEffectSchema", () => {
       target: "SELF",
       energyType: "Électrique",
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate HEAL with ALL amount", () => {
@@ -54,7 +55,7 @@ describe("AnyEffectSchema", () => {
       amount: "ALL",
       target: "SELF",
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate SEARCH_DECK with filter", () => {
@@ -68,7 +69,7 @@ describe("AnyEffectSchema", () => {
       destination: "BENCH",
       shuffleAfter: true,
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate PREVENT_DAMAGE with duration", () => {
@@ -77,7 +78,7 @@ describe("AnyEffectSchema", () => {
       target: "SELF",
       duration: "UNTIL_NEXT_OPPONENT_TURN",
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate SHUFFLE_HAND_DRAW", () => {
@@ -86,7 +87,7 @@ describe("AnyEffectSchema", () => {
       target: "BOTH",
       drawAmount: 4,
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should reject invalid effect type", () => {
@@ -94,7 +95,7 @@ describe("AnyEffectSchema", () => {
       type: "FAKE_EFFECT",
       amount: 30,
     });
-    expect(result.success).toBe(false);
+    assert.equal(result.success, false);
   });
 
   it("should reject invalid target", () => {
@@ -103,7 +104,7 @@ describe("AnyEffectSchema", () => {
       amount: 30,
       target: "INVALID_TARGET",
     });
-    expect(result.success).toBe(false);
+    assert.equal(result.success, false);
   });
 });
 
@@ -128,7 +129,7 @@ describe("CardEffectsSchema", () => {
         },
       },
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate a trainer card", () => {
@@ -143,7 +144,7 @@ describe("CardEffectsSchema", () => {
       ],
       targetStrategy: "OWN_POKEMON",
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate pokemon with empty attack effects", () => {
@@ -153,7 +154,7 @@ describe("CardEffectsSchema", () => {
         Charge: { effects: [] },
       },
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 
   it("should validate pokemon with ability", () => {
@@ -165,7 +166,7 @@ describe("CardEffectsSchema", () => {
         effects: [{ type: "HEAL", amount: 10, target: "SELF" }],
       },
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 });
 
@@ -189,6 +190,6 @@ describe("CardEffectsRegistrySchema", () => {
         ],
       },
     });
-    expect(result.success).toBe(true);
+    assert.equal(result.success, true);
   });
 });

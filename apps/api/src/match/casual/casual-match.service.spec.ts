@@ -243,4 +243,56 @@ describe("CasualMatchService", () => {
       await expect(service.hasOngoingSession(1)).resolves.toBe(false);
     });
   });
+
+  describe("assertCanQueue & findSessionById & cancelOrphanSession & getLobby", () => {
+    it("should assert user can queue when profile and deck exist", async () => {
+      mockPlayerRepository.findOne.mockResolvedValue({ id: 1, user: { id: 1 } });
+      mockDeckRepository.findOne.mockResolvedValue({ id: 10, user: { id: 1 }, cards: [] });
+      mockSavedDeckRepository.createQueryBuilder.mockReturnValue({
+        innerJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([{ deckId: 10 }]),
+      });
+      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({ eligible: true, issues: [] });
+
+      await expect(service.assertCanQueue(1, 10)).resolves.toBeUndefined();
+    });
+
+    it("should find session by id", async () => {
+      mockSessionRepository.findOne.mockResolvedValue(session);
+      const result = await service.findSessionById(42);
+      expect(result?.id).toBe(42);
+    });
+
+    it("should cancel orphan session", async () => {
+      mockSessionRepository.update.mockResolvedValue({ affected: 1 });
+      await service.cancelOrphanSession(42);
+      expect(mockSessionRepository.update).toHaveBeenCalled();
+    });
+
+    it("should return lobby view for user", async () => {
+      mockDeckRepository.find.mockResolvedValue([{ id: 10, name: "Deck A", cards: [] }]);
+      mockSavedDeckRepository.createQueryBuilder.mockReturnValue({
+        innerJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([{ deckId: 10 }]),
+      });
+      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({ eligible: true, issues: [] });
+      mockSessionRepository.find.mockResolvedValue([session]);
+
+      const lobby = await service.getLobby(playerAUser);
+      expect(lobby.activeSessions).toHaveLength(1);
+      expect(lobby.availableDecks).toHaveLength(1);
+    });
+
+    it("should get session views by user", async () => {
+      mockSessionRepository.findOne.mockResolvedValue(session);
+      const views = await service.getSessionViewsByUser(42);
+      expect(views.size).toBe(2);
+      expect(views.get(playerAUser.id)).toBeDefined();
+      expect(views.get(playerBUser.id)).toBeDefined();
+    });
+  });
 });

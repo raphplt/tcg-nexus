@@ -12,7 +12,8 @@
     "update-sealed": "tsx update-sealed.ts",
     "sealed-coverage": "tsx sealed-coverage.ts",
     "migrate-card-images": "tsx migrate-card-images-r2.ts",
-    "test": "tsx --test *.test.ts"
+    "test": "tsx --test *.test.ts",
+    "test:cov": "tsx --test --experimental-test-coverage *.test.ts"
   },
   "keywords": [],
   "author": "",

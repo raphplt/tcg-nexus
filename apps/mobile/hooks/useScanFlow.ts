@@ -314,7 +314,7 @@ export function useScanFlow() {
 
       if (result.bestCard) {
         pushHistory({
-          message: result.bestCard.name || "Carte identifiee automatiquement",
+          message: result.bestCard.name || "Carte identifiée automatiquement",
           status: "found",
           title: "Carte reconnue",
         });

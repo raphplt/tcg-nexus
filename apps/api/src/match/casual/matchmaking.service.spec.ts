@@ -125,4 +125,28 @@ describe("MatchmakingService", () => {
     // Both players are released instead of being stuck in a broken pairing.
     expect(service.getQueueSize()).toBe(0);
   });
+
+  it("should allow player to leave queue", async () => {
+    await service.joinQueue(1, 10);
+    expect(service.isQueued(1)).toBe(true);
+
+    service.leaveQueue(1);
+    expect(service.isQueued(1)).toBe(false);
+    expect(service.getQueueSize()).toBe(0);
+  });
+
+  it("should pair ranked players with closest ELO within window", async () => {
+    mockPlayerRepository.findOne.mockImplementation(({ where: { user: { id } } }) =>
+      Promise.resolve({ elo: id === 1 ? 1000 : id === 2 ? 1020 : 1800 }),
+    );
+
+    await service.joinQueue(1, 10, true);
+    await service.joinQueue(3, 30, true); // ELO 1800 -> too far
+    expect(service.getQueueSize()).toBe(2);
+
+    const match = await service.joinQueue(2, 20, true); // ELO 1020 -> close to P1 (1000)
+    expect(match).not.toBeNull();
+    expect(match?.playerAUserId).toBe(2);
+    expect(match?.playerBUserId).toBe(1);
+  });
 });

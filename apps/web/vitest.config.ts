@@ -24,5 +24,9 @@ export default defineConfig({
     globals: true,
     include: ["test/**/*.{test,spec}.{ts,tsx}"],
     css: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "text-summary", "lcov", "html", "json-summary"],
+    },
   },
 });
