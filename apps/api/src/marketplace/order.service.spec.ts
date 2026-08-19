@@ -670,5 +670,78 @@ describe("OrderService", () => {
         ForbiddenException,
       );
     });
+
+    it("returns the order if the user is buyer or admin", async () => {
+      const order = { id: 1, buyer: { id: 1 } };
+      orderRepo.findOne.mockResolvedValue(order);
+      const result = await service.findOrderById(1, 1);
+      expect(result).toEqual(order);
+    });
+  });
+
+  describe("findOrdersByBuyerId & findSalesBySellerId & getSellerRevenue", () => {
+    it("should find buyer orders", async () => {
+      orderRepo.find.mockResolvedValue([{ id: 100 }]);
+
+      const result = await service.findOrdersByBuyerId(1);
+      expect(result).toHaveLength(1);
+    });
+
+    it("should find seller sales paginated", async () => {
+      const qb: any = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[{ id: 7 }], 1]),
+      };
+      orderItemRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findSalesBySellerId(2, { page: 1, limit: 10 });
+      expect(result.data).toHaveLength(1);
+    });
+
+    it("should calculate seller revenue by currency", async () => {
+      const qb: any = {
+        leftJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([
+          { currency: "EUR", revenue: "50.0", shipping: "5.0", sales: "2" },
+        ]),
+      };
+      orderItemRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const rev = await service.getSellerRevenue(2);
+      expect(rev.totalSales).toBe(2);
+      expect(rev.revenueByCurrency["EUR"]).toBe(50);
+      expect(rev.shippingByCurrency["EUR"]).toBe(5);
+    });
+
+    it("should calculate sales totals across multiple seller IDs", async () => {
+      const emptyMap = await service.getSalesTotalsBySellerIds([]);
+      expect(emptyMap.size).toBe(0);
+
+      const qb: any = {
+        leftJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([
+          { sellerId: "2", revenue: "100.0", sales: "4" },
+        ]),
+      };
+      orderItemRepo.createQueryBuilder.mockReturnValue(qb);
+
+      const totals = await service.getSalesTotalsBySellerIds([2]);
+      expect(totals.get(2)).toEqual({ totalSales: 4, totalRevenue: 100 });
+    });
   });
 });

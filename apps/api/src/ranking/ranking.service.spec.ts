@@ -42,6 +42,7 @@ describe("RankingService", () => {
 
   const mockPlayerRepo = {
     findOne: jest.fn(),
+    save: jest.fn((p) => Promise.resolve(p)),
   };
 
   const mockMatchRepo = {
@@ -384,11 +385,6 @@ describe("RankingService", () => {
     it("should calculate opponent win rates and game win rates", async () => {
       const player1 = { id: 1 } as Player;
       const player2 = { id: 2 } as Player;
-      /* 
-             Match 1: P1 vs P2. P1 wins 2-0.
-             P1 stats: Opponents: [P2]. P2 win rate?
-             P2 stats: Opponents: [P1]. P1 win rate?
-           */
       const matches = [
         {
           id: 1,
@@ -404,14 +400,6 @@ describe("RankingService", () => {
 
       matchRepo.find.mockResolvedValue(matches);
 
-      // Calculating for P1
-      // P1 played P2.
-      // P2 has player matches: Match 1 (loss).
-      // P2 wins = 0. Total = 1. P2 Win Rate = 0.
-      // P1 opponentWinRate = 0.
-
-      // P1 Game Win Rate: Won 2 games out of 2. Rate = 1.0 (100% equivalent, but float 0-1)
-
       const result = await service.calculateTieBreakers(1, [1, 2]);
       const p1Stats = result.get(1);
       expect(p1Stats!.gameWinRate).toBe(1);
@@ -419,7 +407,6 @@ describe("RankingService", () => {
 
       const p2Stats = result.get(2);
       expect(p2Stats!.gameWinRate).toBe(0);
-      // P2 played P1. P1 won match 1. P1 wins=1/1 -> 1.0.
       expect(p2Stats!.opponentWinRate).toBe(1);
     });
 
@@ -429,6 +416,77 @@ describe("RankingService", () => {
       const p1Stats = result.get(1);
       expect(p1Stats).toBeDefined();
       expect(p1Stats!.opponentWinRate).toBe(0);
+    });
+  });
+
+  describe("getMyRankingPosition & ELO methods", () => {
+    it("should return user ranking position from query", async () => {
+      playerRepo.findOne.mockResolvedValue({ id: 1, user: { id: 10, email: "u@t.co" }, elo: 1200 });
+      mockRankedHistoryRepo.query.mockResolvedValue([
+        {
+          rank: "5",
+          oldRank: "6",
+          userId: "10",
+          firstName: "John",
+          lastName: "Doe",
+          score: "1200",
+        },
+      ]);
+
+      const pos = await service.getMyRankingPosition(10, "week");
+      expect(pos.rank).toBe(5);
+      expect(pos.tendency).toBe("up");
+    });
+
+    it("should fallback to player elo when user not yet in ranked table", async () => {
+      playerRepo.findOne.mockResolvedValue({ id: 1, user: { id: 10, email: "u@t.co", firstName: "A", lastName: "B" }, elo: 1050 });
+      mockRankedHistoryRepo.query.mockResolvedValue([]);
+
+      const pos = await service.getMyRankingPosition(10);
+      expect(pos.rank).toBe(0);
+      expect(pos.score).toBe(1050);
+    });
+
+    it("should update ELO on win and on draw", async () => {
+      const p1 = { id: 1, elo: 1000 };
+      const p2 = { id: 2, elo: 1000 };
+      playerRepo.findOne.mockImplementation(({ where: { user: { id } } }) =>
+        Promise.resolve(id === 1 ? p1 : p2),
+      );
+      playerRepo.save.mockImplementation((p: any) => Promise.resolve(p));
+
+      const winRes = await service.updateElo(1, 2, false);
+      expect(winRes.winnerElo).toBeGreaterThan(1000);
+      expect(winRes.loserElo).toBeLessThan(1000);
+
+      // Draw
+      p1.elo = 1000;
+      p2.elo = 1000;
+      const drawRes = await service.updateElo(1, 2, true);
+      expect(drawRes.winnerElo).toBe(1000);
+      expect(drawRes.loserElo).toBe(1000);
+    });
+
+    it("should update ELO with history record", async () => {
+      const p1 = { id: 1, elo: 1000 };
+      const p2 = { id: 2, elo: 1000 };
+      playerRepo.findOne.mockImplementation(({ where: { user: { id } } }) =>
+        Promise.resolve(id === 1 ? p1 : p2),
+      );
+      playerRepo.save.mockImplementation((p: any) => Promise.resolve(p));
+
+      const res = await service.updateEloWithHistory(1, 2, { casualSessionId: 42 });
+      expect(res.delta).toBeGreaterThan(0);
+      expect(mockRankedHistoryRepo.save).toHaveBeenCalled();
+    });
+
+    it("should get ELO for user and get recent ELO history", async () => {
+      playerRepo.findOne.mockResolvedValue({ id: 1, elo: 1150 });
+      const elo = await service.getEloForUser(1);
+      expect(elo).toBe(1150);
+
+      const history = await service.getRecentEloHistory(1, 10);
+      expect(Array.isArray(history)).toBe(true);
     });
   });
 });

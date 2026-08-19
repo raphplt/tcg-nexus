@@ -238,10 +238,22 @@ describe("SealedProductService", () => {
       const result = await service.update("sp-1", {
         productType: SealedProductType.ETB,
         locales: [{ locale: "en" as const, name: "ETB" }],
+        pokemonSetId: null as any,
       });
 
       expect(result).toBeDefined();
       expect(mockEntityManager.save).toHaveBeenCalled();
+    });
+
+    it("should update sealed product without modifying locales", async () => {
+      const existing = { id: "sp-1", productType: SealedProductType.BOOSTER };
+      mockSealedProductRepo.findOne.mockResolvedValue(existing);
+
+      const result = await service.update("sp-1", {
+        productType: SealedProductType.DISPLAY,
+      });
+
+      expect(result).toBeDefined();
     });
 
     it("should remove sealed product", async () => {
@@ -253,6 +265,28 @@ describe("SealedProductService", () => {
     it("should throw NotFoundException if delete affects 0 rows", async () => {
       mockSealedProductRepo.delete.mockResolvedValue({ affected: 0 });
       await expect(service.remove("sp-missing")).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("filter variations and sort resolution", () => {
+    it("should filter with priceMax only", async () => {
+      mockQueryBuilder.getMany.mockResolvedValue([{ id: "sp-1" }]);
+
+      const result = await service.findAll({
+        priceMax: 100,
+        sortBy: SealedSortBy.PRICE_DESC,
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it("should sort by RECENT and by NAME", async () => {
+      mockQueryBuilder.getMany.mockResolvedValue([{ id: "sp-1" }]);
+
+      await service.findAll({ sortBy: SealedSortBy.RECENT });
+      await service.findAll({ sortBy: SealedSortBy.NAME });
+
+      expect(mockSealedProductRepo.createQueryBuilder).toHaveBeenCalled();
     });
   });
 });

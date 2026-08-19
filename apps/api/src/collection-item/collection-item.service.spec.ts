@@ -243,7 +243,7 @@ describe("CollectionItemService", () => {
     });
   });
 
-  describe("addSealedToCollection", () => {
+  describe("addSealedToCollection & addSealedToWishlist", () => {
     it("rejects writing into a collection owned by someone else", async () => {
       mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
 
@@ -251,6 +251,48 @@ describe("CollectionItemService", () => {
         service.addSealedToCollection("c", "sealed1", attacker),
       ).rejects.toThrow(ForbiddenException);
       expect(mockCollectionItemRepo.save).not.toHaveBeenCalled();
+    });
+
+    it("adds a sealed product to a collection owned by the caller", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
+      mockSealedProductRepo.findOne.mockResolvedValue({ id: "sealed1" });
+      mockCollectionItemRepo.findOne.mockResolvedValue(null);
+      mockCollectionItemRepo.create.mockReturnValue({ id: 20 });
+      mockCollectionItemRepo.save.mockResolvedValue({ id: 20 });
+
+      const item = await service.addSealedToCollection("c", "sealed1", owner);
+      expect(item).toEqual({ id: 20 });
+    });
+
+    it("increments quantity when sealed item already exists in collection", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "c", user: owner });
+      mockSealedProductRepo.findOne.mockResolvedValue({ id: "sealed1" });
+      mockCollectionItemRepo.findOne.mockResolvedValue({ id: 20, quantity: 1 });
+      mockCollectionItemRepo.increment.mockResolvedValue({ affected: 1 });
+      mockCollectionItemRepo.findOneOrFail.mockResolvedValue({ id: 20, quantity: 2 });
+
+      const item = await service.addSealedToCollection("c", "sealed1", owner);
+      expect(item.quantity).toBe(2);
+    });
+
+    it("adds a sealed product to user wishlist", async () => {
+      mockSealedProductRepo.findOne.mockResolvedValue({ id: "sealed1" });
+      mockCollectionRepo.findOne.mockResolvedValue({ id: "w", user: owner });
+      mockCollectionItemRepo.findOne.mockResolvedValue(null);
+      mockCollectionItemRepo.create.mockReturnValue({ id: 21 });
+      mockCollectionItemRepo.save.mockResolvedValue({ id: 21 });
+
+      const item = await service.addSealedToWishlist(1, "sealed1");
+      expect(item).toEqual({ id: 21 });
+    });
+
+    it("throws when wishlist not found for addSealedToWishlist", async () => {
+      mockSealedProductRepo.findOne.mockResolvedValue({ id: "sealed1" });
+      mockCollectionRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.addSealedToWishlist(1, "sealed1")).rejects.toThrow(
+        "Collection Wishlist non trouvée",
+      );
     });
   });
 });
