@@ -141,7 +141,15 @@
       "node_modules/(?!@faker-js)"
     ],
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!scripts/**",
+      "!**/scripts/**",
+      "!seed/**",
+      "!**/seed/**",
+      "!migrations/**",
+      "!**/migrations/**",
+      "!main.ts",
+      "!data-source.ts"
     ],
     "coverageDirectory": "../coverage",
     "coverageReporters": [

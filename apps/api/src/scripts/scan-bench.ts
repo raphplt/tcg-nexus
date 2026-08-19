@@ -321,11 +321,54 @@ const parseArgs = () => {
   return args as Record<string, string>;
 };
 
+/**
+ * Probes the vision microservice: without it the scan chain falls back to raw OCR,
+ * which silently degrades the measured accuracy. Warn instead of failing.
+ */
+const warnIfVisionDown = async (): Promise<void> => {
+  const base = process.env.VISION_SERVICE_URL ?? "http://localhost:8000";
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3000);
+    const res = await fetch(`${base}/health`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (res.ok) return;
+  } catch {
+    // fallthrough: treated as unavailable
+  }
+  console.warn(
+    `⚠️  Vision service unreachable (${base}) — the scan chain will fall back to raw OCR ` +
+      "and the measured accuracy will be far below the real one.\n" +
+      "   Start it with: docker compose up -d vision\n",
+  );
+};
+
 async function main() {
   const args = parseArgs();
   const dir = resolve(args.dir ?? "test-cards");
   const labelsPath = resolve(args.labels ?? join(dir, "labels.json"));
   const outPath = resolve(args.out ?? join(dir, "bench-results.json"));
+
+  if (!existsSync(dir)) {
+    console.error(
+      [
+        `Dataset not found: ${dir}`,
+        "",
+        "The benchmark replays the real ScanService over locally labeled photos.",
+        "This dataset is intentionally not versioned (personal card pictures).",
+        "",
+        "Expected layout:",
+        `  ${join(dir, "<photo>.jpg")}        one image = one case`,
+        `  ${join(dir, "rafale", "*.jpg")}   bursts, grouped by filename timestamp`,
+        `  ${labelsPath}                     ground truth`,
+        "",
+        'labels.json format: { "<photo>.jpg": { "name": "Pikachu", "localId": "58", "category": "normal" } }',
+        "",
+        "Point to another folder with: npm run bench:scan -- --dir=path/to/cards",
+      ].join("\n"),
+    );
+    process.exit(1);
+  }
 
   const labels: Labels = existsSync(labelsPath)
     ? JSON.parse(readFileSync(labelsPath, "utf8"))
@@ -338,6 +381,17 @@ async function main() {
   let cases = buildCases(dir, labels);
   if (args.only) cases = cases.filter((c) => c.key === args.only);
   if (args.labeledOnly) cases = cases.filter((c) => c.label);
+
+  if (!cases.length) {
+    console.error(
+      `No image found in ${dir}` +
+        (args.only ? ` matching --only=${args.only}` : "") +
+        " (expected .jpg/.jpeg/.png).",
+    );
+    process.exit(1);
+  }
+
+  await warnIfVisionDown();
 
   console.log(`Boot NestJS (DB + vision)…`);
   const app = await NestFactory.createApplicationContext(BenchModule, {

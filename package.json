@@ -9,7 +9,9 @@
     "format": "biome format --write .",
     "check-types": "turbo check-types",
     "test:cov": "turbo run test:cov",
-    "test:e2e:tournament": "npm run test:e2e:tournament -w api"
+    "test:e2e:tournament": "npm run test:e2e:tournament -w api",
+    "bench:scan": "npm run bench:scan -w api",
+    "scan:bench": "npm run bench:scan -w api"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.3",
