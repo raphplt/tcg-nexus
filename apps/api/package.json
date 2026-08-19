@@ -155,7 +155,8 @@
     "coverageReporters": [
       "text",
       "text-summary",
-      "lcov"
+      "lcov",
+      "json-summary"
     ],
     "coverageThreshold": {
       "**/marketplace/marketplace.service.ts": {

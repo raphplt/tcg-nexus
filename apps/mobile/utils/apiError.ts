@@ -27,7 +27,7 @@ export const getApiErrorMessage = (
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     if (
       error.code === "ERR_NETWORK" ||
-      error.message.toLowerCase().includes("network")
+      error.message?.toLowerCase().includes("network")
     ) {
       return NETWORK_ERROR_MESSAGE;
     }

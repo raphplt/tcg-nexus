@@ -26,7 +26,7 @@ export default defineConfig({
     css: true,
     coverage: {
       provider: "v8",
-      reporter: ["text", "text-summary", "lcov", "html"],
+      reporter: ["text", "text-summary", "lcov", "html", "json-summary"],
     },
   },
 });

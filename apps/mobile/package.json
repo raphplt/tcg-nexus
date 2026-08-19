@@ -10,6 +10,8 @@
     "web": "expo start --web",
     "build": "echo 'Use EAS Build for production builds'",
     "lint": "biome lint .",
+    "test": "tsx --test test/**/*.test.ts",
+    "test:cov": "tsx --test --experimental-test-coverage test/**/*.test.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

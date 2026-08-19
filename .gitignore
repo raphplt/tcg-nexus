@@ -13,6 +13,8 @@ node_modules
 
 # Testing
 coverage
+*.cover
+.coverage
 
 # Turbo
 .turbo
