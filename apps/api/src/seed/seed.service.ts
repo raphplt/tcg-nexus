@@ -4,7 +4,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
 import * as fs from "fs";
 import * as path from "path";
-import { Article } from "src/article/entities/article.entity";
+import {
+  Article,
+  ArticleStatus,
+} from "src/article/entities/article.entity";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 import {
@@ -942,10 +945,33 @@ export class SeedService {
       });
       if (!exists) {
         await this.articleRepository.save(
-          this.articleRepository.create(article),
+          this.articleRepository.create({
+            ...article,
+            slug: this.slugifyArticleTitle(article.title),
+            status: ArticleStatus.PUBLISHED,
+            locale: DEFAULT_LOCALE,
+          }),
         );
       }
     }
+  }
+
+  /**
+   * Builds the URL slug of a seeded article from its title.
+   *
+   * @param title - Article title.
+   * @returns Slug limited to the 180 characters of the column.
+   */
+  private slugifyArticleTitle(title: string): string {
+    return (
+      title
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 170) || "article"
+    );
   }
 
   /**
