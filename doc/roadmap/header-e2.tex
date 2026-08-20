@@ -1,0 +1,19 @@
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{pdflscape}
+\usepackage{colortbl}
+\definecolor{navy}{HTML}{1F3864}
+\usepackage{sectsty}
+\allsectionsfont{\color{navy}}
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{5pt}
+\let\oldlongtable\longtable
+\def\longtable{\small\oldlongtable}
+\renewcommand{\contentsname}{Sommaire}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{navy}Roadmap TCG Nexus}
+\fancyhead[R]{\small\color{navy}CMG-MGQ5 etape 2}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}

@@ -9,5 +9,5 @@
     "moduleResolution": "Bundler",
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

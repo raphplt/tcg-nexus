@@ -13,7 +13,7 @@
     "sealed-coverage": "tsx sealed-coverage.ts",
     "migrate-card-images": "tsx migrate-card-images-r2.ts",
     "test": "tsx --test *.test.ts",
-    "test:cov": "tsx --test --experimental-test-coverage *.test.ts"
+    "test:cov": "mkdir -p coverage && tsx --test --experimental-test-coverage --test-coverage-exclude='**/node_modules/**' --test-coverage-exclude='**/dist/**' --test-coverage-exclude='**/*.test.ts' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info *.test.ts"
   },
   "keywords": [],
   "author": "",

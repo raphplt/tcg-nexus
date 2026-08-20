@@ -3,13 +3,12 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
-  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
     "parse": "tsx src/cli.ts",
     "test": "tsx --test tests/**/*.test.ts",
-    "test:cov": "tsx --test --experimental-test-coverage tests/**/*.test.ts",
+    "test:cov": "mkdir -p coverage && tsx --test --experimental-test-coverage --test-coverage-exclude='**/node_modules/**' --test-coverage-exclude='**/dist/**' --test-coverage-exclude='**/*.test.ts' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info tests/**/*.test.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

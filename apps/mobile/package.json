@@ -11,7 +11,7 @@
     "build": "echo 'Use EAS Build for production builds'",
     "lint": "biome lint .",
     "test": "tsx --test test/**/*.test.ts",
-    "test:cov": "tsx --test --experimental-test-coverage test/**/*.test.ts",
+    "test:cov": "mkdir -p coverage && tsx --test --experimental-test-coverage --test-coverage-exclude='**/node_modules/**' --test-coverage-exclude='**/dist/**' --test-coverage-exclude='**/*.test.ts' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info test/**/*.test.ts",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
