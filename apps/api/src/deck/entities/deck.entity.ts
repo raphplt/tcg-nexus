@@ -20,7 +20,11 @@ export class Deck {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.decks, { onDelete: "CASCADE" })
+  @ManyToOne(
+    () => User,
+    (user) => user.decks,
+    { onDelete: "CASCADE" },
+  )
   user: User;
 
   @Column({ length: 100 })
@@ -32,16 +36,24 @@ export class Deck {
   @Column({ default: 0 })
   views: number;
 
-  @ManyToOne(() => DeckFormat, (format) => format.decks, {
-    eager: true,
-    onDelete: "SET NULL",
-  })
+  @ManyToOne(
+    () => DeckFormat,
+    (format) => format.decks,
+    {
+      eager: true,
+      onDelete: "SET NULL",
+    },
+  )
   format: DeckFormat;
 
   @ManyToOne(() => Card, { nullable: true, eager: true })
   coverCard: Card;
 
-  @OneToMany(() => DeckCard, (deckCard) => deckCard.deck, { cascade: true })
+  @OneToMany(
+    () => DeckCard,
+    (deckCard) => deckCard.deck,
+    { cascade: true },
+  )
   cards?: DeckCard[];
 
   @CreateDateColumn()

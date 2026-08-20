@@ -101,7 +101,9 @@ describe("OnlinePlaySupportService", () => {
         4,
       );
       expect(wrongSize.eligible).toBe(false);
-      expect(wrongSize.reasons.some((r) => r.code === "INVALID_SIZE")).toBe(true);
+      expect(wrongSize.reasons.some((r) => r.code === "INVALID_SIZE")).toBe(
+        true,
+      );
 
       const notOwner = service.evaluateDeckEligibility(
         {

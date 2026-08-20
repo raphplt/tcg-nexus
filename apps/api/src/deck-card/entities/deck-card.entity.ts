@@ -16,13 +16,21 @@ export class DeckCard {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Deck, (deck) => deck.cards, { onDelete: "CASCADE" })
+  @ManyToOne(
+    () => Deck,
+    (deck) => deck.cards,
+    { onDelete: "CASCADE" },
+  )
   deck: Deck;
 
-  @ManyToOne(() => Card, (card) => card.deckCards, {
-    eager: true,
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(
+    () => Card,
+    (card) => card.deckCards,
+    {
+      eager: true,
+      onDelete: "CASCADE",
+    },
+  )
   card: Card;
 
   @Column({ type: "int", default: 1 })

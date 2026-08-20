@@ -1,13 +1,7 @@
 "use client";
 
 import { useContext, useState } from "react";
-import {
-  Bookmark,
-  FolderPlus,
-  Heart,
-  Loader2,
-  Plus,
-} from "lucide-react";
+import { Bookmark, FolderPlus, Heart, Loader2, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,7 +87,8 @@ export function AddToCollectionDialog({
       setIsOpen(false);
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Erreur lors de l'ajout à la Wishlist",
+        error?.response?.data?.message ||
+          "Erreur lors de l'ajout à la Wishlist",
       );
     } finally {
       setAddingTarget(null);
@@ -261,7 +256,8 @@ export function AddToCollectionDialog({
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {col.items?.length || 0} carte{(col.items?.length || 0) > 1 ? "s" : ""}
+                        {col.items?.length || 0} carte
+                        {(col.items?.length || 0) > 1 ? "s" : ""}
                       </p>
                     </div>
 

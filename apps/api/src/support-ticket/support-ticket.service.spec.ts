@@ -158,7 +158,10 @@ describe("SupportTicketService", () => {
   describe("findAll", () => {
     it("should return tickets with pagination for normal user", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[{ id: 1 }], 1]);
-      const result = await service.findAll({ id: 1, role: UserRole.USER } as User);
+      const result = await service.findAll({
+        id: 1,
+        role: UserRole.USER,
+      } as User);
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
       expect(mockQueryBuilder.where).toHaveBeenCalled();
@@ -166,7 +169,10 @@ describe("SupportTicketService", () => {
 
     it("should return all tickets for admin without user filter", async () => {
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[{ id: 1 }], 1]);
-      const result = await service.findAll({ id: 99, role: UserRole.ADMIN } as User);
+      const result = await service.findAll({
+        id: 99,
+        role: UserRole.ADMIN,
+      } as User);
       expect(result.data).toHaveLength(1);
       expect(mockQueryBuilder.where).not.toHaveBeenCalled();
     });
@@ -180,7 +186,10 @@ describe("SupportTicketService", () => {
       });
       mockMessageRepo.find.mockResolvedValue([{ id: 10, message: "msg" }]);
 
-      const result = await service.findOneWithMessages(1, { id: 1, role: UserRole.USER } as User);
+      const result = await service.findOneWithMessages(1, {
+        id: 1,
+        role: UserRole.USER,
+      } as User);
       expect(result.id).toBe(1);
       expect(result.messages).toHaveLength(1);
     });
@@ -192,7 +201,10 @@ describe("SupportTicketService", () => {
       });
       mockMessageRepo.findAndCount.mockResolvedValue([[{ id: 10 }], 1]);
 
-      const result = await service.getMessages(1, { id: 1, role: UserRole.USER } as User);
+      const result = await service.getMessages(1, {
+        id: 1,
+        role: UserRole.USER,
+      } as User);
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
     });
@@ -200,10 +212,17 @@ describe("SupportTicketService", () => {
 
   describe("closeTicket", () => {
     it("should close ticket when requested by owner", async () => {
-      const ticket = { id: 1, user: { id: 1 }, status: SupportTicketStatusType.opened };
+      const ticket = {
+        id: 1,
+        user: { id: 1 },
+        status: SupportTicketStatusType.opened,
+      };
       mockTicketRepo.findOne.mockResolvedValue(ticket);
 
-      const result = await service.closeTicket(1, { id: 1, role: UserRole.USER } as User);
+      const result = await service.closeTicket(1, {
+        id: 1,
+        role: UserRole.USER,
+      } as User);
       expect(result.status).toBe(SupportTicketStatusType.closed);
     });
   });

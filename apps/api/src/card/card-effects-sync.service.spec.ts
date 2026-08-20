@@ -58,9 +58,9 @@ describe("CardEffectsSyncService", () => {
   describe("syncEffectsFromRegistry", () => {
     it("should throw error if registry file does not exist", async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
-      await expect(service.syncEffectsFromRegistry("/non/existent.json")).rejects.toThrow(
-        "Registry not found",
-      );
+      await expect(
+        service.syncEffectsFromRegistry("/non/existent.json"),
+      ).rejects.toThrow("Registry not found");
     });
 
     it("should parse registry and update pokemon card details in batches", async () => {

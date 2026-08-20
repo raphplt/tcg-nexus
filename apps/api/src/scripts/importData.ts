@@ -224,7 +224,9 @@ async function bootstrap() {
       `Tournoi complet créé: ${completeTournament.name} (ID: ${completeTournament.id})`,
     );
 
-    logStep("Création du jeu de données de démo complet (Laura, Maxime, Théo)...");
+    logStep(
+      "Création du jeu de données de démo complet (Laura, Maxime, Théo)...",
+    );
     await seedService.seedDemoDataset();
     logSuccess("Jeu de données de démo créé !");
 

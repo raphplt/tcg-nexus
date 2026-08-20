@@ -91,14 +91,23 @@ describe("SearchService", () => {
         },
       ]);
 
-      const res = await service.globalSearch({ query: "pi", limit: 5, sortBy: "title", sortOrder: "ASC" } as any);
+      const res = await service.globalSearch({
+        query: "pi",
+        limit: 5,
+        sortBy: "title",
+        sortOrder: "ASC",
+      } as any);
       expect(res.results.length).toBeGreaterThan(0);
       expect(tournamentMock.qb.andWhere).toHaveBeenCalledWith(
         "tournament.isPublic = :isPublic",
         { isPublic: true },
       );
 
-      const resType = await service.globalSearch({ query: "pi", limit: 5, sortBy: "type" } as any);
+      const resType = await service.globalSearch({
+        query: "pi",
+        limit: 5,
+        sortBy: "type",
+      } as any);
       expect(resType.results.length).toBeGreaterThan(0);
     });
   });
@@ -111,7 +120,9 @@ describe("SearchService", () => {
 
     it("should return unique suggestion strings from cards and tournaments", async () => {
       cardMock.qb.getMany.mockResolvedValue([{ name: "Pikachu" }]);
-      tournamentMock.qb.getMany.mockResolvedValue([{ name: "Pikachu Tournament" }]);
+      tournamentMock.qb.getMany.mockResolvedValue([
+        { name: "Pikachu Tournament" },
+      ]);
 
       const result = await service.getSearchSuggestions("pika", 5);
       expect(result).toEqual(["Pikachu", "Pikachu Tournament"]);
@@ -125,9 +136,15 @@ describe("SearchService", () => {
     });
 
     it("should return preview items across cards, tournaments, and players", async () => {
-      cardMock.qb.getMany.mockResolvedValue([{ id: "c1", name: "Pikachu", set: { name: "Base" } }]);
-      tournamentMock.qb.getMany.mockResolvedValue([{ id: 1, name: "Tourney", location: "Paris" }]);
-      playerMock.qb.getMany.mockResolvedValue([{ id: 2, user: { firstName: "Satoshi", lastName: "T" } }]);
+      cardMock.qb.getMany.mockResolvedValue([
+        { id: "c1", name: "Pikachu", set: { name: "Base" } },
+      ]);
+      tournamentMock.qb.getMany.mockResolvedValue([
+        { id: 1, name: "Tourney", location: "Paris" },
+      ]);
+      playerMock.qb.getMany.mockResolvedValue([
+        { id: 2, user: { firstName: "Satoshi", lastName: "T" } },
+      ]);
 
       const result = await service.getSuggestionsPreview("pika", 10);
       expect(result.suggestions.length).toBe(3);

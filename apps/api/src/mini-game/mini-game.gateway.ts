@@ -431,10 +431,7 @@ export class MiniGameGateway
 
     // Elapsed time is measured server-side from the round start: a
     // client-provided duration could be negative and inflate the bonus.
-    const timeTaken = Math.max(
-      0,
-      (Date.now() - session.roundStartedAt) / 1000,
-    );
+    const timeTaken = Math.max(0, (Date.now() - session.roundStartedAt) / 1000);
 
     // Points system:
     // Max points per round = 1000

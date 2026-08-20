@@ -246,15 +246,25 @@ describe("CasualMatchService", () => {
 
   describe("assertCanQueue & findSessionById & cancelOrphanSession & getLobby", () => {
     it("should assert user can queue when profile and deck exist", async () => {
-      mockPlayerRepository.findOne.mockResolvedValue({ id: 1, user: { id: 1 } });
-      mockDeckRepository.findOne.mockResolvedValue({ id: 10, user: { id: 1 }, cards: [] });
+      mockPlayerRepository.findOne.mockResolvedValue({
+        id: 1,
+        user: { id: 1 },
+      });
+      mockDeckRepository.findOne.mockResolvedValue({
+        id: 10,
+        user: { id: 1 },
+        cards: [],
+      });
       mockSavedDeckRepository.createQueryBuilder.mockReturnValue({
         innerJoin: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([{ deckId: 10 }]),
       });
-      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({ eligible: true, issues: [] });
+      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({
+        eligible: true,
+        issues: [],
+      });
 
       await expect(service.assertCanQueue(1, 10)).resolves.toBeUndefined();
     });
@@ -272,14 +282,19 @@ describe("CasualMatchService", () => {
     });
 
     it("should return lobby view for user", async () => {
-      mockDeckRepository.find.mockResolvedValue([{ id: 10, name: "Deck A", cards: [] }]);
+      mockDeckRepository.find.mockResolvedValue([
+        { id: 10, name: "Deck A", cards: [] },
+      ]);
       mockSavedDeckRepository.createQueryBuilder.mockReturnValue({
         innerJoin: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([{ deckId: 10 }]),
       });
-      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({ eligible: true, issues: [] });
+      mockOnlinePlaySupportService.evaluateDeckEligibility.mockReturnValue({
+        eligible: true,
+        issues: [],
+      });
       mockSessionRepository.find.mockResolvedValue([session]);
 
       const lobby = await service.getLobby(playerAUser);

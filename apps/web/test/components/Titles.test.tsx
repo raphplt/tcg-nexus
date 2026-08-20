@@ -8,7 +8,9 @@ describe("Typography Title components", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
       "Main Title",
     );
-    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-default");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "text-default",
+    );
 
     rerender(<H1 variant="muted">Muted Title</H1>);
     expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
@@ -16,7 +18,9 @@ describe("Typography Title components", () => {
     );
 
     rerender(<H1 variant="primary">Primary Title</H1>);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveClass("text-primary");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveClass(
+      "text-primary",
+    );
   });
 
   it("renders H2, H3, H4, and H5 tags appropriately", () => {
@@ -29,9 +33,17 @@ describe("Typography Title components", () => {
       </div>,
     );
 
-    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent("Heading 2");
-    expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent("Heading 3");
-    expect(screen.getByRole("heading", { level: 4 })).toHaveTextContent("Heading 4");
-    expect(screen.getByRole("heading", { level: 5 })).toHaveTextContent("Heading 5");
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Heading 2",
+    );
+    expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent(
+      "Heading 3",
+    );
+    expect(screen.getByRole("heading", { level: 4 })).toHaveTextContent(
+      "Heading 4",
+    );
+    expect(screen.getByRole("heading", { level: 5 })).toHaveTextContent(
+      "Heading 5",
+    );
   });
 });

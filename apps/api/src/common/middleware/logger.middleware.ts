@@ -11,8 +11,7 @@ export class LoggerMiddleware implements NestMiddleware {
 
     res.on("finish", () => {
       const { statusCode } = res;
-      const durationMs =
-        Number(process.hrtime.bigint() - start) / 1_000_000;
+      const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
       const userId = (req.user as { id?: number } | undefined)?.id ?? null;
 
       this.logger.log(

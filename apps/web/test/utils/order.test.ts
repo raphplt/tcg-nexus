@@ -15,7 +15,9 @@ describe("order utilities", () => {
     it("returns correct order status keys and tailwind badge colors", () => {
       expect(getOrderStatusKey(OrderStatus.PAID)).toBe("orderStatus.Paid");
       expect(getOrderStatusColor(OrderStatus.PAID)).toContain("bg-green-500");
-      expect(getOrderStatusColor(OrderStatus.CANCELLED)).toContain("bg-red-500");
+      expect(getOrderStatusColor(OrderStatus.CANCELLED)).toContain(
+        "bg-red-500",
+      );
       expect(getOrderStatusColor("UNKNOWN" as any)).toBe("bg-gray-500");
     });
 

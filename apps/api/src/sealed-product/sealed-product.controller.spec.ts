@@ -45,7 +45,10 @@ describe("SealedProductController", () => {
   });
 
   it("should find paginated sealed products", async () => {
-    mockSealedProductService.findAllPaginated.mockResolvedValue({ data: [], total: 0 });
+    mockSealedProductService.findAllPaginated.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
     const result = await controller.findAllPaginated({});
     expect(result).toEqual({ data: [], total: 0 });
   });
@@ -69,7 +72,9 @@ describe("SealedProductController", () => {
   });
 
   it("should get sealed product statistics", async () => {
-    mockSealedProductService.getStatistics.mockResolvedValue({ totalListings: 5 });
+    mockSealedProductService.getStatistics.mockResolvedValue({
+      totalListings: 5,
+    });
     const result = await controller.getStatistics("sp-1");
     expect(result).toEqual({ totalListings: 5 });
   });
@@ -95,7 +100,9 @@ describe("SealedProductController", () => {
   });
 
   it("should seed sealed products", async () => {
-    mockSealedProductService.seedFromJson.mockResolvedValue({ totalRecords: 10 });
+    mockSealedProductService.seedFromJson.mockResolvedValue({
+      totalRecords: 10,
+    });
     const result = await controller.seed();
     expect(result).toEqual({ totalRecords: 10 });
   });

@@ -72,8 +72,14 @@ describe("DashboardService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DashboardService,
-        { provide: getRepositoryToken(Collection), useValue: mockCollectionRepo },
-        { provide: getRepositoryToken(CollectionItem), useValue: mockCollectionItemRepo },
+        {
+          provide: getRepositoryToken(Collection),
+          useValue: mockCollectionRepo,
+        },
+        {
+          provide: getRepositoryToken(CollectionItem),
+          useValue: mockCollectionItemRepo,
+        },
         { provide: getRepositoryToken(Deck), useValue: mockDeckRepo },
         { provide: getRepositoryToken(Player), useValue: mockPlayerRepo },
         { provide: getRepositoryToken(Ranking), useValue: mockRankingRepo },

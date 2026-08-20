@@ -58,9 +58,7 @@ describe("User Profile Components", () => {
 
       renderWithQueryClient(<UserTournamentsTab playerId={10} />);
 
-      expect(
-        await screen.findByText("Championship 2026"),
-      ).toBeInTheDocument();
+      expect(await screen.findByText("Championship 2026")).toBeInTheDocument();
       expect(screen.getByText("4 match(s)")).toBeInTheDocument();
       expect(screen.getByText("1e place")).toBeInTheDocument();
     });

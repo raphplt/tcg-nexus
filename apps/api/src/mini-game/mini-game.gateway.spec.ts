@@ -56,7 +56,10 @@ describe("MiniGameGateway", () => {
       providers: [
         MiniGameGateway,
         { provide: getRepositoryToken(Card), useValue: mockCardRepo },
-        { provide: getRepositoryToken(SealedProduct), useValue: mockSealedRepo },
+        {
+          provide: getRepositoryToken(SealedProduct),
+          useValue: mockSealedRepo,
+        },
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
@@ -161,7 +164,10 @@ describe("MiniGameGateway", () => {
         Promise.resolve({ id, email: `u${id}@tcg.org` }),
       );
 
-      await gateway.handleJoinQueue({ gameType: MiniGameType.JUSTE_PRIX }, client1);
+      await gateway.handleJoinQueue(
+        { gameType: MiniGameType.JUSTE_PRIX },
+        client1,
+      );
       const matchResult = await gateway.handleJoinQueue(
         { gameType: MiniGameType.JUSTE_PRIX },
         client2,
@@ -184,7 +190,9 @@ describe("MiniGameGateway", () => {
   });
 
   describe("gameplay: join room, ready, open pack, and guess", () => {
-    const setupActiveSession = (gameType: "case_opening" | "juste_prix" = "juste_prix") => {
+    const setupActiveSession = (
+      gameType: "case_opening" | "juste_prix" = "juste_prix",
+    ) => {
       const sessionId = "sess-123";
       const session: any = {
         id: sessionId,
@@ -276,7 +284,10 @@ describe("MiniGameGateway", () => {
       session.state = "playing";
       session.round = 1;
       session.items = [
-        { type: "card", data: { id: "c1", pricing: { cardmarket: { trend: "50.0" } } } },
+        {
+          type: "card",
+          data: { id: "c1", pricing: { cardmarket: { trend: "50.0" } } },
+        },
       ];
 
       const client: any = { data: { user: { id: 1 } } };

@@ -4,10 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
 import * as fs from "fs";
 import * as path from "path";
-import {
-  Article,
-  ArticleStatus,
-} from "src/article/entities/article.entity";
+import { Article, ArticleStatus } from "src/article/entities/article.entity";
 import { Card } from "src/card/entities/card.entity";
 import { PokemonCardDetails } from "src/card/entities/pokemon-card-details.entity";
 import {
@@ -1943,7 +1940,8 @@ export class SeedService {
       if (!lauraMainCollection) {
         lauraMainCollection = this.collectionRepository.create({
           name: "Ma Collection Principale",
-          description: "Ma collection de cartes Pokémon accumulées depuis 10 ans.",
+          description:
+            "Ma collection de cartes Pokémon accumulées depuis 10 ans.",
           isPublic: true,
           user: laura,
         });
@@ -2008,10 +2006,7 @@ export class SeedService {
 
         if (existingMasterItems.length === 0 && setCards.length > 0) {
           // Take ~62% of set cards to own
-          const ownedTarget = Math.max(
-            1,
-            Math.floor(setCards.length * 0.62),
-          );
+          const ownedTarget = Math.max(1, Math.floor(setCards.length * 0.62));
           const masterItems: CollectionItem[] = [];
           for (let i = 0; i < ownedTarget; i++) {
             masterItems.push(
@@ -2651,7 +2646,9 @@ export class SeedService {
         currency: Currency.EUR,
         shippingAddress: "15 Rue de Rivoli, 75001 Paris, France",
       } as any);
-      const savedOrder = (await this.orderRepository.save(order)) as unknown as Order;
+      const savedOrder = (await this.orderRepository.save(
+        order,
+      )) as unknown as Order;
 
       await this.orderItemRepository.save(
         this.orderItemRepository.create({

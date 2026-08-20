@@ -6,7 +6,7 @@
     "dev": "turbo dev",
     "seed": "cd apps/api && npm run seed",
     "lint": "turbo lint",
-    "format": "biome format --wrqite .",
+    "format": "biome format --write .",
     "check-types": "turbo check-types",
     "test": "npm --prefix apps/api test -- --no-watchman && npm --prefix apps/web test && npm --prefix apps/fetch test && npm --prefix packages/effect-parser test && npm --prefix packages/pokemon-dataset test && npm --prefix apps/mobile test && python3 -m unittest discover apps/vision",
     "test:all": "npm run test",

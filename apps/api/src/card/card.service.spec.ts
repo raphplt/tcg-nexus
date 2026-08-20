@@ -110,7 +110,9 @@ describe("CardService", () => {
     });
 
     it("should find cards filtered by game", async () => {
-      mockCardRepo.find.mockResolvedValue([{ id: "c-1", game: CardGame.Pokemon }]);
+      mockCardRepo.find.mockResolvedValue([
+        { id: "c-1", game: CardGame.Pokemon },
+      ]);
       const result = await service.findAll(CardGame.Pokemon);
       expect(result).toHaveLength(1);
       expect(mockCardRepo.find).toHaveBeenCalledWith({
@@ -129,7 +131,9 @@ describe("CardService", () => {
 
     it("should throw error if card not found", async () => {
       mockCardRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne("missing")).rejects.toThrow("Card with id missing not found");
+      await expect(service.findOne("missing")).rejects.toThrow(
+        "Card with id missing not found",
+      );
     });
   });
 
@@ -140,13 +144,21 @@ describe("CardService", () => {
     });
 
     it("should query cards by localId variants", async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([{ id: "c-1", localId: "025" }]);
-      const result = await service.findByLocalId("25", undefined, CardGame.Pokemon);
+      mockQueryBuilder.getMany.mockResolvedValue([
+        { id: "c-1", localId: "025" },
+      ]);
+      const result = await service.findByLocalId(
+        "25",
+        undefined,
+        CardGame.Pokemon,
+      );
       expect(result).toHaveLength(1);
     });
 
     it("should query with total count filter when total is provided", async () => {
-      mockQueryBuilder.getMany.mockResolvedValue([{ id: "c-1", localId: "025" }]);
+      mockQueryBuilder.getMany.mockResolvedValue([
+        { id: "c-1", localId: "025" },
+      ]);
       const result = await service.findByLocalId("25", "102");
       expect(result).toHaveLength(1);
     });
@@ -162,10 +174,15 @@ describe("CardService", () => {
       mockCardRepo.query.mockResolvedValue(undefined);
       await service.onModuleInit(); // ready
 
-      mockCardRepo.query.mockResolvedValueOnce([{ id: "c-1", similarity: "0.95" }]);
+      mockCardRepo.query.mockResolvedValueOnce([
+        { id: "c-1", similarity: "0.95" },
+      ]);
       mockCardRepo.find.mockResolvedValue([{ id: "c-1" }]);
 
-      const result = await service.findByEmbedding([0.1, 0.2, 0.3], CardGame.Pokemon);
+      const result = await service.findByEmbedding(
+        [0.1, 0.2, 0.3],
+        CardGame.Pokemon,
+      );
       expect(result).toHaveLength(1);
       expect(result[0].similarity).toBe(0.95);
     });
@@ -190,7 +207,9 @@ describe("CardService", () => {
       mockCardRepo.query.mockResolvedValue(undefined);
       await service.onModuleInit();
 
-      mockCardRepo.query.mockResolvedValueOnce([{ id: "c-1", similarity: "0.88" }]);
+      mockCardRepo.query.mockResolvedValueOnce([
+        { id: "c-1", similarity: "0.88" },
+      ]);
       const result = await service.embeddingSimilarities([0.1, 0.2], ["c-1"]);
       expect(result.get("c-1")).toBe(0.88);
     });
@@ -237,7 +256,10 @@ describe("CardService", () => {
 
   describe("getSetRarities", () => {
     it("should return unique rarities for set in default locale", async () => {
-      mockQueryBuilder.getRawMany.mockResolvedValue([{ rarity: "Common" }, { rarity: "Rare" }]);
+      mockQueryBuilder.getRawMany.mockResolvedValue([
+        { rarity: "Common" },
+        { rarity: "Rare" },
+      ]);
       const result = await service.getSetRarities("set-1", "fr");
       expect(result).toEqual(["Common", "Rare"]);
     });

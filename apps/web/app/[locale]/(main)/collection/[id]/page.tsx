@@ -192,7 +192,9 @@ const CollectionDetailPage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-lg text-muted-foreground">Collection introuvable.</p>
+          <p className="text-lg text-muted-foreground">
+            Collection introuvable.
+          </p>
         </div>
       </div>
     );
@@ -343,7 +345,9 @@ const CollectionDetailPage = () => {
               </div>
               <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
                 <User className="h-4 w-4 text-primary" />
-                <span>{collection.user?.firstName} {collection.user?.lastName}</span>
+                <span>
+                  {collection.user?.firstName} {collection.user?.lastName}
+                </span>
               </div>
             </div>
           </div>
@@ -377,7 +381,9 @@ const CollectionDetailPage = () => {
                     <SelectItem value="pokemonCard.rarity">
                       {t("sortRarity")}
                     </SelectItem>
-                    <SelectItem value="quantity">{t("sortQuantity")}</SelectItem>
+                    <SelectItem value="quantity">
+                      {t("sortQuantity")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
 

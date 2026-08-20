@@ -95,7 +95,12 @@ describe("NotificationService", () => {
         json: async () => ({ data: [] }),
       } as any);
 
-      const result = await service.createNotification(1, "New Trade", "Trade accepted", "trade");
+      const result = await service.createNotification(
+        1,
+        "New Trade",
+        "Trade accepted",
+        "trade",
+      );
 
       expect(result.id).toBe(1);
       expect(mockGateway.sendNotificationToUser).toHaveBeenCalledWith(
@@ -134,7 +139,9 @@ describe("NotificationService", () => {
 
     it("should throw NotFoundException on markAsRead if not found", async () => {
       mockNotificationRepo.findOne.mockResolvedValue(null);
-      await expect(service.markAsRead(1, 999)).rejects.toThrow(NotFoundException);
+      await expect(service.markAsRead(1, 999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it("should mark all unread as read", async () => {

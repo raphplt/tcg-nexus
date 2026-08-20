@@ -33,7 +33,10 @@ describe("ChallengeController", () => {
 
   it("should get active challenges for current user", async () => {
     const user = { id: 1 } as User;
-    mockChallengeService.getActiveChallenges.mockResolvedValue({ daily: [], weekly: [] });
+    mockChallengeService.getActiveChallenges.mockResolvedValue({
+      daily: [],
+      weekly: [],
+    });
 
     const result = await controller.getActiveChallenges(user);
     expect(result).toEqual({ daily: [], weekly: [] });
@@ -42,7 +45,10 @@ describe("ChallengeController", () => {
 
   it("should claim challenge reward", async () => {
     const user = { id: 1 } as User;
-    mockChallengeService.claimChallenge.mockResolvedValue({ success: true, reward: 100 });
+    mockChallengeService.claimChallenge.mockResolvedValue({
+      success: true,
+      reward: 100,
+    });
 
     const result = await controller.claimChallengeReward("5", user);
     expect(result).toEqual({ success: true, reward: 100 });

@@ -75,7 +75,10 @@ describe("PokemonCardController", () => {
 
   it("should return paginated cards", async () => {
     const query = { page: 1, limit: 10, search: "Pikachu" } as any;
-    mockPokemonCardService.findAllPaginated.mockResolvedValue({ data: [], total: 0 });
+    mockPokemonCardService.findAllPaginated.mockResolvedValue({
+      data: [],
+      total: 0,
+    });
     const result = await controller.findAllPaginated(query);
     expect(result).toEqual({ data: [], total: 0 });
     expect(mockPokemonCardService.findAllPaginated).toHaveBeenCalledWith(
@@ -100,12 +103,24 @@ describe("PokemonCardController", () => {
     mockPokemonCardService.findRandom.mockResolvedValue({ id: "c-rand" });
     const result = await controller.findRandom("serie-1", "Rare", "set-1");
     expect(result).toEqual({ id: "c-rand" });
-    expect(mockPokemonCardService.findRandom).toHaveBeenCalledWith("serie-1", "Rare", "set-1");
+    expect(mockPokemonCardService.findRandom).toHaveBeenCalledWith(
+      "serie-1",
+      "Rare",
+      "set-1",
+    );
   });
 
   it("should match cards by OCR scan parameters", async () => {
-    mockPokemonCardService.findByScanMatch.mockResolvedValue([{ score: 100, card: { id: "c-1" } }]);
-    const result = await controller.scanMatch("Pikachu", "025", "Base Set", "025", "102");
+    mockPokemonCardService.findByScanMatch.mockResolvedValue([
+      { score: 100, card: { id: "c-1" } },
+    ]);
+    const result = await controller.scanMatch(
+      "Pikachu",
+      "025",
+      "Base Set",
+      "025",
+      "102",
+    );
     expect(result).toHaveLength(1);
     expect(mockPokemonCardService.findByScanMatch).toHaveBeenCalledWith({
       cardName: "Pikachu",

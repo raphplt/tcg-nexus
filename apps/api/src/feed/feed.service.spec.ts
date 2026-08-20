@@ -78,7 +78,12 @@ describe("FeedService", () => {
           player: {
             user: { id: 3, firstName: "Bob", lastName: "Jones" },
           },
-          tournament: { id: 5, name: "Regional Cup", startDate: null, endDate: null },
+          tournament: {
+            id: 5,
+            name: "Regional Cup",
+            startDate: null,
+            endDate: null,
+          },
         },
       ]);
 

@@ -63,11 +63,9 @@ describe("API service clients", () => {
       expect(profile).toEqual({ id: 1 });
 
       await authService.refreshToken(true);
-      expect(secureApi.post).toHaveBeenCalledWith(
-        "/auth/refresh",
-        null,
-        { headers: { "x-remember-me": "true" } },
-      );
+      expect(secureApi.post).toHaveBeenCalledWith("/auth/refresh", null, {
+        headers: { "x-remember-me": "true" },
+      });
     });
   });
 
@@ -101,7 +99,10 @@ describe("API service clients", () => {
       vi.mocked(authedFetch).mockResolvedValue([{ id: 1 }]);
 
       await collectionService.getMyCollections();
-      expect(authedFetch).toHaveBeenCalledWith("GET", "/collection/my/collections");
+      expect(authedFetch).toHaveBeenCalledWith(
+        "GET",
+        "/collection/my/collections",
+      );
 
       await collectionService.createCollection({ name: "My Set" });
       expect(authedFetch).toHaveBeenCalledWith("POST", "/collection", {
@@ -112,9 +113,13 @@ describe("API service clients", () => {
       expect(authedFetch).toHaveBeenCalledWith("DELETE", "/collection/col-1");
 
       await collectionService.addCardToCollection("col-1", "card-1");
-      expect(authedFetch).toHaveBeenCalledWith("POST", "/collection/col-1/items", {
-        data: { pokemonCardId: "card-1" },
-      });
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/items",
+        {
+          data: { pokemonCardId: "card-1" },
+        },
+      );
 
       await collectionService.removeCardFromCollection("col-1", "card-1");
       expect(authedFetch).toHaveBeenCalledWith(
@@ -137,7 +142,15 @@ describe("API service clients", () => {
 
       await pokemonCardService.getPaginated({ page: 1, search: "Pikachu" });
       expect(api.get).toHaveBeenCalledWith("/pokemon-card/paginated", {
-        params: { page: 1, limit: 10, search: "Pikachu", setId: undefined, serieId: undefined, rarity: undefined, type: undefined },
+        params: {
+          page: 1,
+          limit: 10,
+          search: "Pikachu",
+          setId: undefined,
+          serieId: undefined,
+          rarity: undefined,
+          type: undefined,
+        },
       });
 
       await pokemonCardService.getAll();
@@ -180,9 +193,12 @@ describe("API service clients", () => {
       });
 
       await pokemonCardService.addToCollection("col-1", "card-1");
-      expect(api.post).toHaveBeenCalledWith("/collection-item/collection/col-1", {
-        pokemonCardId: "card-1",
-      });
+      expect(api.post).toHaveBeenCalledWith(
+        "/collection-item/collection/col-1",
+        {
+          pokemonCardId: "card-1",
+        },
+      );
     });
   });
 

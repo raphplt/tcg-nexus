@@ -31,13 +31,19 @@ describe("Mobile AuthValidation", () => {
 
   describe("validateLoginForm", () => {
     it("returns errors when fields are missing or invalid", () => {
-      const errors = validateLoginForm({ email: "invalid-email", password: "123" });
+      const errors = validateLoginForm({
+        email: "invalid-email",
+        password: "123",
+      });
       assert.ok(errors.email);
       assert.ok(errors.password);
     });
 
     it("returns empty errors when login values are valid", () => {
-      const errors = validateLoginForm({ email: "user@example.com", password: "password123" });
+      const errors = validateLoginForm({
+        email: "user@example.com",
+        password: "password123",
+      });
       assert.equal(Object.keys(errors).length, 0);
     });
   });
@@ -46,7 +52,11 @@ describe("Mobile AuthValidation", () => {
     it("validates email presence and pattern", () => {
       assert.ok(validateForgotPasswordForm({ email: "" }).email);
       assert.ok(validateForgotPasswordForm({ email: "bad@" }).email);
-      assert.equal(Object.keys(validateForgotPasswordForm({ email: "user@example.com" })).length, 0);
+      assert.equal(
+        Object.keys(validateForgotPasswordForm({ email: "user@example.com" }))
+          .length,
+        0,
+      );
     });
   });
 

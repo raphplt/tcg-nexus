@@ -52,7 +52,11 @@ describe("SupportTicketController", () => {
 
     const result = await controller.addMessage(1, user, dto);
     expect(result).toEqual({ id: 10 });
-    expect(mockSupportTicketService.addMessage).toHaveBeenCalledWith(1, user, dto);
+    expect(mockSupportTicketService.addMessage).toHaveBeenCalledWith(
+      1,
+      user,
+      dto,
+    );
   });
 
   it("should list tickets", async () => {
@@ -66,25 +70,43 @@ describe("SupportTicketController", () => {
 
   it("should find ticket with messages", async () => {
     const user = { id: 1 } as User;
-    mockSupportTicketService.findOneWithMessages.mockResolvedValue({ id: 1, messages: [] });
+    mockSupportTicketService.findOneWithMessages.mockResolvedValue({
+      id: 1,
+      messages: [],
+    });
 
     const result = await controller.findOne(1, user, 20);
     expect(result).toEqual({ id: 1, messages: [] });
-    expect(mockSupportTicketService.findOneWithMessages).toHaveBeenCalledWith(1, user, 20);
+    expect(mockSupportTicketService.findOneWithMessages).toHaveBeenCalledWith(
+      1,
+      user,
+      20,
+    );
   });
 
   it("should get ticket messages", async () => {
     const user = { id: 1 } as User;
-    mockSupportTicketService.getMessages.mockResolvedValue({ data: [], meta: {} });
+    mockSupportTicketService.getMessages.mockResolvedValue({
+      data: [],
+      meta: {},
+    });
 
     const result = await controller.getMessages(1, user, 1, 10);
     expect(result).toEqual({ data: [], meta: {} });
-    expect(mockSupportTicketService.getMessages).toHaveBeenCalledWith(1, user, 1, 10);
+    expect(mockSupportTicketService.getMessages).toHaveBeenCalledWith(
+      1,
+      user,
+      1,
+      10,
+    );
   });
 
   it("should close ticket", async () => {
     const user = { id: 1 } as User;
-    mockSupportTicketService.closeTicket.mockResolvedValue({ id: 1, status: "closed" });
+    mockSupportTicketService.closeTicket.mockResolvedValue({
+      id: 1,
+      status: "closed",
+    });
 
     const result = await controller.closeTicket("1", user);
     expect(result).toEqual({ id: 1, status: "closed" });

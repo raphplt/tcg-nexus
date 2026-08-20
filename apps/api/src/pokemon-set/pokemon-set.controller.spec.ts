@@ -55,7 +55,9 @@ describe("PokemonSetController", () => {
       mockPokemonSetService.create.mockResolvedValue({ id: "set-1" });
       const result = await controller.create({ id: "set-1" } as any);
       expect(result).toEqual({ id: "set-1" });
-      expect(mockPokemonSetService.create).toHaveBeenCalledWith({ id: "set-1" });
+      expect(mockPokemonSetService.create).toHaveBeenCalledWith({
+        id: "set-1",
+      });
     });
 
     it("should find all pokemon sets", async () => {
@@ -122,13 +124,22 @@ describe("PokemonSetController", () => {
 
     it("should upload logo, replace old visual, and update record", async () => {
       mockPokemonSetService.findOne.mockResolvedValue({ id: "set-1" });
-      mockPokemonSetService.findVisual.mockResolvedValue({ logo: "old-logo.webp" });
-      mockR2StorageService.uploadFile.mockResolvedValue("https://cdn.tcg-nexus.org/sets/set-1/fr/logo.webp");
-      mockPokemonSetService.updateVisual.mockResolvedValue({ id: "set-1", logo: "https://cdn.tcg-nexus.org/sets/set-1/fr/logo.webp" });
+      mockPokemonSetService.findVisual.mockResolvedValue({
+        logo: "old-logo.webp",
+      });
+      mockR2StorageService.uploadFile.mockResolvedValue(
+        "https://cdn.tcg-nexus.org/sets/set-1/fr/logo.webp",
+      );
+      mockPokemonSetService.updateVisual.mockResolvedValue({
+        id: "set-1",
+        logo: "https://cdn.tcg-nexus.org/sets/set-1/fr/logo.webp",
+      });
 
       const result = await controller.uploadLogo("set-1", mockFile, "fr");
       expect(result.logo).toBeDefined();
-      expect(mockR2StorageService.deleteFile).toHaveBeenCalledWith("old-logo.webp");
+      expect(mockR2StorageService.deleteFile).toHaveBeenCalledWith(
+        "old-logo.webp",
+      );
       expect(mockPokemonSetService.updateVisual).toHaveBeenCalled();
     });
 
@@ -144,13 +155,22 @@ describe("PokemonSetController", () => {
 
     it("should upload symbol and update visual", async () => {
       mockPokemonSetService.findOne.mockResolvedValue({ id: "set-1" });
-      mockPokemonSetService.findVisual.mockResolvedValue({ symbol: "old-sym.png" });
-      mockR2StorageService.uploadFile.mockResolvedValue("https://cdn.tcg-nexus.org/sets/set-1/fr/symbol.png");
-      mockPokemonSetService.updateVisual.mockResolvedValue({ id: "set-1", symbol: "https://cdn.tcg-nexus.org/sets/set-1/fr/symbol.png" });
+      mockPokemonSetService.findVisual.mockResolvedValue({
+        symbol: "old-sym.png",
+      });
+      mockR2StorageService.uploadFile.mockResolvedValue(
+        "https://cdn.tcg-nexus.org/sets/set-1/fr/symbol.png",
+      );
+      mockPokemonSetService.updateVisual.mockResolvedValue({
+        id: "set-1",
+        symbol: "https://cdn.tcg-nexus.org/sets/set-1/fr/symbol.png",
+      });
 
       const result = await controller.uploadSymbol("set-1", mockFile, "fr");
       expect(result.symbol).toBeDefined();
-      expect(mockR2StorageService.deleteFile).toHaveBeenCalledWith("old-sym.png");
+      expect(mockR2StorageService.deleteFile).toHaveBeenCalledWith(
+        "old-sym.png",
+      );
     });
   });
 });
