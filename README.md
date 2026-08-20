@@ -8,7 +8,7 @@ Ce README se trouve à la racine du **dépôt GitLab fourni par l’ETNA** et r�
 - **Dépôt de rendu (GitLab ETNA)** : [https://rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981](https://rendu-git.etna-alternance.net/module-10020/activity-53631/group-1056981)
 - **Story Map Figma** : [[https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1](https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1)](https://www.figma.com/design/xJi3bYfxhX4HsBdPtxrw2r/Story-Map?node-id=0-1&p=f&t=TNtJuYX659gcvBoe-0)
 - **Wireframe Figma** : https://www.figma.com/design/ur8IpT8VxUjc3V7MFkvvTP/Wireframe?t=TNtJuYX659gcvBoe-0
-- **Board Github Project** : https://github.com/users/raphplt/projects/3
+- **Roadmap publique GitHub** : https://github.com/users/raphplt/projects/5
 - **Mirroring CI/CD** : GitHub Actions reproduit automatiquement ce repo sur GitLab
 
 ## 📂 Structure du projet
