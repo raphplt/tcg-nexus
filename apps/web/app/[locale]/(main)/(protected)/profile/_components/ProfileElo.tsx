@@ -44,7 +44,9 @@ export const ProfileElo = () => {
   const firstElo = chartData[0]?.elo;
   const currentElo = data?.elo ?? 0;
   const totalDelta =
-    firstElo !== undefined ? currentElo - (firstElo - (history[0]?.delta ?? 0)) : 0;
+    firstElo !== undefined
+      ? currentElo - (firstElo - (history[0]?.delta ?? 0))
+      : 0;
 
   const TrendIcon =
     totalDelta > 0 ? TrendingUp : totalDelta < 0 ? TrendingDown : Minus;
@@ -67,7 +69,9 @@ export const ProfileElo = () => {
 
         <div className="text-right">
           <p className="text-2xl font-bold leading-none">{currentElo}</p>
-          <p className={`mt-1 flex items-center justify-end gap-1 text-xs font-semibold ${trendColor}`}>
+          <p
+            className={`mt-1 flex items-center justify-end gap-1 text-xs font-semibold ${trendColor}`}
+          >
             <TrendIcon className="h-3.5 w-3.5" />
             {totalDelta > 0 ? `+${totalDelta}` : totalDelta}
             <span className="font-normal text-muted-foreground">
@@ -91,7 +95,10 @@ export const ProfileElo = () => {
       ) : (
         <div className="h-48 w-full">
           <ResponsiveContainer height="100%" width="100%">
-            <AreaChart data={chartData} margin={{ left: -20, right: 8, top: 8 }}>
+            <AreaChart
+              data={chartData}
+              margin={{ left: -20, right: 8, top: 8 }}
+            >
               <defs>
                 <linearGradient id="eloGradient" x1="0" x2="0" y1="0" y2="1">
                   <stop

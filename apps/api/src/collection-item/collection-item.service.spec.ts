@@ -269,7 +269,10 @@ describe("CollectionItemService", () => {
       mockSealedProductRepo.findOne.mockResolvedValue({ id: "sealed1" });
       mockCollectionItemRepo.findOne.mockResolvedValue({ id: 20, quantity: 1 });
       mockCollectionItemRepo.increment.mockResolvedValue({ affected: 1 });
-      mockCollectionItemRepo.findOneOrFail.mockResolvedValue({ id: 20, quantity: 2 });
+      mockCollectionItemRepo.findOneOrFail.mockResolvedValue({
+        id: 20,
+        quantity: 2,
+      });
 
       const item = await service.addSealedToCollection("c", "sealed1", owner);
       expect(item.quantity).toBe(2);

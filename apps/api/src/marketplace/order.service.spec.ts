@@ -699,7 +699,10 @@ describe("OrderService", () => {
       };
       orderItemRepo.createQueryBuilder.mockReturnValue(qb);
 
-      const result = await service.findSalesBySellerId(2, { page: 1, limit: 10 });
+      const result = await service.findSalesBySellerId(2, {
+        page: 1,
+        limit: 10,
+      });
       expect(result.data).toHaveLength(1);
     });
 
@@ -711,9 +714,11 @@ describe("OrderService", () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockResolvedValue([
-          { currency: "EUR", revenue: "50.0", shipping: "5.0", sales: "2" },
-        ]),
+        getRawMany: jest
+          .fn()
+          .mockResolvedValue([
+            { currency: "EUR", revenue: "50.0", shipping: "5.0", sales: "2" },
+          ]),
       };
       orderItemRepo.createQueryBuilder.mockReturnValue(qb);
 
@@ -734,9 +739,9 @@ describe("OrderService", () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         groupBy: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockResolvedValue([
-          { sellerId: "2", revenue: "100.0", sales: "4" },
-        ]),
+        getRawMany: jest
+          .fn()
+          .mockResolvedValue([{ sellerId: "2", revenue: "100.0", sales: "4" }]),
       };
       orderItemRepo.createQueryBuilder.mockReturnValue(qb);
 

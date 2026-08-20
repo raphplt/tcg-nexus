@@ -67,7 +67,9 @@ export const collectionService = {
     return fetcher<string[]>(`/collection/${id}/rarities`);
   },
 
-  async createCollection(payload: CreateCollectionPayload): Promise<Collection> {
+  async createCollection(
+    payload: CreateCollectionPayload,
+  ): Promise<Collection> {
     return authedFetch<Collection>("POST", "/collection", {
       data: payload,
     });

@@ -32,10 +32,9 @@ export default function MyTournamentsPage() {
   const [activeOrganizerTab, setActiveOrganizerTab] = useState("all");
 
   // Player Tournaments Query
-  const {
-    data: paginatedTournaments,
-    isLoading: isPlayerLoading,
-  } = useQuery<PaginatedResult<Tournament>>({
+  const { data: paginatedTournaments, isLoading: isPlayerLoading } = useQuery<
+    PaginatedResult<Tournament>
+  >({
     queryKey: ["player", user?.player?.id, "tournaments"],
     queryFn: () => {
       if (!user?.player?.id) {
@@ -58,30 +57,28 @@ export default function MyTournamentsPage() {
   });
 
   // Organizer Tournaments Query
-  const {
-    data: paginatedOrganizedTournaments,
-    isLoading: isOrganizerLoading,
-  } = useQuery<PaginatedResult<Tournament>>({
-    queryKey: ["organizer", user?.id, "tournaments"],
-    queryFn: () => {
-      if (!user?.id) {
-        return Promise.resolve({
-          data: [],
-          meta: {
-            totalItems: 0,
-            itemCount: 0,
-            itemsPerPage: 10,
-            totalPages: 0,
-            currentPage: 1,
-            hasNextPage: false,
-            hasPreviousPage: false,
-          },
-        });
-      }
-      return tournamentService.getOrganizerTournaments(user.id);
-    },
-    enabled: !!user?.id,
-  });
+  const { data: paginatedOrganizedTournaments, isLoading: isOrganizerLoading } =
+    useQuery<PaginatedResult<Tournament>>({
+      queryKey: ["organizer", user?.id, "tournaments"],
+      queryFn: () => {
+        if (!user?.id) {
+          return Promise.resolve({
+            data: [],
+            meta: {
+              totalItems: 0,
+              itemCount: 0,
+              itemsPerPage: 10,
+              totalPages: 0,
+              currentPage: 1,
+              hasNextPage: false,
+              hasPreviousPage: false,
+            },
+          });
+        }
+        return tournamentService.getOrganizerTournaments(user.id);
+      },
+      enabled: !!user?.id,
+    });
 
   const playerTournaments = paginatedTournaments?.data || [];
   const organizedTournaments = paginatedOrganizedTournaments?.data || [];

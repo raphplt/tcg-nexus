@@ -136,8 +136,12 @@ describe("MatchmakingService", () => {
   });
 
   it("should pair ranked players with closest ELO within window", async () => {
-    mockPlayerRepository.findOne.mockImplementation(({ where: { user: { id } } }) =>
-      Promise.resolve({ elo: id === 1 ? 1000 : id === 2 ? 1020 : 1800 }),
+    mockPlayerRepository.findOne.mockImplementation(
+      ({
+        where: {
+          user: { id },
+        },
+      }) => Promise.resolve({ elo: id === 1 ? 1000 : id === 2 ? 1020 : 1800 }),
     );
 
     await service.joinQueue(1, 10, true);

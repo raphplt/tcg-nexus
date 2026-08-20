@@ -16,7 +16,8 @@ describe("VisionService", () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
-              if (key === "VISION_SERVICE_URL") return "http://vision-service:8000";
+              if (key === "VISION_SERVICE_URL")
+                return "http://vision-service:8000";
               if (key === "VISION_API_KEY") return "test-api-key";
               return null;
             }),
@@ -44,12 +45,14 @@ describe("VisionService", () => {
     });
 
     it("should send match request to vision microservice and return score map", async () => {
-      const mockFetch = jest.spyOn(global, "fetch" as any).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          results: [{ id: "c-1", score: 15 }],
-        }),
-      } as any);
+      const mockFetch = jest
+        .spyOn(global, "fetch" as any)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            results: [{ id: "c-1", score: 15 }],
+          }),
+        } as any);
 
       const result = await service.match(Buffer.from("img"), [
         { id: "c-1", url: "http://img.png" },
@@ -60,7 +63,9 @@ describe("VisionService", () => {
     });
 
     it("should return empty map on fetch failure", async () => {
-      jest.spyOn(global, "fetch" as any).mockRejectedValueOnce(new Error("Network fail"));
+      jest
+        .spyOn(global, "fetch" as any)
+        .mockRejectedValueOnce(new Error("Network fail"));
       const result = await service.match(Buffer.from("img"), [
         { id: "c-1", url: "http://img.png" },
       ]);

@@ -117,10 +117,16 @@ describe("json collections", () => {
     };
 
     writeSeries("fr", [{ id: "sv", name: "Écarlate et Violet" }], dataDir);
-    writeSets("fr", [{ id: "sv09", name: "Aventures Ensemble", serieId: "sv" }], dataDir);
+    writeSets(
+      "fr",
+      [{ id: "sv09", name: "Aventures Ensemble", serieId: "sv" }],
+      dataDir,
+    );
     writeSealedProducts("fr", [product], dataDir);
 
-    assert.deepEqual(readSeries("fr", dataDir), [{ id: "sv", name: "Écarlate et Violet" }]);
+    assert.deepEqual(readSeries("fr", dataDir), [
+      { id: "sv", name: "Écarlate et Violet" },
+    ]);
     assert.equal(readSets("fr", dataDir)[0]?.serieId, "sv");
     assert.deepEqual(readSealedProducts("fr", dataDir), [product]);
   });
@@ -147,7 +153,12 @@ describe("card storage", () => {
   });
 
   it("preserves unknown fields coming from the catalog", () => {
-    writeSetCards("fr", "base2", [card("base2-1", { hp: "60", types: ["Fire"] })], dataDir);
+    writeSetCards(
+      "fr",
+      "base2",
+      [card("base2-1", { hp: "60", types: ["Fire"] })],
+      dataDir,
+    );
     const [stored] = readSetCards("fr", "base2", dataDir);
 
     assert.equal(stored?.hp, "60");
@@ -190,14 +201,20 @@ describe("manifest", () => {
 
     assert.equal(manifest.formatVersion, DATASET_FORMAT_VERSION);
     assert.deepEqual(manifest.locales, ["fr"]);
-    assert.deepEqual(manifest.stats.fr, { sets: 1, cards: 3, sealedProducts: 1 });
+    assert.deepEqual(manifest.stats.fr, {
+      sets: 1,
+      cards: 3,
+      sealedProducts: 1,
+    });
 
     const paths = manifest.files.map((entry) => entry.path);
     assert.deepEqual(paths, [...paths].sort());
     assert.ok(paths.includes("fr/cards/base1.ndjson.br"));
     assert.ok(paths.includes("fr/sealed-products.json"));
 
-    const entry = manifest.files.find((f) => f.path === "fr/cards/base1.ndjson.br");
+    const entry = manifest.files.find(
+      (f) => f.path === "fr/cards/base1.ndjson.br",
+    );
     const file = setCardsFile("fr", "base1", dataDir);
     assert.equal(entry?.sha256, sha256File(file));
     assert.equal(entry?.bytes, fs.statSync(file).size);
@@ -214,7 +231,11 @@ describe("manifest", () => {
   });
 
   it("round-trips through write and read", () => {
-    const manifest = buildManifest(["fr", "en"], "2026-08-20T00:00:00.000Z", dataDir);
+    const manifest = buildManifest(
+      ["fr", "en"],
+      "2026-08-20T00:00:00.000Z",
+      dataDir,
+    );
     writeManifest(manifest, dataDir);
 
     assert.deepEqual(readManifest(dataDir), manifest);

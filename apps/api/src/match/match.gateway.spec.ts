@@ -74,8 +74,12 @@ describe("MatchGateway", () => {
   describe("onModuleInit", () => {
     it("should register matchmaking handlers", () => {
       gateway.onModuleInit();
-      expect(mockMatchmakingService.registerMatchFoundHandler).toHaveBeenCalled();
-      expect(mockMatchmakingService.registerMatchFailedHandler).toHaveBeenCalled();
+      expect(
+        mockMatchmakingService.registerMatchFoundHandler,
+      ).toHaveBeenCalled();
+      expect(
+        mockMatchmakingService.registerMatchFailedHandler,
+      ).toHaveBeenCalled();
     });
   });
 
@@ -146,7 +150,11 @@ describe("MatchGateway", () => {
       await gateway.handleMatchmakingJoin({ deckId: 5 }, client);
 
       expect(client.join).toHaveBeenCalledWith("matchmaking:1");
-      expect(mockMatchmakingService.joinQueue).toHaveBeenCalledWith(1, 5, false);
+      expect(mockMatchmakingService.joinQueue).toHaveBeenCalledWith(
+        1,
+        5,
+        false,
+      );
     });
 
     it("should leave matchmaking queue", async () => {
@@ -179,9 +187,16 @@ describe("MatchGateway", () => {
       });
 
       const result = await gateway.handleJoinMatch({ matchId: 10 }, client);
-      expect(result).toEqual({ status: "joined", matchId: 10, enginePlayerId: "p1" });
+      expect(result).toEqual({
+        status: "joined",
+        matchId: 10,
+        enginePlayerId: "p1",
+      });
       expect(client.join).toHaveBeenCalledWith("match:10");
-      expect(client.emit).toHaveBeenCalledWith("session_view", expect.any(Object));
+      expect(client.emit).toHaveBeenCalledWith(
+        "session_view",
+        expect.any(Object),
+      );
 
       // Spectator test
       mockMatchOnlineService.getSessionView.mockResolvedValue({
@@ -191,7 +206,11 @@ describe("MatchGateway", () => {
       });
 
       const specResult = await gateway.handleJoinMatch({ matchId: 10 }, client);
-      expect(specResult).toEqual({ status: "spectating", matchId: 10, enginePlayerId: null });
+      expect(specResult).toEqual({
+        status: "spectating",
+        matchId: 10,
+        enginePlayerId: null,
+      });
     });
 
     it("should handle leave_match", async () => {
@@ -242,7 +261,10 @@ describe("MatchGateway", () => {
       mockMatchOnlineService.getSpectatorView.mockResolvedValue(null);
 
       const result = await gateway.handleRespondPrompt(
-        { matchId: 10, response: { type: "choose_cards", selectedCards: [] } as any },
+        {
+          matchId: 10,
+          response: { type: "choose_cards", selectedCards: [] } as any,
+        },
         client,
       );
 
@@ -265,10 +287,20 @@ describe("MatchGateway", () => {
         gameState: { turn: 1 },
       });
 
-      const joinResult = await gateway.handleCasualJoin({ sessionId: 20 }, client);
-      expect(joinResult).toEqual({ status: "joined", sessionId: 20, enginePlayerId: "p1" });
+      const joinResult = await gateway.handleCasualJoin(
+        { sessionId: 20 },
+        client,
+      );
+      expect(joinResult).toEqual({
+        status: "joined",
+        sessionId: 20,
+        enginePlayerId: "p1",
+      });
 
-      const leaveResult = await gateway.handleCasualLeave({ sessionId: 20 }, client);
+      const leaveResult = await gateway.handleCasualLeave(
+        { sessionId: 20 },
+        client,
+      );
       expect(leaveResult).toEqual({ status: "left" });
     });
 

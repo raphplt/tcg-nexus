@@ -36,7 +36,8 @@ describe("RuleBasedParser", () => {
       attacks: [
         {
           name: "Morsure Venin",
-          effect: "Le Pokémon Actif de votre adversaire est maintenant Empoisonné.",
+          effect:
+            "Le Pokémon Actif de votre adversaire est maintenant Empoisonné.",
         },
       ],
     };

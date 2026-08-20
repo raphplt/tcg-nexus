@@ -34,7 +34,11 @@ const isProduction = process.env.NODE_ENV === "production";
 // distincts ; COOKIE_SAMESITE=lax supprime la surface CSRF quand ils sont same-site
 const resolveSameSite = (): "none" | "lax" | "strict" => {
   const configured = process.env.COOKIE_SAMESITE?.trim().toLowerCase();
-  if (configured === "lax" || configured === "strict" || configured === "none") {
+  if (
+    configured === "lax" ||
+    configured === "strict" ||
+    configured === "none"
+  ) {
     return configured;
   }
   return isProduction ? "none" : "lax";

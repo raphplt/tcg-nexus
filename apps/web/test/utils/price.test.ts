@@ -80,7 +80,11 @@ describe("price utilities", () => {
 
       expect(
         getTcgPlayerPrice({
-          normal: { marketPrice: null as any, midPrice: null as any, lowPrice: 8 },
+          normal: {
+            marketPrice: null as any,
+            midPrice: null as any,
+            lowPrice: 8,
+          },
         } as any),
       ).toBe(8);
     });

@@ -109,7 +109,11 @@ describe("ChallengeService", () => {
       };
       const weeklyChallenge = {
         id: 2,
-        challenge: { id: 20, title: "Play 10 matches", type: ChallengeType.WEEKLY },
+        challenge: {
+          id: 20,
+          title: "Play 10 matches",
+          type: ChallengeType.WEEKLY,
+        },
         expiresAt: new Date(),
       };
 
@@ -192,14 +196,18 @@ describe("ChallengeService", () => {
   describe("claimChallenge", () => {
     it("should throw NotFoundException if progress not found", async () => {
       mockEntityManager.findOne.mockResolvedValueOnce(null);
-      await expect(service.claimChallenge(1, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.claimChallenge(1, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it("should throw BadRequestException if challenge not completed", async () => {
       mockEntityManager.findOne.mockResolvedValueOnce({
         isCompleted: false,
       });
-      await expect(service.claimChallenge(1, 1)).rejects.toThrow(BadRequestException);
+      await expect(service.claimChallenge(1, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it("should throw BadRequestException if already claimed", async () => {
@@ -207,7 +215,9 @@ describe("ChallengeService", () => {
         isCompleted: true,
         isClaimed: true,
       });
-      await expect(service.claimChallenge(1, 1)).rejects.toThrow(BadRequestException);
+      await expect(service.claimChallenge(1, 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it("should claim reward and award XP to player", async () => {

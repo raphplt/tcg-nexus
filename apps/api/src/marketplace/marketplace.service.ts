@@ -57,9 +57,8 @@ const LISTING_SORT_COLUMNS: Record<
 };
 
 const resolveListingSortColumn = (sortBy?: ListingSortBy): string =>
-  LISTING_SORT_COLUMNS[
-    sortBy as Exclude<ListingSortBy, ListingSortBy.NAME>
-  ] ?? LISTING_SORT_COLUMNS[ListingSortBy.CREATED_AT];
+  LISTING_SORT_COLUMNS[sortBy as Exclude<ListingSortBy, ListingSortBy.NAME>] ??
+  LISTING_SORT_COLUMNS[ListingSortBy.CREATED_AT];
 
 export interface FindAllListingsParams {
   sellerId?: number;

@@ -96,9 +96,7 @@ describe("Marketplace Components & Utilities", () => {
           onApply={vi.fn()}
         />,
       );
-      expect(
-        screen.getByText(/Calcul du prix conseillé/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Calcul du prix conseillé/)).toBeInTheDocument();
 
       vi.mocked(usePriceSuggestion).mockReturnValue({
         data: null,
@@ -111,9 +109,7 @@ describe("Marketplace Components & Utilities", () => {
           onApply={vi.fn()}
         />,
       );
-      expect(
-        screen.getByText(/Aucune référence de prix/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Aucune référence de prix/)).toBeInTheDocument();
     });
   });
 

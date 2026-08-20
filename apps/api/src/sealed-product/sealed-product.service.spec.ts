@@ -9,7 +9,10 @@ import {
 } from "src/marketplace/entities/sealed-event.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
 import { DataSource } from "typeorm";
-import { SealedProductFilterDto, SealedSortBy } from "./dto/sealed-product-filter.dto";
+import {
+  SealedProductFilterDto,
+  SealedSortBy,
+} from "./dto/sealed-product-filter.dto";
 import { SealedProduct } from "./entities/sealed-product.entity";
 import { SealedProductLocale } from "./entities/sealed-product-locale.entity";
 import { SealedProductType } from "./enums/sealed-product-type.enum";
@@ -178,7 +181,11 @@ describe("SealedProductService", () => {
 
     it("should return popular sealed products calculated from event scores", async () => {
       mockQueryBuilder.getRawMany.mockResolvedValue([
-        { sealedProductId: "sp-1", eventType: SealedEventType.SALE, count: "2" },
+        {
+          sealedProductId: "sp-1",
+          eventType: SealedEventType.SALE,
+          count: "2",
+        },
       ]);
       mockSealedProductRepo.find.mockResolvedValue([{ id: "sp-1" }]);
 
@@ -206,7 +213,9 @@ describe("SealedProductService", () => {
 
     it("should throw NotFoundException if product does not exist", async () => {
       mockSealedProductRepo.findOne.mockResolvedValue(null);
-      await expect(service.findOne("missing")).rejects.toThrow(NotFoundException);
+      await expect(service.findOne("missing")).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it("should compute market statistics and price history", async () => {
@@ -264,7 +273,9 @@ describe("SealedProductService", () => {
 
     it("should throw NotFoundException if delete affects 0 rows", async () => {
       mockSealedProductRepo.delete.mockResolvedValue({ affected: 0 });
-      await expect(service.remove("sp-missing")).rejects.toThrow(NotFoundException);
+      await expect(service.remove("sp-missing")).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

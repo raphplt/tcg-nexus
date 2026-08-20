@@ -47,7 +47,11 @@ describe("R2StorageService", () => {
 
   it("should return null if s3Client is not configured on upload", async () => {
     (service as any).s3Client = null;
-    const result = await service.uploadFile(Buffer.from("a"), "k", "text/plain");
+    const result = await service.uploadFile(
+      Buffer.from("a"),
+      "k",
+      "text/plain",
+    );
     expect(result).toBeNull();
   });
 

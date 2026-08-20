@@ -11,7 +11,10 @@ describe("r2 utilities", () => {
   });
 
   test("cardKeyPrefixFromTcgdex returns null for non-tcgdex or invalid URLs", () => {
-    assert.equal(cardKeyPrefixFromTcgdex("https://images.pokemontcg.io/base1/4"), null);
+    assert.equal(
+      cardKeyPrefixFromTcgdex("https://images.pokemontcg.io/base1/4"),
+      null,
+    );
     assert.equal(cardKeyPrefixFromTcgdex(""), null);
     assert.equal(cardKeyPrefixFromTcgdex("not-a-valid-url"), null);
   });

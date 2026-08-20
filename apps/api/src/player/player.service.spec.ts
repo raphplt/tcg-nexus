@@ -130,7 +130,9 @@ describe("PlayerService", () => {
 
     it("should throw NotFoundException if player not found for history", async () => {
       playerRepo.findOne.mockResolvedValue(null);
-      await expect(service.getTournamentHistory(999)).rejects.toThrow(NotFoundException);
+      await expect(service.getTournamentHistory(999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

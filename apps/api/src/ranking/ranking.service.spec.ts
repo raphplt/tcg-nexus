@@ -421,7 +421,11 @@ describe("RankingService", () => {
 
   describe("getMyRankingPosition & ELO methods", () => {
     it("should return user ranking position from query", async () => {
-      playerRepo.findOne.mockResolvedValue({ id: 1, user: { id: 10, email: "u@t.co" }, elo: 1200 });
+      playerRepo.findOne.mockResolvedValue({
+        id: 1,
+        user: { id: 10, email: "u@t.co" },
+        elo: 1200,
+      });
       mockRankedHistoryRepo.query.mockResolvedValue([
         {
           rank: "5",
@@ -439,7 +443,11 @@ describe("RankingService", () => {
     });
 
     it("should fallback to player elo when user not yet in ranked table", async () => {
-      playerRepo.findOne.mockResolvedValue({ id: 1, user: { id: 10, email: "u@t.co", firstName: "A", lastName: "B" }, elo: 1050 });
+      playerRepo.findOne.mockResolvedValue({
+        id: 1,
+        user: { id: 10, email: "u@t.co", firstName: "A", lastName: "B" },
+        elo: 1050,
+      });
       mockRankedHistoryRepo.query.mockResolvedValue([]);
 
       const pos = await service.getMyRankingPosition(10);
@@ -450,8 +458,12 @@ describe("RankingService", () => {
     it("should update ELO on win and on draw", async () => {
       const p1 = { id: 1, elo: 1000 };
       const p2 = { id: 2, elo: 1000 };
-      playerRepo.findOne.mockImplementation(({ where: { user: { id } } }) =>
-        Promise.resolve(id === 1 ? p1 : p2),
+      playerRepo.findOne.mockImplementation(
+        ({
+          where: {
+            user: { id },
+          },
+        }) => Promise.resolve(id === 1 ? p1 : p2),
       );
       playerRepo.save.mockImplementation((p: any) => Promise.resolve(p));
 
@@ -470,12 +482,18 @@ describe("RankingService", () => {
     it("should update ELO with history record", async () => {
       const p1 = { id: 1, elo: 1000 };
       const p2 = { id: 2, elo: 1000 };
-      playerRepo.findOne.mockImplementation(({ where: { user: { id } } }) =>
-        Promise.resolve(id === 1 ? p1 : p2),
+      playerRepo.findOne.mockImplementation(
+        ({
+          where: {
+            user: { id },
+          },
+        }) => Promise.resolve(id === 1 ? p1 : p2),
       );
       playerRepo.save.mockImplementation((p: any) => Promise.resolve(p));
 
-      const res = await service.updateEloWithHistory(1, 2, { casualSessionId: 42 });
+      const res = await service.updateEloWithHistory(1, 2, {
+        casualSessionId: 42,
+      });
       expect(res.delta).toBeGreaterThan(0);
       expect(mockRankedHistoryRepo.save).toHaveBeenCalled();
     });

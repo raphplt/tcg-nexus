@@ -325,7 +325,14 @@ describe("TrainingAiService", () => {
         gamePhase: GamePhase.Finished,
       });
       const engine = new GameEngine(state);
-      expect(service.decideNextMove(engine, TRAINING_AI_PLAYER_ID, TrainingDifficulty.EASY, "s")).toBeNull();
+      expect(
+        service.decideNextMove(
+          engine,
+          TRAINING_AI_PLAYER_ID,
+          TrainingDifficulty.EASY,
+          "s",
+        ),
+      ).toBeNull();
 
       state.gamePhase = GamePhase.Play;
       state.pendingPrompt = {
@@ -338,7 +345,14 @@ describe("TrainingAiService", () => {
         allowPass: false,
         options: [],
       };
-      expect(service.decideNextMove(engine, TRAINING_AI_PLAYER_ID, TrainingDifficulty.EASY, "s")).toBeNull();
+      expect(
+        service.decideNextMove(
+          engine,
+          TRAINING_AI_PLAYER_ID,
+          TrainingDifficulty.EASY,
+          "s",
+        ),
+      ).toBeNull();
     });
   });
 
@@ -365,7 +379,8 @@ describe("TrainingAiService", () => {
 
     it("should let easy AI play basic pokemon to bench", () => {
       const state = createBaseState();
-      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks = []; // No playable attack
+      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks =
+        []; // No playable attack
       state.players[TRAINING_AI_PLAYER_ID].bench = [];
       state.players[TRAINING_AI_PLAYER_ID].hand = [
         createPokemon("basic-p", TRAINING_AI_PLAYER_ID, 80),
@@ -387,7 +402,8 @@ describe("TrainingAiService", () => {
 
     it("should let easy AI play trainer card from hand", () => {
       const state = createBaseState();
-      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks = [];
+      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks =
+        [];
       state.players[TRAINING_AI_PLAYER_ID].hand = [
         createTrainerCard("t-1", TRAINING_AI_PLAYER_ID),
       ];
@@ -424,7 +440,8 @@ describe("TrainingAiService", () => {
 
     it("should end turn when no actions or attacks are available", () => {
       const state = createBaseState();
-      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks = [];
+      (state.players[TRAINING_AI_PLAYER_ID].active!.baseCard as any).attacks =
+        [];
       state.players[TRAINING_AI_PLAYER_ID].hand = [];
       const engine = new GameEngine(state);
 

@@ -1728,9 +1728,7 @@ function PlayDuelTab({ query }: { query: UseQueryResult<CasualLobbyView> }) {
                 <div className="flex items-center gap-3">
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold">
-                      {t("searching")}
-                    </p>
+                    <p className="text-sm font-semibold">{t("searching")}</p>
                     <p className="text-xs text-amber-700/80">
                       {queueSize > 1
                         ? t("playersInQueue", { count: queueSize })

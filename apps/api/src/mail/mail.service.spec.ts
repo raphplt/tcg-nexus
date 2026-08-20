@@ -53,7 +53,9 @@ describe("MailService", () => {
     });
 
     it("should handle email send failure without throwing", async () => {
-      mockMailerService.sendMail.mockRejectedValueOnce(new Error("SMTP offline"));
+      mockMailerService.sendMail.mockRejectedValueOnce(
+        new Error("SMTP offline"),
+      );
       await expect(
         service.sendTicketCreated("test@tcg.org", 1, "Question", "en"),
       ).resolves.toBeUndefined();

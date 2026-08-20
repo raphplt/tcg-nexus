@@ -948,7 +948,9 @@ export function PokemonCardsTable({
                     <TableRow
                       key={card.id}
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => router.push(`/marketplace/cards/${card.id}`)}
+                      onClick={() =>
+                        router.push(`/marketplace/cards/${card.id}`)
+                      }
                     >
                       <TableCell className="py-2">
                         <Image
