@@ -1708,6 +1708,10 @@
     "pointsIn": "pts · en {difficulty}"
   },
   "SmashOrPass": {
+    "loginToSave": "Connecte-toi pour enregistrer cette carte dans ta wishlist.",
+    "loadError": "Impossible de charger une carte.",
+    "noCardForFilters": "Aucune carte ne correspond à ces filtres.",
+    "retry": "Réessayer",
     "unknownRarity": "Rareté inconnue",
     "swipeHelp": "Swipe pour ajouter à ta wishlist",
     "refineDiscovery": "Affiner la découverte",

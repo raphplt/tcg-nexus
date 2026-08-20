@@ -59,15 +59,18 @@ export const pokemonCardService = {
     serieId?: string,
     rarity?: PokemonRarity,
     set?: string,
-  ): Promise<PokemonCardType> {
+  ): Promise<PokemonCardType | null> {
     const params: Record<string, string> = {};
     if (serieId) params.serieId = serieId;
     if (rarity) params.rarity = rarity;
     if (set) params.set = set;
 
-    const response = await api.get<PokemonCardType>("/pokemon-card/random", {
-      params: Object.keys(params).length > 0 ? params : undefined,
-    });
+    const response = await api.get<PokemonCardType | null>(
+      "/pokemon-card/random",
+      {
+        params: Object.keys(params).length > 0 ? params : undefined,
+      },
+    );
 
     return response.data;
   },

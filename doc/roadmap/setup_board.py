@@ -200,6 +200,68 @@ STOPWORDS = {
     "systeme", "partie", "gestion", "mettre", "place", "faire", "front", "back",
 }
 
+# Rapprochements tranchés à la main, là où la similarité littérale se trompe ou
+# hésite. Clé = titre de l'issue normalisé ; valeur = identifiant du backlog, ou
+# chaîne vide pour « ne rattache pas cette issue ».
+OVERRIDES: dict[str, str] = {
+    # Deux issues proches qui traitent en réalité de sujets différents
+    "copier deck existant": "COL-09",
+    "copier deck existant partage code": "COL-14",
+    "interface analyse deck cote": "IA-02",
+    "notifications app push": "COM-06",
+    "notifications tournois push email": "TRN-10",
+    # Rapprochements que le score rate ou sous-évalue
+    "faq dynamique centre aide": "COM-05",
+    "completer sealed products": "CAT-08",
+    "refacto marketplace": "MKT-04",
+    "scan ocr cartes pokemon import collection": "IA-05",
+    "classement global joueurs elo points": "TRN-08",
+    "authentification login register mot passe oublie": "SEC-01",
+    "achat cartes": "MKT-07",
+    "page marketplace index tsx liste cartes vente": "MKT-02",
+    "page principale decks utilisateur connecte": "COL-07",
+    "api decks crud add remove clone": "COL-06",
+    "creation entites principales tournoi match joueur classement statistiques": "TRN-01",
+    "logique metier tournois": "TRN-04",
+    "endpoint join tournament": "TRN-03",
+    "collection initiale wishlist": "COL-03",
+    "tests end": "QUA-05",
+    "probleme collection etat etc": "COL-05",
+    "finaliser jeu tcg ligne": "GME-04",
+    "architecture base services api mobile": "MOB-03",
+    "controles acces roles ownership": "SEC-03",
+    "ventes profil": "MKT-03",
+    "tickets support aide": "COM-04",
+    "tableau bord utilisateur stats personnelles": "COM-01",
+    "badges succes achievements": "COM-03",
+    "recommandations cartes collection": "IA-03",
+    "export deck format pdf image": "COL-11",
+    "historique tournois joueur elo": "TRN-06",
+    "actualites annonces tournois": "TRN-12",
+    "rapports analytics organisateurs tournois": "TRN-09",
+    "middleware log requetes api": "QUA-09",
+    "schema base donnees": "QUA-06",
+    "endpoint analyzedeck squelette": "IA-01",
+    "tests unitaires services nestjs": "QUA-04",
+    # Trop fines ou trop larges pour être rattachées à un item du backlog
+    "tests unitaires nestjs middleware logs schema bdd": "",
+    "page details tournois": "",
+    "bouton rejoindre appelle patch tournois join": "",
+    "cta analyser mon deck": "",
+    "test manuel tournoi": "",
+    "skeletons loaders cote": "",
+    "147 defis quotidiens hebdomadaires": "",
+}
+
+
+def override_key(title: str) -> str:
+    """Clé stable pour OVERRIDES : mots signifiants, dans l'ordre du titre."""
+    seen: list[str] = []
+    for word in normalise(title).split():
+        if len(word) > 2 and word not in STOPWORDS and word not in seen:
+            seen.append(word)
+    return " ".join(seen)
+
 
 def normalise(text: str) -> str:
     text = unicodedata.normalize("NFKD", text.lower())
@@ -230,7 +292,7 @@ def build_mapping(items: list[dict], rows: list[dict], path: Path) -> None:
     foreign = [i for i in items
                if i["title"] not in expected and not is_draft(i)]
 
-    taken: dict[str, tuple[float, str]] = {}   # ID CSV -> (score, titre issue)
+    by_id = {r["ID"]: r for r in rows}
     proposals: list[dict] = []
 
     for item in sorted(foreign, key=lambda i: i["title"]):
@@ -238,19 +300,40 @@ def build_mapping(items: list[dict], rows: list[dict], path: Path) -> None:
                         key=lambda p: p[0], reverse=True)
         best_score, best = scored[0]
         second = scored[1][0] if len(scored) > 1 else 0.0
+
+        key = override_key(item["title"])
+        if key in OVERRIDES:
+            ident, origin, score = OVERRIDES[key], "manuel", 1.0
+        elif best_score >= 0.35:
+            ident, origin, score = best["ID"], "auto", best_score
+        else:
+            ident, origin, score = "", "aucun", best_score
+
         proposals.append({
             "Issue": item["title"],
             "Item id": item["id"],
             "Type": item_kind(item),
-            "ID": best["ID"] if best_score >= 0.35 else "",
-            "Titre du backlog": best["Title"] if best_score >= 0.35 else "",
-            "Score": f"{best_score:.2f}",
+            "ID": ident,
+            "Titre du backlog": by_id[ident]["Title"] if ident else "",
+            "Origine": origin,
+            "Score": f"{score:.2f}",
             "2e candidat": f'{scored[1][1]["ID"]} ({second:.2f})' if len(scored) > 1 else "",
         })
-        if best_score >= 0.35:
-            prev = taken.get(best["ID"])
-            if prev is None or best_score > prev[0]:
-                taken[best["ID"]] = (best_score, item["title"])
+
+    # Un identifiant du backlog ne peut désigner qu'une issue. En cas de conflit —
+    # deux issues quasi identiques sur le board, ou deux tickets qui décrivent la
+    # même chose — on garde celle qui a le meilleur score et on libère les autres.
+    conflicts: list[str] = []
+    for ident in {p["ID"] for p in proposals if p["ID"]}:
+        rivals = [p for p in proposals if p["ID"] == ident]
+        if len(rivals) < 2:
+            continue
+        rivals.sort(key=lambda p: (p["Origine"] == "manuel", float(p["Score"])),
+                    reverse=True)
+        for loser in rivals[1:]:
+            loser.update({"ID": "", "Titre du backlog": "",
+                          "Origine": f"écarté (doublon de « {rivals[0]['Issue'][:40]} »)"})
+        conflicts.append(f"{ident} → {rivals[0]['Issue'][:50]}")
 
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(proposals[0].keys())
@@ -258,21 +341,23 @@ def build_mapping(items: list[dict], rows: list[dict], path: Path) -> None:
         writer.writeheader()
         writer.writerows(proposals)
 
-    proposed = sum(1 for p in proposals if p["ID"])
-    solides = sum(1 for p in proposals if float(p["Score"]) >= 0.55)
+    manuel = sum(1 for p in proposals if p["Origine"] == "manuel")
+    auto = sum(1 for p in proposals if p["Origine"] == "auto")
     log(f"  {len(foreign)} issue(s) hors backlog analysée(s).")
-    log(f"  · {solides} rapprochement(s) à score élevé (≥ 0.55)")
-    log(f"  · {proposed - solides} proposition(s) incertaine(s) (0.35 à 0.55)")
-    log(f"  · {len(proposals) - proposed} sans candidat")
-    duplicates = [k for k, _ in taken.items()
-                  if sum(1 for p in proposals if p["ID"] == k) > 1]
-    if duplicates:
-        log(f"  ! {len(duplicates)} identifiant(s) proposé(s) pour plusieurs issues : "
-            f"{', '.join(sorted(duplicates)[:10])}")
-    log(f"\n  Écrit : {path.name}")
-    log("  Relire le fichier, corriger la colonne « ID » (la vider pour ne pas")
-    log("  rattacher une issue), puis lancer :")
-    log(f"      python3 {Path(__file__).name} --apply-map")
+    log(f"  · {manuel} rattachement(s) tranché(s) à la main (table OVERRIDES)")
+    log(f"  · {auto} rattachement(s) déduit(s) automatiquement")
+    log(f"  · {len(proposals) - manuel - auto} laissée(s) sans rattachement")
+    if conflicts:
+        log(f"\n  {len(conflicts)} conflit(s) résolu(s) automatiquement — "
+            f"l'identifiant est allé à :")
+        for line in conflicts:
+            log(f"      {line}")
+        log("  Les issues écartées restent sur le board, simplement non rattachées.")
+        log("  Ce sont souvent de vrais doublons à fermer.")
+    log(f"\n  Écrit : {path.name} — le fichier est cohérent, il peut être appliqué tel")
+    log("  quel. Le relire reste utile : colonne « Origine » pour voir d'où vient")
+    log("  chaque rattachement, colonne « ID » à vider ou corriger si besoin.")
+    log(f"\n  Étape suivante :  python3 {Path(__file__).name} --apply-map")
 
 
 def read_mapping(rows: list[dict], path: Path) -> dict[str, str]:

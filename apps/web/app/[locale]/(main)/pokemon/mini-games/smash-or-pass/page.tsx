@@ -14,6 +14,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import { Link } from "@/i18n/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -241,7 +242,7 @@ function PokemonCardView({
 
 export default function PokemonMatchPage() {
   const t = useTranslations("SmashOrPass");
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { data: series = [] } = usePokemonSeries();
   const { data: sets = [] } = usePokemonSets();
 
@@ -284,6 +285,7 @@ export default function PokemonMatchPage() {
 
   const {
     data: card,
+    isError,
     isLoading,
     isFetching,
     refetch,
@@ -303,7 +305,6 @@ export default function PokemonMatchPage() {
           : undefined,
         selectedSet !== "None" ? selectedSet : undefined,
       ),
-    enabled: !!user,
     placeholderData: keepPreviousData,
   });
 
@@ -319,20 +320,27 @@ export default function PokemonMatchPage() {
           prev[dir === "right" ? "smash" : "pass"] + 1,
       }));
 
-      if (dir === "right" && user?.id) {
-        try {
-          await pokemonCardService.addToWishlist(user.id, card.id);
-        } catch (error) {
-          console.error(t("wishlistError"), error);
+      if (dir === "right") {
+        if (user?.id) {
+          try {
+            await pokemonCardService.addToWishlist(user.id, card.id);
+          } catch (error) {
+            console.error(t("wishlistError"), error);
+          }
+        } else {
+          toast.error(t("loginToSave"));
         }
       }
 
-      await wait(400);
-      setDirection(null);
-      await refetch();
-      setIsProcessing(false);
+      try {
+        await wait(400);
+        setDirection(null);
+        await refetch();
+      } finally {
+        setIsProcessing(false);
+      }
     },
-    [card, isProcessing, user?.id, refetch],
+    [card, isProcessing, user?.id, refetch, t],
   );
 
   useEffect(() => {
@@ -350,8 +358,6 @@ export default function PokemonMatchPage() {
     setSelectedSet("None");
     refetch();
   };
-
-  if (!user) return null;
 
   const total = stats.smash + stats.pass;
 
@@ -512,9 +518,24 @@ export default function PokemonMatchPage() {
 
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
           <div className="relative w-full max-w-95">
-            {isLoading || !card ? (
+            {isAuthLoading || isLoading ? (
               <div className="w-full">
                 <Skeleton className="aspect-[5/7] w-full border border-border rounded-xl shadow-sm" />
+              </div>
+            ) : isError || !card ? (
+              <div className="tcg-surface flex aspect-[5/7] w-full flex-col items-center justify-center gap-3 p-6 text-center">
+                <Sparkles className="h-9 w-9 text-muted-foreground/50" />
+                <p className="text-sm font-semibold">
+                  {isError ? t("loadError") : t("noCardForFilters")}
+                </p>
+                <Button
+                  onClick={() => (isError ? refetch() : resetFilters())}
+                  size="sm"
+                  variant="outline"
+                >
+                  <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                  {isError ? t("retry") : t("reset")}
+                </Button>
               </div>
             ) : (
               <PokemonCardView
@@ -529,7 +550,7 @@ export default function PokemonMatchPage() {
           <div className="flex items-center gap-4 bg-card/95 px-5 py-2.5 border border-border rounded-xl shadow-lg backdrop-blur-sm">
             <Button
               variant="outline"
-              disabled={isProcessing}
+              disabled={isProcessing || !card?.id}
               className="group h-12 w-12 border border-red-400/50 bg-red-50/50 dark:bg-red-950/20 p-0 transition-all hover:bg-red-500 hover:border-red-500 hover:shadow-md md:h-14 md:w-14"
               onClick={() => swipe("left")}
             >
@@ -541,7 +562,7 @@ export default function PokemonMatchPage() {
 
             <Button
               variant="outline"
-              disabled={isProcessing || !card?.id}
+              disabled={isProcessing}
               className="h-10 w-10 border border-border p-0 transition-all hover:shadow-sm"
               onClick={() => refetch()}
             >
@@ -550,7 +571,7 @@ export default function PokemonMatchPage() {
 
             <Button
               variant="outline"
-              disabled={isProcessing}
+              disabled={isProcessing || !card?.id}
               className="group h-12 w-12 border border-green-400/50 bg-green-50/50 dark:bg-green-950/20 p-0 transition-all hover:bg-green-500 hover:border-green-500 hover:shadow-md md:h-14 md:w-14"
               onClick={() => swipe("right")}
             >

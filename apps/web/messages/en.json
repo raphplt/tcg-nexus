@@ -1708,6 +1708,10 @@
     "pointsIn": "pts · on {difficulty}"
   },
   "SmashOrPass": {
+    "loginToSave": "Sign in to save this card to your wishlist.",
+    "loadError": "Could not load a card.",
+    "noCardForFilters": "No card matches these filters.",
+    "retry": "Retry",
     "unknownRarity": "Unknown rarity",
     "swipeHelp": "Swipe to add to your wishlist",
     "refineDiscovery": "Refine discovery",
