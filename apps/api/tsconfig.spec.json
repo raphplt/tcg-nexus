@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "src/*": ["src/*"],
+      "@repo/pokemon-dataset": ["../../packages/pokemon-dataset/src/index.ts"],
+      "@repo/scan-contract": ["../../packages/scan-contract/src/index.ts"]
+    }
+  }
+}
