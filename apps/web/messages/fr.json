@@ -409,7 +409,8 @@
     "toBeConfirmed": "À confirmer",
     "dateToBeConfirmed": "Date à confirmer",
     "locationToBeConfirmed": "Lieu à confirmer",
-    "registerError": "Erreur lors de l'inscription au tournoi :",
+    "registerError": "Erreur lors de l'inscription au tournoi.",
+    "registerSuccess": "Inscription au tournoi confirmée.",
     "date": "Date"
   },
   "Ranking": {
@@ -2669,6 +2670,13 @@
     "noReference": "Aucune référence de prix disponible pour cette carte.",
     "usePrice": "Utiliser ce prix",
     "marketReference": "prix de référence du marché"
+  },
+  "ProfileElo": {
+    "title": "Progression ELO",
+    "elo": "ELO",
+    "overPeriod": "sur {count, plural, =0 {aucun match} one {# match} other {# matchs}}",
+    "empty": "Jouez des matchs classés pour voir votre progression.",
+    "error": "Impossible de charger votre progression ELO."
   },
   "ProfileStats": {
     "title": "Statistiques",

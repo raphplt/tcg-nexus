@@ -161,7 +161,7 @@ export function AddToCollectionDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md overflow-hidden [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderPlus className="w-5 h-5 text-primary" />
@@ -174,8 +174,8 @@ export function AddToCollectionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="min-w-0 space-y-4 py-2">
+          <div className="grid min-w-0 grid-cols-2 gap-2">
             <Button
               variant="outline"
               className="justify-start gap-2 h-auto py-3 px-4 border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-left"
@@ -240,19 +240,22 @@ export function AddToCollectionDialog({
                 </Button>
               </div>
             ) : (
-              <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+              <div className="max-h-56 min-w-0 overflow-y-auto space-y-1.5 pr-1">
                 {customCollections.map((col) => (
                   <div
                     key={col.id}
-                    className="flex items-center justify-between p-2.5 rounded-lg border bg-card/60 hover:bg-accent/40 transition-colors"
+                    className="flex min-w-0 items-center justify-between gap-2 p-2.5 rounded-lg border bg-card/60 hover:bg-accent/40 transition-colors"
                   >
-                    <div className="min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <div className="flex min-w-0 items-center gap-1.5">
                         <p className="font-medium text-sm truncate">
                           {col.name}
                         </p>
                         {col.masterSet && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                          <Badge
+                            variant="secondary"
+                            className="shrink-0 text-[10px] px-1.5 py-0 h-4"
+                          >
                             Master Set
                           </Badge>
                         )}

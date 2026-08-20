@@ -48,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,7 @@ import { FormValues, formSchema } from "../utils";
 
 export default function CreateTournamentPage() {
   const t = useTranslations("CreateTournament");
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -188,10 +189,21 @@ export default function CreateTournamentPage() {
     }
   };
 
-  if (
-    !user?.isPro ||
-    (user.role !== UserRole.ADMIN && user.role !== UserRole.MODERATOR)
-  ) {
+  if (isAuthLoading) {
+    return (
+      <div className="max-w-xl mx-auto mt-20">
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
+
+  const canCreateTournament =
+    !!user &&
+    (user.isPro ||
+      user.role === UserRole.ADMIN ||
+      user.role === UserRole.MODERATOR);
+
+  if (!canCreateTournament) {
     return (
       <div className="max-w-xl mx-auto mt-20">
         <Alert variant="destructive">

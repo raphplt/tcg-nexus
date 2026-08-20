@@ -14,6 +14,7 @@ import {
   Users2,
 } from "lucide-react";
 import React, { useCallback, useState } from "react";
+import toast from "react-hot-toast";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { H1, H2 } from "@/components/Shared/Titles";
@@ -183,11 +184,6 @@ export default function TournamentsPage() {
       return;
     }
 
-    if (!user.player?.id) {
-      router.push(`/tournaments/${tournamentId}`);
-      return;
-    }
-
     setRegisteringTournamentId(tournamentId);
 
     try {
@@ -198,9 +194,12 @@ export default function TournamentsPage() {
           queryKey: ["tournaments", "upcoming", 6],
         }),
       ]);
+      toast.success(t("registerSuccess"));
       router.push(`/tournaments/${tournamentId}`);
-    } catch (registrationError) {
-      console.error(t("registerError"), registrationError);
+    } catch (registrationError: any) {
+      toast.error(
+        registrationError?.response?.data?.message || t("registerError"),
+      );
     } finally {
       setRegisteringTournamentId(null);
     }
@@ -367,7 +366,7 @@ export default function TournamentsPage() {
             </CardContent>
           </Card>
 
-          <Card className="tournament-play-card">
+          <Card className="tournament-play-card text-white">
             <CardContent className="relative z-10 flex h-full flex-col justify-between gap-5 p-5">
               <div>
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white/10">

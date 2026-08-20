@@ -44,12 +44,17 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
     }
   };
 
-  const formatMemberSince = (date: Date) => {
-    return new Date(date).toLocaleDateString(locale, {
+  const formatMemberSince = (date?: Date | string) => {
+    if (!date) return null;
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed.toLocaleDateString(locale, {
       month: "long",
       year: "numeric",
     });
   };
+
+  const memberSince = formatMemberSince(user.createdAt);
 
   return (
     <Card className="p-6 bg-gradient-to-r from-background to-muted/20 border-l-4 border-l-primary shadow-sm">
@@ -81,11 +86,17 @@ export const ProfileHeader = ({ user }: ProfileHeaderProps) => {
                 <Mail className="w-4 h-4" />
                 <span>{user.email}</span>
               </div>
-              <div className="hidden md:block text-muted-foreground/30">•</div>
-              <div className="flex items-center space-x-1.5">
-                <Calendar className="w-4 h-4" />
-                <span>Membre depuis {formatMemberSince(user.createdAt)}</span>
-              </div>
+              {memberSince && (
+                <>
+                  <div className="hidden md:block text-muted-foreground/30">
+                    •
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <Calendar className="w-4 h-4" />
+                    <span>Membre depuis {memberSince}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

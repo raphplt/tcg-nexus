@@ -49,7 +49,7 @@ export class TournamentController {
   constructor(private readonly tournamentService: TournamentService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR, "pro")
   async create(
     @Body() createTournamentDto: CreateTournamentDto,
     @CurrentUser() user: User,

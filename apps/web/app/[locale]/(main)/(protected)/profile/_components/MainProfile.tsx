@@ -9,6 +9,7 @@ import Loader from "@/components/Layout/Loader";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileStats } from "./ProfileStats";
 import { ProfileActivity } from "./ProfileActivity";
+import { ProfileElo } from "./ProfileElo";
 import { ProfileTournaments } from "./ProfileTournaments";
 import { ProfileSales } from "./ProfileSales";
 
@@ -47,6 +48,7 @@ const MainProfile = () => {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
+              <ProfileElo />
               <ProfileActivity activity={dashboard?.activity} />
             </div>
             <div className="space-y-6">

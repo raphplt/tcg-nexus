@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,7 @@ export function PokemonCardsTable({
   const [selectedRarity, setSelectedRarity] = useState<string>("all");
   const [availableRarities, setAvailableRarities] = useState<string[]>([]);
   const [raritiesLoading, setRaritiesLoading] = useState(false);
+  const router = useRouter();
   const [displayFormat, setDisplayFormat] = useState<"grid" | "table">("grid");
 
   const observerRef = React.useRef<HTMLDivElement | null>(null);
@@ -947,25 +948,19 @@ export function PokemonCardsTable({
                     <TableRow
                       key={card.id}
                       className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => router.push(`/marketplace/cards/${card.id}`)}
                     >
                       <TableCell className="py-2">
-                        <Link href={`/marketplace/cards/${card.id}`}>
-                          <Image
-                            src={getCardImage(card, "low")}
-                            alt={card.name || "Pokemon Card"}
-                            width={44}
-                            height={60}
-                            className="object-cover rounded hover:scale-105 transition-transform duration-200"
-                          />
-                        </Link>
+                        <Image
+                          src={getCardImage(card, "low")}
+                          alt={card.name || "Pokemon Card"}
+                          width={44}
+                          height={60}
+                          className="object-cover rounded hover:scale-105 transition-transform duration-200"
+                        />
                       </TableCell>
-                      <TableCell className="font-semibold text-foreground py-2">
-                        <Link
-                          href={`/marketplace/cards/${card.id}`}
-                          className="hover:text-primary transition-colors"
-                        >
-                          {card.name || "N/A"}
-                        </Link>
+                      <TableCell className="font-semibold text-foreground py-2 hover:text-primary transition-colors">
+                        {card.name || "N/A"}
                       </TableCell>
                       <TableCell className="text-muted-foreground py-2">
                         {card.set?.name || "N/A"}
