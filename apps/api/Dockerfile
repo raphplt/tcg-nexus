@@ -27,6 +27,9 @@ ENV TCG_DATA_DIR=/app/data
 
 WORKDIR /app/apps/api
 RUN npm run build
+RUN test -f dist/main.js \
+    || (echo "ERREUR: dist/main.js absent - verifier rootDir/paths de tsconfig" \
+        && ls -R dist | head -40 && exit 1)
 
 EXPOSE 3001
 
