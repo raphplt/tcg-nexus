@@ -1,4 +1,9 @@
-import { useQuery, UseQueryOptions, QueryKey } from "@tanstack/react-query";
+import { QueryKey, UseQueryOptions, useQuery } from "@tanstack/react-query";
+
+type PaginatedQueryOptions<T> = Omit<
+  UseQueryOptions<T>,
+  "queryKey" | "queryFn"
+>;
 
 /**
  * Reusable TanStack Query hook for pagination, filtering, and sorting.
@@ -13,12 +18,12 @@ export function usePaginatedQuery<T = any>(
   key: QueryKey,
   fetcherFn: (params: any) => Promise<T>,
   params: any = {},
-  options?: UseQueryOptions<T>,
+  options?: PaginatedQueryOptions<T>,
 ) {
-  const opts = { ...options, keepPreviousData: true };
   return useQuery<T>({
     queryKey: [...key, params],
     queryFn: () => fetcherFn(params),
-    ...opts,
+    placeholderData: (previousData) => previousData,
+    ...options,
   });
 }

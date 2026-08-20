@@ -25,6 +25,13 @@ import {
 } from "../entities/tournament-registration.entity";
 import { BracketService } from "./bracket.service";
 import { SeedingMethod } from "./seeding.service";
+import { SwissPairingService, toSwissResults } from "./swiss-pairing.service";
+
+export const ORCHESTRATED_TOURNAMENT_TYPES: TournamentType[] = [
+  TournamentType.SINGLE_ELIMINATION,
+  TournamentType.ROUND_ROBIN,
+  TournamentType.SWISS_SYSTEM,
+];
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;
@@ -49,6 +56,7 @@ export class TournamentOrchestrationService {
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
     private bracketService: BracketService,
+    private swissPairingService: SwissPairingService,
     private rankingService: RankingService,
     private matchService: MatchService,
     private dataSource: DataSource,
@@ -153,7 +161,7 @@ export class TournamentOrchestrationService {
         });
       }
 
-      if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+      if (!ORCHESTRATED_TOURNAMENT_TYPES.includes(tournament.type)) {
         throw new BadRequestException(
           "Ce format est suivi sur la plateforme externe de l’organisateur",
         );
@@ -183,11 +191,23 @@ export class TournamentOrchestrationService {
       let playersAdvanced = 0;
       let playersEliminated = 0;
 
-      const result = await this.advanceEliminationRound(
-        tournament,
-        newRound,
-        manager,
-      );
+      let result: {
+        matchesCreated: number;
+        playersAdvanced: number;
+        playersEliminated: number;
+      };
+
+      if (tournament.type === TournamentType.ROUND_ROBIN) {
+        result = this.advanceRoundRobinRound(tournament, newRound);
+      } else if (tournament.type === TournamentType.SWISS_SYSTEM) {
+        result = await this.advanceSwissRound(tournament, newRound, manager);
+      } else {
+        result = await this.advanceEliminationRound(
+          tournament,
+          newRound,
+          manager,
+        );
+      }
       matchesCreated = result.matchesCreated;
       playersAdvanced = result.playersAdvanced;
       playersEliminated = result.playersEliminated;
@@ -461,9 +481,9 @@ export class TournamentOrchestrationService {
       );
     }
 
-    if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+    if (!ORCHESTRATED_TOURNAMENT_TYPES.includes(tournament.type)) {
       throw new BadRequestException(
-        "Seul le format à élimination directe est orchestré par Nexus",
+        "Ce format n'est pas encore orchestré par Nexus",
       );
     }
 
@@ -490,6 +510,119 @@ export class TournamentOrchestrationService {
         `Trop de joueurs pour ce tournoi (${eligiblePlayers.length}/${tournament.maxPlayers})`,
       );
     }
+  }
+
+  /**
+   * Advances a round robin: every round is generated at startup, so there is
+   * nothing to create and nobody to eliminate.
+   */
+  private advanceRoundRobinRound(
+    tournament: Tournament,
+    newRound: number,
+  ): {
+    matchesCreated: number;
+    playersAdvanced: number;
+    playersEliminated: number;
+  } {
+    const nextRoundMatches = tournament.matches.filter(
+      (match) => match.round === newRound,
+    );
+
+    const playersAdvanced = new Set(
+      nextRoundMatches.flatMap((match) =>
+        [match.playerA?.id, match.playerB?.id].filter(
+          (id): id is number => typeof id === "number",
+        ),
+      ),
+    ).size;
+
+    return { matchesCreated: 0, playersAdvanced, playersEliminated: 0 };
+  }
+
+  /**
+   * Pairs and creates the next Swiss round from the current standings.
+   *
+   * Dropped players are excluded from the pairings; an odd field produces a
+   * bye, stored as an already-won match.
+   */
+  private async advanceSwissRound(
+    tournament: Tournament,
+    newRound: number,
+    manager: EntityManager,
+  ): Promise<{
+    matchesCreated: number;
+    playersAdvanced: number;
+    playersEliminated: number;
+  }> {
+    if (newRound > (tournament.totalRounds || 0)) {
+      return { matchesCreated: 0, playersAdvanced: 0, playersEliminated: 0 };
+    }
+
+    const registrations = (tournament.registrations ?? []).filter(
+      (registration) => registration.status === RegistrationStatus.CONFIRMED,
+    );
+
+    const playerIds = registrations
+      .map((registration) => registration.player?.id)
+      .filter((id): id is number => typeof id === "number");
+
+    const droppedPlayerIds = registrations
+      .filter((registration) => registration.droppedAt)
+      .map((registration) => registration.player.id);
+
+    const standings = this.swissPairingService.computeStandings(
+      playerIds,
+      toSwissResults(tournament.matches),
+    );
+
+    const pairings = this.swissPairingService.pairNextRound(
+      standings,
+      droppedPlayerIds,
+    );
+
+    let matchesCreated = 0;
+
+    for (const pairing of pairings) {
+      if (pairing.isBye) {
+        const byeMatch = manager.create(Match, {
+          tournament: { id: tournament.id } as Tournament,
+          playerA: { id: pairing.playerAId } as any,
+          winner: { id: pairing.playerAId } as any,
+          round: newRound,
+          phase: MatchPhase.QUALIFICATION,
+          status: MatchStatus.FINISHED,
+          isBye: true,
+          notes: "Qualification automatique (bye)",
+          scheduledDate: new Date(),
+          finishedAt: new Date(),
+        });
+        await manager.save(Match, byeMatch);
+        matchesCreated++;
+        continue;
+      }
+
+      await this.matchService.create({
+        tournamentId: tournament.id,
+        playerAId: pairing.playerAId,
+        playerBId: pairing.playerBId!,
+        round: newRound,
+        phase: MatchPhase.QUALIFICATION,
+        scheduledDate: new Date(),
+        notes: `Ronde ${newRound} - Système suisse`,
+      });
+      matchesCreated++;
+    }
+
+    const playersAdvanced = pairings.reduce(
+      (count, pairing) => count + (pairing.isBye ? 1 : 2),
+      0,
+    );
+
+    return {
+      matchesCreated,
+      playersAdvanced,
+      playersEliminated: droppedPlayerIds.length,
+    };
   }
 
   /**
@@ -593,6 +726,13 @@ export class TournamentOrchestrationService {
           reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
       );
       return activeRegistrations.length <= 1;
+    }
+
+    if (
+      tournament.type === TournamentType.ROUND_ROBIN ||
+      tournament.type === TournamentType.SWISS_SYSTEM
+    ) {
+      return currentRound > (tournament.totalRounds || 0);
     }
 
     return false;

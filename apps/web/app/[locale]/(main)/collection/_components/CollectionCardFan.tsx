@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import type { CSSProperties } from "react";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { cn } from "@/lib/utils";
 import type { PokemonCardType } from "@/types/cardPokemon";
 import { getCardImage } from "@/utils/images";
-import { cn } from "@/lib/utils";
 
 /** Spacing and tilt between two neighbouring cards of the fan. */
 const FAN_STEP_X = 46;
@@ -65,14 +65,13 @@ export function CollectionCardFan({
       {visibleCards.map((card, index) => (
         <div
           key={card.id}
-          className="collection-fan-card h-[92px] w-[66px] overflow-hidden rounded-lg border border-border/60 bg-card shadow-md"
+          className="collection-fan-card relative h-[92px] w-[66px] overflow-hidden rounded-lg border border-border/60 bg-card shadow-md"
           style={fanStyle(index, visibleCards.length)}
         >
-          <Image
+          <SmartImage
             src={getCardImage(card, "low")}
+            fallbackSrc="/images/carte-pokemon-dos.jpg"
             alt={card.name ?? emptyLabel}
-            width={132}
-            height={184}
             className="h-full w-full object-cover"
           />
         </div>

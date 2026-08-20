@@ -54,6 +54,13 @@ export class TournamentRegistration {
   @Column({ nullable: true })
   eliminatedRound: number;
 
+  /** Mid-tournament drop: the player is no longer paired. */
+  @Column({ type: "timestamp", nullable: true })
+  droppedAt: Date | null;
+
+  @Column({ nullable: true })
+  droppedRound: number | null;
+
   @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   paidAmount: number;
 

@@ -58,16 +58,16 @@ reçue à cette chaîne exacte (`csrf-origin.middleware.ts`), un `http://` ferai
 - `DATABASE_SSL_REJECT_UNAUTHORIZED` / `DATABASE_SSL_CA` — sans effet tant que
   `DATABASE_SSL=false`.
 
-### Limite connue du build web
+### Variables `NEXT_PUBLIC_*` et build web
 
-`apps/web/Dockerfile` ne déclare aucun `ARG` : les variables `NEXT_PUBLIC_*` de
-Coolify ne sont pas présentes pendant `npm run build`, alors que Next.js les
-inline à ce moment-là pour le code client. Les usages côté serveur (sitemap,
-métadonnées) fonctionnent au runtime, mais un composant client (Stripe, Google
-Maps) peut recevoir `undefined`.
+Next.js inline les `NEXT_PUBLIC_*` dans le bundle client au moment du
+`npm run build` : les fournir uniquement au runtime (`env_file`) laisse les
+composants clients (Stripe, Google Maps) avec `undefined`.
 
-> NOTE: correctif si le symptôme apparaît — déclarer les `ARG`/`ENV` dans
-> `apps/web/Dockerfile` et un bloc `build.args` dans `docker-compose.deploy.yml`.
+`apps/web/Dockerfile` déclare donc un `ARG`/`ENV` par variable, et
+`docker-compose.deploy.yml` les passe via `build.args`. Toute nouvelle
+`NEXT_PUBLIC_*` doit être ajoutée **aux deux endroits**, sinon elle sera vide en
+production.
 
 ---
 

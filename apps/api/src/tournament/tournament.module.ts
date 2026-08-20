@@ -29,6 +29,7 @@ import { TournamentStateService } from "./services/tournament-state.service";
 import { TournamentController } from "./tournament.controller";
 import { TournamentService } from "./tournament.service";
 import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
+import { SwissPairingModule } from "./swiss-pairing.module";
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ExternalTournamentSyncService } from "./services/external-tournament-sy
     ]),
     RankingModule,
     MatchModule,
+    SwissPairingModule,
   ],
   controllers: [TournamentController],
   providers: [

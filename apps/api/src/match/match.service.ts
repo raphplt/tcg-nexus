@@ -21,6 +21,10 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
+import {
+  SwissPairingService,
+  toSwissResults,
+} from "../tournament/services/swiss-pairing.service";
 import { CreateMatchDto } from "./dto/create-match.dto";
 import {
   ReportScoreDto,
@@ -111,6 +115,7 @@ export class MatchService {
     @InjectRepository(Deck)
     private readonly deckRepository: Repository<Deck>,
     private readonly rankingService: RankingService,
+    private readonly swissPairingService: SwissPairingService,
   ) {}
 
   /**
@@ -1129,6 +1134,14 @@ export class MatchService {
 
     // If all matches in current round are complete, attempt round progression
     if (unfinishedMatches.length === 0) {
+      if (tournament.type === TournamentType.ROUND_ROBIN) {
+        return this.advanceRoundRobin(tournament, manager);
+      }
+
+      if (tournament.type === TournamentType.SWISS_SYSTEM) {
+        return this.advanceSwiss(tournament, manager);
+      }
+
       // Automatically propagate winners in elimination brackets
       if (
         tournament.type === TournamentType.SINGLE_ELIMINATION ||
@@ -1141,6 +1154,138 @@ export class MatchService {
         );
       }
     }
+
+    return false;
+  }
+
+  /**
+   * Pairs and opens the next Swiss round.
+   *
+   * Pairings depend on the standings, so they can only be computed once the
+   * previous round has been fully played.
+   *
+   * @returns True when the tournament has just finished.
+   */
+  private async advanceSwiss(
+    tournament: Tournament,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const currentRound = tournament.currentRound || 1;
+
+    if (currentRound >= (tournament.totalRounds || 0)) {
+      tournament.status = TournamentStatus.FINISHED;
+      tournament.isFinished = true;
+      await manager.save(tournament);
+      return true;
+    }
+
+    const nextRound = currentRound + 1;
+
+    const alreadyPaired = await manager.count(Match, {
+      where: { tournament: { id: tournament.id }, round: nextRound },
+    });
+
+    if (alreadyPaired === 0) {
+      const registrations = await manager.find(TournamentRegistration, {
+        where: {
+          tournament: { id: tournament.id },
+          status: RegistrationStatus.CONFIRMED,
+        },
+        relations: ["player"],
+      });
+
+      const playedMatches = await manager.find(Match, {
+        where: { tournament: { id: tournament.id } },
+        relations: ["playerA", "playerB", "winner"],
+      });
+
+      const standings = this.swissPairingService.computeStandings(
+        registrations
+          .map((registration) => registration.player?.id)
+          .filter((id): id is number => typeof id === "number"),
+        toSwissResults(playedMatches),
+      );
+
+      const droppedPlayerIds = registrations
+        .filter((registration) => registration.droppedAt)
+        .map((registration) => registration.player.id);
+
+      const pairings = this.swissPairingService.pairNextRound(
+        standings,
+        droppedPlayerIds,
+      );
+
+      for (const pairing of pairings) {
+        const newMatch = manager.create(Match, {
+          tournament,
+          playerA: { id: pairing.playerAId } as Player,
+          playerB: pairing.isBye
+            ? undefined
+            : ({ id: pairing.playerBId } as Player),
+          winner: pairing.isBye
+            ? ({ id: pairing.playerAId } as Player)
+            : undefined,
+          round: nextRound,
+          phase: MatchPhase.QUALIFICATION,
+          status: pairing.isBye ? MatchStatus.FINISHED : MatchStatus.SCHEDULED,
+          isBye: pairing.isBye,
+          notes: pairing.isBye
+            ? "Qualification automatique (bye)"
+            : `Ronde ${nextRound} - Système suisse`,
+          scheduledDate: new Date(),
+          finishedAt: pairing.isBye ? new Date() : undefined,
+        });
+
+        const savedMatch = await manager.save(Match, newMatch);
+        if (!pairing.isBye) {
+          await this.createOnlineSessionWithManager(savedMatch, manager);
+        }
+      }
+    }
+
+    tournament.currentRound = nextRound;
+    await manager.save(tournament);
+
+    return false;
+  }
+
+  /**
+   * Opens the next round of a round robin.
+   *
+   * Every round is created when the tournament starts, so this only advances
+   * the counter and prepares the online sessions, or closes the tournament
+   * after the last round.
+   *
+   * @returns True when the tournament has just finished.
+   */
+  private async advanceRoundRobin(
+    tournament: Tournament,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const currentRound = tournament.currentRound || 1;
+
+    if (currentRound >= (tournament.totalRounds || 0)) {
+      tournament.status = TournamentStatus.FINISHED;
+      tournament.isFinished = true;
+      await manager.save(tournament);
+      return true;
+    }
+
+    const nextRound = currentRound + 1;
+    const nextRoundMatches = await manager.find(Match, {
+      where: {
+        tournament: { id: tournament.id },
+        round: nextRound,
+        status: MatchStatus.SCHEDULED,
+      },
+    });
+
+    for (const nextMatch of nextRoundMatches) {
+      await this.createOnlineSessionWithManager(nextMatch, manager);
+    }
+
+    tournament.currentRound = nextRound;
+    await manager.save(tournament);
 
     return false;
   }

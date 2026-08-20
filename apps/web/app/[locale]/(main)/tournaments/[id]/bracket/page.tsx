@@ -24,6 +24,7 @@ import { useBracket } from "@/hooks/useBracket";
 import { useTournament } from "@/hooks/useTournament";
 import { tournamentService } from "@/services/tournament.service";
 import { EliminationBracket } from "./_components/EliminationBracket";
+import { RoundsSchedule } from "./_components/RoundsSchedule";
 
 export default function BracketPage() {
   const t = useTranslations("Bracket");
@@ -261,13 +262,15 @@ export default function BracketPage() {
                 />
               )}
 
-              {(isSwiss || isRoundRobin) && (
-                <div className="py-12 text-center">
-                  <p className="font-medium">{t("externalRoundTracking")}</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {t("notOrchestrated")}
-                  </p>
-                </div>
+              {(isRoundRobin || isSwiss) && (
+                <RoundsSchedule
+                  bracket={bracket}
+                  currentRound={progress?.currentRound}
+                  onMatchClick={(matchId) =>
+                    router.push(`/tournaments/${id}/matches/${matchId}`)
+                  }
+                  interactive={true}
+                />
               )}
             </CardContent>
           </Card>

@@ -12,6 +12,7 @@ import { UpdateRankingDto } from "./dto/update-ranking.dto";
 import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
 import { Ranking } from "./entities/ranking.entity";
 import { RankingService } from "./ranking.service";
+import { SwissPairingService } from "../tournament/services/swiss-pairing.service";
 
 describe("RankingService", () => {
   let service: RankingService;
@@ -77,6 +78,7 @@ describe("RankingService", () => {
           provide: getRepositoryToken(RankedMatchHistory),
           useValue: mockRankedHistoryRepo,
         },
+        SwissPairingService,
       ],
     }).compile();
 

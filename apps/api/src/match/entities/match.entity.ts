@@ -90,6 +90,15 @@ export class Match {
   @Column({ nullable: true })
   notes: string;
 
+  /**
+   * Marks an automatic qualification: the player clears the round unopposed.
+   *
+   * Distinct from an ordinary win, because a bye must stay out of the Swiss
+   * tie-breakers and of the match statistics.
+   */
+  @Column({ default: false })
+  isBye: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

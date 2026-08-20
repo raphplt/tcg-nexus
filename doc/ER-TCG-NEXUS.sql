@@ -1,15 +1,6 @@
 -- =============================================================
 -- TCG Nexus - schema relationnel (DDL PostgreSQL)
 -- Genere depuis les entites TypeORM de apps/api/src/**/*.entity.ts
---
--- Usage Lucidchart :
---   + > Importer des donnees > Base de donnees > PostgreSQL
---   puis coller l'integralite de ce fichier.
---
--- NOTE : les colonnes typees 'enum' cote TypeORM sont rendues ici en
---        VARCHAR(64), avec la liste des valeurs en commentaire de fin de ligne.
---        Cela evite les CREATE TYPE et les collisions de noms d'enums
---        homonymes entre modules (ex. PaymentMethod marketplace vs tournoi).
 -- =============================================================
 
 -- -------------------------------------------------------------
@@ -1064,4 +1055,3 @@ ALTER TABLE "ranking" ADD CONSTRAINT "UQ_ranking_tournamentId_playerId" UNIQUE (
 ALTER TABLE "statistics" ADD CONSTRAINT "UQ_statistics_playerId_matchId" UNIQUE ("playerId", "matchId");
 ALTER TABLE "user_cart" ADD CONSTRAINT "UQ_user_cart_user_id" UNIQUE ("user_id");
 ALTER TABLE "card" ADD CONSTRAINT "UQ_card_game_tcgDexId" UNIQUE ("game", "tcgDexId");
-

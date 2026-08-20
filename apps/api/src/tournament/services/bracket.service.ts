@@ -15,6 +15,7 @@ import { Player } from "../../player/entities/player.entity";
 import { Tournament, TournamentType } from "../entities/tournament.entity";
 import { RegistrationStatus } from "../entities/tournament-registration.entity";
 import { SeededPlayer, SeedingMethod, SeedingService } from "./seeding.service";
+import { SwissPairingService } from "./swiss-pairing.service";
 
 export interface BracketNode {
   matchId?: number;
@@ -63,6 +64,7 @@ export class BracketService {
     @InjectRepository(Match)
     private matchRepository: Repository<Match>,
     private seedingService: SeedingService,
+    private swissPairingService: SwissPairingService,
   ) {}
 
   /**
@@ -90,12 +92,6 @@ export class BracketService {
       });
     }
 
-    if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
-      throw new BadRequestException(
-        "Seul le format à élimination directe est orchestré par Nexus",
-      );
-    }
-
     const confirmedPlayers = tournament.registrations
       .filter(
         (reg) =>
@@ -116,7 +112,7 @@ export class BracketService {
       options.seedingMethod ?? SeedingMethod.RANDOM,
     );
 
-    const bracketStructure = await this.generateSingleEliminationBracket(
+    const bracketStructure = await this.buildBracketForType(
       seededPlayers,
       tournament,
       options.manager,
@@ -127,6 +123,156 @@ export class BracketService {
     await tournamentRepository.save(tournament);
 
     return bracketStructure;
+  }
+
+  /**
+   * Routes to the generator matching the tournament format.
+   */
+  private buildBracketForType(
+    players: SeededPlayer[],
+    tournament: Tournament,
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
+    switch (tournament.type) {
+      case TournamentType.SINGLE_ELIMINATION:
+        return this.generateSingleEliminationBracket(
+          players,
+          tournament,
+          manager,
+        );
+
+      case TournamentType.ROUND_ROBIN:
+        return this.generateRoundRobinBracket(players, tournament, manager);
+
+      case TournamentType.SWISS_SYSTEM:
+        return this.generateSwissBracket(players, tournament, manager);
+
+      default:
+        throw new BadRequestException(
+          "Ce format n'est pas encore orchestré par Nexus",
+        );
+    }
+  }
+
+  /**
+   * Generates every round of a round robin using the circle method.
+   *
+   * Each player faces all the others exactly once. With an odd field, a dummy
+   * opponent is added: whoever faces it receives a bye for that round.
+   */
+  private async generateRoundRobinBracket(
+    players: SeededPlayer[],
+    tournament: Tournament,
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
+    const slots: (SeededPlayer | undefined)[] = [...players];
+    if (slots.length % 2 !== 0) {
+      slots.push(undefined);
+    }
+
+    const size = slots.length;
+    const totalRounds = size - 1;
+    const matchesPerRound = size / 2;
+
+    // The first player stays fixed while the others rotate by one per round.
+    const fixedPlayer = slots[0];
+    let rotating = slots.slice(1);
+
+    const rounds: { index: number; matches: BracketNode[] }[] = [];
+
+    for (let round = 1; round <= totalRounds; round++) {
+      const arrangement = [fixedPlayer, ...rotating];
+      const matches: BracketNode[] = [];
+
+      for (let position = 0; position < matchesPerRound; position++) {
+        const home = arrangement[position];
+        const away = arrangement[size - 1 - position];
+
+        // Alternate the A/B side so the same player is not always playerA.
+        const swap = (round + position) % 2 === 1;
+        const playerA = swap ? away : home;
+        const playerB = swap ? home : away;
+
+        matches.push({
+          round,
+          position,
+          phase: MatchPhase.QUALIFICATION,
+          playerA: playerA ? this.toBracketPlayer(playerA) : undefined,
+          playerB: playerB ? this.toBracketPlayer(playerB) : undefined,
+        });
+      }
+
+      rounds.push({ index: round, matches });
+
+      rotating = [rotating[rotating.length - 1], ...rotating.slice(0, -1)];
+    }
+
+    await this.createMatchesFromBracket(tournament, rounds, manager);
+
+    return {
+      type: TournamentType.ROUND_ROBIN,
+      totalRounds,
+      rounds,
+    };
+  }
+
+  /**
+   * Generates the opening round of a Swiss tournament.
+   *
+   * Unlike the other formats, later rounds are not known upfront: they depend
+   * on the results and are paired on the fly by {@link SwissPairingService}.
+   * Only the opening round is created here, crossing the top half of the
+   * seeding with the bottom half.
+   */
+  private async generateSwissBracket(
+    players: SeededPlayer[],
+    tournament: Tournament,
+    manager?: EntityManager,
+  ): Promise<BracketStructure> {
+    const totalRounds = this.swissPairingService.recommendedRounds(
+      players.length,
+    );
+
+    const half = Math.ceil(players.length / 2);
+    const topHalf = players.slice(0, half);
+    const bottomHalf = players.slice(half);
+
+    const matches: BracketNode[] = topHalf.map((player, position) => {
+      const opponent = bottomHalf[position];
+
+      return {
+        round: 1,
+        position,
+        phase: MatchPhase.QUALIFICATION,
+        playerA: this.toBracketPlayer(player),
+        playerB: opponent ? this.toBracketPlayer(opponent) : undefined,
+      };
+    });
+
+    const rounds = [{ index: 1, matches }];
+
+    await this.createMatchesFromBracket(tournament, rounds, manager);
+
+    return {
+      type: TournamentType.SWISS_SYSTEM,
+      totalRounds,
+      rounds,
+    };
+  }
+
+  /**
+   * Projects a seeded player onto the representation used by the bracket.
+   */
+  private toBracketPlayer(player: SeededPlayer): {
+    id: number;
+    name: string;
+    seed?: number;
+  } {
+    return {
+      id: player.id,
+      name: `${player.user?.firstName || ""} ${player.user?.lastName || ""}`.trim(),
+      seed: player.seed,
+    };
   }
 
   /**
@@ -255,6 +401,7 @@ export class BracketService {
             round: node.round,
             phase: node.phase,
             scheduledDate: new Date(tournament.startDate),
+            isBye,
             notes: isBye
               ? "Qualification automatique (bye)"
               : "Match généré automatiquement",

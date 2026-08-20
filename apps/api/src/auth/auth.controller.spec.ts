@@ -91,7 +91,8 @@ describe("AuthController", () => {
 
     expect(res.cookie).toHaveBeenCalledTimes(2);
     expect(cookies[0][2].domain).toBe("example.com");
-    // rememberMe=true → cookie refreshToken doit utiliser le TTL refresh
+    expect(cookies[0][2].maxAge).toBe(ACCESS_TTL);
+    // Persistent refresh cookies use the refresh-token TTL.
     expect(cookies[1][2].maxAge).toBe(REFRESH_TTL);
     process.env.FRONTEND_URL = prevFrontend;
     expect(res.json).toHaveBeenCalledWith({
@@ -118,7 +119,8 @@ describe("AuthController", () => {
     await controller.register({} as any, res, req);
 
     expect(res.cookie).toHaveBeenCalledTimes(2);
-    // rememberMe=false → refreshToken cookie should be a session cookie (no maxAge)
+    expect(cookies[0][2].maxAge).toBe(ACCESS_TTL);
+    // Without remember-me, the refresh token remains a browser-session cookie.
     expect(cookies[1][2].maxAge).toBeUndefined();
     expect(res.json).toHaveBeenCalledWith({
       user: { id: 2, email: "b" },

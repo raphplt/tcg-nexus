@@ -8,6 +8,10 @@ import {
   TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
+import {
+  SwissPairingService,
+  toSwissResults,
+} from "../tournament/services/swiss-pairing.service";
 import { User } from "../user/entities/user.entity";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
@@ -61,6 +65,7 @@ export class RankingService {
     private matchRepository: Repository<Match>,
     @InjectRepository(RankedMatchHistory)
     private rankedHistoryRepository: Repository<RankedMatchHistory>,
+    private swissPairingService: SwissPairingService,
   ) {}
 
   /**
@@ -444,11 +449,29 @@ export class RankingService {
       rankings.push(ranking);
     }
 
-    rankings.sort((a, b) => {
-      if (a.points !== b.points) return b.points - a.points;
-      if (a.winRate !== b.winRate) return b.winRate - a.winRate;
-      return b.wins - a.wins;
-    });
+    if (tournament.type === TournamentType.SWISS_SYSTEM) {
+      // Swiss standings are broken by the official tie-breakers (OMW%, GW%,
+      // OGW%) rather than by a plain win ratio.
+      const swissStandings = this.swissPairingService.computeStandings(
+        playerIds,
+        toSwissResults(tournament.matches),
+      );
+      const swissOrder = new Map(
+        swissStandings.map((standing, index) => [standing.playerId, index]),
+      );
+
+      rankings.sort(
+        (a, b) =>
+          (swissOrder.get(a.player.id) ?? Number.MAX_SAFE_INTEGER) -
+          (swissOrder.get(b.player.id) ?? Number.MAX_SAFE_INTEGER),
+      );
+    } else {
+      rankings.sort((a, b) => {
+        if (a.points !== b.points) return b.points - a.points;
+        if (a.winRate !== b.winRate) return b.winRate - a.winRate;
+        return b.wins - a.wins;
+      });
+    }
 
     rankings.forEach((ranking, index) => {
       ranking.rank = index + 1;
@@ -581,6 +604,16 @@ export class RankingService {
     tournament.matches
       .filter((match) => match.finishedAt) // Process finished matches only
       .forEach((match) => {
+        // A bye counts as a win: the player clears the round unopposed.
+        if (match.isBye && match.playerA) {
+          const byeStats = playerStats.get(match.playerA.id);
+          if (byeStats) {
+            byeStats.wins++;
+            byeStats.points += pointsSystem.win;
+          }
+          return;
+        }
+
         if (!match.playerA || !match.playerB) return;
 
         const playerAStats = playerStats.get(match.playerA.id)!;

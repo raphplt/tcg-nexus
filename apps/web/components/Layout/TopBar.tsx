@@ -9,8 +9,8 @@ import {
   ShoppingCart,
   User,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import CartDropdown from "@/components/Marketplace/CartDropdown";
 import { CurrencySelector } from "@/components/Shared/CurrencySelector";
@@ -119,28 +119,48 @@ export function TopBar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center">
+                <Link
+                  href="/profile"
+                  prefetch={false}
+                  className="flex items-center"
+                >
                   <User className="mr-2 h-4 w-4" /> {t("profile")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="flex items-center">
+                <Link
+                  href="/settings"
+                  prefetch={false}
+                  className="flex items-center"
+                >
                   <Settings className="mr-2 h-4 w-4" /> {t("settings")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/cart" className="flex items-center">
+                <Link
+                  href="/cart"
+                  prefetch={false}
+                  className="flex items-center"
+                >
                   <ShoppingCart className="mr-2 h-4 w-4" /> {t("cart")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/orders" className="flex items-center">
+                <Link
+                  href="/orders"
+                  prefetch={false}
+                  className="flex items-center"
+                >
                   <ClipboardList className="mr-2 h-4 w-4" /> {t("orders")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/marketplace/sales" className="flex items-center">
+                <Link
+                  href="/marketplace/sales"
+                  prefetch={false}
+                  className="flex items-center"
+                >
                   <Package className="mr-2 h-4 w-4" /> {t("sales")}
                 </Link>
               </DropdownMenuItem>
@@ -148,7 +168,11 @@ export function TopBar() {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center">
+                    <Link
+                      href="/admin"
+                      prefetch={false}
+                      className="flex items-center"
+                    >
                       <Shield className="mr-2 h-4 w-4" /> {t("admin")}
                     </Link>
                   </DropdownMenuItem>

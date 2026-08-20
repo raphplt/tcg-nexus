@@ -2966,5 +2966,14 @@
     "VALIDATION_ERROR": "Certaines informations sont invalides.",
     "TOO_MANY_REQUESTS": "Trop de requêtes, réessayez dans un instant.",
     "INTERNAL_ERROR": "Une erreur interne est survenue."
+  },
+  "RoundsSchedule": {
+    "round": "Ronde {index}",
+    "current": "En cours",
+    "bye": "Exempt",
+    "empty": "Aucune ronde disponible",
+    "progress": "Ronde {current} sur {total}",
+    "pendingPairings": "Appariements calculés à la fin de la ronde en cours",
+    "remainingRounds": "{count} rondes restantes"
   }
 }
