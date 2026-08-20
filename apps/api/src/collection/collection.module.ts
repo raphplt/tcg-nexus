@@ -1,4 +1,5 @@
 import { CardModule } from "src/card/card.module";
+import { CatalogLocalizationModule } from "src/translation/catalog-localization.module";
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "../card/entities/card.entity";
@@ -19,6 +20,7 @@ import { Collection } from "./entities/collection.entity";
       PokemonSet,
     ]),
     CardModule,
+    CatalogLocalizationModule,
   ],
   controllers: [CollectionController],
   providers: [CollectionService],

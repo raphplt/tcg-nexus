@@ -1,39 +1,32 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Heart, Layers, Plus, Search, Trophy } from "lucide-react";
 import { collectionService } from "@/services/collection.service";
 import { Collection } from "@/types/collection";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/Layout/PageWrapper";
-import { H1 } from "@/components/Shared/Titles";
 import { useRouter } from "@/i18n/navigation";
-import {
-  Search,
-  Plus,
-  Heart,
-  Eye,
-  Users,
-  Lock,
-  Trophy,
-  Layers,
-  Sparkles,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { getCollectionTitle } from "@/utils/collection";
 import CreateCollection from "./_components/CreateCollection";
 import { CreateMasterSetDialog } from "./_components/CreateMasterSetDialog";
-import Image from "next/image";
-import { getCardImage } from "@/utils/images";
+import { CollectionGridCard } from "./_components/CollectionGridCard";
+import { CollectionsOverview } from "./_components/CollectionsOverview";
+
+type CollectionFilter = "all" | "masterSets" | "personal";
+
+const FILTERS: CollectionFilter[] = ["all", "masterSets", "personal"];
 
 const Page = () => {
   const t = useTranslations("Collections");
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [filter, setFilter] = useState<CollectionFilter>("all");
   const { user } = useAuth();
   const router = useRouter();
 
@@ -65,276 +58,196 @@ const Page = () => {
     fetchCollections();
   }, [user?.id]);
 
-  const filteredCollections = collections.filter(
-    (collection) =>
-      collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (collection.description &&
-        collection.description
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())),
-  );
+  const filteredCollections = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return collections;
+
+    return collections.filter((collection) => {
+      const haystack = [
+        getCollectionTitle(collection),
+        collection.name,
+        collection.description ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [collections, searchQuery]);
 
   const masterSets = filteredCollections.filter((c) => !!c.masterSet);
-  const regularCollections = filteredCollections.filter((c) => !c.masterSet);
+  const personalCollections = filteredCollections.filter((c) => !c.masterSet);
+
+  const showMasterSets = filter === "all" || filter === "masterSets";
+  const showPersonal = filter === "all" || filter === "personal";
+  const hasResults =
+    (showMasterSets && masterSets.length > 0) ||
+    (showPersonal && personalCollections.length > 0);
 
   const refreshCollections = async () => {
     await fetchCollections();
   };
 
-  if (loading) {
-    return (
-      <PageWrapper gradient="secondary">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">{t("loading")}</p>
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
-  const onPressCardSwipe = () => {
-    router.push("/pokemon/mini-games/smash-or-pass");
-  };
-
-  const renderCollectionCard = (
-    collection: Collection,
-    isMasterSet: boolean = false,
-  ) => {
-    const ownedCount = collection.items?.filter((i) => (i.quantity || 0) > 0).length || 0;
-    const totalSetCards = collection.masterSet?.cardCount?.total || collection.items?.length || 0;
-    const completionPercent =
-      totalSetCards > 0
-        ? Math.min(100, Math.round((ownedCount / totalSetCards) * 100))
-        : 0;
-
-    const image1 = getCardImage(collection.items?.[0]?.pokemonCard);
-    const image2 = getCardImage(collection.items?.[1]?.pokemonCard);
-    const image3 = getCardImage(collection.items?.[2]?.pokemonCard);
-
-    return (
-      <Card
-        key={collection.id}
-        className="collection-grid-item collection-card group cursor-pointer bg-card/80 backdrop-blur-sm border-2 border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 rounded-xl overflow-hidden"
-        onClick={() => router.push(`/collection/${collection.id}`)}
-      >
-        <div className="collection-card-preview relative h-36 bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
-          {collection.items && collection.items.length > 0 ? (
-            <div className="flex gap-2 justify-center items-center h-full">
-              <Image
-                src={image1}
-                alt={collection.items[0]?.pokemonCard?.name || t("pokemonCard")}
-                width={100}
-                height={100}
-                className="object-contain rounded-lg shadow-lg w-16 h-20"
-              />
-              <Image
-                src={image2}
-                alt={collection.items[1]?.pokemonCard?.name || t("pokemonCard")}
-                width={100}
-                height={100}
-                className="object-contain rounded-lg shadow-lg w-16 h-20"
-              />
-              <Image
-                src={image3}
-                alt={collection.items[2]?.pokemonCard?.name || t("pokemonCard")}
-                width={100}
-                height={100}
-                className="object-contain rounded-lg shadow-lg w-16 h-20"
-              />
-            </div>
-          ) : (
-            <div className="flex gap-2 justify-center items-center h-full">
-              <div className="card-preview-placeholder w-12 h-16 bg-primary/20 rounded border-2 border-dashed border-primary/40 flex items-center justify-center">
-                <Heart className="h-4 w-4 text-primary/60" />
-              </div>
-              <div className="card-preview-placeholder w-12 h-16 bg-secondary/20 rounded border-2 border-dashed border-secondary/40 flex items-center justify-center">
-                <Heart className="h-4 w-4 text-secondary/60" />
-              </div>
-              <div className="card-preview-placeholder w-12 h-16 bg-accent/20 rounded border-2 border-dashed border-accent/40 flex items-center justify-center">
-                <Heart className="h-4 w-4 text-accent/60" />
-              </div>
-            </div>
-          )}
-          <div className="absolute top-2 right-2 flex items-center gap-1.5">
-            {isMasterSet ? (
-              <Badge
-                variant="default"
-                className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-sm"
-              >
-                <Trophy className="h-3 w-3 mr-1" />
-                {completionPercent}% complété
-              </Badge>
-            ) : (
-              <Badge
-                variant={collection.isPublic ? "default" : "secondary"}
-                className="text-xs"
-              >
-                <Eye className="h-3 w-3 mr-1" />
-                {collection.isPublic ? t("public") : t("private")}
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-            {collection.name}
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="pt-0">
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-            {collection.description || t("noDescription")}
-          </p>
-
-          {isMasterSet ? (
-            <div className="space-y-2 mb-4 bg-muted/40 p-2.5 rounded-lg border border-border/40">
-              <div className="flex justify-between items-center text-xs font-medium">
-                <span className="text-muted-foreground">Progression du set</span>
-                <span className="tabular-nums font-bold text-primary">
-                  {ownedCount} / {totalSetCards} cartes
-                </span>
-              </div>
-              <Progress value={completionPercent} className="h-2" />
-            </div>
-          ) : (
-            <div className="space-y-1.5 mb-4">
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Lock className="h-3 w-3 mr-1" />
-                <span>{collection.isPublic ? t("public") : t("private")}</span>
-              </div>
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Users className="h-3 w-3 mr-1" />
-                <span>
-                  {t("cardCount", { count: collection.items?.length || 0 })}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full border-primary/30 hover:border-primary hover:bg-primary/5 transition-all duration-200"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/collection/${collection.id}`);
-            }}
-          >
-            <Eye className="mr-2 h-3 w-3" />
-            {isMasterSet ? "Ouvrir le Master Set" : t("view")}
-          </Button>
-        </CardContent>
-      </Card>
-    );
+  const filterCount = (value: CollectionFilter) => {
+    if (value === "masterSets") return masterSets.length;
+    if (value === "personal") return personalCollections.length;
+    return filteredCollections.length;
   };
 
   return (
     <PageWrapper gradient="secondary">
-      <div className="text-center mb-10">
-        <H1 className="mb-4" variant="primary">
-          {t("title")}
-        </H1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-          {t("subtitle")}
-        </p>
-
-        <div className="flex flex-wrap gap-4 justify-center items-center mb-8">
-          <Button
-            variant="default"
-            size="lg"
-            className="discovery-button bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
-            onClick={onPressCardSwipe}
-          >
-            <Heart className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-            Card Discovery
-            <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">
-              Nouveau
-            </span>
-          </Button>
-
-          <CreateMasterSetDialog
-            existingCollections={collections}
-            onCreated={refreshCollections}
-          />
-
-          <CreateCollection onCollectionCreated={refreshCollections} />
-        </div>
-
-        <div className="max-w-md mx-auto relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder={t("searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input pl-10 pr-4 py-3 border-2 border-border/50 focus:border-primary/50 rounded-lg bg-background/80 backdrop-blur-sm"
-          />
-        </div>
-      </div>
-
-      {filteredCollections.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-12 max-w-md mx-auto border border-border/50">
-            <div className="empty-state-icon w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <Plus className="h-8 w-8 text-muted-foreground" />
+      <div className="space-y-6">
+        <section className="tcg-surface tcg-surface--hero space-y-5 p-5 md:p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                {t("eyebrow")}
+              </p>
+              <h1 className="font-heading text-3xl font-black leading-tight text-foreground md:text-[2.5rem]">
+                {t("title")}
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+                {t("subtitle")}
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-2">
+
+            <div className="flex flex-wrap gap-2 xl:shrink-0 xl:justify-end">
+              <Button
+                className="discovery-button"
+                onClick={() => router.push("/pokemon/mini-games/smash-or-pass")}
+              >
+                <Heart className="mr-2 h-4 w-4" />
+                {t("discovery")}
+              </Button>
+              <CreateMasterSetDialog
+                existingCollections={collections}
+                onCreated={refreshCollections}
+              />
+              <CreateCollection onCollectionCreated={refreshCollections} />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex flex-wrap gap-3">
+              {[0, 1, 2, 3].map((index) => (
+                <Skeleton
+                  key={index}
+                  className="h-[74px] min-w-[160px] flex-1"
+                />
+              ))}
+            </div>
+          ) : (
+            <CollectionsOverview collections={collections} />
+          )}
+        </section>
+
+        <section className="tcg-surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t("searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input pl-9"
+            />
+          </div>
+
+          <div className="tablist flex w-full gap-1 overflow-x-auto sm:w-auto">
+            {FILTERS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                data-state={filter === value ? "active" : "inactive"}
+                className="tab flex-1 whitespace-nowrap px-2.5 py-1.5 text-xs font-medium sm:flex-none sm:px-3 sm:text-sm"
+              >
+                {t(`filters.${value}`)}
+                <span className="ml-1.5 hidden tabular-nums opacity-60 sm:inline">
+                  {filterCount(value)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {loading ? (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[0, 1, 2, 3].map((index) => (
+              <Skeleton key={index} className="h-[300px] rounded-xl" />
+            ))}
+          </div>
+        ) : !hasResults ? (
+          <div className="empty-state mx-auto max-w-md space-y-3 py-12">
+            <div className="empty-state-icon mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Plus className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="font-heading text-lg font-bold">
               {searchQuery ? t("noResults") : t("empty")}
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-sm text-muted-foreground">
               {searchQuery ? t("tryOtherKeywords") : t("createFirst")}
             </p>
           </div>
-        </div>
-      ) : (
-        <div className="space-y-12">
-          {masterSets.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b pb-3">
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-amber-500" />
-                  <h2 className="text-xl font-bold tracking-tight">
-                    Master Sets
-                  </h2>
-                  <Badge variant="secondary" className="ml-2">
-                    {masterSets.length}
-                  </Badge>
+        ) : (
+          <div className="space-y-10">
+            {showMasterSets && masterSets.length > 0 && (
+              <section className="space-y-4">
+                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-500" />
+                    <h2 className="font-heading text-xl font-bold tracking-tight">
+                      {t("masterSets.title")}
+                    </h2>
+                    <span className="chip text-xs tabular-nums">
+                      {masterSets.length}
+                    </span>
+                  </div>
+                  <p className="hidden text-xs text-muted-foreground sm:block">
+                    {t("masterSets.hint")}
+                  </p>
+                </header>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {masterSets.map((collection) => (
+                    <CollectionGridCard
+                      key={collection.id}
+                      collection={collection}
+                    />
+                  ))}
                 </div>
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  Suivi de complétion intégrale par extension
-                </p>
-              </div>
+              </section>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {masterSets.map((col) => renderCollectionCard(col, true))}
-              </div>
-            </div>
-          )}
+            {showPersonal && personalCollections.length > 0 && (
+              <section className="space-y-4">
+                <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-primary" />
+                    <h2 className="font-heading text-xl font-bold tracking-tight">
+                      {t("personal.title")}
+                    </h2>
+                    <span className="chip text-xs tabular-nums">
+                      {personalCollections.length}
+                    </span>
+                  </div>
+                  <p className="hidden text-xs text-muted-foreground sm:block">
+                    {t("personal.hint")}
+                  </p>
+                </header>
 
-          {regularCollections.length > 0 && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b pb-3">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold tracking-tight">
-                    Mes Collections Personnalisées
-                  </h2>
-                  <Badge variant="secondary" className="ml-2">
-                    {regularCollections.length}
-                  </Badge>
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {personalCollections.map((collection) => (
+                    <CollectionGridCard
+                      key={collection.id}
+                      collection={collection}
+                    />
+                  ))}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {regularCollections.map((col) => renderCollectionCard(col, false))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+              </section>
+            )}
+          </div>
+        )}
+      </div>
     </PageWrapper>
   );
 };

@@ -63,6 +63,7 @@ import { PokemonCardType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import type { PaginatedResult } from "@/types/pagination";
 import { getCardImage } from "@/utils/images";
+import { getCollectionTitle } from "@/utils/collection";
 import { useLocale, useTranslations } from "next-intl";
 
 const CollectionDetailPage = () => {
@@ -270,8 +271,8 @@ const CollectionDetailPage = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight">
-                    {collection.name}
+                  <CardTitle className="font-heading text-2xl sm:text-3xl font-bold tracking-tight">
+                    {getCollectionTitle(collection)}
                   </CardTitle>
                   {isMasterSet ? (
                     <Badge className="bg-amber-500 hover:bg-amber-600 text-white font-semibold gap-1">
@@ -289,7 +290,11 @@ const CollectionDetailPage = () => {
                   )}
                 </div>
                 <CardDescription className="text-base text-muted-foreground max-w-2xl">
-                  {collection.description || t("noDescription")}
+                  {isMasterSet
+                    ? t("masterSetDescription", {
+                        set: collection.masterSet?.name ?? "",
+                      })
+                    : collection.description || t("noDescription")}
                 </CardDescription>
               </div>
 
@@ -320,7 +325,7 @@ const CollectionDetailPage = () => {
                 </div>
                 <Progress
                   value={completionPercent}
-                  className="h-3 bg-muted/60"
+                  className="h-3 bg-muted [&>div]:bg-amber-500"
                 />
               </div>
             )}

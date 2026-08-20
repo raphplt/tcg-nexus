@@ -128,10 +128,7 @@ export function CreateMasterSetDialog({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button
-            variant="outline"
-            className="border-primary/40 hover:border-primary bg-background/80 hover:bg-primary/10 text-foreground"
-          >
+          <Button variant="outline">
             <Trophy className="w-4 h-4 mr-2 text-amber-500" />
             Nouveau Master Set
           </Button>
@@ -218,8 +215,7 @@ export function CreateMasterSetDialog({
                               {set.name}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {set.cardCount?.total || "—"}{" "}
-                              cartes
+                              {set.cardCount?.total || "—"} cartes
                             </p>
                           </div>
                         </div>

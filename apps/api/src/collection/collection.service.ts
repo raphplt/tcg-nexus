@@ -1,4 +1,5 @@
 import { CardService } from "src/card/card.service";
+import { CatalogLocalizationService } from "src/card/catalog-localization.service";
 import {
   DEFAULT_LOCALE,
   type SupportedLocale,
@@ -40,6 +41,7 @@ export class CollectionService {
     @InjectRepository(PokemonSet)
     private pokemonSetRepository: Repository<PokemonSet>,
     private readonly cardService: CardService,
+    private readonly localization: CatalogLocalizationService,
   ) {}
 
   private async getOwnedCollection(
@@ -71,10 +73,7 @@ export class CollectionService {
   }
 
   // 404 et pas 403 : un 403 confirmerait l'existence de la collection
-  private assertCanViewCollection(
-    collection: Collection,
-    viewer?: User,
-  ): void {
+  private assertCanViewCollection(collection: Collection, viewer?: User): void {
     if (!this.canViewCollection(collection, viewer)) {
       throw new NotFoundException(
         `Collection with id ${collection.id} not found`,
@@ -164,6 +163,28 @@ export class CollectionService {
   }
 
   /**
+   * Builds the label pair of a Master Set collection.
+   *
+   * Set names live in the translations table: the set must have gone through
+   * `CatalogLocalizationService` first, otherwise `name` is undefined and the
+   * labels end up carrying "undefined". The set identifier is kept as a last
+   * resort so a missing translation never surfaces to the user.
+   *
+   * @param set - Localized Pokémon set.
+   * @returns Collection name and description.
+   */
+  private buildMasterSetLabels(set: PokemonSet): {
+    name: string;
+    description: string;
+  } {
+    const setName = set.name?.trim() || set.id;
+    return {
+      name: `Master Set — ${setName}`,
+      description: `Master Set pour l'extension ${setName}`,
+    };
+  }
+
+  /**
    * Creates a new user collection or Master Set collection.
    *
    * @param createCollectionDto Collection creation parameters.
@@ -182,6 +203,9 @@ export class CollectionService {
         );
       }
 
+      // The set name is stored in the collection labels: resolve it before use.
+      await this.localization.resolveLabels(set);
+
       // Prevent duplicate collection creation for the same user and master set
       const existing = await this.collectionRepository.findOne({
         where: {
@@ -191,7 +215,7 @@ export class CollectionService {
       });
       if (existing) {
         throw new ForbiddenException(
-          `Un Master Set existe déjà pour l'extension ${set.name}.`,
+          `Un Master Set existe déjà pour l'extension ${set.name?.trim() || set.id}.`,
         );
       }
 
@@ -202,12 +226,14 @@ export class CollectionService {
       throw new ForbiddenException("Le nom de la collection est requis.");
     }
 
+    const masterSetLabels = masterSet
+      ? this.buildMasterSetLabels(masterSet)
+      : undefined;
+
     const collection = this.collectionRepository.create({
-      name: masterSet
-        ? `Master Set — ${masterSet.name}`
-        : createCollectionDto.name,
-      description: masterSet
-        ? `Master Set pour l'extension ${masterSet.name}`
+      name: masterSetLabels ? masterSetLabels.name : createCollectionDto.name,
+      description: masterSetLabels
+        ? masterSetLabels.description
         : createCollectionDto.description,
       isPublic: createCollectionDto.isPublic || false,
     });
@@ -598,10 +624,7 @@ export class CollectionService {
         normalizeSortOrder(sortOrder),
       );
     } else {
-      queryBuilder.orderBy(
-        `item.${sortField}`,
-        normalizeSortOrder(sortOrder),
-      );
+      queryBuilder.orderBy(`item.${sortField}`, normalizeSortOrder(sortOrder));
     }
 
     const totalItems = await queryBuilder.getCount();

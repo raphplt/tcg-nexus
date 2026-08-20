@@ -112,13 +112,8 @@ const CreateCollection: React.FC<CreateCollectionProps> = ({
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="lg"
-        className="border-2 border-primary/30 hover:border-primary hover:bg-primary/5 font-semibold px-8 py-3 rounded-lg transition-all duration-300"
-        onClick={() => setOpen(true)}
-      >
-        <Plus className="mr-2 h-5 w-5" />
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" />
         {t("title")}
       </Button>
 

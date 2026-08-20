@@ -3,8 +3,74 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "src/app.module";
 import { Collection } from "src/collection/entities/collection.entity";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
+import { DEFAULT_LOCALE } from "src/translation/supported-locales";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Like, Repository } from "typeorm";
+
+/**
+ * Reads the display name of a set from its translation rows.
+ *
+ * @param translations - Translation rows of a single set.
+ * @param fallback - Value returned when no translation carries a name.
+ * @returns Localized set name.
+ */
+function resolveSetName(
+  translations: PokemonSetTranslation[],
+  fallback: string,
+): string {
+  const preferred =
+    translations.find((translation) => translation.locale === DEFAULT_LOCALE) ??
+    translations[0];
+  return preferred?.name?.trim() || fallback;
+}
+
+/**
+ * Renames Master Set collections whose labels were built before the set name
+ * was resolved: `PokemonSet.name` is virtual and reads as `undefined` unless
+ * the translations are loaded, which used to produce "Master Set — undefined".
+ */
+async function repairMasterSetLabels(
+  collectionRepo: Repository<Collection>,
+  translationRepo: Repository<PokemonSetTranslation>,
+): Promise<void> {
+  const broken = await collectionRepo.find({
+    where: { name: Like("%undefined%") },
+    relations: ["masterSet"],
+  });
+  const repairable = broken.flatMap((collection) =>
+    collection.masterSet
+      ? [{ collection, setId: collection.masterSet.id }]
+      : [],
+  );
+
+  if (repairable.length === 0) {
+    console.log("✅ Aucun libellé de Master Set à réparer.");
+    return;
+  }
+
+  const setIds = repairable.map(({ setId }) => setId);
+  const translations = await translationRepo.find({
+    where: { setId: In(setIds) },
+  });
+  const translationsBySetId = new Map<string, PokemonSetTranslation[]>();
+  for (const translation of translations) {
+    const group = translationsBySetId.get(translation.setId) ?? [];
+    group.push(translation);
+    translationsBySetId.set(translation.setId, group);
+  }
+
+  console.log(`🩹 ${repairable.length} libellé(s) à réparer...`);
+
+  for (const { collection, setId } of repairable) {
+    const setName = resolveSetName(translationsBySetId.get(setId) ?? [], setId);
+    collection.name = `Master Set — ${setName}`;
+    collection.description = `Master Set pour l'extension ${setName}`;
+    await collectionRepo.save(collection);
+    console.log(
+      `  ✅ Collection #${collection.id} renommée → ${collection.name}`,
+    );
+  }
+}
 
 async function bootstrap() {
   console.log(
@@ -18,52 +84,53 @@ async function bootstrap() {
   const setRepo = app.get<Repository<PokemonSet>>(
     getRepositoryToken(PokemonSet),
   );
+  const translationRepo = app.get<Repository<PokemonSetTranslation>>(
+    getRepositoryToken(PokemonSetTranslation),
+  );
 
   try {
     // Find PokemonSet "Surging Sparks" ("Étincelles Déferlantes")
     // Set names originate from translations table: query via translation repository.
-    const translation = await app
-      .get<Repository<PokemonSetTranslation>>(
-        getRepositoryToken(PokemonSetTranslation),
-      )
-      .findOne({ where: { name: "Étincelles Déferlantes" } });
+    const translation = await translationRepo.findOne({
+      where: { name: "Étincelles Déferlantes" },
+    });
 
     const ev08 = translation
       ? await setRepo.findOne({ where: { id: translation.setId } })
       : null;
+
     if (!ev08) {
       console.log(
         "⚠️ PokemonSet 'Étincelles Déferlantes' not found in database. Nothing to migrate.",
       );
-      await app.close();
-      return;
+    } else {
+      // Find all collections with matching name lacking masterSet relationship
+      const collections = await collectionRepo.find({
+        where: { name: "Étincelles Déferlantes" },
+        relations: ["masterSet"],
+      });
+
+      const toMigrate = collections.filter((c) => !c.masterSet);
+
+      if (toMigrate.length === 0) {
+        console.log("✅ Aucune collection à rattacher. Tout est déjà à jour.");
+      } else {
+        console.log(`📦 ${toMigrate.length} collection(s) à migrer...`);
+
+        const setName = translation?.name?.trim() || ev08.id;
+        for (const collection of toMigrate) {
+          collection.masterSet = ev08;
+          collection.name = `Master Set — ${setName}`;
+          collection.description = `Master Set pour l'extension ${setName}`;
+          await collectionRepo.save(collection);
+          console.log(
+            `  ✅ Collection #${collection.id} migrée → Master Set ${setName}`,
+          );
+        }
+      }
     }
 
-    // Find all collections with matching name lacking masterSet relationship
-    const collections = await collectionRepo.find({
-      where: { name: "Étincelles Déferlantes" },
-      relations: ["masterSet"],
-    });
-
-    const toMigrate = collections.filter((c) => !c.masterSet);
-
-    if (toMigrate.length === 0) {
-      console.log("✅ Aucune collection à migrer. Tout est déjà à jour.");
-      await app.close();
-      return;
-    }
-
-    console.log(`📦 ${toMigrate.length} collection(s) à migrer...`);
-
-    for (const collection of toMigrate) {
-      collection.masterSet = ev08;
-      collection.name = `Master Set — ${ev08.name}`;
-      collection.description = `Master Set pour l'extension ${ev08.name}`;
-      await collectionRepo.save(collection);
-      console.log(
-        `  ✅ Collection #${collection.id} migrée → Master Set ${ev08.name}`,
-      );
-    }
+    await repairMasterSetLabels(collectionRepo, translationRepo);
 
     console.log("🎉 Migration terminée avec succès !");
   } catch (error) {

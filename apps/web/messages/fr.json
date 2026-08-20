@@ -851,9 +851,12 @@
   },
   "Collections": {
     "title": "Mes collections",
-    "subtitle": "Gérez vos collections de cartes Pokémon et découvrez de nouvelles cartes avec notre fonctionnalité de swipe",
+    "eyebrow": "Mon espace",
+    "subtitle": "Suivez vos Master Sets extension par extension et regroupez vos cartes dans des collections sur mesure.",
     "loading": "Chargement de vos collections...",
     "view": "Voir la collection",
+    "openMasterSet": "Ouvrir le Master Set",
+    "discovery": "Card Discovery",
     "searchPlaceholder": "Rechercher une collection...",
     "noResults": "Aucune collection trouvée",
     "empty": "Aucune collection",
@@ -863,7 +866,35 @@
     "noDescription": "Aucune description",
     "public": "Public",
     "private": "Privé",
-    "cardCount": "~{count, plural, one {# carte} other {# cartes}}"
+    "cardCount": "~{count, plural, one {# carte} other {# cartes}}",
+    "cardsOwned": "{count, plural, one {# carte} other {# cartes}}",
+    "stats": {
+      "collections": "Collections",
+      "collectionsDetail": "au total",
+      "cards": "Cartes",
+      "cardsDetail": "exemplaires possédés",
+      "masterSets": "Master Sets",
+      "masterSetsDetail": "extensions suivies",
+      "completion": "Complétion",
+      "completionDetail": "moyenne des Master Sets"
+    },
+    "filters": {
+      "all": "Tout",
+      "masterSets": "Master Sets",
+      "personal": "Personnelles"
+    },
+    "masterSets": {
+      "title": "Master Sets",
+      "badge": "Master Set",
+      "hint": "Suivi de complétion intégrale par extension",
+      "progress": "Progression du set",
+      "remaining": "{count, plural, one {# carte manquante} other {# cartes manquantes}}",
+      "complete": "Extension complétée à 100 %"
+    },
+    "personal": {
+      "title": "Mes collections personnalisées",
+      "hint": "Vos sélections de cartes, à votre façon"
+    }
   },
   "CollectionDetail": {
     "public": "Public",
@@ -897,7 +928,8 @@
     "rarity": "Rareté",
     "set": "Set",
     "types": "Types",
-    "condition": "État"
+    "condition": "État",
+    "masterSetDescription": "Suivi de complétion intégrale de l'extension {set}, carte par carte."
   },
   "CreateCollection": {
     "title": "Créer une collection",

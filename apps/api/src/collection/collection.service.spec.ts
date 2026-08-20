@@ -1,4 +1,5 @@
 import { CardService } from "../card/card.service";
+import { CatalogLocalizationService } from "../card/catalog-localization.service";
 import { ForbiddenException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -44,6 +45,10 @@ describe("CollectionService", () => {
   const mockPokemonSetRepo = {
     findOne: jest.fn(),
     find: jest.fn(),
+  };
+
+  const mockLocalization = {
+    resolveLabels: jest.fn(async (payload) => payload),
   };
 
   const createQueryBuilder = () => {
@@ -96,11 +101,18 @@ describe("CollectionService", () => {
           provide: CardService,
           useValue: { getSetRarities: jest.fn().mockResolvedValue([]) },
         },
+        {
+          provide: CatalogLocalizationService,
+          useValue: mockLocalization,
+        },
       ],
     }).compile();
 
     service = module.get<CollectionService>(CollectionService);
     jest.clearAllMocks();
+    mockLocalization.resolveLabels.mockImplementation(
+      async (payload) => payload,
+    );
   });
 
   it("should list public collections", async () => {
@@ -135,6 +147,42 @@ describe("CollectionService", () => {
     const result = await service.create(dto as any);
     expect(result.id).toBe("new");
     expect(mockCollectionRepo.save).toHaveBeenCalled();
+  });
+
+  it("should label a master set collection with the localized set name", async () => {
+    const set = { id: "sv08" };
+    mockPokemonSetRepo.findOne.mockResolvedValue(set);
+    mockCollectionRepo.findOne.mockResolvedValue(null);
+    // Set names only exist in translations: the localization layer is what
+    // fills the virtual `name` read when building the collection labels.
+    mockLocalization.resolveLabels.mockImplementation(async (payload: any) => {
+      payload.name = "Étincelles Déferlantes";
+      return payload;
+    });
+    mockCollectionRepo.create.mockImplementation((dto: any) => dto);
+    mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
+
+    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+
+    expect(mockCollectionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Master Set — Étincelles Déferlantes",
+        description: "Master Set pour l'extension Étincelles Déferlantes",
+      }),
+    );
+  });
+
+  it("should fall back to the set id when no translation is available", async () => {
+    mockPokemonSetRepo.findOne.mockResolvedValue({ id: "sv08" });
+    mockCollectionRepo.findOne.mockResolvedValue(null);
+    mockCollectionRepo.create.mockImplementation((dto: any) => dto);
+    mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
+
+    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+
+    expect(mockCollectionRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Master Set — sv08" }),
+    );
   });
 
   it("should update collection when owner matches", async () => {
@@ -248,7 +296,11 @@ describe("CollectionService", () => {
 
   describe("addCardToCollection & removeCardFromCollection & removeCollectionItem", () => {
     it("should increment quantity if card already in collection", async () => {
-      const existingItem = { id: 10, quantity: 1, pokemonCard: { id: "card-1" } };
+      const existingItem = {
+        id: 10,
+        quantity: 1,
+        pokemonCard: { id: "card-1" },
+      };
       mockCollectionRepo.findOne.mockResolvedValue({
         id: "c1",
         user: { id: 1 },
@@ -270,7 +322,9 @@ describe("CollectionService", () => {
       mockCardRepo.findOne.mockResolvedValue({ id: "card-2" });
       mockCardStateRepo.findOne.mockResolvedValue({ id: 1, code: "NM" });
       mockCollectionItemRepo.create = jest.fn((dto) => dto);
-      mockCollectionItemRepo.save = jest.fn((item) => Promise.resolve({ id: 20, ...item }));
+      mockCollectionItemRepo.save = jest.fn((item) =>
+        Promise.resolve({ id: 20, ...item }),
+      );
 
       const result = await service.addCardToCollection("c1", "card-2", 1);
       expect((result as any)?.pokemonCard?.id).toBe("card-2");
@@ -278,7 +332,11 @@ describe("CollectionService", () => {
     });
 
     it("should decrement quantity if quantity > 1 on removeCardFromCollection", async () => {
-      const existingItem = { id: 10, quantity: 2, pokemonCard: { id: "card-1" } };
+      const existingItem = {
+        id: 10,
+        quantity: 2,
+        pokemonCard: { id: "card-1" },
+      };
       mockCollectionRepo.findOne.mockResolvedValue({
         id: "c1",
         user: { id: 1 },
@@ -291,13 +349,19 @@ describe("CollectionService", () => {
     });
 
     it("should delete item if quantity == 1 on removeCardFromCollection", async () => {
-      const existingItem = { id: 10, quantity: 1, pokemonCard: { id: "card-1" } };
+      const existingItem = {
+        id: 10,
+        quantity: 1,
+        pokemonCard: { id: "card-1" },
+      };
       mockCollectionRepo.findOne.mockResolvedValue({
         id: "c1",
         user: { id: 1 },
         items: [existingItem],
       });
-      mockCollectionItemRepo.delete = jest.fn().mockResolvedValue({ affected: 1 });
+      mockCollectionItemRepo.delete = jest
+        .fn()
+        .mockResolvedValue({ affected: 1 });
 
       const result = await service.removeCardFromCollection("c1", "card-1", 1);
       expect(result).toBeNull();
@@ -310,7 +374,9 @@ describe("CollectionService", () => {
         user: { id: 1 },
       });
       mockCollectionItemRepo.findOne.mockResolvedValue({ id: 5 });
-      mockCollectionItemRepo.delete = jest.fn().mockResolvedValue({ affected: 1 });
+      mockCollectionItemRepo.delete = jest
+        .fn()
+        .mockResolvedValue({ affected: 1 });
 
       await service.removeCollectionItem("c1", 5, 1);
       expect(mockCollectionItemRepo.delete).toHaveBeenCalledWith(5);
@@ -334,7 +400,11 @@ describe("CollectionService", () => {
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([
-          { id: "c1", tcgDexId: "p1", collectionItems: [{ id: 1, quantity: 1 }] },
+          {
+            id: "c1",
+            tcgDexId: "p1",
+            collectionItems: [{ id: 1, quantity: 1 }],
+          },
         ]),
       };
       mockCardRepo.createQueryBuilder = jest.fn(() => cardQb);

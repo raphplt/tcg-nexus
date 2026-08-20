@@ -851,9 +851,12 @@
   },
   "Collections": {
     "title": "My collections",
-    "subtitle": "Manage your Pokémon card collections and discover new cards with our swipe feature",
+    "eyebrow": "My space",
+    "subtitle": "Track your Master Sets expansion by expansion and gather your cards into custom collections.",
     "loading": "Loading your collections...",
     "view": "View collection",
+    "openMasterSet": "Open Master Set",
+    "discovery": "Card Discovery",
     "searchPlaceholder": "Search a collection...",
     "noResults": "No collection found",
     "empty": "No collection",
@@ -863,7 +866,35 @@
     "noDescription": "No description",
     "public": "Public",
     "private": "Private",
-    "cardCount": "~{count, plural, one {# card} other {# cards}}"
+    "cardCount": "~{count, plural, one {# card} other {# cards}}",
+    "cardsOwned": "{count, plural, one {# card} other {# cards}}",
+    "stats": {
+      "collections": "Collections",
+      "collectionsDetail": "in total",
+      "cards": "Cards",
+      "cardsDetail": "copies owned",
+      "masterSets": "Master Sets",
+      "masterSetsDetail": "expansions tracked",
+      "completion": "Completion",
+      "completionDetail": "Master Sets average"
+    },
+    "filters": {
+      "all": "All",
+      "masterSets": "Master Sets",
+      "personal": "Personal"
+    },
+    "masterSets": {
+      "title": "Master Sets",
+      "badge": "Master Set",
+      "hint": "Full completion tracking per expansion",
+      "progress": "Set progress",
+      "remaining": "{count, plural, one {# card missing} other {# cards missing}}",
+      "complete": "Expansion completed at 100%"
+    },
+    "personal": {
+      "title": "My custom collections",
+      "hint": "Your card selections, your way"
+    }
   },
   "CollectionDetail": {
     "public": "Public",
@@ -897,7 +928,8 @@
     "rarity": "Rarity",
     "set": "Set",
     "types": "Types",
-    "condition": "Condition"
+    "condition": "Condition",
+    "masterSetDescription": "Full completion tracking of the {set} expansion, card by card."
   },
   "CreateCollection": {
     "title": "Create a collection",

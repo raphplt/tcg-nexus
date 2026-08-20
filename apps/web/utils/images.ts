@@ -142,8 +142,17 @@ export function normalizeAssetUrl(
   return next;
 }
 
+/**
+ * Builds a card image URL from its base URL, falling back to the card back
+ * placeholder. Only `image` is read, so any card-shaped object fits — a deck
+ * cover card as well as a full card entity.
+ *
+ * @param card - Card carrying a base image URL.
+ * @param quality - Requested rendition.
+ * @returns Ready-to-use image URL.
+ */
 export function getCardImage(
-  card: PokemonCardType | null | undefined,
+  card: Pick<PokemonCardType, "image"> | null | undefined,
   quality: "high" | "low" = "high",
 ): string {
   if (!card || !card.image) {

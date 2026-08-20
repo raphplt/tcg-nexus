@@ -927,6 +927,56 @@ body {
     }
   }
 
+  /* --- Collection tiles ---
+     .collection-tile          : carte de collection (grille)
+     .collection-tile-banner   : bandeau visuel en tête de tuile
+     .collection-fan           : main de cartes en éventail
+  */
+  .collection-tile {
+    border-radius: calc(var(--radius) + 2px);
+  }
+
+  .collection-tile-banner {
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  .collection-tile-banner--master {
+    background:
+      radial-gradient(
+        circle at 50% 120%,
+        color-mix(in srgb, oklch(0.78 0.16 78) 22%, transparent) 0,
+        transparent 62%
+      ),
+      var(--surface-muted);
+  }
+
+  .collection-fan {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .collection-fan-card {
+    position: absolute;
+    transform: translateX(var(--fan-x)) rotate(var(--fan-rot));
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .group:hover .collection-fan-card {
+    transform: translateX(calc(var(--fan-x) * 1.28))
+      rotate(calc(var(--fan-rot) * 1.35)) translateY(-6px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collection-fan-card,
+    .group:hover .collection-fan-card {
+      transition: none;
+      transform: translateX(var(--fan-x)) rotate(var(--fan-rot));
+    }
+  }
+
   /* Collection grid animations */
   .collection-grid-item {
     animation: fadeInUp 0.6s ease-out;

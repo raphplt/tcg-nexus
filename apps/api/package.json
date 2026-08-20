@@ -19,6 +19,7 @@
     "migrate:rename-card": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-rename-card-table.ts",
     "migrate:fix-image-cdn": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-fix-image-cdn.ts",
     "migrate:card-images-cdn": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-card-images-cdn.ts",
+    "migrate:master-sets": "ts-node -r tsconfig-paths/register ./src/scripts/migrate-master-sets.ts",
     "seed:users": "ts-node -r tsconfig-paths/register ./src/scripts/seed-users.ts",
     "seed:cardstates": "ts-node -r tsconfig-paths/register ./src/scripts/seedCardStates.ts",
     "sync:effects": "ts-node -r tsconfig-paths/register ./src/scripts/sync-card-effects.ts",

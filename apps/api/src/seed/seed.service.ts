@@ -1768,6 +1768,24 @@ export class SeedService {
   }
 
   /**
+   * Reads the display name of a set loaded with its `translations`.
+   *
+   * The `name` property of `PokemonSet` is virtual: it is only populated by the
+   * localization layer, which the seed does not go through.
+   *
+   * @param set - Pokémon set loaded with its translations.
+   * @returns Localized name, falling back to the set identifier.
+   */
+  private resolveSetName(set: PokemonSet): string {
+    const translations = set.translations ?? [];
+    const preferred =
+      translations.find(
+        (translation) => translation.locale === DEFAULT_LOCALE,
+      ) ?? translations[0];
+    return preferred?.name?.trim() || set.id;
+  }
+
+  /**
    * Seeds the comprehensive demo dataset supporting the 10-minute presentation:
    * 1. Demo personas (Laura, Maxime, Théo)
    * 2. Laura's collections (140+ cards collection, 62% completed Master Set, Favorites & Rares)
@@ -1930,21 +1948,24 @@ export class SeedService {
       }
 
       // 3.2 Master Set Collection (~62% complete)
+      // Translations are loaded along with the sets: set names live there, and
+      // reading `set.name` without them would label the collection "undefined".
       const availableSets = await this.pokemonSetRepository.find({
-        relations: ["cards"],
+        relations: ["cards", "translations"],
       });
       const targetSet =
         availableSets.find((s) => s.cards && s.cards.length >= 20) ||
         availableSets[0];
 
       if (targetSet) {
+        const targetSetName = this.resolveSetName(targetSet);
         let masterSetCollection = await this.collectionRepository.findOne({
           where: { user: { id: laura.id }, masterSet: { id: targetSet.id } },
         });
         if (!masterSetCollection) {
           masterSetCollection = this.collectionRepository.create({
-            name: `Master Set — ${targetSet.name}`,
-            description: `Collection Master Set pour l'extension ${targetSet.name}`,
+            name: `Master Set — ${targetSetName}`,
+            description: `Collection Master Set pour l'extension ${targetSetName}`,
             isPublic: false,
             user: laura,
             masterSet: targetSet,
