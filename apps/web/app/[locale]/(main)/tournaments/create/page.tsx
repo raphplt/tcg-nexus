@@ -433,7 +433,6 @@ export default function CreateTournamentPage() {
                         })}
                       </SelectContent>
                     </Select>
-                    <FormDescription>{t("formatNotice")}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

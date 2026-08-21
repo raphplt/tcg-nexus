@@ -68,6 +68,59 @@ function extractSetCookies(response: Response): string[] {
   return result;
 }
 
+let missingSecretWarned = false;
+
+/**
+ * Checks the current access token, locally when the signing secret is shared
+ * with the web app, otherwise by asking the API.
+ *
+ * @param token - Access token read from the request cookies.
+ * @param apiBaseUrl - Base URL of the API.
+ * @param cookies - Serialized request cookies forwarded to the API.
+ * @returns Whether the session may access protected routes.
+ */
+async function isAccessTokenValid(
+  token: string,
+  apiBaseUrl: string,
+  cookies: string,
+): Promise<boolean> {
+  const secret = process.env.JWT_SECRET;
+
+  // Without the shared secret every token would look invalid and the proxy
+  // would redirect all protected routes to the login page: fall back to the
+  // API, which stays authoritative anyway.
+  if (!secret) {
+    if (!missingSecretWarned) {
+      missingSecretWarned = true;
+      console.warn(
+        "JWT_SECRET is not set for the web app: falling back to an API call on every protected navigation. Set it to the same value as the API.",
+      );
+    }
+    return verifySessionAgainstApi(apiBaseUrl, cookies);
+  }
+
+  return verifyAccessToken(token, secret);
+}
+
+async function verifySessionAgainstApi(
+  apiBaseUrl: string,
+  cookies: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${apiBaseUrl}/auth/profile`, {
+      method: "POST",
+      headers: {
+        Cookie: cookies,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("Error verifying the session against the API:", error);
+    return false;
+  }
+}
+
 async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
   try {
     const API_BASE_URL = resolveApiBaseUrl(request);
@@ -77,7 +130,7 @@ async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
 
     if (
       accessToken &&
-      (await verifyAccessToken(accessToken, process.env.JWT_SECRET))
+      (await isAccessTokenValid(accessToken, API_BASE_URL, cookies))
     ) {
       return { authenticated: true };
     }
@@ -136,10 +189,15 @@ async function tryRefresh(
     );
     const refreshedAccessToken = accessCookie?.split(";", 1)[0]?.split("=")[1];
 
-    if (
-      !refreshedAccessToken ||
-      !(await verifyAccessToken(refreshedAccessToken, process.env.JWT_SECRET))
-    ) {
+    const secret = process.env.JWT_SECRET;
+
+    if (!refreshedAccessToken) {
+      return { authenticated: false };
+    }
+
+    // A successful refresh already proves the API accepted the session: the
+    // local signature check is only an extra guard when the secret is known.
+    if (secret && !(await verifyAccessToken(refreshedAccessToken, secret))) {
       return { authenticated: false };
     }
 
