@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -11,13 +10,13 @@ import {
   ShieldAlert,
   Users,
 } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import usePlacesAutocomplete from "use-places-autocomplete";
+import { GoogleMapsScript } from "@/components/GoogleMapsScript";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { GoogleMapsScript } from "@/components/GoogleMapsScript";
 import {
   Command,
   CommandEmpty,
@@ -51,6 +50,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { tournamentService } from "@/services/tournament.service";
 import { UserRole } from "@/types/auth";
@@ -103,6 +103,8 @@ export default function CreateTournamentPage() {
       allowedFormats: [],
       currentRound: 0,
       totalRounds: 0,
+      ageRestrictionMin: 18,
+      ageRestrictionMax: 80,
       fillWithPlayers: false,
       isExternal: false,
       grandFinalReset: true,
@@ -315,8 +317,11 @@ export default function CreateTournamentPage() {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-100 p-0">
-                          <Command>
+                        <PopoverContent
+                          className="w-[var(--radix-popover-trigger-width)] p-0"
+                          align="start"
+                        >
+                          <Command shouldFilter={false}>
                             <CommandInput
                               placeholder={t("addressPlaceholder")}
                               value={placesValue}

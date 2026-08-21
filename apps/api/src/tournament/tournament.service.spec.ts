@@ -271,18 +271,28 @@ describe("TournamentService", () => {
       );
     });
 
-    it("should reject an unsupported format for an internal tournament", async () => {
-      const invalidDto = {
+    it("should create an internal tournament in another orchestrated format", async () => {
+      const swissDto = {
         ...dto,
         type: TournamentType.SWISS_SYSTEM,
         isExternal: false,
       };
-      tournamentRepo.create.mockReturnValue(invalidDto);
+      tournamentRepo.create.mockReturnValue(swissDto);
+      tournamentRepo.save.mockResolvedValue({ id: 1, ...swissDto });
+      userRepo.findOne.mockResolvedValue({
+        id: userId,
+        firstName: "John",
+        lastName: "Doe",
+        email: "john@example.com",
+      });
+      organizerRepo.create.mockReturnValue({});
+      organizerRepo.save.mockResolvedValue({});
 
-      await expect(service.create(invalidDto, userId)).rejects.toThrow(
-        "élimination directe",
-      );
-      expect(tournamentRepo.save).not.toHaveBeenCalled();
+      await expect(service.create(swissDto, userId)).resolves.toEqual({
+        id: 1,
+        ...swissDto,
+      });
+      expect(tournamentRepo.save).toHaveBeenCalledWith(swissDto);
     });
 
     it("should require a platform URL for an external tournament", async () => {

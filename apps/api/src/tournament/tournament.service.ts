@@ -1312,25 +1312,15 @@ export class TournamentService {
 
   private validateTournamentConfiguration(
     tournament: Tournament,
-    enforceSupportedFormat = false,
+    enforceExternalRegistrationUrl = false,
   ): void {
     if (
-      enforceSupportedFormat &&
+      enforceExternalRegistrationUrl &&
       tournament.isExternal &&
       !tournament.externalRegistrationUrl
     ) {
       throw new BadRequestException(
         "Le lien de la plateforme externe est requis",
-      );
-    }
-
-    if (
-      enforceSupportedFormat &&
-      !tournament.isExternal &&
-      tournament.type !== TournamentType.SINGLE_ELIMINATION
-    ) {
-      throw new BadRequestException(
-        "Seul le format à élimination directe est actuellement disponible pour les tournois internes",
       );
     }
 

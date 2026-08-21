@@ -971,7 +971,6 @@
     "isPublic": "Public tournament",
     "isExternal": "External tournament",
     "externalLink": "External registration link",
-    "formatNotice": "Nexus currently runs internal single-elimination tournaments. Other formats can be published when they are managed externally.",
     "externalNotice": "The platform publishes the event but manages neither its registrations nor its matches.",
     "fillWithPlayers": "Fill with 8 players (Admin)",
     "fillWithPlayersHelp": "Automatically opens registrations and registers 8 random players",

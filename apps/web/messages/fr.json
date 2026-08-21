@@ -971,7 +971,6 @@
     "isPublic": "Tournoi public",
     "isExternal": "Tournoi externe",
     "externalLink": "Lien d'inscription externe",
-    "formatNotice": "Nexus orchestre actuellement les tournois internes à élimination directe. Les autres formats peuvent être publiés lorsque leur gestion est externe.",
     "externalNotice": "La plateforme publie l'événement, mais n'en orchestre ni les inscriptions ni les matchs.",
     "fillWithPlayers": "Remplir avec 8 joueurs (Admin)",
     "fillWithPlayersHelp": "Ouvre automatiquement les inscriptions et inscrit 8 joueurs aléatoires",
