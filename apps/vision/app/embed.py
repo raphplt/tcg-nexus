@@ -1,5 +1,3 @@
-
-
 import cv2
 import numpy as np
 
@@ -12,6 +10,8 @@ try:
     import torch
     from PIL import Image
 
+    torch.set_num_threads(1)
+
     _model, _, _preprocess = open_clip.create_model_and_transforms(
         MODEL_NAME, pretrained=PRETRAINED
     )
@@ -23,11 +23,6 @@ except Exception:
 
 def _to_pil(bgr: np.ndarray):
     return Image.fromarray(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
-
-
-
-
-
 
 
 ARTWORK_BAND = (0.07, 0.115, 0.86, 0.42)
