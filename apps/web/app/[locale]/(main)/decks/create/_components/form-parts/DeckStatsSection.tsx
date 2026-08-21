@@ -1,18 +1,8 @@
 import { useTranslations } from "next-intl";
 import React from "react";
-import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@components/ui/card";
-import { Badge } from "@components/ui/badge";
-import { Separator } from "@components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@components/ui/card";
 import { Layers } from "lucide-react";
 import { AddedCard } from "../deckForm.schema";
-import { getCardImage } from "@/utils/images";
 
 const StatBlock = ({
   label,
@@ -21,11 +11,11 @@ const StatBlock = ({
   label: string;
   value: string | number;
 }) => (
-  <div className="rounded-lg border bg-card/60 p-3 text-center">
-    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+  <div className="rounded-md border bg-background/70 px-2 py-2 text-center">
+    <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
       {label}
     </p>
-    <p className="text-xl font-semibold">{value}</p>
+    <p className="text-lg font-bold tabular-nums leading-6">{value}</p>
   </div>
 );
 
@@ -35,6 +25,7 @@ interface DeckStatsSectionProps {
   sideCount: number;
 }
 
+/** Displays a compact live summary of the current deck composition. */
 export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
   cards,
   mainCount,
@@ -42,42 +33,19 @@ export const DeckStatsSection: React.FC<DeckStatsSectionProps> = ({
 }) => {
   const t = useTranslations("DeckStats");
   return (
-    <Card className="bg-linear-to-br from-primary/5 via-background to-secondary/10 border-primary/20 shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-primary" />
+    <Card className="border-primary/20 bg-linear-to-br from-primary/5 via-background to-secondary/10 shadow-sm">
+      <CardHeader className="p-4 pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Layers className="h-4 w-4 text-primary" />
           {t("title")}
         </CardTitle>
-        <CardDescription>{t("subtitle")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <StatBlock label="Total cartes" value={mainCount + sideCount} />
-          <StatBlock label="Principal" value={mainCount} />
-          <StatBlock label="Side" value={sideCount} />
+      <CardContent className="p-4 pt-2">
+        <div className="grid grid-cols-4 gap-2">
+          <StatBlock label={t("total")} value={mainCount + sideCount} />
+          <StatBlock label={t("main")} value={mainCount} />
+          <StatBlock label={t("side")} value={sideCount} />
           <StatBlock label={t("varieties")} value={cards.length} />
-        </div>
-        <Separator />
-        <div className="flex -space-x-3">
-          {cards.slice(0, 4).map((c, index) => (
-            <div
-              key={`${c.cardId}-${index}`}
-              className="relative w-16 h-24 rounded-lg overflow-hidden border border-border/60 shadow-sm bg-card"
-            >
-              <Image
-                src={getCardImage(c.card, "low")}
-                alt={c.card?.name || "Carte"}
-                fill
-                className="object-cover"
-              />
-              <Badge className="absolute bottom-1 right-1 text-[10px]">
-                x{c.qty}
-              </Badge>
-            </div>
-          ))}
-          {cards.length === 0 && (
-            <div className="text-sm text-muted-foreground">{t("empty")}</div>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -2277,7 +2277,21 @@
     "search": "Search",
     "priceEur": "Price (€)",
     "price": "Price",
-    "showAll": "Show all"
+    "showAll": "Show all",
+    "collectionSubtitle": "Add cards you already own directly to your deck.",
+    "activeFilters": "{count, plural, one {# active filter} other {# active filters}}",
+    "catalog": "Catalogue",
+    "myCollections": "My collections",
+    "collectionsLoading": "Loading collections...",
+    "chooseCollection": "Choose a collection",
+    "masterSetName": "Master Set — {name}",
+    "catalogHelp": "All cards available on TCG Nexus",
+    "order": "Order",
+    "filters": "Filters",
+    "set": "Set",
+    "rarityPlaceholder": "E.g. Rare",
+    "min": "Min",
+    "max": "Max"
   },
   "DeckAnalysis": {
     "title": "Deck analysis",
@@ -2575,7 +2589,13 @@
     "updateError": "Could not update the deck",
     "createError": "Could not create the deck",
     "submitEdit": "Update deck",
-    "submitCreate": "Create deck"
+    "submitCreate": "Create deck",
+    "back": "Back",
+    "viewDeck": "Deck ({count})",
+    "mobileDeckTitle": "Deck contents",
+    "mobileDeckHelp": "Quickly adjust quantities or remove cards without leaving the catalogue.",
+    "collectionEmpty": "This collection has no cards matching your search.",
+    "noCollection": "Create or select a collection to browse the cards you own."
   },
   "DeckDetail": {
     "loadError": "Something went wrong while loading the deck.",
@@ -2615,7 +2635,10 @@
     "title": "Quick overview",
     "subtitle": "Track your card distribution live.",
     "empty": "Add your first cards to see the overview.",
-    "varieties": "Varieties"
+    "varieties": "Varieties",
+    "total": "Total",
+    "main": "Main",
+    "side": "Side"
   },
   "DecksFilters": {
     "reset": "Reset",
@@ -2911,7 +2934,19 @@
   },
   "DeckCardList": {
     "side": "Side",
-    "main": "Main"
+    "main": "Main",
+    "deckPreview": "My deck",
+    "emptyMain": "No card in the main list.",
+    "emptySide": "No card in the side list.",
+    "cardFallback": "Card",
+    "decrease": "Decrease the quantity of {name}",
+    "increase": "Increase the quantity of {name}",
+    "quantity": "Quantity of {name}",
+    "remove": "Remove {name} from the deck",
+    "owned": "x{count} owned",
+    "add": "Add",
+    "allAdded": "Already added",
+    "empty": "No card matches these filters."
   },
   "DeckScores": {
     "overallScore": "Overall score"

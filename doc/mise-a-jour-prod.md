@@ -77,8 +77,25 @@ production.
 git checkout main && git merge <branche> && git push
 ```
 
-Coolify rebuild et redéploie sur push `main`. Sinon, bouton **Deploy** sur la
-ressource dans le dashboard.
+Puis déclencher le déploiement via le bouton **Deploy** sur la ressource dans
+le dashboard Coolify.
+
+### Déploiement automatique (préparé, désactivé par défaut)
+
+`.github/workflows/deploy.yml` peut appeler l'API Coolify après CI verte sur
+`main`. Pour l'activer :
+
+1. **Exposer l'API Coolify via le tunnel Cloudflare** : ajouter un public
+   hostname (ex. `coolify.tcg-nexus.org` → `http://localhost:8000`) dans la
+   config du tunnel. Le VPN de la VM ne gêne pas : le tunnel est une connexion
+   sortante, comme pour `tcg-nexus.org`.
+2. **Créer un token API** dans Coolify (*Keys & Tokens → API tokens*) et
+   récupérer l'**uuid de la ressource** (visible dans l'URL du dashboard).
+3. **Renseigner les secrets GitHub** (*Settings → Secrets*) :
+   `COOLIFY_API_URL`, `COOLIFY_API_TOKEN`, `COOLIFY_RESOURCE_UUID`.
+4. **Activer** : créer la variable de repo `COOLIFY_DEPLOY_ENABLED=true`
+   (*Settings → Variables*). Tant qu'elle est absente, le job est ignoré —
+   volontaire pour ne pas toucher la prod avant la soutenance.
 
 ---
 

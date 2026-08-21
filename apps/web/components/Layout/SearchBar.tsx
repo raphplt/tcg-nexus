@@ -83,19 +83,21 @@ const SearchBar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-center w-full">
+      <div className="flex w-full items-center justify-start sm:justify-center">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label={t("open")}
-          className="flex items-center gap-2 bg-card rounded-md p-2 border border-border hover:border-primary transition-all duration-300 w-full max-w-md cursor-pointer"
+          className="flex h-9 w-9 cursor-pointer items-center gap-2 rounded-md border border-border bg-card p-2 transition-all duration-300 hover:border-primary sm:w-full sm:max-w-md"
         >
           <SearchIcon
             className="text-muted-foreground size-4"
             aria-hidden="true"
           />
-          <p className="text-muted-foreground text-sm">{t("trigger")}</p>
-          <div className="ml-auto flex items-center gap-1">
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            {t("trigger")}
+          </p>
+          <div className="ml-auto hidden items-center gap-1 md:flex">
             <Command
               className="w-3 h-3 text-muted-foreground"
               aria-hidden="true"

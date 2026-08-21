@@ -6,7 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from "@components/ui/alert";
 import { AlertCircleIcon } from "lucide-react";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -43,7 +42,7 @@ export default function CreateDeckPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 py-16 px-2">
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 to-primary/10 px-3 py-8 sm:px-4 sm:py-12">
         <Alert variant="destructive" className="mx-auto max-w-3xl">
           <AlertCircleIcon />
           <AlertTitle>{t("loginRequired")}</AlertTitle>
@@ -57,28 +56,24 @@ export default function CreateDeckPage() {
 
   if (formatLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-secondary/10 via-background to-primary/10 py-16 px-4">
-        <Skeleton className="mx-auto max-w-5xl h-[720px]" />
+      <div className="min-h-screen bg-linear-to-br from-secondary/10 via-background to-primary/10 px-3 py-4 sm:px-4 sm:py-6">
+        <Skeleton className="mx-auto h-[720px] max-w-[1600px]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-secondary/10 py-12 px-4">
-      <div className="max-w-3/4 mx-auto space-y-6">
-        <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-secondary/10">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-3xl">{t("submit")}</CardTitle>
-            <CardDescription className="text-base">
+    <div className="min-h-screen bg-linear-to-br from-primary/5 via-background to-secondary/10 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
+      <div className="mx-auto max-w-[1600px] space-y-3">
+        <Card className="border-primary/20 bg-linear-to-r from-primary/5 via-background to-secondary/10 shadow-sm">
+          <CardHeader className="space-y-0.5 p-4 sm:px-5">
+            <CardTitle className="text-xl sm:text-2xl">{t("submit")}</CardTitle>
+            <CardDescription className="text-sm">
               {t("subtitle")}
             </CardDescription>
           </CardHeader>
         </Card>
-        <Card className="shadow-xl border-border/60">
-          <CardContent className="pt-6">
-            <DeckForm formats={formatList} />
-          </CardContent>
-        </Card>
+        <DeckForm formats={formatList} />
       </div>
     </div>
   );

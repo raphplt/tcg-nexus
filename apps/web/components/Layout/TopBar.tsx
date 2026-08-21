@@ -49,11 +49,11 @@ export function TopBar() {
   const showUserMenu = !isAuthLoading && isAuthenticated && user;
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-4 sticky top-0 w-full z-40">
+    <header className="sticky top-0 z-40 flex h-14 w-full shrink-0 items-center gap-2 overflow-hidden border-b border-border bg-background px-2 sm:px-4">
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
+      <Separator orientation="vertical" className="mr-2 hidden h-4 sm:block" />
 
-      <Link href="/" className="shrink-0 mr-2 md:hidden">
+      <Link href="/" className="mr-2 hidden shrink-0 sm:block md:hidden">
         <div className="relative w-8 h-8">
           <Image
             src="/images/Logo_Large.png"
@@ -66,13 +66,17 @@ export function TopBar() {
         </div>
       </Link>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <SearchBar />
       </div>
 
-      <div className="flex items-center gap-2">
-        <LocaleSelector />
-        <CurrencySelector />
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="hidden md:block">
+          <LocaleSelector />
+        </div>
+        <div className="hidden sm:block">
+          <CurrencySelector />
+        </div>
         <ThemeToggle />
         {isAuthenticated && <CartDropdown />}
         {isAuthenticated && <NotificationBell />}
@@ -82,7 +86,10 @@ export function TopBar() {
         ) : showAuthButtons ? (
           <div className="flex items-center gap-2">
             <Button asChild size="sm">
-              <Link href="/auth/login">{t("login")}</Link>
+              <Link href="/auth/login" aria-label={t("login")}>
+                <User className="h-4 w-4 sm:hidden" />
+                <span className="hidden sm:inline">{t("login")}</span>
+              </Link>
             </Button>
             <Button
               asChild

@@ -287,6 +287,31 @@ describe("CollectionService", () => {
     expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "DESC");
   });
 
+  it("should exclude sealed products from a card-only collection query", async () => {
+    mockCollectionRepo.findOne.mockResolvedValue({ id: "c", isPublic: true });
+    const qb = createQueryBuilder();
+    mockCollectionItemRepo.createQueryBuilder.mockReturnValue(qb);
+
+    await service.findCollectionItemsPaginated(
+      "c",
+      1,
+      12,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      true,
+      true,
+    );
+
+    expect(qb.andWhere).toHaveBeenCalledWith("item.quantity > 0");
+    expect(qb.andWhere).toHaveBeenCalledWith("pokemonCard.id IS NOT NULL");
+  });
+
   it("should throw when collection missing on pagination", async () => {
     mockCollectionRepo.findOne.mockResolvedValue(null);
     await expect(
@@ -424,6 +449,44 @@ describe("CollectionService", () => {
 
       expect(result.data).toHaveLength(1);
       expect(result.meta.totalItems).toBe(1);
+    });
+
+    it("should limit a master set to owned cards when requested", async () => {
+      mockCollectionRepo.findOne.mockResolvedValue({
+        id: "c-master",
+        isPublic: true,
+        masterSet: { id: "set-1" },
+      });
+
+      const cardQb: any = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(0),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      mockCardRepo.createQueryBuilder = jest.fn(() => cardQb);
+
+      await service.findCollectionItemsPaginated(
+        "c-master",
+        1,
+        12,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        true,
+      );
+
+      expect(cardQb.andWhere).toHaveBeenCalledWith("item.id IS NOT NULL");
+      expect(cardQb.andWhere).toHaveBeenCalledWith("item.quantity > 0");
     });
 
     it("should delegate getSetRarities to CardService for master sets", async () => {

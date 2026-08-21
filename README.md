@@ -114,7 +114,7 @@ npm run test:cov
 La plateforme tourne en production sur une VM (ETNA) et est déployée via **Coolify** (self-hosted). Guide complet : [doc/deploiement-vm.md](doc/deploiement-vm.md).
 
 - **CI — GitHub Actions** ([ci.yml](.github/workflows/ci.yml)) : lint → type-check → tests (coverage + e2e tournois sur PostgreSQL éphémère) → build, à chaque push/PR
-- **CD — Coolify** : à chaque push sur `main`, Coolify redéploie la stack Docker (web, api, vision, postgres) sur la VM ; gestion des services, variables d'environnement, logs et redémarrages via son dashboard
+- **CD — Coolify** : après merge sur `main`, déploiement en un clic (bouton *Deploy*) depuis le dashboard Coolify — rebuild et relance de la stack Docker (web, api, vision, postgres) sur la VM ; gestion des services, variables d'environnement, logs et redémarrages au même endroit
 - **Exposition** : Cloudflare Tunnel → [tcg-nexus.org](https://tcg-nexus.org) (front, API, docs)
 
 Lancement local de la stack complète :

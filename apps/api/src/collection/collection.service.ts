@@ -463,6 +463,9 @@ export class CollectionService {
    * @param serieId Optional series filter.
    * @param rarity Optional card rarity filter.
    * @param cardState Optional card state condition filter.
+   * @param viewer User requesting the collection.
+   * @param ownedOnly Whether Master Sets should exclude cards with no owned copy.
+   * @param cardsOnly Whether sealed collection items should be excluded.
    * @returns Paginated items and metadata.
    */
   async findCollectionItemsPaginated(
@@ -477,6 +480,8 @@ export class CollectionService {
     rarity?: string,
     cardState?: string,
     viewer?: User,
+    ownedOnly: boolean = false,
+    cardsOnly: boolean = false,
   ): Promise<{
     data: CollectionItem[];
     meta: {
@@ -528,6 +533,10 @@ export class CollectionService {
           cardState,
         });
       }
+      if (ownedOnly) {
+        queryBuilder.andWhere("item.id IS NOT NULL");
+        queryBuilder.andWhere("item.quantity > 0");
+      }
 
       queryBuilder.orderBy("card.localId", "ASC");
 
@@ -575,6 +584,13 @@ export class CollectionService {
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
       .where("item.collection.id = :collectionId", { collectionId });
+
+    if (ownedOnly) {
+      queryBuilder.andWhere("item.quantity > 0");
+    }
+    if (cardsOnly) {
+      queryBuilder.andWhere("pokemonCard.id IS NOT NULL");
+    }
 
     if (search) {
       applyCardSearch(queryBuilder, search, { alias: "pokemonCard" });

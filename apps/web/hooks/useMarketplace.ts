@@ -112,6 +112,7 @@ export function useMarketplaceCards(
   filters: FilterState,
   page: number,
   limit: number = 24,
+  enabled: boolean = true,
 ) {
   const { data: sets } = useQuery<PokemonSetType[]>({
     queryKey: ["pokemon-sets"],
@@ -149,6 +150,7 @@ export function useMarketplaceCards(
       limit,
       ...filters,
     },
+    { enabled },
   );
 
   return {

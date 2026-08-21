@@ -93,6 +93,8 @@ export class CollectionController {
     @Query("serieId") serieId?: string,
     @Query("rarity") rarity?: string,
     @Query("cardState") cardState?: string,
+    @Query("ownedOnly") ownedOnly?: string,
+    @Query("cardsOnly") cardsOnly?: string,
     @CurrentUser() user?: User,
   ) {
     const pageNumber = page ? parseInt(page, 10) : 1;
@@ -109,6 +111,8 @@ export class CollectionController {
       rarity,
       cardState,
       user,
+      ownedOnly === "true",
+      cardsOnly === "true",
     );
   }
 

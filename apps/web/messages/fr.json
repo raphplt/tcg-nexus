@@ -2277,7 +2277,21 @@
     "search": "Rechercher",
     "priceEur": "Prix (€)",
     "price": "Prix",
-    "showAll": "Tout afficher"
+    "showAll": "Tout afficher",
+    "collectionSubtitle": "Ajoutez directement les cartes que vous possédez déjà.",
+    "activeFilters": "{count, plural, one {# filtre actif} other {# filtres actifs}}",
+    "catalog": "Catalogue",
+    "myCollections": "Mes collections",
+    "collectionsLoading": "Chargement des collections...",
+    "chooseCollection": "Choisir une collection",
+    "masterSetName": "Master Set — {name}",
+    "catalogHelp": "Toutes les cartes disponibles sur TCG Nexus",
+    "order": "Ordre",
+    "filters": "Filtres",
+    "set": "Extension",
+    "rarityPlaceholder": "Ex. Rare",
+    "min": "Min",
+    "max": "Max"
   },
   "DeckAnalysis": {
     "title": "Analyse du deck",
@@ -2575,7 +2589,13 @@
     "updateError": "Erreur lors de la modification du deck",
     "createError": "Erreur lors de la création du deck",
     "submitEdit": "Modifier le deck",
-    "submitCreate": "Créer le deck"
+    "submitCreate": "Créer le deck",
+    "back": "Retour",
+    "viewDeck": "Deck ({count})",
+    "mobileDeckTitle": "Contenu du deck",
+    "mobileDeckHelp": "Ajustez rapidement les quantités ou retirez des cartes sans quitter le catalogue.",
+    "collectionEmpty": "Cette collection ne contient aucune carte correspondant à votre recherche.",
+    "noCollection": "Créez ou sélectionnez une collection pour afficher les cartes que vous possédez."
   },
   "DeckDetail": {
     "loadError": "Erreur lors du chargement du deck.",
@@ -2615,7 +2635,10 @@
     "title": "Aperçu rapide",
     "subtitle": "Suivez en direct la répartition de vos cartes.",
     "empty": "Ajoutez vos premières cartes pour voir l'aperçu.",
-    "varieties": "Variétés"
+    "varieties": "Variétés",
+    "total": "Total",
+    "main": "Principal",
+    "side": "Side"
   },
   "DecksFilters": {
     "reset": "Réinitialiser",
@@ -2911,7 +2934,19 @@
   },
   "DeckCardList": {
     "side": "Side",
-    "main": "Main"
+    "main": "Principal",
+    "deckPreview": "Mon deck",
+    "emptyMain": "Aucune carte dans la liste principale.",
+    "emptySide": "Aucune carte dans la side list.",
+    "cardFallback": "Carte",
+    "decrease": "Réduire la quantité de {name}",
+    "increase": "Augmenter la quantité de {name}",
+    "quantity": "Quantité de {name}",
+    "remove": "Retirer {name} du deck",
+    "owned": "x{count} possédée(s)",
+    "add": "Ajouter",
+    "allAdded": "Déjà ajoutée",
+    "empty": "Aucune carte ne correspond à ces critères."
   },
   "DeckScores": {
     "overallScore": "Score global"

@@ -14,7 +14,12 @@ export interface CollectionItemsQueryParams extends PaginationParams {
   search?: string;
   sortBy?: string;
   sortOrder?: "ASC" | "DESC";
+  setId?: string;
+  serieId?: string;
   rarity?: string;
+  cardState?: string;
+  ownedOnly?: boolean;
+  cardsOnly?: boolean;
 }
 
 export interface CreateCollectionPayload {

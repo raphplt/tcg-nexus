@@ -15,12 +15,13 @@ import { Separator } from "@components/ui/separator";
 import { AlertCircle, Plus } from "lucide-react";
 import { PaginatedNav } from "@/components/Shared/PaginatedNav";
 import { PokemonCardType } from "@/types/cardPokemon";
+import type { PaginatedResult } from "@/types/pagination";
 import { getCardImage } from "@/utils/images";
 
 interface CardListSectionProps {
   cardsLoading: boolean;
-  allCards: PokemonCardType[];
-  meta: any;
+  allCards: (PokemonCardType | { card: PokemonCardType })[];
+  meta?: PaginatedResult<PokemonCardType>["meta"];
   page: number;
   setPage: (page: number) => void;
   qtyByCard: Record<string, number>;
@@ -28,8 +29,12 @@ interface CardListSectionProps {
   roleByCard: Record<string, string>;
   setRoleByCard: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   addCard: (card: PokemonCardType, qty: number, role: string) => void;
+  ownedQuantityByCard?: Record<string, number>;
+  deckQuantityByCard?: Record<string, number>;
+  emptyMessage?: string;
 }
 
+/** Renders paginated card choices with compact quantity and role controls. */
 export const CardListSection: React.FC<CardListSectionProps> = ({
   cardsLoading,
   allCards,
@@ -41,72 +46,100 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
   roleByCard,
   setRoleByCard,
   addCard,
+  ownedQuantityByCard = {},
+  deckQuantityByCard = {},
+  emptyMessage,
 }) => {
   const t = useTranslations("DeckCardList");
   return (
-    <div className="space-y-4">
-      <Separator />
+    <div className="space-y-3">
+      <Separator className="mt-1" />
 
       {cardsLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {Array.from({ length: 10 }).map((_: unknown, i: number) => (
-            <div key={i} className="h-64 rounded-lg bg-muted animate-pulse" />
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-2.5">
+          {Array.from({ length: 12 }).map((_: unknown, i: number) => (
+            <div key={i} className="h-64 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       ) : allCards.length ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {allCards.map((item: any) => {
-              const card = (item.card || item) as PokemonCardType;
-              const qty = qtyByCard[card.id] || 1;
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,9rem),1fr))] gap-2.5">
+            {allCards.map((item) => {
+              const card = "card" in item ? item.card : item;
+              const ownedQuantity = ownedQuantityByCard[card.id];
+              const remainingOwnedQuantity = ownedQuantity
+                ? Math.max(
+                    0,
+                    ownedQuantity - (deckQuantityByCard[card.id] ?? 0),
+                  )
+                : undefined;
+              const hasAddedAllOwnedCopies = remainingOwnedQuantity === 0;
+              const maximumQuantity = remainingOwnedQuantity || undefined;
+              const qty = Math.min(
+                maximumQuantity ?? Number.POSITIVE_INFINITY,
+                qtyByCard[card.id] || 1,
+              );
               const role = (roleByCard[card.id] as string) || "main";
               return (
                 <article
                   key={card.id}
-                  className="relative rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden text-sm"
+                  className="relative flex min-w-0 flex-col overflow-hidden rounded-lg border bg-card text-sm shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="relative aspect-3/4 bg-muted/40">
                     <Image
                       src={getCardImage(card, "low")}
-                      alt={card.name || "Carte"}
+                      alt={card.name || t("cardFallback")}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                     />
                     {card.rarity && (
-                      <Badge className="absolute top-1 left-1 backdrop-blur-sm px-1 py-0 text-[10px]">
+                      <Badge className="absolute left-1 top-1 max-w-[calc(100%-0.5rem)] truncate px-1 py-0 text-[10px] backdrop-blur-sm">
                         {card.rarity}
                       </Badge>
                     )}
                     {card.set?.name && (
                       <Badge
                         variant="secondary"
-                        className="absolute bottom-1 left-1 px-1 py-0 text-[10px]"
+                        className="absolute bottom-1 left-1 max-w-[calc(100%-0.5rem)] truncate px-1 py-0 text-[10px]"
                       >
                         {card.set.name}
                       </Badge>
                     )}
+                    {ownedQuantity ? (
+                      <Badge className="absolute bottom-1 right-1 bg-emerald-600 px-1.5 py-0 text-[10px] text-white">
+                        {t("owned", { count: ownedQuantity })}
+                      </Badge>
+                    ) : null}
                   </div>
-                  <div className="p-2 space-y-2">
-                    <div className="space-y-0.5">
-                      <h3 className="font-semibold line-clamp-1 text-xs">
-                        {card.name || "Carte"}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-1">
+                  <div className="flex flex-1 flex-col gap-1.5 p-2">
+                    <h3 className="line-clamp-1 min-h-4 text-xs font-semibold">
+                      {card.name || t("cardFallback")}
+                    </h3>
+                    <div className="grid grid-cols-[3rem_minmax(0,1fr)] gap-1">
                       <Input
                         type="number"
                         min={1}
+                        max={maximumQuantity}
+                        disabled={hasAddedAllOwnedCopies}
                         value={qty}
-                        onChange={(e) =>
+                        aria-label={t("quantity", {
+                          name: card.name || t("cardFallback"),
+                        })}
+                        onChange={(event) => {
+                          const nextQuantity = Math.min(
+                            maximumQuantity ?? Number.POSITIVE_INFINITY,
+                            Math.max(1, Number(event.target.value) || 1),
+                          );
                           setQtyByCard((prev) => ({
                             ...prev,
-                            [card.id]: Number(e.target.value),
-                          }))
-                        }
-                        className="w-12 h-7 text-xs px-1"
+                            [card.id]: nextQuantity,
+                          }));
+                        }}
+                        className="h-8 w-full px-1 text-center text-xs tabular-nums"
                       />
                       <Select
                         value={role}
+                        disabled={hasAddedAllOwnedCopies}
                         onValueChange={(value) =>
                           setRoleByCard((prev) => ({
                             ...prev,
@@ -114,7 +147,7 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
                           }))
                         }
                       >
-                        <SelectTrigger className="h-7 text-xs px-2 flex-1">
+                        <SelectTrigger className="h-8 min-w-0 px-2 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -126,11 +159,12 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
                     <Button
                       type="button"
                       size="sm"
-                      className="w-full h-7 text-xs"
+                      className="mt-auto h-8 w-full text-xs"
+                      disabled={hasAddedAllOwnedCopies}
                       onClick={() => addCard(card, qty, role)}
                     >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Ajouter
+                      <Plus className="mr-1 h-3 w-3" />
+                      {hasAddedAllOwnedCopies ? t("allAdded") : t("add")}
                     </Button>
                   </div>
                 </article>
@@ -138,13 +172,19 @@ export const CardListSection: React.FC<CardListSectionProps> = ({
             })}
           </div>
           {meta && (
-            <PaginatedNav meta={meta} page={page} onPageChange={setPage} />
+            <PaginatedNav
+              meta={meta}
+              page={page}
+              onPageChange={setPage}
+              scrollToTop={false}
+              className="mt-4"
+            />
           )}
         </>
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-dashed p-4 text-muted-foreground">
           <AlertCircle className="w-4 h-4" />
-          Aucune carte ne correspond à ces critères.
+          {emptyMessage || t("empty")}
         </div>
       )}
     </div>

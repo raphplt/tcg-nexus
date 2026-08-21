@@ -33,6 +33,7 @@ interface DeckInfoSectionProps {
   isEditMode: boolean;
 }
 
+/** Renders the compact identity and visibility controls for a deck. */
 export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
   form,
   formats,
@@ -40,17 +41,17 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
 }) => {
   const t = useTranslations("DeckForm");
   return (
-    <Card className="xl:col-span-2 border border-primary/20 shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
+    <Card className="border-primary/20 shadow-sm">
+      <CardHeader className="space-y-0.5 p-4 pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Sparkles className="h-4 w-4 text-primary" />
           {isEditMode ? t("editTitle") : t("infoTitle")}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs">
           {isEditMode ? t("editSubtitle") : t("createSubtitle")}
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid md:grid-cols-2 gap-4">
+      <CardContent className="grid gap-3 p-4 pt-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_14rem_minmax(15rem,0.8fr)] xl:items-end">
         <FormField
           control={form.control}
           name="name"
@@ -58,7 +59,7 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
             <FormItem>
               <FormLabel>{t("name")}</FormLabel>
               <FormControl>
-                <Input {...field} placeholder={t("name")} className="h-11" />
+                <Input {...field} placeholder={t("name")} className="h-9" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,14 +77,14 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
                 onValueChange={(v) => field.onChange(Number(v))}
               >
                 <FormControl>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-9">
                     <SelectValue placeholder={t("chooseFormat")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {formats.map((v: any) => (
-                    <SelectItem key={v.id} value={v.id.toString()}>
-                      {v.type}
+                  {formats.map((format) => (
+                    <SelectItem key={format.id} value={format.id.toString()}>
+                      {format.type}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -97,10 +98,10 @@ export const DeckInfoSection: React.FC<DeckInfoSectionProps> = ({
           control={form.control}
           name="isPublic"
           render={({ field }) => (
-            <FormItem className="col-span-full flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-3">
+            <FormItem className="flex min-h-9 items-center justify-between gap-3 rounded-md border bg-muted/35 px-3 py-2 sm:col-span-2 xl:col-span-1">
               <div className="space-y-0.5">
-                <FormLabel>{t("isPublic")}</FormLabel>
-                <p className="text-sm text-muted-foreground">
+                <FormLabel className="text-sm">{t("isPublic")}</FormLabel>
+                <p className="hidden text-xs text-muted-foreground sm:block xl:hidden 2xl:block">
                   {t("publicHelp")}
                 </p>
               </div>
