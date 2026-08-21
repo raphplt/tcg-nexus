@@ -83,8 +83,9 @@ export function useBracket(tournamentId: string) {
 
     isSwiss: bracket?.type === "swiss_system",
     isRoundRobin: bracket?.type === "round_robin",
-    isElimination:
-      bracket?.type === "single_elimination" ||
-      bracket?.type === "double_elimination",
+    // The two elimination formats are drawn by different components: a double
+    // elimination bracket has a losers branch and a grand final to show.
+    isSingleElimination: bracket?.type === "single_elimination",
+    isDoubleElimination: bracket?.type === "double_elimination",
   };
 }

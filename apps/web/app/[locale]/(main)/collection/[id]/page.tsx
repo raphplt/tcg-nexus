@@ -1,29 +1,54 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { collectionService } from "@/services/collection.service";
-import { Collection, CollectionItemType } from "@/types/collection";
-import Image from "next/image";
 import {
-  Search,
-  Info,
-  Eye,
   Calendar,
-  Package,
-  Lock,
-  User,
+  Eye,
+  Filter,
+  Info,
   LayoutGrid,
   List,
-  Plus,
-  Minus,
-  Trophy,
-  Sparkles,
   Loader2,
-  Filter,
+  Lock,
+  Minus,
+  Package,
+  Plus,
+  Search,
+  Sparkles,
+  Trophy,
+  User,
 } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Progress } from "@/components/ui/progress";
+import { SmartImage } from "@/components/ui/SmartImage";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -32,39 +57,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { PokemonCardType } from "@/types/cardPokemon";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
+import { Link } from "@/i18n/navigation";
+import { collectionService } from "@/services/collection.service";
+import { PokemonCardType } from "@/types/cardPokemon";
+import { Collection, CollectionItemType } from "@/types/collection";
 import type { PaginatedResult } from "@/types/pagination";
-import { getCardImage } from "@/utils/images";
 import { getCollectionTitle } from "@/utils/collection";
-import { useLocale, useTranslations } from "next-intl";
+import { getCardImage } from "@/utils/images";
 
 const CollectionDetailPage = () => {
   const t = useTranslations("CollectionDetail");
@@ -141,6 +141,7 @@ const CollectionDetailPage = () => {
       sortOrder,
       rarity: selectedRarity !== "ALL" ? selectedRarity : undefined,
     },
+    { enabled: Boolean(id) && collection !== null },
   );
 
   const handleIncrement = async (cardId: string, cardName?: string) => {
@@ -530,11 +531,11 @@ const CollectionDetailPage = () => {
                       href={`/marketplace/cards/${pokemon.id}`}
                       className="relative w-full h-full block"
                     >
-                      <Image
-                        src={getCardImage(pokemon)}
+                      <SmartImage
+                        src={getCardImage(pokemon, "low")}
+                        fallbackSrc="/images/carte-pokemon-dos.jpg"
                         alt={pokemon.name || "Carte"}
-                        fill
-                        className={`object-contain transition-all duration-300 ${
+                        className={`h-full w-full object-contain transition-all duration-300 ${
                           isOwned
                             ? "group-hover:scale-105"
                             : "grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105"
@@ -652,11 +653,11 @@ const CollectionDetailPage = () => {
                         >
                           <TableCell>
                             <div className="w-14 h-20 relative">
-                              <Image
-                                src={getCardImage(pokemon)}
+                              <SmartImage
+                                src={getCardImage(pokemon, "low")}
+                                fallbackSrc="/images/carte-pokemon-dos.jpg"
                                 alt={pokemon.name || "Carte"}
-                                fill
-                                className={`object-contain rounded ${
+                                className={`h-full w-full object-contain rounded ${
                                   !isOwned ? "grayscale opacity-50" : ""
                                 }`}
                               />

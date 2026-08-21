@@ -56,6 +56,7 @@ import { tournamentService } from "@/services/tournament.service";
 import { UserRole } from "@/types/auth";
 import { CreateTournamentDto } from "@/types/tournament";
 import {
+  ORCHESTRATED_TOURNAMENT_TYPES,
   TournamentStatus,
   TournamentType,
   tournamentTypeTranslation,
@@ -104,10 +105,12 @@ export default function CreateTournamentPage() {
       totalRounds: 0,
       fillWithPlayers: false,
       isExternal: false,
+      grandFinalReset: true,
       externalRegistrationUrl: "",
     },
   });
   const isExternal = form.watch("isExternal");
+  const tournamentType = form.watch("type");
 
   const handleLocationSelect = (
     address: string,
@@ -158,6 +161,10 @@ export default function CreateTournamentPage() {
         allowedFormats: values.allowedFormats,
         isPublic: values.isPublic,
         isExternal: values.isExternal,
+        grandFinalReset:
+          values.type === TournamentType.DOUBLE_ELIMINATION
+            ? values.grandFinalReset
+            : undefined,
         externalRegistrationUrl: values.isExternal
           ? values.externalRegistrationUrl
           : undefined,
@@ -281,58 +288,75 @@ export default function CreateTournamentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("location")}</FormLabel>
-                    <Popover open={locationOpen} onOpenChange={setLocationOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={locationOpen}
-                            className="w-full justify-between font-normal"
-                            disabled={!placesReady}
-                          >
-                            {field.value ||
-                              placesValue ||
-                              t("addressPlaceholder")}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-100 p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder={t("addressPlaceholder")}
-                            value={placesValue}
-                            onValueChange={setPlacesValue}
-                          />
-                          <CommandList>
-                            <CommandEmpty>{t("noAddressFound")}</CommandEmpty>
-                            <CommandGroup>
-                              {placesStatus === "OK" &&
-                                placesData.map(({ place_id, description }) => (
-                                  <CommandItem
-                                    key={place_id}
-                                    value={description}
-                                    onSelect={() =>
-                                      handleLocationSelect(description, field)
-                                    }
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value === description
-                                          ? "opacity-100"
-                                          : "opacity-0",
-                                      )}
-                                    />
-                                    {description}
-                                  </CommandItem>
-                                ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    {!placesReady ? (
+                      <FormControl>
+                        <Input
+                          placeholder={t("addressPlaceholder")}
+                          {...field}
+                        />
+                      </FormControl>
+                    ) : (
+                      <Popover
+                        open={locationOpen}
+                        onOpenChange={setLocationOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={locationOpen}
+                              className="w-full justify-between font-normal"
+                            >
+                              {field.value ||
+                                placesValue ||
+                                t("addressPlaceholder")}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-100 p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder={t("addressPlaceholder")}
+                              value={placesValue}
+                              onValueChange={setPlacesValue}
+                            />
+                            <CommandList>
+                              <CommandEmpty>{t("noAddressFound")}</CommandEmpty>
+                              <CommandGroup>
+                                {placesStatus === "OK" &&
+                                  placesData.map(
+                                    ({ place_id, description }) => (
+                                      <CommandItem
+                                        key={place_id}
+                                        value={description}
+                                        onSelect={() =>
+                                          handleLocationSelect(
+                                            description,
+                                            field,
+                                          )
+                                        }
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            field.value === description
+                                              ? "opacity-100"
+                                              : "opacity-0",
+                                          )}
+                                        />
+                                        {description}
+                                      </CommandItem>
+                                    ),
+                                  )}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -390,22 +414,23 @@ export default function CreateTournamentPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.values(TournamentType).map((value) => (
-                          <SelectItem
-                            key={value}
-                            value={value}
-                            disabled={
-                              !isExternal &&
-                              value !== TournamentType.SINGLE_ELIMINATION
-                            }
-                          >
-                            {tournamentTypeTranslation[value]}
-                            {!isExternal &&
-                            value !== TournamentType.SINGLE_ELIMINATION
-                              ? " — gestion externe uniquement"
-                              : ""}
-                          </SelectItem>
-                        ))}
+                        {Object.values(TournamentType).map((value) => {
+                          const isOrchestrated =
+                            ORCHESTRATED_TOURNAMENT_TYPES.includes(value);
+
+                          return (
+                            <SelectItem
+                              key={value}
+                              value={value}
+                              disabled={!isExternal && !isOrchestrated}
+                            >
+                              {tournamentTypeTranslation[value]}
+                              {!isExternal && !isOrchestrated
+                                ? " — gestion externe uniquement"
+                                : ""}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <FormDescription>{t("formatNotice")}</FormDescription>
@@ -431,6 +456,32 @@ export default function CreateTournamentPage() {
                 )}
               />
 
+              {!isExternal &&
+                tournamentType === TournamentType.DOUBLE_ELIMINATION && (
+                  <FormField
+                    control={form.control}
+                    name="grandFinalReset"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between col-span-2">
+                        <div className="space-y-0.5">
+                          <FormLabel>Belle de la grande finale</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            Le finaliste issu du repêchage arrive avec une
+                            défaite : il doit gagner deux fois pour le titre.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="shadow-none focus:ring-0"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
               <FormField
                 control={form.control}
                 name="isExternal"
@@ -449,8 +500,9 @@ export default function CreateTournamentPage() {
                           field.onChange(checked);
                           if (
                             !checked &&
-                            form.getValues("type") !==
-                              TournamentType.SINGLE_ELIMINATION
+                            !ORCHESTRATED_TOURNAMENT_TYPES.includes(
+                              form.getValues("type"),
+                            )
                           ) {
                             form.setValue(
                               "type",

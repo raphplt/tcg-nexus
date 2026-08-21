@@ -26,6 +26,19 @@ export const tournamentTypeTranslation = {
   [TournamentType.ROUND_ROBIN]: "Toutes rondes",
 };
 
+/**
+ * Formats whose pairings and progression are handled by Nexus itself.
+ *
+ * The others are only offered for externally managed tournaments, where the
+ * platform merely publishes the event.
+ */
+export const ORCHESTRATED_TOURNAMENT_TYPES: TournamentType[] = [
+  TournamentType.SINGLE_ELIMINATION,
+  TournamentType.DOUBLE_ELIMINATION,
+  TournamentType.ROUND_ROBIN,
+  TournamentType.SWISS_SYSTEM,
+];
+
 export const tournamentStatusTranslation = {
   [TournamentStatus.DRAFT]: "Brouillon",
   [TournamentStatus.REGISTRATION_OPEN]: "Inscriptions ouvertes",

@@ -8,6 +8,10 @@ import {
   TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
+import {
+  SwissPairingService,
+  toSwissResults,
+} from "../tournament/services/swiss-pairing.service";
 import { User } from "../user/entities/user.entity";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
@@ -61,6 +65,7 @@ export class RankingService {
     private matchRepository: Repository<Match>,
     @InjectRepository(RankedMatchHistory)
     private rankedHistoryRepository: Repository<RankedMatchHistory>,
+    private swissPairingService: SwissPairingService,
   ) {}
 
   /**
@@ -444,11 +449,34 @@ export class RankingService {
       rankings.push(ranking);
     }
 
-    rankings.sort((a, b) => {
-      if (a.points !== b.points) return b.points - a.points;
-      if (a.winRate !== b.winRate) return b.winRate - a.winRate;
-      return b.wins - a.wins;
-    });
+    if (tournament.type === TournamentType.SWISS_SYSTEM) {
+      // Swiss standings are broken by the official tie-breakers (OMW%, GW%,
+      // OGW%) rather than by a plain win ratio.
+      const swissStandings = this.swissPairingService.computeStandings(
+        playerIds,
+        toSwissResults(tournament.matches),
+      );
+      const swissOrder = new Map(
+        swissStandings.map((standing, index) => [standing.playerId, index]),
+      );
+
+      rankings.sort(
+        (a, b) =>
+          (swissOrder.get(a.player.id) ?? Number.MAX_SAFE_INTEGER) -
+          (swissOrder.get(b.player.id) ?? Number.MAX_SAFE_INTEGER),
+      );
+    } else if (
+      tournament.type === TournamentType.SINGLE_ELIMINATION ||
+      tournament.type === TournamentType.DOUBLE_ELIMINATION
+    ) {
+      this.sortEliminationRankings(rankings, tournament);
+    } else {
+      rankings.sort((a, b) => {
+        if (a.points !== b.points) return b.points - a.points;
+        if (a.winRate !== b.winRate) return b.winRate - a.winRate;
+        return b.wins - a.wins;
+      });
+    }
 
     rankings.forEach((ranking, index) => {
       ranking.rank = index + 1;
@@ -549,6 +577,53 @@ export class RankingService {
   /**
    * Calculates base standings (points, wins, losses, draws, win rate) from finished matches.
    */
+  /**
+   * Orders an elimination bracket by how far each player went.
+   *
+   * The step of the last match played is the real measure: in double
+   * elimination a player who survived deep into the losers bracket finishes
+   * ahead of one knocked out early, whatever their win ratio says.
+   */
+  private sortEliminationRankings(
+    rankings: Ranking[],
+    tournament: Tournament,
+  ): void {
+    const settledMatches = tournament.matches.filter(
+      (match) =>
+        match.status === MatchStatus.FINISHED ||
+        match.status === MatchStatus.FORFEIT,
+    );
+
+    const decidingMatch = [...settledMatches]
+      .filter((match) => !match.nextMatchId)
+      .sort((a, b) => b.round - a.round || b.id - a.id)[0];
+    const championId = decidingMatch?.winner?.id;
+
+    const depthByPlayer = new Map<number, number>();
+    for (const match of settledMatches) {
+      for (const player of [match.playerA, match.playerB]) {
+        if (!player) continue;
+        depthByPlayer.set(
+          player.id,
+          Math.max(depthByPlayer.get(player.id) ?? 0, match.round),
+        );
+      }
+    }
+
+    const depthOf = (ranking: Ranking) =>
+      depthByPlayer.get(ranking.player.id) ?? 0;
+    const isChampion = (ranking: Ranking) =>
+      championId !== undefined && ranking.player.id === championId ? 1 : 0;
+
+    rankings.sort((a, b) => {
+      if (isChampion(a) !== isChampion(b)) return isChampion(b) - isChampion(a);
+      if (depthOf(a) !== depthOf(b)) return depthOf(b) - depthOf(a);
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      if (a.losses !== b.losses) return a.losses - b.losses;
+      return b.winRate - a.winRate;
+    });
+  }
+
   private calculatePlayerStatistics(
     tournament: Tournament,
   ): Map<number, RankingCalculationResult> {
@@ -581,6 +656,16 @@ export class RankingService {
     tournament.matches
       .filter((match) => match.finishedAt) // Process finished matches only
       .forEach((match) => {
+        // A bye counts as a win: the player clears the round unopposed.
+        if (match.isBye && match.playerA) {
+          const byeStats = playerStats.get(match.playerA.id);
+          if (byeStats) {
+            byeStats.wins++;
+            byeStats.points += pointsSystem.win;
+          }
+          return;
+        }
+
         if (!match.playerA || !match.playerB) return;
 
         const playerAStats = playerStats.get(match.playerA.id)!;

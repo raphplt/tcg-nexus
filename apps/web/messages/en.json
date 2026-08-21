@@ -2966,5 +2966,14 @@
     "VALIDATION_ERROR": "Some information is invalid.",
     "TOO_MANY_REQUESTS": "Too many requests, try again in a moment.",
     "INTERNAL_ERROR": "An internal error occurred."
+  },
+  "RoundsSchedule": {
+    "round": "Round {index}",
+    "current": "Live",
+    "bye": "Bye",
+    "empty": "No round available",
+    "progress": "Round {current} of {total}",
+    "pendingPairings": "Pairings computed once the live round ends",
+    "remainingRounds": "{count} rounds left"
   }
 }

@@ -8,6 +8,7 @@ import { Deck } from "../deck/entities/deck.entity";
 import { Player } from "../player/entities/player.entity";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { RankingService } from "../ranking/ranking.service";
+import { SwissPairingService } from "../tournament/services/swiss-pairing.service";
 import { Statistics } from "../statistics/entities/statistic.entity";
 import {
   Tournament,
@@ -18,7 +19,12 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../tournament/entities/tournament-registration.entity";
-import { Match, MatchPhase, MatchStatus } from "./entities/match.entity";
+import {
+  BracketSide,
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "./entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,
@@ -123,6 +129,7 @@ describe("MatchService", () => {
     allowLateRegistration: true, // properties from entity
     isPublic: true,
     isExternal: false,
+    grandFinalReset: true,
     isFinished: false,
     players: [], // Add missing property
     createdAt: new Date(),
@@ -140,6 +147,13 @@ describe("MatchService", () => {
     round: 1,
     phase: MatchPhase.QUALIFICATION,
     status: MatchStatus.SCHEDULED,
+    isBye: false,
+    bracketSide: null,
+    bracketPosition: null,
+    nextMatchId: null,
+    nextSlot: null,
+    loserNextMatchId: null,
+    loserNextSlot: null,
     scheduledDate: new Date(),
     startedAt: undefined,
     finishedAt: undefined,
@@ -194,6 +208,7 @@ describe("MatchService", () => {
         { provide: getRepositoryToken(Deck), useValue: mockDeckRepository },
         { provide: DataSource, useValue: mockDataSource },
         { provide: RankingService, useValue: mockRankingService },
+        SwissPairingService,
         {
           provide: EventEmitter2,
           useValue: { emit: jest.fn(), emitAsync: jest.fn() },
@@ -202,6 +217,7 @@ describe("MatchService", () => {
     }).compile();
 
     service = module.get<MatchService>(MatchService);
+    mockRankingService.updateTournamentRankings.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -996,41 +1012,43 @@ describe("MatchService", () => {
       expect(manager.save).toHaveBeenCalledTimes(2);
     });
 
-    it("should advance tournament when round finished", async () => {
-      const finishedMatch: Match = {
-        ...mockMatch,
-        status: MatchStatus.FINISHED,
-        tournament: {
-          ...mockTournament,
-          currentRound: 1,
-          totalRounds: 2,
-          type: TournamentType.SINGLE_ELIMINATION,
-          matches: [
-            { ...mockMatch, winner: mockPlayerA, status: MatchStatus.FINISHED },
-            {
-              ...mockMatch,
-              id: 2,
-              winner: mockPlayerB,
-              status: MatchStatus.FINISHED,
-            },
-          ],
-        },
+    it("should push the winner into the linked next match", async () => {
+      const tournament = {
+        ...mockTournament,
+        currentRound: 1,
+        totalRounds: 2,
+        type: TournamentType.SINGLE_ELIMINATION,
       };
+      const finalMatch = {
+        ...mockMatch,
+        id: 5,
+        round: 2,
+        playerA: undefined,
+        playerB: undefined,
+        status: MatchStatus.SCHEDULED,
+        isBye: false,
+        nextMatchId: null,
+      };
+      const semiFinal = {
+        ...mockMatch,
+        id: 1,
+        round: 1,
+        winner: mockPlayerA,
+        status: MatchStatus.FINISHED,
+        nextMatchId: 5,
+        nextSlot: "A" as const,
+        tournament,
+      };
+      const loserRegistration = { eliminatedAt: null, eliminatedRound: null };
 
       const manager = {
         count: jest.fn().mockResolvedValue(0),
         create: jest.fn((_entity, data) => data),
-        find: jest.fn().mockResolvedValue(finishedMatch.tournament.matches),
-        findOne: jest.fn().mockImplementation(async (entity) => {
-          if (entity === Tournament) {
-            return finishedMatch.tournament;
-          }
-          if (entity === TournamentRegistration) {
-            return { eliminatedAt: null, eliminatedRound: null };
-          }
-          if (entity === OnlineMatchSession) {
-            return null;
-          }
+        find: jest.fn().mockResolvedValue([finalMatch]),
+        findOne: jest.fn().mockImplementation(async (entity, options) => {
+          if (entity === Tournament) return tournament;
+          if (entity === Match && options?.where?.id === 5) return finalMatch;
+          if (entity === TournamentRegistration) return loserRegistration;
           return null;
         }),
         save: jest
@@ -1038,69 +1056,221 @@ describe("MatchService", () => {
           .mockImplementation(async (_entity, data) => data ?? _entity),
       };
 
-      await (service as any).checkTournamentProgression(finishedMatch, manager);
-
-      expect(manager.create).toHaveBeenCalledWith(
-        Match,
-        expect.objectContaining({ round: 2 }),
+      const finished = await (service as any).checkTournamentProgression(
+        semiFinal,
+        manager,
       );
-      expect(finishedMatch.tournament.currentRound).toBe(2);
-      expect(manager.save).toHaveBeenCalledWith(finishedMatch.tournament);
+
+      expect(finished).toBe(false);
+      expect(finalMatch.playerA).toBe(mockPlayerA);
+      // Single elimination: the defeat has no destination, the player is out.
+      expect(loserRegistration.eliminatedAt).toBeInstanceOf(Date);
+      expect(tournament.currentRound).toBe(2);
     });
 
-    it("should calculate phases for rounds", () => {
-      expect((service as any).getPhaseForRound(3, 3)).toBe(MatchPhase.FINAL);
-      expect((service as any).getPhaseForRound(2, 3)).toBe(
-        MatchPhase.SEMI_FINAL,
-      );
-      expect((service as any).getPhaseForRound(1, 3)).toBe(
-        MatchPhase.QUARTER_FINAL,
-      );
-      expect((service as any).getPhaseForRound(1, 5)).toBe(
-        MatchPhase.QUALIFICATION,
-      );
-    });
-
-    it("should finish an elimination tournament after the final", async () => {
+    it("should eliminate a loser who has nowhere left to drop", async () => {
       const tournament = {
         ...mockTournament,
         currentRound: 1,
-        totalRounds: 1,
-        status: TournamentStatus.IN_PROGRESS,
+        totalRounds: 2,
+        type: TournamentType.SINGLE_ELIMINATION,
       };
-      const finalMatch = {
+      const loserRegistration = { eliminatedAt: null, eliminatedRound: null };
+      const playedMatch = {
         ...mockMatch,
-        id: 7,
+        id: 1,
         round: 1,
-        playerA: mockPlayerA,
-        playerB: mockPlayerB,
         winner: mockPlayerA,
         status: MatchStatus.FINISHED,
-      };
-      const loserRegistration = {
-        eliminatedAt: null,
-        eliminatedRound: null,
-      };
-      const manager = {
-        findOne: jest.fn().mockImplementation(async (entity) => {
-          if (entity === TournamentRegistration) {
-            return loserRegistration;
-          }
-          return null;
-        }),
-        save: jest.fn().mockImplementation(async (value) => value),
+        nextMatchId: 5,
+        nextSlot: "A" as const,
+        loserNextMatchId: null,
+        tournament,
       };
 
-      await (service as any).propagateEliminationWinners(
+      const manager = {
+        count: jest.fn().mockResolvedValue(0),
+        create: jest.fn((_entity, data) => data),
+        find: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockImplementation(async (entity) => {
+          if (entity === TournamentRegistration) return loserRegistration;
+          return null;
+        }),
+        save: jest
+          .fn()
+          .mockImplementation(async (_entity, data) => data ?? _entity),
+      };
+
+      await (service as any).propagateBracketResult(
         tournament,
-        [finalMatch],
+        playedMatch,
         manager,
       );
 
       expect(loserRegistration.eliminatedAt).toBeInstanceOf(Date);
       expect(loserRegistration.eliminatedRound).toBe(1);
+    });
+
+    it("should keep a beaten grand finalist alive through the bracket reset", async () => {
+      const tournament = {
+        ...mockTournament,
+        currentRound: 4,
+        totalRounds: 4,
+        type: TournamentType.DOUBLE_ELIMINATION,
+        grandFinalReset: true,
+      };
+      const loserRegistration = { eliminatedAt: null, eliminatedRound: null };
+      const grandFinal = {
+        ...mockMatch,
+        id: 20,
+        round: 4,
+        bracketSide: BracketSide.GRAND_FINAL,
+        bracketPosition: 0,
+        playerA: mockPlayerA,
+        playerB: mockPlayerB,
+        winner: mockPlayerB,
+        status: MatchStatus.FINISHED,
+        nextMatchId: null,
+        loserNextMatchId: null,
+        tournament,
+      };
+
+      const created: any[] = [];
+      const manager = {
+        count: jest.fn().mockResolvedValue(0),
+        create: jest.fn((_entity, data) => {
+          created.push(data);
+          return { id: 21, ...data };
+        }),
+        find: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockImplementation(async (entity) => {
+          if (entity === TournamentRegistration) return loserRegistration;
+          return null;
+        }),
+        save: jest
+          .fn()
+          .mockImplementation(async (_entity, data) => data ?? _entity),
+      };
+
+      const finished = await (service as any).propagateBracketResult(
+        tournament,
+        grandFinal,
+        manager,
+      );
+
+      expect(finished).toBe(false);
+      expect(created[0]).toEqual(
+        expect.objectContaining({
+          round: 5,
+          bracketSide: BracketSide.GRAND_FINAL,
+          bracketPosition: 1,
+        }),
+      );
+      expect(loserRegistration.eliminatedAt).toBeNull();
+      expect(tournament.totalRounds).toBe(5);
+    });
+
+    it("should end the tournament when the winners finalist takes the grand final", async () => {
+      const tournament = {
+        ...mockTournament,
+        currentRound: 4,
+        totalRounds: 4,
+        type: TournamentType.DOUBLE_ELIMINATION,
+        grandFinalReset: true,
+      };
+      const loserRegistration = { eliminatedAt: null, eliminatedRound: null };
+      const grandFinal = {
+        ...mockMatch,
+        id: 20,
+        round: 4,
+        bracketSide: BracketSide.GRAND_FINAL,
+        bracketPosition: 0,
+        playerA: mockPlayerA,
+        playerB: mockPlayerB,
+        winner: mockPlayerA,
+        status: MatchStatus.FINISHED,
+        nextMatchId: null,
+        loserNextMatchId: null,
+        tournament,
+      };
+
+      const manager = {
+        count: jest.fn().mockResolvedValue(0),
+        create: jest.fn((_entity, data) => data),
+        find: jest.fn().mockResolvedValue([]),
+        findOne: jest.fn().mockImplementation(async (entity) => {
+          if (entity === TournamentRegistration) return loserRegistration;
+          return null;
+        }),
+        save: jest
+          .fn()
+          .mockImplementation(async (_entity, data) => data ?? _entity),
+      };
+
+      const finished = await (service as any).propagateBracketResult(
+        tournament,
+        grandFinal,
+        manager,
+      );
+
+      expect(finished).toBe(true);
+      expect(manager.create).not.toHaveBeenCalled();
+      expect(loserRegistration.eliminatedAt).toBeInstanceOf(Date);
+    });
+
+    it("should open the next round robin round without creating matches", async () => {
+      const tournament = {
+        ...mockTournament,
+        currentRound: 1,
+        totalRounds: 3,
+        type: TournamentType.ROUND_ROBIN,
+        status: TournamentStatus.IN_PROGRESS,
+      };
+      const nextRoundMatch = { ...mockMatch, id: 42, round: 2 };
+      const manager = {
+        find: jest.fn().mockResolvedValue([nextRoundMatch]),
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn((_entity, data) => data),
+        save: jest.fn().mockImplementation(async (value) => value),
+      };
+
+      const finished = await (service as any).advanceRoundRobin(
+        tournament,
+        manager,
+      );
+
+      expect(finished).toBe(false);
+      expect(tournament.currentRound).toBe(2);
+      expect(manager.create).toHaveBeenCalledWith(
+        OnlineMatchSession,
+        expect.objectContaining({ match: nextRoundMatch }),
+      );
+    });
+
+    it("should finish a round robin after its last round", async () => {
+      const tournament = {
+        ...mockTournament,
+        currentRound: 3,
+        totalRounds: 3,
+        type: TournamentType.ROUND_ROBIN,
+        status: TournamentStatus.IN_PROGRESS,
+      };
+      const manager = {
+        find: jest.fn(),
+        findOne: jest.fn(),
+        create: jest.fn(),
+        save: jest.fn().mockImplementation(async (value) => value),
+      };
+
+      const finished = await (service as any).advanceRoundRobin(
+        tournament,
+        manager,
+      );
+
+      expect(finished).toBe(true);
       expect(tournament.status).toBe(TournamentStatus.FINISHED);
       expect(tournament.isFinished).toBe(true);
+      expect(manager.find).not.toHaveBeenCalled();
     });
   });
 });

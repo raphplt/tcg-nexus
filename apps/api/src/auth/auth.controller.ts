@@ -30,8 +30,8 @@ import { LocalAuthGuard } from "./guards/local-auth.guard";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-// `none` n'est nécessaire que si le web et l'API sont sur des domaines
-// distincts ; COOKIE_SAMESITE=lax supprime la surface CSRF quand ils sont same-site
+// `none` is only required when the web app and API use different sites.
+// Same-site deployments should configure `lax` to reduce the CSRF surface.
 const resolveSameSite = (): "none" | "lax" | "strict" => {
   const configured = process.env.COOKIE_SAMESITE?.trim().toLowerCase();
   if (
@@ -97,7 +97,7 @@ export class AuthController {
     const accessTtl = this.authService.getAccessTokenTtlMs();
     const refreshTtl = this.authService.getRefreshTokenTtlMs();
     return {
-      accessTokenMaxAge: refreshTtl > accessTtl ? refreshTtl : accessTtl,
+      accessTokenMaxAge: accessTtl,
       refreshTokenMaxAge: rememberMe ? refreshTtl : undefined,
     };
   }

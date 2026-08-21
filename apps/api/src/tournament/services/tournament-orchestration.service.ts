@@ -25,6 +25,14 @@ import {
 } from "../entities/tournament-registration.entity";
 import { BracketService } from "./bracket.service";
 import { SeedingMethod } from "./seeding.service";
+import { SwissPairingService, toSwissResults } from "./swiss-pairing.service";
+
+export const ORCHESTRATED_TOURNAMENT_TYPES: TournamentType[] = [
+  TournamentType.SINGLE_ELIMINATION,
+  TournamentType.DOUBLE_ELIMINATION,
+  TournamentType.ROUND_ROBIN,
+  TournamentType.SWISS_SYSTEM,
+];
 
 export interface StartTournamentOptions {
   seedingMethod?: SeedingMethod;
@@ -49,6 +57,7 @@ export class TournamentOrchestrationService {
     @InjectRepository(TournamentRegistration)
     private registrationRepository: Repository<TournamentRegistration>,
     private bracketService: BracketService,
+    private swissPairingService: SwissPairingService,
     private rankingService: RankingService,
     private matchService: MatchService,
     private dataSource: DataSource,
@@ -153,7 +162,7 @@ export class TournamentOrchestrationService {
         });
       }
 
-      if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+      if (!ORCHESTRATED_TOURNAMENT_TYPES.includes(tournament.type)) {
         throw new BadRequestException(
           "Ce format est suivi sur la plateforme externe de l’organisateur",
         );
@@ -183,18 +192,31 @@ export class TournamentOrchestrationService {
       let playersAdvanced = 0;
       let playersEliminated = 0;
 
-      const result = await this.advanceEliminationRound(
-        tournament,
-        newRound,
-        manager,
-      );
+      let result: {
+        matchesCreated: number;
+        playersAdvanced: number;
+        playersEliminated: number;
+        round?: number;
+      };
+
+      if (tournament.type === TournamentType.ROUND_ROBIN) {
+        result = this.advanceRoundRobinRound(tournament, newRound);
+      } else if (tournament.type === TournamentType.SWISS_SYSTEM) {
+        result = await this.advanceSwissRound(tournament, newRound, manager);
+      } else {
+        result = this.advanceEliminationRound(tournament, newRound);
+      }
       matchesCreated = result.matchesCreated;
       playersAdvanced = result.playersAdvanced;
       playersEliminated = result.playersEliminated;
 
+      // Elimination brackets progress on their own when scores are reported,
+      // so the manual button must land on the step that is actually pending.
+      const targetRound = result.round ?? newRound;
+
       if (
-        newRound > tournament.totalRounds! ||
-        this.isTournamentComplete(tournament, newRound)
+        targetRound > tournament.totalRounds! ||
+        this.isTournamentComplete(tournament, targetRound)
       ) {
         tournament.status = TournamentStatus.FINISHED;
         tournament.isFinished = true;
@@ -212,13 +234,13 @@ export class TournamentOrchestrationService {
           rankings,
         });
       } else {
-        tournament.currentRound = newRound;
+        tournament.currentRound = targetRound;
       }
 
       await manager.save(tournament);
 
       return {
-        newRound,
+        newRound: targetRound,
         matchesCreated,
         playersAdvanced,
         playersEliminated,
@@ -255,28 +277,28 @@ export class TournamentOrchestrationService {
       }
 
       let championId: number | undefined;
-      if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
-        const finalMatches = await manager.find(Match, {
-          where: {
-            tournament: { id: tournamentId },
-            round: tournament.totalRounds,
-          },
+      if (
+        tournament.type === TournamentType.SINGLE_ELIMINATION ||
+        tournament.type === TournamentType.DOUBLE_ELIMINATION
+      ) {
+        const bracketMatches = await manager.find(Match, {
+          where: { tournament: { id: tournamentId } },
           relations: ["winner"],
-          order: { id: "DESC" },
+          order: { round: "DESC", id: "DESC" },
         });
-        const finalMatch = finalMatches[0];
+        const decidingMatch = this.findDecidingMatch(bracketMatches);
 
         if (
-          !finalMatch?.winner ||
-          (finalMatch.status !== MatchStatus.FINISHED &&
-            finalMatch.status !== MatchStatus.FORFEIT)
+          !decidingMatch?.winner ||
+          (decidingMatch.status !== MatchStatus.FINISHED &&
+            decidingMatch.status !== MatchStatus.FORFEIT)
         ) {
           throw new BadRequestException(
             "Le tournoi ne peut être terminé qu'après une finale validée",
           );
         }
 
-        championId = finalMatch.winner.id;
+        championId = decidingMatch.winner.id;
       }
 
       const activeRegistrations = await manager.find(TournamentRegistration, {
@@ -414,17 +436,7 @@ export class TournamentOrchestrationService {
       (reg) => reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
     ).length;
 
-    const confirmedPlayerCount = tournament.registrations.filter(
-      (registration) => registration.status === RegistrationStatus.CONFIRMED,
-    ).length;
-    const expectedEliminationMatches =
-      confirmedPlayerCount >= 2
-        ? 2 ** Math.ceil(Math.log2(confirmedPlayerCount)) - 1
-        : 0;
-    const totalMatches =
-      tournament.type === TournamentType.SINGLE_ELIMINATION
-        ? Math.max(expectedEliminationMatches, tournament.matches.length)
-        : tournament.matches.length;
+    const totalMatches = this.countExpectedMatches(tournament);
     const progressPercentage =
       totalMatches > 0
         ? Math.min(100, (completedMatches / totalMatches) * 100)
@@ -461,9 +473,9 @@ export class TournamentOrchestrationService {
       );
     }
 
-    if (tournament.type !== TournamentType.SINGLE_ELIMINATION) {
+    if (!ORCHESTRATED_TOURNAMENT_TYPES.includes(tournament.type)) {
       throw new BadRequestException(
-        "Seul le format à élimination directe est orchestré par Nexus",
+        "Ce format n'est pas encore orchestré par Nexus",
       );
     }
 
@@ -493,9 +505,39 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Advances single-elimination tournament to next round.
+   * Advances a round robin: every round is generated at startup, so there is
+   * nothing to create and nobody to eliminate.
    */
-  private async advanceEliminationRound(
+  private advanceRoundRobinRound(
+    tournament: Tournament,
+    newRound: number,
+  ): {
+    matchesCreated: number;
+    playersAdvanced: number;
+    playersEliminated: number;
+  } {
+    const nextRoundMatches = tournament.matches.filter(
+      (match) => match.round === newRound,
+    );
+
+    const playersAdvanced = new Set(
+      nextRoundMatches.flatMap((match) =>
+        [match.playerA?.id, match.playerB?.id].filter(
+          (id): id is number => typeof id === "number",
+        ),
+      ),
+    ).size;
+
+    return { matchesCreated: 0, playersAdvanced, playersEliminated: 0 };
+  }
+
+  /**
+   * Pairs and creates the next Swiss round from the current standings.
+   *
+   * Dropped players are excluded from the pairings; an odd field produces a
+   * bye, stored as an already-won match.
+   */
+  private async advanceSwissRound(
     tournament: Tournament,
     newRound: number,
     manager: EntityManager,
@@ -504,70 +546,115 @@ export class TournamentOrchestrationService {
     playersAdvanced: number;
     playersEliminated: number;
   }> {
-    const previousRoundMatches = tournament.matches.filter(
-      (match) => match.round === newRound - 1,
+    if (newRound > (tournament.totalRounds || 0)) {
+      return { matchesCreated: 0, playersAdvanced: 0, playersEliminated: 0 };
+    }
+
+    const registrations = (tournament.registrations ?? []).filter(
+      (registration) => registration.status === RegistrationStatus.CONFIRMED,
+    );
+
+    const playerIds = registrations
+      .map((registration) => registration.player?.id)
+      .filter((id): id is number => typeof id === "number");
+
+    const droppedPlayerIds = registrations
+      .filter((registration) => registration.droppedAt)
+      .map((registration) => registration.player.id);
+
+    const standings = this.swissPairingService.computeStandings(
+      playerIds,
+      toSwissResults(tournament.matches),
+    );
+
+    const pairings = this.swissPairingService.pairNextRound(
+      standings,
+      droppedPlayerIds,
     );
 
     let matchesCreated = 0;
-    let playersAdvanced = 0;
-    let playersEliminated = 0;
 
-    // Create next round matches pairing up winning players
-    const winners: any[] = [];
-
-    for (const match of previousRoundMatches) {
-      // Determine winner based on match scores if winner property is unassigned
-      let winner = match.winner;
-      if (!winner && match.status === MatchStatus.FINISHED) {
-        if ((match.playerAScore ?? 0) > (match.playerBScore ?? 0)) {
-          winner = match.playerA;
-        } else if ((match.playerBScore ?? 0) > (match.playerAScore ?? 0)) {
-          winner = match.playerB;
-        }
-      }
-
-      if (winner) {
-        winners.push(winner);
-        playersAdvanced++;
-      }
-
-      // Mark losing players as eliminated from tournament
-      const loser =
-        match.playerA?.id === winner?.id ? match.playerB : match.playerA;
-      if (loser) {
-        const registration = await manager.findOne(TournamentRegistration, {
-          where: {
-            tournament: { id: tournament.id },
-            player: { id: loser.id },
-          },
-        });
-
-        if (registration && !registration.eliminatedAt) {
-          registration.eliminatedAt = new Date();
-          registration.eliminatedRound = newRound - 1;
-          await manager.save(registration);
-          playersEliminated++;
-        }
-      }
-    }
-
-    // Create next round matches asynchronously
-    for (let i = 0; i < winners.length; i += 2) {
-      if (i + 1 < winners.length) {
-        await this.matchService.create({
-          tournamentId: tournament.id,
-          playerAId: winners[i].id,
-          playerBId: winners[i + 1].id,
+    for (const pairing of pairings) {
+      if (pairing.isBye) {
+        const byeMatch = manager.create(Match, {
+          tournament: { id: tournament.id } as Tournament,
+          playerA: { id: pairing.playerAId } as any,
+          winner: { id: pairing.playerAId } as any,
           round: newRound,
-          phase: this.getPhaseForRound(newRound, tournament.totalRounds || 0),
+          phase: MatchPhase.QUALIFICATION,
+          status: MatchStatus.FINISHED,
+          isBye: true,
+          notes: "Qualification automatique (bye)",
           scheduledDate: new Date(),
-          notes: `Round ${newRound} - Élimination`,
+          finishedAt: new Date(),
         });
+        await manager.save(Match, byeMatch);
         matchesCreated++;
+        continue;
       }
+
+      await this.matchService.create({
+        tournamentId: tournament.id,
+        playerAId: pairing.playerAId,
+        playerBId: pairing.playerBId!,
+        round: newRound,
+        phase: MatchPhase.QUALIFICATION,
+        scheduledDate: new Date(),
+        notes: `Ronde ${newRound} - Système suisse`,
+      });
+      matchesCreated++;
     }
 
-    return { matchesCreated, playersAdvanced, playersEliminated };
+    const playersAdvanced = pairings.reduce(
+      (count, pairing) => count + (pairing.isBye ? 1 : 2),
+      0,
+    );
+
+    return {
+      matchesCreated,
+      playersAdvanced,
+      playersEliminated: droppedPlayerIds.length,
+    };
+  }
+
+  /**
+   * Advances an elimination bracket to the next step.
+   *
+   * Nothing is created here: winners and losers were already pushed to their
+   * destination when the score was reported, following the links stored on
+   * each match. This only reports where the tournament now stands.
+   */
+  private advanceEliminationRound(
+    tournament: Tournament,
+    newRound: number,
+  ): {
+    matchesCreated: number;
+    playersAdvanced: number;
+    playersEliminated: number;
+    round: number;
+  } {
+    const pendingMatches = (tournament.matches ?? []).filter(
+      (match) =>
+        match.status === MatchStatus.SCHEDULED ||
+        match.status === MatchStatus.IN_PROGRESS,
+    );
+
+    const round = pendingMatches.length
+      ? Math.min(...pendingMatches.map((match) => match.round))
+      : newRound;
+
+    const playersAdvanced = new Set(
+      (tournament.matches ?? [])
+        .filter((match) => match.round === round)
+        .flatMap((match) => [match.playerA?.id, match.playerB?.id])
+        .filter((id): id is number => typeof id === "number"),
+    ).size;
+
+    const playersEliminated = (tournament.registrations ?? []).filter(
+      (registration) => registration.eliminatedAt,
+    ).length;
+
+    return { matchesCreated: 0, playersAdvanced, playersEliminated, round };
   }
 
   /**
@@ -587,7 +674,21 @@ export class TournamentOrchestrationService {
     tournament: Tournament,
     currentRound: number,
   ): boolean {
-    if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
+    if (
+      tournament.type === TournamentType.SINGLE_ELIMINATION ||
+      tournament.type === TournamentType.DOUBLE_ELIMINATION
+    ) {
+      const decidingMatch = this.findDecidingMatch(tournament.matches ?? []);
+
+      if (decidingMatch) {
+        // A double elimination bracket can still owe a deciding grand final,
+        // so counting the remaining players is not enough.
+        return (
+          decidingMatch.status === MatchStatus.FINISHED ||
+          decidingMatch.status === MatchStatus.FORFEIT
+        );
+      }
+
       const activeRegistrations = tournament.registrations.filter(
         (reg) =>
           reg.status === RegistrationStatus.CONFIRMED && !reg.eliminatedAt,
@@ -595,6 +696,59 @@ export class TournamentOrchestrationService {
       return activeRegistrations.length <= 1;
     }
 
+    if (
+      tournament.type === TournamentType.ROUND_ROBIN ||
+      tournament.type === TournamentType.SWISS_SYSTEM
+    ) {
+      return currentRound > (tournament.totalRounds || 0);
+    }
+
     return false;
+  }
+
+  /**
+   * Total number of matches a tournament is expected to hold.
+   *
+   * Elimination brackets are persisted in full when they are generated, so
+   * counting the rows is exact. The theoretical size only serves as a floor
+   * for brackets created before the links were stored.
+   */
+  private countExpectedMatches(tournament: Tournament): number {
+    const persistedCount = tournament.matches.length;
+    const hasStoredBracket = tournament.matches.some(
+      (match) => match.bracketSide !== null && match.bracketSide !== undefined,
+    );
+
+    if (hasStoredBracket) return persistedCount;
+
+    const confirmedPlayerCount = tournament.registrations.filter(
+      (registration) => registration.status === RegistrationStatus.CONFIRMED,
+    ).length;
+
+    if (confirmedPlayerCount < 2) return persistedCount;
+
+    const bracketSize = 2 ** Math.ceil(Math.log2(confirmedPlayerCount));
+
+    if (tournament.type === TournamentType.SINGLE_ELIMINATION) {
+      return Math.max(bracketSize - 1, persistedCount);
+    }
+
+    if (tournament.type === TournamentType.DOUBLE_ELIMINATION) {
+      return Math.max(2 * bracketSize - 2, persistedCount);
+    }
+
+    return persistedCount;
+  }
+
+  /**
+   * Returns the match that crowns the champion: the single elimination final,
+   * or the last grand final once a bracket reset has been played.
+   *
+   * It is the only match of the bracket with no successor.
+   */
+  private findDecidingMatch(matches: Match[]): Match | undefined {
+    return [...matches]
+      .filter((match) => !match.nextMatchId)
+      .sort((a, b) => b.round - a.round || b.id - a.id)[0];
   }
 }

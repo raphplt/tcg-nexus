@@ -114,6 +114,15 @@ export class Tournament {
   @Column({ default: false })
   isExternal: boolean;
 
+  /**
+   * Double elimination only: the finalist coming from the losers bracket must
+   * win the grand final twice, since they arrive with one defeat already.
+   *
+   * Disabling it makes the grand final a single match.
+   */
+  @Column({ default: true })
+  grandFinalReset: boolean;
+
   @Column({ nullable: true })
   externalRegistrationUrl?: string;
 

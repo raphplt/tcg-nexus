@@ -1,13 +1,14 @@
-import createIntlMiddleware from "next-intl/middleware";
 import { NextRequest, NextResponse } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
 import {
   DEFAULT_LOCALE,
   getLocaleFromPathname,
-  stripLocaleFromPathname,
   type SupportedLocale,
+  stripLocaleFromPathname,
 } from "@/i18n/config";
 import { routing } from "@/i18n/routing";
 import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/utils/constants";
+import { verifyAccessToken } from "@/utils/server-auth";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -15,6 +16,8 @@ type AuthCheckResult = {
   authenticated: boolean;
   refreshedCookies?: string[];
 };
+
+const refreshPromises = new Map<string, Promise<AuthCheckResult>>();
 
 function resolveApiBaseUrl(request: NextRequest): string {
   const internalUrl = process.env.API_INTERNAL_URL;
@@ -69,28 +72,18 @@ async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
   try {
     const API_BASE_URL = resolveApiBaseUrl(request);
     const cookies = buildCookieHeader(request);
+    const accessToken = request.cookies.get("accessToken")?.value;
+    const refreshToken = request.cookies.get("refreshToken")?.value;
 
-    if (!cookies || !cookies.includes("accessToken")) {
-      if (cookies && cookies.includes("refreshToken")) {
-        return await tryRefreshAndProfile(API_BASE_URL, cookies);
-      }
-      return { authenticated: false };
-    }
-
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: "POST",
-      headers: {
-        Cookie: cookies,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.ok) {
+    if (
+      accessToken &&
+      (await verifyAccessToken(accessToken, process.env.JWT_SECRET))
+    ) {
       return { authenticated: true };
     }
 
-    if (response.status === 401 && cookies.includes("refreshToken")) {
-      return await tryRefreshAndProfile(API_BASE_URL, cookies);
+    if (refreshToken) {
+      return await refreshOnce(API_BASE_URL, cookies, refreshToken);
     }
 
     return { authenticated: false };
@@ -100,7 +93,27 @@ async function checkAuth(request: NextRequest): Promise<AuthCheckResult> {
   }
 }
 
-async function tryRefreshAndProfile(
+function refreshOnce(
+  API_BASE_URL: string,
+  originalCookies: string,
+  refreshToken: string,
+): Promise<AuthCheckResult> {
+  const key = `${API_BASE_URL}\u0000${refreshToken}`;
+  const pending = refreshPromises.get(key);
+  if (pending) {
+    return pending;
+  }
+
+  const promise = tryRefresh(API_BASE_URL, originalCookies).finally(() => {
+    if (refreshPromises.get(key) === promise) {
+      refreshPromises.delete(key);
+    }
+  });
+  refreshPromises.set(key, promise);
+  return promise;
+}
+
+async function tryRefresh(
   API_BASE_URL: string,
   originalCookies: string,
 ): Promise<AuthCheckResult> {
@@ -118,21 +131,15 @@ async function tryRefreshAndProfile(
     }
 
     const refreshedCookies = extractSetCookies(refreshResponse);
-
-    const newCookieHeader = mergeCookieHeader(
-      originalCookies,
-      refreshedCookies,
+    const accessCookie = refreshedCookies.find((cookie) =>
+      cookie.startsWith("accessToken="),
     );
+    const refreshedAccessToken = accessCookie?.split(";", 1)[0]?.split("=")[1];
 
-    const profileResponse = await fetch(`${API_BASE_URL}/auth/profile`, {
-      method: "POST",
-      headers: {
-        Cookie: newCookieHeader,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!profileResponse.ok) {
+    if (
+      !refreshedAccessToken ||
+      !(await verifyAccessToken(refreshedAccessToken, process.env.JWT_SECRET))
+    ) {
       return { authenticated: false };
     }
 
@@ -144,33 +151,6 @@ async function tryRefreshAndProfile(
     console.error("Error during server-side refresh:", error);
     return { authenticated: false };
   }
-}
-
-function mergeCookieHeader(
-  originalCookieHeader: string,
-  setCookieHeaders: string[],
-): string {
-  const cookieMap = new Map<string, string>();
-
-  for (const part of originalCookieHeader.split("; ")) {
-    const eqIndex = part.indexOf("=");
-    if (eqIndex === -1) continue;
-    cookieMap.set(part.slice(0, eqIndex), part.slice(eqIndex + 1));
-  }
-
-  for (const setCookie of setCookieHeaders) {
-    const firstSegment = setCookie.split(";")[0];
-    if (!firstSegment) continue;
-    const eqIndex = firstSegment.indexOf("=");
-    if (eqIndex === -1) continue;
-    const name = firstSegment.slice(0, eqIndex);
-    const value = firstSegment.slice(eqIndex + 1);
-    cookieMap.set(name, value);
-  }
-
-  return Array.from(cookieMap.entries())
-    .map(([k, v]) => `${k}=${v}`)
-    .join("; ");
 }
 
 function applyRefreshedCookies(

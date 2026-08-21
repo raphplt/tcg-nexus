@@ -14,6 +14,7 @@ import { Statistics } from "../statistics/entities/statistic.entity";
 import { Tournament } from "../tournament/entities/tournament.entity";
 import { TournamentOrganizer } from "../tournament/entities/tournament-organizer.entity";
 import { TournamentRegistration } from "../tournament/entities/tournament-registration.entity";
+import { SwissPairingModule } from "../tournament/swiss-pairing.module";
 import { User } from "../user/entities/user.entity";
 import { CasualMatchService } from "./casual/casual-match.service";
 import { MatchmakingService } from "./casual/matchmaking.service";
@@ -56,6 +57,7 @@ import { TrainingMatchController } from "./training-match.controller";
       User,
     ]),
     CatalogLocalizationModule,
+    SwissPairingModule,
   ],
   controllers: [
     MatchController,

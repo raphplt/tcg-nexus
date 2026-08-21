@@ -24,9 +24,8 @@ import {
   Trophy,
   User,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Link, usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   Collapsible,
   CollapsibleContent,
@@ -48,6 +47,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link, usePathname } from "@/i18n/navigation";
+import { PROTECTED_ROUTES } from "@/utils/constants";
 import { NavItem, navItems } from "@/utils/sidebar";
 
 export function AppSidebar() {
@@ -68,6 +69,10 @@ export function AppSidebar() {
   const activeClass =
     "bg-sidebar-primary text-sidebar-primary-foreground font-semibold";
   const inactiveClass = "transition-colors";
+  const prefetchFor = (href: string): false | undefined =>
+    PROTECTED_ROUTES.some((route) => href.startsWith(route))
+      ? false
+      : undefined;
 
   const renderNavItem = (item: NavItem) => {
     if (item.subItems && item.subItems.length > 0) {
@@ -94,7 +99,7 @@ export function AppSidebar() {
                 {item.subItems.map((sub) => (
                   <SidebarMenuSubItem key={sub.href}>
                     <SidebarMenuSubButton asChild isActive={isActive(sub.href)}>
-                      <Link href={sub.href}>
+                      <Link href={sub.href} prefetch={prefetchFor(sub.href)}>
                         <sub.icon className="h-4 w-4" />
                         <span>{t(sub.labelKey)}</span>
                       </Link>
@@ -116,7 +121,7 @@ export function AppSidebar() {
           tooltip={t(item.labelKey)}
           className={isActive(item.href) ? activeClass : inactiveClass}
         >
-          <Link href={item.href}>
+          <Link href={item.href} prefetch={prefetchFor(item.href)}>
             <item.icon className="h-5 w-5" />
             <span>{t(item.labelKey)}</span>
           </Link>
@@ -207,7 +212,11 @@ export function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild tooltip={user.email}>
-                <Link href="/profile" className="flex items-center gap-3">
+                <Link
+                  href="/profile"
+                  prefetch={false}
+                  className="flex items-center gap-3"
+                >
                   <User className="h-5 w-5" />
                   <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                     <span className="text-sm font-medium truncate">
