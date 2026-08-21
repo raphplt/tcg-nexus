@@ -869,6 +869,16 @@
     "private": "Privé",
     "cardCount": "~{count, plural, one {# carte} other {# cartes}}",
     "cardsOwned": "{count, plural, one {# carte} other {# cartes}}",
+    "delete": {
+      "action": "Supprimer",
+      "actionLabel": "Supprimer la collection {name}",
+      "confirmTitle": "Supprimer « {name} » ?",
+      "confirmDescription": "Cette action est définitive. Toutes les cartes et les données de suivi de cette collection seront supprimées.",
+      "cancel": "Annuler",
+      "deleting": "Suppression...",
+      "success": "La collection « {name} » a été supprimée.",
+      "error": "Impossible de supprimer la collection. Réessayez dans quelques instants."
+    },
     "stats": {
       "collections": "Collections",
       "collectionsDetail": "au total",

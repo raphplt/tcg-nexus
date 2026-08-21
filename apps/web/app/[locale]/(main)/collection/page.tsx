@@ -87,6 +87,12 @@ const Page = () => {
     await fetchCollections();
   };
 
+  const removeDeletedCollection = (collectionId: string) => {
+    setCollections((currentCollections) =>
+      currentCollections.filter((collection) => collection.id !== collectionId),
+    );
+  };
+
   const filterCount = (value: CollectionFilter) => {
     if (value === "masterSets") return masterSets.length;
     if (value === "personal") return personalCollections.length;
@@ -212,6 +218,7 @@ const Page = () => {
                     <CollectionGridCard
                       key={collection.id}
                       collection={collection}
+                      onDeleted={removeDeletedCollection}
                     />
                   ))}
                 </div>
@@ -240,6 +247,7 @@ const Page = () => {
                     <CollectionGridCard
                       key={collection.id}
                       collection={collection}
+                      onDeleted={removeDeletedCollection}
                     />
                   ))}
                 </div>

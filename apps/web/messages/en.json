@@ -869,6 +869,16 @@
     "private": "Private",
     "cardCount": "~{count, plural, one {# card} other {# cards}}",
     "cardsOwned": "{count, plural, one {# card} other {# cards}}",
+    "delete": {
+      "action": "Delete",
+      "actionLabel": "Delete the {name} collection",
+      "confirmTitle": "Delete “{name}”?",
+      "confirmDescription": "This action is permanent. All cards and tracking data in this collection will be deleted.",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "success": "The “{name}” collection was deleted.",
+      "error": "Unable to delete the collection. Please try again in a moment."
+    },
     "stats": {
       "collections": "Collections",
       "collectionsDetail": "in total",

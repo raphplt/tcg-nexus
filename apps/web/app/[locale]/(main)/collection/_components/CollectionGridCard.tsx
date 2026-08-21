@@ -17,9 +17,11 @@ import {
 } from "@/utils/collection";
 import { CollectionCardFan } from "./CollectionCardFan";
 import { CompletionRing } from "./CompletionRing";
+import { DeleteCollectionButton } from "./DeleteCollectionButton";
 
 interface CollectionGridCardProps {
   collection: Collection;
+  onDeleted: (collectionId: string) => void;
 }
 
 /** Release year of an extension, used as a discreet subtitle. */
@@ -32,7 +34,9 @@ function releaseYear(releaseDate?: string): string | undefined {
  * Master Set tile: the extension logo, a completion ring and the card count
  * still missing before the set is complete.
  */
-function MasterSetCard({ collection }: CollectionGridCardProps) {
+function MasterSetCard({
+  collection,
+}: Pick<CollectionGridCardProps, "collection">) {
   const t = useTranslations("Collections");
   const owned = getOwnedCardCount(collection);
   const target = getCollectionTarget(collection);
@@ -43,7 +47,7 @@ function MasterSetCard({ collection }: CollectionGridCardProps) {
   return (
     <Link
       href={`/collection/${collection.id}`}
-      className="collection-grid-item group tcg-surface tcg-surface--hover collection-tile flex flex-col overflow-hidden"
+      className="collection-grid-item group tcg-surface tcg-surface--hover collection-tile flex h-full flex-col overflow-hidden"
     >
       <div className="collection-tile-banner collection-tile-banner--master relative flex h-32 items-center justify-center px-6">
         {logo ? (
@@ -108,14 +112,16 @@ function MasterSetCard({ collection }: CollectionGridCardProps) {
  * Personal collection tile: a fan of the cards it holds, its visibility and how
  * many cards it gathers.
  */
-function PersonalCollectionCard({ collection }: CollectionGridCardProps) {
+function PersonalCollectionCard({
+  collection,
+}: Pick<CollectionGridCardProps, "collection">) {
   const t = useTranslations("Collections");
   const owned = getOwnedCardCount(collection);
 
   return (
     <Link
       href={`/collection/${collection.id}`}
-      className="collection-grid-item group tcg-surface tcg-surface--hover collection-tile flex flex-col overflow-hidden"
+      className="collection-grid-item group tcg-surface tcg-surface--hover collection-tile flex h-full flex-col overflow-hidden"
     >
       <div className="collection-tile-banner relative">
         <CollectionCardFan
@@ -161,10 +167,18 @@ function PersonalCollectionCard({ collection }: CollectionGridCardProps) {
  * Renders a collection as a grid tile, picking the Master Set layout when the
  * collection tracks a whole extension.
  */
-export function CollectionGridCard({ collection }: CollectionGridCardProps) {
-  return collection.masterSet ? (
-    <MasterSetCard collection={collection} />
-  ) : (
-    <PersonalCollectionCard collection={collection} />
+export function CollectionGridCard({
+  collection,
+  onDeleted,
+}: CollectionGridCardProps) {
+  return (
+    <div className="relative h-full">
+      {collection.masterSet ? (
+        <MasterSetCard collection={collection} />
+      ) : (
+        <PersonalCollectionCard collection={collection} />
+      )}
+      <DeleteCollectionButton collection={collection} onDeleted={onDeleted} />
+    </div>
   );
 }
