@@ -34,6 +34,7 @@ export const tournamentTypeTranslation = {
  */
 export const ORCHESTRATED_TOURNAMENT_TYPES: TournamentType[] = [
   TournamentType.SINGLE_ELIMINATION,
+  TournamentType.DOUBLE_ELIMINATION,
   TournamentType.ROUND_ROBIN,
   TournamentType.SWISS_SYSTEM,
 ];

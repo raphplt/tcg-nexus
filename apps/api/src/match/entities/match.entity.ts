@@ -21,6 +21,18 @@ export enum MatchStatus {
   FORFEIT = "forfeit",
 }
 
+/**
+ * Branch of an elimination bracket a match belongs to.
+ *
+ * Only elimination formats use it: round robin and Swiss matches leave it
+ * null.
+ */
+export enum BracketSide {
+  WINNERS = "winners",
+  LOSERS = "losers",
+  GRAND_FINAL = "grand_final",
+}
+
 export enum MatchPhase {
   QUALIFICATION = "qualification",
   ROUND_OF_64 = "round_of_64",
@@ -98,6 +110,42 @@ export class Match {
    */
   @Column({ default: false })
   isBye: boolean;
+
+  /**
+   * Branch of the bracket, for elimination formats.
+   *
+   * NOTE: `round` stays the global step of the tournament — winners round 2
+   * and losers round 1 are played during the same step — so this column is
+   * what separates the two branches.
+   */
+  @Column({
+    type: "enum",
+    enum: BracketSide,
+    nullable: true,
+  })
+  bracketSide: BracketSide | null;
+
+  /** Stable slot of the match inside its round; ordering by id is not enough. */
+  @Column({ type: "int", nullable: true })
+  bracketPosition: number | null;
+
+  /** Match the winner is sent to, and the slot they take there. */
+  @Column({ type: "int", nullable: true })
+  nextMatchId: number | null;
+
+  @Column({ type: "varchar", length: 1, nullable: true })
+  nextSlot: "A" | "B" | null;
+
+  /**
+   * Match the loser drops into — winners bracket only.
+   *
+   * A null value means the defeat is final: the player is eliminated.
+   */
+  @Column({ type: "int", nullable: true })
+  loserNextMatchId: number | null;
+
+  @Column({ type: "varchar", length: 1, nullable: true })
+  loserNextSlot: "A" | "B" | null;
 
   @CreateDateColumn()
   createdAt: Date;

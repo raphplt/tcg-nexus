@@ -49,10 +49,10 @@ export class TournamentRegistration {
   notes: string;
 
   @Column({ type: "timestamp", nullable: true })
-  eliminatedAt: Date;
+  eliminatedAt: Date | null;
 
   @Column({ nullable: true })
-  eliminatedRound: number;
+  eliminatedRound: number | null;
 
   /** Mid-tournament drop: the player is no longer paired. */
   @Column({ type: "timestamp", nullable: true })

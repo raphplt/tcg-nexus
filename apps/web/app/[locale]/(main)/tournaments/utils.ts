@@ -1,6 +1,10 @@
 import z from "zod";
 import { Match } from "@/types/tournament";
-import { TournamentStatus, TournamentType } from "@/utils/tournaments";
+import {
+  ORCHESTRATED_TOURNAMENT_TYPES,
+  TournamentStatus,
+  TournamentType,
+} from "@/utils/tournaments";
 
 export const statusColor: Record<
   string,
@@ -85,6 +89,7 @@ export const formSchema = z
     allowedFormats: z.array(z.string()).optional(),
     fillWithPlayers: z.boolean().optional(),
     isExternal: z.boolean().optional(),
+    grandFinalReset: z.boolean().optional(),
     externalRegistrationUrl: z
       .string()
       .url("Veuillez saisir une URL valide")
@@ -101,7 +106,7 @@ export const formSchema = z
   })
   .refine(
     (data) =>
-      data.isExternal || data.type === TournamentType.SINGLE_ELIMINATION,
+      data.isExternal || ORCHESTRATED_TOURNAMENT_TYPES.includes(data.type),
     {
       message: "Ce format nécessite une gestion externe",
       path: ["type"],

@@ -465,6 +465,11 @@ export class RankingService {
           (swissOrder.get(a.player.id) ?? Number.MAX_SAFE_INTEGER) -
           (swissOrder.get(b.player.id) ?? Number.MAX_SAFE_INTEGER),
       );
+    } else if (
+      tournament.type === TournamentType.SINGLE_ELIMINATION ||
+      tournament.type === TournamentType.DOUBLE_ELIMINATION
+    ) {
+      this.sortEliminationRankings(rankings, tournament);
     } else {
       rankings.sort((a, b) => {
         if (a.points !== b.points) return b.points - a.points;
@@ -572,6 +577,53 @@ export class RankingService {
   /**
    * Calculates base standings (points, wins, losses, draws, win rate) from finished matches.
    */
+  /**
+   * Orders an elimination bracket by how far each player went.
+   *
+   * The step of the last match played is the real measure: in double
+   * elimination a player who survived deep into the losers bracket finishes
+   * ahead of one knocked out early, whatever their win ratio says.
+   */
+  private sortEliminationRankings(
+    rankings: Ranking[],
+    tournament: Tournament,
+  ): void {
+    const settledMatches = tournament.matches.filter(
+      (match) =>
+        match.status === MatchStatus.FINISHED ||
+        match.status === MatchStatus.FORFEIT,
+    );
+
+    const decidingMatch = [...settledMatches]
+      .filter((match) => !match.nextMatchId)
+      .sort((a, b) => b.round - a.round || b.id - a.id)[0];
+    const championId = decidingMatch?.winner?.id;
+
+    const depthByPlayer = new Map<number, number>();
+    for (const match of settledMatches) {
+      for (const player of [match.playerA, match.playerB]) {
+        if (!player) continue;
+        depthByPlayer.set(
+          player.id,
+          Math.max(depthByPlayer.get(player.id) ?? 0, match.round),
+        );
+      }
+    }
+
+    const depthOf = (ranking: Ranking) =>
+      depthByPlayer.get(ranking.player.id) ?? 0;
+    const isChampion = (ranking: Ranking) =>
+      championId !== undefined && ranking.player.id === championId ? 1 : 0;
+
+    rankings.sort((a, b) => {
+      if (isChampion(a) !== isChampion(b)) return isChampion(b) - isChampion(a);
+      if (depthOf(a) !== depthOf(b)) return depthOf(b) - depthOf(a);
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      if (a.losses !== b.losses) return a.losses - b.losses;
+      return b.winRate - a.winRate;
+    });
+  }
+
   private calculatePlayerStatistics(
     tournament: Tournament,
   ): Map<number, RankingCalculationResult> {

@@ -105,10 +105,12 @@ export default function CreateTournamentPage() {
       totalRounds: 0,
       fillWithPlayers: false,
       isExternal: false,
+      grandFinalReset: true,
       externalRegistrationUrl: "",
     },
   });
   const isExternal = form.watch("isExternal");
+  const tournamentType = form.watch("type");
 
   const handleLocationSelect = (
     address: string,
@@ -159,6 +161,10 @@ export default function CreateTournamentPage() {
         allowedFormats: values.allowedFormats,
         isPublic: values.isPublic,
         isExternal: values.isExternal,
+        grandFinalReset:
+          values.type === TournamentType.DOUBLE_ELIMINATION
+            ? values.grandFinalReset
+            : undefined,
         externalRegistrationUrl: values.isExternal
           ? values.externalRegistrationUrl
           : undefined,
@@ -449,6 +455,32 @@ export default function CreateTournamentPage() {
                   </FormItem>
                 )}
               />
+
+              {!isExternal &&
+                tournamentType === TournamentType.DOUBLE_ELIMINATION && (
+                  <FormField
+                    control={form.control}
+                    name="grandFinalReset"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between col-span-2">
+                        <div className="space-y-0.5">
+                          <FormLabel>Belle de la grande finale</FormLabel>
+                          <FormDescription className="text-xs text-muted-foreground">
+                            Le finaliste issu du repêchage arrive avec une
+                            défaite : il doit gagner deux fois pour le titre.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="shadow-none focus:ring-0"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
               <FormField
                 control={form.control}

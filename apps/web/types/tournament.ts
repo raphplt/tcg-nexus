@@ -116,6 +116,8 @@ export interface Player {
   };
 }
 
+export type BracketSide = "winners" | "losers" | "grand_final";
+
 export interface BracketStructure {
   type:
     | "single_elimination"
@@ -152,6 +154,11 @@ export interface BracketMatch {
   scheduledDate?: string;
   nextMatchId?: number;
   nextSlot?: "A" | "B";
+  loserNextMatchId?: number;
+  loserNextSlot?: "A" | "B";
+  /** Branch of the bracket; only elimination formats fill it. */
+  bracketSide?: BracketSide;
+  isBye?: boolean;
   phase: "qualification" | "quarter_final" | "semi_final" | "final";
 }
 
@@ -198,6 +205,8 @@ export interface CreateTournamentDto {
   isPublic?: boolean;
   allowLateRegistration?: boolean;
   requiresApproval?: boolean;
+  /** Double elimination only: play a deciding grand final when needed. */
+  grandFinalReset?: boolean;
   maxPlayers?: number;
   minPlayers?: number;
   rules?: string;

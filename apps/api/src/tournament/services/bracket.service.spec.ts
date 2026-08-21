@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import {
+  BracketSide,
   Match,
   MatchPhase,
   MatchStatus,
@@ -228,48 +229,73 @@ describe("BracketService", () => {
 
       expect(bracket.totalRounds).toBe(3);
       expect(firstRound.matches).toHaveLength(4);
-      expect(savedMatches).toHaveLength(4);
+      // The whole tree is persisted upfront, empty slots included.
+      expect(savedMatches).toHaveLength(7);
       expect(
         savedMatches.filter((match) => match.status === MatchStatus.FINISHED),
       ).toHaveLength(2);
       expect(
         savedMatches.filter((match) => match.status === MatchStatus.SCHEDULED),
-      ).toHaveLength(2);
+      ).toHaveLength(5);
     });
 
-    it.each([TournamentType.DOUBLE_ELIMINATION])(
-      "rejects non-orchestrated format %s",
-      async (type) => {
-        const regs: TournamentRegistration[] = [
-          {
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-            player: basePlayer(1),
-          } as any,
-          {
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-            player: basePlayer(2),
-          } as any,
-          {
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-            player: basePlayer(3),
-          } as any,
-          {
-            status: RegistrationStatus.CONFIRMED,
-            checkedIn: true,
-            player: basePlayer(4),
-          } as any,
-        ];
-        mockTournamentRepository.findOne.mockResolvedValue(
-          buildTournament(type, regs),
-        );
-        await expect(service.generateBracket(1)).rejects.toThrow(
-          "Ce format n'est pas encore orchestré par Nexus",
-        );
-      },
-    );
+    it("links every winner to its next match slot", async () => {
+      const regs = Array.from({ length: 4 }, (_, index) => {
+        return {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: basePlayer(index + 1),
+        } as TournamentRegistration;
+      });
+      mockTournamentRepository.findOne.mockResolvedValue(
+        buildTournament(TournamentType.SINGLE_ELIMINATION, regs),
+      );
+
+      const bracket = await service.generateBracket(1);
+      const [semiFinals, final] = bracket.rounds;
+
+      expect(semiFinals.matches).toHaveLength(2);
+      expect(final.matches).toHaveLength(1);
+      expect(semiFinals.matches[0].nextMatchId).toBe(final.matches[0].matchId);
+      expect(semiFinals.matches[0].nextSlot).toBe("A");
+      expect(semiFinals.matches[1].nextMatchId).toBe(final.matches[0].matchId);
+      expect(semiFinals.matches[1].nextSlot).toBe("B");
+      expect(final.matches[0].nextMatchId).toBeUndefined();
+      expect(semiFinals.matches[0].loserNextMatchId).toBeUndefined();
+    });
+
+    it("generates a full double elimination bracket", async () => {
+      const regs = Array.from({ length: 8 }, (_, index) => {
+        return {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: basePlayer(index + 1),
+        } as TournamentRegistration;
+      });
+      const tournament = buildTournament(
+        TournamentType.DOUBLE_ELIMINATION,
+        regs,
+      );
+      tournament.maxPlayers = 8;
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+
+      const bracket = await service.generateBracket(1);
+      const nodes = bracket.rounds.flatMap((round) => round.matches);
+
+      expect(bracket.type).toBe(TournamentType.DOUBLE_ELIMINATION);
+      expect(bracket.totalRounds).toBe(6);
+      // 2 * bracketSize - 2 matches for a full eight-player field.
+      expect(nodes).toHaveLength(14);
+      expect(
+        nodes.filter((node) => node.bracketSide === BracketSide.WINNERS),
+      ).toHaveLength(7);
+      expect(
+        nodes.filter((node) => node.bracketSide === BracketSide.LOSERS),
+      ).toHaveLength(6);
+      expect(
+        nodes.filter((node) => node.bracketSide === BracketSide.GRAND_FINAL),
+      ).toHaveLength(1);
+    });
 
     describe("round robin", () => {
       const confirmed = (count: number): TournamentRegistration[] =>
@@ -564,13 +590,23 @@ describe("BracketService", () => {
   });
 
   describe("helpers", () => {
-    it("calculates phases for rounds", () => {
-      const final = (service as any).getPhaseForRound(3, 3);
-      const semi = (service as any).getPhaseForRound(2, 3);
-      const qual = (service as any).getPhaseForRound(1, 3);
-      expect(final).toBe(MatchPhase.FINAL);
-      expect(semi).toBe(MatchPhase.SEMI_FINAL);
-      expect(qual).toBe(MatchPhase.QUARTER_FINAL);
+    it("labels the phases of a single elimination bracket", async () => {
+      const regs = Array.from({ length: 8 }, (_, index) => {
+        return {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: basePlayer(index + 1),
+        } as TournamentRegistration;
+      });
+      mockTournamentRepository.findOne.mockResolvedValue(
+        buildTournament(TournamentType.SINGLE_ELIMINATION, regs),
+      );
+
+      const bracket = await service.generateBracket(1);
+
+      expect(bracket.rounds[0].matches[0].phase).toBe(MatchPhase.QUARTER_FINAL);
+      expect(bracket.rounds[1].matches[0].phase).toBe(MatchPhase.SEMI_FINAL);
+      expect(bracket.rounds[2].matches[0].phase).toBe(MatchPhase.FINAL);
     });
   });
 });

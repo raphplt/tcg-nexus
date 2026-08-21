@@ -197,9 +197,37 @@ describe("TournamentOrchestrationService", () => {
       );
     });
 
-    it("rejects formats whose engine is not certified yet", async () => {
+    it("starts a double elimination tournament", async () => {
       const tournament = baseTournament();
       tournament.type = TournamentType.DOUBLE_ELIMINATION;
+      tournament.status = TournamentStatus.REGISTRATION_CLOSED;
+      tournament.minPlayers = 2;
+      tournament.registrations = [
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 1 },
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          checkedIn: true,
+          player: { id: 2 },
+        } as any,
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+      mockBracketService.generateBracket.mockResolvedValue({
+        totalRounds: 4,
+      } as any);
+
+      await service.startTournament(1, {});
+
+      expect(mockBracketService.generateBracket).toHaveBeenCalled();
+      expect(tournament.totalRounds).toBe(4);
+    });
+
+    it("rejects a format the platform does not orchestrate", async () => {
+      const tournament = baseTournament();
+      tournament.type = "pyramid" as TournamentType;
       tournament.minPlayers = 2;
       tournament.registrations = [
         {
@@ -262,23 +290,20 @@ describe("TournamentOrchestrationService", () => {
       );
     });
 
-    it.each([TournamentType.DOUBLE_ELIMINATION])(
-      "rejects advancement for externally managed format %s",
-      async (type) => {
-        const tournament = baseTournament();
-        tournament.type = type;
-        tournament.status = TournamentStatus.IN_PROGRESS;
-        tournament.matches = [
-          { round: 1, status: MatchStatus.FINISHED } as Match,
-          { round: 1, status: MatchStatus.FORFEIT } as Match,
-        ];
-        mockTournamentRepository.findOne.mockResolvedValue(tournament);
+    it("rejects advancement for a format the platform does not orchestrate", async () => {
+      const tournament = baseTournament();
+      tournament.type = "pyramid" as TournamentType;
+      tournament.status = TournamentStatus.IN_PROGRESS;
+      tournament.matches = [
+        { round: 1, status: MatchStatus.FINISHED } as Match,
+        { round: 1, status: MatchStatus.FORFEIT } as Match,
+      ];
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
 
-        await expect(service.advanceToNextRound(1)).rejects.toThrow(
-          "Ce format est suivi sur la plateforme externe de l’organisateur",
-        );
-      },
-    );
+      await expect(service.advanceToNextRound(1)).rejects.toThrow(
+        "Ce format est suivi sur la plateforme externe de l’organisateur",
+      );
+    });
 
     it("throws if tournament is not in progress", async () => {
       const tournament = baseTournament();
@@ -289,7 +314,7 @@ describe("TournamentOrchestrationService", () => {
       );
     });
 
-    it("advances elimination round based on scores and eliminates losers", async () => {
+    it("moves an elimination bracket to the step that is still pending", async () => {
       const tournament = baseTournament();
       tournament.type = TournamentType.SINGLE_ELIMINATION;
       tournament.status = TournamentStatus.IN_PROGRESS;
@@ -298,18 +323,18 @@ describe("TournamentOrchestrationService", () => {
       tournament.registrations = [
         {
           status: RegistrationStatus.CONFIRMED,
-          eliminatedAt: null,
-          player: { id: 1 },
-        } as any,
-        {
-          status: RegistrationStatus.CONFIRMED,
-          eliminatedAt: null,
+          eliminatedAt: new Date(),
           player: { id: 2 },
         } as any,
         {
           status: RegistrationStatus.CONFIRMED,
-          eliminatedAt: null,
+          eliminatedAt: new Date(),
           player: { id: 3 },
+        } as any,
+        {
+          status: RegistrationStatus.CONFIRMED,
+          eliminatedAt: null,
+          player: { id: 1 },
         } as any,
         {
           status: RegistrationStatus.CONFIRMED,
@@ -317,46 +342,41 @@ describe("TournamentOrchestrationService", () => {
           player: { id: 4 },
         } as any,
       ];
+      // Winners were already pushed to the final when the scores came in.
       tournament.matches = [
         {
+          id: 1,
           round: 1,
+          nextMatchId: 3,
           status: MatchStatus.FINISHED,
           playerA: { id: 1 },
           playerB: { id: 2 },
-          playerAScore: 2,
-          playerBScore: 1,
-          winner: undefined,
+          winner: { id: 1 },
         } as any,
         {
+          id: 2,
           round: 1,
+          nextMatchId: 3,
           status: MatchStatus.FINISHED,
           playerA: { id: 3 },
           playerB: { id: 4 },
-          playerAScore: 0,
-          playerBScore: 3,
+          winner: { id: 4 },
+        } as any,
+        {
+          id: 3,
+          round: 2,
+          nextMatchId: null,
+          status: MatchStatus.SCHEDULED,
+          playerA: { id: 1 },
+          playerB: { id: 4 },
           winner: undefined,
         } as any,
       ];
 
       mockTournamentRepository.findOne.mockResolvedValue(tournament);
 
-      const reg1 = { eliminatedAt: null } as any;
-      const reg2 = { eliminatedAt: null } as any;
       const manager = {
-        findOne: jest.fn().mockImplementation(async (entity: any) => {
-          if (entity && entity.name === "Tournament") {
-            return tournament;
-          }
-          // TournamentRegistration lookups (losers)
-          if (entity && entity.name === "TournamentRegistration") {
-            if (!reg1.__used) {
-              reg1.__used = true;
-              return reg1;
-            }
-            return reg2;
-          }
-          return null;
-        }),
+        findOne: jest.fn().mockResolvedValue(tournament),
         save: jest.fn(),
         find: jest.fn(),
         update: jest.fn(),
@@ -366,19 +386,49 @@ describe("TournamentOrchestrationService", () => {
       );
 
       const result = await service.advanceToNextRound(1);
+
       expect(result.newRound).toBe(2);
-      expect(result.matchesCreated).toBe(1);
+      expect(result.matchesCreated).toBe(0);
       expect(result.playersAdvanced).toBe(2);
       expect(result.playersEliminated).toBe(2);
-      expect(mockMatchService.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          round: 2,
-          tournamentId: 1,
-          playerAId: 1,
-          playerBId: 4,
+      expect(mockMatchService.create).not.toHaveBeenCalled();
+      expect(tournament.currentRound).toBe(2);
+      expect(tournament.status).toBe(TournamentStatus.IN_PROGRESS);
+    });
+
+    it("finishes an elimination bracket once its deciding match is played", async () => {
+      const tournament = baseTournament();
+      tournament.type = TournamentType.DOUBLE_ELIMINATION;
+      tournament.status = TournamentStatus.IN_PROGRESS;
+      tournament.currentRound = 4;
+      tournament.totalRounds = 4;
+      tournament.registrations = [];
+      tournament.matches = [
+        {
+          id: 9,
+          round: 4,
+          nextMatchId: null,
+          status: MatchStatus.FINISHED,
+          playerA: { id: 1 },
+          playerB: { id: 2 },
+          winner: { id: 1 },
+        } as any,
+      ];
+
+      mockTournamentRepository.findOne.mockResolvedValue(tournament);
+      mockDataSource.transaction.mockImplementation(async (cb: any) =>
+        cb({
+          findOne: jest.fn().mockResolvedValue(tournament),
+          save: jest.fn(),
+          find: jest.fn(),
+          update: jest.fn(),
         }),
       );
-      expect(manager.save).toHaveBeenCalled();
+
+      await service.advanceToNextRound(1);
+
+      expect(tournament.status).toBe(TournamentStatus.FINISHED);
+      expect(tournament.isFinished).toBe(true);
     });
 
     it("advances a round robin without creating matches nor eliminating", async () => {

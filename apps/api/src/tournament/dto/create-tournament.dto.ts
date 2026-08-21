@@ -94,6 +94,14 @@ export class CreateTournamentDto {
   @IsBoolean()
   isExternal?: boolean;
 
+  /**
+   * Double elimination only: leave the finalist coming from the losers bracket
+   * a second match to win the title. Enabled by default.
+   */
+  @IsOptional()
+  @IsBoolean()
+  grandFinalReset?: boolean;
+
   @ValidateIf(
     (dto: CreateTournamentDto) =>
       dto.isExternal === true || dto.externalRegistrationUrl !== undefined,

@@ -32,7 +32,12 @@ import {
   StartMatchDto,
 } from "./dto/match-operations.dto";
 import { UpdateMatchDto } from "./dto/update-match.dto";
-import { Match, MatchPhase, MatchStatus } from "./entities/match.entity";
+import {
+  BracketSide,
+  Match,
+  MatchPhase,
+  MatchStatus,
+} from "./entities/match.entity";
 import {
   OnlineMatchSession,
   OnlineMatchSessionStatus,
@@ -705,6 +710,10 @@ export class MatchService {
         );
       }
 
+      // Elimination results are propagated as soon as they are reported, so
+      // the players seated downstream have to be taken back out.
+      await this.withdrawBracketPropagation(match, manager);
+
       match.status = MatchStatus.SCHEDULED;
       match.playerAScore = 0;
       match.playerBScore = 0;
@@ -761,10 +770,13 @@ export class MatchService {
         ...(round === undefined ? {} : { round }),
         status: MatchStatus.SCHEDULED,
       },
-      relations: ["onlineSession"],
+      relations: ["onlineSession", "playerA", "playerB"],
     });
 
-    await this.ensureOnlineSessions(matches);
+    // Empty bracket slots are persisted upfront: they have no game to host yet.
+    await this.ensureOnlineSessions(
+      matches.filter((match) => match.playerA && match.playerB),
+    );
   }
 
   /**
@@ -1118,6 +1130,13 @@ export class MatchService {
 
     if (!tournament) return false;
 
+    if (
+      tournament.type === TournamentType.SINGLE_ELIMINATION ||
+      tournament.type === TournamentType.DOUBLE_ELIMINATION
+    ) {
+      return this.advanceEliminationBracket(tournament, match, manager);
+    }
+
     const currentRoundMatches = await manager.find(Match, {
       where: {
         tournament: { id: tournament.id },
@@ -1140,18 +1159,6 @@ export class MatchService {
 
       if (tournament.type === TournamentType.SWISS_SYSTEM) {
         return this.advanceSwiss(tournament, manager);
-      }
-
-      // Automatically propagate winners in elimination brackets
-      if (
-        tournament.type === TournamentType.SINGLE_ELIMINATION ||
-        tournament.type === TournamentType.DOUBLE_ELIMINATION
-      ) {
-        return this.propagateEliminationWinners(
-          tournament,
-          currentRoundMatches,
-          manager,
-        );
       }
     }
 
@@ -1291,90 +1298,338 @@ export class MatchService {
   }
 
   /**
-   * Propage les vainqueurs dans un bracket d'élimination
+   * Applies a bracket result by following the links stored on the match.
+   *
+   * The winner is pushed to `nextMatchId`, the loser to `loserNextMatchId`
+   * when the format gives them a second chance. A defeat with no destination
+   * is final: the player leaves the tournament.
+   *
+   * @returns True when the tournament has just finished.
    */
-  private async propagateEliminationWinners(
+  private async advanceEliminationBracket(
     tournament: Tournament,
-    currentRoundMatches: Match[],
+    match: Match,
     manager: EntityManager,
   ): Promise<boolean> {
-    const currentRound = tournament.currentRound || 1;
-    const nextRound = currentRound + 1;
+    const finished = await this.propagateBracketResult(
+      tournament,
+      match,
+      manager,
+    );
 
-    const completedMatches = currentRoundMatches
-      .filter((currentMatch) => currentMatch.winner)
-      .sort((a, b) => a.id - b.id);
-
-    if (completedMatches.length === 0) return false;
-
-    for (const completedMatch of completedMatches) {
-      const loser =
-        completedMatch.playerA?.id === completedMatch.winner?.id
-          ? completedMatch.playerB
-          : completedMatch.playerA;
-
-      if (!loser) {
-        continue;
-      }
-
-      const registration = await manager.findOne(TournamentRegistration, {
-        where: {
-          tournament: { id: tournament.id },
-          player: { id: loser.id },
-        },
-      });
-
-      if (registration && !registration.eliminatedAt) {
-        registration.eliminatedAt = new Date();
-        registration.eliminatedRound = currentRound;
-        await manager.save(registration);
-      }
-    }
-
-    if (currentRound >= (tournament.totalRounds || 0)) {
+    if (finished) {
       tournament.status = TournamentStatus.FINISHED;
       tournament.isFinished = true;
       await manager.save(tournament);
       return true;
     }
 
-    const nextRoundMatches = await manager.count(Match, {
+    await this.syncEliminationRound(tournament, manager);
+    return false;
+  }
+
+  /**
+   * Pushes the winner and the loser of a settled match to their destinations.
+   *
+   * @returns True when the match was the last one of the tournament.
+   */
+  private async propagateBracketResult(
+    tournament: Tournament,
+    match: Match,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    const winner = match.winner;
+    if (!winner) return false;
+
+    const loser =
+      match.playerA && match.playerA.id === winner.id
+        ? match.playerB
+        : match.playerA;
+
+    const resetCreated = await this.createGrandFinalReset(
+      tournament,
+      match,
+      manager,
+    );
+
+    if (loser && !resetCreated) {
+      if (match.loserNextMatchId) {
+        await this.assignBracketSlot(
+          tournament,
+          match.loserNextMatchId,
+          match.loserNextSlot,
+          loser,
+          manager,
+        );
+      } else {
+        await this.eliminateFromTournament(
+          tournament,
+          loser,
+          match.round,
+          manager,
+        );
+      }
+    }
+
+    if (match.nextMatchId) {
+      await this.assignBracketSlot(
+        tournament,
+        match.nextMatchId,
+        match.nextSlot,
+        winner,
+        manager,
+      );
+      return false;
+    }
+
+    // Only the grand final and the single-elimination final have no successor.
+    return !resetCreated;
+  }
+
+  /**
+   * Seats a player in a bracket slot and unlocks the match when it is ready.
+   *
+   * A slot whose opponent branch is empty resolves as a bye straight away, and
+   * the result cascades further down the bracket.
+   */
+  private async assignBracketSlot(
+    tournament: Tournament,
+    matchId: number,
+    slot: "A" | "B" | null,
+    player: Player,
+    manager: EntityManager,
+  ): Promise<void> {
+    const target = await manager.findOne(Match, {
+      where: { id: matchId },
+      relations: ["tournament", "playerA", "playerB", "winner"],
+    });
+
+    if (
+      !target ||
+      target.status === MatchStatus.FINISHED ||
+      target.status === MatchStatus.FORFEIT
+    ) {
+      return;
+    }
+
+    if (slot === "B") {
+      target.playerB = player;
+    } else {
+      target.playerA = player;
+    }
+
+    const opponent = slot === "B" ? target.playerA : target.playerB;
+
+    if (target.isBye && !opponent) {
+      target.winner = player;
+      target.status = MatchStatus.FINISHED;
+      target.finishedAt = new Date();
+      const settledBye = await manager.save(Match, target);
+      await this.propagateBracketResult(tournament, settledBye, manager);
+      return;
+    }
+
+    const savedTarget = await manager.save(Match, target);
+
+    if (savedTarget.playerA && savedTarget.playerB) {
+      await this.createOnlineSessionWithManager(savedTarget, manager);
+    }
+  }
+
+  /**
+   * Opens the deciding grand final when the losers bracket finalist wins.
+   *
+   * They arrive with one defeat already, so beating the winners bracket
+   * finalist once only levels the score: a second match settles the title.
+   *
+   * @returns True when a deciding match was created or already exists.
+   */
+  private async createGrandFinalReset(
+    tournament: Tournament,
+    match: Match,
+    manager: EntityManager,
+  ): Promise<boolean> {
+    if (
+      match.bracketSide !== BracketSide.GRAND_FINAL ||
+      match.bracketPosition !== 0 ||
+      !tournament.grandFinalReset
+    ) {
+      return false;
+    }
+
+    // The losers bracket finalist always sits in slot B of the grand final.
+    if (!match.playerA || !match.playerB) return false;
+    if (match.winner?.id !== match.playerB.id) return false;
+
+    const decidingRound = match.round + 1;
+    const alreadyCreated = await manager.count(Match, {
       where: {
         tournament: { id: tournament.id },
-        round: nextRound,
+        bracketSide: BracketSide.GRAND_FINAL,
+        bracketPosition: 1,
       },
     });
 
-    if (nextRoundMatches === 0 && completedMatches.length > 1) {
-      const winners = completedMatches.map((completedMatch) => {
-        return completedMatch.winner!;
-      });
+    if (alreadyCreated > 0) return true;
 
-      for (let i = 0; i < winners.length; i += 2) {
-        if (i + 1 < winners.length) {
-          const newMatch = manager.create(Match, {
-            tournament,
-            playerA: winners[i],
-            playerB: winners[i + 1],
-            round: nextRound,
-            phase: this.getPhaseForRound(
-              nextRound,
-              tournament.totalRounds || 0,
-            ),
-            status: MatchStatus.SCHEDULED,
-            scheduledDate: new Date(),
-          });
+    const deciding = manager.create(Match, {
+      tournament: { id: tournament.id } as Tournament,
+      playerA: match.playerA,
+      playerB: match.playerB,
+      round: decidingRound,
+      phase: MatchPhase.FINAL,
+      bracketSide: BracketSide.GRAND_FINAL,
+      bracketPosition: 1,
+      status: MatchStatus.SCHEDULED,
+      scheduledDate: new Date(),
+      notes: "Belle de la grande finale",
+    });
 
-          const savedMatch = await manager.save(Match, newMatch);
-          await this.createOnlineSessionWithManager(savedMatch, manager);
-        }
-      }
+    const savedDeciding = await manager.save(Match, deciding);
+    await this.createOnlineSessionWithManager(savedDeciding, manager);
 
-      tournament.currentRound = nextRound;
-      await manager.save(tournament);
+    tournament.totalRounds = decidingRound;
+    await manager.save(tournament);
+
+    return true;
+  }
+
+  /**
+   * Records a final defeat on the registration of an eliminated player.
+   */
+  private async eliminateFromTournament(
+    tournament: Tournament,
+    player: Player,
+    round: number,
+    manager: EntityManager,
+  ): Promise<void> {
+    const registration = await manager.findOne(TournamentRegistration, {
+      where: {
+        tournament: { id: tournament.id },
+        player: { id: player.id },
+      },
+    });
+
+    if (!registration || registration.eliminatedAt) return;
+
+    registration.eliminatedAt = new Date();
+    registration.eliminatedRound = round;
+    await manager.save(registration);
+  }
+
+  /**
+   * Undoes the propagation of a bracket result before a judge resets it.
+   *
+   * Both destinations are emptied, and a player who had been eliminated by
+   * this defeat is brought back into the tournament.
+   *
+   * @throws BadRequestException If a match downstream has already started.
+   */
+  private async withdrawBracketPropagation(
+    match: Match,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (!match.winner) return;
+
+    const loser =
+      match.playerA && match.playerA.id === match.winner.id
+        ? match.playerB
+        : match.playerA;
+
+    await this.clearBracketSlot(match.nextMatchId, match.nextSlot, manager);
+    await this.clearBracketSlot(
+      match.loserNextMatchId,
+      match.loserNextSlot,
+      manager,
+    );
+
+    if (!loser || match.loserNextMatchId) return;
+
+    const registration = await manager.findOne(TournamentRegistration, {
+      where: {
+        tournament: { id: match.tournament.id },
+        player: { id: loser.id },
+      },
+    });
+
+    if (registration?.eliminatedRound === match.round) {
+      registration.eliminatedAt = null;
+      registration.eliminatedRound = null;
+      await manager.save(registration);
+    }
+  }
+
+  /**
+   * Empties a bracket slot that a reset result had filled.
+   *
+   * @throws BadRequestException If the downstream match is already under way.
+   */
+  private async clearBracketSlot(
+    matchId: number | null,
+    slot: "A" | "B" | null,
+    manager: EntityManager,
+  ): Promise<void> {
+    if (!matchId) return;
+
+    const target = await manager.findOne(Match, {
+      where: { id: matchId },
+      relations: ["playerA", "playerB", "winner"],
+    });
+
+    if (!target) return;
+
+    if (target.status !== MatchStatus.SCHEDULED) {
+      throw new BadRequestException(
+        `Ce résultat ne peut plus être réinitialisé : le match ${target.id} qui en découle est déjà engagé`,
+      );
     }
 
-    return false;
+    // TypeORM skips undefined values, so the column is cleared with null.
+    if (slot === "B") {
+      target.playerB = null as unknown as Player;
+    } else {
+      target.playerA = null as unknown as Player;
+    }
+
+    await manager.save(Match, target);
+  }
+
+  /**
+   * Aligns the current round on the earliest step that still has to be played.
+   *
+   * Both branches of a double elimination bracket share the same step, so the
+   * whole tournament moves forward together.
+   */
+  private async syncEliminationRound(
+    tournament: Tournament,
+    manager: EntityManager,
+  ): Promise<void> {
+    const pendingMatches = await manager.find(Match, {
+      where: {
+        tournament: { id: tournament.id },
+        status: In([MatchStatus.SCHEDULED, MatchStatus.IN_PROGRESS]),
+      },
+      relations: ["playerA", "playerB"],
+      order: { round: "ASC" },
+    });
+
+    if (pendingMatches.length === 0) return;
+
+    const nextRound = Math.min(...pendingMatches.map((m) => m.round));
+    if (nextRound === tournament.currentRound) return;
+
+    tournament.currentRound = nextRound;
+    await manager.save(tournament);
+
+    for (const upcoming of pendingMatches) {
+      if (
+        upcoming.round === nextRound &&
+        upcoming.playerA &&
+        upcoming.playerB
+      ) {
+        await this.createOnlineSessionWithManager(upcoming, manager);
+      }
+    }
   }
 
   private async createOnlineSessionWithManager(
@@ -1401,15 +1656,5 @@ export class MatchService {
       eventLog: [],
     });
     await manager.save(OnlineMatchSession, session);
-  }
-
-  /**
-   * Détermine la phase selon le round et le total
-   */
-  private getPhaseForRound(round: number, totalRounds: number): MatchPhase {
-    if (round === totalRounds) return MatchPhase.FINAL;
-    if (round === totalRounds - 1) return MatchPhase.SEMI_FINAL;
-    if (round === totalRounds - 2) return MatchPhase.QUARTER_FINAL;
-    return MatchPhase.QUALIFICATION;
   }
 }

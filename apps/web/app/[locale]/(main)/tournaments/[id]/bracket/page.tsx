@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBracket } from "@/hooks/useBracket";
 import { useTournament } from "@/hooks/useTournament";
 import { tournamentService } from "@/services/tournament.service";
+import { DoubleEliminationBracket } from "./_components/DoubleEliminationBracket";
 import { EliminationBracket } from "./_components/EliminationBracket";
 import { RoundsSchedule } from "./_components/RoundsSchedule";
 
@@ -47,7 +48,8 @@ export default function BracketPage() {
     progressPercentage,
     isSwiss,
     isRoundRobin,
-    isElimination,
+    isSingleElimination,
+    isDoubleElimination,
     error,
     refetch,
   } = useBracket(id as string);
@@ -252,8 +254,18 @@ export default function BracketPage() {
         ) : (
           <Card>
             <CardContent className="p-4 sm:p-6">
-              {isElimination && (
+              {isSingleElimination && (
                 <EliminationBracket
+                  bracket={bracket}
+                  onMatchClick={(matchId) =>
+                    router.push(`/tournaments/${id}/matches/${matchId}`)
+                  }
+                  interactive={true}
+                />
+              )}
+
+              {isDoubleElimination && (
+                <DoubleEliminationBracket
                   bracket={bracket}
                   onMatchClick={(matchId) =>
                     router.push(`/tournaments/${id}/matches/${matchId}`)
