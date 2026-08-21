@@ -91,6 +91,8 @@ describe("CollectionController", () => {
       undefined,
       undefined,
       undefined,
+      false,
+      false,
     );
   });
 
