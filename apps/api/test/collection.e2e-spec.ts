@@ -101,6 +101,42 @@ describe("CollectionController (e2e)", () => {
     await request(httpServer).get(`/collection/${collectionId}`).expect(404);
   });
 
+  // An unvalidated body used to reach findOne({ where: { id: undefined } }),
+  // where TypeORM drops the criterion and returns the first card of the table:
+  // the endpoint answered 201 and filed a card nobody asked for.
+  it("rejects an item write without a card identifier instead of picking one", async () => {
+    const owner = await createUser(httpServer);
+
+    const createResponse = await request(httpServer)
+      .post("/collection")
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .send({ name: `Items E2E Collection ${Date.now()}`, isPublic: false })
+      .expect(201);
+
+    const collectionId = createResponse.body.id;
+
+    for (const route of ["items", "items/remove"]) {
+      await request(httpServer)
+        .post(`/collection/${collectionId}/${route}`)
+        .set("Authorization", `Bearer ${owner.accessToken}`)
+        .send({})
+        .expect(400);
+
+      await request(httpServer)
+        .post(`/collection/${collectionId}/${route}`)
+        .set("Authorization", `Bearer ${owner.accessToken}`)
+        .send({ cardId: "not-the-expected-field" })
+        .expect(400);
+    }
+
+    const itemsResponse = await request(httpServer)
+      .get(`/collection/${collectionId}/items`)
+      .set("Authorization", `Bearer ${owner.accessToken}`)
+      .expect(200);
+
+    expect(itemsResponse.body.data).toEqual([]);
+  });
+
   it("enforces ownership for collection mutations", async () => {
     const owner = await createUser(httpServer);
     const other = await createUser(httpServer);

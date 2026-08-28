@@ -511,9 +511,16 @@ export class MatchService {
   /**
    * Reports final match scores and computes winner or draw status.
    *
+   * A match still `SCHEDULED` in the tournament's current round is started on
+   * the spot: an organizer keeping score on paper reports the result of a game
+   * that already happened, and forcing an explicit "start" click first only
+   * produced a dead end where the score form was offered but the submission
+   * rejected.
+   *
    * @param id Match ID.
    * @param reportScoreDto Score payload.
    * @returns Updated Match.
+   * @throws BadRequestException If the match is not open for scoring.
    */
   async reportScore(
     id: number,
@@ -554,10 +561,22 @@ export class MatchService {
         });
       }
 
-      if (match.status !== MatchStatus.IN_PROGRESS) {
+      const isStartableNow =
+        match.status === MatchStatus.SCHEDULED &&
+        match.tournament?.status === TournamentStatus.IN_PROGRESS &&
+        match.round === match.tournament.currentRound &&
+        Boolean(match.playerA) &&
+        Boolean(match.playerB);
+
+      if (match.status !== MatchStatus.IN_PROGRESS && !isStartableNow) {
         throw new BadRequestException(
           "Seuls les matches en cours peuvent recevoir des scores",
         );
+      }
+
+      if (isStartableNow) {
+        match.status = MatchStatus.IN_PROGRESS;
+        match.startedAt = new Date();
       }
 
       const { playerAScore, playerBScore, isForfeit, notes } = reportScoreDto;

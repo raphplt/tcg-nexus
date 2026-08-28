@@ -1,4 +1,3 @@
-import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -6,7 +5,7 @@ import cookieParser from "cookie-parser";
 import * as dotenv from "dotenv";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
-import { AllExceptionsFilter } from "./common/http-exception.filter";
+import { applyGlobalRequestContract } from "./common/global-request-contract";
 
 dotenv.config();
 
@@ -76,18 +75,7 @@ export async function bootstrap() {
       });
     }
 
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
-      }),
-    );
-
-    app.useGlobalFilters(new AllExceptionsFilter());
+    applyGlobalRequestContract(app);
 
     app.enableCors({
       origin:

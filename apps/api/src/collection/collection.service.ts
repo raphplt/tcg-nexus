@@ -6,6 +6,7 @@ import {
 } from "src/translation/supported-locales";
 import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -190,7 +191,10 @@ export class CollectionService {
    * @param createCollectionDto Collection creation parameters.
    * @returns Created Collection entity.
    */
-  async create(createCollectionDto: CreateCollectionDto): Promise<Collection> {
+  async create(
+    createCollectionDto: CreateCollectionDto,
+    userId: number,
+  ): Promise<Collection> {
     let masterSet: PokemonSet | undefined;
 
     if (createCollectionDto.masterSetId) {
@@ -209,7 +213,7 @@ export class CollectionService {
       // Prevent duplicate collection creation for the same user and master set
       const existing = await this.collectionRepository.findOne({
         where: {
-          user: { id: Number(createCollectionDto.userId) },
+          user: { id: userId },
           masterSet: { id: set.id },
         },
       });
@@ -237,7 +241,7 @@ export class CollectionService {
         : createCollectionDto.description,
       isPublic: createCollectionDto.isPublic || false,
     });
-    collection.user = { id: Number(createCollectionDto.userId) } as User;
+    collection.user = { id: userId } as User;
     if (masterSet) {
       collection.masterSet = masterSet;
     }
@@ -258,6 +262,12 @@ export class CollectionService {
     userId: number,
   ): Promise<CollectionItem> {
     const collection = await this.getOwnedCollection(collectionId, userId);
+
+    // An empty criterion is dropped by TypeORM and would match the first card
+    // of the table instead of failing.
+    if (!pokemonCardId) {
+      throw new BadRequestException("Identifiant de carte manquant");
+    }
 
     const card = await this.cardRepository.findOne({
       where: { id: pokemonCardId },

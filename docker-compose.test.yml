@@ -7,6 +7,10 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "${E2E_DATABASE_PORT:-55432}:5432"
+    # Card search relies on pg_trgm, unaccent and immutable_unaccent: without
+    # them the search suite only ever exercised the early-return branch.
+    volumes:
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:

@@ -22,6 +22,7 @@ import { Public } from "../auth/decorators/public.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
 import { CollectionService } from "./collection.service";
+import { CollectionCardDto } from "./dto/collection-card.dto";
 import { CreateCollectionDto } from "./dto/create-collection.dto";
 import { UpdateCollectionDto } from "./dto/update-collection.dto";
 import { Collection } from "./entities/collection.entity";
@@ -174,8 +175,7 @@ export class CollectionController {
     @Body() createCollectionDto: CreateCollectionDto,
     @CurrentUser() user: User,
   ): Promise<Collection> {
-    createCollectionDto.userId = user.id;
-    return this.collectionService.create(createCollectionDto);
+    return this.collectionService.create(createCollectionDto, user.id);
   }
 
   @Post(":id/items")
@@ -183,12 +183,12 @@ export class CollectionController {
   @ApiResponse({ status: 201, description: "Carte ajoutee a la collection" })
   async addItem(
     @Param("id") id: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Body() body: CollectionCardDto,
     @CurrentUser() user: User,
   ) {
     return this.collectionService.addCardToCollection(
       id,
-      pokemonCardId,
+      body.pokemonCardId,
       user.id,
     );
   }
@@ -200,12 +200,12 @@ export class CollectionController {
   @ApiResponse({ status: 200, description: "Carte décrémentée ou retirée" })
   async removeItemByCardId(
     @Param("id") id: string,
-    @Body("pokemonCardId") pokemonCardId: string,
+    @Body() body: CollectionCardDto,
     @CurrentUser() user: User,
   ) {
     return this.collectionService.removeCardFromCollection(
       id,
-      pokemonCardId,
+      body.pokemonCardId,
       user.id,
     );
   }

@@ -16,6 +16,9 @@ import { UpdatePokemonCardDto } from "./dto/update-pokemon-card.dto";
 
 @Injectable()
 export class PokemonCardService {
+  /** Upper bound of the non-paginated card listing. */
+  private static readonly MAX_FIND_ALL_CARDS = 500;
+
   constructor(
     @InjectRepository(Card)
     private readonly pokemonCardRepository: Repository<Card>,
@@ -140,10 +143,26 @@ export class PokemonCardService {
     return this.toPokemonCardResponse(savedCard);
   }
 
-  async findAll(): Promise<Record<string, any>[]> {
+  /**
+   * Lists Pokémon cards, capped to keep the response bounded.
+   *
+   * NOTE: unbounded, this serialized the whole catalogue — around 33 MB and
+   * fifteen seconds per call. Callers that need the full catalogue must page
+   * through `findAllPaginated`.
+   *
+   * @param limit - Maximum number of cards returned, clamped to `MAX_FIND_ALL_CARDS`.
+   * @returns Serialized cards.
+   */
+  async findAll(
+    limit: number = PokemonCardService.MAX_FIND_ALL_CARDS,
+  ): Promise<Record<string, any>[]> {
     const cards = await this.pokemonCardRepository.find({
       where: { game: CardGame.Pokemon },
       relations: ["set", "pokemonDetails"],
+      take: Math.min(
+        Math.max(1, limit),
+        PokemonCardService.MAX_FIND_ALL_CARDS,
+      ),
     });
     return cards.map((card) => this.toPokemonCardResponse(card));
   }

@@ -135,18 +135,22 @@ export class AuthService {
       });
 
       await Promise.all([
-        this.collectionService.create({
-          name: "Wishlist",
-          description: "Default Wishlist",
-          isPublic: false,
-          userId: user.id,
-        }),
-        this.collectionService.create({
-          name: "Favorites",
-          description: "Default Favorites",
-          isPublic: false,
-          userId: user.id,
-        }),
+        this.collectionService.create(
+          {
+            name: "Wishlist",
+            description: "Default Wishlist",
+            isPublic: false,
+          },
+          user.id,
+        ),
+        this.collectionService.create(
+          {
+            name: "Favorites",
+            description: "Default Favorites",
+            isPublic: false,
+          },
+          user.id,
+        ),
       ]);
 
       const tokens = await this.generateTokens(user);

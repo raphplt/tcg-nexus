@@ -140,11 +140,11 @@ describe("CollectionService", () => {
   });
 
   it("should create collection with user relation", async () => {
-    const dto = { name: "Col", description: "desc", userId: 3 };
+    const dto = { name: "Col", description: "desc" };
     mockCollectionRepo.create.mockReturnValue({ ...dto });
     mockCollectionRepo.save.mockResolvedValue({ id: "new", ...dto });
 
-    const result = await service.create(dto as any);
+    const result = await service.create(dto as any, 3);
     expect(result.id).toBe("new");
     expect(mockCollectionRepo.save).toHaveBeenCalled();
   });
@@ -162,7 +162,7 @@ describe("CollectionService", () => {
     mockCollectionRepo.create.mockImplementation((dto: any) => dto);
     mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
 
-    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+    await service.create({ masterSetId: "sv08" } as any, 3);
 
     expect(mockCollectionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -178,7 +178,7 @@ describe("CollectionService", () => {
     mockCollectionRepo.create.mockImplementation((dto: any) => dto);
     mockCollectionRepo.save.mockImplementation(async (entity: any) => entity);
 
-    await service.create({ masterSetId: "sv08", userId: 3 } as any);
+    await service.create({ masterSetId: "sv08" } as any, 3);
 
     expect(mockCollectionRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ name: "Master Set — sv08" }),
