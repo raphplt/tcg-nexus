@@ -1765,6 +1765,11 @@
         "title": "Traductions",
         "headline": "Interface & contenus",
         "description": "Clés d'interface et contenus système"
+      },
+      "system": {
+        "title": "Système",
+        "headline": "Santé & Diagnostic",
+        "description": "PostgreSQL, pgvector, vision & uptime"
       }
     },
     "tabs": {
@@ -1773,7 +1778,8 @@
       "tournaments": "Tournois",
       "series": "Séries",
       "sets": "Sets",
-      "cards": "Cartes"
+      "cards": "Cartes",
+      "system": "Santé Système"
     }
   },
   "AdminOrders": {
