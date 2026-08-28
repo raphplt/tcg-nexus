@@ -53,12 +53,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
   const articleEntries: MetadataRoute.Sitemap = localizedArticles.flatMap(
     ({ locale, articles }) =>
-      articles.map((article) => ({
-        url: `${SITE_URL}/${locale}/blog/${article.slug}`,
-        lastModified: new Date(article.updatedAt),
-        changeFrequency: "monthly" as const,
-        priority: 0.6,
-      })),
+      articles
+        .filter((article) => Boolean(article.slug))
+        .map((article) => ({
+          url: `${SITE_URL}/${locale}/blog/${article.slug}`,
+          lastModified: new Date(article.updatedAt),
+          changeFrequency: "monthly" as const,
+          priority: 0.6,
+        })),
   );
 
   return [...staticEntries, ...articleEntries];

@@ -52,7 +52,12 @@ const buildCookieOptions = (
 
   let derivedDomain: string | undefined;
 
-  if (!explicitDomain && process.env.FRONTEND_URL) {
+  if (
+    !explicitDomain &&
+    process.env.FRONTEND_URL &&
+    process.env.FRONTEND_URL !== "undefined" &&
+    process.env.FRONTEND_URL.startsWith("http")
+  ) {
     try {
       const parsedUrl = new URL(process.env.FRONTEND_URL);
       const frontendHost = parsedUrl.hostname.replace(/^www\./, "");
@@ -144,6 +149,62 @@ export class AuthController {
   }
 
   /**
+   * Dedicated Web login endpoint: sets HttpOnly cookies and returns user profile without JWT tokens in JSON.
+   */
+  @UseGuards(LocalAuthGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("web/login")
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async webLogin(
+    @Body() loginDto: LoginDto,
+    @Res() res: Response,
+    @Request() req: ExpressRequest & { user: User },
+  ) {
+    const rememberMe = req.headers["x-remember-me"] === "true";
+    const result = await this.authService.login(loginDto, req.user);
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
+    res.cookie(
+      "accessToken",
+      result.tokens.accessToken,
+      buildCookieOptions(req, accessTokenMaxAge),
+    );
+    res.cookie(
+      "refreshToken",
+      result.tokens.refreshToken,
+      buildCookieOptions(req, refreshTokenMaxAge),
+    );
+    res.json({
+      user: result.user,
+      accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
+    });
+    return;
+  }
+
+  /**
+   * Dedicated Mobile login endpoint: returns JSON JWT tokens for SecureStore.
+   */
+  @UseGuards(LocalAuthGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post("mobile/login")
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async mobileLogin(
+    @Body() loginDto: LoginDto,
+    @Request() req: ExpressRequest & { user: User },
+  ) {
+    const result = await this.authService.login(loginDto, req.user);
+    return {
+      user: result.user,
+      tokens: result.tokens,
+    };
+  }
+
+  /**
    * Registers a new user account and sets authentication cookies.
    *
    * @param registerDto User registration data.
@@ -181,6 +242,57 @@ export class AuthController {
       accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
     });
     return;
+  }
+
+  /**
+   * Dedicated Web register endpoint: sets HttpOnly cookies and returns user profile without JWT tokens in JSON.
+   */
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
+  @Post("web/register")
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  async webRegister(
+    @Body() registerDto: RegisterDto,
+    @Res() res: Response,
+    @Request() req: ExpressRequest,
+  ) {
+    const rememberMe = req.headers["x-remember-me"] === "true";
+    const result = await this.authService.register(registerDto);
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
+    res.cookie(
+      "accessToken",
+      result.tokens.accessToken,
+      buildCookieOptions(req, accessTokenMaxAge),
+    );
+    res.cookie(
+      "refreshToken",
+      result.tokens.refreshToken,
+      buildCookieOptions(req, refreshTokenMaxAge),
+    );
+    res.json({
+      user: result.user,
+      accessTokenExpiresAt: result.tokens.accessTokenExpiresAt,
+    });
+    return;
+  }
+
+  /**
+   * Dedicated Mobile register endpoint: returns JSON JWT tokens for SecureStore.
+   */
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 3, ttl: 300_000 } })
+  @Post("mobile/register")
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  async mobileRegister(@Body() registerDto: RegisterDto) {
+    const result = await this.authService.register(registerDto);
+    return {
+      user: result.user,
+      tokens: result.tokens,
+    };
   }
 
   /**
@@ -232,6 +344,73 @@ export class AuthController {
   }
 
   /**
+   * Dedicated Web refresh endpoint: sets updated HttpOnly cookies and returns success without raw tokens.
+   */
+  @UseGuards(JwtRefreshGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
+  @ApiBearerAuth()
+  @Post("web/refresh")
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async webRefreshTokens(
+    @CurrentUser() user: User,
+    @Res() res: Response,
+    @Request() req: ExpressRequest,
+  ) {
+    const rememberMe = req.headers["x-remember-me"] === "true";
+    if (!user.refreshToken) {
+      throw new UnauthorizedException("No refresh token provided");
+    }
+    const tokens = await this.authService.refreshTokens(
+      user.id,
+      user.refreshToken,
+    );
+    const { accessTokenMaxAge, refreshTokenMaxAge } =
+      this.getCookieMaxAges(rememberMe);
+
+    res.cookie(
+      "accessToken",
+      tokens.accessToken,
+      buildCookieOptions(req, accessTokenMaxAge),
+    );
+    res.cookie(
+      "refreshToken",
+      tokens.refreshToken,
+      buildCookieOptions(req, refreshTokenMaxAge),
+    );
+    res.json({
+      success: true,
+      accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+    });
+    return;
+  }
+
+  /**
+   * Dedicated Mobile refresh endpoint: returns updated JWT tokens in JSON.
+   */
+  @UseGuards(JwtRefreshGuard)
+  @UseGuardsDecorator(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 300_000 } })
+  @ApiBearerAuth()
+  @Post("mobile/refresh")
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async mobileRefreshTokens(@CurrentUser() user: User) {
+    if (!user.refreshToken) {
+      throw new UnauthorizedException("No refresh token provided");
+    }
+    const tokens = await this.authService.refreshTokens(
+      user.id,
+      user.refreshToken,
+    );
+    return {
+      success: true,
+      tokens,
+    };
+  }
+
+  /**
    * Logs out the current user and clears authentication cookies.
    *
    * @param user Current authenticated user.
@@ -254,6 +433,33 @@ export class AuthController {
     res.clearCookie("refreshToken", baseCookieOptions);
     res.json({ message: "Logged out successfully" });
     return;
+  }
+
+  /**
+   * Dedicated Web logout endpoint.
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("web/logout")
+  @HttpCode(HttpStatus.OK)
+  async webLogout(
+    @CurrentUser() user: User,
+    @Res() res: Response,
+    @Request() req: ExpressRequest,
+  ) {
+    return this.logout(user, res, req);
+  }
+
+  /**
+   * Dedicated Mobile logout endpoint.
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("mobile/logout")
+  @HttpCode(HttpStatus.OK)
+  async mobileLogout(@CurrentUser() user: User) {
+    await this.authService.logout(user.id);
+    return { message: "Logged out successfully" };
   }
 
   /**

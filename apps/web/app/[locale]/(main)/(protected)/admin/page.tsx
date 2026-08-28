@@ -1,6 +1,6 @@
 "use client";
 
-import { LanguagesIcon, ShoppingBag, Trophy, Users } from "lucide-react";
+import { Activity, LanguagesIcon, ShoppingBag, Trophy, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -15,6 +15,7 @@ import { AdminPokemonSeriesTable } from "./_components/AdminPokemonSeriesTable";
 import { AdminPokemonSetsTable } from "./_components/AdminPokemonSetsTable";
 import { AdminTournamentsTable } from "./_components/AdminTournamentsTable";
 import { AdminUsersTable } from "./_components/AdminUsersTable";
+import { AdminSystemHealth } from "./_components/AdminSystemHealth";
 
 type AdminTab =
   | "orders"
@@ -22,7 +23,8 @@ type AdminTab =
   | "tournaments"
   | "series"
   | "sets"
-  | "cards";
+  | "cards"
+  | "system";
 
 const SUMMARY_CARDS: Array<{
   key: string;
@@ -34,6 +36,7 @@ const SUMMARY_CARDS: Array<{
   { key: "sales", tab: "orders", icon: ShoppingBag },
   { key: "tournaments", tab: "tournaments", icon: Trophy },
   { key: "translations", href: "/admin/translations", icon: LanguagesIcon },
+  { key: "system", tab: "system", icon: Activity },
 ];
 
 export default function AdminPage() {
@@ -55,7 +58,7 @@ export default function AdminPage() {
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           {SUMMARY_CARDS.map(({ key, tab: target, href, icon: Icon }) => {
             const card = (
               <Card className="h-full transition-colors hover:border-primary/50 hover:bg-accent/40">
@@ -101,7 +104,7 @@ export default function AdminPage() {
           onValueChange={(value) => setTab(value as AdminTab)}
           className="space-y-4"
         >
-          <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 w-full">
             <TabsTrigger value="orders">{t("tabs.orders")}</TabsTrigger>
             <TabsTrigger value="users">{t("tabs.users")}</TabsTrigger>
             <TabsTrigger value="tournaments">
@@ -110,6 +113,7 @@ export default function AdminPage() {
             <TabsTrigger value="series">{t("tabs.series")}</TabsTrigger>
             <TabsTrigger value="sets">{t("tabs.sets")}</TabsTrigger>
             <TabsTrigger value="cards">{t("tabs.cards")}</TabsTrigger>
+            <TabsTrigger value="system">{t("tabs.system")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders">
@@ -134,6 +138,10 @@ export default function AdminPage() {
 
           <TabsContent value="cards">
             <AdminPokemonCardsTable />
+          </TabsContent>
+
+          <TabsContent value="system">
+            <AdminSystemHealth />
           </TabsContent>
         </Tabs>
       </div>

@@ -62,6 +62,7 @@ export class MatchmakingService implements OnModuleInit, OnModuleDestroy {
       () => this.runRebalance(),
       MatchmakingService.REBALANCE_INTERVAL_MS,
     );
+    this.rebalanceTimer.unref();
   }
 
   onModuleDestroy() {

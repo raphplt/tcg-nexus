@@ -12,6 +12,7 @@ describe("UserController", () => {
     findOne: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateOwnProfile: jest.fn(),
     remove: jest.fn(),
   };
 
@@ -75,13 +76,16 @@ describe("UserController", () => {
     expect(mockUserService.update).toHaveBeenCalledWith(7, dto);
   });
 
-  it("updateProfile delegates to userService.update with current user id", async () => {
+  it("updateProfile delegates to userService.updateOwnProfile with current user id", async () => {
     const dto = { lastName: "B" } as any;
-    mockUserService.update.mockResolvedValue({ id: 8, lastName: "B" });
+    mockUserService.updateOwnProfile.mockResolvedValue({
+      id: 8,
+      lastName: "B",
+    });
     await expect(
       controller.updateProfile({ id: 8 } as User, dto),
     ).resolves.toEqual({ id: 8, lastName: "B" });
-    expect(mockUserService.update).toHaveBeenCalledWith(8, dto);
+    expect(mockUserService.updateOwnProfile).toHaveBeenCalledWith(8, dto);
   });
 
   it("remove delegates to userService.remove", async () => {

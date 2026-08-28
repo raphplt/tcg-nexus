@@ -60,6 +60,27 @@ describe("UserController (e2e)", () => {
       expect(response.body.firstName).toBe("Renamed");
       expect(response.body.preferredCurrency).toBe(Currency.USD);
     });
+
+    it("rejects forbidden administrative fields with 400 and preserves user role", async () => {
+      const response = await request(httpServer)
+        .patch("/users/me")
+        .set("Authorization", `Bearer ${user.accessToken}`)
+        .send({
+          role: "ADMIN",
+          isPro: true,
+          isActive: false,
+          emailVerified: true,
+        });
+
+      expect(response.status).toBe(400);
+
+      // Verify user's actual profile is untouched
+      const profileRes = await request(httpServer)
+        .get("/users/me")
+        .set("Authorization", `Bearer ${user.accessToken}`);
+      expect(profileRes.body.role).toBe("USER");
+      expect(profileRes.body.isPro).toBe(false);
+    });
   });
 
   describe("GET /users/:id/public", () => {

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { SealedProductService } from "../sealed-product/sealed-product.service";
+import { DemoService } from "./demo.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
@@ -16,6 +17,10 @@ describe("SeedController", () => {
     seedCardPopularityMetrics: jest.fn(),
     seedCompleteTournament: jest.fn(),
   };
+  const mockDemoService = {
+    prepareDemo: jest.fn(),
+    resetDemoTournament: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -30,6 +35,10 @@ describe("SeedController", () => {
           useValue: {
             seedFromJson: jest.fn().mockResolvedValue(undefined),
           },
+        },
+        {
+          provide: DemoService,
+          useValue: mockDemoService,
         },
       ],
     }).compile();

@@ -10,9 +10,19 @@ describe("AuthModule", () => {
       MODULE_METADATA.IMPORTS,
       AuthModule,
     ) as any[];
-    const jwtAsync = imports.find((i) => typeof i === "object" && i?.providers);
+    const jwtAsync = imports.find(
+      (i) =>
+        typeof i === "object" &&
+        i?.providers?.some(
+          (p: any) =>
+            p?.provide === "JWT_MODULE_OPTIONS" ||
+            p?.provide?.toString?.().includes("JWT"),
+        ),
+    );
     const optionsProvider = jwtAsync?.providers?.find(
-      (p: any) => p?.useFactory,
+      (p: any) =>
+        p?.provide === "JWT_MODULE_OPTIONS" ||
+        p?.provide?.toString?.().includes("JWT"),
     );
     return optionsProvider?.useFactory as (config: ConfigService) => any;
   };

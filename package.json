@@ -5,6 +5,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "seed": "cd apps/api && npm run seed",
+    "demo:prepare": "npm run demo:prepare -w api",
+    "demo:reset-tournament": "npm run demo:reset-tournament -w api",
     "lint": "turbo lint",
     "format": "biome format --write .",
     "check-types": "turbo check-types",
