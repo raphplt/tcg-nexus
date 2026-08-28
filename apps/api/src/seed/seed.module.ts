@@ -40,6 +40,7 @@ import { TournamentReward } from "src/tournament/entities/tournament-reward.enti
 import { TournamentModule } from "src/tournament/tournament.module";
 import { User } from "src/user/entities/user.entity";
 import { CatalogImportService } from "./catalog-import.service";
+import { DemoService } from "./demo.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
@@ -96,7 +97,7 @@ const isSeedApiEnabled =
     TournamentModule,
   ],
   controllers: isSeedApiEnabled ? [SeedController] : [],
-  providers: [SeedService, CatalogImportService],
-  exports: [CatalogImportService],
+  providers: [SeedService, CatalogImportService, DemoService],
+  exports: [CatalogImportService, DemoService],
 })
 export class SeedModule {}

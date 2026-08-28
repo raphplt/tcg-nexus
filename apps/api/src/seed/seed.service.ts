@@ -420,7 +420,8 @@ export class SeedService {
         where: { email: userData.email },
       });
       if (!existing) {
-        const hash = await bcrypt.hash(userData.password, 10);
+        const rawPassword = userData.password || "password123";
+        const hash = await bcrypt.hash(rawPassword, 10);
         const user = this.userRepository.create({
           ...userData,
           password: hash,
