@@ -7,9 +7,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { Player } from "src/player/entities/player.entity";
 import { Repository } from "typeorm";
+import type { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { UserFollowService } from "../user-follow/user-follow.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { PublicUserDto } from "./dto/public-user.dto";
+import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
 
@@ -195,6 +197,42 @@ export class UserService {
       followingCount,
       isFollowing,
     });
+  }
+
+  /**
+   * Updates only the personal profile fields of the authenticated user.
+   * Administrative fields (role, isPro, isActive, emailVerified) cannot be altered here.
+   *
+   * @param id Authenticated user ID.
+   * @param updateDto Personal profile update payload.
+   * @returns Updated User entity.
+   */
+  async updateOwnProfile(
+    id: number,
+    updateDto: UpdateMyProfileDto,
+  ): Promise<User> {
+    await this.findOne(id);
+    const sanitizedData: QueryDeepPartialEntity<User> = {};
+    if (updateDto.firstName !== undefined) {
+      sanitizedData.firstName = updateDto.firstName;
+    }
+    if (updateDto.lastName !== undefined) {
+      sanitizedData.lastName = updateDto.lastName;
+    }
+    if (updateDto.avatarUrl !== undefined) {
+      sanitizedData.avatarUrl = updateDto.avatarUrl;
+    }
+    if (updateDto.preferredCurrency !== undefined) {
+      sanitizedData.preferredCurrency = updateDto.preferredCurrency;
+    }
+    if (updateDto.preferredLocale !== undefined) {
+      sanitizedData.preferredLocale = updateDto.preferredLocale;
+    }
+
+    if (Object.keys(sanitizedData).length > 0) {
+      await this.userRepository.update(id, sanitizedData);
+    }
+    return this.findOne(id);
   }
 
   /**

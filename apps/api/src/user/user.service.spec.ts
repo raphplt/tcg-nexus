@@ -159,6 +159,32 @@ describe("UserService", () => {
     expect(bcrypt.hash).toHaveBeenCalledWith("newpwd", 10);
   });
 
+  it("should update own profile with authorized fields only", async () => {
+    repo.findOne.mockResolvedValueOnce({ id: 1, firstName: "Old" });
+    repo.update.mockResolvedValue({ affected: 1 });
+    repo.findOne.mockResolvedValueOnce({
+      id: 1,
+      firstName: "New",
+      lastName: "Name",
+      preferredLocale: "en",
+    });
+
+    const updated = await service.updateOwnProfile(1, {
+      firstName: "New",
+      lastName: "Name",
+      preferredLocale: "en",
+      // Even if extra fields were injected at runtime:
+      ...({ role: "ADMIN", isPro: true } as any),
+    });
+
+    expect(repo.update).toHaveBeenCalledWith(1, {
+      firstName: "New",
+      lastName: "Name",
+      preferredLocale: "en",
+    });
+    expect(updated.firstName).toBe("New");
+  });
+
   it("should throw on email conflict during update", async () => {
     repo.findOne.mockResolvedValueOnce({ id: 1, email: "old@example.com" });
     repo.findOne.mockResolvedValueOnce({ id: 2, email: "new@example.com" });

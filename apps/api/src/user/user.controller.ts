@@ -19,7 +19,8 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { AdminUpdateUserDto } from "./dto/admin-update-user.dto";
+import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
 import { User } from "./entities/user.entity";
 import { UserService } from "./user.service";
 
@@ -70,9 +71,9 @@ export class UserController {
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   updateProfile(
     @CurrentUser() user: User,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateMyProfileDto: UpdateMyProfileDto,
   ) {
-    return this.userService.update(user.id, updateUserDto);
+    return this.userService.updateOwnProfile(user.id, updateMyProfileDto);
   }
 
   @Patch(":id")
@@ -80,9 +81,9 @@ export class UserController {
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() adminUpdateUserDto: AdminUpdateUserDto,
   ) {
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(id, adminUpdateUserDto);
   }
 
   @Delete(":id")
