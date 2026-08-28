@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { CircleAlert, Eye, EyeOff, ArrowLeft, Home } from "lucide-react";
+import { OAuthSocialButtons } from "@/components/Auth/OAuthSocialButtons";
 import { createLoginSchema, type LoginFormValues } from "./utils";
 
 const DEV_ACCOUNTS = [
@@ -218,6 +219,8 @@ const LoginPage = () => {
                   {t("rememberMe")}
                 </label>
               </div>
+
+              <OAuthSocialButtons disabled={isLoading} />
 
               {isDev && (
                 <div className="pt-4 border-t border-border/40">

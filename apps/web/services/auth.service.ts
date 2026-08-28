@@ -44,8 +44,10 @@ export const authService = {
     await secureApi.post("/auth/logout");
   },
 
-  async getProfile(): Promise<User> {
-    const response = await secureApi.post<User>("/auth/profile");
+  async getProfile(options?: { skipRefresh?: boolean }): Promise<User> {
+    const response = await secureApi.post<User>("/auth/profile", null, {
+      ...(options?.skipRefresh ? ({ skipRefresh: true } as any) : {}),
+    });
     return response.data;
   },
 

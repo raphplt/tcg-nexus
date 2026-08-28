@@ -23,6 +23,7 @@ import { SupportTicket } from "../../support-ticket/entities/support-ticket.enti
 import { SupportMessage } from "../../support-message/entities/support-message.entity";
 import { Notification } from "src/notification/entities/notification.entity";
 import { DeviceToken } from "src/notification/entities/device-token.entity";
+import { AuthIdentity } from "src/auth/entities/auth-identity.entity";
 
 @Entity()
 export class User {
@@ -39,9 +40,9 @@ export class User {
   @Column()
   lastName: string;
 
-  @Column()
+  @Column({ nullable: true })
   @Exclude()
-  password: string;
+  password?: string | null;
 
   @Column({ nullable: true })
   avatarUrl: string;
@@ -159,6 +160,14 @@ export class User {
     (deviceToken) => deviceToken.user,
   )
   deviceTokens?: DeviceToken[];
+
+  @OneToMany(
+    () => AuthIdentity,
+    (identity) => identity.user,
+    { cascade: true },
+  )
+  identities?: AuthIdentity[];
+
   // Dates
   @CreateDateColumn()
   createdAt: Date;
