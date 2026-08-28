@@ -45,14 +45,14 @@ export const authService = {
   },
 
   async getProfile(options?: { skipRefresh?: boolean }): Promise<User> {
-    const response = await secureApi.post<User>("/auth/profile", null, {
+    const response = await secureApi.post<User>("/auth/profile", undefined, {
       ...(options?.skipRefresh ? ({ skipRefresh: true } as any) : {}),
     });
     return response.data;
   },
 
   async refreshToken(rememberMe = false): Promise<void> {
-    await secureApi.post("/auth/refresh", null, {
+    await secureApi.post("/auth/refresh", undefined, {
       headers: {
         "x-remember-me": rememberMe ? "true" : "false",
       },
