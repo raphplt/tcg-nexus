@@ -114,17 +114,17 @@ export default function Footer() {
             <ul className="space-y-2 mb-3">
               <li>
                 <Link href="/legal/terms" className={linkClass}>
-                  Conditions Générales (CGU)
+                  {t("terms")}
                 </Link>
               </li>
               <li>
                 <Link href="/legal/privacy" className={linkClass}>
-                  Confidentialité & RGPD
+                  {t("privacy")}
                 </Link>
               </li>
               <li>
                 <Link href="/legal/mentions" className={linkClass}>
-                  Mentions Légales & Droits
+                  {t("mentions")}
                 </Link>
               </li>
             </ul>
