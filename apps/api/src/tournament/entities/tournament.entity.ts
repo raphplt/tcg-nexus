@@ -18,6 +18,8 @@ import { TournamentOrganizer } from "./tournament-organizer.entity";
 import { TournamentPricing } from "./tournament-pricing.entity";
 import { TournamentRegistration } from "./tournament-registration.entity";
 import { TournamentReward } from "./tournament-reward.entity";
+import { TournamentDeckSnapshot } from "./tournament-deck-snapshot.entity";
+import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 
 export enum TournamentType {
   SINGLE_ELIMINATION = "single_elimination",
@@ -83,6 +85,31 @@ export class Tournament {
 
   @Column({ default: 0, nullable: true })
   totalRounds?: number;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  roundStartedAt?: Date | null;
+
+  @Column({ default: 50 })
+  roundDurationMinutes: number;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  roundDeadline?: Date | null;
+
+  @Column({ default: false })
+  isRoundPaused: boolean;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  pausedAt?: Date | null;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  deckSubmissionDeadline?: Date | null;
+
+  @Column({
+    type: "varchar",
+    length: 50,
+    default: DeckVisibilityPolicy.PUBLIC_ON_START,
+  })
+  deckVisibilityPolicy: DeckVisibilityPolicy;
 
   @Column({ type: "timestamp", nullable: true })
   registrationDeadline?: Date;
@@ -200,4 +227,11 @@ export class Tournament {
     },
   )
   notifications: TournamentNotification[];
+
+  @OneToMany(
+    () => TournamentDeckSnapshot,
+    (snapshot) => snapshot.tournament,
+    { cascade: true },
+  )
+  deckSnapshots: TournamentDeckSnapshot[];
 }

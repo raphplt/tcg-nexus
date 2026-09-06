@@ -2,10 +2,16 @@ import { PaginatedResult, PaginationParams } from "@/types/pagination";
 import {
   BracketStructure,
   CreateTournamentDto,
+  ExplainableStandingsResponse,
   Match,
+  MatchResultProposal,
+  PlayerTournamentDashboard,
   Ranking,
+  RoundClockStatus,
   StartTournamentOptions,
+  SubmittedCardItem,
   Tournament,
+  TournamentDeckSnapshot,
   TournamentRegistration,
 } from "@/types/tournament";
 import { authedFetch } from "@/utils/fetch";
@@ -399,6 +405,175 @@ export const tournamentService = {
       "POST",
       `/tournaments/${tournamentId}/matches/bulk-start`,
       { data: { matchIds } },
+    );
+  },
+
+  // --- TRN-01: Match Result Proposals & Disputes ---
+
+  async proposeMatchResult(
+    matchId: number,
+    data: { playerAScore: number; playerBScore: number; notes?: string },
+  ): Promise<MatchResultProposal> {
+    return authedFetch<MatchResultProposal>(
+      "POST",
+      `/matches/${matchId}/propose-result`,
+      { data },
+    );
+  },
+
+  async respondMatchResult(
+    matchId: number,
+    data: { accept: boolean; disputeReason?: string },
+  ): Promise<{ proposal: MatchResultProposal; match: Match }> {
+    return authedFetch<{ proposal: MatchResultProposal; match: Match }>(
+      "POST",
+      `/matches/${matchId}/respond-result`,
+      { data },
+    );
+  },
+
+  async resolveMatchDispute(
+    matchId: number,
+    data: { playerAScore: number; playerBScore: number; reason: string },
+  ): Promise<{ proposal: MatchResultProposal; match: Match }> {
+    return authedFetch<{ proposal: MatchResultProposal; match: Match }>(
+      "POST",
+      `/matches/${matchId}/resolve-dispute`,
+      { data },
+    );
+  },
+
+  async getMatchProposals(matchId: number): Promise<MatchResultProposal[]> {
+    return authedFetch<MatchResultProposal[]>(
+      "GET",
+      `/matches/${matchId}/proposals`,
+    );
+  },
+
+  // --- TRN-02: Deck Snapshot & Policy ---
+
+  async submitDeckSnapshot(
+    tournamentId: number,
+    data: {
+      deckId?: number;
+      deckName?: string;
+      formatId?: string;
+      ruleVersion?: string;
+      cards?: SubmittedCardItem[];
+    },
+  ): Promise<TournamentDeckSnapshot> {
+    return authedFetch<TournamentDeckSnapshot>(
+      "POST",
+      `/tournaments/${tournamentId}/deck-snapshot`,
+      { data },
+    );
+  },
+
+  async getMyDeckSnapshot(
+    tournamentId: number,
+  ): Promise<TournamentDeckSnapshot | null> {
+    return authedFetch<TournamentDeckSnapshot | null>(
+      "GET",
+      `/tournaments/${tournamentId}/my-deck-snapshot`,
+    );
+  },
+
+  async getTournamentDeckSnapshots(
+    tournamentId: number,
+  ): Promise<TournamentDeckSnapshot[]> {
+    return authedFetch<TournamentDeckSnapshot[]>(
+      "GET",
+      `/tournaments/${tournamentId}/deck-snapshots`,
+    );
+  },
+
+  // --- TRN-03: Round Clock & Controls ---
+
+  async controlRoundClock(
+    tournamentId: number,
+    data: {
+      action: "START" | "PAUSE" | "RESUME" | "EXTEND";
+      durationMinutes?: number;
+      extensionMinutes?: number;
+      reason?: string;
+    },
+  ): Promise<any> {
+    return authedFetch(
+      "POST",
+      `/tournaments/${tournamentId}/round-clock`,
+      { data },
+    );
+  },
+
+  async getRoundClock(tournamentId: number): Promise<RoundClockStatus> {
+    return authedFetch<RoundClockStatus>(
+      "GET",
+      `/tournaments/${tournamentId}/round-clock`,
+    );
+  },
+
+  // --- TRN-04: Explainable Standings ---
+
+  async getExplainableStandings(
+    tournamentId: number,
+  ): Promise<ExplainableStandingsResponse> {
+    return authedFetch<ExplainableStandingsResponse>(
+      "GET",
+      `/tournaments/${tournamentId}/standings`,
+    );
+  },
+
+  // --- TRN-05: Player Dashboard & Incidents ---
+
+  async getPlayerDashboard(
+    tournamentId: number,
+  ): Promise<PlayerTournamentDashboard> {
+    return authedFetch<PlayerTournamentDashboard>(
+      "GET",
+      `/tournaments/${tournamentId}/player-dashboard`,
+    );
+  },
+
+  async dropPlayer(
+    tournamentId: number,
+    data: { playerId?: number; reason?: string },
+  ): Promise<{ success: boolean; message: string }> {
+    return authedFetch<{ success: boolean; message: string }>(
+      "POST",
+      `/tournaments/${tournamentId}/drop-player`,
+      { data },
+    );
+  },
+
+  async previewScoreCorrection(
+    tournamentId: number,
+    data: {
+      matchId: number;
+      playerAScore: number;
+      playerBScore: number;
+      reason: string;
+    },
+  ): Promise<any> {
+    return authedFetch(
+      "POST",
+      `/tournaments/${tournamentId}/score-correction/preview`,
+      { data },
+    );
+  },
+
+  async applyScoreCorrection(
+    tournamentId: number,
+    data: {
+      matchId: number;
+      playerAScore: number;
+      playerBScore: number;
+      reason: string;
+    },
+  ): Promise<{ match: Match; message: string }> {
+    return authedFetch<{ match: Match; message: string }>(
+      "POST",
+      `/tournaments/${tournamentId}/score-correction/apply`,
+      { data },
     );
   },
 };

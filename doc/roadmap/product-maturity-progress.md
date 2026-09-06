@@ -152,3 +152,35 @@ CI retains the upstream frontend test step without executing it twice.
 Post-merge verification: all 10 type-check/build dependency tasks and enabled
 lint tasks passed; 151 API suites / 1,329 tests and 33 web suites / 148 tests passed.
 The repository guidelines now require a completion commit for each intervention.
+
+## Milestone 4: Tournament Operations (TRN-01 to TRN-05)
+
+Completed on 2026-09-06 on branch `feat/product-maturity`:
+
+- **TRN-01 (Result proposal, confirmation and dispute)**:
+  - Added `MatchResultProposal` entity, `MatchResultStatus` / `ProposalStatus` / `OpponentResponse` enums, and database migration `1786102000000-TournamentOperations.ts`.
+  - Implemented `MatchResultService`: mutual player proposal, confirmation, opponent dispute with rationale, and organizer resolution with immutable audit logging.
+  - Added REST endpoints: `POST /matches/:id/propose-result`, `POST /matches/:id/respond-result`, `POST /matches/:id/resolve-dispute`, and `GET /matches/:id/proposals`.
+- **TRN-02 (Immutable tournament deck submissions)**:
+  - Added `TournamentDeckSnapshot` entity and `DeckVisibilityPolicy` enum (`ALWAYS_PRIVATE`, `PUBLIC_ON_START`, `PUBLIC_AFTER_EVENT`).
+  - Implemented `TournamentDeckSnapshotService`: 60-card list submission, validation, auto-locking on round 1 pairing/start, and policy-based opponent deck list masking.
+  - Added REST endpoints: `POST /tournaments/:id/deck-snapshot`, `GET /tournaments/:id/my-deck-snapshot`, and `GET /tournaments/:id/deck-snapshots`.
+- **TRN-03 (Round clock & controls)**:
+  - Implemented `TournamentRoundClockService`: round start, pause, resume, time extensions, and live remaining second countdowns with auto-expiry flags.
+  - Added REST endpoints: `POST /tournaments/:id/round-clock` and `GET /tournaments/:id/round-clock`.
+- **TRN-04 (Explainable standings)**:
+  - Enhanced `RankingService` with Pokémon TCG Swiss tiebreak computations: OMW% (Opponent Match Win %), GW% (Game Win %), OGW% (Opponent Game Win %), byes accounting, and provisional status flags.
+  - Added REST endpoint: `GET /tournaments/:id/standings`.
+  - Updated web `RankingsDisplay` component with tiebreaker columns and expandable calculation formulas.
+- **TRN-05 (Action-oriented player dashboard, drop & score corrections)**:
+  - Implemented `TournamentIncidentService`:
+    - Mid-tournament drop (`POST /tournaments/:id/drop-player`): marks registration dropped, forfeits active scheduled match, and excludes player from future Swiss pairings.
+    - Organizer score correction preview & apply with audit trail (`POST /tournaments/:id/score-correction/preview` and `/apply`).
+    - Unified player tournament cockpit (`GET /tournaments/:id/player-dashboard`): returns registration state, deck submission status, active match proposal/dispute status, round clock countdown, and `nextAction` guidance.
+  - Updated frontend web `apps/web/app/[locale]/(main)/tournaments/[id]/player/page.tsx` with live round clock, active match cockpit, score proposal/dispute modals, and self-drop dialog.
+
+### Verification Evidence:
+- **Root type check**: All 10 Turbo workspaces passed `npm run check-types` with 0 errors.
+- **Monorepo lint**: Biome passed `npm run lint` across 700 API files and 465 web files with 0 violations.
+- **API unit test suite**: All 164 suites, 1,390 tests passed cleanly (`npm run test -w api`).
+- **PostgreSQL E2E suite**: `test/tournament-operations.e2e-spec.ts` passed 12/12 tests validating end-to-end deck snapshotting, round clocks, score proposals/disputes, explainable standings, and mid-tournament drop.

@@ -14,8 +14,13 @@ import {
   ValidateIf,
 } from "class-validator";
 import { TournamentType } from "../entities/tournament.entity";
+import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 
 export class CreateTournamentDto {
+  @IsOptional()
+  @IsEnum(DeckVisibilityPolicy)
+  deckVisibilityPolicy?: DeckVisibilityPolicy;
+
   @IsString()
   name: string;
 

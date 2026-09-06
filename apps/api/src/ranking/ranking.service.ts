@@ -13,6 +13,10 @@ import {
   toSwissResults,
 } from "../tournament/services/swiss-pairing.service";
 import { User } from "../user/entities/user.entity";
+import {
+  ExplainableStandingDto,
+  ExplainableStandingsResponseDto,
+} from "../tournament/dto/explainable-standings.dto";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
 import { UpdateRankingDto } from "./dto/update-ranking.dto";
 import { RankedMatchHistory } from "./entities/ranked-match-history.entity";
@@ -380,11 +384,69 @@ export class RankingService {
       where: { tournament: { id: tournamentId } },
       relations: ["player", "player.user"],
       order: {
+        rank: "ASC",
         points: "DESC",
         winRate: "DESC",
         wins: "DESC",
       },
     });
+  }
+
+  /**
+   * Retrieves explainable tournament standings with tiebreaker breakdowns (TRN-04).
+   */
+  async getExplainableStandings(
+    tournamentId: number,
+  ): Promise<ExplainableStandingsResponseDto> {
+    const tournament = await this.tournamentRepository.findOne({
+      where: { id: tournamentId },
+    });
+
+    if (!tournament) {
+      throw new NotFoundException({
+        code: "TOURNAMENT_NOT_FOUND",
+        message: "Tournoi non trouvé",
+      });
+    }
+
+    const rankings = await this.getTournamentRankings(tournamentId);
+    const isProvisional =
+      tournament.status !== TournamentStatus.FINISHED && !tournament.isFinished;
+
+    const standings: ExplainableStandingDto[] = rankings.map((r) => ({
+      rank: r.rank,
+      playerId: r.player?.id,
+      playerName: r.player?.user
+        ? `${r.player.user.firstName || ""} ${r.player.user.lastName || ""}`.trim() ||
+          r.player.user.email
+        : `Player #${r.player?.id}`,
+      points: r.points,
+      wins: r.wins,
+      losses: r.losses,
+      draws: r.draws,
+      byes: r.byesCount || 0,
+      winRate: Math.round(r.winRate * 1000) / 10,
+      omwPercentage: Number(r.omwPercentage) || 0,
+      gwPercentage: Number(r.gwPercentage) || 0,
+      ogwPercentage: Number(r.ogwPercentage) || 0,
+      isProvisional: r.isProvisional ?? isProvisional,
+      tiebreakExplanation:
+        r.tiebreakExplanation ||
+        `Points: ${r.points} (${r.wins}-${r.losses}-${r.draws})`,
+    }));
+
+    return {
+      tournamentId: tournament.id,
+      tournamentName: tournament.name,
+      currentRound: tournament.currentRound || 1,
+      totalRounds: tournament.totalRounds || 1,
+      isFinished:
+        tournament.status === TournamentStatus.FINISHED ||
+        Boolean(tournament.isFinished),
+      ruleVersion: "POKEMON_SWISS_TIEBREAK_V1",
+      generatedAt: new Date(),
+      standings,
+    };
   }
 
   /**
@@ -449,6 +511,9 @@ export class RankingService {
       rankings.push(ranking);
     }
 
+    const isProvisional =
+      tournament.status !== TournamentStatus.FINISHED && !tournament.isFinished;
+
     if (tournament.type === TournamentType.SWISS_SYSTEM) {
       // Swiss standings are broken by the official tie-breakers (OMW%, GW%,
       // OGW%) rather than by a plain win ratio.
@@ -456,25 +521,62 @@ export class RankingService {
         playerIds,
         toSwissResults(tournament.matches),
       );
-      const swissOrder = new Map(
-        swissStandings.map((standing, index) => [standing.playerId, index]),
+      const swissMap = new Map(
+        swissStandings.map((standing, index) => [
+          standing.playerId,
+          { standing, index },
+        ]),
       );
 
       rankings.sort(
         (a, b) =>
-          (swissOrder.get(a.player.id) ?? Number.MAX_SAFE_INTEGER) -
-          (swissOrder.get(b.player.id) ?? Number.MAX_SAFE_INTEGER),
+          (swissMap.get(a.player.id)?.index ?? Number.MAX_SAFE_INTEGER) -
+          (swissMap.get(b.player.id)?.index ?? Number.MAX_SAFE_INTEGER),
       );
+
+      for (let i = 0; i < rankings.length; i++) {
+        const ranking = rankings[i];
+        const swiss = swissMap.get(ranking.player.id)?.standing;
+        if (swiss) {
+          ranking.omwPercentage =
+            Math.round(swiss.opponentMatchWinRate * 100000) / 1000;
+          ranking.gwPercentage =
+            Math.round(swiss.gameWinRate * 100000) / 1000;
+          ranking.ogwPercentage =
+            Math.round(swiss.opponentGameWinRate * 100000) / 1000;
+          ranking.byesCount = swiss.byes;
+          ranking.isProvisional = isProvisional;
+
+          let explanation = `Points: ${ranking.points} (${ranking.wins}-${ranking.losses}-${ranking.draws})`;
+          if (ranking.byesCount > 0) {
+            explanation += `, Byes: ${ranking.byesCount}`;
+          }
+          explanation += ` | OMW%: ${ranking.omwPercentage.toFixed(1)}%, GW%: ${ranking.gwPercentage.toFixed(1)}%, OGW%: ${ranking.ogwPercentage.toFixed(1)}%`;
+
+          if (i > 0 && rankings[i - 1].points === ranking.points) {
+            explanation += ` (Départagé sous rang #${i} par OMW%: ${(rankings[i - 1].omwPercentage ?? 0).toFixed(1)}% vs ${ranking.omwPercentage.toFixed(1)}%)`;
+          }
+          ranking.tiebreakExplanation = explanation;
+        }
+      }
     } else if (
       tournament.type === TournamentType.SINGLE_ELIMINATION ||
       tournament.type === TournamentType.DOUBLE_ELIMINATION
     ) {
       this.sortEliminationRankings(rankings, tournament);
+      rankings.forEach((r) => {
+        r.isProvisional = isProvisional;
+        r.tiebreakExplanation = `Élimination directe (Points: ${r.points})`;
+      });
     } else {
       rankings.sort((a, b) => {
         if (a.points !== b.points) return b.points - a.points;
         if (a.winRate !== b.winRate) return b.winRate - a.winRate;
         return b.wins - a.wins;
+      });
+      rankings.forEach((r) => {
+        r.isProvisional = isProvisional;
+        r.tiebreakExplanation = `Points: ${r.points}, Taux de victoire: ${(r.winRate * 100).toFixed(1)}%`;
       });
     }
 

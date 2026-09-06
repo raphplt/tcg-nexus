@@ -11,7 +11,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { MatchResultProposal } from "./match-result-proposal.entity";
 import { OnlineMatchSession } from "./online-match-session.entity";
+import { MatchResultStatus } from "../../common/enums/match-result-status";
 
 export enum MatchStatus {
   SCHEDULED = "scheduled",
@@ -99,6 +101,22 @@ export class Match {
   @Column({ default: 0 })
   playerBScore: number;
 
+  @Column({
+    type: "varchar",
+    length: 50,
+    default: MatchResultStatus.UNREPORTED,
+  })
+  resultStatus: MatchResultStatus;
+
+  @Column({ type: "int", nullable: true })
+  tableNumber?: number | null;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  disputedAt?: Date | null;
+
+  @Column({ type: "timestamp with time zone", nullable: true })
+  confirmedAt?: Date | null;
+
   @Column({ nullable: true })
   notes: string;
 
@@ -168,4 +186,11 @@ export class Match {
     },
   )
   onlineSession?: OnlineMatchSession | null;
+
+  @OneToMany(
+    () => MatchResultProposal,
+    (proposal) => proposal.match,
+    { cascade: true },
+  )
+  proposals: MatchResultProposal[];
 }

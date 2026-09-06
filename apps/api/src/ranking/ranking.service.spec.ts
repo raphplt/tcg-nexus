@@ -5,6 +5,7 @@ import { Match } from "../match/entities/match.entity";
 import { Player } from "../player/entities/player.entity";
 import {
   Tournament,
+  TournamentStatus,
   TournamentType,
 } from "../tournament/entities/tournament.entity";
 import { CreateRankingDto } from "./dto/create-ranking.dto";
@@ -507,6 +508,44 @@ describe("RankingService", () => {
 
       const history = await service.getRecentEloHistory(1, 10);
       expect(Array.isArray(history)).toBe(true);
+    });
+  });
+
+  describe("getExplainableStandings", () => {
+    it("should return formatted explainable standings with tiebreakers", async () => {
+      tournamentRepo.findOne.mockResolvedValue({
+        id: 1,
+        name: "Swiss Championship",
+        currentRound: 3,
+        totalRounds: 5,
+        status: TournamentStatus.IN_PROGRESS,
+      });
+
+      rankingRepo.find.mockResolvedValue([
+        {
+          rank: 1,
+          player: { id: 10, user: { firstName: "Ash", lastName: "K" } },
+          points: 9,
+          wins: 3,
+          losses: 0,
+          draws: 0,
+          winRate: 1.0,
+          omwPercentage: 66.7,
+          gwPercentage: 80.0,
+          ogwPercentage: 60.0,
+          byesCount: 0,
+          isProvisional: true,
+          tiebreakExplanation: "Match Points: 9 (3-0-0) | OMW%: 66.7%",
+        },
+      ]);
+
+      const res = await service.getExplainableStandings(1);
+
+      expect(res.tournamentName).toBe("Swiss Championship");
+      expect(res.standings).toHaveLength(1);
+      expect(res.standings[0].playerName).toBe("Ash K");
+      expect(res.standings[0].omwPercentage).toBe(66.7);
+      expect(res.standings[0].isProvisional).toBe(true);
     });
   });
 });

@@ -5,6 +5,10 @@ import { Player } from "../player/entities/player.entity";
 import { Tournament } from "./entities/tournament.entity";
 import { TournamentOrganizer } from "./entities/tournament-organizer.entity";
 import { TournamentRegistration } from "./entities/tournament-registration.entity";
+import { RankingService } from "../ranking/ranking.service";
+import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
+import { TournamentIncidentService } from "./services/tournament-incident.service";
+import { TournamentRoundClockService } from "./services/tournament-round-clock.service";
 import { TournamentOrganizerGuard } from "./guards/tournament-organizer.guard";
 import { TournamentOwnerGuard } from "./guards/tournament-owner.guard";
 import { TournamentParticipantGuard } from "./guards/tournament-participant.guard";
@@ -29,6 +33,36 @@ describe("TournamentController Security", () => {
             registerPlayer: jest.fn(),
             unregisterPlayer: jest.fn(),
             remove: jest.fn(),
+          },
+        },
+        {
+          provide: RankingService,
+          useValue: {
+            getExplainableStandings: jest.fn(),
+            getTournamentRankings: jest.fn(),
+          },
+        },
+        {
+          provide: TournamentDeckSnapshotService,
+          useValue: {
+            submitDeckSnapshot: jest.fn(),
+            getDeckSnapshot: jest.fn(),
+          },
+        },
+        {
+          provide: TournamentRoundClockService,
+          useValue: {
+            getClockStatus: jest.fn(),
+            controlClock: jest.fn(),
+          },
+        },
+        {
+          provide: TournamentIncidentService,
+          useValue: {
+            dropPlayer: jest.fn(),
+            previewScoreCorrection: jest.fn(),
+            applyScoreCorrection: jest.fn(),
+            getPlayerDashboard: jest.fn(),
           },
         },
         {
@@ -90,7 +124,7 @@ describe("TournamentController Security", () => {
   });
 
   it("should have security guards applied", () => {
-    // Vérifier que les guards sont bien appliqués
+    // Verify that guards are properly applied
     const controllerMetadata = Reflect.getMetadata(
       "__guards__",
       TournamentController,

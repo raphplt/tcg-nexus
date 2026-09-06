@@ -52,6 +52,24 @@ export class Ranking {
   @Column({ type: "decimal", precision: 5, scale: 2, default: 0 })
   winRate: number;
 
+  @Column({ type: "decimal", precision: 6, scale: 3, default: 0 })
+  omwPercentage: number;
+
+  @Column({ type: "decimal", precision: 6, scale: 3, default: 0 })
+  gwPercentage: number;
+
+  @Column({ type: "decimal", precision: 6, scale: 3, default: 0 })
+  ogwPercentage: number;
+
+  @Column({ default: 0 })
+  byesCount: number;
+
+  @Column({ default: true })
+  isProvisional: boolean;
+
+  @Column({ type: "text", nullable: true })
+  tiebreakExplanation?: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
