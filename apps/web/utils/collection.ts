@@ -77,5 +77,5 @@ export function getPreviewCards(
   return items
     .filter((item) => (item.quantity || 0) > 0 && item.pokemonCard?.image)
     .slice(0, size)
-    .map((item) => item.pokemonCard);
+    .flatMap((item) => (item.pokemonCard ? [item.pokemonCard] : []));
 }

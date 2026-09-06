@@ -218,15 +218,22 @@ export class OrderService {
         shippingAddress,
         reservationExpiresAt,
         stockReleased: false,
-        orderItems: cartItems.map((item) =>
-          manager.create(OrderItem, {
+        orderItems: cartItems.map((item) => {
+          const listing = freshListings.get(item.listing.id);
+          if (!listing) {
+            throw new BadRequestException(
+              `L'annonce ${item.listing.id} n'est plus disponible`,
+            );
+          }
+          return manager.create(OrderItem, {
             ...this.buildOrderItemSnapshot(item),
+            // NOTE: Line amounts must use the same locked price as the order total.
+            unitPrice: listing.price,
             shippingCost: shippingByCartItem.get(item.id) ?? 0,
             handlingTimeDays:
-              freshListings.get(item.listing.id)?.handlingTimeDays ??
-              SHIPPING_POLICY.handlingTimeDays,
-          }),
-        ),
+              listing.handlingTimeDays ?? SHIPPING_POLICY.handlingTimeDays,
+          });
+        }),
       });
 
       const savedOrder = await manager.save(Order, order);
@@ -645,9 +652,13 @@ export class OrderService {
         order.reservationExpiresAt = null;
       }
 
+      // NOTE: A refund moves money, not physical inventory. Returned goods
+      // require an explicit inspected disposition before they can be resold.
+      // Paid orders can already contain individually shipped lines even while
+      // their aggregate status remains Paid; only unpaid reservations release here.
       if (
-        nextStatus === OrderStatus.CANCELLED ||
-        nextStatus === OrderStatus.REFUNDED
+        nextStatus === OrderStatus.CANCELLED &&
+        previousStatus === OrderStatus.PENDING
       ) {
         await this.releaseStock(order, manager);
       }

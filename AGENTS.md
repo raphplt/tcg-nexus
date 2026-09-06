@@ -106,6 +106,10 @@ All AI agents and developers must strictly adhere to the following 5 Golden Rule
 
 ## 5. Development & Verification Workflow
 
+### Completion commits
+
+Commit completed, verified changes at the end of each intervention unless the user explicitly asks otherwise. Preserve unrelated work and use English commit messages.
+
 ### Command Cheatsheet
 
 ```bash

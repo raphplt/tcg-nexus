@@ -1,4 +1,4 @@
-import { SelectQueryBuilder } from "typeorm";
+import { SelectQueryBuilder, WhereExpressionBuilder } from "typeorm";
 
 /**
  * SQL conditions targeting catalog labels.
@@ -27,11 +27,9 @@ import { SelectQueryBuilder } from "typeorm";
  * @param options Alias of the card table, when it is not `card`.
  * @returns The same query builder, with the search condition applied.
  */
-export function applyCardSearch<T extends object>(
-  qb: SelectQueryBuilder<T>,
-  search: string,
-  options: { alias?: string } = {},
-): SelectQueryBuilder<T> {
+export function applyCardSearch<
+  T extends Pick<WhereExpressionBuilder, "andWhere">,
+>(qb: T, search: string, options: { alias?: string } = {}): T {
   const alias = options.alias ?? "card";
 
   const conditions = [
@@ -54,9 +52,10 @@ export function applyCardSearch<T extends object>(
     )`,
   ];
 
-  return qb.andWhere(`(${conditions.join(" OR ")})`, {
+  qb.andWhere(`(${conditions.join(" OR ")})`, {
     cardSearch: `%${search}%`,
   });
+  return qb;
 }
 
 /**

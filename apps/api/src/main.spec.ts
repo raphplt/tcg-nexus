@@ -1,6 +1,10 @@
 import { NestFactory } from "@nestjs/core";
 import { bootstrap } from "./main";
 
+// NOTE: Bootstrap uses a mocked NestFactory; importing the real module would
+// initialize native mail rendering resources unrelated to this unit test.
+jest.mock("./app.module", () => ({ AppModule: class AppModule {} }));
+
 jest.mock("@nestjs/core", () => {
   const actual = jest.requireActual("@nestjs/core");
   return {

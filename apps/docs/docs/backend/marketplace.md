@@ -51,6 +51,8 @@ C'est volontairement redondant avec le `Listing`. Une commande est une pièce co
 
 ## Réservation de stock
 
+Les prix unitaires figés sur les lignes utilisent les mêmes prix relus sous verrou que le total de la commande, même si une annonce a changé depuis la lecture du panier.
+
 Le stock est décrémenté **au moment du checkout**, pas à la confirmation du paiement. Sinon deux acheteurs peuvent payer le même exemplaire unique.
 
 `reserveStockAndCreateOrder` ouvre une transaction et pose un **verrou pessimiste** (`SELECT ... FOR UPDATE`) sur chaque annonce du panier avant de vérifier puis décrémenter `quantityAvailable`. Un deuxième acheteur sur le dernier exemplaire attend le verrou, puis reçoit une erreur de stock insuffisant.
@@ -66,6 +68,15 @@ Trois issues :
 | Rien ne se passe pendant 20 min | `OrderReservationScheduler` (cron toutes les 5 min) appelle `expireStaleReservations` → `PENDING → CANCELLED`, stock restitué |
 
 Le drapeau `order.stockReleased` garantit que la restitution n'a lieu **qu'une fois**, quel que soit le nombre de fois où l'annulation est déclenchée (webhook rejoué + cron + action admin).
+
+Un remboursement ne réapprovisionne **jamais automatiquement** une annonce,
+même avant expédition : il ne prouve ni le retour physique ni l’état revendable.
+Seule l’annulation d’une réservation `Pending` libère automatiquement le stock.
+Une commande `Paid` peut déjà contenir des lignes expédiées par un vendeur ; son
+annulation globale ne suffit donc pas non plus à remettre les articles en vente.
+Le workflow de retour avec inspection, disposition et mouvement de stock audité
+reste à implémenter dans MKT-02. Les statuts et les montants publics ne changent pas.
+
 
 ## Parcours de paiement
 

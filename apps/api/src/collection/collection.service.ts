@@ -4,7 +4,12 @@ import {
   DEFAULT_LOCALE,
   type SupportedLocale,
 } from "src/translation/supported-locales";
-import { applyCardSearch, applyRarityFilter } from "src/card/card-search";
+import {
+  applyCardSearch,
+  applyRarityFilter,
+  sealedProductNameMatchesSql,
+  localizedSealedNameSql,
+} from "src/card/card-search";
 import {
   BadRequestException,
   ForbiddenException,
@@ -20,7 +25,7 @@ import {
 import { ProductKind } from "src/common/enums/product-kind";
 import { UserRole } from "src/common/enums/user";
 import { PokemonSet } from "src/pokemon-set/entities/pokemon-set.entity";
-import { Repository } from "typeorm";
+import { Brackets, Repository } from "typeorm";
 import { normalizeSortOrder } from "../helpers/pagination";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { User } from "../user/entities/user.entity";
@@ -73,7 +78,7 @@ export class CollectionService {
     return collection.user?.id === viewer.id || viewer.role === UserRole.ADMIN;
   }
 
-  // 404 et pas 403 : un 403 confirmerait l'existence de la collection
+  // NOTE: A 404 avoids disclosing the existence of a private collection.
   private assertCanViewCollection(collection: Collection, viewer?: User): void {
     if (!this.canViewCollection(collection, viewer)) {
       throw new NotFoundException(
@@ -523,6 +528,7 @@ export class CollectionService {
           "item.collection.id = :collectionId",
           { collectionId },
         )
+        .leftJoinAndSelect("item.cardState", "cardState")
         .where("set.id = :masterSetId", { masterSetId });
 
       if (search) {
@@ -539,7 +545,7 @@ export class CollectionService {
         applyRarityFilter(queryBuilder, rarity);
       }
       if (cardState) {
-        queryBuilder.andWhere("item.cardState.code = :cardState", {
+        queryBuilder.andWhere("cardState.code = :cardState", {
           cardState,
         });
       }
@@ -558,6 +564,8 @@ export class CollectionService {
         return {
           id: item?.id ?? null,
           quantity: item?.quantity ?? 0,
+          productKind: ProductKind.CARD,
+          cardState: item?.cardState ?? null,
           added_at: item?.added_at ?? null,
           // `tcgDexId` allows `CatalogLocalizationInterceptor` to attach localized name, image, rarity, and category
           pokemonCard: {
@@ -590,6 +598,9 @@ export class CollectionService {
     const queryBuilder = this.collectionItemRepository
       .createQueryBuilder("item")
       .leftJoinAndSelect("item.pokemonCard", "pokemonCard")
+      .leftJoinAndSelect("item.sealedProduct", "sealedProduct")
+      .leftJoinAndSelect("sealedProduct.pokemonSet", "sealedSet")
+      .leftJoinAndSelect("sealedSet.serie", "sealedSerie")
       .leftJoinAndSelect("item.cardState", "cardState")
       .leftJoinAndSelect("pokemonCard.set", "set")
       .leftJoinAndSelect("set.serie", "serie")
@@ -603,15 +614,30 @@ export class CollectionService {
     }
 
     if (search) {
-      applyCardSearch(queryBuilder, search, { alias: "pokemonCard" });
+      queryBuilder.andWhere(
+        new Brackets((where) => {
+          applyCardSearch(where, search, { alias: "pokemonCard" });
+          where.orWhere(
+            sealedProductNameMatchesSql("sealedProduct", "sealedSearch"),
+            {
+              sealedSearch: `%${search.toLowerCase()}%`,
+            },
+          );
+        }),
+      );
     }
 
     if (setId) {
-      queryBuilder.andWhere("set.id = :setId", { setId });
+      queryBuilder.andWhere("(set.id = :setId OR sealedSet.id = :setId)", {
+        setId,
+      });
     }
 
     if (serieId) {
-      queryBuilder.andWhere("serie.id = :serieId", { serieId });
+      queryBuilder.andWhere(
+        "(serie.id = :serieId OR sealedSerie.id = :serieId)",
+        { serieId },
+      );
     }
 
     if (rarity) {
@@ -645,7 +671,7 @@ export class CollectionService {
       );
       queryBuilder.orderBy(
         sortField === "pokemonCard.name"
-          ? "sortTranslation.name"
+          ? `COALESCE(sortTranslation.name, ${localizedSealedNameSql("sealedProduct")})`
           : "sortTranslation.rarity",
         normalizeSortOrder(sortOrder),
       );

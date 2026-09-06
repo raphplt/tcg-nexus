@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   List,
   Loader2,
-  Lock,
   Minus,
   Package,
   Plus,
@@ -19,7 +18,9 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import React, { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,53 +61,50 @@ import {
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { Link } from "@/i18n/navigation";
 import { collectionService } from "@/services/collection.service";
-import { PokemonCardType } from "@/types/cardPokemon";
-import { Collection, CollectionItemType } from "@/types/collection";
+import { useAuth } from "@/contexts/AuthContext";
+import type { CollectionItemsQueryParams } from "@/services/collection.service";
+import { getCollectionItemDisplay } from "@/utils/collection-item";
+import type { CollectionItemType } from "@/types/collection";
 import type { PaginatedResult } from "@/types/pagination";
 import { getCollectionTitle } from "@/utils/collection";
-import { getCardImage } from "@/utils/images";
 
+/** Displays mixed inventory with owner-only mutations and recoverable loading states. */
 const CollectionDetailPage = () => {
   const t = useTranslations("CollectionDetail");
   const locale = useLocale();
-  const { id } = useParams();
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const mutationPending = useRef(false);
+  const {
+    data: collection,
+    isPending: loading,
+    error: collectionError,
+    refetch: fetchCollection,
+  } = useQuery({
+    queryKey: ["collection", id, user?.id, locale],
+    queryFn: () => collectionService.getById(id),
+    retry: false,
+  });
+  const unavailable =
+    isAxiosError(collectionError) &&
+    [403, 404].includes(collectionError.response?.status ?? 0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("added_at");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
-  const [availableRarities, setAvailableRarities] = useState<string[]>([]);
   const [selectedRarity, setSelectedRarity] = useState<string>("ALL");
   const [updatingCardId, setUpdatingCardId] = useState<string | null>(null);
 
+  const canEdit = Boolean(user && collection?.user?.id === user.id);
   const isMasterSet = Boolean(collection?.masterSet);
   const limit = isMasterSet ? 24 : 12;
 
-  const fetchCollection = async () => {
-    try {
-      const collectionData = await collectionService.getById(id as string);
-      setCollection(collectionData);
-
-      if (collectionData.masterSet) {
-        try {
-          const rarities = await collectionService.getSetRarities(id as string);
-          setAvailableRarities(rarities || []);
-        } catch (err) {
-          console.error("Failed to load set rarities", err);
-        }
-      }
-    } catch (error) {
-      console.error(t("loadError"), error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) fetchCollection();
-  }, [id]);
+  const { data: availableRarities = [] } = useQuery({
+    queryKey: ["collection-rarities", id, user?.id, locale],
+    queryFn: () => collectionService.getSetRarities(id),
+    enabled: isMasterSet,
+  });
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
@@ -122,17 +120,21 @@ const CollectionDetailPage = () => {
     data: itemsData,
     isLoading: itemsLoading,
     refetch: refetchItems,
+    isError: itemsError,
   } = usePaginatedQuery<PaginatedResult<CollectionItemType>>(
     [
       "collection-items",
       id,
+      user?.id,
+      locale,
       page,
       debouncedSearch,
       sortBy,
       sortOrder,
       selectedRarity,
     ],
-    (params: any) => collectionService.getItemsPaginated(id as string, params),
+    (params: CollectionItemsQueryParams) =>
+      collectionService.getItemsPaginated(id, params),
     {
       page,
       limit,
@@ -141,39 +143,39 @@ const CollectionDetailPage = () => {
       sortOrder,
       rarity: selectedRarity !== "ALL" ? selectedRarity : undefined,
     },
-    { enabled: Boolean(id) && collection !== null },
+    { enabled: Boolean(id) && Boolean(collection), placeholderData: undefined },
   );
 
   const handleIncrement = async (cardId: string, cardName?: string) => {
-    if (!id) return;
+    if (!id || !canEdit || mutationPending.current) return;
+    mutationPending.current = true;
     setUpdatingCardId(cardId);
     try {
-      await collectionService.addCardToCollection(id as string, cardId);
-      toast.success(
-        cardName ? `+1 "${cardName}" ajouté !` : "+1 carte ajoutée !",
-      );
+      await collectionService.addCardToCollection(id, cardId);
+      toast.success(t("added", { name: cardName || t("card") }));
       await refetchItems();
       await fetchCollection();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Erreur lors de l'ajout");
+    } catch {
+      toast.error(t("addError"));
     } finally {
+      mutationPending.current = false;
       setUpdatingCardId(null);
     }
   };
 
   const handleDecrement = async (cardId: string, cardName?: string) => {
-    if (!id) return;
+    if (!id || !canEdit || mutationPending.current) return;
+    mutationPending.current = true;
     setUpdatingCardId(cardId);
     try {
-      await collectionService.removeCardFromCollection(id as string, cardId);
-      toast.success(
-        cardName ? `"${cardName}" retirée/décrémentée.` : "Carte retirée.",
-      );
+      await collectionService.removeCardFromCollection(id, cardId);
+      toast.success(t("removed", { name: cardName || t("card") }));
       await refetchItems();
       await fetchCollection();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Erreur lors du retrait");
+    } catch {
+      toast.error(t("removeError"));
     } finally {
+      mutationPending.current = false;
       setUpdatingCardId(null);
     }
   };
@@ -189,13 +191,14 @@ const CollectionDetailPage = () => {
     );
   }
 
-  if (!collection) {
+  if (!collection || collectionError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-lg text-muted-foreground">
-            Collection introuvable.
+            {unavailable ? t("unavailable") : t("loadError")}
           </p>
+          <Button onClick={() => void fetchCollection()}>{t("retry")}</Button>
         </div>
       </div>
     );
@@ -307,7 +310,7 @@ const CollectionDetailPage = () => {
                     {completionPercent}%
                   </div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Complétion
+                    {t("completion")}
                   </p>
                 </div>
               )}
@@ -319,11 +322,14 @@ const CollectionDetailPage = () => {
                 <div className="flex justify-between items-center text-sm font-medium">
                   <span className="text-muted-foreground flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-500" />
-                    Progression de l&apos;extension{" "}
+                    {t("setProgress")}{" "}
                     <strong>{collection.masterSet?.name}</strong>
                   </span>
                   <span className="tabular-nums font-bold text-foreground">
-                    {ownedItemsCount} / {totalSetCards} cartes possédées
+                    {t("ownedCards", {
+                      owned: ownedItemsCount,
+                      total: totalSetCards,
+                    })}
                   </span>
                 </div>
                 <Progress
@@ -337,7 +343,9 @@ const CollectionDetailPage = () => {
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-primary" />
                 <span>
-                  {t("cardCount", { count: meta?.totalItems || totalSetCards })}
+                  {t(isMasterSet ? "cardCount" : "itemCount", {
+                    count: meta?.totalItems || totalSetCards,
+                  })}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -408,7 +416,7 @@ const CollectionDetailPage = () => {
                     variant={viewMode === "grid" ? "secondary" : "ghost"}
                     className="h-8 px-2.5"
                     onClick={() => setViewMode("grid")}
-                    title="Vue Grille"
+                    aria-label={t("gridView")}
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </Button>
@@ -417,7 +425,7 @@ const CollectionDetailPage = () => {
                     variant={viewMode === "table" ? "secondary" : "ghost"}
                     className="h-8 px-2.5"
                     onClick={() => setViewMode("table")}
-                    title="Vue Tableau"
+                    aria-label={t("tableView")}
                   >
                     <List className="w-4 h-4" />
                   </Button>
@@ -430,9 +438,11 @@ const CollectionDetailPage = () => {
               <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-1 text-xs">
                 <span className="text-muted-foreground flex items-center gap-1 shrink-0 mr-1">
                   <Filter className="w-3 h-3" />
-                  Rareté :
+                  {t("rarity")}
                 </span>
-                <Badge
+                <Button
+                  aria-pressed={selectedRarity === "ALL"}
+                  size="sm"
                   variant={selectedRarity === "ALL" ? "default" : "outline"}
                   className="cursor-pointer transition-colors"
                   onClick={() => {
@@ -440,10 +450,12 @@ const CollectionDetailPage = () => {
                     setPage(1);
                   }}
                 >
-                  Toutes
-                </Badge>
+                  {t("allRarities")}
+                </Button>
                 {availableRarities.map((rarity) => (
-                  <Badge
+                  <Button
+                    size="sm"
+                    aria-pressed={selectedRarity === rarity}
                     key={rarity}
                     variant={selectedRarity === rarity ? "default" : "outline"}
                     className="cursor-pointer transition-colors whitespace-nowrap"
@@ -453,7 +465,7 @@ const CollectionDetailPage = () => {
                     }}
                   >
                     {rarity}
-                  </Badge>
+                  </Button>
                 ))}
               </div>
             )}
@@ -461,7 +473,12 @@ const CollectionDetailPage = () => {
         </Card>
 
         {/* Content Section */}
-        {itemsLoading ? (
+        {itemsError ? (
+          <div role="alert" className="text-center space-y-4 py-10">
+            <p>{t("loadError")}</p>
+            <Button onClick={() => void refetchItems()}>{t("retry")}</Button>
+          </div>
+        ) : itemsLoading ? (
           <Card className="bg-card/80 backdrop-blur-sm border-2">
             <CardContent className="pt-6">
               <div className="flex items-center justify-center py-20">
@@ -478,10 +495,16 @@ const CollectionDetailPage = () => {
               <div className="text-center py-16">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-semibold mb-2">
-                  {debouncedSearch ? t("noResults") : t("empty")}
+                  {debouncedSearch || selectedRarity !== "ALL"
+                    ? t("noResults")
+                    : t("empty")}
                 </p>
                 <p className="text-muted-foreground">
-                  {debouncedSearch ? t("tryOtherKeywords") : t("startAdding")}
+                  {debouncedSearch || selectedRarity !== "ALL"
+                    ? t("tryOtherKeywords")
+                    : canEdit
+                      ? t("startAdding")
+                      : t("emptyVisitor")}
                 </p>
               </div>
             </CardContent>
@@ -490,13 +513,13 @@ const CollectionDetailPage = () => {
           /* Grid / Hole Grid Display */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {items.map((item) => {
-              const pokemon = item.pokemonCard;
+              const pokemon = getCollectionItemDisplay(item);
               const isOwned = (item.quantity || 0) > 0;
               const isUpdating = updatingCardId === pokemon.id;
 
               return (
                 <div
-                  key={pokemon.id || item.id}
+                  key={item.id ?? `${pokemon.kind}-${pokemon.id}`}
                   className={`group relative rounded-xl border p-3 flex flex-col justify-between transition-all duration-200 ${
                     isOwned
                       ? "bg-card shadow-sm hover:shadow-md border-border/80 hover:border-primary/50"
@@ -520,7 +543,7 @@ const CollectionDetailPage = () => {
                         variant="outline"
                         className="text-[10px] px-1.5 py-0 h-4 text-muted-foreground border-dashed"
                       >
-                        Manquante
+                        {t("missing")}
                       </Badge>
                     )}
                   </div>
@@ -528,13 +551,17 @@ const CollectionDetailPage = () => {
                   {/* Card Image */}
                   <div className="relative aspect-[3/4] w-full my-1 flex items-center justify-center">
                     <Link
-                      href={`/marketplace/cards/${pokemon.id}`}
+                      href={pokemon.href}
                       className="relative w-full h-full block"
                     >
                       <SmartImage
-                        src={getCardImage(pokemon, "low")}
-                        fallbackSrc="/images/carte-pokemon-dos.jpg"
-                        alt={pokemon.name || "Carte"}
+                        src={pokemon.image}
+                        fallbackSrc={
+                          pokemon.kind === "sealed"
+                            ? "/images/sealed-placeholder.svg"
+                            : "/images/carte-pokemon-dos.jpg"
+                        }
+                        alt={pokemon.name || t("unknownItem")}
                         className={`h-full w-full object-contain transition-all duration-300 ${
                           isOwned
                             ? "group-hover:scale-105"
@@ -547,7 +574,7 @@ const CollectionDetailPage = () => {
                   {/* Card Info */}
                   <div className="mt-2 space-y-1">
                     <Link
-                      href={`/marketplace/cards/${pokemon.id}`}
+                      href={pokemon.href}
                       className="font-medium text-xs truncate block hover:text-primary transition-colors"
                       title={pokemon.name}
                     >
@@ -556,63 +583,75 @@ const CollectionDetailPage = () => {
 
                     <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                       <span className="truncate max-w-[80px]">
-                        {pokemon.rarity || "—"}
+                        {pokemon.kind === "sealed"
+                          ? t("sealedProduct")
+                          : pokemon.rarity || "—"}
                       </span>
                     </div>
 
+                    <p className="text-[10px] text-muted-foreground">
+                      {pokemon.condition
+                        ? pokemon.kind === "sealed"
+                          ? t(`sealedCondition.${pokemon.condition}`)
+                          : pokemon.condition
+                        : t("unknownCondition")}
+                    </p>
+
                     {/* Quick +/- Action Buttons */}
-                    <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-border/40">
-                      {isOwned ? (
-                        <>
+                    {canEdit && pokemon.kind === "card" && (
+                      <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-border/40">
+                        {isOwned ? (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-md text-muted-foreground hover:text-destructive"
+                              disabled={isUpdating}
+                              onClick={() =>
+                                handleDecrement(pokemon.id, pokemon.name)
+                              }
+                              aria-label={t("decrement")}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="text-xs font-semibold tabular-nums">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 rounded-md text-muted-foreground hover:text-primary"
+                              disabled={isUpdating}
+                              onClick={() =>
+                                handleIncrement(pokemon.id, pokemon.name)
+                              }
+                              aria-label={t("increment")}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
                           <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 rounded-md text-muted-foreground hover:text-destructive"
-                            disabled={isUpdating}
-                            onClick={() =>
-                              handleDecrement(pokemon.id, pokemon.name)
-                            }
-                            title="Décrémenter"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="text-xs font-semibold tabular-nums">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 rounded-md text-muted-foreground hover:text-primary"
+                            size="sm"
+                            variant="outline"
+                            className="w-full h-6 text-[11px] px-1.5 border-primary/30 hover:border-primary text-primary"
                             disabled={isUpdating}
                             onClick={() =>
                               handleIncrement(pokemon.id, pokemon.name)
                             }
-                            title="Incrémenter"
                           >
-                            <Plus className="w-3 h-3" />
+                            {isUpdating ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <>
+                                <Plus className="w-3 h-3 mr-1" />
+                                {t("acquired")}
+                              </>
+                            )}
                           </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full h-6 text-[11px] px-1.5 border-primary/30 hover:border-primary text-primary"
-                          disabled={isUpdating}
-                          onClick={() =>
-                            handleIncrement(pokemon.id, pokemon.name)
-                          }
-                        >
-                          {isUpdating ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <>
-                              <Plus className="w-3 h-3 mr-1" />
-                              Acquise
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -634,7 +673,7 @@ const CollectionDetailPage = () => {
                       </TableHead>
                       <TableHead>{t("condition")}</TableHead>
                       <TableHead>{t("rarity")}</TableHead>
-                      <TableHead className="text-center">PV</TableHead>
+                      <TableHead className="text-center">{t("hp")}</TableHead>
                       <TableHead className="text-right">
                         {t("actions")}
                       </TableHead>
@@ -642,21 +681,25 @@ const CollectionDetailPage = () => {
                   </TableHeader>
                   <TableBody>
                     {items.map((item) => {
-                      const pokemon = item.pokemonCard;
+                      const pokemon = getCollectionItemDisplay(item);
                       const isOwned = (item.quantity || 0) > 0;
                       const isUpdating = updatingCardId === pokemon.id;
 
                       return (
                         <TableRow
-                          key={pokemon.id || item.id}
+                          key={item.id ?? `${pokemon.kind}-${pokemon.id}`}
                           className={!isOwned ? "opacity-60 bg-muted/10" : ""}
                         >
                           <TableCell>
                             <div className="w-14 h-20 relative">
                               <SmartImage
-                                src={getCardImage(pokemon, "low")}
-                                fallbackSrc="/images/carte-pokemon-dos.jpg"
-                                alt={pokemon.name || "Carte"}
+                                src={pokemon.image}
+                                fallbackSrc={
+                                  pokemon.kind === "sealed"
+                                    ? "/images/sealed-placeholder.svg"
+                                    : "/images/carte-pokemon-dos.jpg"
+                                }
+                                alt={pokemon.name || t("unknownItem")}
                                 className={`h-full w-full object-contain rounded ${
                                   !isOwned ? "grayscale opacity-50" : ""
                                 }`}
@@ -665,7 +708,7 @@ const CollectionDetailPage = () => {
                           </TableCell>
                           <TableCell className="font-medium">
                             <Link
-                              href={`/marketplace/cards/${pokemon.id}`}
+                              href={pokemon.href}
                               className="hover:underline"
                             >
                               {pokemon.name || "?"}
@@ -678,41 +721,51 @@ const CollectionDetailPage = () => {
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-1.5">
-                              {isOwned && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="h-6 w-6"
-                                  disabled={isUpdating}
-                                  onClick={() =>
-                                    handleDecrement(pokemon.id, pokemon.name)
-                                  }
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </Button>
-                              )}
+                              {canEdit &&
+                                pokemon.kind === "card" &&
+                                isOwned && (
+                                  <Button
+                                    aria-label={t("decrement")}
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-6 w-6"
+                                    disabled={isUpdating}
+                                    onClick={() =>
+                                      handleDecrement(pokemon.id, pokemon.name)
+                                    }
+                                  >
+                                    <Minus className="w-3 h-3" />
+                                  </Button>
+                                )}
                               <Badge
                                 variant={isOwned ? "secondary" : "outline"}
                                 className={!isOwned ? "border-dashed" : ""}
                               >
                                 {item.quantity || 0}
                               </Badge>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6"
-                                disabled={isUpdating}
-                                onClick={() =>
-                                  handleIncrement(pokemon.id, pokemon.name)
-                                }
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
+                              {canEdit && pokemon.kind === "card" && (
+                                <Button
+                                  aria-label={t("increment")}
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-6 w-6"
+                                  disabled={isUpdating}
+                                  onClick={() =>
+                                    handleIncrement(pokemon.id, pokemon.name)
+                                  }
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {item.cardState?.name || "NM"}
+                              {pokemon.condition
+                                ? pokemon.kind === "sealed"
+                                  ? t(`sealedCondition.${pokemon.condition}`)
+                                  : pokemon.condition
+                                : t("unknownCondition")}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -734,9 +787,9 @@ const CollectionDetailPage = () => {
                               variant="ghost"
                               size="icon"
                               asChild
-                              aria-label="Voir les détails"
+                              aria-label={t("viewDetails")}
                             >
-                              <Link href={`/marketplace/cards/${pokemon.id}`}>
+                              <Link href={pokemon.href}>
                                 <Info className="w-4 h-4" />
                               </Link>
                             </Button>

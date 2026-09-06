@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { User } from "../user/entities/user.entity";
 import { CollectionController } from "./collection.controller";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
@@ -101,11 +102,18 @@ describe("CollectionController", () => {
     await expect(controller.findOneById("1")).resolves.toEqual({ id: "1" });
   });
 
-  it("should create collection with current user", async () => {
-    mockCollectionService.create.mockImplementation(async (dto) => dto);
-    const dto: any = { name: "New" };
-    const result: any = await controller.create(dto, { id: 3 } as any);
-    expect(result.userId).toBe(3);
+  it("passes the authenticated owner separately from the creation payload", async () => {
+    const dto = { name: "New" };
+    const user = Object.assign(new User(), { id: 3 });
+    const created = Object.assign(new Collection(), {
+      id: "new",
+      name: dto.name,
+      user,
+    });
+    mockCollectionService.create.mockResolvedValue(created);
+    expect(await controller.create(dto, user)).toBe(created);
+    expect(mockCollectionService.create).toHaveBeenCalledWith(dto, 3);
+    expect(dto).toEqual({ name: "New" });
   });
 
   it("should update collection", async () => {

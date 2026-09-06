@@ -284,7 +284,10 @@ describe("CollectionService", () => {
       "DESC",
     );
     // Names live in card_translation: sorting joins it on the default locale.
-    expect(qb.orderBy).toHaveBeenCalledWith("sortTranslation.name", "DESC");
+    expect(qb.orderBy).toHaveBeenCalledWith(
+      expect.stringContaining("COALESCE(sortTranslation.name"),
+      "DESC",
+    );
   });
 
   it("should exclude sealed products from a card-only collection query", async () => {

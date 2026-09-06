@@ -197,6 +197,7 @@ describe("OrderService", () => {
       await service.startCheckout(dto, buyer);
 
       expect(manager.save.mock.calls[0][1].totalAmount).toBe(50);
+      expect(manager.save.mock.calls[0][1].orderItems[0].unitPrice).toBe(25);
     });
 
     it("charges a seller's shipping once, at their highest declared rate", async () => {
@@ -518,17 +519,39 @@ describe("OrderService", () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it("restores stock when an order is refunded", async () => {
-      manager.findOne.mockResolvedValue(orderIn(OrderStatus.PAID));
-
+    it.each([
+      OrderStatus.PAID,
+      OrderStatus.SHIPPED,
+      OrderStatus.DELIVERED,
+    ])("does not restock refunded merchandise from %s without an inspected return", async (status) => {
+      const order = orderIn(status);
+      manager.findOne.mockResolvedValue(order);
       await service.transitionOrder(100, OrderStatus.REFUNDED);
+      expect(manager.increment).not.toHaveBeenCalled();
+      expect(order.stockReleased).toBe(false);
+    });
 
+    it("releases an unpaid reservation exactly once on cancellation", async () => {
+      const order = orderIn(OrderStatus.PENDING);
+      manager.findOne.mockResolvedValue(order);
+      await service.transitionOrder(100, OrderStatus.CANCELLED);
+      await service.transitionOrder(100, OrderStatus.CANCELLED, {
+        allowNoop: true,
+      });
+      expect(manager.increment).toHaveBeenCalledTimes(1);
       expect(manager.increment).toHaveBeenCalledWith(
         Listing,
         { id: 10 },
         "quantityAvailable",
         2,
       );
+      expect(order.stockReleased).toBe(true);
+    });
+
+    it("does not release a paid order's potentially shipped lines on cancellation", async () => {
+      manager.findOne.mockResolvedValue(orderIn(OrderStatus.PAID));
+      await service.transitionOrder(100, OrderStatus.CANCELLED);
+      expect(manager.increment).not.toHaveBeenCalled();
     });
 
     it("never restores stock twice", async () => {
