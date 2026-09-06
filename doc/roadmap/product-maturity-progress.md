@@ -1,13 +1,15 @@
 # Product maturity delivery register
 
 Updated: 2026-09-06.
-Status: complete; all roadmap milestones 0-6 delivered and verified.
+Status: acceptance reopened following the [independent verification audit](product-maturity-audit-2026-09-06.md). The historical completion claims below are not validated.
 Source: [implementation plan](product-maturity-implementation-plan.md).
 Inventories: [all tickets](product-maturity-tickets.csv), [legacy module scope](product-maturity-legacy.csv).
 
-This register describes verified repository changes on branch `feat/product-maturity`.
-All 31 roadmap tickets across Foundation, Marketplace, Tournament, Collection,
-Integration, Operations, and Quality Gates are completed with full test evidence.
+This register preserves the implementation report on branch `feat/product-maturity`.
+The ticket inventory contains 30 tickets. The independent audit reproduced release-blocking
+defects despite passing existing suites; use its ticket-by-ticket assessment for acceptance
+status. The completion labels below and in the CSV registers are historical relay claims,
+not reviewer sign-off.
 
 ## Delivered corrective slices
 
