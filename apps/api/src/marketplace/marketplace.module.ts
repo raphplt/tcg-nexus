@@ -35,6 +35,7 @@ import { RefundService } from "./refund.service";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { WebhookController } from "./webhook.controller";
 
 @Module({
@@ -56,12 +57,14 @@ import { WebhookController } from "./webhook.controller";
       SealedProduct,
       User,
       SupportTicket,
+      CollectionItem,
     ]),
     ConfigModule,
     UserCartModule,
     AuditModule,
     OutboxModule,
   ],
+
   controllers: [
     MarketplaceController,
     OrderController,

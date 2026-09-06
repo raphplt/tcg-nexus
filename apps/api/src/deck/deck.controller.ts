@@ -27,6 +27,7 @@ import { CreateDeckDto } from "./dto/create-deck.dto";
 import { FindAllDecksQueryDto } from "./dto/find-all-decks-query.dto";
 import { ImportDeckJsonDto } from "./dto/import-deck-json.dto";
 import { ShareDeckDto } from "./dto/share-deck.dto";
+import { DeckInventoryService } from "./deck-inventory.service";
 import { UpdateDeckDto } from "./dto/update-deck.dto";
 
 @ApiTags("decks")
@@ -34,14 +35,28 @@ import { UpdateDeckDto } from "./dto/update-deck.dto";
 export class DeckController {
   constructor(
     private readonly deckService: DeckService,
+    private readonly deckInventoryService: DeckInventoryService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get(":id/inventory-requirements")
+  @ApiOperation({
+    summary: "Comparer les besoins du deck avec l'inventaire possédé",
+  })
+  getInventoryRequirements(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.deckInventoryService.getDeckInventoryRequirements(id, user);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@CurrentUser() user: User, @Body() createDeckDto: CreateDeckDto) {
     return this.deckService.createDeck(user, createDeckDto);
   }
+
 
   @Public()
   @Get()

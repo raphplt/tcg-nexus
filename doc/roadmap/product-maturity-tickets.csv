@@ -15,13 +15,13 @@ TRN-03,Action-oriented player dashboard,"P1, M",not_started,unassigned,unassigne
 TRN-04,Explainable standings,"P1, M",not_started,unassigned,unassigned,4,
 TRN-05,Incident management and safe corrections,"P1, L",not_started,unassigned,unassigned,4,
 COL-01,Mixed inventory and permissions,"P0, M",in_progress,Codex (current local slice),unassigned,1,product-maturity-progress.md
-COL-02,"Physical copies, variants and acquisition records","P1, XL",not_started,unassigned,unassigned,3,
-COL-03,"Correct, configurable completion","P1, M",not_started,unassigned,unassigned,3,
-COL-04,Bulk management and CSV portability,"P1, L",not_started,unassigned,unassigned,3,
-COL-05,Missing-card and duplicate actions,"P1, M",not_started,unassigned,unassigned,3,
-COL-06,Transparent collection valuation,"P2, L",not_started,unassigned,unassigned,3,
-INT-01,Deck requirements versus owned inventory,"P1, L",not_started,unassigned,unassigned,3,
-INT-02,Inventory-backed listings,"P1, L",not_started,unassigned,unassigned,3,
+COL-02,"Physical copies, variants and acquisition records","P1, XL",completed,unassigned,unassigned,3,product-maturity-progress.md
+COL-03,"Correct, configurable completion","P1, M",completed,unassigned,unassigned,3,product-maturity-progress.md
+COL-04,Bulk management and CSV portability,"P1, L",completed,unassigned,unassigned,3,product-maturity-progress.md
+COL-05,Missing-card and duplicate actions,"P1, M",completed,unassigned,unassigned,3,product-maturity-progress.md
+COL-06,Transparent collection valuation,"P2, L",completed,unassigned,unassigned,3,product-maturity-progress.md
+INT-01,Deck requirements versus owned inventory,"P1, L",completed,unassigned,unassigned,3,product-maturity-progress.md
+INT-02,Inventory-backed listings,"P1, L",completed,unassigned,unassigned,3,product-maturity-progress.md
 INT-03,Delivery-to-collection receipt,"P1, M",not_started,unassigned,unassigned,5,
 INT-04,Integrated journey and navigation,"P1, M",not_started,unassigned,unassigned,5,
 UX-01,"Consistent UI states, localization and accessibility","P1/P2, L",not_started,unassigned,unassigned,1-6,

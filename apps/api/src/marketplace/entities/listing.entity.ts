@@ -18,6 +18,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Currency } from "../../common/enums/currency";
 import { OrderItem } from "./order-item.entity";
 
@@ -27,7 +28,9 @@ import { OrderItem } from "./order-item.entity";
 @Index(["pokemonCard", "currency", "cardState"])
 @Index(["sealedProduct", "currency"])
 @Index(["productKind"])
+@Index(["inventoryItem"])
 export class Listing {
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -49,7 +52,17 @@ export class Listing {
   @JoinColumn({ name: "sealed_product_id" })
   sealedProduct?: SealedProduct | null;
 
+  /** Linked physical collection item when inventory-backed. */
+  @ManyToOne(() => CollectionItem, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "inventory_item_id" })
+  inventoryItem?: CollectionItem | null;
+
+  /** Flag indicating whether this listing is backed by verified physical collection inventory. */
+  @Column({ type: "boolean", default: false })
+  isInventoryBacked: boolean;
+
   @Column("decimal", { precision: 10, scale: 2 })
+
   price: number;
 
   @Column({ type: "enum", enum: Currency })

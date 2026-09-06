@@ -7,7 +7,38 @@ export class AddCardItemDto {
   @IsString()
   @IsNotEmpty()
   pokemonCardId: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  cardStateCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  variant?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  language?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  printing?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  storageLocation?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
+
 
 export class AddSealedItemDto {
   @ApiProperty()

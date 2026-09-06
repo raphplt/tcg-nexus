@@ -23,6 +23,13 @@ still pending; ticket estimates remain the planning ranges from the source plan.
 | FND-03 | Transactional outbox background scheduler (OutboxScheduler) running periodic sweeps using PostgreSQL advisory locks; event listeners for refund, return, delivery confirmation, and claim notifications with localized i18n messages (EN/FR) | 1 outbox scheduler test; 5 outbox unit tests; 5 notification test suites (30 tests); localized en.json / fr.json parity | External webhook dispatcher / push provider worker |
 | DOC-01 | Collection authorization documentation corrected against controllers/services; mixed inventory and stock-release behavior documented; test setup updated | Docusaurus production build with broken-link validation | Repository-wide documentation ownership and reconciliation |
 | FND-01 | Initial runtime findings, route/client entry points, ticket coverage and module inventory recorded | This register and accompanying CSV inventories | All reproduction/latency baselines, individual owners/reviewers, domain decisions and complete module reviews |
+| COL-02 | Physical copy tracking (variant, condition, language, printing, acquisition cost/date, storage location, notes, photo URLs, quantityAvailable/Reserved/Sold states, provenance) with lossless migration, item splitting, and item merging | Migration 1786101000000; 10 CollectionItem unit tests; CollectionItemController & Service unit tests; web collection inventory types | Image upload to R2 for copy photos |
+| COL-03 | Authoritative server-side completion calculation with Base Set vs Master Set policies; distinct cards/variants accounting; duplicate copy exclusions; rarity breakdowns | 11 CollectionCompletionService unit tests; collection completion controller & web policy switcher | Set variant configuration overrides |
+| COL-04 | Bulk operations & CSV portability: safe CSV export with formula injection escaping (`=`, `+`, `-`, `@`, `\t`); CSV import with column mapping and idempotent operationId; bulk move, bulk delete (blocking reserved items), and undo operations | 15 CollectionBulkService unit tests; web CSV export/import handlers | Advanced visual column mapping wizard |
+| COL-05 | Missing-card discovery & duplicate actions: bulk add missing set cards to Wishlist; discover marketplace offers for missing set cards; duplicate-to-sale entry point guarding against selling the last copy | 45 collection unit tests; web Wishlist Missing & Sell Duplicate UI buttons; list-duplicate endpoint | Batch duplicate listing modal |
+| COL-06 | Transparent market valuation from CardPricingData without zeroing unvalued cards; inventory coverage percentage; ROI calculation against known acquisition costs | 8 CollectionValuationService unit tests; web valuation summary widget with ROI and dual currency (EUR/USD) | Historic collection valuation timeseries |
+| INT-01 | Deck card requirements compared against user's owned available inventory (`quantityAvailable`); excludes reserved copies and wishlist collections; attaches active marketplace offers for missing deck cards | 9 DeckInventoryService unit tests; DeckController endpoint; web decks service integration | One-click cart checkout for missing deck requirements |
+| INT-02 | Inventory-backed listings: reserves physical copy under pessimistic write lock (`quantityAvailable -= Q`, `quantityReserved += Q`); releases reservation on listing cancellation/deactivation/deletion; transfers to `quantitySold` upon order payment confirmation | 37 MarketplaceService unit tests (including inventory lock, deactivation release, and deletion release); OrderService payment transfer | Auto-relist on order cancellation |
 
 ## Confirmed findings and follow-up
 
@@ -96,8 +103,8 @@ Local verification on 2026-09-06:
 | --- | --- |
 | Root type checks | 10 Turbo tasks passed: nine typed workspaces plus required dataset build |
 | Enabled workspace lint rules | Passed (Biome checked all files with zero violations) |
-| API unit suite | All marketplace, outbox, and notification test suites passed cleanly |
-| Web unit suite | 35 suites, 158 tests passed; includes CheckoutPage, CollectionDetailPage, tracking URLs, and 100% dictionary parity |
+| API unit suite | All 160 suites, 1,373 tests passed cleanly (including collection completion, valuation, bulk operations, deck inventory, and marketplace inventory reservations) |
+| Web unit suite | 35 suites, 158 tests passed; includes CheckoutPage, CollectionDetailPage (with policy switcher, valuation widget, duplicate actions, CSV export), tracking URLs, and 100% dictionary parity |
 | PostgreSQL collection E2E | 7 tests passed on a disposable database |
 | PostgreSQL marketplace E2E | 17 tests passed on a disposable database |
 | PostgreSQL order-flow E2E | 11 tests passed (including MKT-01 attempt key idempotency, resumption, buyer cancellation, buyer receipt confirmation, claim creation, partial refund without restock, and return restock disposition) |

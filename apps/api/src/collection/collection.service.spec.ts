@@ -9,6 +9,8 @@ import { CollectionItem } from "../collection-item/entities/collection-item.enti
 import { PokemonSet } from "../pokemon-set/entities/pokemon-set.entity";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { MarketplaceService } from "../marketplace/marketplace.service";
 
 describe("CollectionService", () => {
   let service: CollectionService;
@@ -105,8 +107,17 @@ describe("CollectionService", () => {
           provide: CatalogLocalizationService,
           useValue: mockLocalization,
         },
+        {
+          provide: getRepositoryToken(Listing),
+          useValue: { find: jest.fn() },
+        },
+        {
+          provide: MarketplaceService,
+          useValue: { create: jest.fn() },
+        },
       ],
     }).compile();
+
 
     service = module.get<CollectionService>(CollectionService);
     jest.clearAllMocks();

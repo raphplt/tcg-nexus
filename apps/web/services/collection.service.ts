@@ -119,4 +119,142 @@ export const collectionService = {
       `/collection/${collectionId}/items/${itemId}`,
     );
   },
+
+  async getCompletion(
+    id: string,
+    policy?: string,
+  ): Promise<import("@/types/collection").CollectionCompletion> {
+    return fetcher<import("@/types/collection").CollectionCompletion>(
+      `/collection/${id}/completion`,
+      { params: policy ? { policy } : undefined },
+    );
+  },
+
+  async getValuation(
+    id: string,
+    currency?: string,
+  ): Promise<import("@/types/collection").CollectionValuation> {
+    return fetcher<import("@/types/collection").CollectionValuation>(
+      `/collection/${id}/valuation`,
+      { params: currency ? { currency } : undefined },
+    );
+  },
+
+  async exportCsv(id: string): Promise<string> {
+    return authedFetch<string>("GET", `/collection/${id}/export/csv`, {
+      responseType: "text",
+    });
+  },
+
+  async importCsv(
+    id: string,
+    payload: {
+      csvContent?: string;
+      fileUrl?: string;
+      mapping?: Record<string, string>;
+      mode?: "MERGE" | "REPLACE";
+      operationId?: string;
+    },
+  ): Promise<import("@/types/collection").ImportResult> {
+    return authedFetch<import("@/types/collection").ImportResult>(
+      "POST",
+      `/collection/${id}/import/csv`,
+      { data: payload },
+    );
+  },
+
+  async bulkMove(
+    id: string,
+    targetCollectionId: string,
+    itemIds: number[],
+  ): Promise<{ movedCount: number }> {
+    return authedFetch<{ movedCount: number }>(
+      "POST",
+      `/collection/${id}/items/bulk-move`,
+      { data: { targetCollectionId, itemIds } },
+    );
+  },
+
+  async bulkDelete(
+    id: string,
+    itemIds: number[],
+  ): Promise<{ deletedCount: number }> {
+    return authedFetch<{ deletedCount: number }>(
+      "POST",
+      `/collection/${id}/items/bulk-delete`,
+      { data: { itemIds } },
+    );
+  },
+
+  async undoOperation(
+    id: string,
+    operationId: string,
+  ): Promise<{ restoredCount: number }> {
+    return authedFetch<{ restoredCount: number }>(
+      "POST",
+      `/collection/${id}/items/undo-operation`,
+      { data: { operationId } },
+    );
+  },
+
+  async wishlistMissing(id: string): Promise<{ addedCount: number }> {
+    return authedFetch<{ addedCount: number }>(
+      "POST",
+      `/collection/${id}/wishlist-missing`,
+    );
+  },
+
+  async getMissingCardOffers(
+    collectionId: string,
+    cardId: string,
+  ): Promise<any[]> {
+    return fetcher<any[]>(`/collection/${collectionId}/cards/${cardId}/offers`);
+  },
+
+  async listDuplicate(
+    collectionId: string,
+    itemId: number,
+    data: {
+      price: number;
+      currency?: string;
+      quantity?: number;
+      description?: string;
+    },
+  ): Promise<any> {
+    return authedFetch<any>(
+      "POST",
+      `/collection/${collectionId}/items/${itemId}/list-duplicate`,
+      { data },
+    );
+  },
+
+  async updateCollectionItem(
+    itemId: number,
+    data: Record<string, any>,
+  ): Promise<CollectionItemType> {
+    return authedFetch<CollectionItemType>("PATCH", `/collection-item/${itemId}`, {
+      data,
+    });
+  },
+
+  async splitCollectionItem(
+    itemId: number,
+    quantity: number,
+  ): Promise<{ original: CollectionItemType; split: CollectionItemType }> {
+    return authedFetch<{ original: CollectionItemType; split: CollectionItemType }>(
+      "POST",
+      `/collection-item/${itemId}/split`,
+      { data: { quantity } },
+    );
+  },
+
+  async mergeCollectionItems(
+    itemId: number,
+    targetItemId: number,
+  ): Promise<CollectionItemType> {
+    return authedFetch<CollectionItemType>(
+      "POST",
+      `/collection-item/${itemId}/merge/${targetItemId}`,
+    );
+  },
 };

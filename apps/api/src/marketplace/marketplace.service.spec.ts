@@ -9,6 +9,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";
 import { Card } from "../card/entities/card.entity";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { Currency } from "../common/enums/currency";
 import { ListingStatus } from "../common/enums/listing-status";
 import { CardState } from "../common/enums/pokemonCardsType";
@@ -38,6 +39,7 @@ describe("MarketplaceService", () => {
   let mockListingRepo: any;
   let mockPriceHistoryRepo: any;
   let mockPokemonCardRepo: any;
+  let mockCollectionItemRepo: any;
   let mockOrderRepo: any;
   let mockPaymentTransactionRepo: any;
   let mockOrderItemRepo: any;
@@ -102,6 +104,11 @@ describe("MarketplaceService", () => {
       createQueryBuilder: jest.fn(() => createMockQb()),
     };
 
+    mockCollectionItemRepo = {
+      findOne: jest.fn(),
+      save: jest.fn().mockImplementation(async (entity) => entity),
+    };
+
     mockOrderRepo = {
       create: jest.fn(),
       save: jest.fn(),
@@ -153,9 +160,15 @@ describe("MarketplaceService", () => {
         if (cls === Listing) {
           return mockListingRepo.findOne(options);
         }
+        if (cls === CollectionItem) {
+          return mockCollectionItemRepo.findOne(options);
+        }
         return null;
       }),
       create: jest.fn().mockImplementation((cls, data) => {
+        if (cls === Listing) {
+          return mockListingRepo.create(data);
+        }
         if (cls === Order) {
           return mockOrderRepo.create(data);
         }
@@ -170,6 +183,12 @@ describe("MarketplaceService", () => {
       save: jest.fn().mockImplementation(async (arg1, arg2) => {
         const entity = arg2 || arg1;
         const cls = arg2 ? arg1 : undefined;
+        if (cls === Listing) {
+          return mockListingRepo.save(entity);
+        }
+        if (cls === CollectionItem) {
+          return mockCollectionItemRepo.save(entity);
+        }
         if (cls === Order) {
           return mockOrderRepo.save(entity);
         }
@@ -199,6 +218,10 @@ describe("MarketplaceService", () => {
         {
           provide: getRepositoryToken(Card),
           useValue: mockPokemonCardRepo,
+        },
+        {
+          provide: getRepositoryToken(CollectionItem),
+          useValue: mockCollectionItemRepo,
         },
         { provide: getRepositoryToken(Order), useValue: mockOrderRepo },
         {
@@ -309,6 +332,40 @@ describe("MarketplaceService", () => {
 
       expect(priceHistoryRepo.save).not.toHaveBeenCalled();
     });
+
+    it("releases reserved inventory when status becomes INACTIVE", async () => {
+      const activeListing: Partial<Listing> = {
+        id: 10,
+        seller: { id: 1 } as any,
+        status: ListingStatus.ACTIVE,
+        isInventoryBacked: true,
+        inventoryItem: { id: 88 } as any,
+        quantityAvailable: 2,
+      };
+      listingRepo.findOne.mockResolvedValue(activeListing);
+      listingRepo.save.mockImplementation(async (l: Listing) => l);
+
+      const inv = {
+        id: 88,
+        quantityAvailable: 1,
+        quantityReserved: 3,
+      };
+      mockCollectionItemRepo.findOne.mockResolvedValue(inv);
+
+      await service.update(
+        10,
+        { status: ListingStatus.INACTIVE } as UpdateListingDto,
+        owner,
+      );
+
+      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 88,
+          quantityAvailable: 3, // 1 + 2
+          quantityReserved: 1, // 3 - 2
+        }),
+      );
+    });
   });
 
   describe("delete ownership", () => {
@@ -335,9 +392,36 @@ describe("MarketplaceService", () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 10 }),
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
+    });
+
+    it("releases reserved inventory when listing is deleted", async () => {
+      const backedListing: Partial<Listing> = {
+        id: 10,
+        seller: { id: 1 } as any,
+        isInventoryBacked: true,
+        inventoryItem: { id: 88 } as any,
+        quantityAvailable: 3,
+      };
+      listingRepo.findOne.mockResolvedValue(backedListing);
+
+      const inv = {
+        id: 88,
+        quantityAvailable: 0,
+        quantityReserved: 4,
+      };
+      mockCollectionItemRepo.findOne.mockResolvedValue(inv);
+
+      await service.delete(10, owner);
+
+      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 88,
+          quantityAvailable: 3, // 0 + 3
+          quantityReserved: 1, // 4 - 3
+        }),
       );
+      expect(listingRepo.softRemove).toHaveBeenCalledWith(backedListing);
     });
 
     it("allows admin", async () => {
@@ -504,6 +588,75 @@ describe("MarketplaceService", () => {
           shippingCost: SHIPPING_POLICY.rates[ProductKind.SEALED].cost,
         }),
       );
+    });
+
+    it("creates inventory-backed listing and reserves quantityAvailable", async () => {
+      const user = { id: 1 } as User;
+      const invItem: Partial<CollectionItem> = {
+        id: 99,
+        quantityAvailable: 3,
+        quantityReserved: 1,
+        quantitySold: 0,
+        productKind: ProductKind.CARD,
+        pokemonCard: { id: "c1" } as any,
+        cardState: { code: CardState.NM } as any,
+        collection: { user: { id: 1 } } as any,
+      };
+
+      mockCollectionItemRepo.findOne.mockResolvedValue({ ...invItem });
+      listingRepo.create.mockImplementation((data: any) => ({ id: 10, ...data }));
+      listingRepo.save.mockImplementation(async (data: any) => data);
+      listingRepo.findOne.mockResolvedValue({ id: 10, pokemonCard: { id: "c1" } });
+
+      const dto: CreateListingDto = {
+        inventoryItemId: 99,
+        price: 25,
+        currency: Currency.EUR,
+        quantityAvailable: 2,
+      };
+
+      const result = await service.create(dto, user);
+
+      expect(result).toBeDefined();
+      expect(result.isInventoryBacked).toBe(true);
+      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 99,
+          quantityAvailable: 1, // 3 - 2
+          quantityReserved: 3, // 1 + 2
+        }),
+      );
+    });
+
+    it("throws NotFoundException if inventoryItem does not exist", async () => {
+      mockCollectionItemRepo.findOne.mockResolvedValue(null);
+      await expect(
+        service.create({ inventoryItemId: 404, price: 10, currency: Currency.EUR }, { id: 1 } as User),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it("throws ForbiddenException if inventoryItem belongs to another user", async () => {
+      mockCollectionItemRepo.findOne.mockResolvedValue({
+        id: 99,
+        collection: { user: { id: 2 } },
+      });
+      await expect(
+        service.create({ inventoryItemId: 99, price: 10, currency: Currency.EUR }, { id: 1 } as User),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it("throws BadRequestException if inventory quantityAvailable is insufficient", async () => {
+      mockCollectionItemRepo.findOne.mockResolvedValue({
+        id: 99,
+        quantityAvailable: 1,
+        collection: { user: { id: 1 } },
+      });
+      await expect(
+        service.create(
+          { inventoryItemId: 99, price: 10, currency: Currency.EUR, quantityAvailable: 2 },
+          { id: 1 } as User,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 

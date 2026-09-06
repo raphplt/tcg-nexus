@@ -45,6 +45,16 @@ export class Collection {
   })
   masterSet?: PokemonSet;
 
+  @Column({
+    type: "varchar",
+    length: 50,
+    default: "base",
+  })
+  completionPolicy: string;
+
+  @Column({ type: "jsonb", nullable: true })
+  completionSnapshot?: Record<string, any> | null;
+
   @OneToMany(
     () => CollectionItem,
     (item) => item.collection,
@@ -52,3 +62,4 @@ export class Collection {
   )
   items: CollectionItem[];
 }
+

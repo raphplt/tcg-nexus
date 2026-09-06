@@ -1,6 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { User } from "../user/entities/user.entity";
+import { CollectionBulkService } from "./collection-bulk.service";
+import { CollectionCompletionService } from "./collection-completion.service";
+import { CollectionValuationService } from "./collection-valuation.service";
 import { CollectionController } from "./collection.controller";
 import { CollectionService } from "./collection.service";
 import { Collection } from "./entities/collection.entity";
@@ -23,6 +26,22 @@ describe("CollectionController", () => {
     removeCollectionItem: jest.fn(),
   };
 
+  const mockCompletionService = {
+    calculateCompletion: jest.fn(),
+  };
+
+  const mockValuationService = {
+    calculateValuation: jest.fn(),
+  };
+
+  const mockBulkService = {
+    exportCsv: jest.fn(),
+    importCsv: jest.fn(),
+    bulkMove: jest.fn(),
+    bulkDelete: jest.fn(),
+    undoOperation: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CollectionController],
@@ -32,11 +51,24 @@ describe("CollectionController", () => {
           useValue: mockCollectionService,
         },
         {
+          provide: CollectionCompletionService,
+          useValue: mockCompletionService,
+        },
+        {
+          provide: CollectionValuationService,
+          useValue: mockValuationService,
+        },
+        {
+          provide: CollectionBulkService,
+          useValue: mockBulkService,
+        },
+        {
           provide: getRepositoryToken(Collection),
           useValue: {},
         },
       ],
     }).compile();
+
 
     controller = module.get<CollectionController>(CollectionController);
   });

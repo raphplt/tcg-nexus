@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
@@ -16,7 +18,9 @@ import { SealedCondition } from "src/common/enums/sealed-condition";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { User } from "src/user/entities/user.entity";
 import { Repository } from "typeorm";
+import { UpdateCollectionItemDto } from "./dto/update-collection-item.dto";
 import { CollectionItem } from "./entities/collection-item.entity";
+
 
 @Injectable()
 export class CollectionItemService {
@@ -345,4 +349,182 @@ export class CollectionItemService {
       }),
     );
   }
+
+  /**
+   * Updates physical metadata of an existing collection item.
+   *
+   * @param itemId Target item ID.
+   * @param dto Updated metadata.
+   * @param user Authenticated user.
+   * @returns Updated CollectionItem.
+   */
+  async updateItem(
+    itemId: number,
+    dto: UpdateCollectionItemDto,
+    user: User,
+  ): Promise<CollectionItem> {
+
+    const item = await this.collectionItemRepo.findOne({
+      where: { id: itemId },
+      relations: ["collection", "collection.user", "cardState"],
+    });
+
+    if (!item) {
+      throw new NotFoundException({
+        code: "ITEM_NOT_FOUND",
+        message: "Item introuvable",
+      });
+    }
+
+    if (item.collection.user?.id !== user.id) {
+      throw new ForbiddenException(
+        "Vous ne pouvez modifier que vos propres items",
+      );
+    }
+
+    if (dto.cardStateCode) {
+      const state = await this.cardStateRepo.findOne({
+        where: { code: dto.cardStateCode as CardStateCode },
+      });
+      if (state) item.cardState = state;
+    }
+    if (dto.sealedCondition !== undefined) item.sealedCondition = dto.sealedCondition;
+    if (dto.variant !== undefined) item.variant = dto.variant;
+    if (dto.language !== undefined) item.language = dto.language;
+    if (dto.printing !== undefined) item.printing = dto.printing;
+    if (dto.acquiredAt !== undefined) item.acquiredAt = dto.acquiredAt;
+    if (dto.acquisitionCost !== undefined) item.acquisitionCost = dto.acquisitionCost;
+    if (dto.acquisitionCurrency !== undefined) item.acquisitionCurrency = dto.acquisitionCurrency;
+    if (dto.storageLocation !== undefined) item.storageLocation = dto.storageLocation;
+    if (dto.notes !== undefined) item.notes = dto.notes;
+    if (dto.photoUrls !== undefined) item.photoUrls = dto.photoUrls;
+    if (dto.quantity !== undefined && dto.quantity >= 1) {
+      const diff = dto.quantity - item.quantity;
+      item.quantity = dto.quantity;
+      item.quantityAvailable = Math.max(0, item.quantityAvailable + diff);
+    }
+
+    return this.collectionItemRepo.save(item);
+  }
+
+  /**
+   * Splits a grouped collection item into a separate physical inventory record (COL-02).
+   *
+   * @param itemId Source item ID.
+   * @param splitQuantity Number of copies to separate.
+   * @param user Requesting owner.
+   * @returns Newly created separate CollectionItem holding the split copies.
+   */
+  async splitItem(
+    itemId: number,
+    splitQuantity: number,
+    user: User,
+  ): Promise<CollectionItem> {
+    const item = await this.collectionItemRepo.findOne({
+      where: { id: itemId },
+      relations: ["collection", "collection.user", "pokemonCard", "sealedProduct", "cardState"],
+    });
+
+    if (!item) {
+      throw new NotFoundException("Item introuvable");
+    }
+
+    if (item.collection.user?.id !== user.id) {
+      throw new ForbiddenException("Vous ne pouvez modifier que vos propres items");
+    }
+
+    if (splitQuantity < 1 || splitQuantity >= item.quantity) {
+      throw new BadRequestException(
+        `La quantité à séparer doit être comprise entre 1 et ${item.quantity - 1}`,
+      );
+    }
+
+    if (item.quantityAvailable < splitQuantity) {
+      throw new BadRequestException(
+        `Quantité disponible insuffisante pour séparer (${item.quantityAvailable} disponible, ${splitQuantity} demandé)`,
+      );
+    }
+
+    // Deduct from source item
+    item.quantity -= splitQuantity;
+    item.quantityAvailable -= splitQuantity;
+    await this.collectionItemRepo.save(item);
+
+    // Create new separate copy
+    const newItem = this.collectionItemRepo.create({
+      collection: item.collection,
+      productKind: item.productKind,
+      pokemonCard: item.pokemonCard,
+      sealedProduct: item.sealedProduct,
+      cardState: item.cardState,
+      sealedCondition: item.sealedCondition,
+      variant: item.variant,
+      language: item.language,
+      printing: item.printing,
+      storageLocation: item.storageLocation,
+      notes: item.notes,
+      quantity: splitQuantity,
+      quantityAvailable: splitQuantity,
+      quantityReserved: 0,
+      quantitySold: 0,
+      provenance: {
+        splitFromItemId: item.id,
+        splitAt: new Date().toISOString(),
+      },
+    });
+
+    return this.collectionItemRepo.save(newItem);
+  }
+
+  /**
+   * Merges two compatible collection item groups into one (COL-02).
+   *
+   * @param sourceItemId Source item to merge from.
+   * @param targetItemId Destination item to merge into.
+   * @param user Requesting owner.
+   * @returns Updated target CollectionItem.
+   */
+  async mergeItem(
+    sourceItemId: number,
+    targetItemId: number,
+    user: User,
+  ): Promise<CollectionItem> {
+    if (sourceItemId === targetItemId) {
+      throw new BadRequestException("Impossible de fusionner un item avec lui-même");
+    }
+
+    const [source, target] = await Promise.all([
+      this.collectionItemRepo.findOne({
+        where: { id: sourceItemId },
+        relations: ["collection", "collection.user", "pokemonCard", "cardState"],
+      }),
+      this.collectionItemRepo.findOne({
+        where: { id: targetItemId },
+        relations: ["collection", "collection.user", "pokemonCard", "cardState"],
+      }),
+    ]);
+
+    if (!source || !target) {
+      throw new NotFoundException("Un des items à fusionner est introuvable");
+    }
+
+    if (source.collection.user?.id !== user.id || target.collection.user?.id !== user.id) {
+      throw new ForbiddenException("Vous ne pouvez fusionner que vos propres items");
+    }
+
+    if (source.quantityReserved > 0) {
+      throw new BadRequestException(
+        "Impossible de fusionner un item actuellement réservé dans une annonce de vente",
+      );
+    }
+
+    target.quantity += source.quantity;
+    target.quantityAvailable += source.quantityAvailable;
+
+    await this.collectionItemRepo.save(target);
+    await this.collectionItemRepo.remove(source);
+
+    return target;
+  }
 }
+

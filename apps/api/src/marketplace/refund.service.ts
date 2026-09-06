@@ -17,7 +17,9 @@ import { DataSource, EntityManager, Repository } from "typeorm";
 import { CreateRefundDto } from "./dto/create-refund.dto";
 import { CreateReturnDto } from "./dto/create-return.dto";
 import { UpdateDispositionDto } from "./dto/update-disposition.dto";
+import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { Listing } from "./entities/listing.entity";
+
 import { OrderItem } from "./entities/order-item.entity";
 import { Order, OrderStatus } from "./entities/order.entity";
 import {
@@ -380,6 +382,7 @@ export class RefundService {
         "orderItem",
         "orderItem.order",
         "orderItem.listing",
+        "orderItem.listing.inventoryItem",
         "orderItem.seller",
       ],
     });
@@ -420,12 +423,29 @@ export class RefundService {
           "quantityAvailable",
           returnItem.quantity,
         );
+
+        if (returnItem.orderItem.listing.inventoryItem?.id) {
+          const inv = await manager.findOne(CollectionItem, {
+            where: { id: returnItem.orderItem.listing.inventoryItem.id },
+            lock: { mode: "pessimistic_write" },
+          });
+          if (inv) {
+            inv.quantitySold = Math.max(
+              0,
+              (inv.quantitySold || 0) - returnItem.quantity,
+            );
+            inv.quantityAvailable += returnItem.quantity;
+            await manager.save(CollectionItem, inv);
+          }
+        }
+
         this.logger.log(
           `Restocked ${returnItem.quantity} copies for listing ${returnItem.orderItem.listing.id} from return ${returnItem.id}`,
         );
       }
 
       const saved = await manager.save(ReturnItem, returnItem);
+
 
       await this.auditService.record(
         {

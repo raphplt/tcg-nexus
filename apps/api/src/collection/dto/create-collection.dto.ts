@@ -17,6 +17,11 @@ export class CreateCollectionDto {
   @IsOptional()
   masterSetId?: string;
 
+  @IsString()
+  @IsOptional()
+  completionPolicy?: string;
+
+
   /**
    * Owner sent by existing clients.
    *

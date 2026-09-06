@@ -28,6 +28,8 @@ import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
 import { AuditService } from "../audit/audit.service";
+import { CollectionItem } from "../collection-item/entities/collection-item.entity";
+
 import { OutboxService } from "../outbox/outbox.service";
 import { CardPopularityService } from "./card-popularity.service";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
@@ -659,7 +661,13 @@ export class OrderService {
 
       const paymentWithOrder = await manager.findOne(PaymentTransaction, {
         where: { id: payment.id },
-        relations: ["order", "order.buyer", "order.orderItems"],
+        relations: [
+          "order",
+          "order.buyer",
+          "order.orderItems",
+          "order.orderItems.listing",
+          "order.orderItems.listing.inventoryItem",
+        ],
       });
       const order = paymentWithOrder?.order;
 
@@ -684,6 +692,22 @@ export class OrderService {
       order.status = OrderStatus.PAID;
       order.reservationExpiresAt = null;
       await manager.save(order);
+
+      // Transition physical inventory from reserved to sold for inventory-backed listings
+      for (const item of order.orderItems || []) {
+        if (item.listing?.isInventoryBacked && item.listing?.inventoryItem?.id) {
+          const inv = await manager.findOne(CollectionItem, {
+            where: { id: item.listing.inventoryItem.id },
+            lock: { mode: "pessimistic_write" },
+          });
+          if (inv) {
+            inv.quantityReserved = Math.max(0, inv.quantityReserved - item.quantity);
+            inv.quantitySold = (inv.quantitySold || 0) + item.quantity;
+            await manager.save(CollectionItem, inv);
+          }
+        }
+      }
+
 
       await this.auditService.record(
         {

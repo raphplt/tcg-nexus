@@ -71,7 +71,14 @@ export class CreateListingDto {
 
   @IsOptional()
   expiresAt?: Date;
+
+  /** Optional collection_item ID if this listing is inventory-backed. */
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  inventoryItemId?: number;
 }
+
 
 /**
  * DTO for creating a new marketplace order.

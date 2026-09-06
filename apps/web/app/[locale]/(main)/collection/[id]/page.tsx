@@ -2,8 +2,11 @@
 
 import {
   Calendar,
+  DollarSign,
+  Download,
   Eye,
   Filter,
+  Heart,
   Info,
   LayoutGrid,
   List,
@@ -14,6 +17,7 @@ import {
   Search,
   Sparkles,
   Trophy,
+  Upload,
   User,
 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -146,6 +150,30 @@ const CollectionDetailPage = () => {
     { enabled: Boolean(id) && Boolean(collection), placeholderData: undefined },
   );
 
+  const [policy, setPolicy] = useState<"BASE_SET" | "MASTER_SET">("BASE_SET");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isWishlisting, setIsWishlisting] = useState(false);
+
+  useEffect(() => {
+    if (collection?.completionPolicy) {
+      setPolicy(collection.completionPolicy);
+    }
+  }, [collection?.completionPolicy]);
+
+  const { data: completionData, refetch: refetchCompletion } = useQuery({
+    queryKey: ["collection-completion", id, policy, locale],
+    queryFn: () => collectionService.getCompletion(id, policy),
+    enabled: Boolean(id) && Boolean(collection),
+  });
+
+  const { data: valuationData, refetch: refetchValuation } = useQuery({
+    queryKey: ["collection-valuation", id, locale],
+    queryFn: () => collectionService.getValuation(id),
+    enabled: Boolean(id) && Boolean(collection),
+  });
+
   const handleIncrement = async (cardId: string, cardName?: string) => {
     if (!id || !canEdit || mutationPending.current) return;
     mutationPending.current = true;
@@ -155,6 +183,8 @@ const CollectionDetailPage = () => {
       toast.success(t("added", { name: cardName || t("card") }));
       await refetchItems();
       await fetchCollection();
+      void refetchCompletion();
+      void refetchValuation();
     } catch {
       toast.error(t("addError"));
     } finally {
@@ -172,11 +202,102 @@ const CollectionDetailPage = () => {
       toast.success(t("removed", { name: cardName || t("card") }));
       await refetchItems();
       await fetchCollection();
+      void refetchCompletion();
+      void refetchValuation();
     } catch {
       toast.error(t("removeError"));
     } finally {
       mutationPending.current = false;
       setUpdatingCardId(null);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    if (!id || isExporting) return;
+    setIsExporting(true);
+    try {
+      const csv = await collectionService.exportCsv(id);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `${collection?.name || "collection"}-inventory.csv`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t("loadError"));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id || isImporting) return;
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const res = await collectionService.importCsv(id, { csvContent: text });
+      toast.success(
+        t("importSuccess", { added: res.added, updated: res.updated }),
+      );
+      await refetchItems();
+      await fetchCollection();
+      void refetchCompletion();
+      void refetchValuation();
+    } catch {
+      toast.error(t("importError"));
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleWishlistMissing = async () => {
+    if (!id || isWishlisting) return;
+    setIsWishlisting(true);
+    try {
+      const res = await collectionService.wishlistMissing(id);
+      toast.success(t("wishlistSuccess", { count: res.addedCount }));
+    } catch {
+      toast.error(t("addError"));
+    } finally {
+      setIsWishlisting(false);
+    }
+  };
+
+  const handleSellDuplicate = async (itemId: number, currentQty: number) => {
+    if (currentQty <= 1) {
+      toast.error(t("cannotSellLastCopy"));
+      return;
+    }
+    const priceStr = window.prompt(t("duplicatePrice") + " (EUR):", "10");
+    if (!priceStr) return;
+    const price = parseFloat(priceStr);
+    if (isNaN(price) || price <= 0) {
+      toast.error(t("addError"));
+      return;
+    }
+    try {
+      await collectionService.listDuplicate(id, itemId, {
+        price,
+        currency: "EUR",
+        quantity: 1,
+      });
+      toast.success(t("duplicateListed"));
+      await refetchItems();
+      await fetchCollection();
+      void refetchCompletion();
+      void refetchValuation();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || t("addError"));
     }
   };
 
@@ -207,14 +328,17 @@ const CollectionDetailPage = () => {
   const meta = itemsData?.meta;
   const items = itemsData?.data || [];
 
-  const ownedItemsCount =
-    collection.items?.filter((i) => (i.quantity || 0) > 0).length || 0;
-  const totalSetCards =
-    collection.masterSet?.cardCount?.total || meta?.totalItems || 0;
+  const ownedDistinctCount =
+    completionData?.ownedDistinct ??
+    (collection.items?.filter((i) => (i.quantity || 0) > 0).length || 0);
+  const totalRequiredCards =
+    completionData?.totalRequired ??
+    (collection.masterSet?.cardCount?.total || meta?.totalItems || 0);
   const completionPercent =
-    totalSetCards > 0
-      ? Math.min(100, Math.round((ownedItemsCount / totalSetCards) * 100))
-      : 0;
+    completionData?.completionPercentage ??
+    (totalRequiredCards > 0
+      ? Math.min(100, Math.round((ownedDistinctCount / totalRequiredCards) * 100))
+      : 0);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(locale, {
@@ -305,13 +429,24 @@ const CollectionDetailPage = () => {
               </div>
 
               {isMasterSet && (
-                <div className="flex flex-col items-end shrink-0">
+                <div className="flex flex-col items-end shrink-0 gap-1.5">
                   <div className="text-3xl font-extrabold text-amber-500 tabular-nums">
                     {completionPercent}%
                   </div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t("completion")}
-                  </p>
+                  <Select
+                    value={policy}
+                    onValueChange={(val: "BASE_SET" | "MASTER_SET") =>
+                      setPolicy(val)
+                    }
+                  >
+                    <SelectTrigger className="h-7 text-xs px-2 bg-background/50 border-border/60">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BASE_SET">{t("policyBaseSet")}</SelectItem>
+                      <SelectItem value="MASTER_SET">{t("policyMasterSet")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </div>
@@ -327,9 +462,14 @@ const CollectionDetailPage = () => {
                   </span>
                   <span className="tabular-nums font-bold text-foreground">
                     {t("ownedCards", {
-                      owned: ownedItemsCount,
-                      total: totalSetCards,
+                      owned: ownedDistinctCount,
+                      total: totalRequiredCards,
                     })}
+                    {completionData && completionData.duplicatesCount > 0 && (
+                      <span className="text-xs font-normal text-muted-foreground ml-1.5">
+                        ({t("duplicates", { count: completionData.duplicatesCount })})
+                      </span>
+                    )}
                   </span>
                 </div>
                 <Progress
@@ -339,28 +479,134 @@ const CollectionDetailPage = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-4 border-t border-border/40 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-primary" />
-                <span>
-                  {t(isMasterSet ? "cardCount" : "itemCount", {
-                    count: meta?.totalItems || totalSetCards,
-                  })}
-                </span>
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-border/40 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-primary" />
+                  <span>
+                    {t(isMasterSet ? "cardCount" : "itemCount", {
+                      count: meta?.totalItems || totalRequiredCards,
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span>{formatDate(collection.created_at)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  <span>
+                    {collection.user?.firstName} {collection.user?.lastName}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span>{formatDate(collection.created_at)}</span>
-              </div>
-              <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-                <User className="h-4 w-4 text-primary" />
-                <span>
-                  {collection.user?.firstName} {collection.user?.lastName}
-                </span>
+
+              {/* Action buttons: CSV Export / Import / Wishlist Missing */}
+              <div className="flex items-center gap-2 flex-wrap ml-auto">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {canEdit && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 text-xs"
+                      disabled={isImporting}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {t("importCsv")}
+                    </Button>
+                    {isMasterSet && completionData && completionData.missingCardsCount > 0 && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1 text-xs text-rose-500 border-rose-500/30 hover:border-rose-500"
+                        disabled={isWishlisting}
+                        onClick={handleWishlistMissing}
+                      >
+                        <Heart className="w-3.5 h-3.5" />
+                        {t("wishlistMissing")}
+                      </Button>
+                    )}
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1 text-xs"
+                  disabled={isExporting}
+                  onClick={handleExportCsv}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  {t("exportCsv")}
+                </Button>
               </div>
             </div>
           </div>
         </Card>
+
+        {/* Valuation Widget */}
+        {valuationData && (
+          <Card className="bg-card/90 backdrop-blur-sm border-2 border-border/60 shadow-sm overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-500" />
+                    <span className="font-heading font-semibold text-base sm:text-lg">
+                      {t("valuationTitle")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("coverage", {
+                      percent: Math.round(valuationData.coveragePercentage),
+                      valued: valuationData.totalValuedCopies,
+                      unvalued: valuationData.totalUnvaluedCopies,
+                    })}
+                  </p>
+                </div>
+                <div className="flex items-center gap-6">
+                  {valuationData.knownAcquisitionCostEur > 0 && (
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">
+                        {t("acquisitionCost", {
+                          cost: `€${valuationData.knownAcquisitionCostEur.toFixed(2)}`,
+                        })}
+                      </div>
+                      {valuationData.roiEur !== undefined && (
+                        <div
+                          className={`text-xs font-semibold ${
+                            valuationData.roiEur >= 0
+                              ? "text-emerald-500"
+                              : "text-rose-500"
+                          }`}
+                        >
+                          {t("roi", {
+                            roi: `${valuationData.roiEur >= 0 ? "+" : ""}€${valuationData.roiEur.toFixed(2)}`,
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-emerald-500 tabular-nums">
+                      €{valuationData.estimatedValueEur.toFixed(2)}
+                    </div>
+                    <div className="text-[10px] uppercase font-semibold text-muted-foreground">
+                      ~${valuationData.estimatedValueUsd.toFixed(2)} USD
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filter Controls Bar */}
         <Card className="bg-card/80 backdrop-blur-sm border-2">
@@ -629,6 +875,19 @@ const CollectionDetailPage = () => {
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
+                            {canEdit && (item.quantity || 0) > 1 && item.id && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 rounded-md text-muted-foreground hover:text-emerald-500"
+                                title={t("sellDuplicate")}
+                                onClick={() =>
+                                  handleSellDuplicate(item.id!, item.quantity)
+                                }
+                              >
+                                <DollarSign className="w-3 h-3" />
+                              </Button>
+                            )}
                           </>
                         ) : (
                           <Button
@@ -783,16 +1042,31 @@ const CollectionDetailPage = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              asChild
-                              aria-label={t("viewDetails")}
-                            >
-                              <Link href={pokemon.href}>
-                                <Info className="w-4 h-4" />
-                              </Link>
-                            </Button>
+                            <div className="flex items-center justify-end gap-1">
+                              {canEdit && (item.quantity || 0) > 1 && item.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-emerald-500"
+                                  title={t("sellDuplicate")}
+                                  onClick={() =>
+                                    handleSellDuplicate(item.id!, item.quantity)
+                                  }
+                                >
+                                  <DollarSign className="w-4 h-4" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                asChild
+                                aria-label={t("viewDetails")}
+                              >
+                                <Link href={pokemon.href}>
+                                  <Info className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
