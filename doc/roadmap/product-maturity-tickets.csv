@@ -5,10 +5,10 @@ FND-03,Reliable domain events and notifications,"P1, L",completed,Codex (current
 FND-04,Contract and migration discipline,"P0, M",not_started,unassigned,unassigned,0,
 MKT-01,"Resumable, idempotent checkout","P0, L",completed,Codex (current local slice),unassigned,1,product-maturity-progress.md
 MKT-02,"Partial refunds, returns and inventory disposition","P0, XL",completed,Codex (current local slice),unassigned,1-2,product-maturity-progress.md
-MKT-03,Listing evidence and trustworthy seller profiles,"P1, L",not_started,unassigned,unassigned,2,
+MKT-03,Listing evidence and trustworthy seller profiles,"P1, L",completed,Codex (current local slice),unassigned,2,product-maturity-progress.md
 MKT-04,Claims linked to orders and support,"P1, L",completed,Codex (current local slice),unassigned,2,product-maturity-progress.md
 MKT-05,Complete multi-seller fulfillment UX,"P1, M",completed,Codex (current local slice),unassigned,2,product-maturity-progress.md
-MKT-06,Seller settlement and payouts,"P1, XL",not_started,unassigned,unassigned,5,
+MKT-06,Seller settlement and payouts,"P1, XL",completed,Codex (current local slice),unassigned,5,product-maturity-progress.md
 TRN-01,"Result proposal, confirmation and dispute","P1, L",completed,Codex (current local slice),unassigned,4,product-maturity-progress.md
 TRN-02,Immutable tournament deck submissions,"P1, L",completed,Codex (current local slice),unassigned,4,product-maturity-progress.md
 TRN-03,Action-oriented player dashboard,"P1, M",completed,Codex (current local slice),unassigned,4,product-maturity-progress.md
@@ -22,8 +22,8 @@ COL-05,Missing-card and duplicate actions,"P1, M",completed,unassigned,unassigne
 COL-06,Transparent collection valuation,"P2, L",completed,unassigned,unassigned,3,product-maturity-progress.md
 INT-01,Deck requirements versus owned inventory,"P1, L",completed,unassigned,unassigned,3,product-maturity-progress.md
 INT-02,Inventory-backed listings,"P1, L",completed,unassigned,unassigned,3,product-maturity-progress.md
-INT-03,Delivery-to-collection receipt,"P1, M",not_started,unassigned,unassigned,5,
-INT-04,Integrated journey and navigation,"P1, M",not_started,unassigned,unassigned,5,
+INT-03,Delivery-to-collection receipt,"P1, M",completed,Codex (current local slice),unassigned,5,product-maturity-progress.md
+INT-04,Integrated journey and navigation,"P1, M",completed,Codex (current local slice),unassigned,5,product-maturity-progress.md
 UX-01,"Consistent UI states, localization and accessibility","P1/P2, L",not_started,unassigned,unassigned,1-6,
 OPS-01,Operational visibility and recovery,"P1, L",not_started,unassigned,unassigned,2-6,
 QLT-01,Progressive automated quality gates,"P0/P1, L",in_progress,Codex (current local slice),unassigned,0-6,product-maturity-progress.md

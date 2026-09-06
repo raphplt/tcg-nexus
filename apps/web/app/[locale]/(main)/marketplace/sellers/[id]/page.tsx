@@ -2,11 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   MessageCircle,
   Package,
   Search,
+  ShieldCheck,
   ShoppingBag,
   Star,
   TrendingUp,
@@ -14,6 +16,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { sellerReviewService } from "@/services/seller-review.service";
 import { CardCard } from "@/components/Marketplace/CardCard";
 import { MarketplaceBreadcrumb } from "@/components/Marketplace/MarketplaceBreadcrumb";
 import { SealedProductCard } from "@/components/Marketplace/SealedProductCard";
@@ -83,6 +86,12 @@ export default function SellerPage() {
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["seller-stats", sellerId],
     queryFn: () => marketplaceService.getSellerStatistics(sellerId),
+    enabled: !!sellerId && !isNaN(sellerId),
+  });
+
+  const { data: profileSummary } = useQuery({
+    queryKey: ["seller-review-profile", sellerId],
+    queryFn: () => sellerReviewService.getSellerProfile(sellerId),
     enabled: !!sellerId && !isNaN(sellerId),
   });
 
@@ -203,7 +212,7 @@ export default function SellerPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -264,6 +273,24 @@ export default function SellerPage() {
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t("perOrder")}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-amber-200/60 bg-amber-50/20 dark:bg-amber-950/10">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                Avis Acheteurs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold flex items-center gap-2">
+                {profileSummary?.averageRating ? profileSummary.averageRating.toFixed(1) : "—"}
+                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {profileSummary?.totalReviewsCount ?? 0} avis certifiés
               </div>
             </CardContent>
           </Card>
@@ -511,6 +538,92 @@ export default function SellerPage() {
             </div>
           )}
         </div>
+
+        {/* Verified Reviews Section */}
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+                Avis acheteurs vérifiés ({profileSummary?.totalReviewsCount ?? 0})
+              </CardTitle>
+              {profileSummary?.averageRating && profileSummary.averageRating > 0 && (
+                <div className="flex items-center gap-1.5 text-sm font-semibold">
+                  <span className="text-lg">{profileSummary.averageRating.toFixed(1)}</span>
+                  <div className="flex text-amber-400">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-4 w-4 ${
+                          star <= Math.round(profileSummary.averageRating)
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Seuls les acheteurs ayant confirmé la réception de leur commande peuvent publier une évaluation.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {!profileSummary?.recentReviews || profileSummary.recentReviews.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Aucun avis n&apos;a encore été publié pour ce vendeur.
+              </div>
+            ) : (
+              <div className="space-y-4 divide-y">
+                {profileSummary.recentReviews.map((rev) => (
+                  <div key={rev.id} className="pt-4 first:pt-0 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">
+                          {rev.buyer?.username || `Acheteur #${rev.buyerId}`}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs text-green-700 bg-green-50 dark:bg-green-950/30 flex items-center gap-1"
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                          Achat vérifié
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex text-amber-400">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-3.5 w-3.5 ${
+                                s <= rev.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-muted-foreground/30"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(rev.createdAt).toLocaleDateString(locale, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    {rev.comment && (
+                      <p className="text-sm text-foreground/90 bg-muted/30 p-3 rounded-md">
+                        {rev.comment}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

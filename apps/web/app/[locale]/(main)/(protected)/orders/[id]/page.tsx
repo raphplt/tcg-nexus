@@ -8,9 +8,12 @@ import {
   ArrowLeft,
   CheckCircle,
   ExternalLink,
+  FolderPlus,
   Loader2,
   MapPin,
   RotateCcw,
+  Sparkles,
+  Star,
   Store,
   Truck,
 } from "lucide-react";
@@ -18,6 +21,8 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { ReceiptToCollectionModal } from "./_components/ReceiptToCollectionModal";
+import { SellerReviewModal } from "./_components/SellerReviewModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +104,8 @@ function OrderDetailsContent() {
   const [claimSuccessMessage, setClaimSuccessMessage] = useState<string | null>(
     null,
   );
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [reviewItem, setReviewItem] = useState<OrderItem | null>(null);
 
   const cameBackFromStripe = !!searchParams.get("payment_intent");
   const redirectFailed =
@@ -194,16 +201,18 @@ function OrderDetailsContent() {
   const totalRefunded =
     order.refundOperations?.reduce((sum, op) => sum + Number(op.amount), 0) ??
     0;
+  const hasDeliveredItems = (order.orderItems || []).some(
+    (it) => it.fulfillmentStatus === FulfillmentStatus.DELIVERED,
+  );
 
   return (
-    <div className="container mx-auto max-w-4xl py-10 space-y-6">
-      <Link
-        href="/orders"
-        className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t("backToOrders")}
-      </Link>
+    <div className="container mx-auto max-w-3xl py-10 space-y-6">
+      <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Link href="/orders">
+          <ArrowLeft className="h-4 w-4" />
+          {t("backToOrders")}
+        </Link>
+      </Button>
 
       <Card>
         <CardHeader className="border-b">
@@ -229,6 +238,30 @@ function OrderDetailsContent() {
         </CardHeader>
 
         <CardContent className="pt-6 space-y-6">
+          {hasDeliveredItems && (
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <FolderPlus className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">
+                    Articles reçus prêts pour votre collection
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Intégrez directement vos cartes livrées dans votre collection avec leur provenance certifiée.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsReceiptModalOpen(true)}
+                className="gap-1.5 shrink-0"
+              >
+                <Sparkles className="h-4 w-4" />
+                Ajouter à ma collection
+              </Button>
+            </div>
+          )}
+
           {order.status === OrderStatus.PENDING && (
             <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
               {t("paymentPending")}
@@ -390,6 +423,49 @@ function OrderDetailsContent() {
                             )}
                           </div>
 
+                          {(item as any).listingPhotoUrls && (item as any).listingPhotoUrls.length > 0 && (
+                            <div className="pt-2 space-y-1">
+                              <p className="text-xs font-medium text-muted-foreground">
+                                Photos certifiées du vendeur :
+                              </p>
+                              <div className="flex gap-2 overflow-x-auto py-1">
+                                {(item as any).listingPhotoUrls.map((url: string, idx: number) => (
+                                  <a
+                                    key={idx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="relative h-12 w-12 shrink-0 rounded border overflow-hidden hover:opacity-80 transition-opacity"
+                                  >
+                                    <Image
+                                      src={url}
+                                      alt={`Photo ${idx + 1}`}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {(item as any).listingDefects && (item as any).listingDefects.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              <span className="text-xs font-medium text-muted-foreground">
+                                Défauts déclarés :
+                              </span>
+                              {(item as any).listingDefects.map((defect: string, idx: number) => (
+                                <Badge
+                                  key={idx}
+                                  variant="outline"
+                                  className="text-xs border-amber-300 text-amber-800 dark:text-amber-300"
+                                >
+                                  {defect}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+
                           <div className="flex flex-wrap items-center gap-2 pt-2">
                             {item.fulfillmentStatus ===
                               FulfillmentStatus.SHIPPED && (
@@ -406,6 +482,19 @@ function OrderDetailsContent() {
                                   <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
                                 )}
                                 {t("confirmReceipt")}
+                              </Button>
+                            )}
+
+                            {item.fulfillmentStatus ===
+                              FulfillmentStatus.DELIVERED && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-amber-300 text-amber-700 hover:bg-amber-50 dark:text-amber-400"
+                                onClick={() => setReviewItem(item)}
+                              >
+                                <Star className="h-3 w-3 mr-1 fill-amber-400 text-amber-400" />
+                                Évaluer le vendeur
                               </Button>
                             )}
 
@@ -558,6 +647,21 @@ function OrderDetailsContent() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ReceiptToCollectionModal
+        isOpen={isReceiptModalOpen}
+        onClose={() => setIsReceiptModalOpen(false)}
+        orderId={order.id}
+        onImportSuccess={loadOrder}
+      />
+
+      <SellerReviewModal
+        isOpen={!!reviewItem}
+        onClose={() => setReviewItem(null)}
+        orderId={order.id}
+        item={reviewItem}
+        onReviewSuccess={loadOrder}
+      />
     </div>
   );
 }

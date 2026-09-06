@@ -1,6 +1,7 @@
 import { User } from "@/types/auth";
-import { authedFetch } from "@/utils/fetch";
 import type { PublicUser } from "@/types/public-profile";
+import type { UserJourneyNextActions } from "@/types/user-journey";
+import { authedFetch } from "@/utils/fetch";
 
 export interface UpdateProfileData {
   firstName?: string;
@@ -26,5 +27,12 @@ export const userService = {
 
   async getPublicProfile(userId: number): Promise<PublicUser> {
     return authedFetch<PublicUser>("GET", `/users/${userId}/public`);
+  },
+
+  async getNextActions(): Promise<UserJourneyNextActions> {
+    return authedFetch<UserJourneyNextActions>(
+      "GET",
+      "/users/me/journey/next-actions",
+    );
   },
 };

@@ -23,13 +23,17 @@ import { AdminUpdateUserDto } from "./dto/admin-update-user.dto";
 import { UpdateMyProfileDto } from "./dto/update-my-profile.dto";
 import { User } from "./entities/user.entity";
 import { UserService } from "./user.service";
+import { UserJourneyService } from "./user-journey.service";
 
 @ApiTags("users")
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller("users")
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly journeyService: UserJourneyService,
+  ) {}
 
   @Post()
   @Roles(UserRole.ADMIN)
@@ -49,6 +53,11 @@ export class UserController {
   @SerializeOptions({ groups: [SELF_SERIALIZATION_GROUP] })
   getProfile(@CurrentUser() user: User) {
     return this.userService.findOne(user.id);
+  }
+
+  @Get("me/journey/next-actions")
+  getMyJourneyNextActions(@CurrentUser() user: User) {
+    return this.journeyService.getNextActions(user);
   }
 
   @Public()

@@ -12,6 +12,8 @@ import { UserCartModule } from "../user_cart/user_cart.module";
 import { CardPopularityController } from "./card-popularity.controller";
 import { CardPopularityScheduler } from "./card-popularity.scheduler";
 import { CardPopularityService } from "./card-popularity.service";
+import { Collection } from "src/collection/entities/collection.entity";
+import { CardState } from "src/card-state/entities/card-state.entity";
 import {
   CardEvent,
   CardPopularityMetrics,
@@ -24,7 +26,13 @@ import {
   RefundOperation,
   ReturnItem,
   SealedEvent,
+  SellerAllocation,
+  SellerPayout,
+  SellerReview,
+  SellerSettlementAccount,
 } from "./entities";
+import { DeliveryReceiptController } from "./delivery-receipt.controller";
+import { DeliveryReceiptService } from "./delivery-receipt.service";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
 import { OrderController } from "./order.controller";
@@ -34,6 +42,10 @@ import { RefundController } from "./refund.controller";
 import { RefundService } from "./refund.service";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
+import { SellerReviewController } from "./seller-review.controller";
+import { SellerReviewService } from "./seller-review.service";
+import { SellerSettlementController } from "./seller-settlement.controller";
+import { SellerSettlementService } from "./seller-settlement.service";
 import { StripeService } from "./stripe.service";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
 import { WebhookController } from "./webhook.controller";
@@ -54,10 +66,16 @@ import { WebhookController } from "./webhook.controller";
       SealedEvent,
       Player,
       Card,
+      CardState,
       SealedProduct,
       User,
       SupportTicket,
+      Collection,
       CollectionItem,
+      SellerSettlementAccount,
+      SellerAllocation,
+      SellerPayout,
+      SellerReview,
     ]),
     ConfigModule,
     UserCartModule,
@@ -72,6 +90,9 @@ import { WebhookController } from "./webhook.controller";
     CardPopularityController,
     SealedEventController,
     WebhookController,
+    SellerSettlementController,
+    DeliveryReceiptController,
+    SellerReviewController,
   ],
   providers: [
     MarketplaceService,
@@ -82,12 +103,18 @@ import { WebhookController } from "./webhook.controller";
     OrderReservationScheduler,
     SealedEventService,
     StripeService,
+    SellerSettlementService,
+    DeliveryReceiptService,
+    SellerReviewService,
   ],
   exports: [
     MarketplaceService,
     OrderService,
     RefundService,
     SealedEventService,
+    SellerSettlementService,
+    DeliveryReceiptService,
+    SellerReviewService,
   ],
 })
 export class MarketplaceModule {}

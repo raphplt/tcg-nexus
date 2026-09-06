@@ -1,3 +1,8 @@
+import type {
+  ReceiptImportPreviewResponse,
+  ReceiptImportRequest,
+  ReceiptImportResult,
+} from "@/types/delivery-receipt";
 import { Order, OrderItem } from "@/types/order";
 import { authedFetch } from "@/utils/fetch";
 
@@ -140,6 +145,26 @@ export const paymentService = {
     return authedFetch(
       "PATCH",
       `/marketplace/returns/${returnId}/disposition`,
+      { data },
+    );
+  },
+
+  async getReceiptImportPreview(
+    orderId: number,
+  ): Promise<ReceiptImportPreviewResponse> {
+    return authedFetch<ReceiptImportPreviewResponse>(
+      "GET",
+      `/marketplace/orders/${orderId}/receipt-preview`,
+    );
+  },
+
+  async importToCollection(
+    orderId: number,
+    data: ReceiptImportRequest,
+  ): Promise<ReceiptImportResult> {
+    return authedFetch<ReceiptImportResult>(
+      "POST",
+      `/marketplace/orders/${orderId}/import-to-collection`,
       { data },
     );
   },

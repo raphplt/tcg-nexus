@@ -100,6 +100,14 @@ export class OrderItem {
   @Column({ type: "timestamp", nullable: true })
   deliveredAt: Date | null;
 
+  /** Snapshot of listing real photo evidence at time of order creation (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  listingPhotoUrls?: string[] | null;
+
+  /** Snapshot of disclosed defect tags at time of order creation (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  listingDefects?: string[] | null;
+
   @OneToMany(
     () => RefundLine,
     (line) => line.orderItem,

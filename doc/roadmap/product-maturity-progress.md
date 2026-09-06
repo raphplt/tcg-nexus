@@ -184,3 +184,41 @@ Completed on 2026-09-06 on branch `feat/product-maturity`:
 - **Monorepo lint**: Biome passed `npm run lint` across 700 API files and 465 web files with 0 violations.
 - **API unit test suite**: All 164 suites, 1,390 tests passed cleanly (`npm run test -w api`).
 - **PostgreSQL E2E suite**: `test/tournament-operations.e2e-spec.ts` passed 12/12 tests validating end-to-end deck snapshotting, round clocks, score proposals/disputes, explainable standings, and mid-tournament drop.
+
+## Milestone 5: Settlement & Connected Journey (MKT-06, INT-03, INT-04, MKT-03)
+
+Completed on 2026-09-06 on branch `feat/product-maturity`:
+
+- **MKT-06 (Seller settlement, escrow & payouts)**:
+  - Added `SellerSettlementAccount`, `SellerAllocation`, and `SellerPayout` entities, `SellerAccountStatus` / `PayoutMethod` / `SellerAllocationStatus` / `PayoutStatus` enums, and database migration `1786200000000-SellerSettlementAndTrust.ts`.
+  - Implemented `SellerSettlementService`:
+    - Order payment creates immutable allocations with 5% marketplace commission deduction and pending escrow balances.
+    - Delivery confirmation releases pending escrow funds into available balance.
+    - Dispute holds (`onClaimOpened`) and refund adjustments (`onRefundApplied`) preserve ledger integrity.
+    - Seller payout requests validate minimum threshold and deduct available balance.
+    - Admin disbursement processing (`adminProcessPayout`) completes or fails payouts with audit trails.
+  - REST endpoints: `GET /marketplace/seller/settlement/summary`, `GET /marketplace/seller/settlement/allocations`, `GET /marketplace/seller/settlement/payouts`, `PATCH /marketplace/seller/settlement/settings`, `POST /marketplace/seller/settlement/payouts`, `GET /marketplace/admin/payouts/overview`, `POST /marketplace/admin/payouts/:id/process`.
+  - Frontend dashboard: `apps/web/app/[locale]/(main)/(protected)/seller/settlement/page.tsx` displaying available, pending, on-hold, and lifetime balances, payout request modal, bank settings modal, and allocations/payouts history.
+- **INT-03 (Delivery-to-collection receipt)**:
+  - Implemented `DeliveryReceiptService` with preview and receipt import endpoints: `GET /marketplace/orders/:id/receipt-preview` and `POST /marketplace/orders/:id/receipt-import` (alias `import-to-collection`).
+  - Prepopulates card attributes (condition, variant, language, acquisition cost, purchase date, order metadata) and writes certified provenance `{ source: "MARKETPLACE_ORDER", orderId, orderItemId, sellerId, importedAt }`.
+  - Deduplication prevents duplicate imports unless explicitly allowed.
+  - Frontend component: `apps/web/app/[locale]/(main)/(protected)/orders/[id]/_components/ReceiptToCollectionModal.tsx` allowing buyers to select eligible delivered items and target collection.
+- **INT-04 (Cross-feature user journey navigation)**:
+  - Implemented `UserJourneyService` and endpoint `GET /users/me/journey/next-actions`:
+    - Aggregates actionable obligations across pending order checkouts, delivered unimported cards, tournament deck submission deadlines, active round matches requiring score report/confirmation/dispute, and incomplete decks (< 60 cards).
+    - Prioritizes tasks (`HIGH`, `MEDIUM`, `LOW`) with direct call-to-action links.
+  - Added journey service methods in `apps/web/services/user.service.ts`.
+- **MKT-03 (Listing photo evidence, defect disclosures & verified reviews)**:
+  - Added photo URLs and defect attributes to `Listing` and `OrderItem` (`listing_photo_urls`, `listing_defects`, `defect_description`).
+  - Implemented `SellerReview` entity, `SellerReviewService`, and endpoints `POST /marketplace/orders/:orderId/items/:itemId/review`, `GET /marketplace/sellers/:id/profile`, and `GET /marketplace/sellers/:id/reviews`.
+  - Only confirmed delivered items from buyers can submit verified reviews (1 per order item).
+  - Public seller profile `apps/web/app/[locale]/(main)/marketplace/sellers/[id]/page.tsx` displays verified buyer rating, reviews list, completed sales, and trust badges.
+  - Order details page `apps/web/app/[locale]/(main)/(protected)/orders/[id]/page.tsx` displays seller photo evidence, declared defects, collection import banner, and seller review modal.
+
+### Verification Evidence:
+- **Root type check**: All 10 Turbo workspaces passed `npm run check-types` with 0 errors.
+- **Monorepo lint**: Biome passed `npm run lint` with 0 violations.
+- **API unit test suite**: All 168 suites, 1,413 tests passed cleanly (`npm run test -w api`), including new test suites for `seller-settlement.service.spec.ts` (9 tests), `delivery-receipt.service.spec.ts` (5 tests), `seller-review.service.spec.ts` (6 tests), `user-journey.service.spec.ts` (2 tests), and `user.controller.spec.ts` (11 tests).
+- **PostgreSQL E2E suite**: `test/settlement-and-journey.e2e-spec.ts` passed end-to-end against live PostgreSQL, validating checkout -> 5% commission allocation -> delivery release -> receipt import to collection -> verified seller review -> payout request & admin execution -> user journey next actions.
+

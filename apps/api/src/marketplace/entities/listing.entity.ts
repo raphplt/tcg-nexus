@@ -95,6 +95,18 @@ export class Listing {
   @Column({ nullable: true })
   description?: string;
 
+  /** Real item photo URLs uploaded as evidence by seller (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  photoUrls?: string[] | null;
+
+  /** Structured defect tags (e.g. EDGE_WEAR, SURFACE_SCRATCH, CREASE) (MKT-03). */
+  @Column({ type: "jsonb", nullable: true })
+  defects?: string[] | null;
+
+  /** Detailed disclosure of condition flaws or defects (MKT-03). */
+  @Column({ type: "text", nullable: true })
+  defectDescription?: string | null;
+
   @Column({ nullable: true, default: Languages.FR })
   language?: Languages;
 

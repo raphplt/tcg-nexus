@@ -78,6 +78,9 @@ export interface CheckoutResult {
   currency: Currency;
 }
 
+import { SellerSettlementService } from "./seller-settlement.service";
+import { Optional } from "@nestjs/common";
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
@@ -100,6 +103,8 @@ export class OrderService {
     private readonly eventEmitter: EventEmitter2,
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
+    @Optional()
+    private readonly sellerSettlementService?: SellerSettlementService,
   ) {}
 
   async startCheckout(
@@ -434,6 +439,8 @@ export class OrderService {
       productSetName: isSealed
         ? (listing.sealedProduct?.pokemonSet?.name ?? null)
         : (listing.pokemonCard?.set?.name ?? null),
+      listingPhotoUrls: listing.photoUrls ?? null,
+      listingDefects: listing.defects ?? null,
       fulfillmentStatus: FulfillmentStatus.TO_SHIP,
     };
   }
@@ -708,6 +715,12 @@ export class OrderService {
         }
       }
 
+      if (this.sellerSettlementService) {
+        await this.sellerSettlementService.createAllocationsForOrder(
+          order,
+          manager,
+        );
+      }
 
       await this.auditService.record(
         {
@@ -1318,6 +1331,10 @@ export class OrderService {
     orderItem.fulfillmentStatus = FulfillmentStatus.DELIVERED;
     orderItem.deliveredAt = orderItem.deliveredAt || new Date();
     const saved = await this.orderItemRepository.save(orderItem);
+
+    if (this.sellerSettlementService) {
+      await this.sellerSettlementService.onItemDelivered(saved);
+    }
 
     await this.syncOrderStatusFromFulfillment(orderId);
 
