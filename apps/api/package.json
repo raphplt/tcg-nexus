@@ -44,6 +44,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:postgres": "bash ../../scripts/run-e2e-postgres.sh",
     "test:e2e:tournament": "bash ../../scripts/run-e2e-postgres.sh test/tournament.e2e-spec.ts test/tournament-concurrency.e2e-spec.ts",
+    "test:e2e:migrations": "bash ../../scripts/run-e2e-postgres.sh test/migrations.e2e-spec.ts",
     "docker:build": "docker build -t tcg-nexus-api .",
     "docker:run": "docker run -p 3001:3001 tcg-nexus-api",
     "docker:up": "docker-compose -f ../../docker-compose.deploy.yml up",

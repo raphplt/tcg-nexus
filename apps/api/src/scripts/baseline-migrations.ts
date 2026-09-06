@@ -1,14 +1,14 @@
 /**
  * Adopts a database built by TypeORM `synchronize` into the migration history.
  *
- * Development databases were created by `synchronize`, never by migrations, so
- * their `migrations` table is empty while their schema already reflects most of
+ * Development databases were originally created by `synchronize`, never by migrations,
+ * so their `migrations` table is empty while their schema already reflects most of
  * the history. Running `migration:run` there would replay everything and fail
  * on the first `CREATE TABLE` of a table that already exists.
  *
  * This script marks as applied every migration whose effect is already present,
  * detected by probing the schema rather than by trusting a hardcoded list. The
- * remaining migrations are then run normally by `npm run migration:run`.
+ * remaining unapplied migrations can then be executed normally by `npm run migration:run`.
  *
  * Idempotent: a migration already recorded is left alone. Safe on a fresh
  * database too — nothing is detected, so nothing is stamped.
@@ -18,8 +18,8 @@
 import { AppDataSource } from "../data-source";
 
 /**
- * A migration and the SQL probe telling whether its effect is already in the
- * schema. The probe must return at least one row when the migration is done.
+ * A migration and the SQL probe determining whether its schema effect is present.
+ * The probe returns at least one row when the migration's changes already exist.
  */
 interface MigrationProbe {
   name: string;
@@ -40,9 +40,6 @@ const PROBES: MigrationProbe[] = [
             WHERE table_name = 'order' AND column_name ILIKE '%shipping%'`,
   },
   {
-    // Pure data migration: no schema trace to probe. Replaying it only resets
-    // shipping costs to the platform rates, which is its whole purpose, so it
-    // is stamped as soon as the column it writes exists.
     name: "PlatformShippingRates1785981600000",
     timestamp: 1785981600000,
     probe: `SELECT 1 FROM information_schema.columns
@@ -80,8 +77,89 @@ const PROBES: MigrationProbe[] = [
               SELECT 1 FROM information_schema.columns
               WHERE table_name = 'card' AND column_name = 'name')`,
   },
+  {
+    name: "SealedProductTranslations1786078800000",
+    timestamp: 1786078800000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'sealed_product_locale'`,
+  },
+  {
+    name: "ArticlePublishing1786082400000",
+    timestamp: 1786082400000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'article' AND column_name = 'slug'`,
+  },
+  {
+    name: "OnlinePlaySessions1786086000000",
+    timestamp: 1786086000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'online_match_session'`,
+  },
+  {
+    name: "PerformanceIndexes1786089600000",
+    timestamp: 1786089600000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'ranked_match_history' AND column_name = 'matchId'`,
+  },
+  {
+    name: "SwissTournaments1786093200000",
+    timestamp: 1786093200000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'match' AND column_name = 'isBye'`,
+  },
+  {
+    name: "DoubleElimination1786096800000",
+    timestamp: 1786096800000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'match' AND column_name = 'bracketSide'`,
+  },
+  {
+    name: "ArticleSlugIntegrity1786097000000",
+    timestamp: 1786097000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'article' AND column_name = 'slug' AND is_nullable = 'NO'`,
+  },
+  {
+    name: "AuthIdentities1786098000000",
+    timestamp: 1786098000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'auth_identity'`,
+  },
+  {
+    name: "CheckoutAttemptAndAuditOutbox1786099000000",
+    timestamp: 1786099000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'outbox_event'`,
+  },
+  {
+    name: "RefundsReturnsClaims1786100000000",
+    timestamp: 1786100000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'refund_operation'`,
+  },
+  {
+    name: "CollectionInventoryAndListings1786101000000",
+    timestamp: 1786101000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'collection_item' AND column_name = 'quantityAvailable'`,
+  },
+  {
+    name: "TournamentOperations1786102000000",
+    timestamp: 1786102000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'tournament_deck_snapshot'`,
+  },
+  {
+    name: "SellerSettlementAndTrust1786200000000",
+    timestamp: 1786200000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'seller_settlement_account'`,
+  },
 ];
 
+/**
+ * Main execution function probing the schema and stamping existing migrations.
+ */
 async function main() {
   await AppDataSource.initialize();
 
@@ -102,13 +180,13 @@ async function main() {
   let stamped = 0;
   for (const migration of PROBES) {
     if (recorded.has(migration.name)) {
-      console.log(`= ${migration.name} — déjà enregistrée`);
+      console.log(`= ${migration.name} — already recorded`);
       continue;
     }
 
     const rows = await AppDataSource.query(migration.probe);
     if (rows.length === 0) {
-      console.log(`- ${migration.name} — non appliquée, sera jouée`);
+      console.log(`- ${migration.name} — not detected, will be executed by runner`);
       continue;
     }
 
@@ -116,25 +194,24 @@ async function main() {
       `INSERT INTO migrations ("timestamp", "name") VALUES ($1, $2)`,
       [migration.timestamp, migration.name],
     );
-    console.log(`+ ${migration.name} — marquée comme appliquée`);
+    console.log(`+ ${migration.name} — stamped as applied`);
     stamped++;
   }
 
-  // Created by CatalogTranslations, which `synchronize` could not reproduce:
-  // it is a partial index, outside the entity metadata.
+  // Ensure unique index for TCGdex IDs exists if catalog translation was applied
   await AppDataSource.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS "UQ_card_game_tcgDexId"
     ON "card" ("game", "tcgDexId")
     WHERE "tcgDexId" IS NOT NULL
   `);
 
-  console.log(`\n${stamped} migration(s) marquée(s). Lance maintenant :`);
+  console.log(`\n${stamped} migration(s) stamped. Next step:`);
   console.log("  npm run migration:run");
 
   await AppDataSource.destroy();
 }
 
 main().catch((error: Error) => {
-  console.error("Échec du baseline :", error.message);
+  console.error("Migration baseline failed:", error.message);
   process.exit(1);
 });

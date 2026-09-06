@@ -59,6 +59,7 @@ import { TournamentModule } from "./tournament/tournament.module";
 import { UserModule } from "./user/user.module";
 import { UserCartModule } from "./user_cart/user_cart.module";
 import { UserFollowModule } from "./user-follow/user-follow.module";
+import { AdminOpsModule } from "./admin-ops/admin-ops.module";
 
 @Module({
   imports: [
@@ -147,6 +148,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     HealthModule,
     AuditModule,
     OutboxModule,
+    AdminOpsModule,
   ],
   controllers: [AppController],
   providers: [

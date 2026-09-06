@@ -1,0 +1,41 @@
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuditModule } from "../audit/audit.module";
+import { AuditEvent } from "../audit/entities/audit-event.entity";
+import { Listing } from "../marketplace/entities/listing.entity";
+import { Order } from "../marketplace/entities/order.entity";
+import { SellerAllocation } from "../marketplace/entities/seller-allocation.entity";
+import { SellerPayout } from "../marketplace/entities/seller-payout.entity";
+import { SellerSettlementAccount } from "../marketplace/entities/seller-settlement-account.entity";
+import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
+import { OutboxEvent } from "../outbox/entities/outbox-event.entity";
+import { OutboxModule } from "../outbox/outbox.module";
+import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
+import { AdminOpsController } from "./admin-ops.controller";
+import { AdminOpsService } from "./admin-ops.service";
+
+/**
+ * Module bundling operational visibility, health telemetry, outbox replay,
+ * audit investigation, and financial reconciliation.
+ */
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([
+      Order,
+      Listing,
+      OutboxEvent,
+      SellerAllocation,
+      SellerSettlementAccount,
+      SellerPayout,
+      SupportTicket,
+      MatchResultProposal,
+      AuditEvent,
+    ]),
+    AuditModule,
+    OutboxModule,
+  ],
+  controllers: [AdminOpsController],
+  providers: [AdminOpsService],
+  exports: [AdminOpsService],
+})
+export class AdminOpsModule {}
