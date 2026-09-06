@@ -45,6 +45,20 @@ export class OrderController {
   }
 
   /**
+   * Retrieves active pending checkout session for the authenticated buyer.
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get("checkout/pending")
+  @ApiOperation({
+    summary:
+      "Retrieves active pending checkout session with reserved items and countdown",
+  })
+  getPendingCheckout(@CurrentUser() user: User) {
+    return this.orderService.findPendingCheckoutSession(user.id);
+  }
+
+  /**
    * Confirms order completion using Stripe payment intent status verification.
    */
   @UseGuards(JwtAuthGuard)
@@ -59,6 +73,23 @@ export class OrderController {
     @CurrentUser() user: User,
   ) {
     return this.orderService.confirmOrderPayment(id, user);
+  }
+
+  /**
+   * Cancels a pending order and releases reserved stock immediately.
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("orders/:id/cancel")
+  @ApiOperation({
+    summary:
+      "Cancels an unfinalized pending order and releases reserved stock immediately",
+  })
+  cancelPendingOrder(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.orderService.cancelPendingOrderByBuyer(id, user);
   }
 
   /**

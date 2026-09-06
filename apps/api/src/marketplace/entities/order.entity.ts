@@ -64,6 +64,11 @@ export class Order {
   @Column({ type: "timestamp", nullable: true })
   reservationExpiresAt: Date | null;
 
+  /** Scoped checkout attempt key ensuring idempotent order creation */
+  @Index()
+  @Column({ type: "varchar", length: 128, nullable: true })
+  checkoutAttemptKey: string | null;
+
   /** Guardrail against duplicate webhook events or replay attacks */
   @Column({ type: "boolean", default: false })
   stockReleased: boolean;

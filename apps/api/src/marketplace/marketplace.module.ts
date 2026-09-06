@@ -5,6 +5,8 @@ import { Card } from "src/card/entities/card.entity";
 import { Player } from "src/player/entities/player.entity";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
 import { User } from "src/user/entities/user.entity";
+import { AuditModule } from "../audit/audit.module";
+import { OutboxModule } from "../outbox/outbox.module";
 import { UserCartModule } from "../user_cart/user_cart.module";
 import { CardPopularityController } from "./card-popularity.controller";
 import { CardPopularityScheduler } from "./card-popularity.scheduler";
@@ -47,6 +49,8 @@ import { WebhookController } from "./webhook.controller";
     ]),
     ConfigModule,
     UserCartModule,
+    AuditModule,
+    OutboxModule,
   ],
   controllers: [
     MarketplaceController,

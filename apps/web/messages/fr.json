@@ -254,7 +254,14 @@
     "subtotal": "Sous-total",
     "shipping": "Frais de port",
     "total": "Total",
-    "emptyCartTitle": "Votre panier est vide"
+    "emptyCartTitle": "Votre panier est vide",
+    "pendingOrderNotice": "Vous avez une réservation en cours pour la commande #{id}.",
+    "reservationTimer": "Temps restant : {time}",
+    "cancelReservation": "Annuler la réservation",
+    "cancelling": "Annulation...",
+    "expiredTitle": "Réservation expirée",
+    "expiredMessage": "Le délai de paiement a expiré. Les articles ont été remis en vente.",
+    "returnToMarketplace": "Retourner à la marketplace"
   },
   "Orders": {
     "title": "Mes commandes",

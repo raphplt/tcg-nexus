@@ -1,9 +1,9 @@
 ticket,title,priority_estimate,status,implementation_owner,reviewer,milestone,evidence
 FND-01,"Inventory, scope traceability and baseline","P0, M",in_progress,Codex (current local slice),unassigned,0,product-maturity-progress.md
-FND-02,Durable business audit history,"P1, M",not_started,unassigned,unassigned,1,
-FND-03,Reliable domain events and notifications,"P1, L",not_started,unassigned,unassigned,1-2,
+FND-02,Durable business audit history,"P1, M",completed,Codex (current local slice),unassigned,1,product-maturity-progress.md
+FND-03,Reliable domain events and notifications,"P1, L",in_progress,Codex (current local slice),unassigned,1-2,product-maturity-progress.md
 FND-04,Contract and migration discipline,"P0, M",not_started,unassigned,unassigned,0,
-MKT-01,"Resumable, idempotent checkout","P0, L",in_progress,Codex (current local slice),unassigned,1,product-maturity-progress.md
+MKT-01,"Resumable, idempotent checkout","P0, L",completed,Codex (current local slice),unassigned,1,product-maturity-progress.md
 MKT-02,"Partial refunds, returns and inventory disposition","P0, XL",in_progress,Codex (current local slice),unassigned,1-2,product-maturity-progress.md
 MKT-03,Listing evidence and trustworthy seller profiles,"P1, L",not_started,unassigned,unassigned,2,
 MKT-04,Claims linked to orders and support,"P1, L",not_started,unassigned,unassigned,2,

@@ -60,6 +60,14 @@ describe("Order flow (e2e)", () => {
     // un checkout refusé laisse le panier rempli : sans ça l'article fuite sur
     // les tests suivants, dont le checkout échoue alors en "stock insuffisant"
     await request(httpServer).delete("/user-cart/me/clear").set(authAs(buyer));
+    const active = await request(httpServer)
+      .get("/marketplace/checkout/pending")
+      .set(authAs(buyer));
+    if (active.body?.orderId) {
+      await request(httpServer)
+        .post(`/marketplace/orders/${active.body.orderId}/cancel`)
+        .set(authAs(buyer));
+    }
 
     jest.clearAllMocks();
     let counter = 0;
@@ -70,6 +78,16 @@ describe("Order flow (e2e)", () => {
         amount: Math.round(amount * 100),
         currency,
         metadata,
+        status: "requires_payment_method",
+      }),
+    );
+    stripeServiceMock.retrievePaymentIntent.mockImplementation(
+      async (id: string) => ({
+        id,
+        client_secret: "secret_e2e",
+        amount: 1000,
+        currency: "eur",
+        metadata: {},
         status: "requires_payment_method",
       }),
     );
@@ -318,6 +336,90 @@ describe("Order flow (e2e)", () => {
         .set(authAs(buyer))
         .send({ fulfillmentStatus: FulfillmentStatus.PREPARING })
         .expect(403);
+    });
+  });
+
+  describe("checkout idempotency and resumption (MKT-01)", () => {
+    it("returns existing pending session without double reserving stock on duplicate attemptKey", async () => {
+      const listingId = await seedListingForSeller(app, seller, {
+        price: 25,
+        quantityAvailable: 5,
+      });
+      await addToCart(listingId, 2).expect(201);
+
+      const attemptKey = `attempt_${Date.now()}`;
+      const checkout1 = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS, attemptKey })
+        .expect(201);
+
+      const listingAfterFirst = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterFirst.quantityAvailable).toBe(3);
+
+      const checkout2 = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS, attemptKey })
+        .expect(201);
+
+      expect(checkout2.body.orderId).toBe(checkout1.body.orderId);
+      expect(checkout2.body.clientSecret).toBe(checkout1.body.clientSecret);
+
+      const listingAfterSecond = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterSecond.quantityAvailable).toBe(3);
+
+      await request(httpServer)
+        .post(`/marketplace/orders/${checkout1.body.orderId}/cancel`)
+        .set(authAs(buyer))
+        .expect(201);
+    });
+
+    it("allows buyer to retrieve active pending checkout session and cancel reservation", async () => {
+      const listingId = await seedListingForSeller(app, seller, {
+        price: 30,
+        quantityAvailable: 3,
+      });
+      await addToCart(listingId, 1).expect(201);
+
+      const checkout = await request(httpServer)
+        .post("/marketplace/checkout")
+        .set(authAs(buyer))
+        .send({ shippingAddress: SHIPPING_ADDRESS })
+        .expect(201);
+
+      const orderId = checkout.body.orderId;
+
+      const pendingRes = await request(httpServer)
+        .get("/marketplace/checkout/pending")
+        .set(authAs(buyer))
+        .expect(200);
+
+      expect(pendingRes.body.orderId).toBe(orderId);
+      expect(pendingRes.body.amount).toBe(30);
+      expect(pendingRes.body.items).toHaveLength(1);
+      expect(pendingRes.body.clientSecret).toBeDefined();
+
+      await request(httpServer)
+        .post(`/marketplace/orders/${orderId}/cancel`)
+        .set(authAs(buyer))
+        .expect(201);
+
+      const listingAfterCancel = await listingRepo.findOneByOrFail({
+        id: listingId,
+      });
+      expect(listingAfterCancel.quantityAvailable).toBe(3);
+
+      const afterCancelRes = await request(httpServer)
+        .get("/marketplace/checkout/pending")
+        .set(authAs(buyer))
+        .expect(200);
+
+      expect(afterCancelRes.body?.orderId).toBeUndefined();
     });
   });
 });

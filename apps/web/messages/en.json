@@ -254,7 +254,14 @@
     "subtotal": "Subtotal",
     "shipping": "Shipping",
     "total": "Total",
-    "emptyCartTitle": "Your cart is empty"
+    "emptyCartTitle": "Your cart is empty",
+    "pendingOrderNotice": "You have an active reservation for order #{id}.",
+    "reservationTimer": "Time left: {time}",
+    "cancelReservation": "Cancel reservation",
+    "cancelling": "Cancelling...",
+    "expiredTitle": "Reservation expired",
+    "expiredMessage": "The reservation deadline has expired. Items were released back to stock.",
+    "returnToMarketplace": "Return to marketplace"
   },
   "Orders": {
     "title": "My orders",

@@ -15,6 +15,8 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import { AuditService } from "../audit/audit.service";
+import { OutboxService } from "../outbox/outbox.service";
 import { OrderService } from "./order.service";
 import { StripeService } from "./stripe.service";
 
@@ -26,6 +28,8 @@ describe("OrderService", () => {
   let stripeService: any;
   let userCartService: any;
   let eventEmitter: any;
+  let auditService: any;
+  let outboxService: any;
   let manager: any;
 
   const buyer = { id: 1, firstName: "Ada", lastName: "L" } as User;
@@ -90,6 +94,8 @@ describe("OrderService", () => {
     };
 
     eventEmitter = { emit: jest.fn() };
+    auditService = { record: jest.fn().mockResolvedValue({ id: "audit-1" }) };
+    outboxService = { record: jest.fn().mockResolvedValue({ id: "outbox-1" }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -114,6 +120,8 @@ describe("OrderService", () => {
           },
         },
         { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: AuditService, useValue: auditService },
+        { provide: OutboxService, useValue: outboxService },
       ],
     }).compile();
 
@@ -343,6 +351,198 @@ describe("OrderService", () => {
         "quantityAvailable",
         2,
       );
+    });
+
+    it("is idempotent when retried with the same attemptKey on active pending order", async () => {
+      const activePendingOrder = {
+        id: 777,
+        status: OrderStatus.PENDING,
+        totalAmount: 42,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        reservationExpiresAt: new Date(Date.now() + 600000),
+        checkoutAttemptKey: "attempt-123",
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(activePendingOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({
+        transactionId: "pi_existing",
+      });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        id: "pi_existing",
+        client_secret: "secret_existing",
+      });
+
+      const result = await service.startCheckout(
+        { ...dto, attemptKey: "attempt-123" },
+        buyer,
+      );
+
+      expect(result).toEqual({
+        orderId: 777,
+        clientSecret: "secret_existing",
+        amount: 42,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+      });
+      // Did NOT create a new order or decrement stock again
+      expect(manager.save).not.toHaveBeenCalled();
+      expect(manager.decrement).not.toHaveBeenCalled();
+    });
+
+    it("resumes pending checkout session if cart is empty but active reservation exists", async () => {
+      userCartService.findCartByUserId.mockResolvedValue({ cartItems: [] });
+
+      const activeOrder = {
+        id: 888,
+        status: OrderStatus.PENDING,
+        totalAmount: 30,
+        shippingAmount: 3,
+        currency: Currency.EUR,
+        reservationExpiresAt: new Date(Date.now() + 600000),
+        orderItems: [],
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(activeOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({ transactionId: "pi_888" });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        client_secret: "secret_888",
+      });
+
+      const result = await service.startCheckout(dto, buyer);
+
+      expect(result).toEqual({
+        orderId: 888,
+        clientSecret: "secret_888",
+        amount: 30,
+        shippingAmount: 3,
+        currency: Currency.EUR,
+      });
+    });
+  });
+
+  describe("findPendingCheckoutSession", () => {
+    it("returns formatted session and items when active pending order exists", async () => {
+      const pendingOrder = {
+        id: 999,
+        status: OrderStatus.PENDING,
+        totalAmount: 55,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        shippingAddress: "42 rue de la Paix",
+        reservationExpiresAt: new Date(Date.now() + 500000),
+        orderItems: [
+          {
+            id: 1,
+            productName: "Charizard",
+            productImage: "https://img.com/charizard.png",
+            productCondition: "NM",
+            productSetName: "Base Set",
+            productKind: "card",
+            quantity: 1,
+            unitPrice: 50,
+          },
+        ],
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+      paymentRepo.findOne.mockResolvedValueOnce({ transactionId: "pi_999" });
+      stripeService.retrievePaymentIntent.mockResolvedValueOnce({
+        client_secret: "secret_999",
+      });
+
+      const session = await service.findPendingCheckoutSession(buyer.id);
+
+      expect(session).toEqual({
+        orderId: 999,
+        clientSecret: "secret_999",
+        amount: 55,
+        shippingAmount: 5,
+        currency: Currency.EUR,
+        shippingAddress: "42 rue de la Paix",
+        reservationExpiresAt: pendingOrder.reservationExpiresAt,
+        items: [
+          {
+            id: 1,
+            productName: "Charizard",
+            productImage: "https://img.com/charizard.png",
+            productCondition: "NM",
+            productSetName: "Base Set",
+            productKind: "card",
+            quantity: 1,
+            unitPrice: 50,
+          },
+        ],
+      });
+    });
+
+    it("returns null when no active pending order exists", async () => {
+      orderRepo.findOne.mockResolvedValueOnce(null);
+      const session = await service.findPendingCheckoutSession(buyer.id);
+      expect(session).toBeNull();
+    });
+  });
+
+  describe("cancelPendingOrderByBuyer", () => {
+    it("cancels pending order, releases stock, and logs audit record", async () => {
+      const pendingOrder = {
+        id: 555,
+        status: OrderStatus.PENDING,
+        buyer,
+        orderItems: [{ listing: { id: 10 }, quantity: 2 }],
+        stockReleased: false,
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+
+      const result = await service.cancelPendingOrderByBuyer(555, buyer);
+
+      expect(result).toEqual({ success: true, orderId: 555 });
+      expect(pendingOrder.status).toBe(OrderStatus.CANCELLED);
+      expect(manager.increment).toHaveBeenCalledWith(
+        Listing,
+        { id: 10 },
+        "quantityAvailable",
+        2,
+      );
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetType: "order",
+          targetId: "555",
+          action: "order.cancelled",
+          reason: "Cancelled by buyer before payment",
+        }),
+        manager,
+      );
+    });
+
+    it("refuses cancellation if caller is not the owner", async () => {
+      const otherBuyer = { id: 99, role: "user" } as User;
+      const pendingOrder = {
+        id: 555,
+        status: OrderStatus.PENDING,
+        buyer: { id: 1 },
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(pendingOrder);
+
+      await expect(
+        service.cancelPendingOrderByBuyer(555, otherBuyer),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("refuses cancellation if order is not pending", async () => {
+      const paidOrder = {
+        id: 555,
+        status: OrderStatus.PAID,
+        buyer,
+      };
+
+      orderRepo.findOne.mockResolvedValueOnce(paidOrder);
+
+      await expect(
+        service.cancelPendingOrderByBuyer(555, buyer),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

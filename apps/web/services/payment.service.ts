@@ -3,14 +3,32 @@ import { authedFetch } from "@/utils/fetch";
 
 export interface StartCheckoutDto {
   shippingAddress: string;
+  attemptKey?: string;
 }
 
 export interface CheckoutSession {
   orderId: number;
-  clientSecret: string;
+  clientSecret: string | null;
   amount: number;
   shippingAmount: number;
   currency: string;
+}
+
+export interface PendingCheckoutItem {
+  id: number;
+  productName: string;
+  productImage: string | null;
+  productCondition: string | null;
+  productSetName: string | null;
+  productKind: "card" | "sealed";
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface PendingCheckoutSession extends CheckoutSession {
+  shippingAddress: string;
+  reservationExpiresAt: string | null;
+  items: PendingCheckoutItem[];
 }
 
 export const paymentService = {
@@ -18,6 +36,26 @@ export const paymentService = {
     return authedFetch<CheckoutSession>("POST", "/marketplace/checkout", {
       data,
     });
+  },
+
+  async getPendingCheckout(): Promise<PendingCheckoutSession | null> {
+    try {
+      return await authedFetch<PendingCheckoutSession | null>(
+        "GET",
+        "/marketplace/checkout/pending",
+      );
+    } catch {
+      return null;
+    }
+  },
+
+  async cancelPendingOrder(
+    orderId: number,
+  ): Promise<{ success: boolean; orderId: number }> {
+    return authedFetch<{ success: boolean; orderId: number }>(
+      "POST",
+      `/marketplace/orders/${orderId}/cancel`,
+    );
   },
 
   async confirmOrder(orderId: number): Promise<Order> {

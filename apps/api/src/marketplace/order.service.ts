@@ -8,20 +8,24 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, LessThan, Repository } from "typeorm";
+import { DataSource, EntityManager, LessThan, MoreThan, Repository } from "typeorm";
 import { Currency } from "../common/enums/currency";
 import {
   FULFILLMENT_TRANSITIONS,
   FulfillmentStatus,
 } from "../common/enums/fulfillment-status";
 import { ProductKind } from "../common/enums/product-kind";
+import { UserRole } from "../common/enums/user";
 import { PaginatedResult, PaginationHelper } from "../helpers/pagination";
 import { DEFAULT_LOCALE } from "../translation/supported-locales";
 import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
+import { AuditService } from "../audit/audit.service";
+import { OutboxService } from "../outbox/outbox.service";
 import { CardPopularityService } from "./card-popularity.service";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
+import { PendingCheckoutSessionDto } from "./dto/pending-checkout-session.dto";
 import { StartCheckoutDto } from "./dto/start-checkout.dto";
 import { UpdateFulfillmentDto } from "./dto/update-fulfillment.dto";
 import { CardEventType } from "./entities/card-event.entity";
@@ -77,16 +81,81 @@ export class OrderService {
     private readonly cardPopularityService: CardPopularityService,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly auditService: AuditService,
+    private readonly outboxService: OutboxService,
   ) {}
 
   async startCheckout(
     dto: StartCheckoutDto,
     user: User,
   ): Promise<CheckoutResult> {
+    if (dto.attemptKey) {
+      const existingAttempt = await this.orderRepository.findOne({
+        where: {
+          buyer: { id: user.id },
+          checkoutAttemptKey: dto.attemptKey,
+        },
+        relations: ORDER_RELATIONS,
+      });
+
+      if (existingAttempt) {
+        if (
+          existingAttempt.status === OrderStatus.PENDING &&
+          existingAttempt.reservationExpiresAt &&
+          new Date(existingAttempt.reservationExpiresAt) > new Date()
+        ) {
+          const payment = await this.paymentTransactionRepository.findOne({
+            where: { order: { id: existingAttempt.id } },
+            order: { createdAt: "DESC" },
+          });
+
+          let clientSecret: string | null = null;
+          if (payment?.transactionId) {
+            try {
+              const intent = await this.stripeService.retrievePaymentIntent(
+                payment.transactionId,
+              );
+              clientSecret = intent.client_secret;
+            } catch {
+              // Ignore provider retrieval issues on idempotent replay
+            }
+          }
+
+          return {
+            orderId: existingAttempt.id,
+            clientSecret,
+            amount: Number(existingAttempt.totalAmount),
+            shippingAmount: Number(existingAttempt.shippingAmount),
+            currency: existingAttempt.currency,
+          };
+        }
+
+        if (existingAttempt.status === OrderStatus.PAID) {
+          return {
+            orderId: existingAttempt.id,
+            clientSecret: null,
+            amount: Number(existingAttempt.totalAmount),
+            shippingAmount: Number(existingAttempt.shippingAmount),
+            currency: existingAttempt.currency,
+          };
+        }
+      }
+    }
+
     const cart = await this.userCartService.findCartByUserId(user.id);
     const cartItems = cart?.cartItems ?? [];
 
     if (cartItems.length === 0) {
+      const activePending = await this.findPendingCheckoutSession(user.id);
+      if (activePending) {
+        return {
+          orderId: activePending.orderId,
+          clientSecret: activePending.clientSecret,
+          amount: activePending.amount,
+          shippingAmount: activePending.shippingAmount,
+          currency: activePending.currency,
+        };
+      }
       throw new BadRequestException("Votre panier est vide");
     }
 
@@ -111,6 +180,7 @@ export class OrderService {
       currency,
       dto.shippingAddress.trim(),
       user,
+      dto.attemptKey,
     );
 
     try {
@@ -155,12 +225,12 @@ export class OrderService {
     }
   }
 
-  // Pessimistic locking to prevent race conditions on last remaining stock items
   private async reserveStockAndCreateOrder(
     cartItems: CartItem[],
     currency: Currency,
     shippingAddress: string,
     user: User,
+    attemptKey?: string,
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
       let itemsAmount = 0;
@@ -218,6 +288,7 @@ export class OrderService {
         shippingAddress,
         reservationExpiresAt,
         stockReleased: false,
+        checkoutAttemptKey: attemptKey ?? null,
         orderItems: cartItems.map((item) => {
           const listing = freshListings.get(item.listing.id);
           if (!listing) {
@@ -246,6 +317,37 @@ export class OrderService {
           item.quantity,
         );
       }
+
+      await this.auditService.record(
+        {
+          actorId: user.id,
+          actorRole: user.role ?? "user",
+          targetType: "order",
+          targetId: String(savedOrder.id),
+          action: "order.checkout_started",
+          reason: "Checkout initiated and stock reserved",
+          afterState: {
+            totalAmount: savedOrder.totalAmount,
+            status: savedOrder.status,
+            reservationExpiresAt: savedOrder.reservationExpiresAt,
+          },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.created",
+          aggregateType: "order",
+          aggregateId: String(savedOrder.id),
+          payload: {
+            buyerId: user.id,
+            totalAmount: savedOrder.totalAmount,
+            currency,
+          },
+        },
+        manager,
+      );
 
       return savedOrder;
     });
@@ -332,6 +434,142 @@ export class OrderService {
       locales[0]?.name;
 
     return listing.pokemonCard?.name ?? sealedName ?? "Produit inconnu";
+  }
+
+  /**
+   * Retrieves active pending checkout session for the authenticated buyer, if any.
+   *
+   * @param userId - Buyer user identifier.
+   * @returns Active pending checkout session details or null.
+   */
+  async findPendingCheckoutSession(
+    userId: number,
+  ): Promise<PendingCheckoutSessionDto | null> {
+    const pendingOrder = await this.orderRepository.findOne({
+      where: {
+        buyer: { id: userId },
+        status: OrderStatus.PENDING,
+        reservationExpiresAt: MoreThan(new Date()),
+      },
+      relations: ORDER_RELATIONS,
+      order: { createdAt: "DESC" },
+    });
+
+    if (!pendingOrder) {
+      return null;
+    }
+
+    const payment = await this.paymentTransactionRepository.findOne({
+      where: { order: { id: pendingOrder.id } },
+      order: { createdAt: "DESC" },
+    });
+
+    let clientSecret: string | null = null;
+    if (payment?.transactionId) {
+      try {
+        const intent = await this.stripeService.retrievePaymentIntent(
+          payment.transactionId,
+        );
+        clientSecret = intent.client_secret;
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve Stripe intent for pending order ${pendingOrder.id}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    return {
+      orderId: pendingOrder.id,
+      clientSecret,
+      amount: Number(pendingOrder.totalAmount),
+      shippingAmount: Number(pendingOrder.shippingAmount),
+      currency: pendingOrder.currency,
+      shippingAddress: pendingOrder.shippingAddress,
+      reservationExpiresAt: pendingOrder.reservationExpiresAt,
+      items: (pendingOrder.orderItems ?? []).map((item) => ({
+        id: item.id,
+        productName: item.productName,
+        productImage: item.productImage,
+        productCondition: item.productCondition,
+        productSetName: item.productSetName,
+        productKind: item.productKind,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+      })),
+    };
+  }
+
+  /**
+   * Cancels an in-progress pending order by the buyer, releasing stock reservation immediately.
+   *
+   * @param orderId - Order identifier.
+   * @param user - Authenticated user attempting cancellation.
+   * @returns Cancellation confirmation.
+   * @throws NotFoundException If the order does not exist.
+   * @throws ForbiddenException If the order does not belong to the user and user is not admin.
+   * @throws BadRequestException If the order is not in PENDING status.
+   */
+  async cancelPendingOrderByBuyer(
+    orderId: number,
+    user: User,
+  ): Promise<{ success: boolean; orderId: number }> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ORDER_RELATIONS,
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    const isOwner = order.buyer?.id === user.id;
+    const isAdmin =
+      user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous n'êtes pas autorisé à annuler cette commande",
+      );
+    }
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(
+        "Seule une commande en attente de paiement peut être annulée",
+      );
+    }
+
+    await this.dataSource.transaction(async (manager) => {
+      order.status = OrderStatus.CANCELLED;
+      order.reservationExpiresAt = null;
+      await this.releaseStock(order, manager);
+      await manager.save(Order, order);
+
+      await this.auditService.record(
+        {
+          actorId: user.id,
+          actorRole: user.role ?? "user",
+          targetType: "order",
+          targetId: String(order.id),
+          action: "order.cancelled",
+          reason: "Cancelled by buyer before payment",
+          beforeState: { status: OrderStatus.PENDING },
+          afterState: { status: OrderStatus.CANCELLED, stockReleased: true },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.cancelled",
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: { orderId: order.id, buyerId: user.id },
+        },
+        manager,
+      );
+    });
+
+    return { success: true, orderId: order.id };
   }
 
   async confirmOrderPayment(orderId: number, user: User): Promise<Order> {
@@ -431,6 +669,35 @@ export class OrderService {
       order.status = OrderStatus.PAID;
       order.reservationExpiresAt = null;
       await manager.save(order);
+
+      await this.auditService.record(
+        {
+          actorId: order.buyer?.id ?? null,
+          actorRole: "buyer",
+          targetType: "order",
+          targetId: String(order.id),
+          action: "order.paid",
+          reason: `Payment confirmed via PaymentIntent ${paymentIntentId}`,
+          beforeState: { status: OrderStatus.PENDING },
+          afterState: { status: OrderStatus.PAID },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: "order.paid",
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: {
+            orderId: order.id,
+            buyerId: order.buyer?.id ?? null,
+            amount: order.totalAmount,
+            currency: order.currency,
+          },
+        },
+        manager,
+      );
 
       return order;
     });
@@ -664,6 +931,30 @@ export class OrderService {
       }
 
       const saved = await manager.save(Order, order);
+
+      await this.auditService.record(
+        {
+          actorId: order.buyer?.id ?? null,
+          actorRole: "system",
+          targetType: "order",
+          targetId: String(order.id),
+          action: `order.status_${nextStatus.toLowerCase()}`,
+          reason: `Transitioned from ${previousStatus} to ${nextStatus}`,
+          beforeState: { status: previousStatus },
+          afterState: { status: nextStatus },
+        },
+        manager,
+      );
+
+      await this.outboxService.record(
+        {
+          eventType: `order.${nextStatus.toLowerCase()}`,
+          aggregateType: "order",
+          aggregateId: String(order.id),
+          payload: { orderId: order.id, previousStatus, nextStatus },
+        },
+        manager,
+      );
 
       if (
         previousStatus !== OrderStatus.SHIPPED &&
