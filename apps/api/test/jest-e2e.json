@@ -4,10 +4,12 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.ts$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^src/(.*)$": "<rootDir>/../src/$1"
+    "^src/(.*)$": "<rootDir>/../src/$1",
+    "^@repo/pokemon-dataset$": "<rootDir>/../../../packages/pokemon-dataset/src/index.ts",
+    "^@repo/scan-contract$": "<rootDir>/../../../packages/scan-contract/src/index.ts"
   },
   "setupFiles": ["<rootDir>/setup-e2e.ts"]
 }

@@ -60,9 +60,13 @@ type RetriableConfig = AxiosRequestConfig & { _retry?: boolean };
 
 const AUTH_ROUTES_SKIPPING_REFRESH = [
   "/auth/login",
+  "/auth/web/login",
   "/auth/register",
+  "/auth/web/register",
   "/auth/logout",
+  "/auth/web/logout",
   "/auth/refresh",
+  "/auth/web/refresh",
 ];
 
 let refreshPromise: Promise<void> | null = null;
@@ -85,7 +89,9 @@ const refreshOnce = (): Promise<void> => {
 secureApi.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as RetriableConfig | undefined;
+    const originalRequest = error.config as
+      | (RetriableConfig & { skipRefresh?: boolean })
+      | undefined;
 
     if (!originalRequest || error.response?.status !== 401) {
       return Promise.reject(error);
@@ -95,7 +101,7 @@ secureApi.interceptors.response.use(
     const isAuthRoute = AUTH_ROUTES_SKIPPING_REFRESH.some((route) =>
       url.includes(route),
     );
-    if (isAuthRoute || originalRequest._retry) {
+    if (isAuthRoute || originalRequest._retry || originalRequest.skipRefresh) {
       return Promise.reject(error);
     }
 

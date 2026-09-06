@@ -111,7 +111,26 @@ export default function Footer() {
             <h3 className="text-lg font-bold text-foreground mb-4">
               {t("legal")}
             </h3>
-            <p className="text-sm text-muted-foreground">{t("legalNotice")}</p>
+            <ul className="space-y-2 mb-3">
+              <li>
+                <Link href="/legal/terms" className={linkClass}>
+                  {t("terms")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/legal/privacy" className={linkClass}>
+                  {t("privacy")}
+                </Link>
+              </li>
+              <li>
+                <Link href="/legal/mentions" className={linkClass}>
+                  {t("mentions")}
+                </Link>
+              </li>
+            </ul>
+            <p className="text-xs text-muted-foreground/80 leading-relaxed">
+              {t("legalNotice")}
+            </p>
           </div>
         </div>
       </div>

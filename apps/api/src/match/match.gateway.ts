@@ -256,6 +256,7 @@ export class MatchGateway
         .emit("opponent_disconnected", { userId });
       this.startInactivityTimer(matchId, userId);
     }, MatchGateway.DISCONNECT_GRACE_MS);
+    timer.unref();
     this.graceTimers.set(key, timer);
   }
 
@@ -272,6 +273,7 @@ export class MatchGateway
         .emit("opponent_disconnected", { userId });
       this.startCasualInactivityTimer(sessionId, userId);
     }, MatchGateway.DISCONNECT_GRACE_MS);
+    timer.unref();
     this.graceTimers.set(key, timer);
   }
 
@@ -314,6 +316,7 @@ export class MatchGateway
         );
       }
     }, MatchGateway.INACTIVITY_TIMEOUT_MS);
+    timer.unref();
 
     this.inactivityTimers.set(matchId, timer);
   }
@@ -353,6 +356,7 @@ export class MatchGateway
         );
       }
     }, MatchGateway.INACTIVITY_TIMEOUT_MS);
+    timer.unref();
 
     this.casualInactivityTimers.set(key, timer);
   }

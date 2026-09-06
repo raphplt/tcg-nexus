@@ -13,7 +13,7 @@ on:
     workflow_call:
 
 jobs:
-    # Job pour le linting et la vérification des types
+    # Linting and TypeScript type checking
     lint-and-types:
         name: Lint & Type Check
         runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
             - name: Check types
               run: npm run check-types
 
-    # Job pour les tests et build du backend
+    # Backend unit, integration, and E2E tests + build
     backend:
         name: Backend Tests & Build
         runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
 
             - name: Run backend tests with coverage
               working-directory: apps/api
-              run: npm test -- --coverage --passWithNoTests
+              run: npm test -- --coverage --passWithNoTests --no-watchman
 
             - name: Upload coverage report
               if: always()
@@ -75,7 +75,7 @@ jobs:
               working-directory: apps/api
               run: npm run build
 
-    # Job pour les tests et build du frontend
+    # Frontend tests, type check, lint and build
     frontend:
         name: Frontend Tests & Build
         runs-on: ubuntu-latest
@@ -93,6 +93,10 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Run frontend tests
+              working-directory: apps/web
+              run: npm test
+
             - name: Check frontend types
               working-directory: apps/web
               run: npm run check-types
@@ -107,7 +111,7 @@ jobs:
                   NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL || 'http://localhost:3001' }}
               run: npm run build
 
-    # Job de build global avec Turbo (optionnel, pour vérifier que tout build ensemble)
+    # Monorepo full build validation
     build-all:
         name: Build All
         runs-on: ubuntu-latest

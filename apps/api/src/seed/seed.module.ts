@@ -42,6 +42,7 @@ import { TournamentModule } from "src/tournament/tournament.module";
 import { User } from "src/user/entities/user.entity";
 import { CatalogImportService } from "./catalog-import.service";
 import { DemoRefreshService } from "./demo-refresh.service";
+import { DemoService } from "./demo.service";
 import { SeedController } from "./seed.controller";
 import { SeedService } from "./seed.service";
 
@@ -99,10 +100,8 @@ const isSeedApiEnabled =
     TournamentModule,
   ],
   controllers: isSeedApiEnabled ? [SeedController] : [],
-  // DemoRefreshService is a provider even in production: it never destroys
-  // data, and the CLI script is the only way to realign the demo fixtures on a
-  // deployed instance, where the seed controller is not mounted.
-  providers: [SeedService, CatalogImportService, DemoRefreshService],
-  exports: [CatalogImportService, DemoRefreshService],
+  // NOTE: Both demo services remain available to CLI entry points in production.
+  providers: [SeedService, CatalogImportService, DemoRefreshService, DemoService],
+  exports: [CatalogImportService, DemoRefreshService, DemoService],
 })
 export class SeedModule {}

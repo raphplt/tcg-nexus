@@ -65,8 +65,9 @@ Le POC doit démontrer :
 ### Prérequis
 
 - Node.js ≥ 18
-- npm ou yarn
-- MySQL
+- npm
+- PostgreSQL 15+ avec extension vectorielle `pgvector`
+- Docker & Docker Compose
 - Turborepo
 
 ### Installation
@@ -77,10 +78,17 @@ cd tcg-nexus
 npm install
 ```
 
-### Seed de la base
+### Seed & Préparation de Démonstration
 
 ```bash
+# Seed initial du catalogue complet Pokémon (séries, sets, cartes & traductions)
 npm run seed
+
+# Préparation idempotente du jeu de données de soutenance (comptes démo, tournoi, articles)
+npm run demo:prepare
+
+# Réinitialisation rapide et ciblée du tournoi de démonstration (quarts de finale)
+npm run demo:reset-tournament
 ```
 
 ### En mode développement
@@ -91,18 +99,24 @@ turbo dev
 npm run dev
 ```
 
-### Build
+### Sondes de Santé & Observabilité (Healthchecks)
 
-```bash
-turbo build
-```
+- `GET /api/health/live` : Sonde de vivacité applicative (Liveness probe)
+- `GET /api/health/ready` : Sonde de disponibilité complète (PostgreSQL, pgvector, migrations, microservice Vision)
+- `GET /api/health/details` : Diagnostics système détaillés (mémoire, uptime, métadonnées)
+
+### Authentification & Fournisseurs Tiers
+
+- **Web (Next.js)** : Cookies de session sécurisés `HttpOnly`, `SameSite=Lax`, `Secure` (zéro token dans le corps JSON).
+- **Mobile (Expo)** : Authentification par jetons JWT persistés dans le `SecureStore`.
+- **Google OAuth 2.0 / OpenID Connect** : Flux Authorization Code avec PKCE SHA-256 (`S256`).
 
 ### Tests & Couverture de code
 
 Voir le guide complet des tests et du code coverage : [TESTING.md](TESTING.md).
 
 ```bash
-# Lancer tous les tests du monorepo (1 408 tests)
+# Lancer tous les tests du monorepo
 npm test
 
 # Lancer la couverture globale et afficher le récapitulatif
@@ -113,21 +127,17 @@ npm run test:cov
 
 La plateforme tourne en production sur une VM (ETNA) et est déployée via **Coolify** (self-hosted). Guide complet : [doc/deploiement-vm.md](doc/deploiement-vm.md).
 
-- **CI — GitHub Actions** ([ci.yml](.github/workflows/ci.yml)) : lint → type-check → tests (coverage + e2e tournois sur PostgreSQL éphémère) → build, à chaque push/PR
-- **CD — Coolify** : après merge sur `main`, déploiement en un clic (bouton *Deploy*) depuis le dashboard Coolify — rebuild et relance de la stack Docker (web, api, vision, postgres) sur la VM ; gestion des services, variables d'environnement, logs et redémarrages au même endroit
+- **CI — GitHub Actions** ([ci.yml](.github/workflows/ci.yml)) : lint → type-check → tests unitaires et intégration → build, à chaque push/PR
+- **CD — Coolify** : rebuild et relance automatique de la stack Docker (`web`, `api`, `vision`, `postgres/pgvector`)
 - **Exposition** : Cloudflare Tunnel → [tcg-nexus.org](https://tcg-nexus.org) (front, API, docs)
 
 Lancement local de la stack complète :
 
 ```bash
-docker-compose up --build
+docker-compose -f docker-compose.deploy.yml up --build
 ```
 
 ---
-
-## ⚙️ Microservice de fetch
-
-Accessible à : `http://localhost:3005/tcgdex`
 
 ## 📜 Licence
 

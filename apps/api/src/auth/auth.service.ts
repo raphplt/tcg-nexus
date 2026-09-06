@@ -260,7 +260,7 @@ export class AuthService {
     }
   }
 
-  private async generateTokens(user: User): Promise<AuthTokens> {
+  async generateTokens(user: User): Promise<AuthTokens> {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,

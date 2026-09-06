@@ -40,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const userData = await authService.getProfile();
+        const userData = await authService.getProfile({ skipRefresh: true });
         setUser(userData);
       } catch (error: any) {
         if (error?.response?.status !== 401) {

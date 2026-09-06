@@ -92,7 +92,10 @@
     "deckBuilder": "Deck builder",
     "myCollection": "My collection",
     "legal": "Legal",
-    "legalNotice": "Legal pages will be available soon.",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy & GDPR",
+    "mentions": "Legal Notices & Disclaimer",
+    "legalNotice": "TCG Nexus is an independent project and is not affiliated with Nintendo, Game Freak or The Pokémon Company.",
     "copyright": "© {year} TCG Nexus. All rights reserved.",
     "madeWithLove": "Made with love for the Pokémon TCG community"
   },
@@ -1765,6 +1768,11 @@
         "title": "Translations",
         "headline": "Interface & content",
         "description": "Interface keys and system content"
+      },
+      "system": {
+        "title": "System",
+        "headline": "Health & Diagnostics",
+        "description": "PostgreSQL, pgvector, vision & uptime"
       }
     },
     "tabs": {
@@ -1773,7 +1781,8 @@
       "tournaments": "Tournaments",
       "series": "Series",
       "sets": "Sets",
-      "cards": "Cards"
+      "cards": "Cards",
+      "system": "System Health"
     }
   },
   "AdminOrders": {
@@ -3019,5 +3028,39 @@
     "progress": "Round {current} of {total}",
     "pendingPairings": "Pairings computed once the live round ends",
     "remainingRounds": "{count} rounds left"
+  },
+  "Legal": {
+    "terms": {
+      "title": "Terms of Service",
+      "subtitle": "Last updated: August 28, 2026 — TCG Nexus Platform",
+      "section1Title": "1. Purpose and Scope",
+      "section1Content": "These Terms of Service govern access to and use of services provided by TCG Nexus, including the web application, mobile applications, and associated APIs. By accessing the Service or creating an account, you unreservedly agree to all provisions herein.",
+      "section2Title": "2. Registration and Account Security",
+      "section2Content": "Access to features (collection management, tournament participation, marketplace) requires creating a personal account or signing in via Google OAuth. Users agree to provide accurate information and maintain credential confidentiality.",
+      "section3Title": "3. Code of Conduct and Tournaments",
+      "section3Content": "Tournament participants agree to strictly adhere to official Pokémon TCG game rules, fair play, and accurate score reporting. Any fraudulent behavior or cheating will lead to immediate account suspension and tournament disqualification.",
+      "section4Title": "4. Marketplace and Transactions",
+      "section4Content": "The TCG Nexus marketplace connects buyers and sellers of collectible cards and sealed products. Sellers guarantee the authenticity and accurate condition of listed items. Payments are secured via Stripe."
+    },
+    "privacy": {
+      "title": "Privacy Policy & GDPR",
+      "subtitle": "Personal data protection in compliance with the General Data Protection Regulation (GDPR).",
+      "section1Title": "1. Data Collected",
+      "section1Content": "TCG Nexus only collects data strictly necessary for service operation: identity (first name, last name, email), secure credentials (hashed passwords, Google OAuth ID), collection data, and match history.",
+      "section2Title": "2. Purposes of Processing",
+      "section2Content": "Information is processed to ensure secure authentication, manage competitive tournaments and ELO ranking calculations, process marketplace orders, and provide AI-based card recognition.",
+      "section3Title": "3. Your Rights (Access, Rectification, Deletion)",
+      "section3Content": "In accordance with GDPR, you have the right to access, rectify, port, and delete your personal data. You may exercise your rights at any time by contacting privacy@tcg-nexus.com."
+    },
+    "mentions": {
+      "title": "Legal Notices & Copyright",
+      "subtitle": "Editorial information, hosting, and brand disclaimer.",
+      "section1Title": "1. Service Publisher",
+      "section1Content": "Project: TCG Nexus — Monorepo Platform & TCG Ecosystem (ETNA Class of 2026). Contact: contact@tcg-nexus.com.",
+      "section2Title": "2. Hosting Infrastructure",
+      "section2Content": "Containerized Docker infrastructure deployed on dedicated cloud servers, with PostgreSQL 15 database and pgvector extension.",
+      "section3Title": "3. Non-Affiliation Clause & Pokémon Disclaimer",
+      "section3Content": "TCG Nexus is an independent community and tech project. Pokémon and Pokémon character names are registered trademarks of Nintendo, Creatures Inc., and GAME FREAK inc. TCG Nexus is not affiliated with, sponsored by, or endorsed by Nintendo or The Pokémon Company."
+    }
   }
 }

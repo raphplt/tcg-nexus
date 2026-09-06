@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { createRegisterSchema, type RegisterFormValues } from "./utils";
 import { ArrowLeft, Home } from "lucide-react";
+import { OAuthSocialButtons } from "@/components/Auth/OAuthSocialButtons";
 
 const RegisterPage = () => {
   const t = useTranslations("Auth.register");
@@ -213,6 +214,11 @@ const RegisterPage = () => {
               >
                 {isLoading ? t("submitting") : t("submit")}
               </Button>
+
+              <OAuthSocialButtons
+                label="S'inscrire avec Google"
+                disabled={isLoading}
+              />
             </form>
           </Form>
         </CardContent>

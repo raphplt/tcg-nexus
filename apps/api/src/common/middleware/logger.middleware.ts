@@ -12,10 +12,11 @@ export class LoggerMiddleware implements NestMiddleware {
     res.on("finish", () => {
       const { statusCode } = res;
       const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+      const reqId = req.headers?.["x-request-id"] || (req as any)?.id || "-";
       const userId = (req.user as { id?: number } | undefined)?.id ?? null;
 
       this.logger.log(
-        `${method} ${originalUrl} ${statusCode} ${durationMs.toFixed(1)}ms userId=${userId ?? "anonymous"}`,
+        `[${reqId}] ${method} ${originalUrl} ${statusCode} ${durationMs.toFixed(1)}ms userId=${userId ?? "anonymous"}`,
       );
     });
 

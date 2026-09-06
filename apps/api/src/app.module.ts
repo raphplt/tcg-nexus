@@ -24,6 +24,7 @@ import { CardModule } from "./card/card.module";
 import { CatalogLocalizationInterceptor } from "./card/catalog-localization.interceptor";
 import { CatalogLocalizationModule } from "./translation/catalog-localization.module";
 import { CardStateModule } from "./card-state/card-state.module";
+import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 import { CsrfOriginMiddleware } from "./common/middleware/csrf-origin.middleware";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { CollectionModule } from "./collection/collection.module";
@@ -35,6 +36,7 @@ import { DeckFormatModule } from "./deck-format/deck-format.module";
 import { FaqModule } from "./faq/faq.module";
 import { TranslationModule } from "./translation/translation.module";
 import { FeedModule } from "./feed/feed.module";
+import { HealthModule } from "./health/health.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MatchModule } from "./match/match.module";
 import { MiniGameModule } from "./mini-game/mini-game.module";
@@ -140,6 +142,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
     ScanModule,
     MiniGameModule,
     CatalogLocalizationModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -168,6 +171,7 @@ import { UserFollowModule } from "./user-follow/user-follow.module";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorrelationIdMiddleware).forRoutes("*");
     consumer.apply(LoggerMiddleware).forRoutes("*");
     consumer.apply(CsrfOriginMiddleware).forRoutes("*");
   }

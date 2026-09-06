@@ -137,10 +137,11 @@ export class ExternalTournamentSyncService implements OnModuleInit {
   }
 
   onModuleInit() {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       this.syncExternalTournaments().catch((err) => {
         this.logger.error("Startup external tournament sync failed", err);
       });
     }, 5000);
+    timer.unref();
   }
 }

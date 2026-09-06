@@ -26,7 +26,7 @@ describe("verifyAccessToken", () => {
   it("rejects expired and tampered access tokens", async () => {
     const expired = await tokenWithExpiration("0s");
     const valid = await tokenWithExpiration("5m");
-    const tampered = `${valid.slice(0, -1)}${valid.endsWith("a") ? "b" : "a"}`;
+    const tampered = valid.replace(/\.[^.]+$/, ".invalidSignature123");
 
     await expect(verifyAccessToken(expired, secret)).resolves.toBe(false);
     await expect(verifyAccessToken(tampered, secret)).resolves.toBe(false);

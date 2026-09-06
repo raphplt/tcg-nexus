@@ -8,6 +8,7 @@ import { SealedProductService } from "src/sealed-product/sealed-product.service"
 import { TournamentType } from "src/tournament/entities/tournament.entity";
 import { SeedingMethod } from "src/tournament/services/seeding.service";
 import { DemoRefreshService } from "./demo-refresh.service";
+import { DemoService } from "./demo.service";
 import { SeedUserDto } from "./dto/seed-user.dto";
 import { SeedService } from "./seed.service";
 
@@ -21,6 +22,7 @@ export class SeedController {
     private readonly seedService: SeedService,
     private readonly sealedProductService: SealedProductService,
     private readonly demoRefreshService: DemoRefreshService,
+    private readonly demoService: DemoService,
   ) {}
 
   /** Importe séries, sets, cartes et traductions depuis le dataset local. */
@@ -54,6 +56,16 @@ export class SeedController {
       .seedFromJson()
       .catch((err) => ({ error: err.message }));
     return { users, tournaments, faqs, sealedReport };
+  }
+
+  @Post("demo/prepare")
+  async prepareDemo() {
+    return this.demoService.prepareDemo();
+  }
+
+  @Post("demo/reset-tournament")
+  async resetDemoTournament() {
+    return this.demoService.resetDemoTournament();
   }
 
   @Post("create-user")
