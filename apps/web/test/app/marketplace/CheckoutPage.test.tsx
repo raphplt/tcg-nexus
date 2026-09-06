@@ -43,7 +43,11 @@ const mockCart = {
           id: 10,
           price: 25,
           currency: "EUR",
-          pokemonCard: { name: "Pikachu", image: "/pika.png", set: { name: "Base" } },
+          pokemonCard: {
+            name: "Pikachu",
+            image: "/pika.png",
+            set: { name: "Base" },
+          },
         },
       },
     ],

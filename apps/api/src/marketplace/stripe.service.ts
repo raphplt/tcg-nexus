@@ -120,4 +120,31 @@ export class StripeService implements OnModuleInit {
       webhookSecret,
     );
   }
+
+  /**
+   * Issues a full or partial refund via Stripe.
+   *
+   * @param paymentIntentId - Stripe payment intent identifier.
+   * @param amountCents - Optional refund amount in cents. If omitted, Stripe issues a full refund.
+   * @param reason - Optional refund reason code.
+   * @param idempotencyKey - Stable idempotency key to prevent duplicate refunds upon retries.
+   * @returns The created Stripe refund object.
+   * @throws ServiceUnavailableException If Stripe is not configured.
+   */
+  async createRefund(
+    paymentIntentId: string,
+    amountCents?: number,
+    reason?: Stripe.RefundCreateParams.Reason,
+    idempotencyKey?: string,
+  ): Promise<Stripe.Refund> {
+    this.ensureInitialized();
+    return this.stripe!.refunds.create(
+      {
+        payment_intent: paymentIntentId,
+        amount: amountCents ? Math.round(amountCents) : undefined,
+        reason,
+      },
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
+  }
 }

@@ -75,10 +75,14 @@ describe("OrderController", () => {
       reservationExpiresAt: new Date(),
       items: [],
     };
-    (orderService.findPendingCheckoutSession as jest.Mock).mockResolvedValue(expected);
+    (orderService.findPendingCheckoutSession as jest.Mock).mockResolvedValue(
+      expected,
+    );
 
     const result = await controller.getPendingCheckout(mockUser);
-    expect(orderService.findPendingCheckoutSession).toHaveBeenCalledWith(mockUser.id);
+    expect(orderService.findPendingCheckoutSession).toHaveBeenCalledWith(
+      mockUser.id,
+    );
     expect(result).toEqual(expected);
   });
 
@@ -89,7 +93,10 @@ describe("OrderController", () => {
     });
 
     const result = await controller.cancelPendingOrder(10, mockUser);
-    expect(orderService.cancelPendingOrderByBuyer).toHaveBeenCalledWith(10, mockUser);
+    expect(orderService.cancelPendingOrderByBuyer).toHaveBeenCalledWith(
+      10,
+      mockUser,
+    );
     expect(result).toEqual({ success: true, orderId: 10 });
   });
 

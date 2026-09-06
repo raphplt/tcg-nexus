@@ -55,6 +55,36 @@ export interface OrderShippedPayload {
   orderId: number;
   trackingNumber?: string;
 }
+export interface OrderRefundCreatedPayload {
+  orderId: number;
+  refundOperationId: number;
+  buyerUserId: number;
+  amount: number;
+  currency?: string;
+  reason?: string;
+}
+export interface OrderReturnRequestedPayload {
+  orderId: number;
+  returnItemId: number;
+  orderItemId: number;
+  buyerUserId: number;
+  sellerUserId: number;
+  reason: string;
+}
+export interface OrderItemDeliveredPayload {
+  orderId: number;
+  orderItemId: number;
+  buyerUserId: number;
+  sellerUserId: number;
+}
+export interface OrderItemClaimCreatedPayload {
+  orderId: number;
+  orderItemId: number;
+  ticketId: number;
+  buyerUserId: number;
+  sellerUserId: number;
+  category: string;
+}
 
 @Injectable()
 export class NotificationListener {
@@ -267,5 +297,58 @@ export class NotificationListener {
       trackingNumber: payload.trackingNumber,
       link,
     });
+  }
+
+  @OnEvent("order.refund_created")
+  async onOrderRefundCreated(
+    payload: OrderRefundCreatedPayload,
+  ): Promise<void> {
+    const link = `/orders/${payload.orderId}`;
+    const amount = this.formatAmount(payload.amount, payload.currency);
+    await this.safeCreate(
+      payload.buyerUserId,
+      "order.refund_created",
+      { link, orderId: payload.orderId, amount: payload.amount },
+      { amount, orderId: payload.orderId },
+    );
+  }
+
+  @OnEvent("order.return_requested")
+  async onOrderReturnRequested(
+    payload: OrderReturnRequestedPayload,
+  ): Promise<void> {
+    const link = `/orders/${payload.orderId}`;
+    await this.safeCreate(
+      payload.sellerUserId,
+      "order.return_requested",
+      { link, orderId: payload.orderId, returnItemId: payload.returnItemId },
+      { orderId: payload.orderId },
+    );
+  }
+
+  @OnEvent("order.item_delivered")
+  async onOrderItemDelivered(
+    payload: OrderItemDeliveredPayload,
+  ): Promise<void> {
+    const link = `/orders/${payload.orderId}`;
+    await this.safeCreate(
+      payload.sellerUserId,
+      "order.item_delivered",
+      { link, orderId: payload.orderId, orderItemId: payload.orderItemId },
+      { orderId: payload.orderId },
+    );
+  }
+
+  @OnEvent("order.item_claim_created")
+  async onOrderItemClaimCreated(
+    payload: OrderItemClaimCreatedPayload,
+  ): Promise<void> {
+    const link = `/orders/${payload.orderId}`;
+    await this.safeCreate(
+      payload.sellerUserId,
+      "order.item_claim_created",
+      { link, orderId: payload.orderId, ticketId: payload.ticketId },
+      { orderId: payload.orderId },
+    );
   }
 }

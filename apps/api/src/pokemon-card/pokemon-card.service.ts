@@ -159,10 +159,7 @@ export class PokemonCardService {
     const cards = await this.pokemonCardRepository.find({
       where: { game: CardGame.Pokemon },
       relations: ["set", "pokemonDetails"],
-      take: Math.min(
-        Math.max(1, limit),
-        PokemonCardService.MAX_FIND_ALL_CARDS,
-      ),
+      take: Math.min(Math.max(1, limit), PokemonCardService.MAX_FIND_ALL_CARDS),
     });
     return cards.map((card) => this.toPokemonCardResponse(card));
   }

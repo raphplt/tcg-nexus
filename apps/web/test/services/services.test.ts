@@ -61,11 +61,9 @@ describe("API service clients", () => {
 
       const profile = await authService.getProfile({ skipRefresh: true });
       expect(profile).toEqual({ id: 1 });
-      expect(secureApi.post).toHaveBeenCalledWith(
-        "/auth/profile",
-        undefined,
-        { skipRefresh: true },
-      );
+      expect(secureApi.post).toHaveBeenCalledWith("/auth/profile", undefined, {
+        skipRefresh: true,
+      });
 
       await authService.refreshToken(true);
       expect(secureApi.post).toHaveBeenCalledWith("/auth/refresh", undefined, {

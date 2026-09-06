@@ -1,4 +1,4 @@
-import { Order } from "@/types/order";
+import { Order, OrderItem } from "@/types/order";
 import { authedFetch } from "@/utils/fetch";
 
 export interface StartCheckoutDto {
@@ -68,5 +68,79 @@ export const paymentService = {
 
   async getOrderById(id: number): Promise<Order> {
     return authedFetch<Order>("GET", `/marketplace/orders/${id}`);
+  },
+
+  async confirmItemReceipt(
+    orderId: number,
+    itemId: number,
+  ): Promise<OrderItem> {
+    return authedFetch<OrderItem>(
+      "POST",
+      `/marketplace/orders/${orderId}/items/${itemId}/confirm-receipt`,
+    );
+  },
+
+  async createItemClaim(
+    orderId: number,
+    itemId: number,
+    data: { claimCategory: string; subject: string; message: string },
+  ): Promise<{ message: string; ticket: any }> {
+    return authedFetch<{ message: string; ticket: any }>(
+      "POST",
+      `/marketplace/orders/${orderId}/items/${itemId}/claim`,
+      { data },
+    );
+  },
+
+  async getRefundBalance(orderId: number): Promise<{
+    totalAmount: number;
+    alreadyRefunded: number;
+    remainingAmount: number;
+  }> {
+    return authedFetch(
+      "GET",
+      `/marketplace/orders/${orderId}/refunds/remaining`,
+    );
+  },
+
+  async createRefund(
+    orderId: number,
+    data: {
+      reason: string;
+      lines?: Array<{ orderItemId: number; quantity?: number; amount: number }>;
+    },
+  ): Promise<any> {
+    return authedFetch("POST", `/marketplace/orders/${orderId}/refund`, {
+      data,
+    });
+  },
+
+  async createReturn(
+    orderId: number,
+    itemId: number,
+    data: {
+      quantity: number;
+      reason: string;
+    },
+  ): Promise<any> {
+    return authedFetch(
+      "POST",
+      `/marketplace/orders/${orderId}/items/${itemId}/returns`,
+      { data },
+    );
+  },
+
+  async setDisposition(
+    returnId: number | string,
+    data: {
+      disposition: string;
+      notes?: string;
+    },
+  ): Promise<any> {
+    return authedFetch(
+      "PATCH",
+      `/marketplace/returns/${returnId}/disposition`,
+      { data },
+    );
   },
 };

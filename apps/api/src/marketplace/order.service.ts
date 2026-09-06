@@ -8,7 +8,13 @@ import {
 } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, LessThan, MoreThan, Repository } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  LessThan,
+  MoreThan,
+  Repository,
+} from "typeorm";
 import { Currency } from "../common/enums/currency";
 import {
   FULFILLMENT_TRANSITIONS,
@@ -41,6 +47,11 @@ import {
   PaymentStatus,
   PaymentTransaction,
 } from "./entities/payment-transaction.entity";
+import { SupportTicketStatusType } from "../common/enums/supportTicketType";
+import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
+import { CreateClaimDto } from "./dto/create-claim.dto";
+import { RefundOperation } from "./entities/refund-operation.entity";
+import { RefundStatus } from "../common/enums/refund-status";
 import { round2 } from "./price.helper";
 import { SHIPPING_POLICY } from "./shipping-policy";
 import { StripeService } from "./stripe.service";
@@ -76,6 +87,10 @@ export class OrderService {
     private readonly orderItemRepository: Repository<OrderItem>,
     @InjectRepository(PaymentTransaction)
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
+    @InjectRepository(SupportTicket)
+    private readonly supportTicketRepository: Repository<SupportTicket>,
+    @InjectRepository(RefundOperation)
+    private readonly refundOperationRepository: Repository<RefundOperation>,
     private readonly stripeService: StripeService,
     private readonly userCartService: UserCartService,
     private readonly cardPopularityService: CardPopularityService,
@@ -849,7 +864,11 @@ export class OrderService {
     await this.cancelOrder(payment.order.id, "payment failed");
   }
 
-  async handlePaymentRefunded(paymentIntentId: string): Promise<void> {
+  async handlePaymentRefunded(
+    paymentIntentId: string,
+    latestRefundId?: string,
+    refundAmount?: number,
+  ): Promise<void> {
     const payment = await this.paymentTransactionRepository.findOne({
       where: { transactionId: paymentIntentId },
       relations: ["order"],
@@ -878,8 +897,8 @@ export class OrderService {
     options: { allowNoop?: boolean } = {},
   ): Promise<Order> {
     return this.dataSource.transaction(async (manager) => {
-      // verrou sans relations : Postgres refuse FOR UPDATE sur le côté nullable
-      // d'un LEFT JOIN, les relations sont rechargées une fois la ligne verrouillée
+      // Lock without relations: Postgres rejects FOR UPDATE on the nullable side
+      // of a LEFT JOIN; relations are reloaded once the row lock is acquired.
       const locked = await manager.findOne(Order, {
         where: { id: orderId },
         lock: { mode: "pessimistic_write" },
@@ -1224,6 +1243,163 @@ export class OrderService {
         `Could not sync order ${orderId} to ${target}: ${(err as Error).message}`,
       );
     }
+  }
+
+  /**
+   * Confirms delivery of an order item by the buyer (MKT-05).
+   *
+   * @param orderId - Order identifier.
+   * @param itemId - OrderItem identifier.
+   * @param buyer - Authenticated buyer confirming receipt.
+   * @returns Updated OrderItem.
+   * @throws NotFoundException If the item does not exist.
+   * @throws ForbiddenException If the caller is not the buyer or admin.
+   * @throws BadRequestException If the item is not currently shipped.
+   */
+  async confirmItemReceipt(
+    orderId: number,
+    itemId: number,
+    buyer: User,
+  ): Promise<OrderItem> {
+    const orderItem = await this.orderItemRepository.findOne({
+      where: { id: itemId, order: { id: orderId } },
+      relations: ["order", "order.buyer", "seller"],
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(
+        `Article ${itemId} introuvable pour la commande ${orderId}`,
+      );
+    }
+
+    const isBuyer = orderItem.order.buyer?.id === buyer.id;
+    const isAdmin =
+      buyer.role === UserRole.ADMIN || buyer.role === UserRole.MODERATOR;
+
+    if (!isBuyer && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous ne pouvez confirmer la réception que pour vos propres commandes",
+      );
+    }
+
+    if (
+      orderItem.fulfillmentStatus !== FulfillmentStatus.SHIPPED &&
+      orderItem.fulfillmentStatus !== FulfillmentStatus.DELIVERED
+    ) {
+      throw new BadRequestException(
+        "Seul un article expédié peut être confirmé comme reçu",
+      );
+    }
+
+    orderItem.fulfillmentStatus = FulfillmentStatus.DELIVERED;
+    orderItem.deliveredAt = orderItem.deliveredAt || new Date();
+    const saved = await this.orderItemRepository.save(orderItem);
+
+    await this.syncOrderStatusFromFulfillment(orderId);
+
+    await this.auditService.record({
+      actorId: buyer.id,
+      actorRole: buyer.role ?? "buyer",
+      targetType: "order_item",
+      targetId: String(orderItem.id),
+      action: "order.item_delivered",
+      reason: "Receipt confirmed by buyer",
+      afterState: { fulfillmentStatus: FulfillmentStatus.DELIVERED },
+    });
+
+    await this.outboxService.record({
+      eventType: "order.item_delivered",
+      aggregateType: "order_item",
+      aggregateId: String(orderItem.id),
+      payload: {
+        orderId,
+        orderItemId: orderItem.id,
+        sellerId: orderItem.seller?.id,
+        buyerId: buyer.id,
+        deliveredAt: orderItem.deliveredAt,
+      },
+    });
+
+    return saved;
+  }
+
+  /**
+   * Opens an item-specific claim and attaches a support ticket (MKT-04).
+   *
+   * @param orderId - Order identifier.
+   * @param itemId - OrderItem identifier.
+   * @param dto - Claim category and details.
+   * @param buyer - Authenticated buyer.
+   * @returns Created SupportTicket.
+   */
+  async createItemClaim(
+    orderId: number,
+    itemId: number,
+    dto: CreateClaimDto,
+    buyer: User,
+  ): Promise<SupportTicket> {
+    const orderItem = await this.orderItemRepository.findOne({
+      where: { id: itemId, order: { id: orderId } },
+      relations: ["order", "order.buyer", "seller"],
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(
+        `Article ${itemId} introuvable pour la commande ${orderId}`,
+      );
+    }
+
+    const isBuyer = orderItem.order.buyer?.id === buyer.id;
+    const isAdmin =
+      buyer.role === UserRole.ADMIN || buyer.role === UserRole.MODERATOR;
+
+    if (!isBuyer && !isAdmin) {
+      throw new ForbiddenException(
+        "Vous ne pouvez ouvrir une réclamation que pour vos propres commandes",
+      );
+    }
+
+    const ticket = this.supportTicketRepository.create({
+      user: buyer,
+      order: orderItem.order,
+      orderItem,
+      subject: dto.subject,
+      message: dto.message,
+      claimCategory: dto.claimCategory,
+      status: SupportTicketStatusType.opened,
+    });
+
+    const saved = await this.supportTicketRepository.save(ticket);
+
+    await this.auditService.record({
+      actorId: buyer.id,
+      actorRole: buyer.role ?? "buyer",
+      targetType: "support_ticket",
+      targetId: String(saved.id),
+      action: "claim.opened",
+      reason: dto.subject,
+      afterState: {
+        orderId,
+        orderItemId: itemId,
+        claimCategory: dto.claimCategory,
+      },
+    });
+
+    await this.outboxService.record({
+      eventType: "claim.opened",
+      aggregateType: "support_ticket",
+      aggregateId: String(saved.id),
+      payload: {
+        ticketId: saved.id,
+        orderId,
+        orderItemId: itemId,
+        claimCategory: dto.claimCategory,
+        buyerId: buyer.id,
+        sellerId: orderItem.seller?.id,
+      },
+    });
+
+    return saved;
   }
 
   async getSellerRevenue(sellerId: number): Promise<{

@@ -83,8 +83,12 @@ export class CheckoutAttemptAndAuditOutbox1786099000000
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_outbox_event_status";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_outbox_event_aggregate";`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_outbox_event_eventType";`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_outbox_event_aggregate";`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_outbox_event_eventType";`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "outbox_event";`);
     await queryRunner.query(`DROP TYPE IF EXISTS "outbox_event_status_enum";`);
 

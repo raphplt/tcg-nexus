@@ -10,11 +10,14 @@ describe("AuditService", () => {
   beforeEach(async () => {
     repo = {
       create: jest.fn((dto: unknown) => dto as AuditEvent),
-      save: jest.fn(async (event: unknown) => ({
-        id: "audit-uuid-1",
-        createdAt: new Date(),
-        ...(event as object),
-      } as AuditEvent)),
+      save: jest.fn(
+        async (event: unknown) =>
+          ({
+            id: "audit-uuid-1",
+            createdAt: new Date(),
+            ...(event as object),
+          }) as AuditEvent,
+      ),
       find: jest.fn(async () => []),
     };
 
@@ -58,11 +61,14 @@ describe("AuditService", () => {
   it("should record an audit event within a provided transaction manager", async () => {
     const managerRepo = {
       create: jest.fn((dto: unknown) => dto as AuditEvent),
-      save: jest.fn(async (event: unknown) => ({
-        id: "tx-audit-uuid",
-        createdAt: new Date(),
-        ...(event as object),
-      } as AuditEvent)),
+      save: jest.fn(
+        async (event: unknown) =>
+          ({
+            id: "tx-audit-uuid",
+            createdAt: new Date(),
+            ...(event as object),
+          }) as AuditEvent,
+      ),
     };
     const mockManager: any = {
       getRepository: jest.fn().mockReturnValue(managerRepo),

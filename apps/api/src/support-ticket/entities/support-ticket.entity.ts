@@ -2,6 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -10,6 +12,9 @@ import {
 import { User } from "../../user/entities/user.entity";
 import { SupportTicketStatusType } from "../../common/enums/supportTicketType";
 import { SupportMessage } from "../../support-message/entities/support-message.entity";
+import { Order } from "../../marketplace/entities/order.entity";
+import { OrderItem } from "../../marketplace/entities/order-item.entity";
+import { ClaimCategory } from "../../common/enums/claim-category";
 @Entity()
 export class SupportTicket {
   @PrimaryGeneratedColumn()
@@ -40,6 +45,23 @@ export class SupportTicket {
     (supportMessage) => supportMessage.supportTicket,
   )
   supportMessages?: SupportMessage[];
+
+  @Index()
+  @ManyToOne(() => Order, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "order_id" })
+  order?: Order | null;
+
+  @Index()
+  @ManyToOne(() => OrderItem, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "order_item_id" })
+  orderItem?: OrderItem | null;
+
+  @Column({
+    type: "enum",
+    enum: ClaimCategory,
+    nullable: true,
+  })
+  claimCategory?: ClaimCategory | null;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -276,17 +276,14 @@ app.get("/pokecardex/series", async (_req: Request, res: Response) => {
   }
 });
 
-app.get(
-  "/pokecardex/series/:id/sealed",
-  async (req, res) => {
-    try {
-      const items = await pokecardexService.scrapeSeriesItems(req.params.id);
-      res.json(items);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+app.get("/pokecardex/series/:id/sealed", async (req, res) => {
+  try {
+    const items = await pokecardexService.scrapeSeriesItems(req.params.id);
+    res.json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 pokecardexService.init().catch((err) => {
   console.warn(

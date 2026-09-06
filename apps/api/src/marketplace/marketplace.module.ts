@@ -4,6 +4,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { Player } from "src/player/entities/player.entity";
 import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
+import { SupportTicket } from "src/support-ticket/entities/support-ticket.entity";
 import { User } from "src/user/entities/user.entity";
 import { AuditModule } from "../audit/audit.module";
 import { OutboxModule } from "../outbox/outbox.module";
@@ -19,6 +20,9 @@ import {
   OrderItem,
   PaymentTransaction,
   PriceHistory,
+  RefundLine,
+  RefundOperation,
+  ReturnItem,
   SealedEvent,
 } from "./entities";
 import { MarketplaceController } from "./marketplace.controller";
@@ -26,6 +30,8 @@ import { MarketplaceService } from "./marketplace.service";
 import { OrderController } from "./order.controller";
 import { OrderService } from "./order.service";
 import { OrderReservationScheduler } from "./order-reservation.scheduler";
+import { RefundController } from "./refund.controller";
+import { RefundService } from "./refund.service";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
 import { StripeService } from "./stripe.service";
@@ -39,6 +45,9 @@ import { WebhookController } from "./webhook.controller";
       OrderItem,
       PaymentTransaction,
       PriceHistory,
+      RefundOperation,
+      RefundLine,
+      ReturnItem,
       CardEvent,
       CardPopularityMetrics,
       SealedEvent,
@@ -46,6 +55,7 @@ import { WebhookController } from "./webhook.controller";
       Card,
       SealedProduct,
       User,
+      SupportTicket,
     ]),
     ConfigModule,
     UserCartModule,
@@ -55,6 +65,7 @@ import { WebhookController } from "./webhook.controller";
   controllers: [
     MarketplaceController,
     OrderController,
+    RefundController,
     CardPopularityController,
     SealedEventController,
     WebhookController,
@@ -62,12 +73,18 @@ import { WebhookController } from "./webhook.controller";
   providers: [
     MarketplaceService,
     OrderService,
+    RefundService,
     CardPopularityService,
     CardPopularityScheduler,
     OrderReservationScheduler,
     SealedEventService,
     StripeService,
   ],
-  exports: [MarketplaceService, OrderService, SealedEventService],
+  exports: [
+    MarketplaceService,
+    OrderService,
+    RefundService,
+    SealedEventService,
+  ],
 })
 export class MarketplaceModule {}

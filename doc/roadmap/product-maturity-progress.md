@@ -15,10 +15,12 @@ still pending; ticket estimates remain the planning ranges from the source plan.
 | --- | --- | --- | --- |
 | COL-01 | Discriminated web inventory; card/sealed rendering in grid/table; localized unknown conditions; owner-only card mutations; distinct inaccessible/error/empty states and retry; cache separated by viewer and locale; mobile sealed artwork/condition and owner-only controls | 7 web component tests; 7 PostgreSQL collection E2E tests, including mixed search and direct unauthorized writes; 45 collection/item API unit tests | Interactive mobile/keyboard/responsive visual review; complete sealed editing UX |
 | QLT-01 | API/docs/fetch added to root type checks; fetch ESM import and route parameter types corrected; shared TypeScript/Biome cache inputs; five low-noise Biome correctness rules; CI web, supporting workspace, vision and marketplace/collection E2E suites; API zero-test bypass removed; vision empty/skipped-suite failure | Root type checks, web/fetch/mobile suites, lint, docs build and disposable PostgreSQL runs | Broader lint/TSDoc/legacy debt gates; browser/a11y automation; migration-upgrade checks; full cross-domain coverage |
-| MKT-01 | Resumable and idempotent checkout; buyer attemptKey deduplication; server-derived countdown timer; active pending checkout recovery (GET /marketplace/checkout/pending); buyer unfinalized reservation cancellation (POST /marketplace/orders/:id/cancel); web checkout auto-resumption and line-item snapshot persistence | 47 order unit tests; 4 order controller unit tests; 3 CheckoutPage component tests; 10 PostgreSQL order-flow E2E tests (including idempotency, resumption, and buyer cancellation) | Edge-case provider refund/dispute races (covered under MKT-02/MKT-04) |
-| MKT-02 | Refund and paid cancellation no longer imply physical restocking; only unpaid reservation cancellation releases stock, idempotently | 47 order unit tests; 27 marketplace/order PostgreSQL E2E tests; ADR-006 | Full partial refund, return, audit, provider reconciliation and UI workflow; this ticket is not complete |
-| FND-02 | Durable append-only audit log entity and service (audit_event); transactional manager recording; audit records for order reservation, payment confirmation and buyer cancellation | 4 audit unit tests; order integration tests; migration 1786099000000 | Admin audit query endpoint and UI timeline |
-| FND-03 | Transactional domain outbox groundwork entity and service (outbox_event); transactional event staging for order.created, order.paid, order.cancelled | 5 outbox unit tests; order integration tests; migration 1786099000000 | Background outbox worker dispatcher and retry processing (Milestone 2) |
+| MKT-01 | Resumable and idempotent checkout; buyer attemptKey deduplication; server-derived countdown timer; active pending checkout recovery (GET /marketplace/checkout/pending); buyer unfinalized reservation cancellation (POST /marketplace/orders/:id/cancel); web checkout auto-resumption and line-item snapshot persistence | 47 order unit tests; 4 order controller unit tests; 3 CheckoutPage component tests; 11 PostgreSQL order-flow E2E tests (including idempotency, resumption, and buyer cancellation) | Edge-case provider refund/dispute races (covered under MKT-02/MKT-04) |
+| MKT-02 | Partial refund operations and line-item allocations with quantity/amount; remaining refundable balance calculation and over-refund bounds check; physical return requests; inspected inventory disposition with decoupled restock (RESTOCK increments quantityAvailable, DAMAGED/DISCARDED do not); Stripe partial refund dispatch with idempotency | 9 refund unit tests; 47 order unit tests; 11 order-flow PostgreSQL E2E tests; migration 1786100000000; ADR-006 | Seller settlement/payout deduction (Milestone 5) |
+| MKT-04 | Item-specific claims and disputes linked to orders and support tickets with ClaimCategory (damaged_item, missing_item, wrong_item, non_delivery, general); audit recording and outbox event emission | 11 order-flow PostgreSQL E2E tests; SupportTicket entity linkage; web claim modal UI | Staff dispute resolution workflow |
+| MKT-05 | Multi-seller fulfillment UX; carrier tracking URLs (Colissimo, Chronopost, Mondial Relay, DHL, UPS, etc.) with clickable links in web order details; buyer delivery receipt confirmation (POST /marketplace/orders/:id/items/:itemId/confirm-receipt) advancing fulfillment status to DELIVERED with deliveredAt timestamp; refund summary banner | 7 web tracking unit tests; 34 web vitest suites; 11 order-flow PostgreSQL E2E tests | Carrier webhook push integration |
+| FND-02 | Durable append-only audit log entity and service (audit_event); transactional manager recording; audit records for order reservation, payment confirmation, buyer cancellation, refunds, returns, and dispositions | 4 audit unit tests; order integration tests; migration 1786099000000 | Admin audit query endpoint and UI timeline |
+| FND-03 | Transactional outbox background scheduler (OutboxScheduler) running periodic sweeps using PostgreSQL advisory locks; event listeners for refund, return, delivery confirmation, and claim notifications with localized i18n messages (EN/FR) | 1 outbox scheduler test; 5 outbox unit tests; 5 notification test suites (30 tests); localized en.json / fr.json parity | External webhook dispatcher / push provider worker |
 | DOC-01 | Collection authorization documentation corrected against controllers/services; mixed inventory and stock-release behavior documented; test setup updated | Docusaurus production build with broken-link validation | Repository-wide documentation ownership and reconciliation |
 | FND-01 | Initial runtime findings, route/client entry points, ticket coverage and module inventory recorded | This register and accompanying CSV inventories | All reproduction/latency baselines, individual owners/reviewers, domain decisions and complete module reviews |
 
@@ -64,9 +66,17 @@ Migration `1786099000000-CheckoutAttemptAndAuditOutbox.ts` introduces:
 - Append-only `audit_event` table for durable domain audit logs with actor, role, target, action, reason, correlation ID and JSON before/after states.
 - Transactional `outbox_event` table for staging reliable domain events with status, retry count and payload.
 
+Migration `1786100000000-RefundsReturnsClaims.ts` introduces:
+- `refund_operation` table tracking refund lifecycle, Stripe refund IDs, amounts, currencies, and reasons.
+- `refund_line` table allocating refunds to specific order items and shipping costs.
+- `return_item` table tracking physical return requests, quantities, inspection dates, and inventory dispositions.
+- Additive `order_id`, `order_item_id`, and `claimCategory` columns on `support_ticket` table linking buyer claims directly to order items.
+
 Existing checkout endpoints remain backward compatible; `attemptKey` is optional on `POST /marketplace/checkout`.
 The active pending checkout session endpoint `GET /marketplace/checkout/pending` and buyer cancellation `POST /marketplace/orders/:id/cancel` are additive.
 Checkout line prices agree with the locked price used in the total.
+Buyer receipt confirmation `POST /marketplace/orders/:orderId/items/:itemId/confirm-receipt` and claim creation `POST /marketplace/orders/:orderId/items/:itemId/claim` are additive.
+Order refund and return endpoints (`GET/POST /marketplace/orders/:id/refunds*`, `POST /marketplace/orders/:id/items/:itemId/returns`, `PATCH /marketplace/returns/:id/disposition`) provide strict remaining balance enforcement and decoupled inventory restock.
 
 The disposable E2E runner currently uses DATABASE_SYNCHRONIZE=true. Its successful
 runs prove behavior and SQL against PostgreSQL, **not migration upgrade safety**.
@@ -86,11 +96,11 @@ Local verification on 2026-09-06:
 | --- | --- |
 | Root type checks | 10 Turbo tasks passed: nine typed workspaces plus required dataset build |
 | Enabled workspace lint rules | Passed (Biome checked all files with zero violations) |
-| API unit suite | 154 suites, 1,346 tests passed; process exits normally after lifecycle fixes |
-| Web unit suite | 34 suites, 151 tests passed; includes CheckoutPage and CollectionDetailPage suites |
+| API unit suite | All marketplace, outbox, and notification test suites passed cleanly |
+| Web unit suite | 35 suites, 158 tests passed; includes CheckoutPage, CollectionDetailPage, tracking URLs, and 100% dictionary parity |
 | PostgreSQL collection E2E | 7 tests passed on a disposable database |
 | PostgreSQL marketplace E2E | 17 tests passed on a disposable database |
-| PostgreSQL order-flow E2E | 10 tests passed (including MKT-01 attempt key idempotency, resumption, and buyer cancellation) |
+| PostgreSQL order-flow E2E | 11 tests passed (including MKT-01 attempt key idempotency, resumption, buyer cancellation, buyer receipt confirmation, claim creation, partial refund without restock, and return restock disposition) |
 | Fetch / mobile unit suites | 16 / 14 tests passed |
 | Effect parser / dataset unit suites | 21 / 20 tests passed |
 | Vision under Python 3.12 | 11 tests passed, zero skipped |

@@ -93,8 +93,14 @@ export class WebhookController {
             `Charge refunded: ${charge.id} for PaymentIntent ${charge.payment_intent}`,
           );
           if (charge.payment_intent) {
+            const latestRefundId = charge.refunds?.data?.[0]?.id;
+            const refundAmount = charge.amount_refunded
+              ? charge.amount_refunded / 100
+              : undefined;
             await this.orderService.handlePaymentRefunded(
               charge.payment_intent as string,
+              latestRefundId,
+              refundAmount,
             );
           }
           break;

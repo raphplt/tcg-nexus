@@ -17,6 +17,8 @@ import {
 } from "./entities/payment-transaction.entity";
 import { AuditService } from "../audit/audit.service";
 import { OutboxService } from "../outbox/outbox.service";
+import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
+import { RefundOperation } from "./entities/refund-operation.entity";
 import { OrderService } from "./order.service";
 import { StripeService } from "./stripe.service";
 
@@ -106,6 +108,8 @@ describe("OrderService", () => {
           provide: getRepositoryToken(PaymentTransaction),
           useValue: paymentRepo,
         },
+        { provide: getRepositoryToken(SupportTicket), useValue: {} },
+        { provide: getRepositoryToken(RefundOperation), useValue: {} },
         { provide: getRepositoryToken(Listing), useValue: {} },
         { provide: StripeService, useValue: stripeService },
         { provide: UserCartService, useValue: userCartService },

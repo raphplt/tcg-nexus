@@ -7,10 +7,13 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Listing } from "./listing.entity";
 import { Order } from "./order.entity";
+import { RefundLine } from "./refund-line.entity";
+import { ReturnItem } from "./return-item.entity";
 
 @Entity()
 export class OrderItem {
@@ -96,4 +99,16 @@ export class OrderItem {
 
   @Column({ type: "timestamp", nullable: true })
   deliveredAt: Date | null;
+
+  @OneToMany(
+    () => RefundLine,
+    (line) => line.orderItem,
+  )
+  refundLines?: RefundLine[];
+
+  @OneToMany(
+    () => ReturnItem,
+    (ret) => ret.orderItem,
+  )
+  returnItems?: ReturnItem[];
 }

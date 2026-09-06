@@ -18,6 +18,7 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { AdminOrderQueryDto } from "./dto/admin-order-query.dto";
+import { CreateClaimDto } from "./dto/create-claim.dto";
 import { SellerSalesQueryDto } from "./dto/seller-sales-query.dto";
 import { StartCheckoutDto } from "./dto/start-checkout.dto";
 import { UpdateFulfillmentDto } from "./dto/update-fulfillment.dto";
@@ -90,6 +91,41 @@ export class OrderController {
     @CurrentUser() user: User,
   ) {
     return this.orderService.cancelPendingOrderByBuyer(id, user);
+  }
+
+  /**
+   * Confirms delivery of an order item by the buyer (MKT-05).
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("orders/:orderId/items/:itemId/confirm-receipt")
+  @ApiOperation({
+    summary: "Confirms delivery of an order item by the buyer",
+  })
+  confirmItemReceipt(
+    @Param("orderId", ParseIntPipe) orderId: number,
+    @Param("itemId", ParseIntPipe) itemId: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.orderService.confirmItemReceipt(orderId, itemId, user);
+  }
+
+  /**
+   * Opens an item-specific claim or dispute (MKT-04).
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post("orders/:orderId/items/:itemId/claim")
+  @ApiOperation({
+    summary: "Opens an item-specific claim or dispute",
+  })
+  createItemClaim(
+    @Param("orderId", ParseIntPipe) orderId: number,
+    @Param("itemId", ParseIntPipe) itemId: number,
+    @Body() dto: CreateClaimDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.orderService.createItemClaim(orderId, itemId, dto, user);
   }
 
   /**

@@ -13,6 +13,7 @@ import {
 import { Currency } from "../../common/enums/currency";
 import { OrderItem } from "./order-item.entity";
 import { PaymentTransaction } from "./payment-transaction.entity";
+import { RefundOperation } from "./refund-operation.entity";
 
 export enum OrderStatus {
   PENDING = "Pending",
@@ -93,4 +94,10 @@ export class Order {
     (payment) => payment.order,
   )
   payments: PaymentTransaction[];
+
+  @OneToMany(
+    () => RefundOperation,
+    (refund) => refund.order,
+  )
+  refundOperations?: RefundOperation[];
 }

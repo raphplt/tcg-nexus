@@ -9,6 +9,11 @@ jest.mock("stripe", () => {
       create: jest.fn().mockResolvedValue({ id: "pi" }),
       retrieve: jest.fn().mockResolvedValue({ id: "pi", status: "succeeded" }),
     },
+    refunds: {
+      create: jest
+        .fn()
+        .mockResolvedValue({ id: "re_123", status: "succeeded" }),
+    },
     webhooks: { constructEvent: jest.fn().mockReturnValue({ id: "evt" }) },
   }));
 });
@@ -71,5 +76,28 @@ describe("StripeService", () => {
       "whsec",
     );
     expect(result).toEqual({ id: "evt" });
+  });
+
+  it("should create refund via Stripe refunds API", async () => {
+    (configService.get as jest.Mock).mockReturnValueOnce("sk_test");
+    const service = new StripeService(configService);
+    const result = await service.createRefund(
+      "pi_123",
+      1500,
+      "requested_by_customer",
+      "idem_ref_1",
+    );
+    const stripeInstance = (Stripe as unknown as jest.Mock).mock.results.slice(
+      -1,
+    )[0].value;
+    expect(stripeInstance.refunds.create).toHaveBeenCalledWith(
+      {
+        payment_intent: "pi_123",
+        amount: 1500,
+        reason: "requested_by_customer",
+      },
+      { idempotencyKey: "idem_ref_1" },
+    );
+    expect(result).toEqual({ id: "re_123", status: "succeeded" });
   });
 });

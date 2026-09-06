@@ -101,7 +101,12 @@ const isSeedApiEnabled =
   ],
   controllers: isSeedApiEnabled ? [SeedController] : [],
   // NOTE: Both demo services remain available to CLI entry points in production.
-  providers: [SeedService, CatalogImportService, DemoRefreshService, DemoService],
+  providers: [
+    SeedService,
+    CatalogImportService,
+    DemoRefreshService,
+    DemoService,
+  ],
   exports: [CatalogImportService, DemoRefreshService, DemoService],
 })
 export class SeedModule {}

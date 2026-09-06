@@ -159,7 +159,9 @@ export class DemoRefreshService {
       where: { name: DEMO_OPEN_TOURNAMENT.name },
     });
     if (open) {
-      open.startDate = new Date(nowMs + DEMO_OPEN_TOURNAMENT.startsInDays * DAY_MS);
+      open.startDate = new Date(
+        nowMs + DEMO_OPEN_TOURNAMENT.startsInDays * DAY_MS,
+      );
       open.endDate = new Date(open.startDate.getTime() + DAY_MS);
       open.registrationDeadline = new Date(
         nowMs + DEMO_OPEN_TOURNAMENT.deadlineInDays * DAY_MS,
@@ -450,9 +452,7 @@ export class DemoRefreshService {
       relations: ["pokemonCard", "pokemonCard.set"],
     });
 
-    const strays = items.filter(
-      (item) => item.pokemonCard?.set?.id !== setId,
-    );
+    const strays = items.filter((item) => item.pokemonCard?.set?.id !== setId);
     if (strays.length > 0) {
       await this.collectionItemRepository.remove(strays);
     }
@@ -562,7 +562,11 @@ export class DemoRefreshService {
       2,
     );
 
-    if (pokemon.length === 0 || trainers.length === 0 || energies.length === 0) {
+    if (
+      pokemon.length === 0 ||
+      trainers.length === 0 ||
+      energies.length === 0
+    ) {
       return "catalogue lacks trainers or energies, deck left untouched";
     }
 

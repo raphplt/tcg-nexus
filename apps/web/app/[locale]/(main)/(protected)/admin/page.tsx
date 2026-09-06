@@ -1,6 +1,12 @@
 "use client";
 
-import { Activity, LanguagesIcon, ShoppingBag, Trophy, Users } from "lucide-react";
+import {
+  Activity,
+  LanguagesIcon,
+  ShoppingBag,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";

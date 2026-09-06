@@ -12,10 +12,13 @@ describe("OutboxService", () => {
   beforeEach(async () => {
     repo = {
       create: jest.fn((dto: unknown) => dto as OutboxEvent),
-      save: jest.fn(async (event: unknown) => ({
-        id: "outbox-uuid-1",
-        ...(event as object),
-      } as OutboxEvent)),
+      save: jest.fn(
+        async (event: unknown) =>
+          ({
+            id: "outbox-uuid-1",
+            ...(event as object),
+          }) as OutboxEvent,
+      ),
       find: jest.fn(async () => []),
     };
     eventEmitter = {

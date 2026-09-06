@@ -34,5 +34,21 @@
   "order.shipped": {
     "title": "Commande expédiée",
     "body": "Votre commande a été expédiée."
+  },
+  "order.refund_created": {
+    "title": "Remboursement traité",
+    "body": "Un remboursement de {amount} a été traité pour la commande #{orderId}."
+  },
+  "order.return_requested": {
+    "title": "Retour demandé",
+    "body": "Un retour a été demandé pour un article de la commande #{orderId}."
+  },
+  "order.item_delivered": {
+    "title": "Livraison confirmée",
+    "body": "La réception de l'article de la commande #{orderId} est confirmée."
+  },
+  "order.item_claim_created": {
+    "title": "Réclamation ouverte",
+    "body": "Une réclamation a été ouverte pour un article de la commande #{orderId}."
   }
 }
