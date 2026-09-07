@@ -1,3 +1,4 @@
+import { NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CatalogLocalizationService } from "src/card/catalog-localization.service";
@@ -69,6 +70,8 @@ describe("DeckInventoryService", () => {
   it("calculates missing deck copies accurately (INT-01 acceptance: 4 required, 2 available = 2 missing)", async () => {
     deckRepo.findOne.mockResolvedValue({
       id: 10,
+      user: mockUser,
+      isPublic: false,
       cards: [
         {
           card: card1,
@@ -123,5 +126,31 @@ describe("DeckInventoryService", () => {
     expect(cardReq.offers).toHaveLength(1);
     expect(cardReq.offers[0].price).toBe(5.5);
     expect(cardReq.offers[0].sellerName).toBe("Brock Gym");
+  });
+  it("rejects a private deck before querying personal inventory or marketplace offers", async () => {
+    deckRepo.findOne.mockResolvedValue({
+      id: 10,
+      isPublic: false,
+      user: { id: 2 },
+      cards: [],
+    });
+    await expect(
+      service.getDeckInventoryRequirements(10, mockUser),
+    ).rejects.toThrow(NotFoundException);
+    expect(itemRepo.find).not.toHaveBeenCalled();
+    expect(listingRepo.find).not.toHaveBeenCalled();
+    expect(localization.resolveLabels).not.toHaveBeenCalled();
+  });
+
+  it("does not expose private decks to anonymous service callers", async () => {
+    deckRepo.findOne.mockResolvedValue({
+      id: 10,
+      isPublic: false,
+      user: mockUser,
+      cards: [],
+    });
+    await expect(service.getDeckInventoryRequirements(10)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });

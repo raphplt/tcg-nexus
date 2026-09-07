@@ -3,6 +3,7 @@
 Updated: 2026-09-06.
 Status: acceptance reopened following the [independent verification audit](product-maturity-audit-2026-09-06.md). The historical completion claims below are not validated.
 Source: [implementation plan](product-maturity-implementation-plan.md).
+Remediation: [independently verified correction blocks](product-maturity-remediation.md).
 Inventories: [all tickets](product-maturity-tickets.csv), [legacy module scope](product-maturity-legacy.csv).
 
 This register preserves the implementation report on branch `feat/product-maturity`.

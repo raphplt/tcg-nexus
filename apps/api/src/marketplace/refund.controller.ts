@@ -32,8 +32,11 @@ export class RefundController {
    */
   @Get("orders/:id/refunds/remaining")
   @ApiOperation({ summary: "Calculates remaining refundable balance on order" })
-  getRemainingRefundable(@Param("id", ParseIntPipe) id: number) {
-    return this.refundService.calculateRemainingRefundable(id);
+  getRemainingRefundable(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.refundService.getAuthorizedRefundBalance(id, user);
   }
 
   /**
@@ -41,8 +44,11 @@ export class RefundController {
    */
   @Get("orders/:id/refunds")
   @ApiOperation({ summary: "Lists refund operations for an order" })
-  getOrderRefunds(@Param("id", ParseIntPipe) id: number) {
-    return this.refundService.findRefundsByOrder(id);
+  getOrderRefunds(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.refundService.findRefundsByOrder(id, user);
   }
 
   /**
@@ -63,8 +69,11 @@ export class RefundController {
    */
   @Get("orders/:id/returns")
   @ApiOperation({ summary: "Lists physical returns requested for an order" })
-  getOrderReturns(@Param("id", ParseIntPipe) id: number) {
-    return this.refundService.findReturnsByOrder(id);
+  getOrderReturns(
+    @Param("id", ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return this.refundService.findReturnsByOrder(id, user);
   }
 
   /**

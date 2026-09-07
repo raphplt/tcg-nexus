@@ -13,6 +13,7 @@ import {
   DeckInventoryRequirementsDto,
 } from "./dto/deck-inventory-requirements.dto";
 
+/** Compares visible decks with the requesting user's inventory and marketplace offers. */
 @Injectable()
 export class DeckInventoryService {
   constructor(
@@ -43,6 +44,7 @@ export class DeckInventoryService {
     const deck = await this.deckRepo.findOne({
       where: { id: deckId },
       relations: [
+        "user",
         "cards",
         "cards.card",
         "cards.card.translations",
@@ -50,7 +52,7 @@ export class DeckInventoryService {
       ],
     });
 
-    if (!deck) {
+    if (!deck || (!deck.isPublic && deck.user?.id !== user?.id)) {
       throw new NotFoundException(`Deck #${deckId} introuvable`);
     }
 
@@ -109,7 +111,7 @@ export class DeckInventoryService {
             status: ListingStatus.ACTIVE,
             quantityAvailable: MoreThan(0),
           },
-          relations: ["seller", "cardState"],
+          relations: ["seller"],
           order: { price: "ASC" },
           take: 5,
         });

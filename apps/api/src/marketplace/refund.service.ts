@@ -57,6 +57,92 @@ export class RefundService {
     private readonly dataSource: DataSource,
   ) {}
 
+  private isStaff(user: User): boolean {
+    return user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
+  }
+
+  private async authorizeOrderRead(
+    orderId: number,
+    user: User,
+  ): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ["buyer", "orderItems", "orderItems.seller"],
+    });
+    if (!order) throw new NotFoundException(`Order ${orderId} not found`);
+    if (
+      !this.isStaff(user) &&
+      order.buyer?.id !== user.id &&
+      !order.orderItems.some((item) => item.seller?.id === user.id)
+    ) {
+      throw new ForbiddenException("Order access denied");
+    }
+    return order;
+  }
+
+  /**
+   * Returns the buyer/staff order balance or only the requesting seller's line balance.
+   *
+   * @param orderId - Order identifier.
+   * @param user - Authenticated caller whose participation is verified before reading refunds.
+   * @throws ForbiddenException If the caller is unrelated to the order.
+   */
+  async getAuthorizedRefundBalance(
+    orderId: number,
+    user: User,
+  ): Promise<{
+    totalAmount: number;
+    alreadyRefunded: number;
+    remainingAmount: number;
+  }> {
+    const order = await this.authorizeOrderRead(orderId, user);
+    if (this.isStaff(user) || order.buyer.id === user.id)
+      return this.calculateRemainingRefundable(orderId);
+    const ownItems = order.orderItems.filter(
+      (item) => item.seller?.id === user.id,
+    );
+    const totalAmount =
+      Math.round(
+        ownItems.reduce(
+          (sum, item) =>
+            sum +
+            Number(item.unitPrice) * item.quantity +
+            Number(item.shippingCost),
+          0,
+        ) * 100,
+      ) / 100;
+    const refunds = await this.refundOperationRepository.find({
+      where: { order: { id: orderId }, status: RefundStatus.SUCCEEDED },
+      relations: [
+        "refundLines",
+        "refundLines.orderItem",
+        "refundLines.orderItem.seller",
+      ],
+    });
+    const alreadyRefunded =
+      Math.round(
+        refunds
+          .flatMap((refund) => refund.refundLines ?? [])
+          .filter((line) => line.orderItem.seller?.id === user.id)
+          .reduce(
+            (sum, line) =>
+              sum + Number(line.amount) + Number(line.shippingAmount),
+            0,
+          ) * 100,
+      ) / 100;
+    // Legacy order-wide refunds cannot safely be attributed to a seller's remaining allowance.
+    const hasUnallocatedRefund = refunds.some(
+      (refund) => !refund.refundLines?.length,
+    );
+    return {
+      totalAmount,
+      alreadyRefunded,
+      remainingAmount: hasUnallocatedRefund
+        ? 0
+        : Math.max(0, Math.round((totalAmount - alreadyRefunded) * 100) / 100),
+    };
+  }
+
   /**
    * Calculates the remaining refundable balance on an order.
    *
@@ -132,6 +218,24 @@ export class RefundService {
       throw new ForbiddenException(
         "Vous n'avez pas l'autorisation d'émettre un remboursement sur cette commande",
       );
+    }
+
+    if (!isAdmin && !dto.lines?.length) {
+      throw new BadRequestException(
+        "Sellers must specify the order lines to refund",
+      );
+    }
+    for (const line of dto.lines ?? []) {
+      const item = order.orderItems.find(
+        (item) => item.id === line.orderItemId,
+      );
+      if (!item)
+        throw new BadRequestException(
+          "Refund line does not belong to this order",
+        );
+      if (!isAdmin && item.seller?.id !== user.id) {
+        throw new ForbiddenException("Refund line belongs to another seller");
+      }
     }
 
     if (
@@ -282,13 +386,48 @@ export class RefundService {
    * Retrieves all refund operations for an order.
    *
    * @param orderId - Order identifier.
-   * @returns Array of refund operations with line item allocations.
+   * @param user - Authenticated buyer, participating seller, or staff member.
+   * @returns Refunds with only the seller's own lines when the caller is a seller.
    */
-  async findRefundsByOrder(orderId: number): Promise<RefundOperation[]> {
-    return this.refundOperationRepository.find({
+  async findRefundsByOrder(
+    orderId: number,
+    user: User,
+  ): Promise<RefundOperation[]> {
+    const order = await this.authorizeOrderRead(orderId, user);
+    const refunds = await this.refundOperationRepository.find({
       where: { order: { id: orderId } },
-      relations: ["refundLines", "refundLines.orderItem", "createdBy"],
+      relations: [
+        "refundLines",
+        "refundLines.orderItem",
+        "refundLines.orderItem.seller",
+        "createdBy",
+      ],
       order: { createdAt: "DESC" },
+    });
+    if (this.isStaff(user) || order.buyer.id === user.id) return refunds;
+    return refunds.flatMap((refund) => {
+      const ownLines = (refund.refundLines ?? []).filter(
+        (line) => line.orderItem.seller?.id === user.id,
+      );
+      if (!ownLines.length) return [];
+      const ownAmount =
+        Math.round(
+          ownLines.reduce(
+            (sum, line) =>
+              sum + Number(line.amount) + Number(line.shippingAmount),
+            0,
+          ) * 100,
+        ) / 100;
+      return [
+        {
+          ...refund,
+          refundLines: ownLines,
+          amount: ownAmount,
+          reason: null,
+          createdBy: null,
+          providerRefundId: null,
+        },
+      ];
     });
   }
 
@@ -446,7 +585,6 @@ export class RefundService {
 
       const saved = await manager.save(ReturnItem, returnItem);
 
-
       await this.auditService.record(
         {
           actorId: user.id,
@@ -483,11 +621,19 @@ export class RefundService {
    * Retrieves all returns for order items in a given order.
    *
    * @param orderId - Order identifier.
-   * @returns Array of return items.
+   * @param user - Authenticated buyer, participating seller, or staff member.
+   * @returns Returns scoped to the seller's items when applicable.
    */
-  async findReturnsByOrder(orderId: number): Promise<ReturnItem[]> {
+  async findReturnsByOrder(orderId: number, user: User): Promise<ReturnItem[]> {
+    const order = await this.authorizeOrderRead(orderId, user);
+    const sellerOnly = !this.isStaff(user) && order.buyer.id !== user.id;
     return this.returnItemRepository.find({
-      where: { orderItem: { order: { id: orderId } } },
+      where: {
+        orderItem: {
+          order: { id: orderId },
+          ...(sellerOnly ? { seller: { id: user.id } } : {}),
+        },
+      },
       relations: ["orderItem"],
       order: { createdAt: "DESC" },
     });

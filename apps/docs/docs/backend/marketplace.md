@@ -197,3 +197,9 @@ Les fonds arrivent sur le compte Stripe de la plateforme et **n'en repartent pas
 | `STRIPE_SECRET_KEY` | clé serveur. Absente, les paiements sont désactivés proprement (l'API le signale au démarrage et le checkout renvoie une erreur explicite) |
 | `STRIPE_WEBHOOK_SECRET` | vérification de signature du webhook |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | côté web, monte le formulaire Stripe Elements |
+
+## Refund and return authorization
+
+`GET /marketplace/orders/:id/refunds`, `GET /marketplace/orders/:id/refunds/remaining` and `GET /marketplace/orders/:id/returns` require an authenticated order participant or staff member. An unrelated account receives 403. Buyers and staff retain the complete order view; a seller receives only their own line amounts and returns. Shared refund reasons, provider references and initiating-user details are excluded from seller projections.
+
+`POST /marketplace/orders/:id/refund` requires a seller to provide explicit `lines` owned by that seller. Cross-seller lines return 403; missing or foreign order-item identities return 400 before the payment provider is called. Staff may still submit order-wide amounts. This authorization boundary does not by itself establish refund idempotency, cumulative amount safety or provider reconciliation.
