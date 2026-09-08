@@ -73,7 +73,7 @@ jobs:
 
             - name: Run marketplace, collection, settlement and migration E2E tests on ephemeral PostgreSQL
               working-directory: apps/api
-              run: npm run test:e2e:postgres -- test/collection.e2e-spec.ts test/marketplace.e2e-spec.ts test/order-flow.e2e-spec.ts test/settlement-and-journey.e2e-spec.ts test/migrations.e2e-spec.ts test/product-maturity-authorization.e2e-spec.ts test/product-maturity-refunds.e2e-spec.ts test/product-maturity-settlement.e2e-spec.ts test/product-maturity-inventory.e2e-spec.ts test/product-maturity-receipts.e2e-spec.ts
+              run: npm run test:e2e:postgres -- test/collection.e2e-spec.ts test/marketplace.e2e-spec.ts test/order-flow.e2e-spec.ts test/settlement-and-journey.e2e-spec.ts test/migrations.e2e-spec.ts test/product-maturity-authorization.e2e-spec.ts test/product-maturity-refunds.e2e-spec.ts test/product-maturity-settlement.e2e-spec.ts test/product-maturity-inventory.e2e-spec.ts test/product-maturity-receipts.e2e-spec.ts test/product-maturity-collection-bulk.e2e-spec.ts
 
             - name: Build backend
               working-directory: apps/api

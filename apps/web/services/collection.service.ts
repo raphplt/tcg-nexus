@@ -167,8 +167,8 @@ export const collectionService = {
     id: string,
     targetCollectionId: string,
     itemIds: number[],
-  ): Promise<{ movedCount: number }> {
-    return authedFetch<{ movedCount: number }>(
+  ): Promise<{ movedCount: number; operationId: string }> {
+    return authedFetch<{ movedCount: number; operationId: string }>(
       "POST",
       `/collection/${id}/items/bulk-move`,
       { data: { targetCollectionId, itemIds } },
@@ -178,8 +178,8 @@ export const collectionService = {
   async bulkDelete(
     id: string,
     itemIds: number[],
-  ): Promise<{ deletedCount: number }> {
-    return authedFetch<{ deletedCount: number }>(
+  ): Promise<{ deletedCount: number; operationId: string }> {
+    return authedFetch<{ deletedCount: number; operationId: string }>(
       "POST",
       `/collection/${id}/items/bulk-delete`,
       { data: { itemIds } },
@@ -189,8 +189,8 @@ export const collectionService = {
   async undoOperation(
     id: string,
     operationId: string,
-  ): Promise<{ restoredCount: number }> {
-    return authedFetch<{ restoredCount: number }>(
+  ): Promise<import("@/types/collection").UndoOperationResult> {
+    return authedFetch<import("@/types/collection").UndoOperationResult>(
       "POST",
       `/collection/${id}/items/undo-operation`,
       { data: { operationId } },

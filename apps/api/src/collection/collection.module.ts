@@ -13,6 +13,11 @@ import { CollectionCompletionService } from "./collection-completion.service";
 import { CollectionValuationService } from "./collection-valuation.service";
 import { CollectionController } from "./collection.controller";
 import { CollectionService } from "./collection.service";
+import { SealedProduct } from "src/sealed-product/entities/sealed-product.entity";
+import {
+  CollectionBulkOperation,
+  CollectionBulkOperationLine,
+} from "./entities/collection-bulk-operation.entity";
 import { Collection } from "./entities/collection.entity";
 
 @Module({
@@ -24,6 +29,9 @@ import { Collection } from "./entities/collection.entity";
       CardState,
       PokemonSet,
       Listing,
+      SealedProduct,
+      CollectionBulkOperation,
+      CollectionBulkOperationLine,
     ]),
     CardModule,
     CatalogLocalizationModule,

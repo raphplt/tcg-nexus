@@ -12,7 +12,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 2b | Seller ledger adjustments, payout state machine, Connect execution and settlement holds | Implemented; verification below |
 | 3a | Return stock and listing reservation ownership | Implemented; verification below |
 | 3b | Receipt import identity and cumulative received quantities | Implemented; verification below |
-| 3c | Lossless CSV round-trip and compensating bulk undo | Pending |
+| 3c | Lossless CSV round-trip and compensating bulk undo | Implemented; verification below |
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Pending |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Pending |
 | 6 | Tournament legality, score confirmation and downstream correction policy | Pending |
@@ -133,3 +133,24 @@ and the lossless CSV work of 3c.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-receipts.e2e-spec.ts` covers refusal before buyer confirmation, cross-collection accounting, splitting a purchase across collections, retried requests, concurrent imports of one line, a deleted collection item, staff filing on the buyer's behalf, and the migration's adoption of a pre-existing import. `delivery-receipt.service.spec.ts` was rewritten around the same contract (11 tests). Both are part of the marketplace CI job.
+
+
+## Block 3c — portable CSV and compensating undo
+
+This sub-block addresses A05 and closes block 3.
+
+- Every bulk change records a `collection_bulk_operation` with one line per affected item, holding the applied deltas and the values that preceded them. Undo compensates those deltas: an item that existed before the import keeps the quantity it had — the audited defect deleted it outright — an item the operation created is removed, a moved item returns to its previous collection, and a deleted item is rebuilt from its snapshot under a new identifier.
+- Copies reserved or sold since the operation are kept and reported in `conflicts`, as is any item whose quantity drifted from what the operation left. Undo is applied under a row lock per item and recorded once: repeating it answers from the stored outcome.
+- Import identity now covers the complete physical identity — product kind, card or sealed product, variant, language, printing and condition — so a different condition of the same card becomes its own stack instead of merging into an unrelated one. Sealed rows import as sealed items.
+- `replace` mode refuses a quantity below the copies a listing or sale already holds, reporting the row instead of denying committed stock.
+- Provenance is written only when an item is created, so a later import can no longer claim an earlier operation's items and make that operation replayable against them.
+- Import idempotency is durable: an operation row unique per collection stores its summary, and a replay answers from it instead of applying the rows again.
+- The CSV round-trips printing, sealed identity, acquisition cost, currency and date, photo URLs and sold quantities, and a proper parser keeps quoted commas, quotes and newlines intact in both directions. A `schemaVersion` column states which contract produced the file; columns are matched by name.
+- Web types and the collection page were corrected to the real import result shape, and the bulk endpoints now return the operation identifier their undo needs.
+
+Out of scope here and still open: the legacy inventory backfill of block 7, and
+the wider client integration and acceptance evidence of block 8.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-collection-bulk.e2e-spec.ts` covers undoing an import over pre-existing stock, removing only created items, replayed imports, provenance stability across operations, a full export/import round trip of quoted multi-line values, `replace` against reserved copies, conflicts from reserved copies, repeated undo, restoring deleted items from their snapshot, and the migration's adoption of legacy provenance. `collection-bulk.service.spec.ts` was rewritten around the same contract (29 tests). Both are part of the CI job.

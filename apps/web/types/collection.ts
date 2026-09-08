@@ -114,11 +114,21 @@ export interface CollectionValuation {
 }
 
 export interface ImportResult {
-  added: number;
-  updated: number;
-  failed: number;
   operationId: string;
-  errors: string[];
+  importedCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  errors: Array<{ row: number; reason: string }>;
+}
+
+/** Outcome of compensating a recorded bulk operation. */
+export interface UndoOperationResult {
+  operationId: string;
+  revertedCount: number;
+  removedCount: number;
+  /** Deleted items rebuilt from their snapshot, under new identifiers. */
+  restoredCount: number;
+  conflicts: string[];
 }
 
 export interface DeckInventoryRequirements {

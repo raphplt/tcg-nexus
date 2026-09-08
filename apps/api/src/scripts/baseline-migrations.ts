@@ -179,6 +179,12 @@ const PROBES: MigrationProbe[] = [
     probe: `SELECT 1 FROM information_schema.tables
             WHERE table_name = 'receipt_import'`,
   },
+  {
+    name: "CollectionBulkOperations1789100000000",
+    timestamp: 1789100000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'collection_bulk_operation'`,
+  },
 ];
 
 /**

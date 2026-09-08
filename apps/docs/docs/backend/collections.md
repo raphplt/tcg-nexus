@@ -59,3 +59,13 @@ Les collections inaccessibles et les collections vides ont des états distincts.
 
 Vérification : 2026-09-06, contrôleurs `collection` / `collection-item` et tests
 `CollectionService`, `CollectionItemService`, `CollectionDetailPage`.
+
+## Portable CSV and compensating bulk undo
+
+The export columns are the contract: an importer matches them by name, so a file can gain columns without breaking older readers, and `schemaVersion` states which contract produced it. A row carries everything a physical copy needs to round trip — product kind, card or sealed identity, variant, language, printing, condition, quantities, acquisition cost, currency and date, storage location, notes and photo URLs — and values containing commas, quotes or newlines are quoted and parsed back intact.
+
+An imported row updates an existing item only when its complete physical identity matches: product, variant, language, printing and condition. A second condition of the same card therefore becomes its own stack instead of merging into an unrelated one. In `replace` mode the requested quantity may not fall below the copies a listing or a sale already holds; such a row is reported as an error rather than silently denying committed stock. Acquisition data is written when the item is created and the provenance of the operation that created it is never rewritten by a later import.
+
+Every bulk change records a `collection_bulk_operation` with one line per affected item, holding the applied deltas and the values that preceded them. `POST /collection/:id/items/undo-operation` compensates those deltas: an item that existed before the import keeps the quantity it had, an item the operation created is removed, a moved item returns to its previous collection, and a deleted item is rebuilt from its snapshot under a new identifier. Copies reserved or sold since the operation are kept and reported in `conflicts`, as is any item whose quantity drifted from what the operation left. Repeating an import with the same `operationId` answers from the recorded summary, and repeating an undo answers from its recorded outcome.
+
+Migration `CollectionBulkOperations1789100000000` is additive. Imports performed before it have no recorded per-row effects, so they are adopted as already-undone operations: they cannot be compensated, and the register says so rather than deleting the items they touched.

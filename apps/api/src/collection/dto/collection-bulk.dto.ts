@@ -75,3 +75,30 @@ export class ImportResultDto {
   skippedCount: number;
   errors: Array<{ row: number; reason: string }>;
 }
+
+/**
+ * Outcome of compensating a recorded bulk operation (COL-04).
+ */
+export class UndoResultDto {
+  @ApiProperty({ description: "Operation that was compensated" })
+  operationId: string;
+
+  @ApiProperty({ description: "Item effects reversed" })
+  revertedCount: number;
+
+  @ApiProperty({
+    description: "Items removed because the operation had created them",
+  })
+  removedCount: number;
+
+  @ApiProperty({
+    description: "Deleted items rebuilt from their snapshot, under new ids",
+  })
+  restoredCount: number;
+
+  @ApiProperty({
+    description: "Effects that could not be reversed exactly",
+    type: [String],
+  })
+  conflicts: string[];
+}

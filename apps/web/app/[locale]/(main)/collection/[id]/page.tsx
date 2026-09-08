@@ -244,7 +244,10 @@ const CollectionDetailPage = () => {
       const text = await file.text();
       const res = await collectionService.importCsv(id, { csvContent: text });
       toast.success(
-        t("importSuccess", { added: res.added, updated: res.updated }),
+        t("importSuccess", {
+          added: res.importedCount,
+          updated: res.updatedCount,
+        }),
       );
       await refetchItems();
       await fetchCollection();
