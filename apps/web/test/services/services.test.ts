@@ -136,6 +136,126 @@ describe("API service clients", () => {
         "DELETE",
         "/collection/col-1/items/100",
       );
+
+      vi.mocked(fetcher).mockResolvedValue({ rate: 50 });
+      await collectionService.getCompletion("col-1", "strict");
+      expect(fetcher).toHaveBeenCalledWith("/collection/col-1/completion", {
+        params: { policy: "strict" },
+      });
+
+      vi.mocked(fetcher).mockResolvedValue({ total: 100 });
+      await collectionService.getValuation("col-1", "EUR");
+      expect(fetcher).toHaveBeenCalledWith("/collection/col-1/valuation", {
+        params: { currency: "EUR" },
+      });
+
+      vi.mocked(authedFetch).mockResolvedValue("id,quantity");
+      await collectionService.exportCsv("col-1");
+      expect(authedFetch).toHaveBeenCalledWith(
+        "GET",
+        "/collection/col-1/export/csv",
+        {
+          responseType: "text",
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ importedCount: 5 });
+      await collectionService.importCsv("col-1", {
+        csvContent: "col1,col2",
+        mode: "REPLACE",
+        operationId: "op-1",
+      });
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/import/csv",
+        {
+          data: {
+            csvContent: "col1,col2",
+            mode: "REPLACE",
+            operationId: "op-1",
+          },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ movedCount: 2 });
+      await collectionService.bulkMove("col-1", "target-col", [10, 20]);
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/items/bulk-move",
+        {
+          data: { targetCollectionId: "target-col", itemIds: [10, 20] },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ deletedCount: 3 });
+      await collectionService.bulkDelete("col-1", [1, 2, 3]);
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/items/bulk-delete",
+        {
+          data: { itemIds: [1, 2, 3] },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ restoredCount: 1 });
+      await collectionService.undoOperation("col-1", "op-1");
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/items/undo-operation",
+        {
+          data: { operationId: "op-1" },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ addedCount: 4 });
+      await collectionService.wishlistMissing("col-1");
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/wishlist-missing",
+      );
+
+      vi.mocked(fetcher).mockResolvedValue([]);
+      await collectionService.getMissingCardOffers("col-1", "card-1");
+      expect(fetcher).toHaveBeenCalledWith(
+        "/collection/col-1/cards/card-1/offers",
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ listingId: 99 });
+      await collectionService.listDuplicate("col-1", 10, {
+        price: 15,
+        currency: "EUR",
+        quantity: 1,
+      });
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection/col-1/items/10/list-duplicate",
+        {
+          data: { price: 15, currency: "EUR", quantity: 1 },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ id: 10, notes: "updated" });
+      await collectionService.updateCollectionItem(10, { notes: "updated" });
+      expect(authedFetch).toHaveBeenCalledWith("PATCH", "/collection-item/10", {
+        data: { notes: "updated" },
+      });
+
+      vi.mocked(authedFetch).mockResolvedValue({ original: {}, split: {} });
+      await collectionService.splitCollectionItem(10, 2);
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection-item/10/split",
+        {
+          data: { quantity: 2 },
+        },
+      );
+
+      vi.mocked(authedFetch).mockResolvedValue({ id: 20 });
+      await collectionService.mergeCollectionItems(10, 20);
+      expect(authedFetch).toHaveBeenCalledWith(
+        "POST",
+        "/collection-item/10/merge/20",
+      );
     });
   });
 
