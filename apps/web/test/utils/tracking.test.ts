@@ -41,6 +41,23 @@ describe("getCarrierTrackingUrl", () => {
     expect(url).toBe("https://www.ups.com/track?tracknum=1Z9999999999999999");
   });
 
+  it("resolves FedEx tracking url", () => {
+    const url = getCarrierTrackingUrl("FedEx", "123456789012");
+    expect(url).toBe("https://www.fedex.com/fedextrack/?trknbr=123456789012");
+  });
+
+  it("resolves GLS tracking url", () => {
+    const url = getCarrierTrackingUrl("GLS", "GLS123456");
+    expect(url).toBe("https://gls-group.eu/FR/fr/suivi-colis?match=GLS123456");
+  });
+
+  it("resolves DPD tracking url", () => {
+    const url = getCarrierTrackingUrl("DPD", "DPD987654");
+    expect(url).toBe(
+      "https://www.dpd.com/fr/fr/recevoir-des-colis/suivi-de-colis/?parcelNumber=DPD987654",
+    );
+  });
+
   it("returns null for unknown carrier", () => {
     expect(getCarrierTrackingUrl("UnknownCarrier", "12345")).toBeNull();
   });

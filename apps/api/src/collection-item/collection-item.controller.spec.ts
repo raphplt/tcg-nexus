@@ -18,6 +18,11 @@ describe("CollectionItemController", () => {
     addToWishlist: jest.fn(),
     addToFavorites: jest.fn(),
     addToCollection: jest.fn(),
+    addSealedToCollection: jest.fn(),
+    addSealedToWishlist: jest.fn(),
+    updateItem: jest.fn(),
+    splitItem: jest.fn(),
+    mergeItem: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -95,6 +100,94 @@ describe("CollectionItemController", () => {
     expect(mockCollectionItemService.addToCollection).toHaveBeenCalledWith(
       "col",
       "card3",
+      currentUser,
+    );
+  });
+
+  it("should add sealed product to collection", async () => {
+    mockCollectionItemService.addSealedToCollection.mockResolvedValue({
+      id: 4,
+    });
+
+    const dto = { sealedProductId: "sealed-1", sealedCondition: "MINT" as any };
+    await expect(
+      controller.addSealedToCollection("col-1", currentUser, dto),
+    ).resolves.toEqual({ id: 4 });
+
+    expect(
+      mockCollectionItemService.addSealedToCollection,
+    ).toHaveBeenCalledWith("col-1", "sealed-1", currentUser, "MINT");
+  });
+
+  it("should add sealed product to wishlist", async () => {
+    mockCollectionItemService.addSealedToWishlist.mockResolvedValue({ id: 5 });
+
+    const dto = { sealedProductId: "sealed-2" };
+    await expect(
+      controller.addSealedToWishlist(1, currentUser, dto),
+    ).resolves.toEqual({ id: 5 });
+
+    expect(mockCollectionItemService.assertSelf).toHaveBeenCalledWith(
+      1,
+      currentUser,
+    );
+    expect(mockCollectionItemService.addSealedToWishlist).toHaveBeenCalledWith(
+      1,
+      "sealed-2",
+    );
+  });
+
+  it("should update collection item", async () => {
+    mockCollectionItemService.updateItem.mockResolvedValue({
+      id: 10,
+      notes: "updated",
+    });
+
+    const dto = { notes: "updated" };
+    await expect(controller.updateItem(10, currentUser, dto)).resolves.toEqual({
+      id: 10,
+      notes: "updated",
+    });
+
+    expect(mockCollectionItemService.updateItem).toHaveBeenCalledWith(
+      10,
+      dto,
+      currentUser,
+    );
+  });
+
+  it("should split collection item", async () => {
+    mockCollectionItemService.splitItem.mockResolvedValue({
+      original: { id: 10 },
+      split: { id: 11 },
+    });
+
+    await expect(controller.splitItem(10, currentUser, 2)).resolves.toEqual({
+      original: { id: 10 },
+      split: { id: 11 },
+    });
+
+    expect(mockCollectionItemService.splitItem).toHaveBeenCalledWith(
+      10,
+      2,
+      currentUser,
+    );
+  });
+
+  it("should merge collection items", async () => {
+    mockCollectionItemService.mergeItem.mockResolvedValue({
+      id: 20,
+      quantity: 5,
+    });
+
+    await expect(controller.mergeItem(10, 20, currentUser)).resolves.toEqual({
+      id: 20,
+      quantity: 5,
+    });
+
+    expect(mockCollectionItemService.mergeItem).toHaveBeenCalledWith(
+      10,
+      20,
       currentUser,
     );
   });

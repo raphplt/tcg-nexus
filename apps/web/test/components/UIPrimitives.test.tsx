@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Progress } from "@/components/ui/progress";
 import {
   Popover,
@@ -17,6 +17,18 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectScrollDownButton,
+  SelectScrollUpButton,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 describe("UI Primitives", () => {
   describe("Progress", () => {
@@ -85,6 +97,79 @@ describe("UI Primitives", () => {
       expect(screen.getByText("Suggestions")).toBeInTheDocument();
       expect(screen.getByText("Profile")).toBeInTheDocument();
       expect(screen.getByText("⌘P")).toBeInTheDocument();
+    });
+  });
+
+  describe("Select", () => {
+    it("renders trigger with default and sm sizes", () => {
+      const { rerender } = render(
+        <Select>
+          <SelectTrigger size="default">
+            <SelectValue placeholder="Select an option" />
+          </SelectTrigger>
+        </Select>,
+      );
+
+      const trigger = screen.getByRole("combobox");
+      expect(trigger).toHaveAttribute("data-size", "default");
+      expect(screen.getByText("Select an option")).toBeInTheDocument();
+
+      rerender(
+        <Select>
+          <SelectTrigger size="sm">
+            <SelectValue placeholder="Small option" />
+          </SelectTrigger>
+        </Select>,
+      );
+      expect(trigger).toHaveAttribute("data-size", "sm");
+    });
+
+    it("renders select content, groups, labels, items and separators when open", () => {
+      render(
+        <Select open={true}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick one" />
+          </SelectTrigger>
+          <SelectContent className="custom-content">
+            <SelectGroup>
+              <SelectLabel className="custom-label">Fruits</SelectLabel>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana" disabled>
+                Banana
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator className="custom-separator" />
+            <SelectGroup>
+              <SelectLabel>Vegetables</SelectLabel>
+              <SelectItem value="carrot">Carrot</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>,
+      );
+
+      expect(screen.getByText("Fruits")).toBeInTheDocument();
+      expect(screen.getByText("Apple")).toBeInTheDocument();
+      expect(screen.getByText("Banana")).toBeInTheDocument();
+      expect(screen.getByText("Vegetables")).toBeInTheDocument();
+      expect(screen.getByText("Carrot")).toBeInTheDocument();
+    });
+
+    it("renders select items and supports value selection", () => {
+      const onValueChange = vi.fn();
+      render(
+        <Select open={true} onValueChange={onValueChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Pick one" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="opt1">Option 1</SelectItem>
+            <SelectItem value="opt2">Option 2</SelectItem>
+          </SelectContent>
+        </Select>,
+      );
+
+      expect(screen.getByText("Option 1")).toBeInTheDocument();
+      expect(screen.getByText("Option 2")).toBeInTheDocument();
     });
   });
 });

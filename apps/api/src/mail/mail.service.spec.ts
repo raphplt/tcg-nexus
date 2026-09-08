@@ -80,5 +80,21 @@ describe("MailService", () => {
         }),
       );
     });
+
+    it("should handle email send failure without throwing", async () => {
+      mockMailerService.sendMail.mockRejectedValueOnce(
+        new Error("SMTP offline"),
+      );
+      await expect(
+        service.sendTicketReply(
+          "test@tcg.org",
+          1,
+          "Question",
+          "Staff",
+          "Preview msg",
+          "en",
+        ),
+      ).resolves.toBeUndefined();
+    });
   });
 });
