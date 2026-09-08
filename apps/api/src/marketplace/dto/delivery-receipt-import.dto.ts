@@ -4,9 +4,9 @@ import {
   IsArray,
   IsBoolean,
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
+  Min,
   ValidateNested,
 } from "class-validator";
 
@@ -43,6 +43,23 @@ export class ReceiptImportItemDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Copies to receive from this line; defaults to the quantity not yet received",
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  quantity?: number;
+
+  @ApiPropertyOptional({
+    description:
+      "Idempotency key; a retry under the same key returns the existing receipt",
+  })
+  @IsOptional()
+  @IsString()
+  requestKey?: string;
 }
 
 /**
@@ -66,7 +83,8 @@ export class ReceiptImportRequestDto {
   items: ReceiptImportItemDto[];
 
   @ApiPropertyOptional({
-    description: "Allow duplicate import if item was already recorded",
+    description:
+      "Import a line that already has a receipt; the purchased quantity remains the ceiling",
     default: false,
   })
   @IsOptional()
@@ -115,12 +133,25 @@ export class ReceiptImportPreviewItemDto {
   deliveredAt?: Date | null;
 
   @ApiProperty({
-    description: "Whether this item was already recorded in collection",
+    description: "Whether this line already has at least one receipt",
   })
   alreadyImported: boolean;
 
   @ApiPropertyOptional()
   existingCollectionItemId?: number | null;
+
+  @ApiProperty({ description: "Copies of this line already received anywhere" })
+  importedQuantity: number;
+
+  @ApiProperty({
+    description: "Copies of this line still available to receive",
+  })
+  remainingQuantity: number;
+
+  @ApiPropertyOptional({
+    description: "Moment the buyer confirmed receiving this line",
+  })
+  receiptConfirmedAt?: Date | null;
 }
 
 /**

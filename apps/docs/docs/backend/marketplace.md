@@ -245,3 +245,13 @@ An inventory-backed listing stores the copies it holds in `inventoryReservedQuan
 Return dispositions are applied by difference and identified by a revision, so a corrected inspection is safe: `RESTOCK` returns the received copies to the listing that still offers them (or to the collection when it does not), a correction to `DAMAGED` or `DISCARDED` reverses that restock, and re-submitting the same disposition changes no stock at all. Both reads happen under the same lock as the write, so concurrent inspections cannot both restock. Money movement stays decoupled: a refund never restocks by itself.
 
 Migration `InventoryMovementsAndListingReservations1788900000000` is additive: it adopts each collection item's current quantities as one opening movement and records each inventory-backed listing's held copies from its offer plus its pending orders.
+
+## Delivery receipts
+
+Receiving a purchase into a collection is recorded in `receipt_import`, keyed by the order line rather than by the destination collection. The cumulative received quantity of a line therefore counts every collection it was filed into, and can never exceed the purchased quantity: importing the same delivered line into a second collection consumes the remaining copies instead of creating them again. Deleting the collection item that an import created leaves its receipt in place, so the purchase does not become receivable a second time.
+
+`POST /marketplace/orders/:id/receipt-import` accepts an optional `quantity` per line (defaulting to what remains) and an optional `requestKey`; the same key returns the existing receipt instead of importing twice, and each line is locked while its remaining quantity is checked and written, so concurrent imports cannot overshoot. `allowDuplicates` now only permits receiving a line that already has a receipt — the purchased quantity stays the ceiling. `GET /marketplace/orders/:id/receipt-preview` reports `importedQuantity`, `remainingQuantity` and `receiptConfirmedAt` per line.
+
+A seller marking a line delivered is a declaration; only the buyer's confirmation (`POST /marketplace/orders/:orderId/items/:itemId/confirm-receipt`, which stamps `receiptConfirmedAt`) makes its copies eligible for import. Staff may file a receipt during support work, and it is filed in the buyer's collection, never the staff member's.
+
+Migration `ReceiptImports1789000000000` is additive: it adopts existing collection items carrying marketplace provenance as receipts, capped at their line's purchased quantity, and stamps `receiptConfirmedAt` from the existing delivery date — a declaration and a confirmation cannot be told apart retroactively.

@@ -100,6 +100,15 @@ export class OrderItem {
   @Column({ type: "timestamp", nullable: true })
   deliveredAt: Date | null;
 
+  /**
+   * Moment the buyer confirmed physically receiving this line (MKT-05, INT-03).
+   *
+   * A seller marking a line delivered is a declaration, not a receipt: only a
+   * buyer confirmation makes the copies eligible for import into a collection.
+   */
+  @Column({ type: "timestamp", nullable: true })
+  receiptConfirmedAt: Date | null;
+
   /** Snapshot of listing real photo evidence at time of order creation (MKT-03). */
   @Column({ type: "jsonb", nullable: true })
   listingPhotoUrls?: string[] | null;

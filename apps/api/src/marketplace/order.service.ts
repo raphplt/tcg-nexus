@@ -1314,6 +1314,9 @@ export class OrderService {
 
     orderItem.fulfillmentStatus = FulfillmentStatus.DELIVERED;
     orderItem.deliveredAt = orderItem.deliveredAt || new Date();
+    // Distinct from a seller's delivery declaration: only this confirmation
+    // makes the copies eligible for a collection receipt (INT-03).
+    orderItem.receiptConfirmedAt = orderItem.receiptConfirmedAt || new Date();
     const saved = await this.orderItemRepository.save(orderItem);
 
     if (this.sellerSettlementService) {

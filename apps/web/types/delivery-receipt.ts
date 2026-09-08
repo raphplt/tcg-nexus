@@ -13,6 +13,12 @@ export interface ReceiptImportPreviewItem {
   deliveredAt: string | null;
   alreadyImported: boolean;
   existingCollectionItemId: number | null;
+  /** Copies of this line already received, in any collection. */
+  importedQuantity: number;
+  /** Copies of this line still available to receive. */
+  remainingQuantity: number;
+  /** Moment the buyer confirmed receiving this line. */
+  receiptConfirmedAt: string | null;
 }
 
 export interface ReceiptImportPreviewResponse {
@@ -27,6 +33,10 @@ export interface ReceiptImportItem {
   variant?: string;
   storageLocation?: string;
   notes?: string;
+  /** Copies to receive; defaults to the quantity not yet received. */
+  quantity?: number;
+  /** Idempotency key; a retry under the same key returns the existing receipt. */
+  requestKey?: string;
 }
 
 export interface ReceiptImportRequest {

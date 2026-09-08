@@ -247,13 +247,24 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
       .expect(200);
     expect(receiptPreviewAfter.body.items[0].alreadyImported).toBe(true);
 
-    // Duplicate import is rejected without allowDuplicates
+    // Repeating the identical request returns the receipt already recorded
+    const replay = await request(httpServer)
+      .post(`/marketplace/orders/${orderId}/import-to-collection`)
+      .set(authAs(buyer))
+      .send({
+        items: [{ orderItemId: orderItem.id, condition: "NM" }],
+        allowDuplicates: false,
+      })
+      .expect(200);
+    expect(replay.body.items[0].id).toBe(importRes.body.items[0].id);
+
+    // Receiving the same purchase again, anywhere, is refused
     await request(httpServer)
       .post(`/marketplace/orders/${orderId}/import-to-collection`)
       .set(authAs(buyer))
       .send({
-        items: [{ orderItemId: orderItem.id }],
-        allowDuplicates: false,
+        items: [{ orderItemId: orderItem.id, requestKey: "second-attempt" }],
+        allowDuplicates: true,
       })
       .expect(400);
 

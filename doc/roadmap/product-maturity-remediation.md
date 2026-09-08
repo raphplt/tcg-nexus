@@ -11,7 +11,7 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 2a | Refund reservations, provider idempotency and individual refund reconciliation | Implemented; verification below |
 | 2b | Seller ledger adjustments, payout state machine, Connect execution and settlement holds | Implemented; verification below |
 | 3a | Return stock and listing reservation ownership | Implemented; verification below |
-| 3b | Receipt import identity and cumulative received quantities | Pending |
+| 3b | Receipt import identity and cumulative received quantities | Implemented; verification below |
 | 3c | Lossless CSV round-trip and compensating bulk undo | Pending |
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Pending |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Pending |
@@ -112,3 +112,24 @@ backfill of block 7.
 ### Verification
 
 The PostgreSQL suite `apps/api/test/product-maturity-inventory.e2e-spec.ts` covers reservation on creation, refusal of an offer the collection cannot back, deactivation followed by deletion, reactivation with and without available copies, quantity edits, sale commitment and its replay, disposition toggling, concurrent dispositions on one return, administrator deletion, ledger reconciliation, and the migration's actual up/down DDL with its adoption entries. `inventory-ledger.service.spec.ts` adds 12 unit tests for the movement rules themselves. Both are part of the marketplace CI job.
+
+
+## Block 3b — receipt identity
+
+This sub-block addresses A06. Block 3 stays open until 3c (lossless CSV
+round-trip and compensating bulk undo).
+
+- Receiving a purchase is recorded in `receipt_import`, keyed by the order line and its buyer rather than by the destination collection. The cumulative received quantity counts every collection the line was filed into and can never exceed the purchased quantity, so importing the same delivered line into a second collection consumes the remaining copies instead of creating them again.
+- Deleting the collection item an import created leaves its receipt, so a deleted item does not make the purchase receivable again.
+- `POST /marketplace/orders/:id/receipt-import` accepts an optional per-line `quantity` (defaulting to the remaining copies) and an optional `requestKey`; the same key returns the existing receipt. Each line is locked while its remaining quantity is checked and written, and the collection item, the receipt and the audit record commit together, so concurrent imports of one purchase cannot overshoot it.
+- `allowDuplicates` no longer bypasses the purchased quantity: it only permits receiving a line that already has a receipt.
+- A seller marking a line delivered is a declaration; only the buyer's confirmation stamps `receiptConfirmedAt` and makes the copies eligible. Staff may still file a receipt during support work, and it is filed in the buyer's collection rather than their own.
+- The preview reports `importedQuantity`, `remainingQuantity` and `receiptConfirmedAt` per line, and the web receipt modal selects and labels lines from the remaining quantity instead of a boolean.
+- Additive migration `ReceiptImports1789000000000` adopts existing collection items carrying marketplace provenance as receipts, capped at their line's purchased quantity.
+
+Out of scope here and still open: partial-receipt reconciliation against returns,
+and the lossless CSV work of 3c.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-receipts.e2e-spec.ts` covers refusal before buyer confirmation, cross-collection accounting, splitting a purchase across collections, retried requests, concurrent imports of one line, a deleted collection item, staff filing on the buyer's behalf, and the migration's adoption of a pre-existing import. `delivery-receipt.service.spec.ts` was rewritten around the same contract (11 tests). Both are part of the marketplace CI job.

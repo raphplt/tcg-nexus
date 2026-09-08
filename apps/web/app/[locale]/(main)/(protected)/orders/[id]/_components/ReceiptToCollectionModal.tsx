@@ -84,13 +84,16 @@ export function ReceiptToCollectionModal({
           setSelectedCollectionId(userCollections[0].id);
         }
 
-        // Preselect all non-imported delivered items
-        const nonImported = (preview.items || [])
+        // Preselect the confirmed lines that still have copies to receive
+        const receivable = (preview.items || [])
           .filter(
-            (it) => it.fulfillmentStatus === "delivered" && !it.alreadyImported,
+            (it) =>
+              it.fulfillmentStatus === "delivered" &&
+              !!it.receiptConfirmedAt &&
+              it.remainingQuantity > 0,
           )
           .map((it) => it.orderItemId);
-        setSelectedItemIds(new Set(nonImported));
+        setSelectedItemIds(new Set(receivable));
       } catch (err: any) {
         setError(
           err.message || "Erreur lors du chargement des articles livrés.",
@@ -234,7 +237,7 @@ export function ReceiptToCollectionModal({
                       <div
                         key={item.orderItemId}
                         onClick={() => {
-                          if (isDelivered && !item.alreadyImported) {
+                          if (isDelivered && item.remainingQuantity > 0) {
                             toggleItem(item.orderItemId);
                           }
                         }}
@@ -242,7 +245,7 @@ export function ReceiptToCollectionModal({
                           isSelected
                             ? "bg-primary/5 border border-primary/20"
                             : "hover:bg-muted/50"
-                        } ${!isDelivered || item.alreadyImported ? "opacity-60 cursor-not-allowed" : ""}`}
+                        } ${!isDelivered || item.remainingQuantity <= 0 ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         <div className="relative h-12 w-10 shrink-0 bg-muted rounded overflow-hidden">
                           {item.productImage ? (
@@ -273,17 +276,23 @@ export function ReceiptToCollectionModal({
                               </Badge>
                             )}
                             <span>x{item.quantity}</span>
+                            {item.importedQuantity > 0 && (
+                              <span>
+                                {item.importedQuantity} reçu(s),{" "}
+                                {item.remainingQuantity} restant(s)
+                              </span>
+                            )}
                           </div>
                         </div>
 
                         <div>
-                          {item.alreadyImported ? (
+                          {item.remainingQuantity <= 0 ? (
                             <Badge
                               variant="secondary"
                               className="text-xs flex items-center gap-1"
                             >
                               <CheckCircle2 className="h-3 w-3 text-green-600" />
-                              Déjà importé
+                              Déjà reçu
                             </Badge>
                           ) : !isDelivered ? (
                             <Badge variant="outline" className="text-xs">
