@@ -17,6 +17,7 @@ import { CardState } from "src/card-state/entities/card-state.entity";
 import {
   CardEvent,
   CardPopularityMetrics,
+  InventoryMovement,
   Listing,
   Order,
   OrderItem,
@@ -34,6 +35,7 @@ import {
 } from "./entities";
 import { DeliveryReceiptController } from "./delivery-receipt.controller";
 import { DeliveryReceiptService } from "./delivery-receipt.service";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { MarketplaceController } from "./marketplace.controller";
 import { MarketplaceService } from "./marketplace.service";
 import { OrderController } from "./order.controller";
@@ -65,6 +67,7 @@ import { WebhookController } from "./webhook.controller";
       ReturnItem,
       CardEvent,
       CardPopularityMetrics,
+      InventoryMovement,
       SealedEvent,
       Player,
       Card,
@@ -98,6 +101,7 @@ import { WebhookController } from "./webhook.controller";
     SellerReviewController,
   ],
   providers: [
+    InventoryLedgerService,
     MarketplaceService,
     OrderService,
     RefundService,
@@ -112,6 +116,7 @@ import { WebhookController } from "./webhook.controller";
     SellerReviewService,
   ],
   exports: [
+    InventoryLedgerService,
     MarketplaceService,
     OrderService,
     RefundService,

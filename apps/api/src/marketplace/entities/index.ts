@@ -1,6 +1,7 @@
 export * from "../../common/enums/currency";
 export * from "./card-event.entity";
 export * from "./card-popularity-metrics.entity";
+export * from "./inventory-movement.entity";
 export * from "./listing.entity";
 export * from "./order.entity";
 export * from "./order-item.entity";

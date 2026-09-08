@@ -24,6 +24,7 @@ import { Card } from "../card/entities/card.entity";
 import { Currency } from "../common/enums/currency";
 import { Languages } from "../common/enums/languages";
 import { ListingStatus } from "../common/enums/listing-status";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { ProductKind } from "../common/enums/product-kind";
 import {
   normalizeSortOrder,
@@ -97,6 +98,7 @@ export class MarketplaceService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     private readonly dataSource: DataSource,
     private readonly orderService: OrderService,
+    private readonly inventoryLedger: InventoryLedgerService,
   ) {}
 
   private readonly logger = new Logger(MarketplaceService.name);
@@ -197,22 +199,6 @@ export class MarketplaceService {
     } = createListingDto;
 
     return this.dataSource.transaction(async (manager) => {
-      if (isInventoryBacked && inventoryItem) {
-        const lockedItem = await manager.findOne(CollectionItem, {
-          where: { id: inventoryItem.id },
-          lock: { mode: "pessimistic_write" },
-        });
-
-        const listQty = createListingDto.quantityAvailable ?? 1;
-        if (!lockedItem || lockedItem.quantityAvailable < listQty) {
-          throw new BadRequestException("Quantité disponible insuffisante");
-        }
-
-        lockedItem.quantityAvailable -= listQty;
-        lockedItem.quantityReserved += listQty;
-        await manager.save(CollectionItem, lockedItem);
-      }
-
       const listing = manager.create(Listing, {
         ...rest,
         productKind,
@@ -230,6 +216,20 @@ export class MarketplaceService {
       });
 
       const savedListing = await manager.save(Listing, listing);
+
+      // Reserving through the ledger keeps the listing's held copies explicit
+      // and refuses the creation when the collection cannot back the offer.
+      savedListing.inventoryItem = listing.inventoryItem ?? null;
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        savedListing,
+        { quantityAvailable: 0, status: ListingStatus.INACTIVE },
+        {
+          quantityAvailable: savedListing.quantityAvailable,
+          status: savedListing.status,
+        },
+        "created",
+      );
 
       const listingWithRelations = await manager.findOne(Listing, {
         where: { id: savedListing.id },
@@ -347,92 +347,103 @@ export class MarketplaceService {
     updateListingDto: UpdateListingDto,
     user: User,
   ): Promise<Listing> {
-    const listing = await this.listingRepository.findOne({
-      where: { id },
-      relations: ["seller", "inventoryItem"],
-    });
-    if (!listing) throw new NotFoundException("Annonce introuvable");
-    if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
-      this.logger.warn(
-        `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
-      );
-      throw new ForbiddenException("Vous ne pouvez pas modifier cette annonce");
-    }
-
-    // Release inventory reservation if listing is made inactive
-    if (
-      updateListingDto.status === ListingStatus.INACTIVE &&
-      listing.status !== ListingStatus.INACTIVE &&
-      listing.isInventoryBacked &&
-      listing.inventoryItem &&
-      listing.quantityAvailable > 0
-    ) {
-      const inv = await this.collectionItemRepository.findOne({
-        where: { id: listing.inventoryItem.id },
+    const saved = await this.dataSource.transaction(async (manager) => {
+      const locked = await manager.findOne(Listing, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
       });
-      if (inv) {
-        inv.quantityReserved = Math.max(
-          0,
-          inv.quantityReserved - listing.quantityAvailable,
+      if (!locked) throw new NotFoundException("Annonce introuvable");
+      const listing = await manager.findOneOrFail(Listing, {
+        where: { id },
+        relations: ["seller", "inventoryItem"],
+      });
+      if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+        this.logger.warn(
+          `Refus update listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
         );
-        inv.quantityAvailable += listing.quantityAvailable;
-        await this.collectionItemRepository.save(inv);
+        throw new ForbiddenException(
+          "Vous ne pouvez pas modifier cette annonce",
+        );
       }
-    }
 
-    const previousPrice = Number(listing.price);
-    const previousCurrency = listing.currency;
+      const previousOffer = {
+        quantityAvailable: listing.quantityAvailable,
+        status: listing.status,
+      };
+      const previousPrice = Number(listing.price);
+      const previousCurrency = listing.currency;
 
-    Object.assign(listing, updateListingDto);
-    const saved = await this.listingRepository.save(listing);
+      Object.assign(listing, updateListingDto);
 
-    const priceChanged =
-      Number(saved.price) !== previousPrice ||
-      saved.currency !== previousCurrency;
+      // One delta per transition: deactivation, reactivation and quantity edits
+      // reserve or release exactly the difference, never the whole offer twice.
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        listing,
+        previousOffer,
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+        },
+        `offer:${previousOffer.status}:${previousOffer.quantityAvailable}->${listing.status}:${listing.quantityAvailable}`,
+      );
 
-    if (priceChanged) {
-      const withRelations = await this.findOne(saved.id);
+      const persisted = await manager.save(Listing, listing);
+      return {
+        listing: persisted,
+        priceChanged:
+          Number(persisted.price) !== previousPrice ||
+          persisted.currency !== previousCurrency,
+      };
+    });
+
+    if (saved.priceChanged) {
+      const withRelations = await this.findOne(saved.listing.id);
       await this.recordPriceHistory(withRelations);
     }
 
-    return saved;
+    return saved.listing;
   }
 
   async delete(id: number, user: User): Promise<void> {
-    const listing = await this.listingRepository.findOne({
-      where: { id },
-      relations: ["seller", "inventoryItem"],
-    });
-    if (!listing) throw new NotFoundException("Annonce introuvable");
-    if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
-      this.logger.warn(
-        `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
-      );
-      throw new ForbiddenException(
-        "Vous ne pouvez pas supprimer cette annonce",
-      );
-    }
-
-    // Release inventory reservation if inventory-backed
-    if (
-      listing.isInventoryBacked &&
-      listing.inventoryItem &&
-      listing.quantityAvailable > 0
-    ) {
-      const inv = await this.collectionItemRepository.findOne({
-        where: { id: listing.inventoryItem.id },
+    await this.dataSource.transaction(async (manager) => {
+      const locked = await manager.findOne(Listing, {
+        where: { id },
+        lock: { mode: "pessimistic_write" },
       });
-      if (inv) {
-        inv.quantityReserved = Math.max(
-          0,
-          inv.quantityReserved - listing.quantityAvailable,
+      if (!locked) throw new NotFoundException("Annonce introuvable");
+      const listing = await manager.findOneOrFail(Listing, {
+        where: { id },
+        relations: ["seller", "inventoryItem"],
+      });
+      if (listing.seller.id !== user.id && user.role !== UserRole.ADMIN) {
+        this.logger.warn(
+          `Refus delete listing: user=${user.id} role=${user.role} targetListing=${id} seller=${listing.seller.id}`,
         );
-        inv.quantityAvailable += listing.quantityAvailable;
-        await this.collectionItemRepository.save(inv);
+        throw new ForbiddenException(
+          "Vous ne pouvez pas supprimer cette annonce",
+        );
       }
-    }
 
-    await this.listingRepository.softRemove(listing);
+      // An already inactive listing has released its offer: deleting it here
+      // computes a zero delta instead of returning the same copies again.
+      await this.inventoryLedger.syncListingReservation(
+        manager,
+        listing,
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+        },
+        {
+          quantityAvailable: listing.quantityAvailable,
+          status: listing.status,
+          deleted: true,
+        },
+        "deleted",
+      );
+
+      await manager.softRemove(Listing, listing);
+    });
   }
 
   async findBySellerId(

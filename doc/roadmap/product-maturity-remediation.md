@@ -10,7 +10,9 @@ Corrections are delivered as independently tested commits. No block closes an en
 | 1 | Refund/return participant authorization, seller line visibility, private deck requirements and valid offer query | Verified; independent commit |
 | 2a | Refund reservations, provider idempotency and individual refund reconciliation | Implemented; verification below |
 | 2b | Seller ledger adjustments, payout state machine, Connect execution and settlement holds | Implemented; verification below |
-| 3 | Return stock, listing reservations, receipt deduplication and compensating CSV undo | Pending |
+| 3a | Return stock and listing reservation ownership | Implemented; verification below |
+| 3b | Receipt import identity and cumulative received quantities | Pending |
+| 3c | Lossless CSV round-trip and compensating bulk undo | Pending |
 | 4 | Checkout recovery, cancellation/payment races and safe operational expiration | Pending |
 | 5 | Durable event contracts, consumer deduplication and notification failure recovery | Pending |
 | 6 | Tournament legality, score confirmation and downstream correction policy | Pending |
@@ -89,3 +91,24 @@ Verified on 2026-09-08:
 - API unit suites: 183 suites, 1,606 tests passed (15 rewritten seller settlement tests covering the ledger, the state machine and reconciliation).
 - PostgreSQL settlement suite: 14/14 tests passed on a disposable database (`tcg-settle-2b`, port 55461).
 - PostgreSQL regression: settlement-and-journey, order-flow, refunds, authorization and marketplace suites rerun on a disposable database.
+
+
+## Block 3a — physical inventory conservation
+
+This sub-block addresses A04 and A09. It does not close block 3: receipt
+deduplication (A06) and the compensating CSV undo (A05) remain in 3b and 3c.
+
+- Every change to a collection item's available, reserved or sold copies is an entry in `inventory_movement`, applied under a `pessimistic_write` lock on that item and keyed by the transition that caused it. Deltas sum to zero and no component may go negative, so a movement redistributes copies instead of inventing them.
+- The first movement of an item adopts the quantities it already carried; the migration does the same for existing items. `reconcileItem` can therefore prove stored quantities equal the sum of their movements, and reports an item whose quantities were written outside the ledger.
+- An inventory-backed listing stores the copies it holds in `inventoryReservedQuantity` (its offer plus copies committed to pending orders). Creation, deactivation, reactivation, quantity edits and deletion reserve or release exactly the difference between the previous and next offer, each identified by its own reservation revision. Deleting an already inactive listing now moves nothing — the audited double release — and reactivation reacquires the copies or fails with 400 when the collection can no longer back them.
+- Listing update and deletion run inside a transaction that locks the listing row before reading the state it transitions from; the previous code read it outside any transaction.
+- Payment converts reserved copies to sold once per order line, so a replayed payment confirmation cannot sell a copy twice and a later deletion cannot release copies the buyer owns.
+- Return dispositions apply the difference between the previous and the new physical effect under the same lock that reads it, identified by a disposition revision. `restock -> damaged -> restock` no longer multiplies stock (the audited 1 to 3), re-submitting the same disposition changes nothing, and a correction away from `RESTOCK` explicitly reverses the copies it had returned. A restocked copy is re-held by its listing rather than being freely available in the collection and offered through two paths.
+
+Out of scope here and still open: receipt import identity (A06), CSV/bulk
+compensating undo and lossless round-trip (A05), and the legacy inventory
+backfill of block 7.
+
+### Verification
+
+The PostgreSQL suite `apps/api/test/product-maturity-inventory.e2e-spec.ts` covers reservation on creation, refusal of an offer the collection cannot back, deactivation followed by deletion, reactivation with and without available copies, quantity edits, sale commitment and its replay, disposition toggling, concurrent dispositions on one return, administrator deletion, ledger reconciliation, and the migration's actual up/down DDL with its adoption entries. `inventory-ledger.service.spec.ts` adds 12 unit tests for the movement rules themselves. Both are part of the marketplace CI job.

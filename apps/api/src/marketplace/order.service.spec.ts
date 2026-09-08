@@ -20,6 +20,7 @@ import { OutboxService } from "../outbox/outbox.service";
 import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { OrderService } from "./order.service";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
@@ -106,6 +107,16 @@ describe("OrderService", () => {
         {
           provide: RefundFinanceService,
           useValue: { reconcilePaymentRefunds: jest.fn() },
+        },
+        {
+          provide: InventoryLedgerService,
+          useValue: {
+            syncListingReservation: jest.fn().mockResolvedValue(0),
+            commitSale: jest.fn().mockResolvedValue(undefined),
+            restockReturn: jest.fn().mockResolvedValue(true),
+            reverseRestock: jest.fn().mockResolvedValue(true),
+            applyMovement: jest.fn().mockResolvedValue(null),
+          },
         },
         { provide: getRepositoryToken(Order), useValue: orderRepo },
         { provide: getRepositoryToken(OrderItem), useValue: orderItemRepo },

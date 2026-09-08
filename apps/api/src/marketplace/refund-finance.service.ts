@@ -354,7 +354,8 @@ export class RefundFinanceService {
       amounts.set(sellerId, {
         goods: (moneyCents(current.goods) + moneyCents(line.amount)) / 100,
         shipping:
-          (moneyCents(current.shipping) + moneyCents(line.shippingAmount)) / 100,
+          (moneyCents(current.shipping) + moneyCents(line.shippingAmount)) /
+          100,
       });
     }
     return amounts;

@@ -565,7 +565,8 @@ export class SellerSettlementService {
         requestKey,
         pending:
           bucket === SellerAllocationStatus.PENDING_DELIVERY ? -debitCents : 0,
-        available: bucket === SellerAllocationStatus.AVAILABLE ? -debitCents : 0,
+        available:
+          bucket === SellerAllocationStatus.AVAILABLE ? -debitCents : 0,
         onHold:
           bucket === SellerAllocationStatus.DISPUTED_HOLD ? -debitCents : 0,
         allocation,
@@ -598,12 +599,11 @@ export class SellerSettlementService {
         where: { id: adjustment.allocation.id },
       });
       if (allocation) {
-        const restoredCents =
-          -(
-            adjustment.deltaPendingCents +
-            adjustment.deltaAvailableCents +
-            adjustment.deltaOnHoldCents
-          );
+        const restoredCents = -(
+          adjustment.deltaPendingCents +
+          adjustment.deltaAvailableCents +
+          adjustment.deltaOnHoldCents
+        );
         allocation.netAmount =
           (moneyCents(allocation.netAmount) + restoredCents) / 100;
         if (allocation.status === SellerAllocationStatus.CANCELLED) {
@@ -890,10 +890,7 @@ export class SellerSettlementService {
             String(payout.id),
           );
       if (!transfer) {
-        if (
-          Date.now() - payout.providerAttemptedAt!.getTime() >
-          23 * 3600000
-        ) {
+        if (Date.now() - payout.providerAttemptedAt!.getTime() > 23 * 3600000) {
           throw new ConflictException(
             "Provider idempotency window elapsed; reconcile before retrying",
           );
@@ -1148,7 +1145,11 @@ export class SellerSettlementService {
         moneyCents(account.balancePaidOut),
         sum((entry) => entry.deltaPaidOutCents),
       );
-      compare("payouts", disbursed, sum((entry) => entry.deltaPaidOutCents));
+      compare(
+        "payouts",
+        disbursed,
+        sum((entry) => entry.deltaPaidOutCents),
+      );
 
       if (mismatches.length) {
         discrepancies.push({

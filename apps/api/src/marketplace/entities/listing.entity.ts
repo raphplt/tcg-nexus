@@ -69,6 +69,24 @@ export class Listing {
   @Column({ type: "int", default: 1 })
   quantityAvailable: number;
 
+  /**
+   * Copies of {@link inventoryItem} this listing currently holds reserved.
+   *
+   * It covers the offered quantity plus any copy committed to a pending order,
+   * so every lifecycle transition can reserve or release an exact delta instead
+   * of guessing from the offered quantity.
+   */
+  @Column({ type: "int", default: 0 })
+  inventoryReservedQuantity: number;
+
+  /**
+   * Number of reservation changes already applied to physical stock. It makes
+   * every inventory movement of this listing uniquely identifiable, so repeated
+   * deactivate/reactivate cycles each get their own durable record.
+   */
+  @Column({ type: "int", default: 0 })
+  reservationRevision: number;
+
   @Column("decimal", { precision: 10, scale: 2, default: 0 })
   shippingCost: number;
 

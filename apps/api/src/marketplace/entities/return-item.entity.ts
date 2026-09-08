@@ -52,6 +52,17 @@ export class ReturnItem {
   })
   disposition: InventoryDisposition;
 
+  /**
+   * Number of disposition decisions already applied to physical stock. It makes
+   * every inventory movement of this return uniquely and durably identifiable.
+   */
+  @Column({ type: "int", default: 0 })
+  dispositionRevision: number;
+
+  /** Copies currently returned to sellable stock by this return. */
+  @Column({ type: "int", default: 0 })
+  restockedQuantity: number;
+
   @Column({ type: "timestamp", nullable: true })
   receivedAt: Date | null;
 

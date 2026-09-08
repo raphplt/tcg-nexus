@@ -20,6 +20,7 @@ import {
 import { RefundLine } from "./entities/refund-line.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { ReturnItem } from "./entities/return-item.entity";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { RefundFinanceService } from "./refund-finance.service";
 import { RefundService } from "./refund.service";
 import { StripeService } from "./stripe.service";
@@ -38,6 +39,7 @@ describe("RefundService", () => {
   let auditService: Partial<Record<keyof AuditService, jest.Mock>>;
   let outboxService: Partial<Record<keyof OutboxService, jest.Mock>>;
   let dataSource: Partial<Record<keyof DataSource, jest.Mock>>;
+  let inventoryLedger: Record<string, jest.Mock>;
 
   const mockBuyer: User = {
     id: 10,
@@ -136,10 +138,19 @@ describe("RefundService", () => {
       ),
     };
 
+    inventoryLedger = {
+      syncListingReservation: jest.fn().mockResolvedValue(0),
+      commitSale: jest.fn().mockResolvedValue(undefined),
+      restockReturn: jest.fn().mockResolvedValue(true),
+      reverseRestock: jest.fn().mockResolvedValue(true),
+      applyMovement: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefundService,
         { provide: RefundFinanceService, useValue: finance },
+        { provide: InventoryLedgerService, useValue: inventoryLedger },
         {
           provide: getRepositoryToken(RefundOperation),
           useValue: refundOpRepo,
@@ -281,33 +292,43 @@ describe("RefundService", () => {
   });
 
   describe("setReturnDisposition", () => {
-    it("increments listing stock when disposition is RESTOCK", async () => {
-      const listing = { id: 201, quantityAvailable: 3 } as Listing;
-      const orderItem = {
-        id: 101,
-        listing,
-        seller: mockSeller,
-        order: { id: 42, userId: 10 },
-      } as unknown as OrderItem;
+    const listing = { id: 201, quantityAvailable: 3 } as Listing;
 
-      const returnItem = {
+    /** Serves the locked read and the relation read of one return item. */
+    const withReturn = (returnItem: ReturnItem) => {
+      const manager = {
+        findOne: jest.fn().mockResolvedValue(returnItem),
+        findOneOrFail: jest.fn().mockResolvedValue(returnItem),
+        save: jest.fn((_cls, entity) => Promise.resolve(entity)),
+        increment: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+      };
+      dataSource.transaction!.mockImplementation((cb: any) => cb(manager));
+      return manager;
+    };
+
+    const buildReturn = (overrides: Partial<ReturnItem> = {}): ReturnItem =>
+      ({
         id: "ret-uuid-1",
-        orderItemId: 101,
         quantity: 2,
-        orderItem,
+        orderItem: {
+          id: 101,
+          listing,
+          seller: mockSeller,
+          order: { id: 42 },
+        },
         status: ReturnStatus.REQUESTED,
         disposition: InventoryDisposition.NO_RETURN_REQUIRED,
-      } as unknown as ReturnItem;
+        dispositionRevision: 0,
+        restockedQuantity: 0,
+        ...overrides,
+      }) as unknown as ReturnItem;
 
-      returnItemRepo.findOne!.mockResolvedValue(returnItem);
+    it("restocks a received return once, through the inventory ledger", async () => {
+      const returnItem = buildReturn();
+      withReturn(returnItem);
 
-      const mockManager = {
-        increment: jest.fn().mockResolvedValue({}),
-        save: jest.fn((cls, entity) => Promise.resolve(entity)),
-      };
-      dataSource.transaction!.mockImplementation((cb: any) => cb(mockManager));
-
-      await service.setReturnDisposition(
+      const saved = await service.setReturnDisposition(
         "ret-uuid-1",
         {
           disposition: InventoryDisposition.RESTOCK,
@@ -316,41 +337,21 @@ describe("RefundService", () => {
         mockSeller,
       );
 
-      expect(mockManager.increment).toHaveBeenCalledWith(
-        Listing,
-        { id: 201 },
-        "quantityAvailable",
+      expect(inventoryLedger.restockReturn).toHaveBeenCalledWith(
+        expect.anything(),
+        returnItem,
+        listing,
         2,
+        1,
       );
+      expect(saved.restockedQuantity).toBe(2);
+      expect(saved.dispositionRevision).toBe(1);
       expect(auditService.record).toHaveBeenCalled();
       expect(outboxService.record).toHaveBeenCalled();
     });
 
-    it("does NOT increment listing stock when disposition is DAMAGED", async () => {
-      const listing = { id: 201, quantityAvailable: 3 } as Listing;
-      const orderItem = {
-        id: 101,
-        listing,
-        seller: mockSeller,
-        order: { id: 42, userId: 10 },
-      } as unknown as OrderItem;
-
-      const returnItem = {
-        id: "ret-uuid-2",
-        orderItemId: 101,
-        quantity: 2,
-        orderItem,
-        status: ReturnStatus.REQUESTED,
-        disposition: InventoryDisposition.NO_RETURN_REQUIRED,
-      } as unknown as ReturnItem;
-
-      returnItemRepo.findOne!.mockResolvedValue(returnItem);
-
-      const mockManager = {
-        increment: jest.fn().mockResolvedValue({}),
-        save: jest.fn((cls, entity) => Promise.resolve(entity)),
-      };
-      dataSource.transaction!.mockImplementation((cb: any) => cb(mockManager));
+    it("does not touch stock for a damaged return", async () => {
+      withReturn(buildReturn({ id: "ret-uuid-2" } as Partial<ReturnItem>));
 
       await service.setReturnDisposition(
         "ret-uuid-2",
@@ -361,8 +362,53 @@ describe("RefundService", () => {
         mockSeller,
       );
 
-      expect(mockManager.increment).not.toHaveBeenCalled();
+      expect(inventoryLedger.restockReturn).not.toHaveBeenCalled();
+      expect(inventoryLedger.reverseRestock).not.toHaveBeenCalled();
       expect(auditService.record).toHaveBeenCalled();
+    });
+
+    it("reverses the restock when the inspection is corrected to damaged", async () => {
+      const returnItem = buildReturn({
+        disposition: InventoryDisposition.RESTOCK,
+        dispositionRevision: 1,
+        restockedQuantity: 2,
+      } as Partial<ReturnItem>);
+      withReturn(returnItem);
+
+      const saved = await service.setReturnDisposition(
+        "ret-uuid-1",
+        { disposition: InventoryDisposition.DAMAGED },
+        mockSeller,
+      );
+
+      expect(inventoryLedger.reverseRestock).toHaveBeenCalledWith(
+        expect.anything(),
+        returnItem,
+        listing,
+        2,
+        2,
+      );
+      expect(saved.restockedQuantity).toBe(0);
+      expect(inventoryLedger.restockReturn).not.toHaveBeenCalled();
+    });
+
+    it("repeats no physical effect when the same disposition is submitted again", async () => {
+      withReturn(
+        buildReturn({
+          disposition: InventoryDisposition.RESTOCK,
+          dispositionRevision: 1,
+          restockedQuantity: 2,
+        } as Partial<ReturnItem>),
+      );
+
+      await service.setReturnDisposition(
+        "ret-uuid-1",
+        { disposition: InventoryDisposition.RESTOCK },
+        mockSeller,
+      );
+
+      expect(inventoryLedger.restockReturn).not.toHaveBeenCalled();
+      expect(inventoryLedger.reverseRestock).not.toHaveBeenCalled();
     });
   });
 });

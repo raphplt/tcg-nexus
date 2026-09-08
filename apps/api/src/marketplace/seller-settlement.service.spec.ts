@@ -49,9 +49,7 @@ class FakeManager {
       const current = row[key];
       if (value && typeof value === "object") {
         const expected = (value as Row).id ?? value;
-        return (
-          !!current && String((current as Row).id) === String(expected)
-        );
+        return !!current && String((current as Row).id) === String(expected);
       }
       return String(current ?? "") === String(value);
     });
@@ -65,7 +63,9 @@ class FakeManager {
     const rows = this.store<Row>(target);
     const row = entity as Row;
     if (row.id === undefined) row.id = this.sequence++;
-    const index = rows.findIndex((stored) => String(stored.id) === String(row.id));
+    const index = rows.findIndex(
+      (stored) => String(stored.id) === String(row.id),
+    );
     if (index >= 0) rows[index] = row;
     else rows.push(row);
     return entity;
@@ -314,12 +314,12 @@ describe("SellerSettlementService", () => {
     it("refuses payouts above the available balance or below the minimum", async () => {
       await fund();
 
-      await expect(service.requestPayout(seller, { amount: 60 })).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
-      await expect(service.requestPayout(seller, { amount: 1 })).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(
+        service.requestPayout(seller, { amount: 60 }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      await expect(
+        service.requestPayout(seller, { amount: 1 }),
+      ).rejects.toBeInstanceOf(BadRequestException);
       expect(Number(account().balanceAvailable)).toBe(52.5);
     });
 

@@ -24,6 +24,7 @@ import { Listing } from "./entities/listing.entity";
 import { Order } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { PaymentTransaction } from "./entities/payment-transaction.entity";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { PriceHistory } from "./entities/price-history.entity";
 import { MarketplaceService } from "./marketplace.service";
 import { OrderService } from "./order.service";
@@ -50,6 +51,7 @@ describe("MarketplaceService", () => {
   let mockOrderService: any;
   let mockDataSource: any;
   let mockManager: any;
+  let mockInventoryLedger: any;
 
   // Helper to create a fresh QB mock
   const createMockQb = () => ({
@@ -200,7 +202,28 @@ describe("MarketplaceService", () => {
         }
         return entity;
       }),
+      findOneOrFail: jest.fn().mockImplementation(async (cls, options) => {
+        const found =
+          cls === Listing
+            ? await mockListingRepo.findOne(options)
+            : cls === CollectionItem
+              ? await mockCollectionItemRepo.findOne(options)
+              : null;
+        if (!found) throw new NotFoundException("Entity not found");
+        return found;
+      }),
+      update: jest.fn().mockResolvedValue(undefined),
+      softRemove: jest.fn().mockImplementation(async (_cls, entity) => entity),
+      increment: jest.fn().mockResolvedValue(undefined),
       decrement: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockInventoryLedger = {
+      syncListingReservation: jest.fn().mockResolvedValue(0),
+      commitSale: jest.fn().mockResolvedValue(undefined),
+      restockReturn: jest.fn().mockResolvedValue(true),
+      reverseRestock: jest.fn().mockResolvedValue(true),
+      applyMovement: jest.fn().mockResolvedValue(null),
     };
 
     mockDataSource = {
@@ -210,6 +233,7 @@ describe("MarketplaceService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MarketplaceService,
+        { provide: InventoryLedgerService, useValue: mockInventoryLedger },
         { provide: getRepositoryToken(Listing), useValue: mockListingRepo },
         {
           provide: getRepositoryToken(PriceHistory),
@@ -286,7 +310,7 @@ describe("MarketplaceService", () => {
         owner,
       );
       expect(res).toBeDefined();
-      expect(listingRepo.save).toHaveBeenCalled();
+      expect(mockManager.save).toHaveBeenCalledWith(Listing, expect.anything());
     });
 
     it("allows admin", async () => {
@@ -298,16 +322,19 @@ describe("MarketplaceService", () => {
         admin,
       );
       expect(res).toBeDefined();
-      expect(listingRepo.save).toHaveBeenCalled();
+      expect(mockManager.save).toHaveBeenCalledWith(Listing, expect.anything());
     });
 
     it("records a price history point when the price changes", async () => {
-      const priced = { ...listing, price: 100, currency: Currency.EUR };
-      listingRepo.findOne.mockResolvedValueOnce(priced).mockResolvedValueOnce({
-        ...priced,
-        price: 200,
+      // The same row is read to lock it, to apply the update and to record the
+      // price point, so the mock returns one mutable listing throughout.
+      const priced = {
+        ...listing,
+        price: 100,
+        currency: Currency.EUR,
         pokemonCard: { id: "c1" },
-      });
+      };
+      listingRepo.findOne.mockResolvedValue(priced);
       listingRepo.save.mockImplementation(async (l: Listing) => l);
       priceHistoryRepo.create.mockImplementation((data: any) => data);
 
@@ -333,7 +360,7 @@ describe("MarketplaceService", () => {
       expect(priceHistoryRepo.save).not.toHaveBeenCalled();
     });
 
-    it("releases reserved inventory when status becomes INACTIVE", async () => {
+    it("releases exactly the deactivated offer through the inventory ledger", async () => {
       const activeListing: Partial<Listing> = {
         id: 10,
         seller: { id: 1 } as any,
@@ -341,16 +368,10 @@ describe("MarketplaceService", () => {
         isInventoryBacked: true,
         inventoryItem: { id: 88 } as any,
         quantityAvailable: 2,
+        inventoryReservedQuantity: 2,
       };
       listingRepo.findOne.mockResolvedValue(activeListing);
       listingRepo.save.mockImplementation(async (l: Listing) => l);
-
-      const inv = {
-        id: 88,
-        quantityAvailable: 1,
-        quantityReserved: 3,
-      };
-      mockCollectionItemRepo.findOne.mockResolvedValue(inv);
 
       await service.update(
         10,
@@ -358,12 +379,12 @@ describe("MarketplaceService", () => {
         owner,
       );
 
-      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 88,
-          quantityAvailable: 3, // 1 + 2
-          quantityReserved: 1, // 3 - 2
-        }),
+      expect(mockInventoryLedger.syncListingReservation).toHaveBeenCalledWith(
+        mockManager,
+        expect.objectContaining({ id: 10 }),
+        { quantityAvailable: 2, status: ListingStatus.ACTIVE },
+        { quantityAvailable: 2, status: ListingStatus.INACTIVE },
+        expect.stringContaining("offer:"),
       );
     });
   });
@@ -392,43 +413,46 @@ describe("MarketplaceService", () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, owner);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(found);
+      expect(mockManager.softRemove).toHaveBeenCalledWith(Listing, found);
     });
 
-    it("releases reserved inventory when listing is deleted", async () => {
+    it("releases a deleted listing's offer once, as a ledger delta", async () => {
       const backedListing: Partial<Listing> = {
         id: 10,
         seller: { id: 1 } as any,
+        status: ListingStatus.ACTIVE,
         isInventoryBacked: true,
         inventoryItem: { id: 88 } as any,
         quantityAvailable: 3,
+        inventoryReservedQuantity: 3,
       };
       listingRepo.findOne.mockResolvedValue(backedListing);
 
-      const inv = {
-        id: 88,
-        quantityAvailable: 0,
-        quantityReserved: 4,
-      };
-      mockCollectionItemRepo.findOne.mockResolvedValue(inv);
-
       await service.delete(10, owner);
 
-      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 88,
-          quantityAvailable: 3, // 0 + 3
-          quantityReserved: 1, // 4 - 3
-        }),
+      expect(mockInventoryLedger.syncListingReservation).toHaveBeenCalledWith(
+        mockManager,
+        expect.objectContaining({ id: 10 }),
+        { quantityAvailable: 3, status: ListingStatus.ACTIVE },
+        {
+          quantityAvailable: 3,
+          status: ListingStatus.ACTIVE,
+          deleted: true,
+        },
+        "deleted",
       );
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(backedListing);
+      expect(mockManager.softRemove).toHaveBeenCalledWith(
+        Listing,
+        backedListing,
+      );
     });
 
     it("allows admin", async () => {
       const found = { ...listing };
       listingRepo.findOne.mockResolvedValue(found);
       await service.delete(10, admin);
-      expect(listingRepo.softRemove).toHaveBeenCalledWith(
+      expect(mockManager.softRemove).toHaveBeenCalledWith(
+        Listing,
         expect.objectContaining({ id: 10 }),
       );
     });
@@ -590,7 +614,7 @@ describe("MarketplaceService", () => {
       );
     });
 
-    it("creates inventory-backed listing and reserves quantityAvailable", async () => {
+    it("creates an inventory-backed listing and reserves its offer through the ledger", async () => {
       const user = { id: 1 } as User;
       const invItem: Partial<CollectionItem> = {
         id: 99,
@@ -625,12 +649,12 @@ describe("MarketplaceService", () => {
 
       expect(result).toBeDefined();
       expect(result.isInventoryBacked).toBe(true);
-      expect(mockCollectionItemRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 99,
-          quantityAvailable: 1, // 3 - 2
-          quantityReserved: 3, // 1 + 2
-        }),
+      expect(mockInventoryLedger.syncListingReservation).toHaveBeenCalledWith(
+        mockManager,
+        expect.objectContaining({ id: 10 }),
+        { quantityAvailable: 0, status: ListingStatus.INACTIVE },
+        expect.objectContaining({ quantityAvailable: 2 }),
+        "created",
       );
     });
 

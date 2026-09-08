@@ -17,8 +17,6 @@ import { DataSource, EntityManager, Repository, Not } from "typeorm";
 import { CreateRefundDto } from "./dto/create-refund.dto";
 import { CreateReturnDto } from "./dto/create-return.dto";
 import { UpdateDispositionDto } from "./dto/update-disposition.dto";
-import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
-import { Listing } from "./entities/listing.entity";
 
 import { OrderItem } from "./entities/order-item.entity";
 import { Order } from "./entities/order.entity";
@@ -26,6 +24,7 @@ import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { RefundLine } from "./entities/refund-line.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { ReturnItem } from "./entities/return-item.entity";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { RefundFinanceService } from "./refund-finance.service";
 import { moneyCents } from "./finance/finance.utils";
 
@@ -50,6 +49,7 @@ export class RefundService {
     @InjectRepository(PaymentTransaction)
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
     private readonly refundFinance: RefundFinanceService,
+    private readonly inventoryLedger: InventoryLedgerService,
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
     private readonly dataSource: DataSource,
@@ -352,72 +352,80 @@ export class RefundService {
     dto: UpdateDispositionDto,
     user: User,
   ): Promise<ReturnItem> {
-    const returnItem = await this.returnItemRepository.findOne({
-      where: { id: returnId },
-      relations: [
-        "orderItem",
-        "orderItem.order",
-        "orderItem.listing",
-        "orderItem.listing.inventoryItem",
-        "orderItem.seller",
-      ],
-    });
-
-    if (!returnItem) {
-      throw new NotFoundException(`Return ${returnId} not found`);
-    }
-
-    const isAdmin =
-      user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
-    const isSeller = returnItem.orderItem.seller?.id === user.id;
-
-    if (!isAdmin && !isSeller) {
-      throw new ForbiddenException(
-        "Vous n'avez pas l'autorisation de traiter ce retour",
-      );
-    }
-
     return this.dataSource.transaction(async (manager: EntityManager) => {
+      // The previous disposition is read under the same lock that applies the
+      // physical effect, so concurrent inspections cannot both restock.
+      const locked = await manager.findOne(ReturnItem, {
+        where: { id: returnId },
+        lock: { mode: "pessimistic_write" },
+      });
+      if (!locked) {
+        throw new NotFoundException(`Return ${returnId} not found`);
+      }
+      const returnItem = await manager.findOneOrFail(ReturnItem, {
+        where: { id: returnId },
+        relations: [
+          "orderItem",
+          "orderItem.order",
+          "orderItem.listing",
+          "orderItem.listing.inventoryItem",
+          "orderItem.seller",
+        ],
+      });
+
+      const isAdmin =
+        user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
+      const isSeller = returnItem.orderItem.seller?.id === user.id;
+      if (!isAdmin && !isSeller) {
+        throw new ForbiddenException(
+          "Vous n'avez pas l'autorisation de traiter ce retour",
+        );
+      }
+
       const previousDisposition = returnItem.disposition;
+      if (previousDisposition === dto.disposition) {
+        // Re-submitting the same decision changes no stock and adds no movement.
+        if (dto.notes && dto.notes !== returnItem.notes) {
+          returnItem.notes = dto.notes;
+          await manager.save(ReturnItem, returnItem);
+        }
+        return returnItem;
+      }
+
+      const listing = returnItem.orderItem.listing ?? null;
+      const wasRestocked = returnItem.restockedQuantity > 0;
+      const willRestock = dto.disposition === InventoryDisposition.RESTOCK;
+      const revision = returnItem.dispositionRevision + 1;
+
+      if (willRestock && !wasRestocked) {
+        await this.inventoryLedger.restockReturn(
+          manager,
+          returnItem,
+          listing,
+          returnItem.quantity,
+          revision,
+        );
+        returnItem.restockedQuantity = returnItem.quantity;
+      } else if (!willRestock && wasRestocked) {
+        // An inspection corrected to a non-sellable outcome removes the copies
+        // it had returned to stock instead of leaving them offered twice.
+        await this.inventoryLedger.reverseRestock(
+          manager,
+          returnItem,
+          listing,
+          returnItem.restockedQuantity,
+          revision,
+        );
+        returnItem.restockedQuantity = 0;
+      }
+
+      returnItem.dispositionRevision = revision;
       returnItem.disposition = dto.disposition;
       returnItem.status = ReturnStatus.RECEIVED;
       returnItem.receivedAt = returnItem.receivedAt || new Date();
       returnItem.disposedAt = new Date();
       if (dto.notes) {
         returnItem.notes = dto.notes;
-      }
-
-      // Restock only when transitioning to RESTOCK disposition
-      if (
-        dto.disposition === InventoryDisposition.RESTOCK &&
-        previousDisposition !== InventoryDisposition.RESTOCK &&
-        returnItem.orderItem.listing
-      ) {
-        await manager.increment(
-          Listing,
-          { id: returnItem.orderItem.listing.id },
-          "quantityAvailable",
-          returnItem.quantity,
-        );
-
-        if (returnItem.orderItem.listing.inventoryItem?.id) {
-          const inv = await manager.findOne(CollectionItem, {
-            where: { id: returnItem.orderItem.listing.inventoryItem.id },
-            lock: { mode: "pessimistic_write" },
-          });
-          if (inv) {
-            inv.quantitySold = Math.max(
-              0,
-              (inv.quantitySold || 0) - returnItem.quantity,
-            );
-            inv.quantityAvailable += returnItem.quantity;
-            await manager.save(CollectionItem, inv);
-          }
-        }
-
-        this.logger.log(
-          `Restocked ${returnItem.quantity} copies for listing ${returnItem.orderItem.listing.id} from return ${returnItem.id}`,
-        );
       }
 
       const saved = await manager.save(ReturnItem, returnItem);
@@ -430,8 +438,16 @@ export class RefundService {
           targetId: String(returnItem.id),
           action: "return.disposition_set",
           reason: dto.notes ?? `Disposition set to ${dto.disposition}`,
-          beforeState: { disposition: previousDisposition },
-          afterState: { disposition: dto.disposition, notes: dto.notes },
+          beforeState: {
+            disposition: previousDisposition,
+            restockedQuantity: wasRestocked ? returnItem.quantity : 0,
+          },
+          afterState: {
+            disposition: dto.disposition,
+            restockedQuantity: saved.restockedQuantity,
+            revision,
+            notes: dto.notes,
+          },
         },
         manager,
       );
@@ -445,6 +461,7 @@ export class RefundService {
             returnId: returnItem.id,
             disposition: dto.disposition,
             quantity: returnItem.quantity,
+            restockedQuantity: saved.restockedQuantity,
           },
         },
         manager,

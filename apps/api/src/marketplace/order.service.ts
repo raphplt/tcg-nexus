@@ -28,7 +28,6 @@ import { User } from "../user/entities/user.entity";
 import { CartItem } from "../user_cart/entities/cart-item.entity";
 import { UserCartService } from "../user_cart/user_cart.service";
 import { AuditService } from "../audit/audit.service";
-import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 
 import { OutboxService } from "../outbox/outbox.service";
 import { CardPopularityService } from "./card-popularity.service";
@@ -56,6 +55,7 @@ import { RefundOperation } from "./entities/refund-operation.entity";
 import { RefundStatus } from "../common/enums/refund-status";
 import { round2 } from "./price.helper";
 import { SHIPPING_POLICY } from "./shipping-policy";
+import { InventoryLedgerService } from "./inventory-ledger.service";
 import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
@@ -105,6 +105,7 @@ export class OrderService {
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
     private readonly refundFinance: RefundFinanceService,
+    private readonly inventoryLedger: InventoryLedgerService,
     @Optional()
     private readonly sellerSettlementService?: SellerSettlementService,
   ) {}
@@ -702,24 +703,17 @@ export class OrderService {
       order.reservationExpiresAt = null;
       await manager.save(order);
 
-      // Transition physical inventory from reserved to sold for inventory-backed listings
+      // Transition physical inventory from reserved to sold for inventory-backed
+      // listings. The ledger records it once per order line, so a replayed
+      // payment confirmation cannot sell the same copy twice.
       for (const item of order.orderItems || []) {
-        if (
-          item.listing?.isInventoryBacked &&
-          item.listing?.inventoryItem?.id
-        ) {
-          const inv = await manager.findOne(CollectionItem, {
-            where: { id: item.listing.inventoryItem.id },
-            lock: { mode: "pessimistic_write" },
-          });
-          if (inv) {
-            inv.quantityReserved = Math.max(
-              0,
-              inv.quantityReserved - item.quantity,
-            );
-            inv.quantitySold = (inv.quantitySold || 0) + item.quantity;
-            await manager.save(CollectionItem, inv);
-          }
+        if (item.listing) {
+          await this.inventoryLedger.commitSale(
+            manager,
+            item.listing,
+            item,
+            item.quantity,
+          );
         }
       }
 
