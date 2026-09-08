@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Public } from "../auth/decorators/public.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { User } from "../user/entities/user.entity";
@@ -27,6 +28,7 @@ export class RankingController {
     return this.rankingService.create(createRankingDto);
   }
 
+  @Public()
   @Get("global")
   getGlobalRanking(
     @Query("page") page?: number,
@@ -57,6 +59,7 @@ export class RankingController {
     );
   }
 
+  @Public()
   @Get()
   findAll() {
     return this.rankingService.findAll();
