@@ -140,6 +140,8 @@ describe("UserController", () => {
     await expect(
       controller.getMyJourneyNextActions({ id: 5 } as User),
     ).resolves.toEqual(mockActions);
-    expect(mockUserJourneyService.getNextActions).toHaveBeenCalledWith({ id: 5 });
+    expect(mockUserJourneyService.getNextActions).toHaveBeenCalledWith({
+      id: 5,
+    });
   });
 });

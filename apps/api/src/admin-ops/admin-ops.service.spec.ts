@@ -152,7 +152,9 @@ describe("AdminOpsService", () => {
       expect(metrics.orders.stalePendingCheckouts).toBe(2);
       expect(metrics.outbox.pendingEvents).toBe(3);
       expect(metrics.outbox.failedEvents).toBe(1);
-      expect(metrics.outbox.oldestPendingAgeSeconds).toBeGreaterThanOrEqual(119);
+      expect(metrics.outbox.oldestPendingAgeSeconds).toBeGreaterThanOrEqual(
+        119,
+      );
       expect(metrics.settlement.pendingPayouts).toBe(4);
       expect(metrics.settlement.failedPayouts).toBe(1);
       expect(metrics.settlement.totalPendingEscrow).toBe(200);
@@ -185,9 +187,12 @@ describe("AdminOpsService", () => {
       expect(qb.andWhere).toHaveBeenCalledWith("audit.actorId = :actorId", {
         actorId: 42,
       });
-      expect(qb.andWhere).toHaveBeenCalledWith("audit.targetType = :targetType", {
-        targetType: "order",
-      });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        "audit.targetType = :targetType",
+        {
+          targetType: "order",
+        },
+      );
       expect(qb.andWhere).toHaveBeenCalledWith("audit.targetId = :targetId", {
         targetId: "100",
       });
@@ -274,7 +279,11 @@ describe("AdminOpsService", () => {
     it("should calculate ledger sums and declare reconciled when balanced", async () => {
       mockAllocationRepo.find.mockResolvedValueOnce([
         { grossAmount: "100.00", commissionAmount: "5.00", netAmount: "95.00" },
-        { grossAmount: "200.00", commissionAmount: "10.00", netAmount: "190.00" },
+        {
+          grossAmount: "200.00",
+          commissionAmount: "10.00",
+          netAmount: "190.00",
+        },
       ]);
       mockSellerAccountRepo.find.mockResolvedValueOnce([
         {

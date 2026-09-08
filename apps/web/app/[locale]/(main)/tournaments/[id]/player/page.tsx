@@ -92,7 +92,10 @@ export default function PlayerDashboardPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
-    if (dashboard?.remainingSeconds !== undefined && dashboard.remainingSeconds !== null) {
+    if (
+      dashboard?.remainingSeconds !== undefined &&
+      dashboard.remainingSeconds !== null
+    ) {
       setCountdown(dashboard.remainingSeconds);
     }
   }, [dashboard?.remainingSeconds]);
@@ -293,7 +296,11 @@ export default function PlayerDashboardPage() {
           {!dashboard?.isDropped && (
             <Dialog open={dropModalOpen} onOpenChange={setDropModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive/10">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10"
+                >
                   <ShieldAlert className="w-4 h-4 mr-2" />
                   {t("dropTournament")}
                 </Button>
@@ -315,7 +322,10 @@ export default function PlayerDashboardPage() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button variant="ghost" onClick={() => setDropModalOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setDropModalOpen(false)}
+                  >
                     Annuler
                   </Button>
                   <Button
@@ -342,7 +352,10 @@ export default function PlayerDashboardPage() {
                   {t("roundClock")} — Ronde {dashboard?.currentRound ?? 1}
                 </span>
                 {dashboard?.isRoundPaused ? (
-                  <Badge variant="secondary" className="gap-1 bg-yellow-100 text-yellow-800">
+                  <Badge
+                    variant="secondary"
+                    className="gap-1 bg-yellow-100 text-yellow-800"
+                  >
                     <PauseCircle className="w-3 h-3" />
                     {t("paused")}
                   </Badge>
@@ -425,7 +438,9 @@ export default function PlayerDashboardPage() {
                 {wins}V - {losses}D - {draws}N
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {playerRanking ? `${playerRanking.points} points de match` : "0 point"}
+                {playerRanking
+                  ? `${playerRanking.points} points de match`
+                  : "0 point"}
               </p>
             </CardContent>
           </Card>
@@ -451,7 +466,9 @@ export default function PlayerDashboardPage() {
                   <span className="text-xs uppercase font-semibold text-muted-foreground">
                     {t("opponent")}
                   </span>
-                  <div className="text-xl font-bold">{activeMatch.opponentName}</div>
+                  <div className="text-xl font-bold">
+                    {activeMatch.opponentName}
+                  </div>
                 </div>
 
                 <div className="text-center sm:text-right">
@@ -496,7 +513,10 @@ export default function PlayerDashboardPage() {
                         {t("acceptScore")}
                       </Button>
 
-                      <Dialog open={disputeModalOpen} onOpenChange={setDisputeModalOpen}>
+                      <Dialog
+                        open={disputeModalOpen}
+                        onOpenChange={setDisputeModalOpen}
+                      >
                         <DialogTrigger asChild>
                           <Button size="sm" variant="destructive">
                             {t("disputeScore")}
@@ -506,7 +526,8 @@ export default function PlayerDashboardPage() {
                           <DialogHeader>
                             <DialogTitle>{t("disputeScore")}</DialogTitle>
                             <DialogDescription>
-                              Indiquez aux juges pourquoi vous contestez ce score.
+                              Indiquez aux juges pourquoi vous contestez ce
+                              score.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-2">
@@ -566,7 +587,10 @@ export default function PlayerDashboardPage() {
                 activeMatch.status !== "finished" &&
                 activeMatch.status !== "forfeit" && (
                   <div className="pt-2">
-                    <Dialog open={proposeModalOpen} onOpenChange={setProposeModalOpen}>
+                    <Dialog
+                      open={proposeModalOpen}
+                      onOpenChange={setProposeModalOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button className="w-full sm:w-auto">
                           {t("proposeScore")}
@@ -576,7 +600,8 @@ export default function PlayerDashboardPage() {
                         <DialogHeader>
                           <DialogTitle>{t("proposeScore")}</DialogTitle>
                           <DialogDescription>
-                            Entrez les manches remportées contre {activeMatch.opponentName}.
+                            Entrez les manches remportées contre{" "}
+                            {activeMatch.opponentName}.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-2 gap-4 py-4">
@@ -589,7 +614,9 @@ export default function PlayerDashboardPage() {
                               max={2}
                               value={proposeMyScore}
                               onChange={(e) =>
-                                setProposeMyScore(parseInt(e.target.value, 10) || 0)
+                                setProposeMyScore(
+                                  parseInt(e.target.value, 10) || 0,
+                                )
                               }
                             />
                           </div>
@@ -602,7 +629,9 @@ export default function PlayerDashboardPage() {
                               max={2}
                               value={proposeOppScore}
                               onChange={(e) =>
-                                setProposeOppScore(parseInt(e.target.value, 10) || 0)
+                                setProposeOppScore(
+                                  parseInt(e.target.value, 10) || 0,
+                                )
                               }
                             />
                           </div>
@@ -674,7 +703,9 @@ export default function PlayerDashboardPage() {
                                   {opponent?.name?.[0] || "?"}
                                 </AvatarFallback>
                               </Avatar>
-                              <span>{opponent?.name || t("toBeDetermined")}</span>
+                              <span>
+                                {opponent?.name || t("toBeDetermined")}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>{result}</TableCell>
@@ -702,7 +733,9 @@ export default function PlayerDashboardPage() {
                           </TableCell>
                           <TableCell>
                             <Button variant="outline" size="sm" asChild>
-                              <Link href={`/tournaments/${id}/matches/${match.id}`}>
+                              <Link
+                                href={`/tournaments/${id}/matches/${match.id}`}
+                              >
                                 Voir
                               </Link>
                             </Button>

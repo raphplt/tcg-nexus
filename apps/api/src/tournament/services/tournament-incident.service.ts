@@ -35,10 +35,7 @@ import {
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
 import { Tournament, TournamentStatus } from "../entities/tournament.entity";
-import {
-  SwissPairingService,
-  toSwissResults,
-} from "./swiss-pairing.service";
+import { SwissPairingService, toSwissResults } from "./swiss-pairing.service";
 import { TournamentRoundClockService } from "./tournament-round-clock.service";
 
 /**

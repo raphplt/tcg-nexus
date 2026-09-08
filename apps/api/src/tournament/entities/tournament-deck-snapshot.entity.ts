@@ -30,9 +30,13 @@ export class TournamentDeckSnapshot {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Tournament, (tournament) => tournament.deckSnapshots, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(
+    () => Tournament,
+    (tournament) => tournament.deckSnapshots,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   tournament: Tournament;
 
   @ManyToOne(() => Player, { onDelete: "CASCADE" })

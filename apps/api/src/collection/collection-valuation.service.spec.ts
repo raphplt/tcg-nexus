@@ -29,12 +29,10 @@ describe("CollectionValuationService", () => {
     },
   } as unknown as Card;
 
-
   const cardWithoutPrice: Card = {
     id: "c-unpriced",
     pricing: null,
   } as unknown as Card;
-
 
   beforeEach(async () => {
     collectionRepo = {
@@ -88,7 +86,11 @@ describe("CollectionValuationService", () => {
       },
     ]);
 
-    const res = await service.calculateValuation("col-1", Currency.EUR, mockUser);
+    const res = await service.calculateValuation(
+      "col-1",
+      Currency.EUR,
+      mockUser,
+    );
 
     expect(res.totalCopiesCount).toBe(3);
     expect(res.valuedCopiesCount).toBe(2);
@@ -117,7 +119,11 @@ describe("CollectionValuationService", () => {
       },
     ]);
 
-    const res = await service.calculateValuation("col-1", Currency.EUR, mockUser);
+    const res = await service.calculateValuation(
+      "col-1",
+      Currency.EUR,
+      mockUser,
+    );
 
     expect(res.totalEstimatedValue).toBe(9.0);
     expect(res.valuedCopiesCount).toBe(1);

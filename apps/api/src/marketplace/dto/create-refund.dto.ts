@@ -2,6 +2,8 @@ import { Type } from "class-transformer";
 import {
   IsArray,
   IsNumber,
+  IsInt,
+  MaxLength,
   IsOptional,
   IsPositive,
   IsString,
@@ -13,11 +15,12 @@ import {
  * Line item allocation for a partial refund request.
  */
 export class RefundLineDto {
-  @IsNumber()
+  @IsInt()
   orderItemId: number;
 
-  @IsNumber()
-  @IsPositive()
+  /** Use zero for a monetary adjustment without another refunded copy. */
+  @IsInt()
+  @Min(0)
   quantity: number;
 
   @IsNumber()
@@ -34,6 +37,11 @@ export class RefundLineDto {
  * Payload for initiating a partial or full refund on an order.
  */
 export class CreateRefundDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  requestKey?: string;
+
   @IsOptional()
   @IsNumber()
   @IsPositive()

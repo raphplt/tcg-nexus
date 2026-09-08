@@ -60,6 +60,11 @@ export default function SellerSettlementPage() {
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState<string>("");
   const [payoutSubmitting, setPayoutSubmitting] = useState(false);
+  // Stable per-attempt key: a resubmitted request returns the same payout
+  // instead of reserving the balance twice.
+  const [payoutRequestKey, setPayoutRequestKey] = useState<string>(() =>
+    crypto.randomUUID(),
+  );
   const [payoutError, setPayoutError] = useState<string | null>(null);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -83,7 +88,10 @@ export default function SellerSettlementPage() {
       setAllocations(allocRes.data || []);
       setPayouts(payRes.data || []);
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement des informations financières.");
+      setError(
+        err.message ||
+          "Erreur lors du chargement des informations financières.",
+      );
     } finally {
       setLoading(false);
     }
@@ -104,16 +112,22 @@ export default function SellerSettlementPage() {
       return;
     }
     if (summary && amount < summary.minimumPayoutAmount) {
-      setPayoutError(`Le montant minimum de retrait est de ${summary.minimumPayoutAmount} ${summary.currency}.`);
+      setPayoutError(
+        `Le montant minimum de retrait est de ${summary.minimumPayoutAmount} ${summary.currency}.`,
+      );
       return;
     }
 
     setPayoutSubmitting(true);
     setPayoutError(null);
     try {
-      await sellerSettlementService.requestPayout({ amount });
+      await sellerSettlementService.requestPayout({
+        amount,
+        requestKey: payoutRequestKey,
+      });
       setIsPayoutModalOpen(false);
       setPayoutAmount("");
+      setPayoutRequestKey(crypto.randomUUID());
       await loadData();
     } catch (err: any) {
       setPayoutError(err.message || "Échec de la demande de virement.");
@@ -140,7 +154,9 @@ export default function SellerSettlementPage() {
       setIsSettingsModalOpen(false);
       await loadData();
     } catch (err: any) {
-      setSettingsError(err.message || "Impossible de mettre à jour les coordonnées bancaires.");
+      setSettingsError(
+        err.message || "Impossible de mettre à jour les coordonnées bancaires.",
+      );
     } finally {
       setSettingsSubmitting(false);
     }
@@ -151,7 +167,11 @@ export default function SellerSettlementPage() {
       case "available":
         return <Badge className="bg-green-600 text-white">Disponible</Badge>;
       case "pending_delivery":
-        return <Badge variant="outline" className="text-amber-600 border-amber-300">En cours de livraison</Badge>;
+        return (
+          <Badge variant="outline" className="text-amber-600 border-amber-300">
+            En cours de livraison
+          </Badge>
+        );
       case "in_payout":
         return <Badge variant="secondary">En virement</Badge>;
       case "paid":
@@ -170,9 +190,17 @@ export default function SellerSettlementPage() {
       case "completed":
         return <Badge className="bg-green-600 text-white">Payé</Badge>;
       case "processing":
-        return <Badge className="bg-amber-600 text-white">En cours de traitement</Badge>;
+        return (
+          <Badge className="bg-amber-600 text-white">
+            En cours de traitement
+          </Badge>
+        );
       case "requested":
-        return <Badge variant="outline" className="border-amber-300 text-amber-600">Demandé</Badge>;
+        return (
+          <Badge variant="outline" className="border-amber-300 text-amber-600">
+            Demandé
+          </Badge>
+        );
       case "failed":
         return <Badge variant="destructive">Rejeté / Échoué</Badge>;
       default:
@@ -184,7 +212,9 @@ export default function SellerSettlementPage() {
     return (
       <div className="container mx-auto max-w-6xl py-12 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Chargement de votre compte de règlement...</p>
+        <p className="text-sm text-muted-foreground">
+          Chargement de votre compte de règlement...
+        </p>
       </div>
     );
   }
@@ -194,9 +224,12 @@ export default function SellerSettlementPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Règlements & Séquestre</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Règlements & Séquestre
+          </h1>
           <p className="text-muted-foreground">
-            Suivez vos ventes, le séquestre sécurisé des commandes et gérez vos virements bancaires.
+            Suivez vos ventes, le séquestre sécurisé des commandes et gérez vos
+            virements bancaires.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -205,7 +238,9 @@ export default function SellerSettlementPage() {
             className="gap-2"
             onClick={() => {
               if (summary?.payoutDetailsMasked) {
-                setAccountHolder(summary.payoutDetailsMasked.accountHolderName || "");
+                setAccountHolder(
+                  summary.payoutDetailsMasked.accountHolderName || "",
+                );
                 setBankName(summary.payoutDetailsMasked.bankName || "");
               }
               setIsSettingsModalOpen(true);
@@ -244,7 +279,10 @@ export default function SellerSettlementPage() {
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold text-green-700 dark:text-green-400">
-              {formatExact(summary?.balanceAvailable ?? 0, summary?.currency ?? "EUR")}
+              {formatExact(
+                summary?.balanceAvailable ?? 0,
+                summary?.currency ?? "EUR",
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
@@ -259,11 +297,15 @@ export default function SellerSettlementPage() {
               <Lock className="h-4 w-4 text-amber-600" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold text-amber-700 dark:text-amber-400">
-              {formatExact(summary?.balancePending ?? 0, summary?.currency ?? "EUR")}
+              {formatExact(
+                summary?.balancePending ?? 0,
+                summary?.currency ?? "EUR",
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            {summary?.pendingDeliveriesCount ?? 0} commande(s) en attente de confirmation de livraison.
+            {summary?.pendingDeliveriesCount ?? 0} commande(s) en attente de
+            confirmation de livraison.
           </CardContent>
         </Card>
 
@@ -274,11 +316,15 @@ export default function SellerSettlementPage() {
               <ShieldCheck className="h-4 w-4 text-muted-foreground" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold">
-              {formatExact(summary?.balanceOnHold ?? 0, summary?.currency ?? "EUR")}
+              {formatExact(
+                summary?.balanceOnHold ?? 0,
+                summary?.currency ?? "EUR",
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            {summary?.disputedAllocationsCount ?? 0} allocation(s) temporairement réservée(s).
+            {summary?.disputedAllocationsCount ?? 0} allocation(s)
+            temporairement réservée(s).
           </CardContent>
         </Card>
 
@@ -289,11 +335,18 @@ export default function SellerSettlementPage() {
               <CheckCircle2 className="h-4 w-4 text-primary" />
             </CardDescription>
             <CardTitle className="text-2xl font-bold">
-              {formatExact(summary?.balancePaidOut ?? 0, summary?.currency ?? "EUR")}
+              {formatExact(
+                summary?.balancePaidOut ?? 0,
+                summary?.currency ?? "EUR",
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-muted-foreground">
-            Gains à vie : {formatExact(summary?.lifetimeEarned ?? 0, summary?.currency ?? "EUR")}
+            Gains à vie :{" "}
+            {formatExact(
+              summary?.lifetimeEarned ?? 0,
+              summary?.currency ?? "EUR",
+            )}
           </CardContent>
         </Card>
       </div>
@@ -316,7 +369,8 @@ export default function SellerSettlementPage() {
             <CardHeader>
               <CardTitle>Journal des ventes & commissions</CardTitle>
               <CardDescription>
-                Commission plateforme transparente de 5 % appliquée sur le montant brut hors frais de port.
+                Commission plateforme transparente de 5 % appliquée sur le
+                montant brut hors frais de port.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -339,16 +393,25 @@ export default function SellerSettlementPage() {
                     </thead>
                     <tbody className="divide-y">
                       {allocations.map((alloc) => (
-                        <tr key={alloc.id} className="hover:bg-muted/30 transition-colors">
+                        <tr
+                          key={alloc.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
                           <td className="p-3 font-medium">#{alloc.orderId}</td>
                           <td className="p-3 text-muted-foreground">
-                            {format(new Date(alloc.createdAt), "d MMM yyyy", { locale: fr })}
+                            {format(new Date(alloc.createdAt), "d MMM yyyy", {
+                              locale: fr,
+                            })}
                           </td>
                           <td className="p-3 text-right font-mono">
                             {formatExact(alloc.grossAmount, alloc.currency)}
                           </td>
                           <td className="p-3 text-right font-mono text-muted-foreground">
-                            -{formatExact(alloc.commissionAmount, alloc.currency)}
+                            -
+                            {formatExact(
+                              alloc.commissionAmount,
+                              alloc.currency,
+                            )}
                           </td>
                           <td className="p-3 text-right font-mono font-semibold text-green-600 dark:text-green-400">
                             +{formatExact(alloc.netAmount, alloc.currency)}
@@ -371,7 +434,8 @@ export default function SellerSettlementPage() {
             <CardHeader>
               <CardTitle>Historique des virements bancaires</CardTitle>
               <CardDescription>
-                Consultez l&apos;état d&apos;exécution de vos demandes de virement.
+                Consultez l&apos;état d&apos;exécution de vos demandes de
+                virement.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -394,22 +458,41 @@ export default function SellerSettlementPage() {
                     </thead>
                     <tbody className="divide-y">
                       {payouts.map((p) => (
-                        <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="p-3 font-mono font-medium">{p.reference}</td>
-                          <td className="p-3 text-muted-foreground">
-                            {format(new Date(p.createdAt), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                        <tr
+                          key={p.id}
+                          className="hover:bg-muted/30 transition-colors"
+                        >
+                          <td className="p-3 font-mono font-medium">
+                            {p.reference}
                           </td>
-                          <td className="p-3 capitalize">{p.payoutMethod.replace("_", " ")}</td>
+                          <td className="p-3 text-muted-foreground">
+                            {format(
+                              new Date(p.createdAt),
+                              "d MMM yyyy 'à' HH:mm",
+                              { locale: fr },
+                            )}
+                          </td>
+                          <td className="p-3 capitalize">
+                            {p.payoutMethod.replace("_", " ")}
+                          </td>
                           <td className="p-3 text-right font-mono font-semibold">
                             {formatExact(p.amount, p.currency)}
                           </td>
-                          <td className="p-3 text-center">{getPayoutBadge(p.status)}</td>
+                          <td className="p-3 text-center">
+                            {getPayoutBadge(p.status)}
+                          </td>
                           <td className="p-3 text-muted-foreground">
-                            {p.completedAt
-                              ? format(new Date(p.completedAt), "d MMM yyyy", { locale: fr })
-                              : p.failureReason
-                              ? <span className="text-destructive text-xs">{p.failureReason}</span>
-                              : "—"}
+                            {p.completedAt ? (
+                              format(new Date(p.completedAt), "d MMM yyyy", {
+                                locale: fr,
+                              })
+                            ) : p.failureReason ? (
+                              <span className="text-destructive text-xs">
+                                {p.failureReason}
+                              </span>
+                            ) : (
+                              "—"
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -428,7 +511,8 @@ export default function SellerSettlementPage() {
           <DialogHeader>
             <DialogTitle>Demander un virement</DialogTitle>
             <DialogDescription>
-              Transférez vos gains disponibles directement vers vos coordonnées bancaires enregistrées.
+              Transférez vos gains disponibles directement vers vos coordonnées
+              bancaires enregistrées.
             </DialogDescription>
           </DialogHeader>
 
@@ -443,7 +527,10 @@ export default function SellerSettlementPage() {
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Solde disponible :</span>
                 <span className="font-semibold text-foreground">
-                  {formatExact(summary?.balanceAvailable ?? 0, summary?.currency ?? "EUR")}
+                  {formatExact(
+                    summary?.balanceAvailable ?? 0,
+                    summary?.currency ?? "EUR",
+                  )}
                 </span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -455,7 +542,9 @@ export default function SellerSettlementPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="payout-amount">Montant à transférer ({summary?.currency})</Label>
+              <Label htmlFor="payout-amount">
+                Montant à transférer ({summary?.currency})
+              </Label>
               <Input
                 id="payout-amount"
                 type="number"
@@ -466,7 +555,8 @@ export default function SellerSettlementPage() {
                 onChange={(e) => setPayoutAmount(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Montant minimum : {summary?.minimumPayoutAmount ?? 10} {summary?.currency}
+                Montant minimum : {summary?.minimumPayoutAmount ?? 10}{" "}
+                {summary?.currency}
               </p>
             </div>
           </div>
@@ -483,7 +573,9 @@ export default function SellerSettlementPage() {
               onClick={handleRequestPayout}
               disabled={payoutSubmitting || !payoutAmount}
             >
-              {payoutSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {payoutSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               Confirmer le virement
             </Button>
           </DialogFooter>
@@ -496,7 +588,8 @@ export default function SellerSettlementPage() {
           <DialogHeader>
             <DialogTitle>Coordonnées bancaires</DialogTitle>
             <DialogDescription>
-              Renseignez vos identifiants bancaires (IBAN / SEPA) pour recevoir vos règlements de ventes.
+              Renseignez vos identifiants bancaires (IBAN / SEPA) pour recevoir
+              vos règlements de ventes.
             </DialogDescription>
           </DialogHeader>
 
@@ -508,7 +601,9 @@ export default function SellerSettlementPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="account-holder">Titulaire du compte (Nom / Entreprise)</Label>
+              <Label htmlFor="account-holder">
+                Titulaire du compte (Nom / Entreprise)
+              </Label>
               <Input
                 id="account-holder"
                 placeholder="ex. Jean Dupont"
@@ -558,7 +653,9 @@ export default function SellerSettlementPage() {
               Annuler
             </Button>
             <Button onClick={handleSaveSettings} disabled={settingsSubmitting}>
-              {settingsSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {settingsSubmitting && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
               Enregistrer
             </Button>
           </DialogFooter>

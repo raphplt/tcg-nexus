@@ -248,7 +248,9 @@ describe("Migration Discipline & Baseline Adoption (e2e)", () => {
 
     expect(stamped).toBe(21);
 
-    const recorded = await dataSource.query(`SELECT name FROM migrations ORDER BY timestamp ASC`);
+    const recorded = await dataSource.query(
+      `SELECT name FROM migrations ORDER BY timestamp ASC`,
+    );
     expect(recorded.length).toBe(21);
   });
 

@@ -27,7 +27,8 @@ export class CreateSellerReviewDto {
 
   @ApiPropertyOptional({
     description: "Detailed feedback comment from the buyer",
-    example: "Cards arrived carefully packaged in toploaders. Perfect condition!",
+    example:
+      "Cards arrived carefully packaged in toploaders. Perfect condition!",
   })
   @IsOptional()
   @IsString()
@@ -88,7 +89,9 @@ export class SellerProfileSummaryDto {
   @ApiProperty({ description: "Average rating (1.0 to 5.0) or 0 if unrated" })
   averageRating: number;
 
-  @ApiProperty({ description: "Percentage of shipments on-time within handling window" })
+  @ApiProperty({
+    description: "Percentage of shipments on-time within handling window",
+  })
   onTimeShippingRate: number;
 
   @ApiProperty({ description: "Resolved customer claim rate percentage" })

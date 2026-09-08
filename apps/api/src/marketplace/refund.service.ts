@@ -13,7 +13,7 @@ import { ReturnStatus } from "src/common/enums/return-status";
 import { UserRole } from "src/common/enums/user";
 import { OutboxService } from "src/outbox/outbox.service";
 import { User } from "src/user/entities/user.entity";
-import { DataSource, EntityManager, Repository } from "typeorm";
+import { DataSource, EntityManager, Repository, Not } from "typeorm";
 import { CreateRefundDto } from "./dto/create-refund.dto";
 import { CreateReturnDto } from "./dto/create-return.dto";
 import { UpdateDispositionDto } from "./dto/update-disposition.dto";
@@ -21,15 +21,13 @@ import { CollectionItem } from "src/collection-item/entities/collection-item.ent
 import { Listing } from "./entities/listing.entity";
 
 import { OrderItem } from "./entities/order-item.entity";
-import { Order, OrderStatus } from "./entities/order.entity";
-import {
-  PaymentStatus,
-  PaymentTransaction,
-} from "./entities/payment-transaction.entity";
+import { Order } from "./entities/order.entity";
+import { PaymentTransaction } from "./entities/payment-transaction.entity";
 import { RefundLine } from "./entities/refund-line.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { ReturnItem } from "./entities/return-item.entity";
-import { StripeService } from "./stripe.service";
+import { RefundFinanceService } from "./refund-finance.service";
+import { moneyCents } from "./finance/finance.utils";
 
 /**
  * Service orchestrating partial/full refunds, returns, and inspected inventory dispositions.
@@ -51,7 +49,7 @@ export class RefundService {
     private readonly returnItemRepository: Repository<ReturnItem>,
     @InjectRepository(PaymentTransaction)
     private readonly paymentTransactionRepository: Repository<PaymentTransaction>,
-    private readonly stripeService: StripeService,
+    private readonly refundFinance: RefundFinanceService,
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
     private readonly dataSource: DataSource,
@@ -112,7 +110,7 @@ export class RefundService {
         ) * 100,
       ) / 100;
     const refunds = await this.refundOperationRepository.find({
-      where: { order: { id: orderId }, status: RefundStatus.SUCCEEDED },
+      where: { order: { id: orderId }, status: Not(RefundStatus.FAILED) },
       relations: [
         "refundLines",
         "refundLines.orderItem",
@@ -122,6 +120,7 @@ export class RefundService {
     const alreadyRefunded =
       Math.round(
         refunds
+          .filter((refund) => refund.status === RefundStatus.SUCCEEDED)
           .flatMap((refund) => refund.refundLines ?? [])
           .filter((line) => line.orderItem.seller?.id === user.id)
           .reduce(
@@ -130,6 +129,15 @@ export class RefundService {
             0,
           ) * 100,
       ) / 100;
+    const committedAmount =
+      refunds
+        .flatMap((refund) => refund.refundLines ?? [])
+        .filter((line) => line.orderItem.seller?.id === user.id)
+        .reduce(
+          (sum, line) =>
+            sum + moneyCents(line.amount) + moneyCents(line.shippingAmount),
+          0,
+        ) / 100;
     // Legacy order-wide refunds cannot safely be attributed to a seller's remaining allowance.
     const hasUnallocatedRefund = refunds.some(
       (refund) => !refund.refundLines?.length,
@@ -139,7 +147,7 @@ export class RefundService {
       alreadyRefunded,
       remainingAmount: hasUnallocatedRefund
         ? 0
-        : Math.max(0, Math.round((totalAmount - alreadyRefunded) * 100) / 100),
+        : Math.max(0, Math.round((totalAmount - committedAmount) * 100) / 100),
     };
   }
 
@@ -173,10 +181,14 @@ export class RefundService {
       0,
     );
 
+    const committedAmount =
+      (order.refundOperations ?? [])
+        .filter((refund) => refund.status !== RefundStatus.FAILED)
+        .reduce((sum, refund) => sum + moneyCents(refund.amount), 0) / 100;
     const totalAmount = Number(order.totalAmount);
     const remainingAmount = Math.max(
       0,
-      Math.round((totalAmount - alreadyRefunded) * 100) / 100,
+      Math.round((totalAmount - committedAmount) * 100) / 100,
     );
 
     return {
@@ -199,187 +211,7 @@ export class RefundService {
     dto: CreateRefundDto,
     user: User,
   ): Promise<RefundOperation> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: ["buyer", "orderItems", "orderItems.seller", "payments"],
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order ${orderId} not found`);
-    }
-
-    const isAdmin =
-      user.role === UserRole.ADMIN || user.role === UserRole.MODERATOR;
-    const isSeller = order.orderItems.some(
-      (item) => item.seller?.id === user.id,
-    );
-
-    if (!isAdmin && !isSeller) {
-      throw new ForbiddenException(
-        "Vous n'avez pas l'autorisation d'émettre un remboursement sur cette commande",
-      );
-    }
-
-    if (!isAdmin && !dto.lines?.length) {
-      throw new BadRequestException(
-        "Sellers must specify the order lines to refund",
-      );
-    }
-    for (const line of dto.lines ?? []) {
-      const item = order.orderItems.find(
-        (item) => item.id === line.orderItemId,
-      );
-      if (!item)
-        throw new BadRequestException(
-          "Refund line does not belong to this order",
-        );
-      if (!isAdmin && item.seller?.id !== user.id) {
-        throw new ForbiddenException("Refund line belongs to another seller");
-      }
-    }
-
-    if (
-      order.status !== OrderStatus.PAID &&
-      order.status !== OrderStatus.SHIPPED &&
-      order.status !== OrderStatus.DELIVERED
-    ) {
-      throw new BadRequestException(
-        "Seule une commande réglée peut faire l'objet d'un remboursement",
-      );
-    }
-
-    const { remainingAmount } =
-      await this.calculateRemainingRefundable(orderId);
-
-    let refundAmount = dto.amount;
-    if (dto.lines && dto.lines.length > 0) {
-      const lineTotal = dto.lines.reduce(
-        (sum, line) => sum + line.amount + (line.shippingAmount ?? 0),
-        0,
-      );
-      refundAmount = lineTotal;
-    }
-
-    if (!refundAmount || refundAmount <= 0) {
-      throw new BadRequestException(
-        "Le montant du remboursement doit être supérieur à 0",
-      );
-    }
-
-    if (refundAmount > remainingAmount + 0.001) {
-      throw new BadRequestException(
-        `Le montant demandé (${refundAmount} €) dépasse le solde remboursable restant (${remainingAmount} €)`,
-      );
-    }
-
-    // Resolve payment intent ID from payment transactions
-    const successfulPayment = order.payments?.find(
-      (p) => p.status === PaymentStatus.COMPLETED,
-    );
-    const paymentIntentId = successfulPayment?.transactionId;
-
-    let providerRefundId: string | null = null;
-    if (paymentIntentId) {
-      try {
-        const idempotencyKey = `ref_${order.id}_${Date.now()}`;
-        const stripeRefund = await this.stripeService.createRefund(
-          paymentIntentId,
-          Math.round(refundAmount * 100),
-          "requested_by_customer",
-          idempotencyKey,
-        );
-        providerRefundId = stripeRefund.id;
-      } catch (err) {
-        this.logger.error(
-          `Stripe refund creation failed on order ${order.id}: ${(err as Error).message}`,
-        );
-        throw new BadRequestException(
-          `Échec du remboursement bancaire : ${(err as Error).message}`,
-        );
-      }
-    }
-
-    return this.dataSource.transaction(async (manager: EntityManager) => {
-      const refundOp = manager.create(RefundOperation, {
-        order,
-        amount: refundAmount,
-        currency: order.currency,
-        reason: dto.reason ?? null,
-        status: RefundStatus.SUCCEEDED,
-        providerRefundId,
-        createdBy: user,
-      });
-
-      const savedOp = await manager.save(RefundOperation, refundOp);
-
-      if (dto.lines && dto.lines.length > 0) {
-        for (const lineDto of dto.lines) {
-          const item = order.orderItems.find(
-            (i) => i.id === lineDto.orderItemId,
-          );
-          if (!item) {
-            throw new BadRequestException(
-              `L'article ${lineDto.orderItemId} n'appartient pas à la commande ${order.id}`,
-            );
-          }
-
-          const line = manager.create(RefundLine, {
-            refundOperation: savedOp,
-            orderItem: item,
-            quantity: lineDto.quantity,
-            amount: lineDto.amount,
-            shippingAmount: lineDto.shippingAmount ?? 0,
-          });
-          await manager.save(RefundLine, line);
-        }
-      }
-
-      // Check if full order is now refunded
-      const newRemaining = Math.max(
-        0,
-        Math.round((remainingAmount - refundAmount) * 100) / 100,
-      );
-      if (newRemaining <= 0) {
-        order.status = OrderStatus.REFUNDED;
-        await manager.save(Order, order);
-      }
-
-      await this.auditService.record(
-        {
-          actorId: user.id,
-          actorRole: user.role ?? "user",
-          targetType: "order",
-          targetId: String(order.id),
-          action: "order.refunded",
-          reason: dto.reason ?? "Refund issued",
-          beforeState: { remainingAmount },
-          afterState: {
-            refundedAmount: refundAmount,
-            remainingAmount: newRemaining,
-            providerRefundId,
-          },
-        },
-        manager,
-      );
-
-      await this.outboxService.record(
-        {
-          eventType: "order.refunded",
-          aggregateType: "order",
-          aggregateId: String(order.id),
-          payload: {
-            orderId: order.id,
-            refundOperationId: savedOp.id,
-            amount: refundAmount,
-            currency: order.currency,
-            providerRefundId,
-          },
-        },
-        manager,
-      );
-
-      return savedOp;
-    });
+    return this.refundFinance.createRefund(orderId, dto, user);
   }
 
   /**
@@ -426,6 +258,11 @@ export class RefundService {
           reason: null,
           createdBy: null,
           providerRefundId: null,
+          paymentIntentId: null,
+          requestKey: null,
+          fingerprint: null,
+          providerAttemptedAt: null,
+          failureReason: null,
         },
       ];
     });

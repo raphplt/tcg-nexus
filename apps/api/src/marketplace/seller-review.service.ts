@@ -174,19 +174,21 @@ export class SellerReviewService {
         ? Math.round((onTimeCount / completedSalesCount) * 100)
         : 100;
 
-    const recentReviews: SellerReviewItemDto[] = reviews.slice(0, 10).map((r) => ({
-      id: r.id,
-      buyerName: r.buyer
-        ? `${r.buyer.firstName || ""} ${r.buyer.lastName || ""}`.trim() ||
-          r.buyer.email.split("@")[0]
-        : "Acheteur vérifié",
-      buyerAvatar: r.buyer?.avatarUrl || null,
-      rating: r.rating,
-      comment: r.comment || null,
-      verifiedPurchase: r.verifiedPurchase,
-      productName: r.orderItem?.productName || "Carte Pokémon",
-      createdAt: r.createdAt,
-    }));
+    const recentReviews: SellerReviewItemDto[] = reviews
+      .slice(0, 10)
+      .map((r) => ({
+        id: r.id,
+        buyerName: r.buyer
+          ? `${r.buyer.firstName || ""} ${r.buyer.lastName || ""}`.trim() ||
+            r.buyer.email.split("@")[0]
+          : "Acheteur vérifié",
+        buyerAvatar: r.buyer?.avatarUrl || null,
+        rating: r.rating,
+        comment: r.comment || null,
+        verifiedPurchase: r.verifiedPurchase,
+        productName: r.orderItem?.productName || "Carte Pokémon",
+        createdAt: r.createdAt,
+      }));
 
     const displayName =
       `${seller.firstName || ""} ${seller.lastName || ""}`.trim() ||

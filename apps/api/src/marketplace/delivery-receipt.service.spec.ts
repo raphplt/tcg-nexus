@@ -1,9 +1,16 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AuditService } from "../audit/audit.service";
-import { CardState, CardStateCode } from "../card-state/entities/card-state.entity";
+import {
+  CardState,
+  CardStateCode,
+} from "../card-state/entities/card-state.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { Collection } from "../collection/entities/collection.entity";
 import { Currency } from "../common/enums/currency";
@@ -19,7 +26,9 @@ describe("DeliveryReceiptService", () => {
   let orderRepo: Partial<Record<keyof Repository<Order>, jest.Mock>>;
   let orderItemRepo: Partial<Record<keyof Repository<OrderItem>, jest.Mock>>;
   let collectionRepo: Partial<Record<keyof Repository<Collection>, jest.Mock>>;
-  let collectionItemRepo: Partial<Record<keyof Repository<CollectionItem>, jest.Mock>>;
+  let collectionItemRepo: Partial<
+    Record<keyof Repository<CollectionItem>, jest.Mock>
+  >;
   let cardStateRepo: Partial<Record<keyof Repository<CardState>, jest.Mock>>;
   let auditService: Partial<Record<keyof AuditService, jest.Mock>>;
 
@@ -70,7 +79,9 @@ describe("DeliveryReceiptService", () => {
     collectionRepo = {
       findOne: jest.fn(),
       find: jest.fn(),
-      create: jest.fn().mockImplementation((dto) => ({ ...dto, id: "col-default" })),
+      create: jest
+        .fn()
+        .mockImplementation((dto) => ({ ...dto, id: "col-default" })),
       save: jest.fn().mockImplementation(async (entity) => entity),
     };
 

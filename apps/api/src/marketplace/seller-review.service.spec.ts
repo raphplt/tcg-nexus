@@ -104,7 +104,10 @@ describe("SellerReviewService", () => {
       orderItemRepo.findOne!.mockResolvedValue(null);
 
       await expect(
-        service.createReview(42, 101, mockBuyer, { rating: 5, comment: "Parfait" }),
+        service.createReview(42, 101, mockBuyer, {
+          rating: 5,
+          comment: "Parfait",
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -155,10 +158,7 @@ describe("SellerReviewService", () => {
   describe("getSellerProfile", () => {
     it("returns calculated metrics, ratings, and sales count", async () => {
       userRepo.findOne!.mockResolvedValue(mockSeller);
-      orderItemRepo.find!.mockResolvedValue([
-        { id: 1 },
-        { id: 2 },
-      ]);
+      orderItemRepo.find!.mockResolvedValue([{ id: 1 }, { id: 2 }]);
       reviewRepo.find!.mockResolvedValue([
         { id: 801, rating: 5, createdAt: new Date() },
         { id: 802, rating: 4, createdAt: new Date() },

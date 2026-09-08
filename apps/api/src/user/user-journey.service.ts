@@ -3,7 +3,10 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { FulfillmentStatus } from "../common/enums/fulfillment-status";
-import { MatchResultStatus, ProposalStatus } from "../common/enums/match-result-status";
+import {
+  MatchResultStatus,
+  ProposalStatus,
+} from "../common/enums/match-result-status";
 import { Deck } from "../deck/entities/deck.entity";
 import { Match, MatchStatus } from "../match/entities/match.entity";
 import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
@@ -205,7 +208,8 @@ export class UserJourneyService {
               id: `match-dispute-${currentMatch.id}`,
               type: "DISPUTE_RESOLUTION_NEEDED",
               title: `Litige de score en cours (Ronde ${currentMatch.round})`,
-              description: "Votre score est en cours d'examen par les arbitres du tournoi.",
+              description:
+                "Votre score est en cours d'examen par les arbitres du tournoi.",
               priority: "HIGH",
               actionUrl: `/tournaments/${tournament.id}/player`,
               actionLabel: "Voir le cockpit",
@@ -217,7 +221,8 @@ export class UserJourneyService {
               id: `match-report-${currentMatch.id}`,
               type: "TOURNAMENT_SCORE_REPORT",
               title: `Rapportez le résultat de votre match (Ronde ${currentMatch.round})`,
-              description: "Votre match est prêt à être joué. Transmettez votre score une fois la manche terminée.",
+              description:
+                "Votre match est prêt à être joué. Transmettez votre score une fois la manche terminée.",
               priority: "HIGH",
               actionUrl: `/tournaments/${tournament.id}/player`,
               actionLabel: "Déclarer le score",
@@ -259,7 +264,9 @@ export class UserJourneyService {
 
     // Sort actions by priority: HIGH -> MEDIUM -> LOW
     const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
-    actions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    actions.sort(
+      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority],
+    );
 
     return {
       userId: user.id,

@@ -13,5 +13,5 @@ export * from "./return-item.entity";
 export * from "./seller-settlement-account.entity";
 export * from "./seller-allocation.entity";
 export * from "./seller-payout.entity";
+export * from "./seller-ledger-entry.entity";
 export * from "./seller-review.entity";
-

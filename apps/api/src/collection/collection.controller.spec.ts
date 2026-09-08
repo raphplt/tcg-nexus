@@ -69,7 +69,6 @@ describe("CollectionController", () => {
       ],
     }).compile();
 
-
     controller = module.get<CollectionController>(CollectionController);
   });
 

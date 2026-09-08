@@ -55,12 +55,18 @@ export class RespondMatchResultDto {
  * Payload for tournament organizer/staff to resolve a disputed match result with audit (TRN-01).
  */
 export class ResolveMatchDisputeDto {
-  @ApiProperty({ description: "Validated final score for player A", example: 2 })
+  @ApiProperty({
+    description: "Validated final score for player A",
+    example: 2,
+  })
   @IsInt()
   @Min(0)
   playerAScore: number;
 
-  @ApiProperty({ description: "Validated final score for player B", example: 0 })
+  @ApiProperty({
+    description: "Validated final score for player B",
+    example: 0,
+  })
   @IsInt()
   @Min(0)
   playerBScore: number;

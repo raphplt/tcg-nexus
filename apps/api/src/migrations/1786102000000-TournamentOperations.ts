@@ -8,9 +8,7 @@ import { MigrationInterface, QueryRunner } from "typeorm";
  * - Adds round clock and deck policy columns to tournament table (TRN-03, TRN-05).
  * - Adds official tiebreaker columns (omw, gw, ogw, byes, explanation) to ranking table (TRN-04).
  */
-export class TournamentOperations1786102000000
-  implements MigrationInterface
-{
+export class TournamentOperations1786102000000 implements MigrationInterface {
   name = "TournamentOperations1786102000000";
 
   public async up(queryRunner: QueryRunner): Promise<void> {

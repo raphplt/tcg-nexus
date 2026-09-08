@@ -99,7 +99,9 @@ describe("TournamentIncidentService", () => {
       });
 
       const user = { id: 50, role: UserRole.USER } as any;
-      const res = await service.dropPlayer(1, user, { reason: "Medical emergency" });
+      const res = await service.dropPlayer(1, user, {
+        reason: "Medical emergency",
+      });
 
       expect(res.success).toBe(true);
       expect(registrationRepository.save).toHaveBeenCalledWith(

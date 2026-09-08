@@ -10,13 +10,16 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Order } from "./order.entity";
+import { Order, OrderStatus } from "./order.entity";
 import { RefundLine } from "./refund-line.entity";
 
 /**
  * Persisted financial refund operation with provider reference and line-level allocations.
  */
 @Entity("refund_operation")
+@Index("IDX_refund_order_request_key", ["order", "requestKey"], {
+  unique: true,
+})
 export class RefundOperation {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -65,6 +68,27 @@ export class RefundOperation {
     },
   )
   refundLines: RefundLine[];
+
+  /** Stable order-scoped operation identity; null only for legacy/provider-originated rows. */
+  @Column({ type: "varchar", length: 128, nullable: true })
+  requestKey?: string | null;
+
+  @Column({ type: "varchar", length: 64, nullable: true })
+  fingerprint?: string | null;
+
+  @Column({ type: "varchar", length: 128, nullable: true })
+  paymentIntentId?: string | null;
+
+  /** Committed before the external call so a crash cannot erase an ambiguous attempt. */
+  @Column({ type: "timestamptz", nullable: true })
+  providerAttemptedAt?: Date | null;
+
+  @Column({ type: "text", nullable: true })
+  failureReason?: string | null;
+
+  /** Restores fulfillment state if a full refund is later rejected by the bank. */
+  @Column({ type: "varchar", length: 32, nullable: true })
+  orderStatusBeforeFullRefund?: OrderStatus | null;
 
   @CreateDateColumn()
   createdAt: Date;

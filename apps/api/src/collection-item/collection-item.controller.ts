@@ -16,7 +16,6 @@ import {
 } from "./dto/add-collection-item.dto";
 import { UpdateCollectionItemDto } from "./dto/update-collection-item.dto";
 
-
 @ApiTags("collection-item")
 @ApiBearerAuth()
 @Controller("collection-item")
@@ -95,7 +94,6 @@ export class CollectionItemController {
     return this.collectionItemService.updateItem(id, dto, user);
   }
 
-
   @Post(":id/split")
   async splitItem(
     @Param("id", ParseIntPipe) id: number,
@@ -114,4 +112,3 @@ export class CollectionItemController {
     return this.collectionItemService.mergeItem(id, targetId, user);
   }
 }
-

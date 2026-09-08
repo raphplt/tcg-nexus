@@ -286,7 +286,9 @@ export default function SellerPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold flex items-center gap-2">
-                {profileSummary?.averageRating ? profileSummary.averageRating.toFixed(1) : "—"}
+                {profileSummary?.averageRating
+                  ? profileSummary.averageRating.toFixed(1)
+                  : "—"}
                 <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
               </div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -545,32 +547,38 @@ export default function SellerPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-green-600" />
-                Avis acheteurs vérifiés ({profileSummary?.totalReviewsCount ?? 0})
+                Avis acheteurs vérifiés (
+                {profileSummary?.totalReviewsCount ?? 0})
               </CardTitle>
-              {profileSummary?.averageRating && profileSummary.averageRating > 0 && (
-                <div className="flex items-center gap-1.5 text-sm font-semibold">
-                  <span className="text-lg">{profileSummary.averageRating.toFixed(1)}</span>
-                  <div className="flex text-amber-400">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${
-                          star <= Math.round(profileSummary.averageRating)
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground/30"
-                        }`}
-                      />
-                    ))}
+              {profileSummary?.averageRating &&
+                profileSummary.averageRating > 0 && (
+                  <div className="flex items-center gap-1.5 text-sm font-semibold">
+                    <span className="text-lg">
+                      {profileSummary.averageRating.toFixed(1)}
+                    </span>
+                    <div className="flex text-amber-400">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(profileSummary.averageRating)
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Seuls les acheteurs ayant confirmé la réception de leur commande peuvent publier une évaluation.
+              Seuls les acheteurs ayant confirmé la réception de leur commande
+              peuvent publier une évaluation.
             </p>
           </CardHeader>
           <CardContent>
-            {!profileSummary?.recentReviews || profileSummary.recentReviews.length === 0 ? (
+            {!profileSummary?.recentReviews ||
+            profileSummary.recentReviews.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
                 Aucun avis n&apos;a encore été publié pour ce vendeur.
               </div>

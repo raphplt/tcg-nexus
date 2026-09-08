@@ -18,17 +18,23 @@ export class ReceiptImportItemDto {
   @IsInt()
   orderItemId: number;
 
-  @ApiPropertyOptional({ description: "Card condition override (e.g. Near Mint)" })
+  @ApiPropertyOptional({
+    description: "Card condition override (e.g. Near Mint)",
+  })
   @IsOptional()
   @IsString()
   condition?: string;
 
-  @ApiPropertyOptional({ description: "Physical variant/finish (e.g. Holo, Reverse, Normal)" })
+  @ApiPropertyOptional({
+    description: "Physical variant/finish (e.g. Holo, Reverse, Normal)",
+  })
   @IsOptional()
   @IsString()
   variant?: string;
 
-  @ApiPropertyOptional({ description: "Physical storage location (e.g. Binder A, Deck Box 1)" })
+  @ApiPropertyOptional({
+    description: "Physical storage location (e.g. Binder A, Deck Box 1)",
+  })
   @IsOptional()
   @IsString()
   storageLocation?: string;

@@ -44,4 +44,3 @@ import { Collection } from "./entities/collection.entity";
   ],
 })
 export class CollectionModule {}
-

@@ -1,4 +1,8 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from "@nestjs/common";
 import { MatchResultService } from "./match-result.service";
 import {
   MatchResultStatus,
@@ -47,7 +51,9 @@ describe("MatchResultService", () => {
       findOne: jest.fn(),
     };
     matchService = {
-      reportScore: jest.fn().mockResolvedValue({ id: 100, status: MatchStatus.FINISHED }),
+      reportScore: jest
+        .fn()
+        .mockResolvedValue({ id: 100, status: MatchStatus.FINISHED }),
     };
     auditService = {
       record: jest.fn().mockResolvedValue({ id: 1 }),
@@ -149,7 +155,11 @@ describe("MatchResultService", () => {
       organizerRepository.findOne.mockResolvedValue({ id: 1, isActive: true });
       proposalRepository.findOne.mockResolvedValue({ id: 55 });
 
-      const adminUser = { id: 99, role: UserRole.ADMIN, email: "admin@test.com" } as any;
+      const adminUser = {
+        id: 99,
+        role: UserRole.ADMIN,
+        email: "admin@test.com",
+      } as any;
 
       const res = await service.resolveDispute(100, adminUser, {
         playerAScore: 2,

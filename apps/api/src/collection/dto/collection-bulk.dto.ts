@@ -16,7 +16,10 @@ export enum ImportMode {
 }
 
 export class BulkMoveDto {
-  @ApiProperty({ description: "Array of collection item IDs to move", type: [Number] })
+  @ApiProperty({
+    description: "Array of collection item IDs to move",
+    type: [Number],
+  })
   @IsArray()
   @ArrayMinSize(1)
   @IsInt({ each: true })
@@ -29,7 +32,10 @@ export class BulkMoveDto {
 }
 
 export class BulkDeleteDto {
-  @ApiProperty({ description: "Array of collection item IDs to delete", type: [Number] })
+  @ApiProperty({
+    description: "Array of collection item IDs to delete",
+    type: [Number],
+  })
   @IsArray()
   @ArrayMinSize(1)
   @IsInt({ each: true })
@@ -47,7 +53,9 @@ export class ImportCsvDto {
   @IsEnum(ImportMode)
   mode?: ImportMode;
 
-  @ApiPropertyOptional({ description: "Client-provided operation ID for idempotency" })
+  @ApiPropertyOptional({
+    description: "Client-provided operation ID for idempotency",
+  })
   @IsOptional()
   @IsString()
   operationId?: string;

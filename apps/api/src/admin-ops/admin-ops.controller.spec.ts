@@ -8,7 +8,11 @@ describe("AdminOpsController", () => {
   const mockAdminOpsService = {
     getMetrics: jest.fn().mockResolvedValue({
       orders: { pendingCheckouts: 1, stalePendingCheckouts: 0 },
-      outbox: { pendingEvents: 0, failedEvents: 0, oldestPendingAgeSeconds: null },
+      outbox: {
+        pendingEvents: 0,
+        failedEvents: 0,
+        oldestPendingAgeSeconds: null,
+      },
       settlement: {
         pendingPayouts: 0,
         failedPayouts: 0,

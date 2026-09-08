@@ -15,14 +15,35 @@ jest.setTimeout(60000);
 
 const SHIPPING_ADDRESS = "12 rue des Cartes, 75001 Paris, France";
 
+const remoteRefunds = new Map<string, Record<string, unknown>>();
+
 const stripeServiceMock = {
   onModuleInit: jest.fn(),
   createPaymentIntent: jest.fn(),
   retrievePaymentIntent: jest.fn(),
   constructEventFromPayload: jest.fn(),
-  createRefund: jest
-    .fn()
-    .mockResolvedValue({ id: "re_e2e_123", status: "succeeded" }),
+  findRefundForOperation: jest.fn().mockResolvedValue(undefined),
+  retrieveRefund: jest.fn(async (id: string) => remoteRefunds.get(id)),
+  createRefund: jest.fn(
+    async (
+      intent: string,
+      amount: number,
+      _reason: string,
+      key: string,
+      operationId: string,
+    ) => {
+      const refund = {
+        id: `re_${operationId}`,
+        status: "succeeded",
+        amount,
+        currency: "eur",
+        payment_intent: intent,
+        metadata: { operationId },
+      };
+      remoteRefunds.set(refund.id, refund);
+      return refund;
+    },
+  ),
 };
 
 describe("Order flow (e2e)", () => {

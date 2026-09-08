@@ -40,7 +40,9 @@ describe("TournamentRoundClockService", () => {
       expect(res.roundStartedAt).toBeDefined();
       expect(res.roundDeadline).toBeDefined();
       expect(res.currentRound).toBe(1);
-      expect(snapshotService.lockSnapshotsForTournament).toHaveBeenCalledWith(1);
+      expect(snapshotService.lockSnapshotsForTournament).toHaveBeenCalledWith(
+        1,
+      );
     });
   });
 
@@ -70,7 +72,9 @@ describe("TournamentRoundClockService", () => {
       const resumed = await service.resumeRoundClock(1);
       expect(resumed.isRoundPaused).toBe(false);
       expect(resumed.pausedAt).toBeNull();
-      expect(resumed.roundDeadline!.getTime()).toBeGreaterThan(initialDeadline.getTime());
+      expect(resumed.roundDeadline!.getTime()).toBeGreaterThan(
+        initialDeadline.getTime(),
+      );
     });
   });
 
@@ -84,7 +88,9 @@ describe("TournamentRoundClockService", () => {
       });
 
       const res = await service.extendRoundClock(1, 5, "Dispute delay");
-      expect(res.roundDeadline!.getTime()).toBe(deadline.getTime() + 5 * 60 * 1000);
+      expect(res.roundDeadline!.getTime()).toBe(
+        deadline.getTime() + 5 * 60 * 1000,
+      );
       expect(res.roundDurationMinutes).toBe(55);
     });
   });

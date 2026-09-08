@@ -7,7 +7,10 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { AuditService } from "../audit/audit.service";
-import { CardState, CardStateCode } from "../card-state/entities/card-state.entity";
+import {
+  CardState,
+  CardStateCode,
+} from "../card-state/entities/card-state.entity";
 import { CollectionItem } from "../collection-item/entities/collection-item.entity";
 import { Collection } from "../collection/entities/collection.entity";
 import { FulfillmentStatus } from "../common/enums/fulfillment-status";

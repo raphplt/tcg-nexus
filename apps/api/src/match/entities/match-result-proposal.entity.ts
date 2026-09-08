@@ -22,9 +22,13 @@ export class MatchResultProposal {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Match, (match) => match.proposals, {
-    onDelete: "CASCADE",
-  })
+  @ManyToOne(
+    () => Match,
+    (match) => match.proposals,
+    {
+      onDelete: "CASCADE",
+    },
+  )
   match: Match;
 
   @ManyToOne(() => Player, { onDelete: "CASCADE" })

@@ -30,9 +30,7 @@ import { SellerSettlementService } from "./seller-settlement.service";
 @Controller("marketplace")
 @UseGuards(ThrottlerGuard)
 export class SellerSettlementController {
-  constructor(
-    private readonly settlementService: SellerSettlementService,
-  ) {}
+  constructor(private readonly settlementService: SellerSettlementService) {}
 
   /**
    * Retrieves current settlement account balances and settings for the authenticated seller.
@@ -55,7 +53,8 @@ export class SellerSettlementController {
   @ApiBearerAuth()
   @Get("seller/settlement/allocations")
   @ApiOperation({
-    summary: "Lists all order allocations, commissions, and net amounts for the seller",
+    summary:
+      "Lists all order allocations, commissions, and net amounts for the seller",
   })
   getSellerAllocations(@CurrentUser() user: User) {
     return this.settlementService.getSellerAllocations(user.id);
@@ -75,13 +74,27 @@ export class SellerSettlementController {
   }
 
   /**
+   * Retrieves the append-only balance movements of the authenticated seller.
+   */
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get("seller/settlement/ledger")
+  @ApiOperation({
+    summary: "Lists every balance movement recorded for the seller account",
+  })
+  getSellerLedger(@CurrentUser() user: User) {
+    return this.settlementService.getSellerLedger(user.id);
+  }
+
+  /**
    * Updates payout preferences and bank details for the authenticated seller.
    */
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Patch("seller/settlement/settings")
   @ApiOperation({
-    summary: "Updates payout bank information and preferred disbursement method",
+    summary:
+      "Updates payout bank information and preferred disbursement method",
   })
   updatePayoutSettings(
     @CurrentUser() user: User,
@@ -119,7 +132,22 @@ export class SellerSettlementController {
   }
 
   /**
-   * Administrative action to process, complete, or fail a payout request.
+   * Administrative verification that stored balances match their ledger.
+   */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @Roles(UserRole.ADMIN, UserRole.MODERATOR)
+  @Get(["admin/settlements/reconcile", "admin/payouts/reconcile"])
+  @ApiOperation({
+    summary:
+      "Verifies stored seller balances against the append-only settlement ledger",
+  })
+  reconcile() {
+    return this.settlementService.reconcile();
+  }
+
+  /**
+   * Administrative action to process, complete, cancel, or fail a payout request.
    */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()

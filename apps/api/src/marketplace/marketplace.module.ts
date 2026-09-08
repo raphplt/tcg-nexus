@@ -27,6 +27,7 @@ import {
   ReturnItem,
   SealedEvent,
   SellerAllocation,
+  SellerLedgerEntry,
   SellerPayout,
   SellerReview,
   SellerSettlementAccount,
@@ -39,6 +40,7 @@ import { OrderController } from "./order.controller";
 import { OrderService } from "./order.service";
 import { OrderReservationScheduler } from "./order-reservation.scheduler";
 import { RefundController } from "./refund.controller";
+import { RefundFinanceService } from "./refund-finance.service";
 import { RefundService } from "./refund.service";
 import { SealedEventController } from "./sealed-event.controller";
 import { SealedEventService } from "./sealed-event.service";
@@ -75,6 +77,7 @@ import { WebhookController } from "./webhook.controller";
       SellerSettlementAccount,
       SellerAllocation,
       SellerPayout,
+      SellerLedgerEntry,
       SellerReview,
     ]),
     ConfigModule,
@@ -98,6 +101,7 @@ import { WebhookController } from "./webhook.controller";
     MarketplaceService,
     OrderService,
     RefundService,
+    RefundFinanceService,
     CardPopularityService,
     CardPopularityScheduler,
     OrderReservationScheduler,
@@ -111,6 +115,7 @@ import { WebhookController } from "./webhook.controller";
     MarketplaceService,
     OrderService,
     RefundService,
+    RefundFinanceService,
     SealedEventService,
     SellerSettlementService,
     DeliveryReceiptService,

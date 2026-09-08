@@ -137,7 +137,10 @@ export class MarketplaceService {
       isInventoryBacked = true;
 
       // Prefill fields from inventory if missing
-      if (inventoryItem.productKind === ProductKind.CARD && inventoryItem.pokemonCard) {
+      if (
+        inventoryItem.productKind === ProductKind.CARD &&
+        inventoryItem.pokemonCard
+      ) {
         createListingDto.productKind = ProductKind.CARD;
         createListingDto.pokemonCardId =
           createListingDto.pokemonCardId || inventoryItem.pokemonCard.id;
@@ -151,7 +154,10 @@ export class MarketplaceService {
         createListingDto.productKind = ProductKind.SEALED;
         createListingDto.sealedProductId =
           createListingDto.sealedProductId || inventoryItem.sealedProduct.id;
-        if (inventoryItem.sealedCondition && !createListingDto.sealedCondition) {
+        if (
+          inventoryItem.sealedCondition &&
+          !createListingDto.sealedCondition
+        ) {
           createListingDto.sealedCondition = inventoryItem.sealedCondition;
         }
       }
@@ -211,7 +217,8 @@ export class MarketplaceService {
         ...rest,
         productKind,
         isInventoryBacked,
-        inventoryItem: isInventoryBacked && inventoryItem ? inventoryItem : null,
+        inventoryItem:
+          isInventoryBacked && inventoryItem ? inventoryItem : null,
         shippingCost: getShippingCost(productKind),
         handlingTimeDays: SHIPPING_POLICY.handlingTimeDays,
         seller: user,
@@ -235,7 +242,6 @@ export class MarketplaceService {
       return savedListing;
     });
   }
-
 
   async findAll(
     params: FindAllListingsParams = {},
@@ -361,7 +367,6 @@ export class MarketplaceService {
       listing.inventoryItem &&
       listing.quantityAvailable > 0
     ) {
-
       const inv = await this.collectionItemRepository.findOne({
         where: { id: listing.inventoryItem.id },
       });
@@ -429,7 +434,6 @@ export class MarketplaceService {
 
     await this.listingRepository.softRemove(listing);
   }
-
 
   async findBySellerId(
     sellerId: number,

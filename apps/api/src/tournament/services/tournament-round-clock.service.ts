@@ -51,8 +51,7 @@ export class TournamentRoundClockService {
       throw new NotFoundException("Tournoi non trouvé");
     }
 
-    const duration =
-      durationMinutes ?? tournament.roundDurationMinutes ?? 50;
+    const duration = durationMinutes ?? tournament.roundDurationMinutes ?? 50;
     const now = new Date();
     const deadline = new Date(now.getTime() + duration * 60 * 1000);
 

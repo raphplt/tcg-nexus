@@ -4,9 +4,7 @@ import { DataSource, In, LessThan, Repository } from "typeorm";
 import { AuditService } from "../audit/audit.service";
 import { AuditEvent } from "../audit/entities/audit-event.entity";
 import { ProposalStatus } from "../common/enums/match-result-status";
-import {
-  PayoutStatus,
-} from "../common/enums/seller-settlement";
+import { PayoutStatus } from "../common/enums/seller-settlement";
 import { SupportTicketStatusType } from "../common/enums/supportTicketType";
 import { Listing } from "../marketplace/entities/listing.entity";
 import { Order, OrderStatus } from "../marketplace/entities/order.entity";
@@ -101,7 +99,9 @@ export class AdminOpsService {
     // 3. Settlement metrics
     const [pendingPayouts, failedPayouts, sellerAccounts] = await Promise.all([
       this.payoutRepository.count({
-        where: { status: In([PayoutStatus.REQUESTED, PayoutStatus.PROCESSING]) },
+        where: {
+          status: In([PayoutStatus.REQUESTED, PayoutStatus.PROCESSING]),
+        },
       }),
       this.payoutRepository.count({
         where: { status: PayoutStatus.FAILED },
@@ -164,9 +164,12 @@ export class AdminOpsService {
    * @param dto - Query filters and pagination options.
    * @returns Paginated audit records with total count.
    */
-  async queryAuditLogs(
-    dto: QueryAuditLogsDto,
-  ): Promise<{ data: AuditEvent[]; total: number; page: number; limit: number }> {
+  async queryAuditLogs(dto: QueryAuditLogsDto): Promise<{
+    data: AuditEvent[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const page = dto.page || 1;
     const limit = dto.limit || 20;
 

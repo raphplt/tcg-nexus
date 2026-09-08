@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
   IsEnum,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -47,6 +48,13 @@ export class UpdatePayoutSettingsDto {
   @IsOptional()
   @IsString()
   bankName?: string;
+
+  @ApiPropertyOptional({
+    description: "Connected account identifier for provider-executed payouts",
+  })
+  @IsOptional()
+  @IsString()
+  providerAccountId?: string;
 }
 
 /**
@@ -67,6 +75,14 @@ export class RequestPayoutDto {
   @IsOptional()
   @IsEnum(Currency)
   currency?: Currency;
+
+  @ApiPropertyOptional({
+    description:
+      "Idempotency key; a retry under the same key returns the existing payout",
+  })
+  @IsOptional()
+  @IsString()
+  requestKey?: string;
 }
 
 /**
@@ -74,12 +90,12 @@ export class RequestPayoutDto {
  */
 export class AdminProcessPayoutDto {
   @ApiProperty({
-    description: "Target action on payout (PROCESS, COMPLETE, FAIL)",
-    enum: ["PROCESS", "COMPLETE", "FAIL"],
+    description: "Target action on payout (PROCESS, COMPLETE, FAIL, CANCEL)",
+    enum: ["PROCESS", "COMPLETE", "FAIL", "CANCEL"],
     example: "COMPLETE",
   })
-  @IsString()
-  action: "PROCESS" | "COMPLETE" | "FAIL";
+  @IsIn(["PROCESS", "COMPLETE", "FAIL", "CANCEL"])
+  action: "PROCESS" | "COMPLETE" | "FAIL" | "CANCEL";
 
   @ApiPropertyOptional({ description: "External banking/transfer reference" })
   @IsOptional()
@@ -129,5 +145,28 @@ export class SellerSettlementSummaryDto {
     ibanMasked?: string;
     bic?: string;
     bankName?: string;
+    providerAccountId?: string;
   } | null;
+}
+
+/**
+ * Result of verifying stored balances against the append-only seller ledger (MKT-06).
+ */
+export class SettlementReconciliationDto {
+  @ApiProperty({ description: "Number of settlement accounts verified" })
+  accountsChecked: number;
+
+  @ApiProperty({ description: "True when no account deviates from its ledger" })
+  consistent: boolean;
+
+  @ApiProperty({
+    description: "Accounts whose stored balances deviate from their ledger",
+    isArray: true,
+  })
+  discrepancies: {
+    accountId: number;
+    sellerId: number;
+    currency: Currency;
+    mismatches: string[];
+  }[];
 }

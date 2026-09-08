@@ -155,6 +155,18 @@ const PROBES: MigrationProbe[] = [
     probe: `SELECT 1 FROM information_schema.tables
             WHERE table_name = 'seller_settlement_account'`,
   },
+  {
+    name: "RefundReservations1788768000000",
+    timestamp: 1788768000000,
+    probe: `SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'refund_operation' AND column_name = 'requestKey'`,
+  },
+  {
+    name: "SellerLedgerAndPayoutExecution1788800000000",
+    timestamp: 1788800000000,
+    probe: `SELECT 1 FROM information_schema.tables
+            WHERE table_name = 'seller_ledger_entry'`,
+  },
 ];
 
 /**
@@ -186,7 +198,9 @@ async function main() {
 
     const rows = await AppDataSource.query(migration.probe);
     if (rows.length === 0) {
-      console.log(`- ${migration.name} — not detected, will be executed by runner`);
+      console.log(
+        `- ${migration.name} — not detected, will be executed by runner`,
+      );
       continue;
     }
 

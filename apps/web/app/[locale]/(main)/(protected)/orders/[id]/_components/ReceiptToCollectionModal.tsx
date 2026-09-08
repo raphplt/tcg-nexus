@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Check, CheckCircle2, ChevronRight, FolderPlus, Loader2, Sparkles } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  FolderPlus,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +51,9 @@ export function ReceiptToCollectionModal({
   const [items, setItems] = useState<ReceiptImportPreviewItem[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string>("");
-  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number | null>(null);
 
@@ -67,17 +76,25 @@ export function ReceiptToCollectionModal({
         setItems(preview.items || []);
         setCollections(userCollections || []);
 
-        if (userCollections && userCollections.length > 0 && userCollections[0]) {
+        if (
+          userCollections &&
+          userCollections.length > 0 &&
+          userCollections[0]
+        ) {
           setSelectedCollectionId(userCollections[0].id);
         }
 
         // Preselect all non-imported delivered items
         const nonImported = (preview.items || [])
-          .filter((it) => it.fulfillmentStatus === "delivered" && !it.alreadyImported)
+          .filter(
+            (it) => it.fulfillmentStatus === "delivered" && !it.alreadyImported,
+          )
           .map((it) => it.orderItemId);
         setSelectedItemIds(new Set(nonImported));
       } catch (err: any) {
-        setError(err.message || "Erreur lors du chargement des articles livrés.");
+        setError(
+          err.message || "Erreur lors du chargement des articles livrés.",
+        );
       } finally {
         setLoading(false);
       }
@@ -138,14 +155,17 @@ export function ReceiptToCollectionModal({
             Importer vos articles reçus dans votre collection
           </DialogTitle>
           <DialogDescription>
-            Ajoutez directement les cartes livrées de votre commande avec leur historique d&apos;achat et état vérifié.
+            Ajoutez directement les cartes livrées de votre commande avec leur
+            historique d&apos;achat et état vérifié.
           </DialogDescription>
         </DialogHeader>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Recherche des articles livrés...</p>
+            <p className="text-sm text-muted-foreground">
+              Recherche des articles livrés...
+            </p>
           </div>
         ) : successCount !== null ? (
           <div className="py-8 text-center space-y-4">
@@ -155,7 +175,8 @@ export function ReceiptToCollectionModal({
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">Importation réussie !</h3>
               <p className="text-sm text-muted-foreground">
-                {successCount} article(s) ajouté(s) à votre collection avec provenance certifiée.
+                {successCount} article(s) ajouté(s) à votre collection avec
+                provenance certifiée.
               </p>
             </div>
             <DialogFooter className="sm:justify-center">
@@ -190,7 +211,8 @@ export function ReceiptToCollectionModal({
                 </Select>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Une collection par défaut sera créée automatiquement pour accueillir ces articles.
+                  Une collection par défaut sera créée automatiquement pour
+                  accueillir ces articles.
                 </p>
               )}
             </div>
@@ -200,7 +222,8 @@ export function ReceiptToCollectionModal({
               <div className="max-h-64 overflow-y-auto space-y-2 border rounded-md p-2 divide-y">
                 {items.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Aucun article livré n&apos;est disponible pour l&apos;importation.
+                    Aucun article livré n&apos;est disponible pour
+                    l&apos;importation.
                   </p>
                 ) : (
                   items.map((item) => {
@@ -219,7 +242,7 @@ export function ReceiptToCollectionModal({
                           isSelected
                             ? "bg-primary/5 border border-primary/20"
                             : "hover:bg-muted/50"
-                        } ${(!isDelivered || item.alreadyImported) ? "opacity-60 cursor-not-allowed" : ""}`}
+                        } ${!isDelivered || item.alreadyImported ? "opacity-60 cursor-not-allowed" : ""}`}
                       >
                         <div className="relative h-12 w-10 shrink-0 bg-muted rounded overflow-hidden">
                           {item.productImage ? (
@@ -237,17 +260,28 @@ export function ReceiptToCollectionModal({
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{item.productName}</p>
+                          <p className="font-medium text-sm truncate">
+                            {item.productName}
+                          </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {item.condition && <Badge variant="outline">{item.condition}</Badge>}
-                            {item.language && <Badge variant="outline">{item.language.toUpperCase()}</Badge>}
+                            {item.condition && (
+                              <Badge variant="outline">{item.condition}</Badge>
+                            )}
+                            {item.language && (
+                              <Badge variant="outline">
+                                {item.language.toUpperCase()}
+                              </Badge>
+                            )}
                             <span>x{item.quantity}</span>
                           </div>
                         </div>
 
                         <div>
                           {item.alreadyImported ? (
-                            <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                            <Badge
+                              variant="secondary"
+                              className="text-xs flex items-center gap-1"
+                            >
                               <CheckCircle2 className="h-3 w-3 text-green-600" />
                               Déjà importé
                             </Badge>
@@ -258,7 +292,9 @@ export function ReceiptToCollectionModal({
                           ) : (
                             <div
                               className={`h-5 w-5 rounded border flex items-center justify-center transition-colors ${
-                                isSelected ? "bg-primary text-primary-foreground border-primary" : "border-muted-foreground/40"
+                                isSelected
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "border-muted-foreground/40"
                               }`}
                             >
                               {isSelected && <Check className="h-3 w-3" />}

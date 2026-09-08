@@ -64,7 +64,8 @@ export function SellerReviewModal({
         <DialogHeader>
           <DialogTitle>Évaluer votre achat</DialogTitle>
           <DialogDescription>
-            Votre avis certifié aide la communauté à identifier les vendeurs de confiance.
+            Votre avis certifié aide la communauté à identifier les vendeurs de
+            confiance.
           </DialogDescription>
         </DialogHeader>
 
@@ -78,7 +79,9 @@ export function SellerReviewModal({
           <div className="p-3 bg-muted rounded-md space-y-1">
             <p className="text-xs text-muted-foreground">Article évalué</p>
             <p className="text-sm font-semibold truncate">{item.productName}</p>
-            <p className="text-xs text-muted-foreground">Vendu par {item.sellerName}</p>
+            <p className="text-xs text-muted-foreground">
+              Vendu par {item.sellerName}
+            </p>
           </div>
 
           <div className="space-y-2 text-center">

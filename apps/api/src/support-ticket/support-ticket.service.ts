@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  Optional,
 } from "@nestjs/common";
 import { CreateSupportTicketDto } from "./dto/create-support-ticket.dto";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -14,6 +15,7 @@ import { CreateSupportMessageDto } from "./dto/create-support-message.dto";
 import { SupportTicketStatusType } from "../common/enums/supportTicketType";
 import { UserRole } from "../common/enums/user";
 import { MailService } from "../mail/mail.service";
+import { SellerSettlementService } from "../marketplace/seller-settlement.service";
 
 @Injectable()
 export class SupportTicketService {
@@ -25,6 +27,13 @@ export class SupportTicketService {
     private readonly messageRepo: Repository<SupportMessage>,
 
     private readonly mailService: MailService,
+
+    /**
+     * Present when the marketplace is loaded; closing a marketplace claim then
+     * releases the seller funds it froze (MKT-04/MKT-06).
+     */
+    @Optional()
+    private readonly settlementService?: SellerSettlementService,
   ) {}
 
   private isStaff(user: User): boolean {
@@ -192,6 +201,10 @@ export class SupportTicketService {
     };
   }
 
+  /**
+   * Closes a ticket and, for a marketplace claim, releases the settlement hold
+   * it created.
+   */
   async closeTicket(ticketId: number, user: User) {
     const ticket = await this.ticketRepo.findOne({
       where: { id: ticketId },
@@ -202,6 +215,10 @@ export class SupportTicketService {
     this.assertOwnerOrStaff(ticket, user);
 
     ticket.status = SupportTicketStatusType.closed;
-    return this.ticketRepo.save(ticket);
+    const saved = await this.ticketRepo.save(ticket);
+
+    await this.settlementService?.onClaimResolved(ticketId);
+
+    return saved;
   }
 }

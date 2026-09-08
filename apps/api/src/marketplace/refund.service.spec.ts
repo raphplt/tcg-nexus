@@ -20,11 +20,13 @@ import {
 import { RefundLine } from "./entities/refund-line.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { ReturnItem } from "./entities/return-item.entity";
+import { RefundFinanceService } from "./refund-finance.service";
 import { RefundService } from "./refund.service";
 import { StripeService } from "./stripe.service";
 
 describe("RefundService", () => {
   let service: RefundService;
+  const finance = { createRefund: jest.fn() };
   let orderRepo: Partial<Record<keyof Repository<Order>, jest.Mock>>;
   let refundOpRepo: Partial<
     Record<keyof Repository<RefundOperation>, jest.Mock>
@@ -79,6 +81,7 @@ describe("RefundService", () => {
   };
 
   beforeEach(async () => {
+    finance.createRefund.mockReset();
     orderRepo = {
       findOne: jest.fn(),
       save: jest.fn(),
@@ -136,6 +139,7 @@ describe("RefundService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefundService,
+        { provide: RefundFinanceService, useValue: finance },
         {
           provide: getRepositoryToken(RefundOperation),
           useValue: refundOpRepo,
@@ -209,67 +213,26 @@ describe("RefundService", () => {
   });
 
   describe("createRefund", () => {
-    it("throws BadRequestException if requested refund exceeds remaining balance", async () => {
-      const order = mockOrder({
-        totalAmount: 100,
-        refundOperations: [
-          {
-            id: 1,
-            amount: 80,
-            status: RefundStatus.SUCCEEDED,
-          } as unknown as RefundOperation,
-        ],
-      });
-      orderRepo.findOne!.mockResolvedValue(order);
-
-      await expect(
-        service.createRefund(
-          order.id,
-          {
-            reason: "Customer request",
-            lines: [{ orderItemId: 101, amount: 30, quantity: 1 }],
-          },
-          mockSeller,
-        ),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it("creates partial refund operation and does not restock inventory", async () => {
-      const order = mockOrder({ totalAmount: 100, refundOperations: [] });
-      const initialStock = order.orderItems[0].listing!.quantityAvailable;
-
-      orderRepo.findOne!.mockResolvedValue(order);
-
-      const mockManager = {
-        findOne: jest.fn().mockResolvedValue(order),
-        find: jest.fn().mockResolvedValue([]),
-        create: jest.fn((cls, dto) => dto),
-        save: jest.fn().mockImplementation((clsOrEntity, maybeEntity) => {
-          const entity = maybeEntity ?? clsOrEntity;
-          return Promise.resolve({ id: 10, ...entity });
-        }),
+    it("delegates to the durable finance boundary without performing an independent provider call", async () => {
+      const payload = {
+        requestKey: "retry-1",
+        lines: [{ orderItemId: 101, quantity: 1, amount: 30 }],
       };
-      dataSource.transaction!.mockImplementation((cb: any) => cb(mockManager));
-
-      await service.createRefund(
-        order.id,
-        {
-          reason: "Defective item",
-          lines: [{ orderItemId: 101, amount: 45, quantity: 1 }],
-        },
+      finance.createRefund.mockResolvedValue({
+        id: "operation",
+        status: RefundStatus.PENDING,
+      });
+      expect(await service.createRefund(42, payload, mockSeller)).toEqual({
+        id: "operation",
+        status: RefundStatus.PENDING,
+      });
+      expect(finance.createRefund).toHaveBeenCalledWith(
+        42,
+        payload,
         mockSeller,
       );
-
-      expect(stripeService.createRefund).toHaveBeenCalledWith(
-        "pi_test_123",
-        4500,
-        "requested_by_customer",
-        expect.any(String),
-      );
-      // Decoupling verification: listingRepo.save or manager.save on Listing should NOT have been called
+      expect(stripeService.createRefund).not.toHaveBeenCalled();
       expect(listingRepo.save).not.toHaveBeenCalled();
-      expect(order.orderItems[0].listing!.quantityAvailable).toBe(initialStock);
-      expect(outboxService.record).toHaveBeenCalled();
     });
   });
 

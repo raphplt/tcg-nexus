@@ -61,7 +61,6 @@ export class CollectionService {
     private readonly localization: CatalogLocalizationService,
   ) {}
 
-
   private async getOwnedCollection(
     id: string,
     userId: number,
@@ -923,4 +922,3 @@ export class CollectionService {
     );
   }
 }
-

@@ -137,9 +137,7 @@ describe("Tournament Operations (e2e)", () => {
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
-      const aliceSnapshot = res.body.find(
-        (s: any) => s.playerId === playerAId,
-      );
+      const aliceSnapshot = res.body.find((s: any) => s.playerId === playerAId);
       expect(aliceSnapshot).toBeDefined();
       expect(aliceSnapshot.cards).toHaveLength(0);
       expect(aliceSnapshot.cardCount).toBe(60);
@@ -282,7 +280,9 @@ describe("Tournament Operations (e2e)", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain("has been dropped from future pairings");
+      expect(res.body.message).toContain(
+        "has been dropped from future pairings",
+      );
 
       const dashboardRes = await request(httpServer)
         .get(`/tournaments/${tournamentId}/player-dashboard`)

@@ -25,6 +25,7 @@ import { RefundLine } from "./entities/refund-line.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { financeFingerprint } from "./finance/finance.utils";
 import { RefundFinanceService } from "./refund-finance.service";
+import { SellerSettlementService } from "./seller-settlement.service";
 import { StripeService } from "./stripe.service";
 
 describe("RefundFinanceService", () => {
@@ -33,6 +34,7 @@ describe("RefundFinanceService", () => {
   let stripeService: any;
   let auditService: any;
   let outboxService: any;
+  let settlementService: any;
   let mockEntityManager: any;
   let mockRefundOpRepo: any;
   let mockPaymentRepo: any;
@@ -130,6 +132,11 @@ describe("RefundFinanceService", () => {
       record: jest.fn().mockResolvedValue({ id: "outbox-1" }),
     };
 
+    settlementService = {
+      onRefundApplied: jest.fn().mockResolvedValue(undefined),
+      onRefundReversed: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefundFinanceService,
@@ -137,6 +144,7 @@ describe("RefundFinanceService", () => {
         { provide: StripeService, useValue: stripeService },
         { provide: AuditService, useValue: auditService },
         { provide: OutboxService, useValue: outboxService },
+        { provide: SellerSettlementService, useValue: settlementService },
       ],
     }).compile();
 

@@ -20,6 +20,7 @@ import { OutboxService } from "../outbox/outbox.service";
 import { SupportTicket } from "../support-ticket/entities/support-ticket.entity";
 import { RefundOperation } from "./entities/refund-operation.entity";
 import { OrderService } from "./order.service";
+import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
 describe("OrderService", () => {
@@ -102,6 +103,10 @@ describe("OrderService", () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrderService,
+        {
+          provide: RefundFinanceService,
+          useValue: { reconcilePaymentRefunds: jest.fn() },
+        },
         { provide: getRepositoryToken(Order), useValue: orderRepo },
         { provide: getRepositoryToken(OrderItem), useValue: orderItemRepo },
         {

@@ -52,6 +52,32 @@ export class SellerPayout {
   @Column({ type: "varchar", length: 100, unique: true })
   reference: string;
 
+  /**
+   * Seller-supplied idempotency key, unique per seller. A retried request
+   * returns the existing payout instead of reserving the balance twice.
+   */
+  @Column({ type: "varchar", length: 128, nullable: true })
+  requestKey?: string | null;
+
+  /** Connected account the disbursement targets, captured when the payout is requested. */
+  @Column({ type: "varchar", length: 128, nullable: true })
+  providerAccountId?: string | null;
+
+  /** Provider transfer identity, present once execution has been committed remotely. */
+  @Column({ type: "varchar", length: 128, nullable: true })
+  providerTransferId?: string | null;
+
+  /**
+   * First provider attempt. Retaining it keeps an ambiguous attempt recoverable
+   * by provider lookup instead of issuing a second disbursement.
+   */
+  @Column({ type: "timestamp with time zone", nullable: true })
+  providerAttemptedAt?: Date | null;
+
+  /** External banking or provider reference evidencing a completed disbursement. */
+  @Column({ type: "varchar", length: 190, nullable: true })
+  transactionReference?: string | null;
+
   @Column({
     type: "enum",
     enum: PayoutMethod,

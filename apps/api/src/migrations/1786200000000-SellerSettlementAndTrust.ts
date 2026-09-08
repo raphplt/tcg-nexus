@@ -154,7 +154,11 @@ export class SellerSettlementAndTrust1786200000000
 
     await queryRunner.query(`DROP TABLE IF EXISTS "seller_review" CASCADE;`);
     await queryRunner.query(`DROP TABLE IF EXISTS "seller_payout" CASCADE;`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "seller_allocation" CASCADE;`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "seller_settlement_account" CASCADE;`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "seller_allocation" CASCADE;`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "seller_settlement_account" CASCADE;`,
+    );
   }
 }

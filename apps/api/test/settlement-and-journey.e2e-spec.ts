@@ -24,7 +24,9 @@ const stripeServiceMock = {
   createPaymentIntent: jest.fn(),
   retrievePaymentIntent: jest.fn(),
   constructEventFromPayload: jest.fn(),
-  createRefund: jest.fn().mockResolvedValue({ id: "re_e2e_settle", status: "succeeded" }),
+  createRefund: jest
+    .fn()
+    .mockResolvedValue({ id: "re_e2e_settle", status: "succeeded" }),
 };
 
 describe("Settlement, Receipt Import & User Journey (e2e)", () => {
@@ -101,7 +103,9 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
     const listingCheck = await request(httpServer)
       .get(`/marketplace/listings/${listingId}`)
       .expect(200);
-    expect(listingCheck.body.photoUrls).toContain("https://example.com/cards/charizard-front.jpg");
+    expect(listingCheck.body.photoUrls).toContain(
+      "https://example.com/cards/charizard-front.jpg",
+    );
     expect(listingCheck.body.defects).toContain("Corner whitening");
 
     // 2. Buyer purchase via cart & checkout
@@ -144,7 +148,9 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
       .set(authAs(buyer))
       .expect(200);
     const orderItem = orderDetails.body.orderItems[0];
-    expect(orderItem.listingPhotoUrls).toContain("https://example.com/cards/charizard-front.jpg");
+    expect(orderItem.listingPhotoUrls).toContain(
+      "https://example.com/cards/charizard-front.jpg",
+    );
     expect(orderItem.listingDefects).toContain("Corner whitening");
 
     // 3. Verify Seller Allocation and Pending Balance (MKT-06)
@@ -165,7 +171,9 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
       ? allocationsRes.body
       : allocationsRes.body.data;
     expect(allocations.length).toBeGreaterThanOrEqual(1);
-    const alloc = allocations.find((a: any) => a.order?.id === orderId || a.orderId === orderId);
+    const alloc = allocations.find(
+      (a: any) => a.order?.id === orderId || a.orderId === orderId,
+    );
     expect(alloc).toBeDefined();
     expect(Number(alloc.grossAmount)).toBe(50);
     expect(Number(alloc.commissionAmount)).toBe(2.5);
@@ -191,7 +199,9 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
 
     // Buyer confirms item receipt
     await request(httpServer)
-      .post(`/marketplace/orders/${orderId}/items/${orderItem.id}/confirm-receipt`)
+      .post(
+        `/marketplace/orders/${orderId}/items/${orderItem.id}/confirm-receipt`,
+      )
       .set(authAs(buyer))
       .expect(201);
 
@@ -299,8 +309,13 @@ describe("Settlement, Receipt Import & User Journey (e2e)", () => {
       .expect(200);
     expect(Number(summaryAfterPayoutReq.body.balanceAvailable)).toBe(17.5);
 
-    // Admin processes and completes payout
+    // Admin moves the payout through its legal transitions before completing it
     const payoutId = payoutRes.body.id;
+    await request(httpServer)
+      .post(`/marketplace/admin/payouts/${payoutId}/process`)
+      .set(authAs(admin))
+      .send({ action: "PROCESS" })
+      .expect(201);
     const processRes = await request(httpServer)
       .post(`/marketplace/admin/payouts/${payoutId}/process`)
       .set(authAs(admin))

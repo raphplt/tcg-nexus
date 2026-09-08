@@ -61,7 +61,9 @@ export class AdminOpsController {
    */
   @Get("audit-logs")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Query domain audit logs with filtering and pagination" })
+  @ApiOperation({
+    summary: "Query domain audit logs with filtering and pagination",
+  })
   @ApiResponse({
     status: 200,
     description: "Paginated audit logs",
@@ -93,7 +95,9 @@ export class AdminOpsController {
    */
   @Post("orders/expire-stale")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Expire stale pending checkout orders and restore stock" })
+  @ApiOperation({
+    summary: "Expire stale pending checkout orders and restore stock",
+  })
   @ApiResponse({
     status: 200,
     description: "Stale order sweep summary",
@@ -111,7 +115,9 @@ export class AdminOpsController {
    */
   @Get("settlement/reconcile")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Reconcile marketplace ledger against seller account balances" })
+  @ApiOperation({
+    summary: "Reconcile marketplace ledger against seller account balances",
+  })
   @ApiResponse({
     status: 200,
     description: "Ledger reconciliation report",

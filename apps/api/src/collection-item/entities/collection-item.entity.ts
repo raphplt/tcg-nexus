@@ -130,4 +130,3 @@ export class CollectionItem {
   @Column({ type: "jsonb", nullable: true })
   provenance?: Record<string, any> | null;
 }
-

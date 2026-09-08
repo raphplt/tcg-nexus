@@ -337,7 +337,10 @@ const CollectionDetailPage = () => {
   const completionPercent =
     completionData?.completionPercentage ??
     (totalRequiredCards > 0
-      ? Math.min(100, Math.round((ownedDistinctCount / totalRequiredCards) * 100))
+      ? Math.min(
+          100,
+          Math.round((ownedDistinctCount / totalRequiredCards) * 100),
+        )
       : 0);
 
   const formatDate = (dateString: string) => {
@@ -443,8 +446,12 @@ const CollectionDetailPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="BASE_SET">{t("policyBaseSet")}</SelectItem>
-                      <SelectItem value="MASTER_SET">{t("policyMasterSet")}</SelectItem>
+                      <SelectItem value="BASE_SET">
+                        {t("policyBaseSet")}
+                      </SelectItem>
+                      <SelectItem value="MASTER_SET">
+                        {t("policyMasterSet")}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -467,7 +474,11 @@ const CollectionDetailPage = () => {
                     })}
                     {completionData && completionData.duplicatesCount > 0 && (
                       <span className="text-xs font-normal text-muted-foreground ml-1.5">
-                        ({t("duplicates", { count: completionData.duplicatesCount })})
+                        (
+                        {t("duplicates", {
+                          count: completionData.duplicatesCount,
+                        })}
+                        )
                       </span>
                     )}
                   </span>
@@ -522,18 +533,20 @@ const CollectionDetailPage = () => {
                       <Upload className="w-3.5 h-3.5" />
                       {t("importCsv")}
                     </Button>
-                    {isMasterSet && completionData && completionData.missingCardsCount > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 gap-1 text-xs text-rose-500 border-rose-500/30 hover:border-rose-500"
-                        disabled={isWishlisting}
-                        onClick={handleWishlistMissing}
-                      >
-                        <Heart className="w-3.5 h-3.5" />
-                        {t("wishlistMissing")}
-                      </Button>
-                    )}
+                    {isMasterSet &&
+                      completionData &&
+                      completionData.missingCardsCount > 0 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1 text-xs text-rose-500 border-rose-500/30 hover:border-rose-500"
+                          disabled={isWishlisting}
+                          onClick={handleWishlistMissing}
+                        >
+                          <Heart className="w-3.5 h-3.5" />
+                          {t("wishlistMissing")}
+                        </Button>
+                      )}
                   </>
                 )}
                 <Button
@@ -1043,19 +1056,24 @@ const CollectionDetailPage = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
-                              {canEdit && (item.quantity || 0) > 1 && item.id && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-emerald-500"
-                                  title={t("sellDuplicate")}
-                                  onClick={() =>
-                                    handleSellDuplicate(item.id!, item.quantity)
-                                  }
-                                >
-                                  <DollarSign className="w-4 h-4" />
-                                </Button>
-                              )}
+                              {canEdit &&
+                                (item.quantity || 0) > 1 &&
+                                item.id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-emerald-500"
+                                    title={t("sellDuplicate")}
+                                    onClick={() =>
+                                      handleSellDuplicate(
+                                        item.id!,
+                                        item.quantity,
+                                      )
+                                    }
+                                  >
+                                    <DollarSign className="w-4 h-4" />
+                                  </Button>
+                                )}
                               <Button
                                 variant="ghost"
                                 size="icon"

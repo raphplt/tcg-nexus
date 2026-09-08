@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { OrderService } from "./order.service";
@@ -92,5 +93,45 @@ describe("WebhookController", () => {
     await expect(
       controller.handleWebhook("sig", { rawBody: Buffer.from("p") } as any),
     ).rejects.toThrow("Webhook Error: fail");
+  });
+  it.each([
+    "refund.created",
+    "refund.updated",
+    "refund.failed",
+  ])("reconciles %s from its payment identity", async (type) => {
+    (stripeService.constructEventFromPayload as jest.Mock).mockResolvedValue({
+      id: "evt_refund",
+      type,
+      data: {
+        object: {
+          id: "re_partial",
+          amount: 123,
+          status: "pending",
+          payment_intent: { id: "pi_refund" },
+        },
+      },
+    });
+    await controller.handleWebhook("sig", {
+      rawBody: Buffer.from("payload"),
+    } as unknown as Request);
+    expect(orderService.handlePaymentRefunded).toHaveBeenCalledWith(
+      "pi_refund",
+    );
+  });
+
+  it("propagates refund reconciliation errors for provider redelivery", async () => {
+    (stripeService.constructEventFromPayload as jest.Mock).mockResolvedValue({
+      id: "evt_refund_retry",
+      type: "refund.updated",
+      data: { object: { payment_intent: "pi_refund" } },
+    });
+    (orderService.handlePaymentRefunded as jest.Mock).mockRejectedValueOnce(
+      new Error("Reconciliation unavailable"),
+    );
+    await expect(
+      controller.handleWebhook("sig", {
+        rawBody: Buffer.from("payload"),
+      } as unknown as Request),
+    ).rejects.toThrow("Reconciliation unavailable");
   });
 });

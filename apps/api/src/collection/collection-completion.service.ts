@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
@@ -33,10 +30,14 @@ export class CollectionCompletionService {
   private assertCanView(collection: Collection, viewer?: User): void {
     if (collection.isPublic) return;
     if (!viewer) {
-      throw new NotFoundException(`Collection with id ${collection.id} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collection.id} not found`,
+      );
     }
     if (collection.user?.id !== viewer.id && viewer.role !== UserRole.ADMIN) {
-      throw new NotFoundException(`Collection with id ${collection.id} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collection.id} not found`,
+      );
     }
   }
 
@@ -63,7 +64,9 @@ export class CollectionCompletionService {
     });
 
     if (!collection) {
-      throw new NotFoundException(`Collection with id ${collectionId} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collectionId} not found`,
+      );
     }
 
     this.assertCanView(collection, viewer);
@@ -97,7 +100,8 @@ export class CollectionCompletionService {
       }
     }
 
-    const rarityBreakdown: Record<string, { total: number; owned: number }> = {};
+    const rarityBreakdown: Record<string, { total: number; owned: number }> =
+      {};
 
     // Case 1: Master Set or Set-linked collection
     if (collection.masterSet) {
@@ -129,10 +133,11 @@ export class CollectionCompletionService {
         } else {
           // Master Set: distinct targets for each defined variant
           const variants = card.variants || { normal: true };
-          const variantKeys = Object.keys(variants).filter(
-            (k) => Boolean(variants[k]),
+          const variantKeys = Object.keys(variants).filter((k) =>
+            Boolean(variants[k]),
           );
-          const targetVariants = variantKeys.length > 0 ? variantKeys : ["normal"];
+          const targetVariants =
+            variantKeys.length > 0 ? variantKeys : ["normal"];
 
           for (const v of targetVariants) {
             totalUniqueTargets += 1;
@@ -155,7 +160,10 @@ export class CollectionCompletionService {
           ? Math.round((ownedUniqueTargets / totalUniqueTargets) * 10000) / 100
           : 0;
 
-      const duplicateCopiesCount = Math.max(0, totalCopiesCount - ownedUniqueTargets);
+      const duplicateCopiesCount = Math.max(
+        0,
+        totalCopiesCount - ownedUniqueTargets,
+      );
       const missingCount = Math.max(0, totalUniqueTargets - ownedUniqueTargets);
 
       return {
@@ -166,14 +174,18 @@ export class CollectionCompletionService {
         totalCopiesCount,
         duplicateCopiesCount,
         missingCount,
-        isComplete: totalUniqueTargets > 0 && ownedUniqueTargets === totalUniqueTargets,
+        isComplete:
+          totalUniqueTargets > 0 && ownedUniqueTargets === totalUniqueTargets,
         rarityBreakdown,
       };
     }
 
     // Case 2: Custom / freeform collection
     const uniqueCardCount = ownedCardsMap.size;
-    const duplicateCopiesCount = Math.max(0, totalCopiesCount - uniqueCardCount);
+    const duplicateCopiesCount = Math.max(
+      0,
+      totalCopiesCount - uniqueCardCount,
+    );
 
     return {
       policy: activePolicy,

@@ -105,38 +105,39 @@ function PlayerStats({ ranking, tournament }: PlayerStatsProps) {
           )}
         </div>
 
-        {ranking.omwPercentage !== undefined && ranking.omwPercentage !== null && (
-          <div className="pt-3 border-t space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">
-              Départages officiels (Tiebreakers)
+        {ranking.omwPercentage !== undefined &&
+          ranking.omwPercentage !== null && (
+            <div className="pt-3 border-t space-y-2">
+              <div className="text-xs font-semibold uppercase text-muted-foreground">
+                Départages officiels (Tiebreakers)
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.omwPercentage).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">OMW%</div>
+                </div>
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.gwPercentage ?? 0).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">GW%</div>
+                </div>
+                <div className="p-2 bg-muted/60 rounded">
+                  <div className="font-bold text-foreground">
+                    {Number(ranking.ogwPercentage ?? 0).toFixed(1)}%
+                  </div>
+                  <div className="text-muted-foreground">OGW%</div>
+                </div>
+              </div>
+              {ranking.tiebreakExplanation && (
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  {ranking.tiebreakExplanation}
+                </p>
+              )}
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="p-2 bg-muted/60 rounded">
-                <div className="font-bold text-foreground">
-                  {Number(ranking.omwPercentage).toFixed(1)}%
-                </div>
-                <div className="text-muted-foreground">OMW%</div>
-              </div>
-              <div className="p-2 bg-muted/60 rounded">
-                <div className="font-bold text-foreground">
-                  {Number(ranking.gwPercentage ?? 0).toFixed(1)}%
-                </div>
-                <div className="text-muted-foreground">GW%</div>
-              </div>
-              <div className="p-2 bg-muted/60 rounded">
-                <div className="font-bold text-foreground">
-                  {Number(ranking.ogwPercentage ?? 0).toFixed(1)}%
-                </div>
-                <div className="text-muted-foreground">OGW%</div>
-              </div>
-            </div>
-            {ranking.tiebreakExplanation && (
-              <p className="text-xs text-muted-foreground italic mt-1">
-                {ranking.tiebreakExplanation}
-              </p>
-            )}
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

@@ -56,6 +56,7 @@ import { RefundOperation } from "./entities/refund-operation.entity";
 import { RefundStatus } from "../common/enums/refund-status";
 import { round2 } from "./price.helper";
 import { SHIPPING_POLICY } from "./shipping-policy";
+import { RefundFinanceService } from "./refund-finance.service";
 import { StripeService } from "./stripe.service";
 
 const RESERVATION_TTL_MINUTES = 20;
@@ -103,6 +104,7 @@ export class OrderService {
     private readonly eventEmitter: EventEmitter2,
     private readonly auditService: AuditService,
     private readonly outboxService: OutboxService,
+    private readonly refundFinance: RefundFinanceService,
     @Optional()
     private readonly sellerSettlementService?: SellerSettlementService,
   ) {}
@@ -702,13 +704,19 @@ export class OrderService {
 
       // Transition physical inventory from reserved to sold for inventory-backed listings
       for (const item of order.orderItems || []) {
-        if (item.listing?.isInventoryBacked && item.listing?.inventoryItem?.id) {
+        if (
+          item.listing?.isInventoryBacked &&
+          item.listing?.inventoryItem?.id
+        ) {
           const inv = await manager.findOne(CollectionItem, {
             where: { id: item.listing.inventoryItem.id },
             lock: { mode: "pessimistic_write" },
           });
           if (inv) {
-            inv.quantityReserved = Math.max(0, inv.quantityReserved - item.quantity);
+            inv.quantityReserved = Math.max(
+              0,
+              inv.quantityReserved - item.quantity,
+            );
             inv.quantitySold = (inv.quantitySold || 0) + item.quantity;
             await manager.save(CollectionItem, inv);
           }
@@ -901,31 +909,13 @@ export class OrderService {
     await this.cancelOrder(payment.order.id, "payment failed");
   }
 
+  /** Reconciles individual provider refunds; cumulative webhook amounts are not a full-refund signal. */
   async handlePaymentRefunded(
     paymentIntentId: string,
-    latestRefundId?: string,
-    refundAmount?: number,
+    _latestRefundId?: string,
+    _refundAmount?: number,
   ): Promise<void> {
-    const payment = await this.paymentTransactionRepository.findOne({
-      where: { transactionId: paymentIntentId },
-      relations: ["order"],
-    });
-
-    if (!payment?.order) {
-      this.logger.warn(
-        `No order attached to refunded PaymentIntent ${paymentIntentId}`,
-      );
-      return;
-    }
-
-    if (payment.status !== PaymentStatus.REFUNDED) {
-      payment.status = PaymentStatus.REFUNDED;
-      await this.paymentTransactionRepository.save(payment);
-    }
-
-    await this.transitionOrder(payment.order.id, OrderStatus.REFUNDED, {
-      allowNoop: true,
-    });
+    await this.refundFinance.reconcilePaymentRefunds(paymentIntentId);
   }
 
   async transitionOrder(
@@ -1411,6 +1401,15 @@ export class OrderService {
     });
 
     const saved = await this.supportTicketRepository.save(ticket);
+
+    // Freeze the seller's proceeds for the duration of the claim (MKT-04/MKT-06).
+    if (this.sellerSettlementService && orderItem.seller?.id) {
+      await this.sellerSettlementService.onClaimOpened(
+        orderId,
+        orderItem.seller.id,
+        saved.id,
+      );
+    }
 
     await this.auditService.record({
       actorId: buyer.id,

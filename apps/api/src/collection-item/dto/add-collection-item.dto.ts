@@ -39,7 +39,6 @@ export class AddCardItemDto {
   notes?: string;
 }
 
-
 export class AddSealedItemDto {
   @ApiProperty()
   @IsString()

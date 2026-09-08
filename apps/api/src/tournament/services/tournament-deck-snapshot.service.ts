@@ -174,7 +174,10 @@ export class TournamentDeckSnapshotService {
       );
     }
 
-    const totalCards = cards.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    const totalCards = cards.reduce(
+      (sum, item) => sum + (item.quantity || 1),
+      0,
+    );
     const validationErrors: string[] = [];
     let isValid = true;
 
@@ -187,7 +190,7 @@ export class TournamentDeckSnapshotService {
 
     const formatIdNum = dto.formatId
       ? Number(dto.formatId) || null
-      : deckEntity?.format?.id ?? null;
+      : (deckEntity?.format?.id ?? null);
 
     if (!snapshot) {
       snapshot = this.snapshotRepository.create({
@@ -211,7 +214,9 @@ export class TournamentDeckSnapshotService {
       snapshot.ruleVersion = dto.ruleVersion || snapshot.ruleVersion;
       snapshot.cardsSnapshot = cards;
       snapshot.isValid = isValid;
-      snapshot.validationErrors = validationErrors.length ? validationErrors : null;
+      snapshot.validationErrors = validationErrors.length
+        ? validationErrors
+        : null;
       snapshot.submittedAt = now;
     }
 
@@ -296,9 +301,7 @@ export class TournamentDeckSnapshotService {
     return snapshots.map((snapshot) => {
       const isOwner = requestingUser && snapshot.user?.id === requestingUser.id;
       const canViewCards =
-        isOrganizerOrAdmin ||
-        isOwner ||
-        this.canViewCardsByPolicy(tournament);
+        isOrganizerOrAdmin || isOwner || this.canViewCardsByPolicy(tournament);
 
       return this.mapToResponseDto(snapshot, Boolean(canViewCards));
     });

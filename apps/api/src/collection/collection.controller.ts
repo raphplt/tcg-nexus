@@ -50,7 +50,6 @@ export class CollectionController {
     private readonly bulkService: CollectionBulkService,
   ) {}
 
-
   @Get()
   @Public()
   @ApiOperation({ summary: "Récupérer toutes les collections publiques" })
@@ -338,7 +337,10 @@ export class CollectionController {
 
   @Post(":id/items/undo-operation")
   @ApiOperation({ summary: "Annuler une opération d'inventaire par son ID" })
-  async undoOperation(@Body() dto: UndoOperationDto, @CurrentUser() user: User) {
+  async undoOperation(
+    @Body() dto: UndoOperationDto,
+    @CurrentUser() user: User,
+  ) {
     return this.bulkService.undoOperation(user, dto);
   }
 
@@ -377,4 +379,3 @@ export class CollectionController {
     return this.collectionService.listDuplicate(id, itemId, user, dto);
   }
 }
-

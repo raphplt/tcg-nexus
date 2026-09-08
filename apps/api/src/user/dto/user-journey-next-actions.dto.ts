@@ -42,7 +42,9 @@ export class ActionableJourneyItemDto {
   @ApiProperty({ description: "Action button label" })
   actionLabel: string;
 
-  @ApiProperty({ description: "Related entity type (e.g. order, tournament, deck)" })
+  @ApiProperty({
+    description: "Related entity type (e.g. order, tournament, deck)",
+  })
   entityType: string;
 
   @ApiProperty({ description: "Related entity unique identifier" })

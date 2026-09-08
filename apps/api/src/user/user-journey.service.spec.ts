@@ -18,10 +18,16 @@ describe("UserJourneyService", () => {
   let service: UserJourneyService;
   let orderRepo: Partial<Record<keyof Repository<Order>, jest.Mock>>;
   let deckRepo: Partial<Record<keyof Repository<Deck>, jest.Mock>>;
-  let regRepo: Partial<Record<keyof Repository<TournamentRegistration>, jest.Mock>>;
+  let regRepo: Partial<
+    Record<keyof Repository<TournamentRegistration>, jest.Mock>
+  >;
   let matchRepo: Partial<Record<keyof Repository<Match>, jest.Mock>>;
-  let proposalRepo: Partial<Record<keyof Repository<MatchResultProposal>, jest.Mock>>;
-  let snapshotRepo: Partial<Record<keyof Repository<TournamentDeckSnapshot>, jest.Mock>>;
+  let proposalRepo: Partial<
+    Record<keyof Repository<MatchResultProposal>, jest.Mock>
+  >;
+  let snapshotRepo: Partial<
+    Record<keyof Repository<TournamentDeckSnapshot>, jest.Mock>
+  >;
   let colItemRepo: Partial<Record<keyof Repository<CollectionItem>, jest.Mock>>;
 
   const mockUser = {
@@ -116,8 +122,8 @@ describe("UserJourneyService", () => {
     });
 
     it("aggregates pending orders, unimported receipts, and incomplete decks", async () => {
-      orderRepo.find!
-        .mockResolvedValueOnce([
+      orderRepo
+        .find!.mockResolvedValueOnce([
           {
             id: 10,
             status: OrderStatus.PENDING,
@@ -152,7 +158,9 @@ describe("UserJourneyService", () => {
 
       expect(result.totalActionableCount).toBe(3);
       expect(result.actions.map((a) => a.type)).toContain("CHECKOUT_PENDING");
-      expect(result.actions.map((a) => a.type)).toContain("RECEIPT_IMPORT_PENDING");
+      expect(result.actions.map((a) => a.type)).toContain(
+        "RECEIPT_IMPORT_PENDING",
+      );
       expect(result.actions.map((a) => a.type)).toContain("DECK_MISSING_CARDS");
     });
   });

@@ -21,7 +21,6 @@ export class CreateCollectionDto {
   @IsOptional()
   completionPolicy?: string;
 
-
   /**
    * Owner sent by existing clients.
    *

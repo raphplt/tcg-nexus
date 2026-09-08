@@ -182,7 +182,8 @@ Filtres de `GET /marketplace/listings` (`FindAllListingsQuery`) : `search`, `car
 |---|---|
 | `payment_intent.succeeded` | `markOrderPaid` (idempotent) |
 | `payment_intent.payment_failed` | commande annulée, stock restitué |
-| `charge.refunded` | commande passée en `Refunded` |
+| `charge.refunded` | Reconcile each provider refund; only the successful total can mark the order `Refunded` |
+| `refund.created`, `refund.updated`, `refund.failed` | Re-read current provider outcomes, including pending and failed refunds |
 
 La contrainte d'unicité sur `payment_transaction.transactionId` empêche qu'un rejeu crée une seconde transaction.
 
@@ -202,4 +203,35 @@ Les fonds arrivent sur le compte Stripe de la plateforme et **n'en repartent pas
 
 `GET /marketplace/orders/:id/refunds`, `GET /marketplace/orders/:id/refunds/remaining` and `GET /marketplace/orders/:id/returns` require an authenticated order participant or staff member. An unrelated account receives 403. Buyers and staff retain the complete order view; a seller receives only their own line amounts and returns. Shared refund reasons, provider references and initiating-user details are excluded from seller projections.
 
-`POST /marketplace/orders/:id/refund` requires a seller to provide explicit `lines` owned by that seller. Cross-seller lines return 403; missing or foreign order-item identities return 400 before the payment provider is called. Staff may still submit order-wide amounts. This authorization boundary does not by itself establish refund idempotency, cumulative amount safety or provider reconciliation.
+`POST /marketplace/orders/:id/refund` requires a seller to provide explicit `lines` owned by that seller. Cross-seller lines return 403; missing or foreign order-item identities return 400 before the payment provider is called. Staff may still submit order-wide amounts. The reservation and provider reconciliation boundary is described below.
+
+
+## Durable refund reservations
+
+`POST /marketplace/orders/:id/refund` accepts an optional `requestKey` (maximum 128 characters). Generate a key for each intentional refund and retain it with the unchanged payload through retries. The same key returns the existing operation; changing its payload returns 409. Legacy requests without a key use a payload fingerprint and are conservatively deduplicated. An intentionally repeated identical refund needs a new explicit key.
+
+Authorization, completed-payment validation, unique line membership, cumulative quantities, merchandise amounts, shipping amounts and the order ceiling are checked inside an order-row lock. Pending and successful refunds consume the allowance; failed refunds do not. Amounts use integer accounting cents, with currency-specific provider units (JPY has no fractional unit). Each line must have an integer `quantity`; zero represents a price or shipping adjustment without another refunded copy. Staff amount-only requests are allocated across the remaining line balances. Money movement never restocks physical inventory.
+
+The pending operation, lines and reservation audit commit before contacting Stripe. Provider calls use `refund-{operationId}` and carry the operation ID as metadata. An ambiguous exception returns 503 and retains the reservation. A retry searches all provider refund pages for that operation before creating anything. After 23 hours from the first recorded attempt, absence of a matching provider record returns 409 and retains the reservation for manual reconciliation. This margin accounts for Stripe potentially pruning idempotency keys after 24 hours; simply generating a new key would risk another refund. See [Stripe idempotent requests](https://docs.stripe.com/api/idempotent_requests) and [refund pagination](https://docs.stripe.com/api/refunds/list).
+
+Successful HTTP transport does not imply a successful refund: callers must inspect the returned operation `status`. `PENDING` also covers provider `requires_action`; no success event is emitted for it. The balance response keeps `alreadyRefunded` limited to confirmed successes and excludes both pending and successful reservations from `remainingAmount`.
+
+Subscribe the signed webhook to `charge.refunded`, `refund.created`, `refund.updated` and `refund.failed`. Reconciliation fetches current individual refund records under the order lock instead of trusting cumulative charge amounts or event order. Each confirmed status change and its outbox record commit together. Partial refunds preserve the order/payment state. Full confirmed refunds mark both refunded; a later bank rejection restores the saved fulfillment state and releases that refund's allowance. Stripe documents these asynchronous outcomes in [refund and cancel payments](https://docs.stripe.com/refunds).
+
+Provider-originated refunds without local line allocations are recorded once, count toward the order balance, and block additional line refunds until reviewed. Legacy records are preserved by the additive `RefundReservations1788768000000` migration; they are not retroactively claimed to have provider proof. The targeted migration test runs actual DDL against a legacy table. Repair of the historical migration chain remains a separate block.
+
+Recovery currently uses a retry of the original authorized POST or provider webhook redelivery. There is no autonomous refund recovery worker in this sub-block. After a 409 for an expired ambiguous attempt, staff must compare the operation metadata and full refund history in Stripe before deciding a correction; never delete the reservation merely to retry. Seller balance deductions, payout freezes, claim holds and Connect execution are the next financial sub-block and are not established by these refund tests. Provider tests are simulated; a Stripe sandbox rehearsal remains required before enabling production refunds.
+
+## Seller settlement ledger, holds and payouts
+
+Seller balances are a projection of `seller_ledger_entry`, an append-only table of integer-cent movements. Every escrow, release, hold, refund adjustment and payout writes one entry under a `pessimistic_write` lock on the settlement account, inside the caller's transaction when one is open. Each entry carries a `requestKey` unique per account, so a replayed business event (a repeated payment confirmation, a redelivered claim, a retried refund reconciliation) is recorded once and moves no balance twice. Reversals are new negating entries, never edits.
+
+`GET /marketplace/admin/settlements/reconcile` verifies, per account, that the stored pending, available, on-hold and paid-out balances equal the sum of their entries and that disbursed funds equal the completed payouts. `GET /marketplace/seller/settlement/ledger` exposes the same movements to the seller.
+
+Order payment escrows the seller net amount (merchandise plus shipping, less the 5% commission) as `pending`. Delivery of every one of that seller's items in the order releases it to `available`. Opening a buyer claim moves the allocation to `on_hold` from whichever bucket held it; closing the support ticket returns it to that same bucket. A succeeded refund debits the seller for the refunded merchandise less its proportional commission, plus refunded shipping, and a provider-confirmed late failure of that refund restores it. Allocation rows record `refundedAmount` and `commissionReversedAmount` alongside the remaining net.
+
+Payouts follow one state machine: `REQUESTED -> PROCESSING -> COMPLETED | FAILED`, with `CANCELLED` reachable only from `REQUESTED`. Terminal states accept no further action; a replayed `COMPLETE` or `FAIL` returns 409 instead of moving funds again. `POST /marketplace/seller/settlement/payouts` accepts an optional `requestKey`: the same key returns the existing payout, a changed amount under that key returns 409. Validation reads the balance the account lock protects, so concurrent requests cannot overdraw it.
+
+A manual or bank payout is completed by an administrator only with a `transactionReference`, which is stored on the payout as disbursement evidence. A `stripe_connect` payout cannot be declared complete by an administrator at all: `PROCESS` executes a provider transfer keyed `payout-{payoutId}` carrying the payout ID as metadata, and only the provider's own outcome completes it. An ambiguous provider response returns 503 and keeps the payout `PROCESSING` with its reservation; a retry searches the connected account's transfers for that payout before creating anything, and after 23 hours returns 409 for manual reconciliation. A reversed transfer fails the payout and returns the reserved amount to `available`.
+
+Settlement changes are additive through `SellerLedgerAndPayoutExecution1788800000000`, which adopts existing balances as one opening entry per account so reconciliation is meaningful from installation. Provider tests are simulated; a Stripe sandbox rehearsal remains required before enabling production disbursements, and no test moves real money.

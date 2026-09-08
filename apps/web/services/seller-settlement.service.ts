@@ -1,6 +1,7 @@
 import type { PaginatedResult, PaginationParams } from "@/types/pagination";
 import type {
   AdminProcessPayoutDto,
+  SellerLedgerEntry,
   RequestPayoutDto,
   SellerAllocation,
   SellerPayout,
@@ -74,6 +75,16 @@ export const sellerSettlementService = {
       "POST",
       "/marketplace/seller/settlement/payouts",
       { data },
+    );
+  },
+
+  /**
+   * Retrieves the append-only balance movements of the current seller.
+   */
+  async getLedger(): Promise<SellerLedgerEntry[]> {
+    return authedFetch<SellerLedgerEntry[]>(
+      "GET",
+      "/marketplace/seller/settlement/ledger",
     );
   },
 

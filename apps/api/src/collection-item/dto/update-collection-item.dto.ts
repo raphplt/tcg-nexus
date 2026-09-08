@@ -16,7 +16,9 @@ import { SealedCondition } from "src/common/enums/sealed-condition";
  * DTO for updating physical attributes of a collection item.
  */
 export class UpdateCollectionItemDto {
-  @ApiPropertyOptional({ description: "Card condition state code (e.g. NM, EX, LP)" })
+  @ApiPropertyOptional({
+    description: "Card condition state code (e.g. NM, EX, LP)",
+  })
   @IsOptional()
   @IsString()
   cardStateCode?: string;
@@ -26,7 +28,9 @@ export class UpdateCollectionItemDto {
   @IsEnum(SealedCondition)
   sealedCondition?: SealedCondition;
 
-  @ApiPropertyOptional({ description: "Card variant (e.g. normal, holo, reverse, firstEdition)" })
+  @ApiPropertyOptional({
+    description: "Card variant (e.g. normal, holo, reverse, firstEdition)",
+  })
   @IsOptional()
   @IsString()
   variant?: string;
@@ -36,7 +40,9 @@ export class UpdateCollectionItemDto {
   @IsString()
   language?: string;
 
-  @ApiPropertyOptional({ description: "Printing/edition (e.g. 1st_edition, unlimited, promo)" })
+  @ApiPropertyOptional({
+    description: "Printing/edition (e.g. 1st_edition, unlimited, promo)",
+  })
   @IsOptional()
   @IsString()
   printing?: string;

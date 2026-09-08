@@ -60,6 +60,7 @@ export interface SellerAllocation {
   commissionAmount: number;
   netAmount: number;
   refundedAmount: number;
+  commissionReversedAmount: number;
   status: SellerAllocationStatus;
   eligibleAt?: string | null;
   paidAt?: string | null;
@@ -74,6 +75,10 @@ export interface SellerPayout {
   amount: number;
   status: PayoutStatus;
   reference: string;
+  requestKey?: string | null;
+  providerAccountId?: string | null;
+  providerTransferId?: string | null;
+  transactionReference?: string | null;
   payoutMethod: PayoutMethod;
   payoutDestinationSnapshot?: Record<string, any> | null;
   processedAt?: string | null;
@@ -111,15 +116,35 @@ export interface UpdatePayoutSettingsDto {
   iban?: string;
   bic?: string;
   bankName?: string;
+  /** Connected account identifier, required for provider-executed payouts. */
+  providerAccountId?: string;
 }
 
 export interface RequestPayoutDto {
   amount: number;
   currency?: string;
+  /** Idempotency key; retrying under the same key returns the existing payout. */
+  requestKey?: string;
 }
 
 export interface AdminProcessPayoutDto {
-  action: "PROCESS" | "COMPLETE" | "FAIL";
+  action: "PROCESS" | "COMPLETE" | "FAIL" | "CANCEL";
+  /** Required to complete a manual payout; provider payouts complete themselves. */
   transactionReference?: string;
   failureReason?: string;
+}
+
+/** One append-only movement of a seller settlement balance. */
+export interface SellerLedgerEntry {
+  id: string;
+  currency: string;
+  kind: string;
+  deltaPendingCents: number;
+  deltaAvailableCents: number;
+  deltaOnHoldCents: number;
+  deltaPaidOutCents: number;
+  refundOperationId?: string | null;
+  requestKey: string;
+  reason?: string | null;
+  createdAt: string;
 }

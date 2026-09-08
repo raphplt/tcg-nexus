@@ -35,7 +35,9 @@ export class QueryAuditLogsDto {
   @IsInt()
   actorId?: number;
 
-  @ApiPropertyOptional({ description: "Filter by target entity type (e.g. order, match, payout)" })
+  @ApiPropertyOptional({
+    description: "Filter by target entity type (e.g. order, match, payout)",
+  })
   @IsOptional()
   @IsString()
   targetType?: string;
@@ -55,7 +57,9 @@ export class QueryAuditLogsDto {
   @IsString()
   action?: string;
 
-  @ApiPropertyOptional({ description: "Earliest creation timestamp (ISO 8601)" })
+  @ApiPropertyOptional({
+    description: "Earliest creation timestamp (ISO 8601)",
+  })
   @IsOptional()
   @IsDateString()
   from?: string;
@@ -85,7 +89,8 @@ export class RetryOutboxEventsDto {
 export class ExpireStaleOrdersDto {
   @ApiPropertyOptional({
     default: 15,
-    description: "Age threshold in minutes past which an unpaid order is expired and restocked",
+    description:
+      "Age threshold in minutes past which an unpaid order is expired and restocked",
   })
   @IsOptional()
   @Type(() => Number)
@@ -138,7 +143,9 @@ export class OpsMetricsResponseDto {
  * Financial ledger reconciliation report comparing allocations, balances, and disbursements.
  */
 export class SettlementReconciliationResponseDto {
-  @ApiProperty({ description: "Total gross merchandise sales from all allocations" })
+  @ApiProperty({
+    description: "Total gross merchandise sales from all allocations",
+  })
   totalAllocationsGross: number;
 
   @ApiProperty({ description: "Total platform commission deducted" })
@@ -159,10 +166,14 @@ export class SettlementReconciliationResponseDto {
   @ApiProperty({ description: "Sum of all completed seller disbursements" })
   totalSellerBalancesPaidOut: number;
 
-  @ApiProperty({ description: "Sum of all completed seller payout entity amounts" })
+  @ApiProperty({
+    description: "Sum of all completed seller payout entity amounts",
+  })
   totalPayoutsDisbursed: number;
 
-  @ApiProperty({ description: "Whether ledger balances mathematically match disbursements" })
+  @ApiProperty({
+    description: "Whether ledger balances mathematically match disbursements",
+  })
   isReconciled: boolean;
 
   @ApiProperty({ description: "Calculated discrepancy amount, if any" })

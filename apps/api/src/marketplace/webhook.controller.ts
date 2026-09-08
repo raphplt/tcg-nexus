@@ -98,11 +98,25 @@ export class WebhookController {
               ? charge.amount_refunded / 100
               : undefined;
             await this.orderService.handlePaymentRefunded(
-              charge.payment_intent as string,
+              typeof charge.payment_intent === "string"
+                ? charge.payment_intent
+                : charge.payment_intent.id,
               latestRefundId,
               refundAmount,
             );
           }
+          break;
+        }
+
+        case "refund.created":
+        case "refund.updated":
+        case "refund.failed": {
+          const refund = event.data.object as Stripe.Refund;
+          const intent =
+            typeof refund.payment_intent === "string"
+              ? refund.payment_intent
+              : refund.payment_intent?.id;
+          if (intent) await this.orderService.handlePaymentRefunded(intent);
           break;
         }
 

@@ -118,7 +118,6 @@ describe("CollectionService", () => {
       ],
     }).compile();
 
-
     service = module.get<CollectionService>(CollectionService);
     jest.clearAllMocks();
     mockLocalization.resolveLabels.mockImplementation(

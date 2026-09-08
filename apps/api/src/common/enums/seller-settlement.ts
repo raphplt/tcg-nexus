@@ -39,3 +39,22 @@ export enum PayoutStatus {
   FAILED = "failed",
   CANCELLED = "cancelled",
 }
+
+/**
+ * Movement recorded by an append-only seller ledger entry.
+ *
+ * Every balance mutation carries one kind so stored balances can be
+ * reconciled against the sum of their entries.
+ */
+export enum SellerLedgerEntryKind {
+  OPENING_BALANCE = "opening_balance",
+  ALLOCATION_RESERVED = "allocation_reserved",
+  DELIVERY_RELEASE = "delivery_release",
+  DISPUTE_HOLD = "dispute_hold",
+  DISPUTE_RELEASE = "dispute_release",
+  REFUND_ADJUSTMENT = "refund_adjustment",
+  REFUND_REVERSAL = "refund_reversal",
+  PAYOUT_RESERVED = "payout_reserved",
+  PAYOUT_PAID = "payout_paid",
+  PAYOUT_REVERSED = "payout_reversed",
+}

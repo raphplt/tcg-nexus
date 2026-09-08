@@ -21,7 +21,6 @@ import { Repository } from "typeorm";
 import { UpdateCollectionItemDto } from "./dto/update-collection-item.dto";
 import { CollectionItem } from "./entities/collection-item.entity";
 
-
 @Injectable()
 export class CollectionItemService {
   constructor(
@@ -363,7 +362,6 @@ export class CollectionItemService {
     dto: UpdateCollectionItemDto,
     user: User,
   ): Promise<CollectionItem> {
-
     const item = await this.collectionItemRepo.findOne({
       where: { id: itemId },
       relations: ["collection", "collection.user", "cardState"],
@@ -388,14 +386,18 @@ export class CollectionItemService {
       });
       if (state) item.cardState = state;
     }
-    if (dto.sealedCondition !== undefined) item.sealedCondition = dto.sealedCondition;
+    if (dto.sealedCondition !== undefined)
+      item.sealedCondition = dto.sealedCondition;
     if (dto.variant !== undefined) item.variant = dto.variant;
     if (dto.language !== undefined) item.language = dto.language;
     if (dto.printing !== undefined) item.printing = dto.printing;
     if (dto.acquiredAt !== undefined) item.acquiredAt = dto.acquiredAt;
-    if (dto.acquisitionCost !== undefined) item.acquisitionCost = dto.acquisitionCost;
-    if (dto.acquisitionCurrency !== undefined) item.acquisitionCurrency = dto.acquisitionCurrency;
-    if (dto.storageLocation !== undefined) item.storageLocation = dto.storageLocation;
+    if (dto.acquisitionCost !== undefined)
+      item.acquisitionCost = dto.acquisitionCost;
+    if (dto.acquisitionCurrency !== undefined)
+      item.acquisitionCurrency = dto.acquisitionCurrency;
+    if (dto.storageLocation !== undefined)
+      item.storageLocation = dto.storageLocation;
     if (dto.notes !== undefined) item.notes = dto.notes;
     if (dto.photoUrls !== undefined) item.photoUrls = dto.photoUrls;
     if (dto.quantity !== undefined && dto.quantity >= 1) {
@@ -422,7 +424,13 @@ export class CollectionItemService {
   ): Promise<CollectionItem> {
     const item = await this.collectionItemRepo.findOne({
       where: { id: itemId },
-      relations: ["collection", "collection.user", "pokemonCard", "sealedProduct", "cardState"],
+      relations: [
+        "collection",
+        "collection.user",
+        "pokemonCard",
+        "sealedProduct",
+        "cardState",
+      ],
     });
 
     if (!item) {
@@ -430,7 +438,9 @@ export class CollectionItemService {
     }
 
     if (item.collection.user?.id !== user.id) {
-      throw new ForbiddenException("Vous ne pouvez modifier que vos propres items");
+      throw new ForbiddenException(
+        "Vous ne pouvez modifier que vos propres items",
+      );
     }
 
     if (splitQuantity < 1 || splitQuantity >= item.quantity) {
@@ -490,17 +500,29 @@ export class CollectionItemService {
     user: User,
   ): Promise<CollectionItem> {
     if (sourceItemId === targetItemId) {
-      throw new BadRequestException("Impossible de fusionner un item avec lui-même");
+      throw new BadRequestException(
+        "Impossible de fusionner un item avec lui-même",
+      );
     }
 
     const [source, target] = await Promise.all([
       this.collectionItemRepo.findOne({
         where: { id: sourceItemId },
-        relations: ["collection", "collection.user", "pokemonCard", "cardState"],
+        relations: [
+          "collection",
+          "collection.user",
+          "pokemonCard",
+          "cardState",
+        ],
       }),
       this.collectionItemRepo.findOne({
         where: { id: targetItemId },
-        relations: ["collection", "collection.user", "pokemonCard", "cardState"],
+        relations: [
+          "collection",
+          "collection.user",
+          "pokemonCard",
+          "cardState",
+        ],
       }),
     ]);
 
@@ -508,8 +530,13 @@ export class CollectionItemService {
       throw new NotFoundException("Un des items à fusionner est introuvable");
     }
 
-    if (source.collection.user?.id !== user.id || target.collection.user?.id !== user.id) {
-      throw new ForbiddenException("Vous ne pouvez fusionner que vos propres items");
+    if (
+      source.collection.user?.id !== user.id ||
+      target.collection.user?.id !== user.id
+    ) {
+      throw new ForbiddenException(
+        "Vous ne pouvez fusionner que vos propres items",
+      );
     }
 
     if (source.quantityReserved > 0) {
@@ -527,4 +554,3 @@ export class CollectionItemService {
     return target;
   }
 }
-

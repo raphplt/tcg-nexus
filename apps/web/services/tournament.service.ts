@@ -498,11 +498,9 @@ export const tournamentService = {
       reason?: string;
     },
   ): Promise<any> {
-    return authedFetch(
-      "POST",
-      `/tournaments/${tournamentId}/round-clock`,
-      { data },
-    );
+    return authedFetch("POST", `/tournaments/${tournamentId}/round-clock`, {
+      data,
+    });
   },
 
   async getRoundClock(tournamentId: number): Promise<RoundClockStatus> {

@@ -24,9 +24,7 @@ import { ReceiptImportRequestDto } from "./dto/delivery-receipt-import.dto";
 @Controller("marketplace")
 @UseGuards(ThrottlerGuard)
 export class DeliveryReceiptController {
-  constructor(
-    private readonly receiptService: DeliveryReceiptService,
-  ) {}
+  constructor(private readonly receiptService: DeliveryReceiptService) {}
 
   /**
    * Previews delivered items from an order with provenance and duplication detection.

@@ -21,7 +21,8 @@ export enum RoundControlAction {
  */
 export class DropPlayerDto {
   @ApiPropertyOptional({
-    description: "Player ID to drop. Defaults to the requesting user's registered player if omitted.",
+    description:
+      "Player ID to drop. Defaults to the requesting user's registered player if omitted.",
     example: 12,
   })
   @IsOptional()

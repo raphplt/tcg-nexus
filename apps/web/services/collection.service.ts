@@ -232,20 +232,23 @@ export const collectionService = {
     itemId: number,
     data: Record<string, any>,
   ): Promise<CollectionItemType> {
-    return authedFetch<CollectionItemType>("PATCH", `/collection-item/${itemId}`, {
-      data,
-    });
+    return authedFetch<CollectionItemType>(
+      "PATCH",
+      `/collection-item/${itemId}`,
+      {
+        data,
+      },
+    );
   },
 
   async splitCollectionItem(
     itemId: number,
     quantity: number,
   ): Promise<{ original: CollectionItemType; split: CollectionItemType }> {
-    return authedFetch<{ original: CollectionItemType; split: CollectionItemType }>(
-      "POST",
-      `/collection-item/${itemId}/split`,
-      { data: { quantity } },
-    );
+    return authedFetch<{
+      original: CollectionItemType;
+      split: CollectionItemType;
+    }>("POST", `/collection-item/${itemId}/split`, { data: { quantity } });
   },
 
   async mergeCollectionItems(

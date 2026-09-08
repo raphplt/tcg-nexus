@@ -540,8 +540,7 @@ export class RankingService {
         if (swiss) {
           ranking.omwPercentage =
             Math.round(swiss.opponentMatchWinRate * 100000) / 1000;
-          ranking.gwPercentage =
-            Math.round(swiss.gameWinRate * 100000) / 1000;
+          ranking.gwPercentage = Math.round(swiss.gameWinRate * 100000) / 1000;
           ranking.ogwPercentage =
             Math.round(swiss.opponentGameWinRate * 100000) / 1000;
           ranking.byesCount = swiss.byes;

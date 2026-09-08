@@ -1,7 +1,11 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { DataSource } from "typeorm";
 import { AuditService } from "../audit/audit.service";
 import { Currency } from "../common/enums/currency";
 import { FulfillmentStatus } from "../common/enums/fulfillment-status";
@@ -10,313 +14,496 @@ import {
   PayoutStatus,
   SellerAccountStatus,
   SellerAllocationStatus,
+  SellerLedgerEntryKind,
 } from "../common/enums/seller-settlement";
 import { UserRole } from "../common/enums/user";
 import { User } from "../user/entities/user.entity";
 import { Order } from "./entities/order.entity";
 import { OrderItem } from "./entities/order-item.entity";
 import { SellerAllocation } from "./entities/seller-allocation.entity";
+import { SellerLedgerEntry } from "./entities/seller-ledger-entry.entity";
 import { SellerPayout } from "./entities/seller-payout.entity";
 import { SellerSettlementAccount } from "./entities/seller-settlement-account.entity";
 import { SellerSettlementService } from "./seller-settlement.service";
+import { StripeService } from "./stripe.service";
+
+/** Row shape used by the in-memory manager below. */
+type Row = Record<string, unknown> & { id?: number | string };
+
+/**
+ * Minimal in-memory EntityManager: the ledger invariants under test are about
+ * which rows are written, not about SQL generation, and the PostgreSQL suite
+ * covers locking and concurrency against a real database.
+ */
+class FakeManager {
+  private readonly stores = new Map<unknown, Row[]>();
+  private sequence = 1;
+
+  store<T>(target: unknown): T[] {
+    if (!this.stores.has(target)) this.stores.set(target, []);
+    return this.stores.get(target)! as T[];
+  }
+
+  private matches(row: Row, where: Record<string, unknown>): boolean {
+    return Object.entries(where).every(([key, value]) => {
+      const current = row[key];
+      if (value && typeof value === "object") {
+        const expected = (value as Row).id ?? value;
+        return (
+          !!current && String((current as Row).id) === String(expected)
+        );
+      }
+      return String(current ?? "") === String(value);
+    });
+  }
+
+  create<T>(_target: unknown, data: T): T {
+    return { ...data };
+  }
+
+  async save<T>(target: unknown, entity: T): Promise<T> {
+    const rows = this.store<Row>(target);
+    const row = entity as Row;
+    if (row.id === undefined) row.id = this.sequence++;
+    const index = rows.findIndex((stored) => String(stored.id) === String(row.id));
+    if (index >= 0) rows[index] = row;
+    else rows.push(row);
+    return entity;
+  }
+
+  async find<T>(
+    target: unknown,
+    options: { where?: Record<string, unknown> } = {},
+  ): Promise<T[]> {
+    return this.store<Row>(target).filter((row) =>
+      this.matches(row, options.where ?? {}),
+    ) as T[];
+  }
+
+  async findOne<T>(
+    target: unknown,
+    options: { where?: Record<string, unknown> } = {},
+  ): Promise<T | null> {
+    const [row] = await this.find<T>(target, options);
+    return row ?? null;
+  }
+
+  async findOneOrFail<T>(
+    target: unknown,
+    options: { where?: Record<string, unknown> } = {},
+  ): Promise<T> {
+    const row = await this.findOne<T>(target, options);
+    if (!row) throw new Error("Entity not found");
+    return row;
+  }
+
+  getRepository(target: unknown) {
+    return {
+      find: (options = {}) => this.find(target, options),
+      findOne: (options = {}) => this.findOne(target, options),
+      create: (data: Row) => this.create(target, data),
+      save: (entity: Row) => this.save(target, entity),
+      count: async (options: { where?: Record<string, unknown> } = {}) =>
+        (await this.find(target, options)).length,
+      update: async (
+        criteria: Record<string, unknown>,
+        patch: Record<string, unknown>,
+      ) => {
+        for (const row of await this.find<Row>(target, { where: criteria })) {
+          Object.assign(row, patch);
+        }
+      },
+    };
+  }
+}
 
 describe("SellerSettlementService", () => {
   let service: SellerSettlementService;
-  let accountRepo: Partial<Record<keyof Repository<SellerSettlementAccount>, jest.Mock>>;
-  let allocationRepo: Partial<Record<keyof Repository<SellerAllocation>, jest.Mock>>;
-  let payoutRepo: Partial<Record<keyof Repository<SellerPayout>, jest.Mock>>;
-  let orderRepo: Partial<Record<keyof Repository<Order>, jest.Mock>>;
-  let orderItemRepo: Partial<Record<keyof Repository<OrderItem>, jest.Mock>>;
-  let userRepo: Partial<Record<keyof Repository<User>, jest.Mock>>;
-  let auditService: Partial<Record<keyof AuditService, jest.Mock>>;
+  let manager: FakeManager;
+  let stripe: Record<string, jest.Mock>;
+  let audit: { record: jest.Mock };
 
-  const mockSeller = {
-    id: 10,
-    email: "seller@test.com",
-    role: UserRole.USER,
-  } as User;
+  const seller = { id: 10, role: UserRole.USER } as User;
+  const admin = { id: 1, role: UserRole.ADMIN } as User;
 
-  const mockAdmin = {
-    id: 1,
-    email: "admin@test.com",
-    role: UserRole.ADMIN,
-  } as User;
+  const ledger = () => manager.store<SellerLedgerEntry>(SellerLedgerEntry);
+  const accounts = () =>
+    manager.store<SellerSettlementAccount>(SellerSettlementAccount);
+  const account = () => accounts()[0];
+  const allocations = () => manager.store<SellerAllocation>(SellerAllocation);
 
-  const mockAccount = (overrides: Partial<SellerSettlementAccount> = {}): SellerSettlementAccount =>
-    ({
-      id: 100,
-      seller: mockSeller,
-      status: SellerAccountStatus.ACTIVE,
+  const seedOrder = async (
+    unitPrice = 50,
+    quantity = 1,
+    shippingCost = 0,
+  ): Promise<Order> => {
+    const order = await manager.save(Order, {
+      id: 42,
       currency: Currency.EUR,
-      balanceAvailable: 200,
-      balancePending: 50,
-      balanceOnHold: 0,
-      balancePaidOut: 0,
-      minimumPayoutAmount: 10,
-      payoutMethod: PayoutMethod.BANK_TRANSFER,
-      payoutDetails: { ibanMasked: "FR76****7890" },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...overrides,
-    }) as SellerSettlementAccount;
+    } as unknown as Order);
+    await manager.save(OrderItem, {
+      id: 500,
+      order,
+      seller,
+      quantity,
+      unitPrice,
+      shippingCost,
+      fulfillmentStatus: FulfillmentStatus.SHIPPED,
+    } as unknown as OrderItem);
+    return order;
+  };
+
+  const activateAccount = async () => {
+    await service.updatePayoutSettings(seller.id, {
+      accountHolderName: "Seller",
+      iban: "FR7612345678901234567890",
+    });
+  };
+
+  const deliver = async () => {
+    const [item] = manager.store<OrderItem>(OrderItem);
+    item.fulfillmentStatus = FulfillmentStatus.DELIVERED;
+    await service.onItemDelivered(item);
+  };
 
   beforeEach(async () => {
-    accountRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 100 })),
-      save: jest.fn().mockImplementation(async (entity) => entity),
+    manager = new FakeManager();
+    stripe = {
+      createTransfer: jest.fn(),
+      retrieveTransfer: jest.fn(),
+      listTransfers: jest.fn(async () => []),
+      findTransferForPayout: jest.fn(async () => undefined),
     };
+    audit = { record: jest.fn().mockResolvedValue(undefined) };
 
-    allocationRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      findAndCount: jest.fn(),
-      create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 500 })),
-      save: jest.fn().mockImplementation(async (entity) => entity),
-    };
-
-    payoutRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-      findAndCount: jest.fn(),
-      create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 900 })),
-      save: jest.fn().mockImplementation(async (entity) => entity),
-    };
-
-    orderRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-    };
-
-    orderItemRepo = {
-      findOne: jest.fn(),
-      find: jest.fn(),
-    };
-
-    userRepo = {
-      findOne: jest.fn(),
-    };
-
-    auditService = {
-      record: jest.fn().mockResolvedValue(undefined),
+    const database = {
+      transaction: (work: (manager: FakeManager) => Promise<unknown>) =>
+        work(manager),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SellerSettlementService,
+        { provide: DataSource, useValue: database },
         {
           provide: getRepositoryToken(SellerSettlementAccount),
-          useValue: accountRepo,
+          useValue: manager.getRepository(SellerSettlementAccount),
         },
         {
           provide: getRepositoryToken(SellerAllocation),
-          useValue: allocationRepo,
+          useValue: manager.getRepository(SellerAllocation),
         },
         {
           provide: getRepositoryToken(SellerPayout),
-          useValue: payoutRepo,
+          useValue: manager.getRepository(SellerPayout),
         },
         {
-          provide: getRepositoryToken(Order),
-          useValue: orderRepo,
+          provide: getRepositoryToken(SellerLedgerEntry),
+          useValue: manager.getRepository(SellerLedgerEntry),
         },
-        {
-          provide: getRepositoryToken(OrderItem),
-          useValue: orderItemRepo,
-        },
-        {
-          provide: getRepositoryToken(User),
-          useValue: userRepo,
-        },
-        {
-          provide: AuditService,
-          useValue: auditService,
-        },
+        { provide: StripeService, useValue: stripe },
+        { provide: AuditService, useValue: audit },
       ],
     }).compile();
 
-    service = module.get<SellerSettlementService>(SellerSettlementService);
+    service = module.get(SellerSettlementService);
   });
 
-  describe("getOrCreateAccount", () => {
-    it("returns existing account if found", async () => {
-      const existing = mockAccount();
-      accountRepo.findOne!.mockResolvedValue(existing);
+  describe("allocations and escrow", () => {
+    it("escrows the net amount once, whatever the number of confirmations", async () => {
+      const order = await seedOrder(50, 1, 5);
 
-      const result = await service.getOrCreateAccount(mockSeller.id);
-      expect(result).toBe(existing);
-      expect(accountRepo.save).not.toHaveBeenCalled();
+      await service.createAllocationsForOrder(order);
+      await service.createAllocationsForOrder(order);
+
+      expect(allocations()).toHaveLength(1);
+      expect(Number(allocations()[0].commissionAmount)).toBe(2.5);
+      expect(Number(allocations()[0].netAmount)).toBe(52.5);
+      expect(Number(account().balancePending)).toBe(52.5);
+      expect(
+        ledger().filter(
+          (entry) => entry.kind === SellerLedgerEntryKind.ALLOCATION_RESERVED,
+        ),
+      ).toHaveLength(1);
     });
 
-    it("creates and saves new account if not found", async () => {
-      accountRepo.findOne!.mockResolvedValue(null);
-      userRepo.findOne!.mockResolvedValue(mockSeller);
+    it("releases escrow only once every item of the seller is delivered", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+      const [item] = manager.store<OrderItem>(OrderItem);
 
-      const result = await service.getOrCreateAccount(mockSeller.id);
-      expect(result).toBeDefined();
-      expect(accountRepo.create).toHaveBeenCalled();
-      expect(accountRepo.save).toHaveBeenCalled();
-    });
-  });
+      await service.onItemDelivered(item);
+      expect(Number(account().balanceAvailable)).toBe(0);
 
-  describe("createAllocationsForOrder", () => {
-    it("creates pending allocations and updates seller pending balance", async () => {
-      const order = {
-        id: 42,
-        currency: Currency.EUR,
-      } as Order;
+      await deliver();
+      await deliver();
 
-      const orderItem = {
-        id: 1,
-        seller: mockSeller,
-        order,
-        unitPrice: 100,
-        quantity: 1,
-        shippingCost: 0,
-      } as unknown as OrderItem;
-
-      orderItemRepo.find!.mockResolvedValue([orderItem]);
-      const account = mockAccount({ balancePending: 0 });
-      accountRepo.findOne!.mockResolvedValue(account);
-
-      const allocations = await service.createAllocationsForOrder(order);
-
-      expect(allocations).toHaveLength(1);
-      expect(allocations[0].grossAmount).toBe(100);
-      expect(allocations[0].commissionRate).toBe(0.05);
-      expect(allocations[0].commissionAmount).toBe(5);
-      expect(allocations[0].netAmount).toBe(95);
-      expect(allocations[0].status).toBe(SellerAllocationStatus.PENDING_DELIVERY);
-      expect(account.balancePending).toBe(95);
-      expect(accountRepo.save).toHaveBeenCalledWith(account);
+      expect(Number(account().balancePending)).toBe(0);
+      expect(Number(account().balanceAvailable)).toBe(52.5);
+      expect(
+        ledger().filter(
+          (entry) => entry.kind === SellerLedgerEntryKind.DELIVERY_RELEASE,
+        ),
+      ).toHaveLength(1);
     });
   });
 
-  describe("onItemDelivered", () => {
-    it("releases pending allocation to available balance when all items are delivered", async () => {
-      const account = mockAccount({ balancePending: 95, balanceAvailable: 0 });
-      const order = { id: 42 } as Order;
-      const orderItem = {
-        id: 1,
-        order,
-        seller: mockSeller,
-        fulfillmentStatus: FulfillmentStatus.DELIVERED,
-      } as OrderItem;
+  describe("claims and refunds", () => {
+    it("holds released funds while a claim is open and restores their bucket on resolution", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+      await deliver();
 
-      const allocation = {
-        id: 501,
-        seller: mockSeller,
-        status: SellerAllocationStatus.PENDING_DELIVERY,
-        netAmount: 95,
-        currency: Currency.EUR,
-      } as SellerAllocation;
+      await service.onClaimOpened(order.id, seller.id, 77);
+      await service.onClaimOpened(order.id, seller.id, 77);
 
-      allocationRepo.findOne!.mockResolvedValue(allocation);
-      orderItemRepo.find!.mockResolvedValue([orderItem]);
-      accountRepo.findOne!.mockResolvedValue(account);
+      expect(Number(account().balanceAvailable)).toBe(0);
+      expect(Number(account().balanceOnHold)).toBe(52.5);
+      expect(allocations()[0].status).toBe(
+        SellerAllocationStatus.DISPUTED_HOLD,
+      );
 
-      await service.onItemDelivered(orderItem);
+      await service.onClaimResolved(77);
+      await service.onClaimResolved(77);
 
-      expect(allocation.status).toBe(SellerAllocationStatus.AVAILABLE);
-      expect(account.balancePending).toBe(0);
-      expect(account.balanceAvailable).toBe(95);
-      expect(allocationRepo.save).toHaveBeenCalledWith(allocation);
-      expect(accountRepo.save).toHaveBeenCalledWith(account);
+      expect(Number(account().balanceOnHold)).toBe(0);
+      expect(Number(account().balanceAvailable)).toBe(52.5);
+      expect(allocations()[0].status).toBe(SellerAllocationStatus.AVAILABLE);
+    });
+
+    it("debits a refund net of its returned commission and reverses a failed refund", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+      await deliver();
+
+      await service.onRefundApplied(order.id, seller.id, "op-1", 20, 5);
+      await service.onRefundApplied(order.id, seller.id, "op-1", 20, 5);
+
+      // 20 goods less its 5% commission, plus 5 shipping.
+      expect(Number(account().balanceAvailable)).toBe(28.5);
+      expect(Number(allocations()[0].refundedAmount)).toBe(25);
+      expect(Number(allocations()[0].commissionReversedAmount)).toBe(1);
+
+      await service.onRefundReversed(order.id, seller.id, "op-1");
+      await service.onRefundReversed(order.id, seller.id, "op-1");
+
+      expect(Number(account().balanceAvailable)).toBe(52.5);
+      expect(Number(allocations()[0].netAmount)).toBe(52.5);
+    });
+
+    it("takes a refund from escrow while the order is still pending delivery", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+
+      await service.onRefundApplied(order.id, seller.id, "op-2", 50, 5);
+
+      expect(Number(account().balancePending)).toBe(0);
+      expect(Number(account().balanceAvailable)).toBe(0);
+      expect(allocations()[0].status).toBe(SellerAllocationStatus.CANCELLED);
     });
   });
 
-  describe("onClaimOpened", () => {
-    it("holds allocation in balanceOnHold", async () => {
-      const account = mockAccount({ balancePending: 95, balanceOnHold: 0 });
-      const allocation = {
-        id: 501,
-        seller: mockSeller,
-        currency: Currency.EUR,
-        status: SellerAllocationStatus.PENDING_DELIVERY,
-        netAmount: 95,
-      } as SellerAllocation;
+  describe("payout lifecycle", () => {
+    const fund = async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+      await deliver();
+      await activateAccount();
+    };
 
-      allocationRepo.findOne!.mockResolvedValue(allocation);
-      accountRepo.findOne!.mockResolvedValue(account);
+    it("refuses payouts above the available balance or below the minimum", async () => {
+      await fund();
 
-      await service.onClaimOpened(42, mockSeller.id);
-
-      expect(allocation.status).toBe(SellerAllocationStatus.DISPUTED_HOLD);
-      expect(account.balancePending).toBe(0);
-      expect(account.balanceOnHold).toBe(95);
+      await expect(service.requestPayout(seller, { amount: 60 })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      await expect(service.requestPayout(seller, { amount: 1 })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(Number(account().balanceAvailable)).toBe(52.5);
     });
-  });
 
-  describe("requestPayout", () => {
-    it("throws BadRequestException if amount exceeds available balance", async () => {
-      const account = mockAccount({ balanceAvailable: 30 });
-      accountRepo.findOne!.mockResolvedValue(account);
+    it("refuses payouts while the account is not active", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
+      await deliver();
 
       await expect(
-        service.requestPayout(mockSeller, { amount: 50 }),
-      ).rejects.toThrow(BadRequestException);
+        service.requestPayout(seller, { amount: 30 }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
-    it("creates requested payout and reserves available balance", async () => {
-      const account = mockAccount({ balanceAvailable: 100 });
-      accountRepo.findOne!.mockResolvedValue(account);
+    it("reserves the balance once for a repeated request key and rejects a changed amount", async () => {
+      await fund();
 
-      const payout = await service.requestPayout(mockSeller, { amount: 50 });
+      const first = await service.requestPayout(seller, {
+        amount: 30,
+        requestKey: "payout-key",
+      });
+      const second = await service.requestPayout(seller, {
+        amount: 30,
+        requestKey: "payout-key",
+      });
 
-      expect(payout.status).toBe(PayoutStatus.REQUESTED);
-      expect(payout.amount).toBe(50);
-      expect(account.balanceAvailable).toBe(50);
-      expect(payoutRepo.save).toHaveBeenCalled();
-      expect(accountRepo.save).toHaveBeenCalledWith(account);
+      expect(second.id).toBe(first.id);
+      expect(Number(account().balanceAvailable)).toBe(22.5);
+      await expect(
+        service.requestPayout(seller, { amount: 31, requestKey: "payout-key" }),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it("rejects illegal transitions and replayed administrative outcomes", async () => {
+      await fund();
+      const payout = await service.requestPayout(seller, { amount: 30 });
+
+      await expect(
+        service.adminProcessPayout(payout.id, admin, { action: "COMPLETE" }),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      await service.adminProcessPayout(payout.id, admin, { action: "PROCESS" });
+      await expect(
+        service.adminProcessPayout(payout.id, admin, { action: "COMPLETE" }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      await service.adminProcessPayout(payout.id, admin, {
+        action: "COMPLETE",
+        transactionReference: "SEPA-1",
+      });
+      expect(Number(account().balancePaidOut)).toBe(30);
+      expect(Number(account().balanceAvailable)).toBe(22.5);
+
+      for (const action of ["COMPLETE", "FAIL", "PROCESS"] as const) {
+        await expect(
+          service.adminProcessPayout(payout.id, admin, {
+            action,
+            transactionReference: "SEPA-1",
+          }),
+        ).rejects.toBeInstanceOf(ConflictException);
+      }
+      expect(Number(account().balancePaidOut)).toBe(30);
+      expect(Number(account().balanceAvailable)).toBe(22.5);
+    });
+
+    it("returns a failed payout to the available balance exactly once", async () => {
+      await fund();
+      const payout = await service.requestPayout(seller, { amount: 30 });
+
+      await service.adminProcessPayout(payout.id, admin, { action: "PROCESS" });
+      await service.adminProcessPayout(payout.id, admin, {
+        action: "FAIL",
+        failureReason: "Bank rejection",
+      });
+
+      expect(Number(account().balanceAvailable)).toBe(52.5);
+      await expect(
+        service.adminProcessPayout(payout.id, admin, { action: "FAIL" }),
+      ).rejects.toBeInstanceOf(ConflictException);
+      expect(Number(account().balanceAvailable)).toBe(52.5);
+    });
+
+    it("completes a connected-account payout from the provider outcome, not an administrator", async () => {
+      await fund();
+      account().payoutMethod = PayoutMethod.STRIPE_CONNECT;
+      account().payoutDetails = {
+        ...account().payoutDetails,
+        providerAccountId: "acct_1",
+      };
+      const payout = await service.requestPayout(seller, { amount: 30 });
+      stripe.createTransfer.mockResolvedValue({
+        id: "tr_1",
+        destination: "acct_1",
+        currency: "eur",
+        amount: 3000,
+        reversed: false,
+      });
+
+      const processed = await service.adminProcessPayout(payout.id, admin, {
+        action: "PROCESS",
+      });
+
+      expect(stripe.createTransfer).toHaveBeenCalledWith(
+        "acct_1",
+        3000,
+        Currency.EUR,
+        `payout-${payout.id}`,
+        String(payout.id),
+      );
+      expect(processed.status).toBe(PayoutStatus.COMPLETED);
+      expect(processed.providerTransferId).toBe("tr_1");
+      expect(Number(account().balancePaidOut)).toBe(30);
+      await expect(
+        service.adminProcessPayout(payout.id, admin, {
+          action: "COMPLETE",
+          transactionReference: "manual",
+        }),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it("keeps the reservation when the provider outcome is unresolved", async () => {
+      await fund();
+      account().payoutMethod = PayoutMethod.STRIPE_CONNECT;
+      account().payoutDetails = {
+        ...account().payoutDetails,
+        providerAccountId: "acct_1",
+      };
+      const payout = await service.requestPayout(seller, { amount: 30 });
+      stripe.createTransfer.mockRejectedValue(new Error("Connection lost"));
+
+      await expect(
+        service.adminProcessPayout(payout.id, admin, { action: "PROCESS" }),
+      ).rejects.toThrow();
+
+      const stored = manager.store<SellerPayout>(SellerPayout)[0];
+      expect(stored.status).toBe(PayoutStatus.PROCESSING);
+      expect(stored.providerAttemptedAt).toBeInstanceOf(Date);
+      expect(Number(account().balanceAvailable)).toBe(22.5);
+
+      stripe.createTransfer.mockResolvedValue({
+        id: "tr_2",
+        destination: "acct_1",
+        currency: "eur",
+        amount: 3000,
+        reversed: false,
+      });
+      const resumed = await service.executePayout(payout.id);
+      expect(resumed.status).toBe(PayoutStatus.COMPLETED);
+      expect(Number(account().balancePaidOut)).toBe(30);
     });
   });
 
-  describe("adminProcessPayout", () => {
-    it("marks payout complete and updates paid out balance", async () => {
-      const payout = {
-        id: 901,
-        amount: 50,
-        currency: Currency.EUR,
-        status: PayoutStatus.PROCESSING,
-        seller: mockSeller,
-      } as SellerPayout;
+  describe("reconciliation", () => {
+    it("reports an account whose stored balance left its ledger", async () => {
+      const order = await seedOrder(50, 1, 5);
+      await service.createAllocationsForOrder(order);
 
-      payoutRepo.findOne!.mockResolvedValue(payout);
-      const account = mockAccount({ balancePaidOut: 0 });
-      accountRepo.findOne!.mockResolvedValue(account);
+      expect((await service.reconcile()).consistent).toBe(true);
 
-      const processed = await service.adminProcessPayout(901, mockAdmin, {
-        action: "COMPLETE",
-        transactionReference: "WIRE-REF-9988",
+      account().balanceAvailable = 999;
+      const report = await service.reconcile();
+
+      expect(report.consistent).toBe(false);
+      expect(report.discrepancies[0].mismatches[0]).toContain("available");
+    });
+  });
+
+  describe("payout settings", () => {
+    it("activates a pending account once bank details are known", async () => {
+      const updated = await service.updatePayoutSettings(seller.id, {
+        accountHolderName: "Seller",
+        iban: "FR7612345678901234567890",
       });
 
-      expect(processed.status).toBe(PayoutStatus.COMPLETED);
-      expect(account.balancePaidOut).toBe(50);
-      expect(auditService.record).toHaveBeenCalled();
+      expect(updated.status).toBe(SellerAccountStatus.ACTIVE);
+      expect(updated.payoutDetails?.ibanMasked).toBe("FR76 **** **** 7890");
     });
 
-    it("restores available balance if payout fails", async () => {
-      const payout = {
-        id: 901,
-        amount: 50,
-        currency: Currency.EUR,
-        status: PayoutStatus.PROCESSING,
-        seller: mockSeller,
-      } as SellerPayout;
-
-      payoutRepo.findOne!.mockResolvedValue(payout);
-      const account = mockAccount({ balanceAvailable: 50 });
-      accountRepo.findOne!.mockResolvedValue(account);
-
-      const processed = await service.adminProcessPayout(901, mockAdmin, {
-        action: "FAIL",
-        failureReason: "Invalid IBAN format",
-      });
-
-      expect(processed.status).toBe(PayoutStatus.FAILED);
-      expect(account.balanceAvailable).toBe(100);
-      expect(accountRepo.save).toHaveBeenCalledWith(account);
+    it("requires a connected account before provider payouts are selected", async () => {
+      await expect(
+        service.updatePayoutSettings(seller.id, {
+          accountHolderName: "Seller",
+          payoutMethod: PayoutMethod.STRIPE_CONNECT,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 });

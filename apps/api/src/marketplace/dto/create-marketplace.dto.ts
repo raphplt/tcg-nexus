@@ -79,7 +79,6 @@ export class CreateListingDto {
   inventoryItemId?: number;
 }
 
-
 /**
  * DTO for creating a new marketplace order.
  */

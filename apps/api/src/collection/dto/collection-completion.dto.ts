@@ -7,16 +7,28 @@ export class CollectionCompletionDto {
   @ApiProperty({ description: "Target completion policy", example: "base" })
   policy: "base" | "master";
 
-  @ApiProperty({ description: "Total unique targets required by the policy", example: 102 })
+  @ApiProperty({
+    description: "Total unique targets required by the policy",
+    example: 102,
+  })
   totalUniqueTargets: number;
 
-  @ApiProperty({ description: "Total unique targets owned by the user", example: 45 })
+  @ApiProperty({
+    description: "Total unique targets owned by the user",
+    example: 45,
+  })
   ownedUniqueTargets: number;
 
-  @ApiProperty({ description: "Completion percentage rounded to two decimals", example: 44.12 })
+  @ApiProperty({
+    description: "Completion percentage rounded to two decimals",
+    example: 44.12,
+  })
   percentage: number;
 
-  @ApiProperty({ description: "Total physical copies owned across targets", example: 68 })
+  @ApiProperty({
+    description: "Total physical copies owned across targets",
+    example: 68,
+  })
   totalCopiesCount: number;
 
   @ApiProperty({ description: "Total duplicate copies owned", example: 23 })
@@ -25,7 +37,10 @@ export class CollectionCompletionDto {
   @ApiProperty({ description: "Total missing unique targets", example: 57 })
   missingCount: number;
 
-  @ApiProperty({ description: "Whether the collection has reached 100% completion", example: false })
+  @ApiProperty({
+    description: "Whether the collection has reached 100% completion",
+    example: false,
+  })
   isComplete: boolean;
 
   @ApiProperty({

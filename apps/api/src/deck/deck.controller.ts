@@ -57,7 +57,6 @@ export class DeckController {
     return this.deckService.createDeck(user, createDeckDto);
   }
 
-
   @Public()
   @Get()
   findAll(@Query() query: FindAllDecksQueryDto) {

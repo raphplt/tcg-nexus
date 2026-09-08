@@ -58,6 +58,10 @@ export class SellerAllocation {
   @Column("decimal", { precision: 12, scale: 2, default: 0 })
   refundedAmount: number;
 
+  /** Commission returned to the seller for refunded merchandise */
+  @Column("decimal", { precision: 12, scale: 2, default: 0 })
+  commissionReversedAmount: number;
+
   @Column({
     type: "enum",
     enum: SellerAllocationStatus,

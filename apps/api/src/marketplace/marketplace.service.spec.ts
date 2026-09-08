@@ -604,9 +604,15 @@ describe("MarketplaceService", () => {
       };
 
       mockCollectionItemRepo.findOne.mockResolvedValue({ ...invItem });
-      listingRepo.create.mockImplementation((data: any) => ({ id: 10, ...data }));
+      listingRepo.create.mockImplementation((data: any) => ({
+        id: 10,
+        ...data,
+      }));
       listingRepo.save.mockImplementation(async (data: any) => data);
-      listingRepo.findOne.mockResolvedValue({ id: 10, pokemonCard: { id: "c1" } });
+      listingRepo.findOne.mockResolvedValue({
+        id: 10,
+        pokemonCard: { id: "c1" },
+      });
 
       const dto: CreateListingDto = {
         inventoryItemId: 99,
@@ -631,7 +637,10 @@ describe("MarketplaceService", () => {
     it("throws NotFoundException if inventoryItem does not exist", async () => {
       mockCollectionItemRepo.findOne.mockResolvedValue(null);
       await expect(
-        service.create({ inventoryItemId: 404, price: 10, currency: Currency.EUR }, { id: 1 } as User),
+        service.create(
+          { inventoryItemId: 404, price: 10, currency: Currency.EUR },
+          { id: 1 } as User,
+        ),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
@@ -641,7 +650,10 @@ describe("MarketplaceService", () => {
         collection: { user: { id: 2 } },
       });
       await expect(
-        service.create({ inventoryItemId: 99, price: 10, currency: Currency.EUR }, { id: 1 } as User),
+        service.create(
+          { inventoryItemId: 99, price: 10, currency: Currency.EUR },
+          { id: 1 } as User,
+        ),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 
@@ -653,7 +665,12 @@ describe("MarketplaceService", () => {
       });
       await expect(
         service.create(
-          { inventoryItemId: 99, price: 10, currency: Currency.EUR, quantityAvailable: 2 },
+          {
+            inventoryItemId: 99,
+            price: 10,
+            currency: Currency.EUR,
+            quantityAvailable: 2,
+          },
           { id: 1 } as User,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);

@@ -30,7 +30,6 @@ import { OrderItem } from "./order-item.entity";
 @Index(["productKind"])
 @Index(["inventoryItem"])
 export class Listing {
-
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -62,7 +61,6 @@ export class Listing {
   isInventoryBacked: boolean;
 
   @Column("decimal", { precision: 10, scale: 2 })
-
   price: number;
 
   @Column({ type: "enum", enum: Currency })

@@ -108,11 +108,19 @@ export const paymentService = {
     );
   },
 
+  /** Reuse requestKey after an ambiguous response; allocate a new key only for a new intentional refund. */
   async createRefund(
     orderId: number,
     data: {
+      requestKey?: string;
       reason: string;
-      lines?: Array<{ orderItemId: number; quantity?: number; amount: number }>;
+      amount?: number;
+      lines?: Array<{
+        orderItemId: number;
+        quantity: number;
+        amount: number;
+        shippingAmount?: number;
+      }>;
     },
   ): Promise<any> {
     return authedFetch("POST", `/marketplace/orders/${orderId}/refund`, {

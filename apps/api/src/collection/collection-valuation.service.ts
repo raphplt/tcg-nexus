@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Card } from "src/card/entities/card.entity";
 import { CollectionItem } from "src/collection-item/entities/collection-item.entity";
@@ -26,10 +23,14 @@ export class CollectionValuationService {
   private assertCanView(collection: Collection, viewer?: User): void {
     if (collection.isPublic) return;
     if (!viewer) {
-      throw new NotFoundException(`Collection with id ${collection.id} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collection.id} not found`,
+      );
     }
     if (collection.user?.id !== viewer.id && viewer.role !== UserRole.ADMIN) {
-      throw new NotFoundException(`Collection with id ${collection.id} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collection.id} not found`,
+      );
     }
   }
 
@@ -57,7 +58,9 @@ export class CollectionValuationService {
     });
 
     if (!collection) {
-      throw new NotFoundException(`Collection with id ${collectionId} not found`);
+      throw new NotFoundException(
+        `Collection with id ${collectionId} not found`,
+      );
     }
 
     this.assertCanView(collection, viewer);
@@ -105,10 +108,16 @@ export class CollectionValuationService {
           totalEstimatedValue += effectivePrice * qty;
           valuedCopiesCount += qty;
 
-          if (targetCurrency === Currency.EUR && item.pokemonCard.pricing.cardmarket) {
+          if (
+            targetCurrency === Currency.EUR &&
+            item.pokemonCard.pricing.cardmarket
+          ) {
             sourcesSet.add("Cardmarket (trend/avg)");
           }
-          if (targetCurrency === Currency.USD && item.pokemonCard.pricing.tcgplayer) {
+          if (
+            targetCurrency === Currency.USD &&
+            item.pokemonCard.pricing.tcgplayer
+          ) {
             sourcesSet.add("TCGPlayer (market)");
           }
         } else {
@@ -132,7 +141,11 @@ export class CollectionValuationService {
     let unrealizedGainLoss: number | null = null;
     let roiPercentage: number | null = null;
 
-    if (hasAnyAcquisitionCost && totalAcquisitionCost !== null && totalAcquisitionCost > 0) {
+    if (
+      hasAnyAcquisitionCost &&
+      totalAcquisitionCost !== null &&
+      totalAcquisitionCost > 0
+    ) {
       totalAcquisitionCost = round2(totalAcquisitionCost);
       unrealizedGainLoss = round2(roundedEstimatedValue - totalAcquisitionCost);
       roiPercentage = round2((unrealizedGainLoss / totalAcquisitionCost) * 100);

@@ -247,7 +247,8 @@ function OrderDetailsContent() {
                     Articles reçus prêts pour votre collection
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Intégrez directement vos cartes livrées dans votre collection avec leur provenance certifiée.
+                    Intégrez directement vos cartes livrées dans votre
+                    collection avec leur provenance certifiée.
                   </p>
                 </div>
               </div>
@@ -423,48 +424,54 @@ function OrderDetailsContent() {
                             )}
                           </div>
 
-                          {(item as any).listingPhotoUrls && (item as any).listingPhotoUrls.length > 0 && (
-                            <div className="pt-2 space-y-1">
-                              <p className="text-xs font-medium text-muted-foreground">
-                                Photos certifiées du vendeur :
-                              </p>
-                              <div className="flex gap-2 overflow-x-auto py-1">
-                                {(item as any).listingPhotoUrls.map((url: string, idx: number) => (
-                                  <a
-                                    key={idx}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="relative h-12 w-12 shrink-0 rounded border overflow-hidden hover:opacity-80 transition-opacity"
-                                  >
-                                    <Image
-                                      src={url}
-                                      alt={`Photo ${idx + 1}`}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  </a>
-                                ))}
+                          {(item as any).listingPhotoUrls &&
+                            (item as any).listingPhotoUrls.length > 0 && (
+                              <div className="pt-2 space-y-1">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  Photos certifiées du vendeur :
+                                </p>
+                                <div className="flex gap-2 overflow-x-auto py-1">
+                                  {(item as any).listingPhotoUrls.map(
+                                    (url: string, idx: number) => (
+                                      <a
+                                        key={idx}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="relative h-12 w-12 shrink-0 rounded border overflow-hidden hover:opacity-80 transition-opacity"
+                                      >
+                                        <Image
+                                          src={url}
+                                          alt={`Photo ${idx + 1}`}
+                                          fill
+                                          className="object-cover"
+                                        />
+                                      </a>
+                                    ),
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {(item as any).listingDefects && (item as any).listingDefects.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Défauts déclarés :
-                              </span>
-                              {(item as any).listingDefects.map((defect: string, idx: number) => (
-                                <Badge
-                                  key={idx}
-                                  variant="outline"
-                                  className="text-xs border-amber-300 text-amber-800 dark:text-amber-300"
-                                >
-                                  {defect}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
+                          {(item as any).listingDefects &&
+                            (item as any).listingDefects.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  Défauts déclarés :
+                                </span>
+                                {(item as any).listingDefects.map(
+                                  (defect: string, idx: number) => (
+                                    <Badge
+                                      key={idx}
+                                      variant="outline"
+                                      className="text-xs border-amber-300 text-amber-800 dark:text-amber-300"
+                                    >
+                                      {defect}
+                                    </Badge>
+                                  ),
+                                )}
+                              </div>
+                            )}
 
                           <div className="flex flex-wrap items-center gap-2 pt-2">
                             {item.fulfillmentStatus ===
