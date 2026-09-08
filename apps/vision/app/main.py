@@ -10,10 +10,10 @@ from .pipeline import _decode, preprocess, preprocess_many
 
 app = FastAPI(title="TCG Nexus Vision Service", version="1.0")
 
-# images base64 : une requête légitime dépasse rarement quelques Mo
+# Base64 images: a legitimate request rarely exceeds a few megabytes
 MAX_BODY_BYTES = int(os.getenv("VISION_MAX_BODY_BYTES", 32 * 1024 * 1024))
 
-# secret partagé optionnel : non défini = service ouvert (dev, réseau interne)
+# Optional shared secret: undefined = open service (local dev, internal network)
 _API_KEY = os.getenv("VISION_API_KEY", "").strip()
 
 _PUBLIC_PATHS = {"/health"}
@@ -69,8 +69,8 @@ def preprocess_endpoint(req: PreprocessRequest) -> dict:
 
 @app.post("/preprocess-batch")
 def preprocess_batch_endpoint(req: PreprocessBatchRequest) -> dict:
-    """Best-of-N : prétraite/OCRise plusieurs frames en parallèle et fusionne
-    le meilleur nom + le meilleur numéro."""
+    """Best-of-N: pre-processes and OCRs multiple candidate frames in parallel,
+    fusing the best detected name and number."""
     try:
         return preprocess_many(req.images)
     except ValueError as error:
@@ -79,15 +79,16 @@ def preprocess_batch_endpoint(req: PreprocessBatchRequest) -> dict:
 
 @app.post("/match")
 def match_endpoint(req: MatchRequest) -> dict:
-    candidates = [c.model_dump() for c in req.candidates]
+    candidates = [candidate.model_dump() for candidate in req.candidates]
     return {"results": match(req.image, candidates)}
 
 
 @app.post("/embed")
 def embed_endpoint(req: EmbedRequest) -> dict:
-    """Vecteurs CLIP des images fournies (pré-calcul catalogue + requête scan)."""
+    """Generates CLIP embeddings for provided artwork images."""
     try:
-        imgs = [_decode(i) for i in req.images]
+        imgs = [_decode(image_b64) for image_b64 in req.images]
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     return {"embeddings": embed_artwork(imgs)}
+

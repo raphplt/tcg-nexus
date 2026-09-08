@@ -1,4 +1,4 @@
-"""Garde-fous SSRF sur les URLs candidates téléchargées par /match."""
+"""SSRF protection guards on candidate URLs downloaded by the match endpoint."""
 
 from __future__ import annotations
 
@@ -23,15 +23,15 @@ class UnsafeUrlError(ValueError):
 
 
 def _is_public_address(address: str) -> bool:
-    ip = ipaddress.ip_address(address)
-    # link_local couvre 169.254.169.254 (métadonnées cloud)
+    parsed_ip = ipaddress.ip_address(address)
+    # Link-local covers 169.254.169.254 (cloud metadata services)
     return not (
-        ip.is_private
-        or ip.is_loopback
-        or ip.is_link_local
-        or ip.is_reserved
-        or ip.is_multicast
-        or ip.is_unspecified
+        parsed_ip.is_private
+        or parsed_ip.is_loopback
+        or parsed_ip.is_link_local
+        or parsed_ip.is_reserved
+        or parsed_ip.is_multicast
+        or parsed_ip.is_unspecified
     )
 
 
@@ -53,9 +53,10 @@ def assert_safe_url(url: str) -> None:
     except socket.gaierror as error:
         raise UnsafeUrlError(f"Hôte non résolu : {host!r}") from error
 
-    # toutes les IP résolues doivent être publiques : un seul enregistrement
-    # pointant vers le réseau interne suffirait à contourner le contrôle
+    # All resolved IPs must be public: a single record pointing to the internal
+    # network would be sufficient to bypass the guard check.
     for info in infos:
         address = info[4][0]
         if not _is_public_address(address):
             raise UnsafeUrlError(f"Adresse interne refusée : {address}")
+

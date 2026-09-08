@@ -1,7 +1,3 @@
-
-
-
-
 import urllib.request
 
 import cv2
@@ -9,7 +5,6 @@ import numpy as np
 
 from .pipeline import _decode, _find_card_box, _warp_card
 from .url_guard import MAX_DOWNLOAD_BYTES, assert_safe_url
-
 
 _REF_SIZE = (245, 337)
 _RATIO = 0.75
@@ -19,20 +14,22 @@ _bf = cv2.BFMatcher(cv2.NORM_HAMMING)
 
 
 def _art(gray: np.ndarray) -> np.ndarray:
-
-    h, w = gray.shape
-    return gray[int(0.08 * h) : int(0.55 * h), int(0.05 * w) : int(0.95 * w)]
+    height, width = gray.shape
+    return gray[
+        int(0.08 * height) : int(0.55 * height),
+        int(0.05 * width) : int(0.95 * width),
+    ]
 
 
 def _descriptors(gray: np.ndarray):
     return _orb.detectAndCompute(_art(cv2.resize(gray, _REF_SIZE)), None)[1]
 
 
-def _good_matches(d1, d2) -> int:
-    if d1 is None or d2 is None:
+def _good_matches(descriptors_1, descriptors_2) -> int:
+    if descriptors_1 is None or descriptors_2 is None:
         return 0
     good = 0
-    for pair in _bf.knnMatch(d1, d2, k=2):
+    for pair in _bf.knnMatch(descriptors_1, descriptors_2, k=2):
         if len(pair) == 2 and pair[0].distance < _RATIO * pair[1].distance:
             good += 1
     return good
@@ -42,9 +39,9 @@ def _download_gray(url: str):
     assert_safe_url(url)
     req = urllib.request.Request(url, headers={"User-Agent": "tcg-nexus"})
     with urllib.request.urlopen(req, timeout=15) as response:
-        # revalidé après redirection : urllib suit les 3xx sans repasser par le garde
+        # Re-verify after HTTP redirects: urllib follows 3xx without re-running the guard
         assert_safe_url(response.geturl())
-        # +1 octet pour détecter un dépassement au lieu de tronquer silencieusement
+        # Request +1 byte to detect overflow instead of silently truncating
         data = response.read(MAX_DOWNLOAD_BYTES + 1)
     if len(data) > MAX_DOWNLOAD_BYTES:
         return None
@@ -80,3 +77,4 @@ def match(image_b64: str, candidates: list) -> list:
             score = 0
         results.append({"id": cand["id"], "score": score})
     return results
+
