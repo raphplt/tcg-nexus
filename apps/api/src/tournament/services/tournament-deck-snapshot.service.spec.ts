@@ -1,9 +1,9 @@
-import { DeckLegalityStatus } from "../entities/tournament-deck-snapshot.entity";
 import { BadRequestException, ForbiddenException } from "@nestjs/common";
 import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 import { UserRole } from "../../common/enums/user";
-import { RegistrationStatus } from "../entities/tournament-registration.entity";
 import { TournamentStatus } from "../entities/tournament.entity";
+import { DeckLegalityStatus } from "../entities/tournament-deck-snapshot.entity";
+import { RegistrationStatus } from "../entities/tournament-registration.entity";
 import { TournamentDeckSnapshotService } from "./tournament-deck-snapshot.service";
 
 describe("TournamentDeckSnapshotService", () => {

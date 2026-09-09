@@ -13,8 +13,8 @@ import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
-import { TournamentOrchestrationService } from "./tournament-orchestration.service";
 import { SwissPairingService } from "./swiss-pairing.service";
+import { TournamentOrchestrationService } from "./tournament-orchestration.service";
 
 const mockTournamentRepository = {
   findOne: jest.fn(),

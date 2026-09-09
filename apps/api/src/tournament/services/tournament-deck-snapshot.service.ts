@@ -17,18 +17,18 @@ import {
   SubmittedCardItemDto,
   TournamentDeckSnapshotResponseDto,
 } from "../dto/tournament-deck-snapshot.dto";
+import { Tournament, TournamentStatus } from "../entities/tournament.entity";
 import {
   DeckLegalityStatus,
   SnapshotCardItem,
   TournamentDeckSnapshot,
 } from "../entities/tournament-deck-snapshot.entity";
+import { TournamentDeckSnapshotRevision } from "../entities/tournament-deck-snapshot-revision.entity";
 import { TournamentOrganizer } from "../entities/tournament-organizer.entity";
 import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
-import { Tournament, TournamentStatus } from "../entities/tournament.entity";
-import { TournamentDeckSnapshotRevision } from "../entities/tournament-deck-snapshot-revision.entity";
 import { DeckLegalityService } from "./deck-legality.service";
 
 /**

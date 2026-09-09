@@ -1,11 +1,11 @@
 import { FindOperator } from "typeorm";
-import { MatchService } from "../../match/match.service";
 import {
   BracketSide,
   Match,
   MatchStatus,
 } from "../../match/entities/match.entity";
 import { OnlineMatchSession } from "../../match/entities/online-match-session.entity";
+import { MatchService } from "../../match/match.service";
 import { Player } from "../../player/entities/player.entity";
 import {
   Tournament,

@@ -150,7 +150,10 @@ describe("DeckLegalityService", () => {
   });
 
   it("reports a list as unverified when the rule set is unknown", async () => {
-    cardRepository.find.mockResolvedValue([card(uuid(1)), basicEnergy(uuid(2))]);
+    cardRepository.find.mockResolvedValue([
+      card(uuid(1)),
+      basicEnergy(uuid(2)),
+    ]);
 
     const result = await service.validate(
       list([
@@ -195,7 +198,10 @@ describe("DeckLegalityService", () => {
   });
 
   it("refuses a format that is not active on the submission date", async () => {
-    cardRepository.find.mockResolvedValue([card(uuid(1)), basicEnergy(uuid(2))]);
+    cardRepository.find.mockResolvedValue([
+      card(uuid(1)),
+      basicEnergy(uuid(2)),
+    ]);
     formatRepository.findOne.mockResolvedValue({
       id: 3,
       type: "Standard 2019",
@@ -213,8 +219,8 @@ describe("DeckLegalityService", () => {
     );
 
     expect(result.status).toBe(DeckLegalityStatus.INVALID);
-    expect(result.errors.some((error) => error.includes("n'est pas actif"))).toBe(
-      true,
-    );
+    expect(
+      result.errors.some((error) => error.includes("n'est pas actif")),
+    ).toBe(true);
   });
 });

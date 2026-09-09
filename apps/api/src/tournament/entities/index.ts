@@ -9,6 +9,10 @@ export {
   TournamentType,
 } from "./tournament.entity";
 export {
+  SnapshotCardItem,
+  TournamentDeckSnapshot,
+} from "./tournament-deck-snapshot.entity";
+export {
   NotificationStatus,
   NotificationType,
   TournamentNotification,
@@ -23,7 +27,3 @@ export {
   TournamentRegistration,
 } from "./tournament-registration.entity";
 export { RewardType, TournamentReward } from "./tournament-reward.entity";
-export {
-  TournamentDeckSnapshot,
-  SnapshotCardItem,
-} from "./tournament-deck-snapshot.entity";

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsIn,
@@ -9,7 +10,6 @@ import {
   ValidateNested,
 } from "class-validator";
 import { DeckLegalityStatus } from "../entities/tournament-deck-snapshot.entity";
-import { Type } from "class-transformer";
 
 export class SubmittedCardItemDto {
   @ApiProperty({ description: "Card identifier (e.g. base1-4)" })

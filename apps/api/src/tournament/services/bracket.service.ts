@@ -91,7 +91,11 @@ export class BracketService {
   ) {}
 
   /**
-   * Génère le bracket complet pour un tournoi selon son type
+   * Generates the complete bracket tree for a tournament based on format type.
+   *
+   * @param tournamentId - Unique tournament identifier.
+   * @param options - Seeding and transaction manager options.
+   * @returns Generated bracket structure with rounds, nodes, and player slots.
    */
   async generateBracket(
     tournamentId: number,
@@ -452,7 +456,7 @@ export class BracketService {
   }
 
   /**
-   * Crée les matches en base à partir du bracket
+   * Persists database match entities derived from bracket structure.
    */
   private async createMatchesFromBracket(
     tournament: Tournament,
@@ -496,7 +500,10 @@ export class BracketService {
   }
 
   /**
-   * Récupère le bracket actuel d'un tournoi
+   * Retrieves the current bracket layout and live match progression for a tournament.
+   *
+   * @param tournamentId - Unique tournament identifier.
+   * @returns Current bracket structure reconstructed from persisted matches.
    */
   async getBracket(tournamentId: number): Promise<BracketStructure> {
     const tournament = await this.tournamentRepository.findOne({

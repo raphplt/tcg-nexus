@@ -76,7 +76,11 @@ export class TournamentDeckSnapshot {
    * `unverified` means the rules could not be checked — an unknown format, a
    * card without legality data — and is never presented as a valid list.
    */
-  @Column({ type: "varchar", length: 16, default: DeckLegalityStatus.UNVERIFIED })
+  @Column({
+    type: "varchar",
+    length: 16,
+    default: DeckLegalityStatus.UNVERIFIED,
+  })
   legalityStatus: DeckLegalityStatus;
 
   /** True only when every checked rule passed; kept for existing clients. */

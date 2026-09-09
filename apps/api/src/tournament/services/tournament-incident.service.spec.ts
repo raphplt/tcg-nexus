@@ -1,9 +1,9 @@
 import { ConflictException } from "@nestjs/common";
-import { MatchStatus } from "../../match/entities/match.entity";
-import { TournamentIncidentService } from "./tournament-incident.service";
-import { RegistrationStatus } from "../entities/tournament-registration.entity";
-import { TournamentStatus } from "../entities/tournament.entity";
 import { UserRole } from "../../common/enums/user";
+import { MatchStatus } from "../../match/entities/match.entity";
+import { TournamentStatus } from "../entities/tournament.entity";
+import { RegistrationStatus } from "../entities/tournament-registration.entity";
+import { TournamentIncidentService } from "./tournament-incident.service";
 
 describe("TournamentIncidentService", () => {
   const organizerUser = {
@@ -159,62 +159,62 @@ describe("TournamentIncidentService", () => {
     });
   });
 
-    it("refuses a correction whose later matches are already played", async () => {
-      organizerRepository.findOne.mockResolvedValue({ id: 1, isActive: true });
-      matchRepository.findOne.mockResolvedValue({
-        id: 42,
-        round: 1,
-        playerA: { id: 1 },
-        playerB: { id: 2 },
-        tournament: { id: 10 },
-        playerAScore: 2,
-        playerBScore: 0,
-      });
-      matchRepository.find.mockResolvedValue([
-        { id: 60, round: 2, status: MatchStatus.FINISHED },
-      ]);
-
-      await expect(
-        service.applyScoreCorrection(10, organizerUser, {
-          matchId: 42,
-          playerAScore: 0,
-          playerBScore: 2,
-          reason: "Judge review",
-        }),
-      ).rejects.toBeInstanceOf(ConflictException);
-      expect(rankingService.reverseMatchElo).not.toHaveBeenCalled();
+  it("refuses a correction whose later matches are already played", async () => {
+    organizerRepository.findOne.mockResolvedValue({ id: 1, isActive: true });
+    matchRepository.findOne.mockResolvedValue({
+      id: 42,
+      round: 1,
+      playerA: { id: 1 },
+      playerB: { id: 2 },
+      tournament: { id: 10 },
+      playerAScore: 2,
+      playerBScore: 0,
     });
+    matchRepository.find.mockResolvedValue([
+      { id: 60, round: 2, status: MatchStatus.FINISHED },
+    ]);
 
-    it("applies an acknowledged correction and reverses its rating", async () => {
-      organizerRepository.findOne.mockResolvedValue({ id: 1, isActive: true });
-      matchRepository.findOne.mockResolvedValue({
-        id: 42,
-        round: 1,
-        playerA: { id: 1 },
-        playerB: { id: 2 },
-        tournament: { id: 10 },
-        playerAScore: 2,
-        playerBScore: 0,
-      });
-      matchRepository.find.mockResolvedValue([
-        { id: 60, round: 2, status: MatchStatus.FINISHED },
-      ]);
-
-      const result = await service.applyScoreCorrection(10, organizerUser, {
+    await expect(
+      service.applyScoreCorrection(10, organizerUser, {
         matchId: 42,
         playerAScore: 0,
         playerBScore: 2,
         reason: "Judge review",
-        acknowledgeDownstreamImpact: true,
-      });
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(rankingService.reverseMatchElo).not.toHaveBeenCalled();
+  });
 
-      expect(result.downstreamMatchIds).toEqual([60]);
-      expect(rankingService.reverseMatchElo).toHaveBeenCalledWith(
-        42,
-        expect.stringContaining("Score correction"),
-      );
-      expect(rankingService.updateTournamentRankings).toHaveBeenCalledWith(10);
+  it("applies an acknowledged correction and reverses its rating", async () => {
+    organizerRepository.findOne.mockResolvedValue({ id: 1, isActive: true });
+    matchRepository.findOne.mockResolvedValue({
+      id: 42,
+      round: 1,
+      playerA: { id: 1 },
+      playerB: { id: 2 },
+      tournament: { id: 10 },
+      playerAScore: 2,
+      playerBScore: 0,
     });
+    matchRepository.find.mockResolvedValue([
+      { id: 60, round: 2, status: MatchStatus.FINISHED },
+    ]);
+
+    const result = await service.applyScoreCorrection(10, organizerUser, {
+      matchId: 42,
+      playerAScore: 0,
+      playerBScore: 2,
+      reason: "Judge review",
+      acknowledgeDownstreamImpact: true,
+    });
+
+    expect(result.downstreamMatchIds).toEqual([60]);
+    expect(rankingService.reverseMatchElo).toHaveBeenCalledWith(
+      42,
+      expect.stringContaining("Score correction"),
+    );
+    expect(rankingService.updateTournamentRankings).toHaveBeenCalledWith(10);
+  });
 
   describe("getPlayerDashboard", () => {
     it("should return complete cockpit payload for registered participant", async () => {

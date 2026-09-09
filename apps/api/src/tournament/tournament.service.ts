@@ -324,16 +324,13 @@ export class TournamentService {
   }
 
   /**
-   * Registers a player for a tournament.
-   */
-  /**
-   * Resolves the player profile attached to a user account.
+   * Resolves the player profile attached to an authenticated user account.
    *
-   * L'utilisateur porté par le token n'embarque plus la relation `player` :
-   * elle est résolue ici, au moment où on en a besoin.
+   * The user identity from JWT tokens does not eagerly load the player relation;
+   * this method fetches it on demand when required.
    *
-   * @param userId Identifiant de l'utilisateur authentifié.
-   * @returns Identifiant du joueur, ou null si le profil n'existe pas.
+   * @param userId - Authenticated user unique identifier.
+   * @returns Player ID, or null if no profile exists.
    */
   async findPlayerIdByUserId(userId: number): Promise<number | null> {
     const player = await this.playerRepository.findOne({
@@ -653,7 +650,10 @@ export class TournamentService {
   }
 
   /**
-   * Démarre un tournoi
+   * Starts a tournament and creates its opening round matches.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param options - Optional seeding and check-in configuration.
    */
   async startTournament(
     tournamentId: number,
@@ -668,35 +668,35 @@ export class TournamentService {
   }
 
   /**
-   * Termine un tournoi
+   * Concludes a tournament and marks it as completed.
    */
   async finishTournament(tournamentId: number) {
     return this.orchestrationService.finishTournament(tournamentId);
   }
 
   /**
-   * Annule un tournoi
+   * Cancels a tournament with an optional reason.
    */
   async cancelTournament(tournamentId: number, reason?: string) {
     return this.orchestrationService.cancelTournament(tournamentId, reason);
   }
 
   /**
-   * Passe au round suivant
+   * Advances the tournament to the next round.
    */
   async advanceToNextRound(tournamentId: number) {
     return this.orchestrationService.advanceToNextRound(tournamentId);
   }
 
   /**
-   * Récupère le bracket d'un tournoi
+   * Retrieves the current tournament bracket tree.
    */
   async getBracket(tournamentId: number) {
     return this.bracketService.getBracket(tournamentId);
   }
 
   /**
-   * Récupère les paires du round actuel
+   * Retrieves match pairings for the current or specified round.
    */
   async getCurrentPairings(tournamentId: number, round?: number) {
     const tournament = await this.findOne(tournamentId);
@@ -715,14 +715,14 @@ export class TournamentService {
   }
 
   /**
-   * Récupère le progrès d'un tournoi
+   * Retrieves tournament match completion and player progression metrics.
    */
   getTournamentProgress(tournamentId: number) {
     return this.orchestrationService.getTournamentProgress(tournamentId);
   }
 
   /**
-   * Récupère les matches d'un tournoi
+   * Retrieves tournament matches matching optional round and status filters.
    */
   getTournamentMatches(
     tournamentId: number,
@@ -784,7 +784,10 @@ export class TournamentService {
   }
 
   /**
-   * Récupère un match spécifique d'un tournoi
+   * Retrieves a specific tournament match record.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param matchId - Match unique identifier.
    */
   async getTournamentMatch(tournamentId: number, matchId: number) {
     const match = await this.matchService.findOne(matchId);
@@ -807,7 +810,11 @@ export class TournamentService {
   }
 
   /**
-   * Met à jour un match d'un tournoi (score, statut)
+   * Updates tournament match scores and state transitions.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param matchId - Match unique identifier.
+   * @param updateData - Scores and next match status.
    */
   async updateTournamentMatch(
     tournamentId: number,
@@ -866,7 +873,10 @@ export class TournamentService {
   }
 
   /**
-   * Récupère les inscriptions d'un tournoi
+   * Retrieves player registrations for a tournament.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param status - Optional registration status filter.
    */
   async getTournamentRegistrations(tournamentId: number, status?: string) {
     const queryBuilder = this.registrationRepository

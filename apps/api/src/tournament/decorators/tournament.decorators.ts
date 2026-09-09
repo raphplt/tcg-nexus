@@ -12,8 +12,8 @@ interface AuthenticatedRequest {
 }
 
 /**
- * Décorateur pour récupérer les informations d'organisateur de tournoi depuis la requête
- * Utilisé après TournamentOrganizerGuard ou TournamentOwnerGuard
+ * Parameter decorator to extract tournament organizer details from request context.
+ * Typically used following TournamentOrganizerGuard or TournamentOwnerGuard.
  */
 export const TournamentOrganizer = createParamDecorator(
   (
@@ -26,8 +26,8 @@ export const TournamentOrganizer = createParamDecorator(
 );
 
 /**
- * Décorateur pour récupérer les informations de tournoi depuis la requête
- * Utilisé après n'importe quel guard de tournoi
+ * Parameter decorator to extract tournament entity from request context.
+ * Typically used following any tournament guard.
  */
 export const Tournament = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): TournamentEntity | undefined => {
@@ -37,8 +37,8 @@ export const Tournament = createParamDecorator(
 );
 
 /**
- * Décorateur pour récupérer les informations de joueur de tournoi depuis la requête
- * Utilisé après TournamentParticipantGuard
+ * Parameter decorator to extract tournament player entity from request context.
+ * Typically used following TournamentParticipantGuard.
  */
 export const TournamentPlayer = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): Player | undefined => {
@@ -48,8 +48,8 @@ export const TournamentPlayer = createParamDecorator(
 );
 
 /**
- * Décorateur pour récupérer les informations d'inscription de tournoi depuis la requête
- * Utilisé après TournamentParticipantGuard
+ * Parameter decorator to extract tournament registration entity from request context.
+ * Typically used following TournamentParticipantGuard.
  */
 export const TournamentRegistration = createParamDecorator(
   (

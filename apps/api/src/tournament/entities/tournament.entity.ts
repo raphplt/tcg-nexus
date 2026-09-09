@@ -13,13 +13,13 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
+import { TournamentDeckSnapshot } from "./tournament-deck-snapshot.entity";
 import { TournamentNotification } from "./tournament-notification.entity";
 import { TournamentOrganizer } from "./tournament-organizer.entity";
 import { TournamentPricing } from "./tournament-pricing.entity";
 import { TournamentRegistration } from "./tournament-registration.entity";
 import { TournamentReward } from "./tournament-reward.entity";
-import { TournamentDeckSnapshot } from "./tournament-deck-snapshot.entity";
-import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
 
 export enum TournamentType {
   SINGLE_ELIMINATION = "single_elimination",

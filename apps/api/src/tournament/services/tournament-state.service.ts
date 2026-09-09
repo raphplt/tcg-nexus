@@ -120,7 +120,11 @@ export class TournamentStateService {
   ) {}
 
   /**
-   * Valide si une transition d'état est possible
+   * Validates whether a state transition is permissible according to tournament rules.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param targetStatus - Target status to transition to.
+   * @returns Validation outcome with actionable errors and warnings.
    */
   async validateStateTransition(
     tournamentId: number,
@@ -134,7 +138,7 @@ export class TournamentStateService {
     if (!tournament) {
       return {
         canTransition: false,
-        errors: ["Tournoi non trouvé"],
+        errors: ["Tournament not found"],
         warnings: [],
       };
     }
@@ -147,7 +151,7 @@ export class TournamentStateService {
       return {
         canTransition: false,
         errors: [
-          `Transition de ${tournament.status} vers ${targetStatus} non autorisée`,
+          `Transition from ${tournament.status} to ${targetStatus} is not authorized`,
         ],
         warnings: [],
       };
@@ -161,12 +165,10 @@ export class TournamentStateService {
       try {
         const result = await condition(tournament);
         if (!result) {
-          errors.push(`Condition non remplie pour ${rule.description}`);
+          errors.push(`Condition not met for ${rule.description}`);
         }
       } catch (error) {
-        errors.push(
-          `Erreur lors de la validation: ${(error as Error).message}`,
-        );
+        errors.push(`Error during validation: ${(error as Error).message}`);
       }
     }
 
@@ -189,7 +191,10 @@ export class TournamentStateService {
   }
 
   /**
-   * Récupère les transitions possibles depuis l'état actuel
+   * Retrieves permissible target transitions from the current tournament status.
+   *
+   * @param currentStatus - Current tournament status.
+   * @returns List of reachable target statuses.
    */
   getAvailableTransitions(currentStatus: TournamentStatus): TournamentStatus[] {
     return this.transitionRules
@@ -198,7 +203,11 @@ export class TournamentStateService {
   }
 
   /**
-   * Récupère la description d'une transition
+   * Retrieves the operational description for a state transition.
+   *
+   * @param from - Source status.
+   * @param to - Target status.
+   * @returns Description of the transition rule.
    */
   getTransitionDescription(
     from: TournamentStatus,
@@ -211,7 +220,13 @@ export class TournamentStateService {
   }
 
   /**
-   * Effectue une transition d'état avec validation
+   * Executes a state transition with validation and side effects.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param targetStatus - Next target status transition.
+   * @param reason - Optional transition rationale.
+   * @returns Updated tournament entity.
+   * @throws BadRequestException If transition is invalid according to state machine rules.
    */
   async transitionState(
     tournamentId: number,
@@ -225,7 +240,7 @@ export class TournamentStateService {
 
     if (!validation.canTransition) {
       throw new BadRequestException(
-        `Impossible de changer l'état: ${validation.errors.join(", ")}`,
+        `Unable to transition state: ${validation.errors.join(", ")}`,
       );
     }
 
@@ -236,7 +251,7 @@ export class TournamentStateService {
     if (!tournament) {
       throw new BadRequestException({
         code: "TOURNAMENT_NOT_FOUND",
-        message: "Tournoi non trouvé",
+        message: "Tournament not found",
       });
     }
 
@@ -254,7 +269,10 @@ export class TournamentStateService {
   }
 
   /**
-   * Vérifie si le tournoi a le nombre minimum de joueurs
+   * Verifies whether the tournament has reached its minimum player threshold.
+   *
+   * @param tournament - Tournament entity to inspect.
+   * @returns True if confirmed player count meets minimum required.
    */
   private async hasMinimumPlayers(tournament: Tournament): Promise<boolean> {
     const confirmedCount = await this.getConfirmedPlayersCount(tournament.id);
@@ -283,7 +301,10 @@ export class TournamentStateService {
   }
 
   /**
-   * Vérifie si tous les matches sont terminés
+   * Verifies whether all tournament matches are completed.
+   *
+   * @param tournament - Tournament entity to inspect.
+   * @returns True if no matches are scheduled or in progress.
    */
   private async allMatchesCompleted(tournament: Tournament): Promise<boolean> {
     const incompleteMatches = await this.matchRepository.count({
@@ -297,7 +318,10 @@ export class TournamentStateService {
   }
 
   /**
-   * Vérifie si le dernier round est terminé
+   * Verifies whether the final tournament round has completed.
+   *
+   * @param tournament - Tournament entity to inspect.
+   * @returns True if the final round is finished.
    */
   private async isLastRoundCompleted(tournament: Tournament): Promise<boolean> {
     if (!tournament.totalRounds || !tournament.currentRound) {
@@ -359,7 +383,7 @@ export class TournamentStateService {
         break;
 
       case TournamentStatus.CANCELLED:
-        // Enregistrer la raison d'annulation
+        // Record cancellation reason if provided
         if (reason) {
           tournament.additionalInfo =
             `${tournament.additionalInfo || ""}\nAnnulé: ${reason}`.trim();
@@ -369,7 +393,10 @@ export class TournamentStateService {
   }
 
   /**
-   * Récupère l'historique des transitions d'un tournoi
+   * Retrieves the transition state history and options for a tournament.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @returns State history with available transitions and descriptions.
    */
   async getStateHistory(tournamentId: number): Promise<{
     currentStatus: TournamentStatus;

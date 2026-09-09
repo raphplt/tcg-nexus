@@ -13,8 +13,8 @@ import {
   ProposalStatus,
 } from "../../common/enums/match-result-status";
 import { UserRole } from "../../common/enums/user";
-import { MatchResultProposal } from "../../match/entities/match-result-proposal.entity";
 import { Match, MatchStatus } from "../../match/entities/match.entity";
+import { MatchResultProposal } from "../../match/entities/match-result-proposal.entity";
 import { MatchService } from "../../match/match.service";
 import { Player } from "../../player/entities/player.entity";
 import { RankingService } from "../../ranking/ranking.service";
@@ -29,13 +29,13 @@ import {
   ScoreCorrectionApplyDto,
   ScoreCorrectionPreviewDto,
 } from "../dto/tournament-incident.dto";
+import { Tournament, TournamentStatus } from "../entities/tournament.entity";
 import { TournamentDeckSnapshot } from "../entities/tournament-deck-snapshot.entity";
 import { TournamentOrganizer } from "../entities/tournament-organizer.entity";
 import {
   RegistrationStatus,
   TournamentRegistration,
 } from "../entities/tournament-registration.entity";
-import { Tournament, TournamentStatus } from "../entities/tournament.entity";
 import { SwissPairingService, toSwissResults } from "./swiss-pairing.service";
 import { TournamentRoundClockService } from "./tournament-round-clock.service";
 

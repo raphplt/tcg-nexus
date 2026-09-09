@@ -1,14 +1,18 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuditModule } from "../audit/audit.module";
+import { Card } from "../card/entities/card.entity";
 import { Deck } from "../deck/entities/deck.entity";
-import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
+import { DeckFormat } from "../deck-format/entities/deck-format.entity";
 import { Match } from "../match/entities/match.entity";
+import { MatchResultProposal } from "../match/entities/match-result-proposal.entity";
 import { MatchModule } from "../match/match.module";
 import { Player } from "../player/entities/player.entity";
+import { RankedMatchHistory } from "../ranking/entities/ranked-match-history.entity";
 import { Ranking } from "../ranking/entities/ranking.entity";
 import { RankingModule } from "../ranking/ranking.module";
 import { User } from "../user/entities/user.entity";
+import { DeckLegalityModule } from "./deck-legality.module";
 import {
   RegistrationPayment,
   Tournament,
@@ -19,6 +23,7 @@ import {
   TournamentRegistration,
   TournamentReward,
 } from "./entities";
+import { TournamentDeckSnapshotRevision } from "./entities/tournament-deck-snapshot-revision.entity";
 import {
   TournamentOrganizerGuard,
   TournamentOwnerGuard,
@@ -29,11 +34,6 @@ import { PublicTournamentDataInterceptor } from "./interceptors/public-tournamen
 import { BracketService } from "./services/bracket.service";
 import { ExternalTournamentSyncService } from "./services/external-tournament-sync.service";
 import { SeedingService } from "./services/seeding.service";
-import { Card } from "../card/entities/card.entity";
-import { DeckFormat } from "../deck-format/entities/deck-format.entity";
-import { RankedMatchHistory } from "../ranking/entities/ranked-match-history.entity";
-import { TournamentDeckSnapshotRevision } from "./entities/tournament-deck-snapshot-revision.entity";
-import { DeckLegalityModule } from "./deck-legality.module";
 import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
 import { TournamentIncidentService } from "./services/tournament-incident.service";
 import { TournamentOrchestrationService } from "./services/tournament-orchestration.service";

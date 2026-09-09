@@ -3,6 +3,7 @@ import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Player } from "../player/entities/player.entity";
+import { RankingService } from "../ranking/ranking.service";
 import { User } from "../user/entities/user.entity";
 import { BulkRegistrationAction } from "./dto/bulk-registration-action.dto";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
@@ -13,7 +14,6 @@ import { TournamentRegistration } from "./entities/tournament-registration.entit
 import { TournamentOrganizerGuard } from "./guards/tournament-organizer.guard";
 import { TournamentOwnerGuard } from "./guards/tournament-owner.guard";
 import { TournamentParticipantGuard } from "./guards/tournament-participant.guard";
-import { RankingService } from "../ranking/ranking.service";
 import { TournamentDeckSnapshotService } from "./services/tournament-deck-snapshot.service";
 import { TournamentIncidentService } from "./services/tournament-incident.service";
 import { TournamentRoundClockService } from "./services/tournament-round-clock.service";

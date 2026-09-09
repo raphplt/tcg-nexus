@@ -42,7 +42,12 @@ export class SeedingService {
   ) {}
 
   /**
-   * Génère le seeding des joueurs selon la méthode choisie
+   * Generates player seeding based on the designated seeding method.
+   *
+   * @param players - List of tournament players to seed.
+   * @param tournament - Target tournament entity.
+   * @param method - Seeding algorithm (Random, Ranking, ELO, Manual).
+   * @returns Seeded players ordered with assigned seed numbers.
    */
   async seedPlayers(
     players: Player[],
@@ -151,7 +156,7 @@ export class SeedingService {
   }
 
   /**
-   * Seeding basé sur l'ELO (si implémenté)
+   * Generates seeding based on global player ELO rating.
    */
   private async eloBasedSeeding(players: Player[]): Promise<SeededPlayer[]> {
     // Fetch fresh player data with elo scores
@@ -177,7 +182,7 @@ export class SeedingService {
   }
 
   /**
-   * Seeding manuel (ordre donné)
+   * Generates manual sequential seeding based on provided player order.
    */
   private manualSeeding(players: Player[]): SeededPlayer[] {
     return players.map((player, index) => ({
@@ -187,8 +192,8 @@ export class SeedingService {
   }
 
   /**
-   * Génère un seeding équilibré pour les brackets
-   * Place les têtes de série de manière optimale
+   * Generates balanced seeding for single/double elimination brackets.
+   * Places top seeds on opposite ends of the bracket tree to prevent early clashes.
    */
   generateBalancedSeeding(seededPlayers: SeededPlayer[]): SeededPlayer[] {
     const playerCount = seededPlayers.length;

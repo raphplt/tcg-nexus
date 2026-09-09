@@ -65,7 +65,11 @@ export class TournamentOrchestrationService {
   ) {}
 
   /**
-   * Démarre un tournoi : génère les brackets/pairings et crée les premiers matches
+   * Starts a tournament: generates bracket or initial Swiss pairings and creates round 1 matches.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @param options - Seeding method and check-in enforcement options.
+   * @returns Updated tournament entity in IN_PROGRESS status.
    */
   async startTournament(
     tournamentId: number,
@@ -398,7 +402,10 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Récupère les statistiques en temps réel d'un tournoi
+   * Retrieves real-time match progression and player status metrics for a tournament.
+   *
+   * @param tournamentId - Tournament unique identifier.
+   * @returns Progress statistics including completion percentage and player counts.
    */
   async getTournamentProgress(tournamentId: number): Promise<{
     status: TournamentStatus;
@@ -455,7 +462,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Valide qu'un tournoi peut être démarré
+   * Validates whether tournament prerequisites are fulfilled before starting.
    */
   private validateTournamentStart(
     tournament: Tournament,
@@ -658,7 +665,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Détermine la phase d'un match selon le round
+   * Determines match phase based on current round relative to total rounds.
    */
   private getPhaseForRound(round: number, totalRounds: number): MatchPhase {
     if (round === totalRounds) return MatchPhase.FINAL;
@@ -668,7 +675,7 @@ export class TournamentOrchestrationService {
   }
 
   /**
-   * Vérifie si un tournoi est terminé
+   * Verifies whether tournament has reached completion.
    */
   private isTournamentComplete(
     tournament: Tournament,

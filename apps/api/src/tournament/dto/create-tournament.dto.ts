@@ -13,8 +13,8 @@ import {
   Min,
   ValidateIf,
 } from "class-validator";
-import { TournamentType } from "../entities/tournament.entity";
 import { DeckVisibilityPolicy } from "../../common/enums/deck-visibility-policy";
+import { TournamentType } from "../entities/tournament.entity";
 
 export class CreateTournamentDto {
   @IsOptional()

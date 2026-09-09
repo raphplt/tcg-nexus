@@ -11,12 +11,14 @@ import {
 } from "../entities/tournament-deck-snapshot.entity";
 
 /** Rule sets this service knows how to check. */
-const KNOWN_RULE_VERSIONS: Record<string, { legality: "standard" | "expanded" }> =
-  {
-    POKEMON_STANDARD_2026: { legality: "standard" },
-    POKEMON_STANDARD_2025: { legality: "standard" },
-    POKEMON_EXPANDED_2026: { legality: "expanded" },
-  };
+const KNOWN_RULE_VERSIONS: Record<
+  string,
+  { legality: "standard" | "expanded" }
+> = {
+  POKEMON_STANDARD_2026: { legality: "standard" },
+  POKEMON_STANDARD_2025: { legality: "standard" },
+  POKEMON_EXPANDED_2026: { legality: "expanded" },
+};
 
 /** Copies of one card a list may contain outside basic energy. */
 const MAX_COPIES_PER_CARD = 4;
