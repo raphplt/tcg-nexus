@@ -1,0 +1,5 @@
+# Dépendances de test uniquement : jamais installées dans l'image de production.
+-r requirements.txt
+
+# fastapi.testclient (test_main.py) passe par starlette.testclient, qui exige httpx.
+httpx==0.28.1
